@@ -1,0 +1,53 @@
+{
+  "name": "browser-commander",
+  "version": "0.1.0",
+  "description": "Universal browser automation library that supports both Playwright and Puppeteer with a unified API",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test tests/",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/link-foundation/browser-commander.git"
+  },
+  "keywords": [
+    "browser",
+    "automation",
+    "playwright",
+    "puppeteer",
+    "testing",
+    "e2e"
+  ],
+  "author": "",
+  "license": "UNLICENSE",
+  "bugs": {
+    "url": "https://github.com/link-foundation/browser-commander/issues"
+  },
+  "homepage": "https://github.com/link-foundation/browser-commander#readme",
+  "peerDependencies": {
+    "playwright": ">=1.40.0",
+    "puppeteer": ">=21.0.0"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    },
+    "puppeteer": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "log-lazy": "^1.0.4"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.0",
+    "playwright": "^1.56.1",
+    "puppeteer": "^24.27.0"
+  }
+}

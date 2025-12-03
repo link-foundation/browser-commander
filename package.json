@@ -8,7 +8,13 @@
     ".": "./src/index.js"
   },
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test --test-reporter spec tests/unit/",
+    "test:unit": "node --test --test-reporter spec tests/unit/",
+    "test:coverage": "node --test --experimental-test-coverage tests/unit/",
+    "test:e2e": "RUN_E2E=true node --test tests/e2e/",
+    "test:e2e:playwright": "RUN_E2E=true node --test tests/e2e/playwright.e2e.test.js",
+    "test:e2e:puppeteer": "RUN_E2E=true node --test tests/e2e/puppeteer.e2e.test.js",
+    "test:all": "npm run test:unit && npm run test:e2e",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

@@ -1,7 +1,14 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { isVisible, isEnabled, count } from '../../../src/elements/visibility.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage } from '../../helpers/mocks.js';
+import {
+  isVisible,
+  isEnabled,
+  count,
+} from '../../../src/elements/visibility.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+} from '../../helpers/mocks.js';
 
 describe('visibility', () => {
   describe('isVisible', () => {
@@ -15,7 +22,7 @@ describe('visibility', () => {
 
     it('should return true for visible element with Playwright', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'button': { visible: true, count: 1 } },
+        elements: { button: { visible: true, count: 1 } },
       });
       const visible = await isVisible({
         page,
@@ -27,7 +34,7 @@ describe('visibility', () => {
 
     it('should return false for non-visible element with Playwright', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'button': { visible: false, count: 1 } },
+        elements: { button: { visible: false, count: 1 } },
       });
       const visible = await isVisible({
         page,
@@ -39,7 +46,7 @@ describe('visibility', () => {
 
     it('should return true for visible element with Puppeteer', async () => {
       const page = createMockPuppeteerPage({
-        elements: { 'button': { visible: true, count: 1 } },
+        elements: { button: { visible: true, count: 1 } },
       });
       const visible = await isVisible({
         page,
@@ -51,7 +58,7 @@ describe('visibility', () => {
 
     it('should return false when element not found with Puppeteer', async () => {
       const page = createMockPuppeteerPage({
-        elements: { 'button': { count: 0 } },
+        elements: { button: { count: 0 } },
       });
       const visible = await isVisible({
         page,
@@ -88,7 +95,7 @@ describe('visibility', () => {
 
     it('should return true for enabled element with Playwright', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'button': { enabled: true, count: 1 } },
+        elements: { button: { enabled: true, count: 1 } },
       });
       const enabled = await isEnabled({
         page,
@@ -100,7 +107,7 @@ describe('visibility', () => {
 
     it('should return false for disabled element with Playwright', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'button': { enabled: false, disabled: true, count: 1 } },
+        elements: { button: { enabled: false, disabled: true, count: 1 } },
       });
       const enabled = await isEnabled({
         page,
@@ -113,7 +120,7 @@ describe('visibility', () => {
     it('should check for custom disabled classes', async () => {
       const page = createMockPlaywrightPage({
         elements: {
-          'button': {
+          button: {
             enabled: true,
             className: 'magritte-button_loading',
             count: 1,
@@ -158,7 +165,7 @@ describe('visibility', () => {
 
     it('should return element count with Playwright', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'button': { count: 5 } },
+        elements: { button: { count: 5 } },
       });
       const c = await count({
         page,
@@ -170,7 +177,7 @@ describe('visibility', () => {
 
     it('should return element count with Puppeteer', async () => {
       const page = createMockPuppeteerPage({
-        elements: { 'button': { count: 3 } },
+        elements: { button: { count: 3 } },
       });
       const c = await count({
         page,
@@ -182,7 +189,7 @@ describe('visibility', () => {
 
     it('should return 0 when no elements found', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'button': { count: 0 } },
+        elements: { button: { count: 0 } },
       });
       const c = await count({
         page,

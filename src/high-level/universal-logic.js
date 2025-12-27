@@ -3,7 +3,10 @@
  * These are pure functions that work with any browser automation engine
  */
 
-import { isNavigationError, withNavigationSafety } from '../core/navigation-safety.js';
+import {
+  isNavigationError,
+  withNavigationSafety,
+} from '../core/navigation-safety.js';
 
 /**
  * Wait indefinitely for a URL condition with custom check function
@@ -60,13 +63,20 @@ export async function waitForUrlCondition(options = {}) {
 
       // Handle navigation errors gracefully
       if (isNavigationError(error)) {
-        console.log('⚠️  Navigation detected during URL check, continuing to wait...');
+        console.log(
+          '⚠️  Navigation detected during URL check, continuing to wait...'
+        );
       } else {
-        console.log(`⚠️  Temporary error while checking URL: ${error.message.substring(0, 100)}... (retrying)`);
+        console.log(
+          `⚠️  Temporary error while checking URL: ${error.message.substring(0, 100)}... (retrying)`
+        );
       }
     }
 
-    await wait({ ms: pollingInterval, reason: 'polling interval before next URL check' });
+    await wait({
+      ms: pollingInterval,
+      reason: 'polling interval before next URL check',
+    });
   }
 }
 
@@ -83,26 +93,35 @@ export async function installClickListener(options = {}) {
 
   const safeEvaluate = withNavigationSafety(evaluate, {
     onNavigationError: () => {
-      console.log('⚠️  Navigation detected during installClickListener, skipping');
+      console.log(
+        '⚠️  Navigation detected during installClickListener, skipping'
+      );
       return false;
     },
   });
 
   const result = await safeEvaluate({
     fn: (text, key) => {
-      document.addEventListener('click', (event) => {
-        let element = event.target;
-        while (element && element !== document.body) {
-          const elementText = element.textContent?.trim() || '';
-          if (elementText === text ||
-              (element.tagName === 'A' || element.tagName === 'BUTTON') && elementText.includes(text)) {
-            console.log(`[Click Listener] Detected click on ${text} button!`);
-            window.sessionStorage.setItem(key, 'true');
-            break;
+      document.addEventListener(
+        'click',
+        (event) => {
+          let element = event.target;
+          while (element && element !== document.body) {
+            const elementText = element.textContent?.trim() || '';
+            if (
+              elementText === text ||
+              ((element.tagName === 'A' || element.tagName === 'BUTTON') &&
+                elementText.includes(text))
+            ) {
+              console.log(`[Click Listener] Detected click on ${text} button!`);
+              window.sessionStorage.setItem(key, 'true');
+              break;
+            }
+            element = element.parentElement;
           }
-          element = element.parentElement;
-        }
-      }, true);
+        },
+        true
+      );
     },
     args: [buttonText, storageKey],
   });
@@ -122,7 +141,9 @@ export async function checkAndClearFlag(options = {}) {
 
   const safeEvaluate = withNavigationSafety(evaluate, {
     onNavigationError: () => {
-      console.log('⚠️  Navigation detected during checkAndClearFlag, returning false');
+      console.log(
+        '⚠️  Navigation detected during checkAndClearFlag, returning false'
+      );
       return false;
     },
   });

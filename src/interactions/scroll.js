@@ -25,8 +25,10 @@ const isElementInViewportFn = (el, margin = 50) => {
   const viewportWidth = window.innerWidth;
 
   // Check if element is at least partially visible with some margin
-  const isInVerticalView = rect.top < (viewportHeight - margin) && rect.bottom > margin;
-  const isInHorizontalView = rect.left < (viewportWidth - margin) && rect.right > margin;
+  const isInVerticalView =
+    rect.top < viewportHeight - margin && rect.bottom > margin;
+  const isInHorizontalView =
+    rect.left < viewportWidth - margin && rect.right > margin;
 
   return isInVerticalView && isInHorizontalView;
 };
@@ -47,9 +49,16 @@ export async function defaultScrollVerification(options = {}) {
   try {
     let inViewport;
     if (engine === 'playwright') {
-      inViewport = await locatorOrElement.evaluate(isElementInViewportFn, margin);
+      inViewport = await locatorOrElement.evaluate(
+        isElementInViewportFn,
+        margin
+      );
     } else {
-      inViewport = await page.evaluate(isElementInViewportFn, locatorOrElement, margin);
+      inViewport = await page.evaluate(
+        isElementInViewportFn,
+        locatorOrElement,
+        margin
+      );
     }
     return { verified: inViewport, inViewport };
   } catch (error) {
@@ -96,20 +105,27 @@ export async function verifyScroll(options = {}) {
     });
 
     if (lastResult.verified) {
-      log.debug(() => `✅ Scroll verification succeeded after ${attempts} attempt(s)`);
+      log.debug(
+        () => `✅ Scroll verification succeeded after ${attempts} attempt(s)`
+      );
       return { ...lastResult, attempts };
     }
 
     if (lastResult.navigationError) {
-      log.debug(() => '⚠️  Navigation/stop detected during scroll verification');
+      log.debug(
+        () => '⚠️  Navigation/stop detected during scroll verification'
+      );
       return { ...lastResult, attempts };
     }
 
     // Wait before next retry
-    await new Promise(resolve => setTimeout(resolve, retryInterval));
+    await new Promise((resolve) => setTimeout(resolve, retryInterval));
   }
 
-  log.debug(() => `❌ Scroll verification failed after ${attempts} attempts - element not in viewport`);
+  log.debug(
+    () =>
+      `❌ Scroll verification failed after ${attempts} attempts - element not in viewport`
+  );
   return { ...lastResult, attempts };
 }
 
@@ -145,12 +161,24 @@ export async function scrollIntoView(options = {}) {
   try {
     if (engine === 'playwright') {
       await locatorOrElement.evaluate((el, scrollBehavior) => {
-        el.scrollIntoView({ behavior: scrollBehavior, block: 'center', inline: 'center' });
+        el.scrollIntoView({
+          behavior: scrollBehavior,
+          block: 'center',
+          inline: 'center',
+        });
       }, behavior);
     } else {
-      await page.evaluate((el, scrollBehavior) => {
-        el.scrollIntoView({ behavior: scrollBehavior, block: 'center', inline: 'center' });
-      }, locatorOrElement, behavior);
+      await page.evaluate(
+        (el, scrollBehavior) => {
+          el.scrollIntoView({
+            behavior: scrollBehavior,
+            block: 'center',
+            inline: 'center',
+          });
+        },
+        locatorOrElement,
+        behavior
+      );
     }
 
     // Verify scroll if requested
@@ -173,7 +201,9 @@ export async function scrollIntoView(options = {}) {
     return { scrolled: true, verified: true };
   } catch (error) {
     if (isNavigationError(error) || isActionStoppedError(error)) {
-      console.log('⚠️  Navigation/stop detected during scrollIntoView, skipping');
+      console.log(
+        '⚠️  Navigation/stop detected during scrollIntoView, skipping'
+      );
       return { scrolled: false, verified: false };
     }
     throw error;
@@ -204,7 +234,9 @@ export async function needsScrolling(options = {}) {
     }
   } catch (error) {
     if (isNavigationError(error) || isActionStoppedError(error)) {
-      console.log('⚠️  Navigation/stop detected during needsScrolling, returning false');
+      console.log(
+        '⚠️  Navigation/stop detected during needsScrolling, returning false'
+      );
       return false;
     }
     throw error;
@@ -251,10 +283,18 @@ export async function scrollIntoViewIfNeeded(options = {}) {
   }
 
   // Check if scrolling is needed
-  const needsScroll = await needsScrolling({ page, engine, locatorOrElement, threshold });
+  const needsScroll = await needsScrolling({
+    page,
+    engine,
+    locatorOrElement,
+    threshold,
+  });
 
   if (!needsScroll) {
-    log.debug(() => `🔍 [VERBOSE] Element already in view (within ${threshold}% threshold), skipping scroll`);
+    log.debug(
+      () =>
+        `🔍 [VERBOSE] Element already in view (within ${threshold}% threshold), skipping scroll`
+    );
     return { scrolled: false, verified: true, skipped: true };
   }
 
@@ -278,13 +318,19 @@ export async function scrollIntoViewIfNeeded(options = {}) {
 
   // Wait for scroll animation if specified
   if (waitAfterScroll > 0) {
-    await wait({ ms: waitAfterScroll, reason: `${behavior} scroll animation to complete` });
+    await wait({
+      ms: waitAfterScroll,
+      reason: `${behavior} scroll animation to complete`,
+    });
   }
 
   if (scrollResult.verified) {
     log.debug(() => '✅ Scroll verification passed - element is in viewport');
   } else {
-    log.debug(() => '⚠️  Scroll verification failed - element may not be fully in viewport');
+    log.debug(
+      () =>
+        '⚠️  Scroll verification failed - element may not be fully in viewport'
+    );
   }
 
   return {

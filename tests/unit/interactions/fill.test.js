@@ -7,7 +7,10 @@ import {
   performFill,
   fillTextArea,
 } from '../../../src/interactions/fill.js';
-import { createMockPlaywrightPage, createMockLogger } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockLogger,
+} from '../../helpers/mocks.js';
 
 describe('fill', () => {
   describe('defaultFillVerification', () => {
@@ -136,7 +139,8 @@ describe('fill', () => {
 
     it('should throw when page is not provided and no adapter', async () => {
       await assert.rejects(
-        () => checkIfElementEmpty({ engine: 'playwright', locatorOrElement: {} }),
+        () =>
+          checkIfElementEmpty({ engine: 'playwright', locatorOrElement: {} }),
         /page is required/
       );
     });
@@ -214,12 +218,13 @@ describe('fill', () => {
       const log = createMockLogger();
 
       await assert.rejects(
-        () => performFill({
-          page,
-          engine: 'playwright',
-          locatorOrElement: {},
-          log,
-        }),
+        () =>
+          performFill({
+            page,
+            engine: 'playwright',
+            locatorOrElement: {},
+            log,
+          }),
         /text is required/
       );
     });
@@ -229,12 +234,13 @@ describe('fill', () => {
       const log = createMockLogger();
 
       await assert.rejects(
-        () => performFill({
-          page,
-          engine: 'playwright',
-          text: 'test',
-          log,
-        }),
+        () =>
+          performFill({
+            page,
+            engine: 'playwright',
+            text: 'test',
+            log,
+          }),
         /locatorOrElement is required/
       );
     });
@@ -244,7 +250,9 @@ describe('fill', () => {
       const log = createMockLogger();
       let typeCalled = false;
       const adapter = {
-        type: async (el, text) => { typeCalled = true; },
+        type: async (el, text) => {
+          typeCalled = true;
+        },
         getInputValue: async () => 'test text',
       };
 
@@ -268,7 +276,9 @@ describe('fill', () => {
       const log = createMockLogger();
       let fillCalled = false;
       const adapter = {
-        fill: async (el, text) => { fillCalled = true; },
+        fill: async (el, text) => {
+          fillCalled = true;
+        },
         getInputValue: async () => 'test text',
       };
 
@@ -318,13 +328,14 @@ describe('fill', () => {
       const wait = async () => {};
 
       await assert.rejects(
-        () => fillTextArea({
-          page,
-          engine: 'playwright',
-          log,
-          wait,
-          text: 'test',
-        }),
+        () =>
+          fillTextArea({
+            page,
+            engine: 'playwright',
+            log,
+            wait,
+            text: 'test',
+          }),
         /selector and text are required/
       );
     });
@@ -335,13 +346,14 @@ describe('fill', () => {
       const wait = async () => {};
 
       await assert.rejects(
-        () => fillTextArea({
-          page,
-          engine: 'playwright',
-          log,
-          wait,
-          selector: 'textarea',
-        }),
+        () =>
+          fillTextArea({
+            page,
+            engine: 'playwright',
+            log,
+            wait,
+            selector: 'textarea',
+          }),
         /selector and text are required/
       );
     });
@@ -351,13 +363,14 @@ describe('fill', () => {
       const wait = async () => {};
 
       await assert.rejects(
-        () => fillTextArea({
-          engine: 'playwright',
-          log,
-          wait,
-          selector: 'textarea',
-          text: 'test',
-        }),
+        () =>
+          fillTextArea({
+            engine: 'playwright',
+            log,
+            wait,
+            selector: 'textarea',
+            text: 'test',
+          }),
         /page is required/
       );
     });

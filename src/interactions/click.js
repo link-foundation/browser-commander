@@ -23,14 +23,20 @@ import { createEngineAdapter } from '../core/engine-adapter.js';
  * @returns {Promise<{verified: boolean, reason: string}>}
  */
 export async function defaultClickVerification(options = {}) {
-  const { page, engine, locatorOrElement, preClickState = {}, adapter: providedAdapter } = options;
+  const {
+    page,
+    engine,
+    locatorOrElement,
+    preClickState = {},
+    adapter: providedAdapter,
+  } = options;
 
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
 
     // Get current element state
-    const getElementState = async () => {
-      return await adapter.evaluateOnElement(locatorOrElement, (el) => ({
+    const getElementState = async () =>
+      await adapter.evaluateOnElement(locatorOrElement, (el) => ({
         disabled: el.disabled,
         ariaPressed: el.getAttribute('aria-pressed'),
         ariaExpanded: el.getAttribute('aria-expanded'),
@@ -39,7 +45,6 @@ export async function defaultClickVerification(options = {}) {
         className: el.className,
         isConnected: el.isConnected,
       }));
-    };
 
     const postClickState = await getElementState();
 
@@ -66,7 +71,10 @@ export async function defaultClickVerification(options = {}) {
     // If element is still connected and not disabled, assume click worked
     // (many clicks don't change element state - they trigger actions)
     if (postClickState.isConnected) {
-      return { verified: true, reason: 'element still connected (assumed success)' };
+      return {
+        verified: true,
+        reason: 'element still connected (assumed success)',
+      };
     }
 
     // Element was removed from DOM - likely click triggered UI change
@@ -74,7 +82,11 @@ export async function defaultClickVerification(options = {}) {
   } catch (error) {
     if (isNavigationError(error) || isActionStoppedError(error)) {
       // Navigation/stop during verification - click likely triggered navigation
-      return { verified: true, reason: 'navigation detected (expected for navigation clicks)', navigationError: true };
+      return {
+        verified: true,
+        reason: 'navigation detected (expected for navigation clicks)',
+        navigationError: true,
+      };
     }
     throw error;
   }
@@ -142,7 +154,9 @@ export async function verifyClick(options = {}) {
   if (result.verified) {
     log.debug(() => `✅ Click verification passed: ${result.reason}`);
   } else {
-    log.debug(() => `⚠️  Click verification uncertain: ${result.reason || 'unknown'}`);
+    log.debug(
+      () => `⚠️  Click verification uncertain: ${result.reason || 'unknown'}`
+    );
   }
 
   return result;
@@ -183,11 +197,17 @@ export async function clickElement(options = {}) {
     // Capture pre-click state for verification
     let preClickState = {};
     if (verify && page) {
-      preClickState = await capturePreClickState({ page, engine, locatorOrElement, adapter });
+      preClickState = await capturePreClickState({
+        page,
+        engine,
+        locatorOrElement,
+        adapter,
+      });
     }
 
     // Click with appropriate options
-    const clickOptions = (engine === 'playwright' && noAutoScroll) ? { force: true } : {};
+    const clickOptions =
+      engine === 'playwright' && noAutoScroll ? { force: true } : {};
     if (engine === 'playwright' && noAutoScroll) {
       log.debug(() => `🔍 [VERBOSE] Clicking with noAutoScroll (force: true)`);
     }
@@ -214,9 +234,15 @@ export async function clickElement(options = {}) {
     return { clicked: true, verified: true };
   } catch (error) {
     if (isNavigationError(error) || isActionStoppedError(error)) {
-      console.log('⚠️  Navigation/stop detected during click, recovering gracefully');
+      console.log(
+        '⚠️  Navigation/stop detected during click, recovering gracefully'
+      );
       // Navigation during click is considered verified (click triggered navigation)
-      return { clicked: false, verified: true, reason: 'navigation during click' };
+      return {
+        clicked: false,
+        verified: true,
+        reason: 'navigation during click',
+      };
     }
     throw error;
   }
@@ -280,7 +306,12 @@ async function prepareElement(options = {}) {
   } = options;
 
   // Get locator/element and wait for it to be visible (unified for both engines)
-  const locatorOrElement = await waitForLocatorOrElement({ page, engine, selector, timeout });
+  const locatorOrElement = await waitForLocatorOrElement({
+    page,
+    engine,
+    selector,
+    timeout,
+  });
 
   // Log element info if verbose
   if (verbose) {
@@ -348,7 +379,12 @@ async function executeClick(options = {}) {
 
   if (!clickResult.clicked) {
     // Navigation/stop occurred during click itself
-    return { clicked: false, verified: true, navigated: true, reason: 'navigation during click' };
+    return {
+      clicked: false,
+      verified: true,
+      navigated: true,
+      reason: 'navigation during click',
+    };
   }
 
   log.debug(() => `🔍 [VERBOSE] Click completed`);
@@ -391,7 +427,10 @@ async function handleNavigationAfterClick(options = {}) {
   // Check if click caused navigation
   if (waitForNavigation) {
     // Wait briefly for navigation to potentially start
-    await wait({ ms: navigationCheckDelay, reason: 'checking for navigation after click' });
+    await wait({
+      ms: navigationCheckDelay,
+      reason: 'checking for navigation after click',
+    });
 
     // Detect if navigation occurred
     const { navigated, newUrl } = await detectNavigation({
@@ -425,25 +464,35 @@ async function handleNavigationAfterClick(options = {}) {
       }
 
       // Navigation is considered successful verification
-      return { navigated: true, verified: true, reason: 'click triggered navigation' };
+      return {
+        navigated: true,
+        verified: true,
+        reason: 'click triggered navigation',
+      };
     }
   }
 
   // No navigation - wait after click if specified (useful for modals)
   if (waitAfterClick > 0) {
-    const waitResult = await wait({ ms: waitAfterClick, reason: 'post-click settling time for modal scroll capture' });
+    const waitResult = await wait({
+      ms: waitAfterClick,
+      reason: 'post-click settling time for modal scroll capture',
+    });
 
     // Check if wait was aborted due to navigation that happened during the wait
     if (waitResult && waitResult.aborted) {
-      log.debug(() => '🔄 Navigation detected during post-click wait (wait was aborted)');
+      log.debug(
+        () => '🔄 Navigation detected during post-click wait (wait was aborted)'
+      );
 
       // Re-check for navigation since it happened during the wait
-      const { navigated: lateNavigated, newUrl: lateUrl } = await detectNavigation({
-        page,
-        navigationManager,
-        startUrl,
-        log,
-      });
+      const { navigated: lateNavigated, newUrl: lateUrl } =
+        await detectNavigation({
+          page,
+          navigationManager,
+          startUrl,
+          log,
+        });
 
       if (lateNavigated) {
         log.debug(() => `🔄 Confirmed late navigation to: ${lateUrl}`);
@@ -456,7 +505,11 @@ async function handleNavigationAfterClick(options = {}) {
           });
         }
 
-        return { navigated: true, verified: true, reason: 'late-detected navigation' };
+        return {
+          navigated: true,
+          verified: true,
+          reason: 'late-detected navigation',
+        };
       }
     }
   }
@@ -464,14 +517,20 @@ async function handleNavigationAfterClick(options = {}) {
   // Final check: did navigation happen while we were processing?
   // This catches cases where navigation started but wasn't detected earlier
   if (navigationManager && navigationManager.shouldAbort()) {
-    log.debug(() => '🔄 Navigation detected via abort signal at end of click processing');
+    log.debug(
+      () => '🔄 Navigation detected via abort signal at end of click processing'
+    );
 
     await navigationManager.waitForPageReady({
       timeout: 120000,
       reason: 'after abort-detected click navigation',
     });
 
-    return { navigated: true, verified: true, reason: 'abort-signal navigation' };
+    return {
+      navigated: true,
+      verified: true,
+      reason: 'abort-signal navigation',
+    };
   }
 
   // If we have network tracking, wait for any XHR/fetch to complete
@@ -558,7 +617,12 @@ export async function clickButton(options = {}) {
     });
 
     if (prepareResult.navigated) {
-      return { clicked: false, navigated: true, verified: true, reason: 'navigation during scroll' };
+      return {
+        clicked: false,
+        navigated: true,
+        verified: true,
+        reason: 'navigation during scroll',
+      };
     }
 
     const { locatorOrElement } = prepareResult;
@@ -575,7 +639,12 @@ export async function clickButton(options = {}) {
     });
 
     if (clickResult.navigated) {
-      return { clicked: false, navigated: true, verified: true, reason: 'navigation during click' };
+      return {
+        clicked: false,
+        navigated: true,
+        verified: true,
+        reason: 'navigation during click',
+      };
     }
 
     // Step 3: Handle navigation detection and waiting
@@ -599,9 +668,16 @@ export async function clickButton(options = {}) {
     };
   } catch (error) {
     if (isNavigationError(error) || isActionStoppedError(error)) {
-      console.log('⚠️  Navigation/stop detected during clickButton, recovering gracefully');
+      console.log(
+        '⚠️  Navigation/stop detected during clickButton, recovering gracefully'
+      );
       // Navigation/stop during click is considered successful
-      return { clicked: false, navigated: true, verified: true, reason: 'navigation/stop error' };
+      return {
+        clicked: false,
+        navigated: true,
+        verified: true,
+        reason: 'navigation/stop error',
+      };
     }
     throw error;
   }

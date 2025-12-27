@@ -27,16 +27,16 @@ function App() {
     const { name, value, type, checked } = e.target;
 
     if (type === 'checkbox' && name === 'interests') {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         interests: checked
           ? [...prev.interests, value]
-          : prev.interests.filter(i => i !== value)
+          : prev.interests.filter((i) => i !== value),
       }));
     } else if (type === 'checkbox') {
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      setFormData((prev) => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -49,7 +49,7 @@ function App() {
       setSubmitResult({
         success: true,
         message: 'Form submitted successfully!',
-        data: formData
+        data: formData,
       });
       setIsLoading(false);
     }, 500);
@@ -75,7 +75,7 @@ function App() {
     setTimeout(() => {
       setDynamicContent({
         title: 'Dynamic Content Loaded',
-        items: ['Item 1', 'Item 2', 'Item 3']
+        items: ['Item 1', 'Item 2', 'Item 3'],
       });
       setIsLoading(false);
     }, 300);
@@ -144,7 +144,7 @@ function App() {
           <div className="form-group">
             <label>Gender</label>
             <div className="radio-group" data-testid="radio-gender">
-              {['male', 'female', 'other'].map(gender => (
+              {['male', 'female', 'other'].map((gender) => (
                 <div className="radio-item" key={gender}>
                   <input
                     type="radio"
@@ -166,22 +166,24 @@ function App() {
           <div className="form-group">
             <label>Interests</label>
             <div className="checkbox-group" data-testid="checkbox-interests">
-              {['technology', 'sports', 'music', 'travel', 'food'].map(interest => (
-                <div className="checkbox-item" key={interest}>
-                  <input
-                    type="checkbox"
-                    id={`interest-${interest}`}
-                    name="interests"
-                    value={interest}
-                    checked={formData.interests.includes(interest)}
-                    onChange={handleInputChange}
-                    data-testid={`checkbox-${interest}`}
-                  />
-                  <label htmlFor={`interest-${interest}`}>
-                    {interest.charAt(0).toUpperCase() + interest.slice(1)}
-                  </label>
-                </div>
-              ))}
+              {['technology', 'sports', 'music', 'travel', 'food'].map(
+                (interest) => (
+                  <div className="checkbox-item" key={interest}>
+                    <input
+                      type="checkbox"
+                      id={`interest-${interest}`}
+                      name="interests"
+                      value={interest}
+                      checked={formData.interests.includes(interest)}
+                      onChange={handleInputChange}
+                      data-testid={`checkbox-${interest}`}
+                    />
+                    <label htmlFor={`interest-${interest}`}>
+                      {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                    </label>
+                  </div>
+                )
+              )}
             </div>
           </div>
 
@@ -252,7 +254,10 @@ function App() {
         </form>
 
         {submitResult && (
-          <div className={`result ${submitResult.success ? 'success' : 'error'}`} data-testid="submit-result">
+          <div
+            className={`result ${submitResult.success ? 'success' : 'error'}`}
+            data-testid="submit-result"
+          >
             <strong>{submitResult.message}</strong>
             <pre>{JSON.stringify(submitResult.data, null, 2)}</pre>
           </div>
@@ -269,15 +274,17 @@ function App() {
           <div className="counter">
             <button
               className="secondary"
-              onClick={() => setCounter(c => c - 1)}
+              onClick={() => setCounter((c) => c - 1)}
               data-testid="btn-decrement"
             >
               -
             </button>
-            <span className="counter-value" data-testid="counter-value">{counter}</span>
+            <span className="counter-value" data-testid="counter-value">
+              {counter}
+            </span>
             <button
               className="secondary"
-              onClick={() => setCounter(c => c + 1)}
+              onClick={() => setCounter((c) => c + 1)}
               data-testid="btn-increment"
             >
               +
@@ -318,7 +325,7 @@ function App() {
             </button>
             {dropdownOpen && (
               <div className="dropdown-menu" data-testid="dropdown-menu">
-                {['Option A', 'Option B', 'Option C'].map(option => (
+                {['Option A', 'Option B', 'Option C'].map((option) => (
                   <button
                     key={option}
                     onClick={() => {
@@ -366,7 +373,9 @@ function App() {
               <strong>{dynamicContent.title}</strong>
               <ul>
                 {dynamicContent.items.map((item, i) => (
-                  <li key={i} data-testid={`dynamic-item-${i}`}>{item}</li>
+                  <li key={i} data-testid={`dynamic-item-${i}`}>
+                    {item}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -408,11 +417,15 @@ function App() {
       <section className="section" data-testid="navigation-section">
         <h2>Navigation Test</h2>
         <div className="button-group">
-          <a href="/page-1" data-testid="link-page-1">Go to Page 1</a>
-          <a href="/page-2" data-testid="link-page-2">Go to Page 2</a>
+          <a href="/page-1" data-testid="link-page-1">
+            Go to Page 1
+          </a>
+          <a href="/page-2" data-testid="link-page-2">
+            Go to Page 2
+          </a>
           <button
             className="primary"
-            onClick={() => window.location.href = '/success'}
+            onClick={() => (window.location.href = '/success')}
             data-testid="btn-navigate"
           >
             Navigate to Success

@@ -26,12 +26,22 @@ export function createMockPlaywrightPage(options = {}) {
 
     return {
       count: async () => elementData.count,
-      first: function() { return this; },
-      nth: function(i) { return this; },
-      last: function() { return this; },
+      first() {
+        return this;
+      },
+      nth(i) {
+        return this;
+      },
+      last() {
+        return this;
+      },
       click: async (opts = {}) => {},
-      fill: async (text) => { elementData.value = text; },
-      type: async (text) => { elementData.value = text; },
+      fill: async (text) => {
+        elementData.value = text;
+      },
+      type: async (text) => {
+        elementData.value = text;
+      },
       focus: async () => {},
       textContent: async () => elementData.textContent,
       inputValue: async () => elementData.value,
@@ -90,12 +100,15 @@ export function createMockPlaywrightPage(options = {}) {
       return loc.evaluate(fn, ...args);
     },
     $$eval: async (sel, fn, ...args) => {
-      const locs = await page.$$('sel');
-      return locs.map(l => l.evaluate(fn, ...args));
+      const count = elements[sel]?.count || 1;
+      const locs = Array(count).fill(locatorMock(sel));
+      return locs.map((l) => l.evaluate(fn, ...args));
     },
     locator: locatorMock,
     evaluate: async (fn, ...args) => {
-      if (evaluateResult !== null) return evaluateResult;
+      if (evaluateResult !== null) {
+        return evaluateResult;
+      }
       // Create mock window/document context
       const mockContext = {
         innerHeight: 800,
@@ -103,8 +116,12 @@ export function createMockPlaywrightPage(options = {}) {
         sessionStorage: {
           _data: {},
           getItem: (key) => mockContext.sessionStorage._data[key] || null,
-          setItem: (key, val) => { mockContext.sessionStorage._data[key] = val; },
-          removeItem: (key) => { delete mockContext.sessionStorage._data[key]; },
+          setItem: (key, val) => {
+            mockContext.sessionStorage._data[key] = val;
+          },
+          removeItem: (key) => {
+            delete mockContext.sessionStorage._data[key];
+          },
         },
         querySelectorAll: () => [],
       };
@@ -129,13 +146,15 @@ export function createMockPlaywrightPage(options = {}) {
       const handlers = eventListeners.get(event);
       if (handlers) {
         const idx = handlers.indexOf(handler);
-        if (idx !== -1) handlers.splice(idx, 1);
+        if (idx !== -1) {
+          handlers.splice(idx, 1);
+        }
       }
     },
     emit: (event, data) => {
       const handlers = eventListeners.get(event);
       if (handlers) {
-        handlers.forEach(h => h(data));
+        handlers.forEach((h) => h(data));
       }
     },
     click: async (sel, opts = {}) => {},
@@ -171,10 +190,11 @@ export function createMockPuppeteerPage(options = {}) {
     return {
       click: async (opts = {}) => {},
       focus: async () => {},
-      type: async (text) => { elementData.value = text; },
-      evaluate: async (fn, ...args) => {
-        return page.evaluate(fn, elementMock(selector), ...args);
+      type: async (text) => {
+        elementData.value = text;
       },
+      evaluate: async (fn, ...args) =>
+        page.evaluate(fn, elementMock(selector), ...args),
     };
   };
 
@@ -186,12 +206,16 @@ export function createMockPuppeteerPage(options = {}) {
     waitForSelector: async (sel, opts = {}) => elementMock(sel),
     $: async (sel) => {
       const elementData = elements[sel];
-      if (elementData?.count === 0) return null;
+      if (elementData?.count === 0) {
+        return null;
+      }
       return elementMock(sel);
     },
     $$: async (sel) => {
       const count = elements[sel]?.count || 1;
-      return Array(count).fill(null).map(() => elementMock(sel));
+      return Array(count)
+        .fill(null)
+        .map(() => elementMock(sel));
     },
     $eval: async (sel, fn, ...args) => {
       const elementData = elements[sel] || {};
@@ -228,7 +252,9 @@ export function createMockPuppeteerPage(options = {}) {
       return fn(Array(count).fill({}), ...args);
     },
     evaluate: async (fn, ...args) => {
-      if (evaluateResult !== null) return evaluateResult;
+      if (evaluateResult !== null) {
+        return evaluateResult;
+      }
       try {
         // For element evaluations, first arg might be an element mock
         if (args[0] && typeof args[0] === 'object' && args[0].click) {
@@ -246,7 +272,12 @@ export function createMockPuppeteerPage(options = {}) {
             getAttribute: () => null,
             classList: { contains: () => false },
             getBoundingClientRect: () => ({
-              top: 100, bottom: 150, left: 10, right: 110, width: 100, height: 50,
+              top: 100,
+              bottom: 150,
+              left: 10,
+              right: 110,
+              width: 100,
+              height: 50,
             }),
             scrollIntoView: () => {},
             dispatchEvent: () => {},
@@ -272,13 +303,15 @@ export function createMockPuppeteerPage(options = {}) {
       const handlers = eventListeners.get(event);
       if (handlers) {
         const idx = handlers.indexOf(handler);
-        if (idx !== -1) handlers.splice(idx, 1);
+        if (idx !== -1) {
+          handlers.splice(idx, 1);
+        }
       }
     },
     emit: (event, data) => {
       const handlers = eventListeners.get(event);
       if (handlers) {
-        handlers.forEach(h => h(data));
+        handlers.forEach((h) => h(data));
       }
     },
     click: async (sel, opts = {}) => {},
@@ -301,26 +334,40 @@ export function createMockLogger(options = {}) {
   return {
     debug: (fn) => {
       if (collectLogs) {
-        logs.push({ level: 'debug', message: typeof fn === 'function' ? fn() : fn });
+        logs.push({
+          level: 'debug',
+          message: typeof fn === 'function' ? fn() : fn,
+        });
       }
     },
     info: (fn) => {
       if (collectLogs) {
-        logs.push({ level: 'info', message: typeof fn === 'function' ? fn() : fn });
+        logs.push({
+          level: 'info',
+          message: typeof fn === 'function' ? fn() : fn,
+        });
       }
     },
     warn: (fn) => {
       if (collectLogs) {
-        logs.push({ level: 'warn', message: typeof fn === 'function' ? fn() : fn });
+        logs.push({
+          level: 'warn',
+          message: typeof fn === 'function' ? fn() : fn,
+        });
       }
     },
     error: (fn) => {
       if (collectLogs) {
-        logs.push({ level: 'error', message: typeof fn === 'function' ? fn() : fn });
+        logs.push({
+          level: 'error',
+          message: typeof fn === 'function' ? fn() : fn,
+        });
       }
     },
     getLogs: () => logs,
-    clear: () => { logs.length = 0; },
+    clear: () => {
+      logs.length = 0;
+    },
   };
 }
 
@@ -328,10 +375,7 @@ export function createMockLogger(options = {}) {
  * Create a mock network tracker
  */
 export function createMockNetworkTracker(options = {}) {
-  const {
-    initialPendingCount = 0,
-    waitForIdleResult = true,
-  } = options;
+  const { initialPendingCount = 0, waitForIdleResult = true } = options;
 
   let pendingCount = initialPendingCount;
   const listeners = {
@@ -346,17 +390,25 @@ export function createMockNetworkTracker(options = {}) {
     waitForNetworkIdle: async (opts = {}) => waitForIdleResult,
     getPendingCount: () => pendingCount,
     getPendingUrls: () => [],
-    reset: () => { pendingCount = 0; },
+    reset: () => {
+      pendingCount = 0;
+    },
     on: (event, callback) => {
-      if (listeners[event]) listeners[event].push(callback);
+      if (listeners[event]) {
+        listeners[event].push(callback);
+      }
     },
     off: (event, callback) => {
       if (listeners[event]) {
         const idx = listeners[event].indexOf(callback);
-        if (idx !== -1) listeners[event].splice(idx, 1);
+        if (idx !== -1) {
+          listeners[event].splice(idx, 1);
+        }
       }
     },
-    setPendingCount: (count) => { pendingCount = count; },
+    setPendingCount: (count) => {
+      pendingCount = count;
+    },
   };
 }
 
@@ -372,7 +424,7 @@ export function createMockNavigationManager(options = {}) {
 
   let url = currentUrl;
   let navigating = isNavigating;
-  let sessionId = 1;
+  const sessionId = 1;
   let abortController = new AbortController();
   const listeners = {
     onNavigationStart: [],
@@ -396,33 +448,47 @@ export function createMockNavigationManager(options = {}) {
     shouldAbort: () => shouldAbortValue,
     onSessionCleanup: (callback) => {},
     on: (event, callback) => {
-      if (listeners[event]) listeners[event].push(callback);
+      if (listeners[event]) {
+        listeners[event].push(callback);
+      }
     },
     off: (event, callback) => {
       if (listeners[event]) {
         const idx = listeners[event].indexOf(callback);
-        if (idx !== -1) listeners[event].splice(idx, 1);
+        if (idx !== -1) {
+          listeners[event].splice(idx, 1);
+        }
       }
     },
     startListening: () => {},
     stopListening: () => {},
     configure: (config) => {},
-    setUrl: (newUrl) => { url = newUrl; },
-    setNavigating: (val) => { navigating = val; },
+    setUrl: (newUrl) => {
+      url = newUrl;
+    },
+    setNavigating: (val) => {
+      navigating = val;
+    },
     triggerEvent: (event, data) => {
       if (listeners[event]) {
-        listeners[event].forEach(cb => cb(data));
+        listeners[event].forEach((cb) => cb(data));
       }
     },
-    abort: () => { abortController.abort(); },
-    resetAbort: () => { abortController = new AbortController(); },
+    abort: () => {
+      abortController.abort();
+    },
+    resetAbort: () => {
+      abortController = new AbortController();
+    },
   };
 }
 
 /**
  * Create navigation error for testing
  */
-export function createNavigationError(message = 'Execution context was destroyed') {
+export function createNavigationError(
+  message = 'Execution context was destroyed'
+) {
   const error = new Error(message);
   error.name = 'NavigationError';
   return error;
@@ -458,7 +524,9 @@ export const assert = {
       throw new Error(`${message}: Expected function to throw`);
     } catch (error) {
       if (expectedError && !error.message.includes(expectedError)) {
-        throw new Error(`${message}: Expected error message to include "${expectedError}", got "${error.message}"`);
+        throw new Error(
+          `${message}: Expected error message to include "${expectedError}", got "${error.message}"`
+        );
       }
     }
   },
@@ -466,7 +534,9 @@ export const assert = {
     try {
       await fn();
     } catch (error) {
-      throw new Error(`${message}: Expected function not to throw, but got: ${error.message}`);
+      throw new Error(
+        `${message}: Expected function not to throw, but got: ${error.message}`
+      );
     }
   },
 };

@@ -375,11 +375,11 @@ export class PuppeteerAdapter extends EngineAdapter {
   }
 
   async getTextContent(locatorOrElement) {
-    return await this.page.evaluate(el => el.textContent, locatorOrElement);
+    return await this.page.evaluate((el) => el.textContent, locatorOrElement);
   }
 
   async getInputValue(locatorOrElement) {
-    return await this.page.evaluate(el => el.value, locatorOrElement);
+    return await this.page.evaluate((el) => el.value, locatorOrElement);
   }
 
   async getAttribute(locatorOrElement, attribute) {
@@ -406,11 +406,15 @@ export class PuppeteerAdapter extends EngineAdapter {
 
   async fill(locatorOrElement, text) {
     // Puppeteer doesn't have fill() - use evaluate to set value
-    await this.page.evaluate((el, value) => {
-      el.value = value;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }, locatorOrElement, text);
+    await this.page.evaluate(
+      (el, value) => {
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      },
+      locatorOrElement,
+      text
+    );
   }
 
   async focus(locatorOrElement) {
@@ -440,12 +444,14 @@ export class PuppeteerAdapter extends EngineAdapter {
 export function createEngineAdapter(page, engine) {
   if (!page) {
     const errorDetails = {
-      page: page,
+      page,
       pageType: typeof page,
-      engine: engine,
+      engine,
       stackTrace: new Error().stack,
     };
-    throw new Error(`page is required in createEngineAdapter. Received: page=${page} (type: ${typeof page}), engine=${engine}. This may indicate that the page object was not properly passed through the function call chain. Stack trace: ${errorDetails.stackTrace}`);
+    throw new Error(
+      `page is required in createEngineAdapter. Received: page=${page} (type: ${typeof page}), engine=${engine}. This may indicate that the page object was not properly passed through the function call chain. Stack trace: ${errorDetails.stackTrace}`
+    );
   }
 
   if (engine === 'playwright') {
@@ -453,6 +459,8 @@ export function createEngineAdapter(page, engine) {
   } else if (engine === 'puppeteer') {
     return new PuppeteerAdapter(page);
   } else {
-    throw new Error(`Unsupported engine: ${engine}. Expected 'playwright' or 'puppeteer'`);
+    throw new Error(
+      `Unsupported engine: ${engine}. Expected 'playwright' or 'puppeteer'`
+    );
   }
 }

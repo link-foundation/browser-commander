@@ -26,7 +26,9 @@ export async function querySelector(options = {}) {
     }
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during querySelector, returning null');
+      console.log(
+        '⚠️  Navigation detected during querySelector, returning null'
+      );
       return null;
     }
     throw error;
@@ -62,7 +64,9 @@ export async function querySelectorAll(options = {}) {
     }
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during querySelectorAll, returning empty array');
+      console.log(
+        '⚠️  Navigation detected during querySelectorAll, returning empty array'
+      );
       return [];
     }
     throw error;
@@ -122,36 +126,43 @@ export async function normalizeSelector(options = {}) {
   if (selector._isPuppeteerTextSelector) {
     try {
       // Find element by text and generate a unique selector
-      const result = await page.evaluate((baseSelector, text, exact) => {
-        const elements = Array.from(document.querySelectorAll(baseSelector));
-        const matchingElement = elements.find(el => {
-          const elementText = el.textContent.trim();
-          return exact ? elementText === text : elementText.includes(text);
-        });
+      const result = await page.evaluate(
+        (baseSelector, text, exact) => {
+          const elements = Array.from(document.querySelectorAll(baseSelector));
+          const matchingElement = elements.find((el) => {
+            const elementText = el.textContent.trim();
+            return exact ? elementText === text : elementText.includes(text);
+          });
 
-        if (!matchingElement) {
-          return null;
-        }
+          if (!matchingElement) {
+            return null;
+          }
 
-        // Generate a unique selector using data-qa or nth-of-type
-        const dataQa = matchingElement.getAttribute('data-qa');
-        if (dataQa) {
-          return `[data-qa="${dataQa}"]`;
-        }
+          // Generate a unique selector using data-qa or nth-of-type
+          const dataQa = matchingElement.getAttribute('data-qa');
+          if (dataQa) {
+            return `[data-qa="${dataQa}"]`;
+          }
 
-        // Use nth-of-type as fallback
-        const tagName = matchingElement.tagName.toLowerCase();
-        const siblings = Array.from(matchingElement.parentElement.children).filter(
-          el => el.tagName.toLowerCase() === tagName
-        );
-        const index = siblings.indexOf(matchingElement);
-        return `${tagName}:nth-of-type(${index + 1})`;
-      }, selector.baseSelector, selector.text, selector.exact);
+          // Use nth-of-type as fallback
+          const tagName = matchingElement.tagName.toLowerCase();
+          const siblings = Array.from(
+            matchingElement.parentElement.children
+          ).filter((el) => el.tagName.toLowerCase() === tagName);
+          const index = siblings.indexOf(matchingElement);
+          return `${tagName}:nth-of-type(${index + 1})`;
+        },
+        selector.baseSelector,
+        selector.text,
+        selector.exact
+      );
 
       return result;
     } catch (error) {
       if (isNavigationError(error)) {
-        console.log('⚠️  Navigation detected during normalizeSelector, returning null');
+        console.log(
+          '⚠️  Navigation detected during normalizeSelector, returning null'
+        );
         return null;
       }
       throw error;
@@ -173,7 +184,11 @@ export function withTextSelectorSupport(fn, engine, page) {
     let { selector } = options;
 
     // Normalize Puppeteer text selectors
-    if (engine === 'puppeteer' && typeof selector === 'object' && selector._isPuppeteerTextSelector) {
+    if (
+      engine === 'puppeteer' &&
+      typeof selector === 'object' &&
+      selector._isPuppeteerTextSelector
+    ) {
       selector = await normalizeSelector({ page, selector });
       if (!selector) {
         throw new Error('Element with specified text not found');
@@ -196,7 +211,14 @@ export function withTextSelectorSupport(fn, engine, page) {
  * @returns {Promise<boolean>} - True if selector found, false on navigation
  */
 export async function waitForSelector(options = {}) {
-  const { page, engine, selector, visible = true, timeout = 5000, throwOnNavigation = true } = options;
+  const {
+    page,
+    engine,
+    selector,
+    visible = true,
+    timeout = 5000,
+    throwOnNavigation = true,
+  } = options;
 
   if (!selector) {
     throw new Error('selector is required in options');
@@ -205,14 +227,19 @@ export async function waitForSelector(options = {}) {
   try {
     if (engine === 'playwright') {
       const locator = createPlaywrightLocator({ page, selector });
-      await locator.waitFor({ state: visible ? 'visible' : 'attached', timeout });
+      await locator.waitFor({
+        state: visible ? 'visible' : 'attached',
+        timeout,
+      });
     } else {
       await page.waitForSelector(selector, { visible, timeout });
     }
     return true;
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during waitForSelector, recovering gracefully');
+      console.log(
+        '⚠️  Navigation detected during waitForSelector, recovering gracefully'
+      );
       if (throwOnNavigation) {
         throw error;
       }

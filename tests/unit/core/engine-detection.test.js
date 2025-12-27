@@ -1,7 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { detectEngine } from '../../../src/core/engine-detection.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+} from '../../helpers/mocks.js';
 
 describe('engine-detection', () => {
   describe('detectEngine', () => {

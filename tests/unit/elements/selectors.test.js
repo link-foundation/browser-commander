@@ -8,7 +8,10 @@ import {
   withTextSelectorSupport,
   waitForSelector,
 } from '../../../src/elements/selectors.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+} from '../../helpers/mocks.js';
 
 describe('selectors', () => {
   describe('querySelector', () => {
@@ -21,20 +24,38 @@ describe('selectors', () => {
     });
 
     it('should find element with Playwright', async () => {
-      const page = createMockPlaywrightPage({ elements: { 'button': { count: 1 } } });
-      const el = await querySelector({ page, engine: 'playwright', selector: 'button' });
+      const page = createMockPlaywrightPage({
+        elements: { button: { count: 1 } },
+      });
+      const el = await querySelector({
+        page,
+        engine: 'playwright',
+        selector: 'button',
+      });
       assert.ok(el);
     });
 
     it('should find element with Puppeteer', async () => {
-      const page = createMockPuppeteerPage({ elements: { 'button': { count: 1 } } });
-      const el = await querySelector({ page, engine: 'puppeteer', selector: 'button' });
+      const page = createMockPuppeteerPage({
+        elements: { button: { count: 1 } },
+      });
+      const el = await querySelector({
+        page,
+        engine: 'puppeteer',
+        selector: 'button',
+      });
       assert.ok(el);
     });
 
     it('should return null when element not found with Playwright', async () => {
-      const page = createMockPlaywrightPage({ elements: { 'button': { count: 0 } } });
-      const el = await querySelector({ page, engine: 'playwright', selector: 'button' });
+      const page = createMockPlaywrightPage({
+        elements: { button: { count: 0 } },
+      });
+      const el = await querySelector({
+        page,
+        engine: 'playwright',
+        selector: 'button',
+      });
       assert.strictEqual(el, null);
     });
 
@@ -47,7 +68,11 @@ describe('selectors', () => {
           },
         }),
       });
-      const el = await querySelector({ page, engine: 'playwright', selector: 'button' });
+      const el = await querySelector({
+        page,
+        engine: 'playwright',
+        selector: 'button',
+      });
       assert.strictEqual(el, null);
     });
   });
@@ -62,22 +87,40 @@ describe('selectors', () => {
     });
 
     it('should find all elements with Playwright', async () => {
-      const page = createMockPlaywrightPage({ elements: { 'button': { count: 3 } } });
-      const elements = await querySelectorAll({ page, engine: 'playwright', selector: 'button' });
+      const page = createMockPlaywrightPage({
+        elements: { button: { count: 3 } },
+      });
+      const elements = await querySelectorAll({
+        page,
+        engine: 'playwright',
+        selector: 'button',
+      });
       assert.ok(Array.isArray(elements));
       assert.strictEqual(elements.length, 3);
     });
 
     it('should find all elements with Puppeteer', async () => {
-      const page = createMockPuppeteerPage({ elements: { 'button': { count: 3 } } });
-      const elements = await querySelectorAll({ page, engine: 'puppeteer', selector: 'button' });
+      const page = createMockPuppeteerPage({
+        elements: { button: { count: 3 } },
+      });
+      const elements = await querySelectorAll({
+        page,
+        engine: 'puppeteer',
+        selector: 'button',
+      });
       assert.ok(Array.isArray(elements));
       assert.strictEqual(elements.length, 3);
     });
 
     it('should return empty array when no elements found', async () => {
-      const page = createMockPlaywrightPage({ elements: { 'button': { count: 0 } } });
-      const elements = await querySelectorAll({ page, engine: 'playwright', selector: 'button' });
+      const page = createMockPlaywrightPage({
+        elements: { button: { count: 0 } },
+      });
+      const elements = await querySelectorAll({
+        page,
+        engine: 'playwright',
+        selector: 'button',
+      });
       assert.ok(Array.isArray(elements));
       assert.strictEqual(elements.length, 0);
     });
@@ -89,7 +132,11 @@ describe('selectors', () => {
           throw new Error('Execution context was destroyed');
         },
       });
-      const elements = await querySelectorAll({ page, engine: 'playwright', selector: 'button' });
+      const elements = await querySelectorAll({
+        page,
+        engine: 'playwright',
+        selector: 'button',
+      });
       assert.ok(Array.isArray(elements));
       assert.strictEqual(elements.length, 0);
     });
@@ -210,7 +257,9 @@ describe('selectors', () => {
     });
 
     it('should wait for selector with Playwright', async () => {
-      const page = createMockPlaywrightPage({ elements: { 'button': { visible: true } } });
+      const page = createMockPlaywrightPage({
+        elements: { button: { visible: true } },
+      });
       const result = await waitForSelector({
         page,
         engine: 'playwright',
@@ -221,7 +270,9 @@ describe('selectors', () => {
     });
 
     it('should wait for selector with Puppeteer', async () => {
-      const page = createMockPuppeteerPage({ elements: { 'button': { visible: true } } });
+      const page = createMockPuppeteerPage({
+        elements: { button: { visible: true } },
+      });
       const result = await waitForSelector({
         page,
         engine: 'puppeteer',

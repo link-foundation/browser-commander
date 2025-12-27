@@ -5,16 +5,53 @@
 
 import { wait, evaluate, safeEvaluate } from './utilities/wait.js';
 import { getUrl, unfocusAddressBar } from './utilities/url.js';
-import { waitForUrlStabilization, goto, waitForNavigation, waitForPageReady, waitAfterAction } from './browser/navigation.js';
-import { createPlaywrightLocator, getLocatorOrElement, waitForLocatorOrElement, waitForVisible, locator } from './elements/locators.js';
-import { querySelector, querySelectorAll, findByText, normalizeSelector, waitForSelector } from './elements/selectors.js';
+import {
+  waitForUrlStabilization,
+  goto,
+  waitForNavigation,
+  waitForPageReady,
+  waitAfterAction,
+} from './browser/navigation.js';
+import {
+  createPlaywrightLocator,
+  getLocatorOrElement,
+  waitForLocatorOrElement,
+  waitForVisible,
+  locator,
+} from './elements/locators.js';
+import {
+  querySelector,
+  querySelectorAll,
+  findByText,
+  normalizeSelector,
+  waitForSelector,
+  withTextSelectorSupport,
+} from './elements/selectors.js';
 import { isVisible, isEnabled, count } from './elements/visibility.js';
-import { textContent, inputValue, getAttribute, getInputValue, logElementInfo } from './elements/content.js';
-import { scrollIntoView, needsScrolling, scrollIntoViewIfNeeded } from './interactions/scroll.js';
+import {
+  textContent,
+  inputValue,
+  getAttribute,
+  getInputValue,
+  logElementInfo,
+} from './elements/content.js';
+import {
+  scrollIntoView,
+  needsScrolling,
+  scrollIntoViewIfNeeded,
+} from './interactions/scroll.js';
 import { clickElement, clickButton } from './interactions/click.js';
-import { checkIfElementEmpty, performFill, fillTextArea } from './interactions/fill.js';
-import { waitForUrlCondition, installClickListener, checkAndClearFlag, findToggleButton } from './high-level/universal-logic.js';
-import { withTextSelectorSupport } from './elements/selectors.js';
+import {
+  checkIfElementEmpty,
+  performFill,
+  fillTextArea,
+} from './interactions/fill.js';
+import {
+  waitForUrlCondition,
+  installClickListener,
+  checkAndClearFlag,
+  findToggleButton,
+} from './high-level/universal-logic.js';
 
 /**
  * Create bound functions for a browser commander instance
@@ -40,63 +77,76 @@ export function createBoundFunctions(options = {}) {
   // Create bound helper functions that inject page, engine, log
   // Wait function now automatically gets abort signal from navigation manager
   const waitBound = (opts) => {
-    const abortSignal = navigationManager ? navigationManager.getAbortSignal() : null;
+    const abortSignal = navigationManager
+      ? navigationManager.getAbortSignal()
+      : null;
     return wait({ ...opts, log, abortSignal: opts.abortSignal || abortSignal });
   };
   const evaluateBound = (opts) => evaluate({ ...opts, page, engine });
   const safeEvaluateBound = (opts) => safeEvaluate({ ...opts, page, engine });
   const getUrlBound = () => getUrl({ page });
-  const unfocusAddressBarBound = (opts = {}) => unfocusAddressBar({ ...opts, page });
+  const unfocusAddressBarBound = (opts = {}) =>
+    unfocusAddressBar({ ...opts, page });
 
   // Bound navigation - with NavigationManager integration
-  const waitForUrlStabilizationBound = (opts) => waitForUrlStabilization({
-    ...opts,
-    page,
-    log,
-    wait: waitBound,
-    navigationManager,
-  });
-  const gotoBound = (opts) => goto({
-    ...opts,
-    page,
-    waitForUrlStabilization: waitForUrlStabilizationBound,
-    navigationManager,
-  });
-  const waitForNavigationBound = (opts) => waitForNavigation({
-    ...opts,
-    page,
-    navigationManager,
-  });
-  const waitForPageReadyBound = (opts) => waitForPageReady({
-    ...opts,
-    page,
-    navigationManager,
-    networkTracker,
-    log,
-    wait: waitBound,
-  });
-  const waitAfterActionBound = (opts) => waitAfterAction({
-    ...opts,
-    page,
-    navigationManager,
-    networkTracker,
-    log,
-    wait: waitBound,
-  });
+  const waitForUrlStabilizationBound = (opts) =>
+    waitForUrlStabilization({
+      ...opts,
+      page,
+      log,
+      wait: waitBound,
+      navigationManager,
+    });
+  const gotoBound = (opts) =>
+    goto({
+      ...opts,
+      page,
+      waitForUrlStabilization: waitForUrlStabilizationBound,
+      navigationManager,
+    });
+  const waitForNavigationBound = (opts) =>
+    waitForNavigation({
+      ...opts,
+      page,
+      navigationManager,
+    });
+  const waitForPageReadyBound = (opts) =>
+    waitForPageReady({
+      ...opts,
+      page,
+      navigationManager,
+      networkTracker,
+      log,
+      wait: waitBound,
+    });
+  const waitAfterActionBound = (opts) =>
+    waitAfterAction({
+      ...opts,
+      page,
+      navigationManager,
+      networkTracker,
+      log,
+      wait: waitBound,
+    });
 
   // Bound locators
-  const createPlaywrightLocatorBound = (opts) => createPlaywrightLocator({ ...opts, page });
-  const getLocatorOrElementBound = (opts) => getLocatorOrElement({ ...opts, page, engine });
-  const waitForLocatorOrElementBound = (opts) => waitForLocatorOrElement({ ...opts, page, engine });
+  const createPlaywrightLocatorBound = (opts) =>
+    createPlaywrightLocator({ ...opts, page });
+  const getLocatorOrElementBound = (opts) =>
+    getLocatorOrElement({ ...opts, page, engine });
+  const waitForLocatorOrElementBound = (opts) =>
+    waitForLocatorOrElement({ ...opts, page, engine });
   const waitForVisibleBound = (opts) => waitForVisible({ ...opts, engine });
   const locatorBound = (opts) => locator({ ...opts, page, engine });
 
   // Bound selectors
   const querySelectorBound = (opts) => querySelector({ ...opts, page, engine });
-  const querySelectorAllBound = (opts) => querySelectorAll({ ...opts, page, engine });
+  const querySelectorAllBound = (opts) =>
+    querySelectorAll({ ...opts, page, engine });
   const findByTextBound = (opts) => findByText({ ...opts, engine });
   const normalizeSelectorBound = (opts) => normalizeSelector({ ...opts, page });
-  const waitForSelectorBound = (opts) => waitForSelector({ ...opts, page, engine });
+  const waitForSelectorBound = (opts) =>
+    waitForSelector({ ...opts, page, engine });
 
   // Bound visibility
   const isVisibleBound = (opts) => isVisible({ ...opts, page, engine });
@@ -108,45 +158,93 @@ export function createBoundFunctions(options = {}) {
   const inputValueBound = (opts) => inputValue({ ...opts, page, engine });
   const getAttributeBound = (opts) => getAttribute({ ...opts, page, engine });
   const getInputValueBound = (opts) => getInputValue({ ...opts, page, engine });
-  const logElementInfoBound = (opts) => logElementInfo({ ...opts, page, engine, log });
+  const logElementInfoBound = (opts) =>
+    logElementInfo({ ...opts, page, engine, log });
 
   // Bound scroll
-  const scrollIntoViewBound = (opts) => scrollIntoView({ ...opts, page, engine });
-  const needsScrollingBound = (opts) => needsScrolling({ ...opts, page, engine });
-  const scrollIntoViewIfNeededBound = (opts) => scrollIntoViewIfNeeded({ ...opts, page, engine, wait: waitBound, log });
+  const scrollIntoViewBound = (opts) =>
+    scrollIntoView({ ...opts, page, engine });
+  const needsScrollingBound = (opts) =>
+    needsScrolling({ ...opts, page, engine });
+  const scrollIntoViewIfNeededBound = (opts) =>
+    scrollIntoViewIfNeeded({ ...opts, page, engine, wait: waitBound, log });
 
   // Bound click - now navigation-aware
   const clickElementBound = (opts) => clickElement({ ...opts, engine, log });
-  const clickButtonBound = (opts) => clickButton({
-    ...opts,
-    page,
-    engine,
-    wait: waitBound,
-    log,
-    verbose,
-    navigationManager,
-    networkTracker,
-  });
+  const clickButtonBound = (opts) =>
+    clickButton({
+      ...opts,
+      page,
+      engine,
+      wait: waitBound,
+      log,
+      verbose,
+      navigationManager,
+      networkTracker,
+    });
 
   // Bound fill
-  const checkIfElementEmptyBound = (opts) => checkIfElementEmpty({ ...opts, page, engine });
+  const checkIfElementEmptyBound = (opts) =>
+    checkIfElementEmpty({ ...opts, page, engine });
   const performFillBound = (opts) => performFill({ ...opts, page, engine });
-  const fillTextAreaBound = (opts) => fillTextArea({ ...opts, page, engine, wait: waitBound, log });
+  const fillTextAreaBound = (opts) =>
+    fillTextArea({ ...opts, page, engine, wait: waitBound, log });
 
   // Bound high-level
-  const waitForUrlConditionBound = (opts) => waitForUrlCondition({ ...opts, getUrl: getUrlBound, wait: waitBound, evaluate: evaluateBound });
-  const installClickListenerBound = (opts) => installClickListener({ ...opts, evaluate: evaluateBound });
-  const checkAndClearFlagBound = (opts) => checkAndClearFlag({ ...opts, evaluate: evaluateBound });
-  const findToggleButtonBound = (opts) => findToggleButton({ ...opts, count: countBound, findByText: findByTextBound });
+  const waitForUrlConditionBound = (opts) =>
+    waitForUrlCondition({
+      ...opts,
+      getUrl: getUrlBound,
+      wait: waitBound,
+      evaluate: evaluateBound,
+    });
+  const installClickListenerBound = (opts) =>
+    installClickListener({ ...opts, evaluate: evaluateBound });
+  const checkAndClearFlagBound = (opts) =>
+    checkAndClearFlag({ ...opts, evaluate: evaluateBound });
+  const findToggleButtonBound = (opts) =>
+    findToggleButton({
+      ...opts,
+      count: countBound,
+      findByText: findByTextBound,
+    });
 
   // Wrap functions with text selector support
-  const fillTextAreaWrapped = withTextSelectorSupport(fillTextAreaBound, engine, page);
-  const clickButtonWrapped = withTextSelectorSupport(clickButtonBound, engine, page);
-  const getAttributeWrapped = withTextSelectorSupport(getAttributeBound, engine, page);
-  const isVisibleWrapped = withTextSelectorSupport(isVisibleBound, engine, page);
-  const isEnabledWrapped = withTextSelectorSupport(isEnabledBound, engine, page);
-  const textContentWrapped = withTextSelectorSupport(textContentBound, engine, page);
-  const inputValueWrapped = withTextSelectorSupport(inputValueBound, engine, page);
+  const fillTextAreaWrapped = withTextSelectorSupport(
+    fillTextAreaBound,
+    engine,
+    page
+  );
+  const clickButtonWrapped = withTextSelectorSupport(
+    clickButtonBound,
+    engine,
+    page
+  );
+  const getAttributeWrapped = withTextSelectorSupport(
+    getAttributeBound,
+    engine,
+    page
+  );
+  const isVisibleWrapped = withTextSelectorSupport(
+    isVisibleBound,
+    engine,
+    page
+  );
+  const isEnabledWrapped = withTextSelectorSupport(
+    isEnabledBound,
+    engine,
+    page
+  );
+  const textContentWrapped = withTextSelectorSupport(
+    textContentBound,
+    engine,
+    page
+  );
+  const inputValueWrapped = withTextSelectorSupport(
+    inputValueBound,
+    engine,
+    page
+  );
 
   return {
     // Helper functions (now public)

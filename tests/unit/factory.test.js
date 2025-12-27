@@ -1,15 +1,16 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { makeBrowserCommander } from '../../src/factory.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage, createMockLogger } from '../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+  createMockLogger,
+} from '../helpers/mocks.js';
 
 describe('factory', () => {
   describe('makeBrowserCommander', () => {
     it('should throw when page is not provided', () => {
-      assert.throws(
-        () => makeBrowserCommander({}),
-        /page is required/
-      );
+      assert.throws(() => makeBrowserCommander({}), /page is required/);
     });
 
     it('should create commander with Playwright page', () => {
@@ -103,7 +104,9 @@ describe('factory', () => {
 
       const commander = makeBrowserCommander({ page });
 
-      assert.ok(commander.engine === 'playwright' || commander.engine === 'puppeteer');
+      assert.ok(
+        commander.engine === 'playwright' || commander.engine === 'puppeteer'
+      );
     });
 
     it('should expose page object', () => {
@@ -127,7 +130,10 @@ describe('factory', () => {
       });
       page.context = () => ({});
 
-      const commander = makeBrowserCommander({ page, enableNetworkTracking: false });
+      const commander = makeBrowserCommander({
+        page,
+        enableNetworkTracking: false,
+      });
 
       assert.ok(commander);
       assert.strictEqual(commander.networkTracker, null);
@@ -141,7 +147,10 @@ describe('factory', () => {
       });
       page.context = () => ({});
 
-      const commander = makeBrowserCommander({ page, enableNavigationManager: false });
+      const commander = makeBrowserCommander({
+        page,
+        enableNavigationManager: false,
+      });
 
       assert.ok(commander);
       assert.strictEqual(commander.navigationManager, null);

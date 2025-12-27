@@ -20,8 +20,14 @@ export async function textContent(options = {}) {
 
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
-    const locatorOrElement = await getLocatorOrElement({ page, engine, selector });
-    if (!locatorOrElement) return null;
+    const locatorOrElement = await getLocatorOrElement({
+      page,
+      engine,
+      selector,
+    });
+    if (!locatorOrElement) {
+      return null;
+    }
     return await adapter.getTextContent(locatorOrElement);
   } catch (error) {
     if (isNavigationError(error)) {
@@ -50,12 +56,20 @@ export async function inputValue(options = {}) {
 
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
-    const locatorOrElement = await getLocatorOrElement({ page, engine, selector });
-    if (!locatorOrElement) return '';
+    const locatorOrElement = await getLocatorOrElement({
+      page,
+      engine,
+      selector,
+    });
+    if (!locatorOrElement) {
+      return '';
+    }
     return await adapter.getInputValue(locatorOrElement);
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during inputValue, returning empty string');
+      console.log(
+        '⚠️  Navigation detected during inputValue, returning empty string'
+      );
       return '';
     }
     throw error;
@@ -73,7 +87,13 @@ export async function inputValue(options = {}) {
  * @returns {Promise<string|null>} - Attribute value or null
  */
 export async function getAttribute(options = {}) {
-  const { page, engine, selector, attribute, adapter: providedAdapter } = options;
+  const {
+    page,
+    engine,
+    selector,
+    attribute,
+    adapter: providedAdapter,
+  } = options;
 
   if (!selector || !attribute) {
     throw new Error('selector and attribute are required in options');
@@ -81,12 +101,20 @@ export async function getAttribute(options = {}) {
 
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
-    const locatorOrElement = await getLocatorOrElement({ page, engine, selector });
-    if (!locatorOrElement) return null;
+    const locatorOrElement = await getLocatorOrElement({
+      page,
+      engine,
+      selector,
+    });
+    if (!locatorOrElement) {
+      return null;
+    }
     return await adapter.getAttribute(locatorOrElement, attribute);
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during getAttribute, returning null');
+      console.log(
+        '⚠️  Navigation detected during getAttribute, returning null'
+      );
       return null;
     }
     throw error;
@@ -114,7 +142,9 @@ export async function getInputValue(options = {}) {
     return await adapter.getInputValue(locatorOrElement);
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during getInputValue, returning empty string');
+      console.log(
+        '⚠️  Navigation detected during getInputValue, returning empty string'
+      );
       return '';
     }
     throw error;
@@ -132,7 +162,13 @@ export async function getInputValue(options = {}) {
  * @returns {Promise<void>}
  */
 export async function logElementInfo(options = {}) {
-  const { page, engine, log, locatorOrElement, adapter: providedAdapter } = options;
+  const {
+    page,
+    engine,
+    log,
+    locatorOrElement,
+    adapter: providedAdapter,
+  } = options;
 
   if (!locatorOrElement) {
     return;
@@ -140,12 +176,20 @@ export async function logElementInfo(options = {}) {
 
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
-    const tagName = await adapter.evaluateOnElement(locatorOrElement, el => el.tagName);
+    const tagName = await adapter.evaluateOnElement(
+      locatorOrElement,
+      (el) => el.tagName
+    );
     const text = await adapter.getTextContent(locatorOrElement);
-    log.debug(() => `🔍 [VERBOSE] Target element: ${tagName}: "${text?.trim().substring(0, 30)}..."`);
+    log.debug(
+      () =>
+        `🔍 [VERBOSE] Target element: ${tagName}: "${text?.trim().substring(0, 30)}..."`
+    );
   } catch (error) {
     if (isNavigationError(error)) {
-      log.debug(() => '⚠️  Navigation detected during logElementInfo, skipping');
+      log.debug(
+        () => '⚠️  Navigation detected during logElementInfo, skipping'
+      );
       return;
     }
     throw error;

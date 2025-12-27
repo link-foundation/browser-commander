@@ -22,7 +22,11 @@ Browser Commander manages the browser as a state machine with two states:
 ## Quick Start
 
 ```javascript
-import { launchBrowser, makeBrowserCommander, makeUrlCondition } from './browser-commander/index.js';
+import {
+  launchBrowser,
+  makeBrowserCommander,
+  makeUrlCondition,
+} from './browser-commander/index.js';
 
 // 1. Launch browser
 const { browser, page } = await launchBrowser({ engine: 'playwright' });
@@ -33,7 +37,7 @@ const commander = makeBrowserCommander({ page, verbose: true });
 // 3. Register page trigger with condition and action
 commander.pageTrigger({
   name: 'example-trigger',
-  condition: makeUrlCondition('*example.com*'),  // matches URLs containing 'example.com'
+  condition: makeUrlCondition('*example.com*'), // matches URLs containing 'example.com'
   action: async (ctx) => {
     // ctx.commander has all methods, but they throw ActionStoppedError if navigation happens
     // ctx.checkStopped() - call in loops to check if should stop
@@ -62,45 +66,49 @@ await browser.close();
 The `makeUrlCondition` helper makes it easy to create URL matching conditions:
 
 ```javascript
-import { makeUrlCondition, allConditions, anyCondition, notCondition } from './browser-commander/index.js';
+import {
+  makeUrlCondition,
+  allConditions,
+  anyCondition,
+  notCondition,
+} from './browser-commander/index.js';
 
 // Exact URL match
-makeUrlCondition('https://example.com/page')
+makeUrlCondition('https://example.com/page');
 
 // Contains substring (use * wildcards)
-makeUrlCondition('*checkout*')     // URL contains 'checkout'
-makeUrlCondition('*example.com*')  // URL contains 'example.com'
+makeUrlCondition('*checkout*'); // URL contains 'checkout'
+makeUrlCondition('*example.com*'); // URL contains 'example.com'
 
 // Starts with / ends with
-makeUrlCondition('/api/*')         // starts with '/api/'
-makeUrlCondition('*.json')         // ends with '.json'
+makeUrlCondition('/api/*'); // starts with '/api/'
+makeUrlCondition('*.json'); // ends with '.json'
 
 // Express-style route patterns
-makeUrlCondition('/vacancy/:id')                    // matches /vacancy/123
-makeUrlCondition('https://hh.ru/vacancy/:vacancyId') // matches specific domain + path
-makeUrlCondition('/user/:userId/profile')           // multiple segments
+makeUrlCondition('/vacancy/:id'); // matches /vacancy/123
+makeUrlCondition('https://hh.ru/vacancy/:vacancyId'); // matches specific domain + path
+makeUrlCondition('/user/:userId/profile'); // multiple segments
 
 // RegExp
-makeUrlCondition(/\/product\/\d+/)
+makeUrlCondition(/\/product\/\d+/);
 
 // Custom function (receives full context)
 makeUrlCondition((url, ctx) => {
   const parsed = new URL(url);
-  return parsed.pathname.startsWith('/admin') && parsed.searchParams.has('edit');
-})
+  return (
+    parsed.pathname.startsWith('/admin') && parsed.searchParams.has('edit')
+  );
+});
 
 // Combine conditions
 allConditions(
   makeUrlCondition('*example.com*'),
   makeUrlCondition('*/checkout*')
-)  // Both must match
+); // Both must match
 
-anyCondition(
-  makeUrlCondition('*/cart*'),
-  makeUrlCondition('*/checkout*')
-)  // Either matches
+anyCondition(makeUrlCondition('*/cart*'), makeUrlCondition('*/checkout*')); // Either matches
 
-notCondition(makeUrlCondition('*/admin*'))  // Negation
+notCondition(makeUrlCondition('*/admin*')); // Negation
 ```
 
 ## Page Trigger Lifecycle
@@ -108,11 +116,13 @@ notCondition(makeUrlCondition('*/admin*'))  // Negation
 ### The Guarantee
 
 When navigation is detected:
+
 1. **Action is signaled to stop** (AbortController.abort())
 2. **Wait for action to finish** (up to 10 seconds for graceful cleanup)
 3. **Only then start waiting for page load**
 
 This ensures:
+
 - No DOM operations on stale/loading pages
 - Actions can do proper cleanup (clear intervals, save state)
 - No race conditions between action and navigation
@@ -158,13 +168,13 @@ commander.pageTrigger({
   condition: makeUrlCondition('*/checkout*'),
   action: async (ctx) => {
     // Current URL
-    ctx.url;  // 'https://example.com/checkout'
+    ctx.url; // 'https://example.com/checkout'
 
     // Trigger name (for debugging)
-    ctx.triggerName;  // 'my-trigger'
+    ctx.triggerName; // 'my-trigger'
 
     // Check if action should stop
-    ctx.isStopped();  // Returns true if navigation detected
+    ctx.isStopped(); // Returns true if navigation detected
 
     // Throw ActionStoppedError if stopped (use in manual loops)
     ctx.checkStopped();
@@ -208,9 +218,9 @@ action: async (ctx) => {
       console.log('Navigation detected, stopping');
       return;
     }
-    throw error;  // Re-throw other errors
+    throw error; // Re-throw other errors
   }
-}
+};
 ```
 
 The error is automatically caught by the PageTriggerManager, so you usually don't need to catch it unless you need custom cleanup logic.
@@ -221,22 +231,24 @@ The `condition` function determines when your trigger runs. It receives full con
 
 ```javascript
 // Simple URL check
-condition: (ctx) => ctx.url.includes('/checkout')
+condition: (ctx) => ctx.url.includes('/checkout');
 
 // Multiple pages
-condition: (ctx) => ctx.url.includes('/cart') || ctx.url.includes('/checkout')
+condition: (ctx) => ctx.url.includes('/cart') || ctx.url.includes('/checkout');
 
 // Regex
-condition: (ctx) => /\/product\/\d+/.test(ctx.url)
+condition: (ctx) => /\/product\/\d+/.test(ctx.url);
 
 // Complex logic with commander access
 condition: (ctx) => {
   const parsed = new URL(ctx.url);
-  return parsed.pathname.startsWith('/admin') && parsed.searchParams.has('edit');
-}
+  return (
+    parsed.pathname.startsWith('/admin') && parsed.searchParams.has('edit')
+  );
+};
 
 // Or use makeUrlCondition helper
-condition: makeUrlCondition('/checkout/*')
+condition: makeUrlCondition('/checkout/*');
 ```
 
 ### Trigger Priority
@@ -247,14 +259,14 @@ If multiple triggers match, the highest priority runs:
 // Higher priority runs first
 commander.pageTrigger({
   name: 'specific-checkout',
-  priority: 10,  // Higher priority
+  priority: 10, // Higher priority
   condition: makeUrlCondition('*/checkout/payment*'),
   action: handlePaymentPage,
 });
 
 commander.pageTrigger({
   name: 'general-checkout',
-  priority: 0,   // Default priority
+  priority: 0, // Default priority
   condition: makeUrlCondition('*/checkout*'),
   action: handleCheckoutPage,
 });
@@ -292,7 +304,9 @@ await commander.goto({ url: '/search' });
 const unregister = commander.pageTrigger({
   name: 'temp-trigger',
   condition: makeUrlCondition('*/temp*'),
-  action: async (ctx) => { /* ... */ },
+  action: async (ctx) => {
+    /* ... */
+  },
 });
 
 // Later: remove the trigger
@@ -357,11 +371,12 @@ The library waits for **30 seconds of zero pending HTTP requests** before consid
 ```javascript
 // NetworkTracker created with 30s idle timeout
 networkTracker = createNetworkTracker({
-  idleTimeout: 30000,  // 30 seconds without requests = idle
+  idleTimeout: 30000, // 30 seconds without requests = idle
 });
 ```
 
 This ensures:
+
 - All lazy-loaded content is fetched
 - All analytics scripts complete
 - All async JavaScript executes
@@ -373,9 +388,9 @@ This ensures:
 
 ```javascript
 const commander = makeBrowserCommander({
-  page,                          // Required: Playwright/Puppeteer page
-  verbose: false,                // Enable debug logging
-  enableNetworkTracking: true,   // Track HTTP requests
+  page, // Required: Playwright/Puppeteer page
+  verbose: false, // Enable debug logging
+  enableNetworkTracking: true, // Track HTTP requests
   enableNavigationManager: true, // Enable navigation events
 });
 ```
@@ -396,7 +411,7 @@ const unregister = commander.pageTrigger({
 ```javascript
 await commander.goto({
   url: 'https://example.com',
-  waitUntil: 'domcontentloaded',  // Playwright/Puppeteer option
+  waitUntil: 'domcontentloaded', // Playwright/Puppeteer option
   timeout: 60000,
 });
 ```
@@ -424,7 +439,7 @@ await commander.fillTextArea({
 ### commander.destroy()
 
 ```javascript
-await commander.destroy();  // Stop actions, cleanup
+await commander.destroy(); // Stop actions, cleanup
 ```
 
 ## Best Practices
@@ -448,12 +463,12 @@ await ctx.forEach(items, async (item) => {
 ```javascript
 action: async (ctx) => {
   while (hasMorePages) {
-    ctx.checkStopped();  // Throws if navigation detected
+    ctx.checkStopped(); // Throws if navigation detected
 
     await processPage(ctx);
     hasMorePages = await ctx.commander.isVisible({ selector: '.next' });
   }
-}
+};
 ```
 
 ### 3. Register Cleanup for Resources
@@ -468,7 +483,7 @@ action: async (ctx) => {
   });
 
   // ... rest of action
-}
+};
 ```
 
 ### 4. Use ctx.abortSignal with Fetch
@@ -476,9 +491,9 @@ action: async (ctx) => {
 ```javascript
 action: async (ctx) => {
   const response = await fetch(url, {
-    signal: ctx.abortSignal,  // Cancels on navigation
+    signal: ctx.abortSignal, // Cancels on navigation
   });
-}
+};
 ```
 
 ## Debugging
@@ -490,6 +505,7 @@ const commander = makeBrowserCommander({ page, verbose: true });
 ```
 
 Log symbols:
+
 - `📋` Trigger registration/lifecycle
 - `🚀` Action starting
 - `🛑` Action stopping

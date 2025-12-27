@@ -7,7 +7,11 @@ import {
   getInputValue,
   logElementInfo,
 } from '../../../src/elements/content.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage, createMockLogger } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+  createMockLogger,
+} from '../../helpers/mocks.js';
 
 describe('content', () => {
   describe('textContent', () => {
@@ -21,7 +25,7 @@ describe('content', () => {
 
     it('should return text content for Playwright', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'div': { textContent: 'Hello World', count: 1 } },
+        elements: { div: { textContent: 'Hello World', count: 1 } },
       });
       const text = await textContent({
         page,
@@ -33,14 +37,13 @@ describe('content', () => {
 
     it('should return text content for Puppeteer', async () => {
       const page = createMockPuppeteerPage({
-        elements: { 'div': { textContent: 'Hello World', count: 1 } },
+        elements: { div: { textContent: 'Hello World', count: 1 } },
       });
       // Override evaluate to properly return textContent for this test
-      page.evaluate = async (fn, el) => {
+      page.evaluate = async (fn, el) =>
         // The fn is like: el => el.textContent
         // Return the configured text content
-        return 'Hello World';
-      };
+        'Hello World';
       const text = await textContent({
         page,
         engine: 'puppeteer',
@@ -51,7 +54,7 @@ describe('content', () => {
 
     it('should return null when element not found', async () => {
       const page = createMockPuppeteerPage({
-        elements: { 'div': { count: 0 } },
+        elements: { div: { count: 0 } },
       });
       const text = await textContent({
         page,
@@ -88,7 +91,7 @@ describe('content', () => {
 
     it('should return input value for Playwright', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'input': { value: 'test value', count: 1 } },
+        elements: { input: { value: 'test value', count: 1 } },
       });
       const value = await inputValue({
         page,
@@ -100,14 +103,13 @@ describe('content', () => {
 
     it('should return input value for Puppeteer', async () => {
       const page = createMockPuppeteerPage({
-        elements: { 'input': { value: 'test value', count: 1 } },
+        elements: { input: { value: 'test value', count: 1 } },
       });
       // Override evaluate to properly return value for this test
-      page.evaluate = async (fn, el) => {
+      page.evaluate = async (fn, el) =>
         // The fn is like: el => el.value
         // Return the configured value
-        return 'test value';
-      };
+        'test value';
       const value = await inputValue({
         page,
         engine: 'puppeteer',
@@ -118,7 +120,7 @@ describe('content', () => {
 
     it('should return empty string when element not found', async () => {
       const page = createMockPuppeteerPage({
-        elements: { 'input': { count: 0 } },
+        elements: { input: { count: 0 } },
       });
       const value = await inputValue({
         page,
@@ -163,7 +165,7 @@ describe('content', () => {
 
     it('should return attribute value for Playwright', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'a': { href: 'https://example.com', count: 1 } },
+        elements: { a: { href: 'https://example.com', count: 1 } },
       });
       const value = await getAttribute({
         page,
@@ -176,7 +178,7 @@ describe('content', () => {
 
     it('should return null when attribute not found', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'a': { count: 1 } },
+        elements: { a: { count: 1 } },
       });
       const value = await getAttribute({
         page,
@@ -189,7 +191,7 @@ describe('content', () => {
 
     it('should return null when element not found', async () => {
       const page = createMockPuppeteerPage({
-        elements: { 'a': { count: 0 } },
+        elements: { a: { count: 0 } },
       });
       const value = await getAttribute({
         page,
@@ -271,7 +273,7 @@ describe('content', () => {
 
     it('should log element information', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'button': { textContent: 'Click me', count: 1 } },
+        elements: { button: { textContent: 'Click me', count: 1 } },
       });
       const log = createMockLogger({ collectLogs: true });
       const mockLocator = {

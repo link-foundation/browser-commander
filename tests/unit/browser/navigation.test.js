@@ -9,12 +9,19 @@ import {
   waitForPageReady,
   waitAfterAction,
 } from '../../../src/browser/navigation.js';
-import { createMockPlaywrightPage, createMockLogger, createMockNavigationManager, createMockNetworkTracker } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockLogger,
+  createMockNavigationManager,
+  createMockNetworkTracker,
+} from '../../helpers/mocks.js';
 
 describe('navigation', () => {
   describe('defaultNavigationVerification', () => {
     it('should verify exact URL match', async () => {
-      const page = createMockPlaywrightPage({ url: 'https://example.com/page' });
+      const page = createMockPlaywrightPage({
+        url: 'https://example.com/page',
+      });
       const result = await defaultNavigationVerification({
         page,
         expectedUrl: 'https://example.com/page',
@@ -24,7 +31,9 @@ describe('navigation', () => {
     });
 
     it('should verify URL pattern match', async () => {
-      const page = createMockPlaywrightPage({ url: 'https://example.com/page?foo=bar' });
+      const page = createMockPlaywrightPage({
+        url: 'https://example.com/page?foo=bar',
+      });
       const result = await defaultNavigationVerification({
         page,
         expectedUrl: 'https://example.com/page',
@@ -33,7 +42,9 @@ describe('navigation', () => {
     });
 
     it('should fail verification on URL mismatch', async () => {
-      const page = createMockPlaywrightPage({ url: 'https://example.com/other' });
+      const page = createMockPlaywrightPage({
+        url: 'https://example.com/other',
+      });
       const result = await defaultNavigationVerification({
         page,
         expectedUrl: 'https://example.com/page',
@@ -62,7 +73,9 @@ describe('navigation', () => {
 
   describe('verifyNavigation', () => {
     it('should verify navigation with retry logic', async () => {
-      const page = createMockPlaywrightPage({ url: 'https://example.com/target' });
+      const page = createMockPlaywrightPage({
+        url: 'https://example.com/target',
+      });
       const log = createMockLogger();
 
       const result = await verifyNavigation({
@@ -77,7 +90,9 @@ describe('navigation', () => {
     });
 
     it('should fail after timeout', async () => {
-      const page = createMockPlaywrightPage({ url: 'https://example.com/wrong' });
+      const page = createMockPlaywrightPage({
+        url: 'https://example.com/wrong',
+      });
       const log = createMockLogger();
 
       const result = await verifyNavigation({
@@ -137,14 +152,13 @@ describe('navigation', () => {
     it('should throw when url is not provided', async () => {
       const page = createMockPlaywrightPage();
 
-      await assert.rejects(
-        () => goto({ page }),
-        /url is required/
-      );
+      await assert.rejects(() => goto({ page }), /url is required/);
     });
 
     it('should navigate using navigationManager', async () => {
-      const page = createMockPlaywrightPage({ url: 'https://example.com/target' });
+      const page = createMockPlaywrightPage({
+        url: 'https://example.com/target',
+      });
       const log = createMockLogger();
       const navigationManager = createMockNavigationManager();
       let navigateCalled = false;
@@ -166,10 +180,14 @@ describe('navigation', () => {
     });
 
     it('should navigate without navigationManager', async () => {
-      const page = createMockPlaywrightPage({ url: 'https://example.com/target' });
+      const page = createMockPlaywrightPage({
+        url: 'https://example.com/target',
+      });
       const log = createMockLogger();
       let gotoCalled = false;
-      page.goto = async () => { gotoCalled = true; };
+      page.goto = async () => {
+        gotoCalled = true;
+      };
 
       const result = await goto({
         page,
@@ -207,7 +225,9 @@ describe('navigation', () => {
     it('should use page.waitForNavigation without navigationManager', async () => {
       const page = createMockPlaywrightPage();
       let waitCalled = false;
-      page.waitForNavigation = async () => { waitCalled = true; };
+      page.waitForNavigation = async () => {
+        waitCalled = true;
+      };
 
       const result = await waitForNavigation({ page });
 

@@ -20,12 +20,7 @@ import { isNavigationError } from './navigation-safety.js';
  * @returns {Object} - NavigationManager API
  */
 export function createNavigationManager(options = {}) {
-  const {
-    page,
-    engine,
-    log,
-    networkTracker,
-  } = options;
+  const { page, engine, log, networkTracker } = options;
 
   if (!page) {
     throw new Error('page is required in options');
@@ -66,7 +61,8 @@ export function createNavigationManager(options = {}) {
    */
   async function handleFrameNavigation(frame) {
     // Only handle main frame
-    const mainFrame = engine === 'playwright' ? page.mainFrame() : page.mainFrame();
+    const mainFrame =
+      engine === 'playwright' ? page.mainFrame() : page.mainFrame();
     if (frame !== mainFrame) {
       return;
     }
@@ -81,7 +77,7 @@ export function createNavigationManager(options = {}) {
     log.debug(() => `🔗 URL change detected: ${previousUrl} → ${newUrl}`);
 
     // Notify URL change listeners
-    listeners.onUrlChange.forEach(fn => {
+    listeners.onUrlChange.forEach((fn) => {
       try {
         fn({ previousUrl, newUrl, sessionId });
       } catch (e) {
@@ -93,7 +89,9 @@ export function createNavigationManager(options = {}) {
 
     // If we're not in a controlled navigation, this is an external navigation
     if (!isNavigating) {
-      log.debug(() => '🔄 External navigation detected (JS redirect or link click)');
+      log.debug(
+        () => '🔄 External navigation detected (JS redirect or link click)'
+      );
 
       // Trigger navigation start
       await triggerNavigationStart({ url: newUrl, isExternal: true });
@@ -126,7 +124,10 @@ export function createNavigationManager(options = {}) {
     }
 
     // Run session cleanup callbacks
-    log.debug(() => `🧹 Running ${sessionCleanupCallbacks.length} session cleanup callbacks...`);
+    log.debug(
+      () =>
+        `🧹 Running ${sessionCleanupCallbacks.length} session cleanup callbacks...`
+    );
     for (const fn of sessionCleanupCallbacks) {
       try {
         await fn();
@@ -147,11 +148,18 @@ export function createNavigationManager(options = {}) {
     }
 
     // Notify navigation start listeners
-    listeners.onNavigationStart.forEach(fn => {
+    listeners.onNavigationStart.forEach((fn) => {
       try {
-        fn({ url: url || currentUrl, sessionId, isExternal, abortSignal: currentAbortController.signal });
+        fn({
+          url: url || currentUrl,
+          sessionId,
+          isExternal,
+          abortSignal: currentAbortController.signal,
+        });
       } catch (e) {
-        log.debug(() => `⚠️  Error in onNavigationStart listener: ${e.message}`);
+        log.debug(
+          () => `⚠️  Error in onNavigationStart listener: ${e.message}`
+        );
       }
     });
 
@@ -172,15 +180,14 @@ export function createNavigationManager(options = {}) {
    * @returns {Promise<boolean>} - True if ready, false if timeout
    */
   async function waitForPageReady(opts = {}) {
-    const {
-      timeout = config.networkIdleTimeout,
-      reason = 'page ready',
-    } = opts;
+    const { timeout = config.networkIdleTimeout, reason = 'page ready' } = opts;
 
     // If another waitForPageReady is already running, wait for it instead of starting a new one
     // This prevents concurrent waits that can cause race conditions
     if (pageReadyPromise) {
-      log.debug(() => `⏳ Waiting for existing page ready operation (${reason})...`);
+      log.debug(
+        () => `⏳ Waiting for existing page ready operation (${reason})...`
+      );
       return pageReadyPromise;
     }
 
@@ -192,13 +199,18 @@ export function createNavigationManager(options = {}) {
       let lastUrlChangeTime = Date.now();
 
       // Wait for URL to stabilize (no more redirects)
-      while (Date.now() - lastUrlChangeTime < config.redirectStabilizationTime) {
+      while (
+        Date.now() - lastUrlChangeTime <
+        config.redirectStabilizationTime
+      ) {
         if (Date.now() - startTime > timeout) {
-          log.debug(() => `⚠️  Page ready timeout after ${timeout}ms (${reason})`);
+          log.debug(
+            () => `⚠️  Page ready timeout after ${timeout}ms (${reason})`
+          );
           break;
         }
 
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise((r) => setTimeout(r, 200));
 
         // Check if URL changed
         const nowUrl = page.url();
@@ -255,19 +267,23 @@ export function createNavigationManager(options = {}) {
     const duration = Date.now() - navigationStartTime;
     navigationStartTime = null;
 
-    log.debug(() => `✅ Navigation complete (session ${sessionId}, ${duration}ms)`);
+    log.debug(
+      () => `✅ Navigation complete (session ${sessionId}, ${duration}ms)`
+    );
 
     // Notify navigation complete listeners
-    listeners.onNavigationComplete.forEach(fn => {
+    listeners.onNavigationComplete.forEach((fn) => {
       try {
         fn({ url: currentUrl, sessionId, duration });
       } catch (e) {
-        log.debug(() => `⚠️  Error in onNavigationComplete listener: ${e.message}`);
+        log.debug(
+          () => `⚠️  Error in onNavigationComplete listener: ${e.message}`
+        );
       }
     });
 
     // Notify page ready listeners
-    listeners.onPageReady.forEach(fn => {
+    listeners.onPageReady.forEach((fn) => {
       try {
         fn({ url: currentUrl, sessionId });
       } catch (e) {
@@ -292,11 +308,7 @@ export function createNavigationManager(options = {}) {
    * @returns {Promise<boolean>} - True if navigation succeeded
    */
   async function navigate(opts = {}) {
-    const {
-      url,
-      waitUntil = 'domcontentloaded',
-      timeout = 60000,
-    } = opts;
+    const { url, waitUntil = 'domcontentloaded', timeout = 60000 } = opts;
 
     if (!url) {
       throw new Error('url is required in options');
@@ -403,7 +415,9 @@ export function createNavigationManager(options = {}) {
       return true;
     }
     // Also check the abort signal for backwards compatibility
-    return currentAbortController ? currentAbortController.signal.aborted : false;
+    return currentAbortController
+      ? currentAbortController.signal.aborted
+      : false;
   }
 
   /**

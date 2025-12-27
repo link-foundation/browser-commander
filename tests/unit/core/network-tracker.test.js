@@ -1,7 +1,10 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import { createNetworkTracker } from '../../../src/core/network-tracker.js';
-import { createMockPlaywrightPage, createMockLogger } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockLogger,
+} from '../../helpers/mocks.js';
 
 describe('network-tracker', () => {
   let page;
@@ -172,7 +175,10 @@ describe('network-tracker', () => {
         idleTimeout: 10, // Very short for testing
       });
 
-      const result = await tracker.waitForNetworkIdle({ timeout: 100, idleTime: 10 });
+      const result = await tracker.waitForNetworkIdle({
+        timeout: 100,
+        idleTime: 10,
+      });
       assert.ok(result === true || result === false); // May timeout in fast test
     });
 

@@ -133,18 +133,34 @@ export function makeBrowserCommander(options = {}) {
     destroy,
 
     // Convenience methods for page sessions (legacy API)
-    createSession: sessionFactory ? (opts) => sessionFactory.createSession(opts) : null,
-    getActiveSessions: sessionFactory ? () => sessionFactory.getActiveSessions() : () => [],
+    createSession: sessionFactory
+      ? (opts) => sessionFactory.createSession(opts)
+      : null,
+    getActiveSessions: sessionFactory
+      ? () => sessionFactory.getActiveSessions()
+      : () => [],
 
     // Subscribe to navigation events (legacy API)
-    onNavigationStart: navigationManager ? (fn) => navigationManager.on('onNavigationStart', fn) : () => {},
-    onNavigationComplete: navigationManager ? (fn) => navigationManager.on('onNavigationComplete', fn) : () => {},
-    onUrlChange: navigationManager ? (fn) => navigationManager.on('onUrlChange', fn) : () => {},
-    onPageReady: navigationManager ? (fn) => navigationManager.on('onPageReady', fn) : () => {},
+    onNavigationStart: navigationManager
+      ? (fn) => navigationManager.on('onNavigationStart', fn)
+      : () => {},
+    onNavigationComplete: navigationManager
+      ? (fn) => navigationManager.on('onNavigationComplete', fn)
+      : () => {},
+    onUrlChange: navigationManager
+      ? (fn) => navigationManager.on('onUrlChange', fn)
+      : () => {},
+    onPageReady: navigationManager
+      ? (fn) => navigationManager.on('onPageReady', fn)
+      : () => {},
 
     // Abort handling - check these to stop operations when navigation occurs
-    shouldAbort: navigationManager ? () => navigationManager.shouldAbort() : () => false,
-    getAbortSignal: navigationManager ? () => navigationManager.getAbortSignal() : () => null,
+    shouldAbort: navigationManager
+      ? () => navigationManager.shouldAbort()
+      : () => false,
+    getAbortSignal: navigationManager
+      ? () => navigationManager.getAbortSignal()
+      : () => null,
 
     // Page Trigger API
     // Register a trigger: commander.pageTrigger({ condition, action, name })
@@ -152,7 +168,9 @@ export function makeBrowserCommander(options = {}) {
     // action receives context: { url, commander, checkStopped, forEach, wait, onCleanup, ... }
     pageTrigger: pageTriggerManager
       ? (config) => pageTriggerManager.pageTrigger(config)
-      : () => { throw new Error('pageTrigger requires enableNavigationManager: true'); },
+      : () => {
+          throw new Error('pageTrigger requires enableNavigationManager: true');
+        },
 
     // URL condition helpers
     makeUrlCondition,

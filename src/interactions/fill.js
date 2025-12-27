@@ -22,7 +22,8 @@ export async function defaultFillVerification(options = {}) {
   try {
     const actualValue = await getInputValue({ page, engine, locatorOrElement });
     // Verify that the value contains the expected text (handles cases where value may have formatting)
-    const verified = actualValue === expectedText || actualValue.includes(expectedText);
+    const verified =
+      actualValue === expectedText || actualValue.includes(expectedText);
     return { verified, actualValue };
   } catch (error) {
     if (isNavigationError(error)) {
@@ -71,7 +72,9 @@ export async function verifyFill(options = {}) {
     });
 
     if (lastResult.verified) {
-      log.debug(() => `✅ Fill verification succeeded after ${attempts} attempt(s)`);
+      log.debug(
+        () => `✅ Fill verification succeeded after ${attempts} attempt(s)`
+      );
       return { ...lastResult, attempts };
     }
 
@@ -81,10 +84,13 @@ export async function verifyFill(options = {}) {
     }
 
     // Wait before next retry
-    await new Promise(resolve => setTimeout(resolve, retryInterval));
+    await new Promise((resolve) => setTimeout(resolve, retryInterval));
   }
 
-  log.debug(() => `❌ Fill verification failed after ${attempts} attempts. Expected: "${expectedText}", Got: "${lastResult.actualValue}"`);
+  log.debug(
+    () =>
+      `❌ Fill verification failed after ${attempts} attempts. Expected: "${expectedText}", Got: "${lastResult.actualValue}"`
+  );
   return { ...lastResult, attempts };
 }
 
@@ -107,7 +113,9 @@ export async function checkIfElementEmpty(options = {}) {
   // Add defensive check for page parameter
   if (!page && !providedAdapter) {
     const availableKeys = Object.keys(options).join(', ');
-    throw new Error(`checkIfElementEmpty: page is required in options when adapter is not provided. Available option keys: [${availableKeys}]. This indicates the 'page' parameter was not passed correctly from the calling function.`);
+    throw new Error(
+      `checkIfElementEmpty: page is required in options when adapter is not provided. Available option keys: [${availableKeys}]. This indicates the 'page' parameter was not passed correctly from the calling function.`
+    );
   }
 
   try {
@@ -116,7 +124,9 @@ export async function checkIfElementEmpty(options = {}) {
     return !currentValue || currentValue.trim() === '';
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during checkIfElementEmpty, returning true');
+      console.log(
+        '⚠️  Navigation detected during checkIfElementEmpty, returning true'
+      );
       return true;
     }
     throw error;
@@ -163,7 +173,9 @@ export async function performFill(options = {}) {
   // Add defensive check for page parameter
   if (!page && !providedAdapter) {
     const availableKeys = Object.keys(options).join(', ');
-    throw new Error(`performFill: page is required in options when adapter is not provided. Available option keys: [${availableKeys}]. This indicates the 'page' parameter was not passed correctly from the calling function.`);
+    throw new Error(
+      `performFill: page is required in options when adapter is not provided. Available option keys: [${availableKeys}]. This indicates the 'page' parameter was not passed correctly from the calling function.`
+    );
   }
 
   try {
@@ -187,7 +199,10 @@ export async function performFill(options = {}) {
       });
 
       if (!verificationResult.verified) {
-        log.debug(() => `⚠️  Fill verification failed: expected "${text}", got "${verificationResult.actualValue}"`);
+        log.debug(
+          () =>
+            `⚠️  Fill verification failed: expected "${text}", got "${verificationResult.actualValue}"`
+        );
       }
 
       return {
@@ -200,7 +215,9 @@ export async function performFill(options = {}) {
     return { filled: true, verified: true };
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during performFill, recovering gracefully');
+      console.log(
+        '⚠️  Navigation detected during performFill, recovering gracefully'
+      );
       return { filled: false, verified: false };
     }
     throw error;
@@ -249,7 +266,9 @@ export async function fillTextArea(options = {}) {
   // Defensive check: Validate that page parameter is present
   if (!page) {
     const availableKeys = Object.keys(options).join(', ');
-    throw new Error(`fillTextArea: page is required in options. Available option keys: [${availableKeys}]. This indicates the 'page' parameter was not passed correctly from the calling function (bindings layer).`);
+    throw new Error(
+      `fillTextArea: page is required in options. Available option keys: [${availableKeys}]. This indicates the 'page' parameter was not passed correctly from the calling function (bindings layer).`
+    );
   }
 
   if (!selector || !text) {
@@ -258,25 +277,59 @@ export async function fillTextArea(options = {}) {
 
   try {
     // Get locator/element and wait for it to be visible (unified for both engines)
-    const locatorOrElement = await waitForLocatorOrElement({ page, engine, selector, timeout });
+    const locatorOrElement = await waitForLocatorOrElement({
+      page,
+      engine,
+      selector,
+      timeout,
+    });
 
     // Check if empty (if requested)
     if (checkEmpty) {
-      const isEmpty = await checkIfElementEmpty({ page, engine, locatorOrElement });
+      const isEmpty = await checkIfElementEmpty({
+        page,
+        engine,
+        locatorOrElement,
+      });
       if (!isEmpty) {
-        const currentValue = await getInputValue({ page, engine, locatorOrElement });
-        log.debug(() => `🔍 [VERBOSE] Textarea already has content, skipping: "${currentValue.substring(0, 30)}..."`);
-        return { filled: false, verified: false, skipped: true, actualValue: currentValue };
+        const currentValue = await getInputValue({
+          page,
+          engine,
+          locatorOrElement,
+        });
+        log.debug(
+          () =>
+            `🔍 [VERBOSE] Textarea already has content, skipping: "${currentValue.substring(0, 30)}..."`
+        );
+        return {
+          filled: false,
+          verified: false,
+          skipped: true,
+          actualValue: currentValue,
+        };
       }
     }
 
     // Scroll into view (if requested and needed)
     if (shouldScroll) {
-      await scrollIntoViewIfNeeded({ page, engine, wait, log, locatorOrElement, behavior: 'smooth' });
+      await scrollIntoViewIfNeeded({
+        page,
+        engine,
+        wait,
+        log,
+        locatorOrElement,
+        behavior: 'smooth',
+      });
     }
 
     // Click the element (prevent auto-scroll if scrollIntoView is disabled)
-    const clicked = await clickElement({ page, engine, log, locatorOrElement, noAutoScroll: !shouldScroll });
+    const clicked = await clickElement({
+      page,
+      engine,
+      log,
+      locatorOrElement,
+      noAutoScroll: !shouldScroll,
+    });
     if (!clicked) {
       return { filled: false, verified: false, skipped: false }; // Navigation occurred
     }
@@ -298,12 +351,18 @@ export async function fillTextArea(options = {}) {
       return { filled: false, verified: false, skipped: false }; // Navigation occurred
     }
 
-    log.debug(() => `🔍 [VERBOSE] Filled textarea with text: "${text.substring(0, 50)}..."`);
+    log.debug(
+      () =>
+        `🔍 [VERBOSE] Filled textarea with text: "${text.substring(0, 50)}..."`
+    );
 
     if (fillResult.verified) {
       log.debug(() => `✅ Fill verification passed`);
     } else {
-      log.debug(() => `⚠️  Fill verification failed: expected "${text}", got "${fillResult.actualValue}"`);
+      log.debug(
+        () =>
+          `⚠️  Fill verification failed: expected "${text}", got "${fillResult.actualValue}"`
+      );
     }
 
     return {
@@ -314,7 +373,9 @@ export async function fillTextArea(options = {}) {
     };
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during fillTextArea, recovering gracefully');
+      console.log(
+        '⚠️  Navigation detected during fillTextArea, recovering gracefully'
+      );
       return { filled: false, verified: false, skipped: false };
     }
     throw error;

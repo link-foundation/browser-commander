@@ -31,7 +31,10 @@ export class ActionStoppedError extends Error {
  * @returns {boolean}
  */
 export function isActionStoppedError(error) {
-  return error && (error.isActionStopped === true || error.name === 'ActionStoppedError');
+  return (
+    error &&
+    (error.isActionStopped === true || error.name === 'ActionStoppedError')
+  );
 }
 
 /**
@@ -108,14 +111,19 @@ export function makeUrlCondition(pattern) {
     // Simple substring match (no wildcards, no params)
     // If it looks like a full URL, do exact match
     if (pattern.startsWith('http://') || pattern.startsWith('https://')) {
-      return (ctx) => ctx.url === pattern || ctx.url.startsWith(pattern + '?') || ctx.url.startsWith(pattern + '#');
+      return (ctx) =>
+        ctx.url === pattern ||
+        ctx.url.startsWith(`${pattern}?`) ||
+        ctx.url.startsWith(`${pattern}#`);
     }
 
     // Otherwise, treat as path pattern - match if URL contains this path
     return (ctx) => ctx.url.includes(pattern);
   }
 
-  throw new Error(`Invalid URL pattern type: ${typeof pattern}. Expected string, RegExp, or function.`);
+  throw new Error(
+    `Invalid URL pattern type: ${typeof pattern}. Expected string, RegExp, or function.`
+  );
 }
 
 /**
@@ -124,7 +132,7 @@ export function makeUrlCondition(pattern) {
  * @returns {Function} - Combined condition function
  */
 export function allConditions(...conditions) {
-  return (ctx) => conditions.every(cond => cond(ctx));
+  return (ctx) => conditions.every((cond) => cond(ctx));
 }
 
 /**
@@ -133,7 +141,7 @@ export function allConditions(...conditions) {
  * @returns {Function} - Combined condition function
  */
 export function anyCondition(...conditions) {
-  return (ctx) => conditions.some(cond => cond(ctx));
+  return (ctx) => conditions.some((cond) => cond(ctx));
 }
 
 /**
@@ -153,10 +161,7 @@ export function notCondition(condition) {
  * @returns {Object} - PageTriggerManager API
  */
 export function createPageTriggerManager(options = {}) {
-  const {
-    navigationManager,
-    log,
-  } = options;
+  const { navigationManager, log } = options;
 
   if (!navigationManager) {
     throw new Error('navigationManager is required');
@@ -184,12 +189,7 @@ export function createPageTriggerManager(options = {}) {
    * @returns {Function} - Unregister function
    */
   function pageTrigger(config) {
-    const {
-      condition,
-      action,
-      name = 'unnamed',
-      priority = 0,
-    } = config;
+    const { condition, action, name = 'unnamed', priority = 0 } = config;
 
     if (typeof condition !== 'function') {
       throw new Error('condition must be a function');
@@ -210,7 +210,9 @@ export function createPageTriggerManager(options = {}) {
     // Sort by priority (descending)
     triggers.sort((a, b) => b.priority - a.priority);
 
-    log.debug(() => `📋 Registered page trigger: "${name}" (priority: ${priority})`);
+    log.debug(
+      () => `📋 Registered page trigger: "${name}" (priority: ${priority})`
+    );
 
     // Return unregister function
     return () => {
@@ -234,7 +236,9 @@ export function createPageTriggerManager(options = {}) {
           return config;
         }
       } catch (e) {
-        log.debug(() => `⚠️  Error in condition for "${config.name}": ${e.message}`);
+        log.debug(
+          () => `⚠️  Error in condition for "${config.name}": ${e.message}`
+        );
       }
     }
     return null;
@@ -261,7 +265,7 @@ export function createPageTriggerManager(options = {}) {
     log.debug(() => `🛑 Stopping action "${currentTrigger?.name}"...`);
 
     // Create promise that resolves when action actually stops
-    actionStopPromise = new Promise(resolve => {
+    actionStopPromise = new Promise((resolve) => {
       actionStopResolve = resolve;
     });
 
@@ -272,9 +276,12 @@ export function createPageTriggerManager(options = {}) {
 
     // Wait for action to finish (with timeout)
     const timeoutMs = 10000; // 10 second max wait
-    const timeoutPromise = new Promise(resolve => {
+    const timeoutPromise = new Promise((resolve) => {
       setTimeout(() => {
-        log.debug(() => `⚠️  Action "${currentTrigger?.name}" did not stop gracefully within ${timeoutMs}ms`);
+        log.debug(
+          () =>
+            `⚠️  Action "${currentTrigger?.name}" did not stop gracefully within ${timeoutMs}ms`
+        );
         resolve();
       }, timeoutMs);
     });
@@ -336,14 +343,21 @@ export function createPageTriggerManager(options = {}) {
     actionPromise = (async () => {
       try {
         await matchingTrigger.action(context);
-        log.debug(() => `✅ Action "${matchingTrigger.name}" completed normally`);
+        log.debug(
+          () => `✅ Action "${matchingTrigger.name}" completed normally`
+        );
       } catch (error) {
         if (isActionStoppedError(error)) {
-          log.debug(() => `🛑 Action "${matchingTrigger.name}" stopped (caught ActionStoppedError)`);
+          log.debug(
+            () =>
+              `🛑 Action "${matchingTrigger.name}" stopped (caught ActionStoppedError)`
+          );
         } else if (error.name === 'AbortError') {
           log.debug(() => `🛑 Action "${matchingTrigger.name}" aborted`);
         } else {
-          log.debug(() => `❌ Action "${matchingTrigger.name}" error: ${error.message}`);
+          log.debug(
+            () => `❌ Action "${matchingTrigger.name}" error: ${error.message}`
+          );
           console.error(`Action "${matchingTrigger.name}" error:`, error);
         }
       } finally {
@@ -404,10 +418,14 @@ export function createPageTriggerManager(options = {}) {
       checkStopped();
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(resolve, ms);
-        abortSignal.addEventListener('abort', () => {
-          clearTimeout(timeout);
-          reject(new ActionStoppedError());
-        }, { once: true });
+        abortSignal.addEventListener(
+          'abort',
+          () => {
+            clearTimeout(timeout);
+            reject(new ActionStoppedError());
+          },
+          { once: true }
+        );
       });
     }
 
@@ -417,19 +435,27 @@ export function createPageTriggerManager(options = {}) {
     const cleanupCallbacks = [];
     function onCleanup(callback) {
       cleanupCallbacks.push(callback);
-      abortSignal.addEventListener('abort', async () => {
-        try {
-          await callback();
-        } catch (e) {
-          log.debug(() => `⚠️  Cleanup error: ${e.message}`);
-        }
-      }, { once: true });
+      abortSignal.addEventListener(
+        'abort',
+        async () => {
+          try {
+            await callback();
+          } catch (e) {
+            log.debug(() => `⚠️  Cleanup error: ${e.message}`);
+          }
+        },
+        { once: true }
+      );
     }
 
     // Wrap all commander methods to be abort-aware
     const wrappedCommander = {};
     for (const [key, value] of Object.entries(commander)) {
-      if (typeof value === 'function' && key !== 'destroy' && key !== 'pageTrigger') {
+      if (
+        typeof value === 'function' &&
+        key !== 'destroy' &&
+        key !== 'pageTrigger'
+      ) {
         wrappedCommander[key] = wrapAsync(value);
       } else {
         wrappedCommander[key] = value;
@@ -506,7 +532,9 @@ export function createPageTriggerManager(options = {}) {
     navigationManager.on('onBeforeNavigate', onNavigationStart);
 
     // Start action when page is ready
-    navigationManager.on('onPageReady', (event) => onPageReady(event, commander));
+    navigationManager.on('onPageReady', (event) =>
+      onPageReady(event, commander)
+    );
 
     log.debug(() => '📋 PageTriggerManager initialized');
   }

@@ -34,7 +34,10 @@ export async function defaultNavigationVerification(options = {}) {
         return { verified: true, actualUrl, reason: 'exact URL match' };
       }
       // Check if expected URL is contained in actual URL (for patterns)
-      if (actualUrl.includes(expectedUrl) || actualUrl.startsWith(expectedUrl)) {
+      if (
+        actualUrl.includes(expectedUrl) ||
+        actualUrl.startsWith(expectedUrl)
+      ) {
         return { verified: true, actualUrl, reason: 'URL pattern match' };
       }
       // Check if it's a regex pattern
@@ -58,7 +61,12 @@ export async function defaultNavigationVerification(options = {}) {
     return { verified: true, actualUrl, reason: 'navigation completed' };
   } catch (error) {
     if (isNavigationError(error) || isActionStoppedError(error)) {
-      return { verified: false, actualUrl: '', reason: 'error during verification', navigationError: true };
+      return {
+        verified: false,
+        actualUrl: '',
+        reason: 'error during verification',
+        navigationError: true,
+      };
     }
     throw error;
   }
@@ -100,7 +108,10 @@ export async function verifyNavigation(options = {}) {
     });
 
     if (lastResult.verified) {
-      log.debug(() => `✅ Navigation verification succeeded after ${attempts} attempt(s): ${lastResult.reason}`);
+      log.debug(
+        () =>
+          `✅ Navigation verification succeeded after ${attempts} attempt(s): ${lastResult.reason}`
+      );
       return { ...lastResult, attempts };
     }
 
@@ -110,10 +121,13 @@ export async function verifyNavigation(options = {}) {
     }
 
     // Wait before next retry
-    await new Promise(resolve => setTimeout(resolve, retryInterval));
+    await new Promise((resolve) => setTimeout(resolve, retryInterval));
   }
 
-  log.debug(() => `❌ Navigation verification failed after ${attempts} attempts: ${lastResult.reason}`);
+  log.debug(
+    () =>
+      `❌ Navigation verification failed after ${attempts} attempts: ${lastResult.reason}`
+  );
   return { ...lastResult, attempts };
 }
 
@@ -159,7 +173,9 @@ export async function waitForUrlStabilization(options = {}) {
   while (stableCount < stableChecks) {
     // Check timeout
     if (Date.now() - startTime > timeout) {
-      log.debug(() => `⚠️  URL stabilization timeout after ${timeout}ms (${reason})`);
+      log.debug(
+        () => `⚠️  URL stabilization timeout after ${timeout}ms (${reason})`
+      );
       return false;
     }
 
@@ -168,11 +184,17 @@ export async function waitForUrlStabilization(options = {}) {
 
     if (currentUrl === lastUrl) {
       stableCount++;
-      log.debug(() => `🔍 [VERBOSE] URL stable for ${stableCount}/${stableChecks} checks: ${currentUrl}`);
+      log.debug(
+        () =>
+          `🔍 [VERBOSE] URL stable for ${stableCount}/${stableChecks} checks: ${currentUrl}`
+      );
     } else {
       stableCount = 0;
       lastUrl = currentUrl;
-      log.debug(() => `🔍 [VERBOSE] URL changed to: ${currentUrl}, resetting stability counter`);
+      log.debug(
+        () =>
+          `🔍 [VERBOSE] URL changed to: ${currentUrl}, resetting stability counter`
+      );
     }
   }
 
@@ -258,7 +280,11 @@ export async function goto(options = {}) {
       if (isNavigationError(error) || isActionStoppedError(error)) {
         // Navigation was stopped by page trigger or navigation error
         // This is not a failure - it means another action took over
-        return { navigated: false, verified: false, reason: 'navigation stopped/interrupted' };
+        return {
+          navigated: false,
+          verified: false,
+          reason: 'navigation stopped/interrupted',
+        };
       }
       throw error;
     }
@@ -309,8 +335,14 @@ export async function goto(options = {}) {
     return { navigated: true, verified: true, actualUrl: page.url() };
   } catch (error) {
     if (isNavigationError(error) || isActionStoppedError(error)) {
-      console.log('⚠️  Navigation was interrupted/stopped, recovering gracefully');
-      return { navigated: false, verified: false, reason: 'navigation interrupted/stopped' };
+      console.log(
+        '⚠️  Navigation was interrupted/stopped, recovering gracefully'
+      );
+      return {
+        navigated: false,
+        verified: false,
+        reason: 'navigation interrupted/stopped',
+      };
     }
     throw error;
   }
@@ -338,7 +370,9 @@ export async function waitForNavigation(options = {}) {
     return true;
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  waitForNavigation was interrupted, continuing gracefully');
+      console.log(
+        '⚠️  waitForNavigation was interrupted, continuing gracefully'
+      );
       return false;
     }
     throw error;

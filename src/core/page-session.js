@@ -19,13 +19,9 @@
  * @returns {Object} - PageSession factory
  */
 export function createPageSessionFactory(options = {}) {
-  const {
-    navigationManager,
-    networkTracker,
-    log,
-  } = options;
+  const { navigationManager, networkTracker, log } = options;
 
-  let activeSessions = new Map();
+  const activeSessions = new Map();
 
   /**
    * Create a new PageSession for the current page
@@ -35,10 +31,7 @@ export function createPageSessionFactory(options = {}) {
    * @returns {Object} - PageSession instance
    */
   function createSession(sessionOptions = {}) {
-    const {
-      name = 'unnamed',
-      urlPattern = null,
-    } = sessionOptions;
+    const { name = 'unnamed', urlPattern = null } = sessionOptions;
 
     const sessionId = navigationManager.getSessionId();
     const startUrl = navigationManager.getCurrentUrl();
@@ -48,13 +41,18 @@ export function createPageSessionFactory(options = {}) {
     let cleanupCallbacks = [];
     let eventListeners = [];
 
-    log.debug(() => `📄 Creating page session "${name}" (id: ${sessionId}) for: ${startUrl}`);
+    log.debug(
+      () =>
+        `📄 Creating page session "${name}" (id: ${sessionId}) for: ${startUrl}`
+    );
 
     /**
      * Check if URL matches the session pattern
      */
     function matchesUrl(url) {
-      if (!urlPattern) return true;
+      if (!urlPattern) {
+        return true;
+      }
       if (urlPattern instanceof RegExp) {
         return urlPattern.test(url);
       }
@@ -68,11 +66,15 @@ export function createPageSessionFactory(options = {}) {
      * Handle navigation - deactivate session if URL no longer matches
      */
     function handleUrlChange({ previousUrl, newUrl }) {
-      if (!isActive) return;
+      if (!isActive) {
+        return;
+      }
 
       // If we have a URL pattern, check if we're still on a matching page
       if (urlPattern && !matchesUrl(newUrl)) {
-        log.debug(() => `📄 Session "${name}" ending - URL no longer matches: ${newUrl}`);
+        log.debug(
+          () => `📄 Session "${name}" ending - URL no longer matches: ${newUrl}`
+        );
         deactivate();
       }
     }
@@ -81,9 +83,13 @@ export function createPageSessionFactory(options = {}) {
      * Handle navigation start - cleanup before leaving
      */
     async function handleBeforeNavigate() {
-      if (!isActive) return;
+      if (!isActive) {
+        return;
+      }
 
-      log.debug(() => `📄 Session "${name}" cleanup triggered (navigation starting)`);
+      log.debug(
+        () => `📄 Session "${name}" cleanup triggered (navigation starting)`
+      );
       await runCleanup();
       deactivate();
     }
@@ -120,7 +126,9 @@ export function createPageSessionFactory(options = {}) {
      * Deactivate the session
      */
     function deactivate() {
-      if (!isActive) return;
+      if (!isActive) {
+        return;
+      }
 
       isActive = false;
 
@@ -140,7 +148,9 @@ export function createPageSessionFactory(options = {}) {
      */
     function onCleanup(callback) {
       if (!isActive) {
-        log.debug(() => `⚠️  Cannot register cleanup on inactive session "${name}"`);
+        log.debug(
+          () => `⚠️  Cannot register cleanup on inactive session "${name}"`
+        );
         return;
       }
       cleanupCallbacks.push(callback);
@@ -166,7 +176,9 @@ export function createPageSessionFactory(options = {}) {
      * @param {Function} handler - Event handler
      */
     function addEventListener(target, event, handler) {
-      if (!isActive) return;
+      if (!isActive) {
+        return;
+      }
 
       target.on(event, handler);
       eventListeners.push({ target, event, handler });
@@ -196,8 +208,12 @@ export function createPageSessionFactory(options = {}) {
      * Wait for network idle within this session
      */
     async function waitForNetworkIdle(opts = {}) {
-      if (!isActive) return false;
-      if (!networkTracker) return true;
+      if (!isActive) {
+        return false;
+      }
+      if (!networkTracker) {
+        return true;
+      }
       return networkTracker.waitForNetworkIdle(opts);
     }
 
@@ -205,7 +221,9 @@ export function createPageSessionFactory(options = {}) {
      * Wait for page to be ready within this session
      */
     async function waitForPageReady(opts = {}) {
-      if (!isActive) return false;
+      if (!isActive) {
+        return false;
+      }
       return navigationManager.waitForPageReady(opts);
     }
 
@@ -213,7 +231,9 @@ export function createPageSessionFactory(options = {}) {
      * Manually end the session
      */
     async function end() {
-      if (!isActive) return;
+      if (!isActive) {
+        return;
+      }
 
       log.debug(() => `📄 Session "${name}" ending (manual)`);
       await runCleanup();
@@ -222,10 +242,18 @@ export function createPageSessionFactory(options = {}) {
 
     const session = {
       // State
-      get isActive() { return isActive; },
-      get sessionId() { return sessionId; },
-      get startUrl() { return startUrl; },
-      get currentUrl() { return navigationManager.getCurrentUrl(); },
+      get isActive() {
+        return isActive;
+      },
+      get sessionId() {
+        return sessionId;
+      },
+      get startUrl() {
+        return startUrl;
+      },
+      get currentUrl() {
+        return navigationManager.getCurrentUrl();
+      },
 
       // Lifecycle
       onCleanup,

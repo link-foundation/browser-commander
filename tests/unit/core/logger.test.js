@@ -24,7 +24,7 @@ describe('logger', () => {
     it('should return false when VERBOSE env is not set', () => {
       delete process.env.VERBOSE;
       // Filter out --verbose from argv if present
-      process.argv = process.argv.filter(arg => arg !== '--verbose');
+      process.argv = process.argv.filter((arg) => arg !== '--verbose');
       assert.strictEqual(isVerboseEnabled(), false);
     });
 

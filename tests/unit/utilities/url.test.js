@@ -6,7 +6,9 @@ import { createMockPlaywrightPage } from '../../helpers/mocks.js';
 describe('url utilities', () => {
   describe('getUrl', () => {
     it('should return current page URL', () => {
-      const page = createMockPlaywrightPage({ url: 'https://example.com/page' });
+      const page = createMockPlaywrightPage({
+        url: 'https://example.com/page',
+      });
       const url = getUrl({ page });
       assert.strictEqual(url, 'https://example.com/page');
     });
@@ -22,10 +24,7 @@ describe('url utilities', () => {
 
   describe('unfocusAddressBar', () => {
     it('should throw when page is not provided', async () => {
-      await assert.rejects(
-        () => unfocusAddressBar({}),
-        /page is required/
-      );
+      await assert.rejects(() => unfocusAddressBar({}), /page is required/);
     });
 
     it('should call bringToFront on page', async () => {

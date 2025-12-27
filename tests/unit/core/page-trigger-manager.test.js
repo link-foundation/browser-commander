@@ -9,7 +9,10 @@ import {
   notCondition,
   createPageTriggerManager,
 } from '../../../src/core/page-trigger-manager.js';
-import { createMockNavigationManager, createMockLogger } from '../../helpers/mocks.js';
+import {
+  createMockNavigationManager,
+  createMockLogger,
+} from '../../helpers/mocks.js';
 
 describe('page-trigger-manager', () => {
   describe('ActionStoppedError', () => {
@@ -73,39 +76,77 @@ describe('page-trigger-manager', () => {
       });
 
       it('should pass context to function', () => {
-        const condition = makeUrlCondition((url, ctx) => ctx.someValue === true);
-        assert.strictEqual(condition({ url: 'https://test.com', someValue: true }), true);
-        assert.strictEqual(condition({ url: 'https://test.com', someValue: false }), false);
+        const condition = makeUrlCondition(
+          (url, ctx) => ctx.someValue === true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://test.com', someValue: true }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://test.com', someValue: false }),
+          false
+        );
       });
     });
 
     describe('RegExp patterns', () => {
       it('should match RegExp pattern', () => {
         const condition = makeUrlCondition(/\/product\/\d+/);
-        assert.strictEqual(condition({ url: 'https://example.com/product/123' }), true);
-        assert.strictEqual(condition({ url: 'https://example.com/product/' }), false);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/product/123' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://example.com/product/' }),
+          false
+        );
       });
     });
 
     describe('string patterns', () => {
       it('should match exact URL', () => {
         const condition = makeUrlCondition('https://example.com/page');
-        assert.strictEqual(condition({ url: 'https://example.com/page' }), true);
-        assert.strictEqual(condition({ url: 'https://example.com/page?foo=bar' }), true);
-        assert.strictEqual(condition({ url: 'https://example.com/other' }), false);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/page' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://example.com/page?foo=bar' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://example.com/other' }),
+          false
+        );
       });
 
       it('should match *substring* pattern (contains)', () => {
         const condition = makeUrlCondition('*checkout*');
-        assert.strictEqual(condition({ url: 'https://example.com/checkout/step1' }), true);
-        assert.strictEqual(condition({ url: 'https://checkout.example.com' }), true);
-        assert.strictEqual(condition({ url: 'https://example.com/cart' }), false);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/checkout/step1' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://checkout.example.com' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://example.com/cart' }),
+          false
+        );
       });
 
       it('should match *suffix pattern (ends with)', () => {
         const condition = makeUrlCondition('*.json');
-        assert.strictEqual(condition({ url: 'https://api.example.com/data.json' }), true);
-        assert.strictEqual(condition({ url: 'https://api.example.com/data.xml' }), false);
+        assert.strictEqual(
+          condition({ url: 'https://api.example.com/data.json' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://api.example.com/data.xml' }),
+          false
+        );
       });
 
       it('should match prefix* pattern (starts with)', () => {
@@ -131,8 +172,14 @@ describe('page-trigger-manager', () => {
 
       it('should match URL containing path (no wildcards, no params)', () => {
         const condition = makeUrlCondition('/admin');
-        assert.strictEqual(condition({ url: 'https://example.com/admin/dashboard' }), true);
-        assert.strictEqual(condition({ url: 'https://example.com/user' }), false);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/admin/dashboard' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://example.com/user' }),
+          false
+        );
       });
     });
 
@@ -154,7 +201,10 @@ describe('page-trigger-manager', () => {
           makeUrlCondition('*example.com*'),
           makeUrlCondition('*checkout*')
         );
-        assert.strictEqual(condition({ url: 'https://example.com/checkout' }), true);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/checkout' }),
+          true
+        );
       });
 
       it('should return false when any condition fails', () => {
@@ -162,7 +212,10 @@ describe('page-trigger-manager', () => {
           makeUrlCondition('*example.com*'),
           makeUrlCondition('*checkout*')
         );
-        assert.strictEqual(condition({ url: 'https://example.com/cart' }), false);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/cart' }),
+          false
+        );
       });
     });
 
@@ -172,8 +225,14 @@ describe('page-trigger-manager', () => {
           makeUrlCondition('*cart*'),
           makeUrlCondition('*checkout*')
         );
-        assert.strictEqual(condition({ url: 'https://example.com/cart' }), true);
-        assert.strictEqual(condition({ url: 'https://example.com/checkout' }), true);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/cart' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://example.com/checkout' }),
+          true
+        );
       });
 
       it('should return false when no conditions match', () => {
@@ -181,15 +240,24 @@ describe('page-trigger-manager', () => {
           makeUrlCondition('*cart*'),
           makeUrlCondition('*checkout*')
         );
-        assert.strictEqual(condition({ url: 'https://example.com/home' }), false);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/home' }),
+          false
+        );
       });
     });
 
     describe('notCondition', () => {
       it('should negate condition', () => {
         const condition = notCondition(makeUrlCondition('*admin*'));
-        assert.strictEqual(condition({ url: 'https://example.com/user' }), true);
-        assert.strictEqual(condition({ url: 'https://example.com/admin' }), false);
+        assert.strictEqual(
+          condition({ url: 'https://example.com/user' }),
+          true
+        );
+        assert.strictEqual(
+          condition({ url: 'https://example.com/admin' }),
+          false
+        );
       });
     });
   });
@@ -235,11 +303,12 @@ describe('page-trigger-manager', () => {
       const manager = createPageTriggerManager({ navigationManager, log });
 
       assert.throws(
-        () => manager.pageTrigger({
-          name: 'test',
-          condition: 'not-a-function',
-          action: async () => {},
-        }),
+        () =>
+          manager.pageTrigger({
+            name: 'test',
+            condition: 'not-a-function',
+            action: async () => {},
+          }),
         /condition must be a function/
       );
     });
@@ -248,11 +317,12 @@ describe('page-trigger-manager', () => {
       const manager = createPageTriggerManager({ navigationManager, log });
 
       assert.throws(
-        () => manager.pageTrigger({
-          name: 'test',
-          condition: () => true,
-          action: 'not-a-function',
-        }),
+        () =>
+          manager.pageTrigger({
+            name: 'test',
+            condition: () => true,
+            action: 'not-a-function',
+          }),
         /action must be a function/
       );
     });

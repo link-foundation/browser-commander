@@ -7,7 +7,11 @@ import {
   needsScrolling,
   scrollIntoViewIfNeeded,
 } from '../../../src/interactions/scroll.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage, createMockLogger } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+  createMockLogger,
+} from '../../helpers/mocks.js';
 
 describe('scroll', () => {
   describe('defaultScrollVerification', () => {

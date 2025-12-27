@@ -27,7 +27,9 @@ export async function wait(options = {}) {
   if (abortSignal) {
     // Check if already aborted
     if (abortSignal.aborted) {
-      log.debug(() => `🛑 Wait skipped (already aborted): ${reason || 'no reason'}`);
+      log.debug(
+        () => `🛑 Wait skipped (already aborted): ${reason || 'no reason'}`
+      );
       return { completed: false, aborted: true };
     }
 
@@ -36,8 +38,12 @@ export async function wait(options = {}) {
       let abortHandler = null;
 
       const cleanup = () => {
-        if (timeoutId) clearTimeout(timeoutId);
-        if (abortHandler) abortSignal.removeEventListener('abort', abortHandler);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        if (abortHandler) {
+          abortSignal.removeEventListener('abort', abortHandler);
+        }
       };
 
       abortHandler = () => {
@@ -59,7 +65,7 @@ export async function wait(options = {}) {
   }
 
   // Standard non-abortable wait (backwards compatible)
-  await new Promise(r => setTimeout(r, ms));
+  await new Promise((r) => setTimeout(r, ms));
 
   if (reason) {
     log.debug(() => `🔍 [VERBOSE] Wait complete (${ms}ms)`);
@@ -118,7 +124,9 @@ export async function safeEvaluate(options = {}) {
   } catch (error) {
     if (isNavigationError(error)) {
       if (!silent) {
-        console.log(`⚠️  Navigation detected during ${operationName}, recovering gracefully`);
+        console.log(
+          `⚠️  Navigation detected during ${operationName}, recovering gracefully`
+        );
       }
       return { success: false, value: defaultValue, navigationError: true };
     }

@@ -1,16 +1,17 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { wait, evaluate, safeEvaluate } from '../../../src/utilities/wait.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage, createMockLogger } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+  createMockLogger,
+} from '../../helpers/mocks.js';
 
 describe('wait utilities', () => {
   describe('wait', () => {
     it('should throw when ms is not provided', async () => {
       const log = createMockLogger();
-      await assert.rejects(
-        () => wait({ log }),
-        /ms is required/
-      );
+      await assert.rejects(() => wait({ log }), /ms is required/);
     });
 
     it('should wait for specified time', async () => {
@@ -193,11 +194,12 @@ describe('wait utilities', () => {
       };
 
       await assert.rejects(
-        () => safeEvaluate({
-          page,
-          engine: 'playwright',
-          fn: () => 'test',
-        }),
+        () =>
+          safeEvaluate({
+            page,
+            engine: 'playwright',
+            fn: () => 'test',
+          }),
         /Regular error/
       );
     });

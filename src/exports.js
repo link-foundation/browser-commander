@@ -10,6 +10,7 @@ export { disableTranslateInPreferences } from './core/preferences.js';
 export { detectEngine } from './core/engine-detection.js';
 export {
   isNavigationError,
+  isTimeoutError,
   safeOperation,
   makeNavigationSafe,
   withNavigationSafety,

@@ -77,7 +77,9 @@ describe('navigation-safety', () => {
 
     it('should return default value on navigation error', async () => {
       const result = await safeOperation(
-        async () => { throw new Error('Execution context was destroyed'); },
+        async () => {
+          throw new Error('Execution context was destroyed');
+        },
         { defaultValue: 'default', silent: true }
       );
       assert.strictEqual(result.success, false);
@@ -87,14 +89,19 @@ describe('navigation-safety', () => {
 
     it('should rethrow non-navigation errors', async () => {
       await assert.rejects(
-        async () => safeOperation(async () => { throw new Error('Regular error'); }),
+        async () =>
+          safeOperation(async () => {
+            throw new Error('Regular error');
+          }),
         /Regular error/
       );
     });
 
     it('should use null as default value when not specified', async () => {
       const result = await safeOperation(
-        async () => { throw new Error('Execution context was destroyed'); },
+        async () => {
+          throw new Error('Execution context was destroyed');
+        },
         { silent: true }
       );
       assert.strictEqual(result.value, null);
@@ -102,7 +109,9 @@ describe('navigation-safety', () => {
 
     it('should handle operation name for logging', async () => {
       const result = await safeOperation(
-        async () => { throw new Error('Execution context was destroyed'); },
+        async () => {
+          throw new Error('Execution context was destroyed');
+        },
         { operationName: 'test operation', silent: true }
       );
       assert.strictEqual(result.navigationError, true);
@@ -118,7 +127,9 @@ describe('navigation-safety', () => {
     });
 
     it('should return default value on navigation error', async () => {
-      const fn = async () => { throw new Error('Execution context was destroyed'); };
+      const fn = async () => {
+        throw new Error('Execution context was destroyed');
+      };
       const safeFn = makeNavigationSafe(fn, 'default');
       const result = await safeFn();
       assert.strictEqual(result, 'default');
@@ -142,7 +153,9 @@ describe('navigation-safety', () => {
 
     it('should call onNavigationError callback on navigation error', async () => {
       let called = false;
-      const fn = async () => { throw new Error('Execution context was destroyed'); };
+      const fn = async () => {
+        throw new Error('Execution context was destroyed');
+      };
       const safeFn = withNavigationSafety(fn, {
         onNavigationError: () => {
           called = true;
@@ -155,20 +168,26 @@ describe('navigation-safety', () => {
     });
 
     it('should return undefined when rethrow is false and no callback', async () => {
-      const fn = async () => { throw new Error('Execution context was destroyed'); };
+      const fn = async () => {
+        throw new Error('Execution context was destroyed');
+      };
       const safeFn = withNavigationSafety(fn, { rethrow: false });
       const result = await safeFn();
       assert.strictEqual(result, undefined);
     });
 
     it('should rethrow navigation error when rethrow is true and no callback', async () => {
-      const fn = async () => { throw new Error('Execution context was destroyed'); };
+      const fn = async () => {
+        throw new Error('Execution context was destroyed');
+      };
       const safeFn = withNavigationSafety(fn, { rethrow: true });
       await assert.rejects(safeFn, /Execution context was destroyed/);
     });
 
     it('should rethrow non-navigation errors', async () => {
-      const fn = async () => { throw new Error('Regular error'); };
+      const fn = async () => {
+        throw new Error('Regular error');
+      };
       const safeFn = withNavigationSafety(fn);
       await assert.rejects(safeFn, /Regular error/);
     });

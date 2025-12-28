@@ -38,7 +38,11 @@ Browser Commander manages the browser as a state machine with two states:
 ## Quick Start
 
 ```javascript
-import { launchBrowser, makeBrowserCommander, makeUrlCondition } from 'browser-commander';
+import {
+  launchBrowser,
+  makeBrowserCommander,
+  makeUrlCondition,
+} from 'browser-commander';
 
 // 1. Launch browser
 const { browser, page } = await launchBrowser({ engine: 'playwright' });
@@ -49,7 +53,7 @@ const commander = makeBrowserCommander({ page, verbose: true });
 // 3. Register page trigger with condition and action
 commander.pageTrigger({
   name: 'example-trigger',
-  condition: makeUrlCondition('*example.com*'),  // matches URLs containing 'example.com'
+  condition: makeUrlCondition('*example.com*'), // matches URLs containing 'example.com'
   action: async (ctx) => {
     // ctx.commander has all methods, but they throw ActionStoppedError if navigation happens
     // ctx.checkStopped() - call in loops to check if should stop
@@ -78,45 +82,49 @@ await browser.close();
 The `makeUrlCondition` helper makes it easy to create URL matching conditions:
 
 ```javascript
-import { makeUrlCondition, allConditions, anyCondition, notCondition } from 'browser-commander';
+import {
+  makeUrlCondition,
+  allConditions,
+  anyCondition,
+  notCondition,
+} from 'browser-commander';
 
 // Exact URL match
-makeUrlCondition('https://example.com/page')
+makeUrlCondition('https://example.com/page');
 
 // Contains substring (use * wildcards)
-makeUrlCondition('*checkout*')     // URL contains 'checkout'
-makeUrlCondition('*example.com*')  // URL contains 'example.com'
+makeUrlCondition('*checkout*'); // URL contains 'checkout'
+makeUrlCondition('*example.com*'); // URL contains 'example.com'
 
 // Starts with / ends with
-makeUrlCondition('/api/*')         // starts with '/api/'
-makeUrlCondition('*.json')         // ends with '.json'
+makeUrlCondition('/api/*'); // starts with '/api/'
+makeUrlCondition('*.json'); // ends with '.json'
 
 // Express-style route patterns
-makeUrlCondition('/vacancy/:id')                    // matches /vacancy/123
-makeUrlCondition('https://hh.ru/vacancy/:vacancyId') // matches specific domain + path
-makeUrlCondition('/user/:userId/profile')           // multiple segments
+makeUrlCondition('/vacancy/:id'); // matches /vacancy/123
+makeUrlCondition('https://hh.ru/vacancy/:vacancyId'); // matches specific domain + path
+makeUrlCondition('/user/:userId/profile'); // multiple segments
 
 // RegExp
-makeUrlCondition(/\/product\/\d+/)
+makeUrlCondition(/\/product\/\d+/);
 
 // Custom function (receives full context)
 makeUrlCondition((url, ctx) => {
   const parsed = new URL(url);
-  return parsed.pathname.startsWith('/admin') && parsed.searchParams.has('edit');
-})
+  return (
+    parsed.pathname.startsWith('/admin') && parsed.searchParams.has('edit')
+  );
+});
 
 // Combine conditions
 allConditions(
   makeUrlCondition('*example.com*'),
   makeUrlCondition('*/checkout*')
-)  // Both must match
+); // Both must match
 
-anyCondition(
-  makeUrlCondition('*/cart*'),
-  makeUrlCondition('*/checkout*')
-)  // Either matches
+anyCondition(makeUrlCondition('*/cart*'), makeUrlCondition('*/checkout*')); // Either matches
 
-notCondition(makeUrlCondition('*/admin*'))  // Negation
+notCondition(makeUrlCondition('*/admin*')); // Negation
 ```
 
 ## Page Trigger Lifecycle
@@ -124,11 +132,13 @@ notCondition(makeUrlCondition('*/admin*'))  // Negation
 ### The Guarantee
 
 When navigation is detected:
+
 1. **Action is signaled to stop** (AbortController.abort())
 2. **Wait for action to finish** (up to 10 seconds for graceful cleanup)
 3. **Only then start waiting for page load**
 
 This ensures:
+
 - No DOM operations on stale/loading pages
 - Actions can do proper cleanup (clear intervals, save state)
 - No race conditions between action and navigation
@@ -143,13 +153,13 @@ commander.pageTrigger({
   condition: makeUrlCondition('*/checkout*'),
   action: async (ctx) => {
     // Current URL
-    ctx.url;  // 'https://example.com/checkout'
+    ctx.url; // 'https://example.com/checkout'
 
     // Trigger name (for debugging)
-    ctx.triggerName;  // 'my-trigger'
+    ctx.triggerName; // 'my-trigger'
 
     // Check if action should stop
-    ctx.isStopped();  // Returns true if navigation detected
+    ctx.isStopped(); // Returns true if navigation detected
 
     // Throw ActionStoppedError if stopped (use in manual loops)
     ctx.checkStopped();
@@ -185,9 +195,9 @@ commander.pageTrigger({
 
 ```javascript
 const commander = makeBrowserCommander({
-  page,                          // Required: Playwright/Puppeteer page
-  verbose: false,                // Enable debug logging
-  enableNetworkTracking: true,   // Track HTTP requests
+  page, // Required: Playwright/Puppeteer page
+  verbose: false, // Enable debug logging
+  enableNetworkTracking: true, // Track HTTP requests
   enableNavigationManager: true, // Enable navigation events
 });
 ```
@@ -208,7 +218,7 @@ const unregister = commander.pageTrigger({
 ```javascript
 await commander.goto({
   url: 'https://example.com',
-  waitUntil: 'domcontentloaded',  // Playwright/Puppeteer option
+  waitUntil: 'domcontentloaded', // Playwright/Puppeteer option
   timeout: 60000,
 });
 ```
@@ -236,7 +246,7 @@ await commander.fillTextArea({
 ### commander.destroy()
 
 ```javascript
-await commander.destroy();  // Stop actions, cleanup
+await commander.destroy(); // Stop actions, cleanup
 ```
 
 ## Best Practices
@@ -260,12 +270,12 @@ await ctx.forEach(items, async (item) => {
 ```javascript
 action: async (ctx) => {
   while (hasMorePages) {
-    ctx.checkStopped();  // Throws if navigation detected
+    ctx.checkStopped(); // Throws if navigation detected
 
     await processPage(ctx);
     hasMorePages = await ctx.commander.isVisible({ selector: '.next' });
   }
-}
+};
 ```
 
 ### 3. Register Cleanup for Resources
@@ -280,7 +290,7 @@ action: async (ctx) => {
   });
 
   // ... rest of action
-}
+};
 ```
 
 ### 4. Use ctx.abortSignal with Fetch
@@ -288,9 +298,9 @@ action: async (ctx) => {
 ```javascript
 action: async (ctx) => {
   const response = await fetch(url, {
-    signal: ctx.abortSignal,  // Cancels on navigation
+    signal: ctx.abortSignal, // Cancels on navigation
   });
-}
+};
 ```
 
 ## Debugging

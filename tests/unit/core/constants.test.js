@@ -62,7 +62,9 @@ describe('constants', () => {
 
     it('should have reasonable timeout values', () => {
       // Verification retry should be shorter than verification timeout
-      assert.ok(TIMING.VERIFICATION_RETRY_INTERVAL < TIMING.VERIFICATION_TIMEOUT);
+      assert.ok(
+        TIMING.VERIFICATION_RETRY_INTERVAL < TIMING.VERIFICATION_TIMEOUT
+      );
       // Scroll animation wait should be relatively short
       assert.ok(TIMING.SCROLL_ANIMATION_WAIT < 1000);
     });

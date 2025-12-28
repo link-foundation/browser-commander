@@ -7,7 +7,10 @@ import {
   clickElement,
   clickButton,
 } from '../../../src/interactions/click.js';
-import { createMockPlaywrightPage, createMockLogger } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockLogger,
+} from '../../helpers/mocks.js';
 
 describe('click', () => {
   describe('defaultClickVerification', () => {
@@ -226,7 +229,9 @@ describe('click', () => {
       const log = createMockLogger();
       let clicked = false;
       const adapter = {
-        click: async () => { clicked = true; },
+        click: async () => {
+          clicked = true;
+        },
         evaluateOnElement: async () => ({ isConnected: true }),
       };
       const mockLocator = {};
@@ -249,7 +254,9 @@ describe('click', () => {
       const log = createMockLogger();
       let clickOptions = null;
       const adapter = {
-        click: async (el, opts) => { clickOptions = opts; },
+        click: async (el, opts) => {
+          clickOptions = opts;
+        },
         evaluateOnElement: async () => ({ isConnected: true }),
       };
 
@@ -303,7 +310,7 @@ describe('click', () => {
 
     it('should click button with full flow', async () => {
       const page = createMockPlaywrightPage({
-        elements: { 'button': { visible: true, count: 1 } },
+        elements: { button: { visible: true, count: 1 } },
       });
       const log = createMockLogger();
       const wait = async ({ ms }) => ({ completed: true, aborted: false });

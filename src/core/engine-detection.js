@@ -43,5 +43,7 @@ export function detectEngine(pageOrContext) {
   if (isVerboseEnabled()) {
     console.log('🔍 [ENGINE DETECTION] Could not detect engine!');
   }
-  throw new Error('Unknown browser automation engine. Expected Playwright or Puppeteer page object.');
+  throw new Error(
+    'Unknown browser automation engine. Expected Playwright or Puppeteer page object.'
+  );
 }

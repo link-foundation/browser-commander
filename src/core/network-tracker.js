@@ -52,7 +52,8 @@ export function createNetworkTracker(options = {}) {
   function getRequestKey(request) {
     // Use URL + method as unique key (handles redirects properly)
     const url = typeof request.url === 'function' ? request.url() : request.url;
-    const method = typeof request.method === 'function' ? request.method() : request.method;
+    const method =
+      typeof request.method === 'function' ? request.method() : request.method;
     return `${method}:${url}`;
   }
 
@@ -77,10 +78,15 @@ export function createNetworkTracker(options = {}) {
       idleTimer = null;
     }
 
-    log.debug(() => `📤 Request started: ${url.substring(0, 80)}... (pending: ${pendingRequests.size})`);
+    log.debug(
+      () =>
+        `📤 Request started: ${url.substring(0, 80)}... (pending: ${pendingRequests.size})`
+    );
 
     // Notify listeners
-    listeners.onRequestStart.forEach(fn => fn({ url, pendingCount: pendingRequests.size }));
+    listeners.onRequestStart.forEach((fn) =>
+      fn({ url, pendingCount: pendingRequests.size })
+    );
   }
 
   /**
@@ -97,10 +103,15 @@ export function createNetworkTracker(options = {}) {
     pendingRequests.delete(key);
     requestStartTimes.delete(key);
 
-    log.debug(() => `📥 Request ended: ${url.substring(0, 80)}... (pending: ${pendingRequests.size})`);
+    log.debug(
+      () =>
+        `📥 Request ended: ${url.substring(0, 80)}... (pending: ${pendingRequests.size})`
+    );
 
     // Notify listeners
-    listeners.onRequestEnd.forEach(fn => fn({ url, pendingCount: pendingRequests.size }));
+    listeners.onRequestEnd.forEach((fn) =>
+      fn({ url, pendingCount: pendingRequests.size })
+    );
 
     // Check if we're now idle
     checkIdle();
@@ -115,7 +126,7 @@ export function createNetworkTracker(options = {}) {
       idleTimer = setTimeout(() => {
         if (pendingRequests.size === 0) {
           log.debug(() => '🌐 Network idle detected');
-          listeners.onNetworkIdle.forEach(fn => fn());
+          listeners.onNetworkIdle.forEach((fn) => fn());
         }
         idleTimer = null;
       }, idleTimeout);
@@ -196,17 +207,14 @@ export function createNetworkTracker(options = {}) {
    * @returns {Promise<boolean>} - True if idle, false if timeout
    */
   async function waitForNetworkIdle(opts = {}) {
-    const {
-      timeout = 30000,
-      idleTime = idleTimeout,
-    } = opts;
+    const { timeout = 30000, idleTime = idleTimeout } = opts;
 
     const startTime = Date.now();
     const currentNavId = navigationId;
 
     // If already idle, wait for idle time
     if (pendingRequests.size === 0) {
-      await new Promise(r => setTimeout(r, idleTime));
+      await new Promise((r) => setTimeout(r, idleTime));
 
       // Check if still idle and no navigation happened
       if (pendingRequests.size === 0 && navigationId === currentNavId) {
@@ -220,8 +228,12 @@ export function createNetworkTracker(options = {}) {
       let timeoutTimer = null;
 
       const cleanup = () => {
-        if (checkTimer) clearInterval(checkTimer);
-        if (timeoutTimer) clearTimeout(timeoutTimer);
+        if (checkTimer) {
+          clearInterval(checkTimer);
+        }
+        if (timeoutTimer) {
+          clearTimeout(timeoutTimer);
+        }
         resolved = true;
       };
 
@@ -229,7 +241,10 @@ export function createNetworkTracker(options = {}) {
       timeoutTimer = setTimeout(() => {
         if (!resolved) {
           cleanup();
-          log.debug(() => `⚠️  Network idle timeout after ${timeout}ms (${pendingRequests.size} pending)`);
+          log.debug(
+            () =>
+              `⚠️  Network idle timeout after ${timeout}ms (${pendingRequests.size} pending)`
+          );
 
           // Log stuck requests
           if (pendingRequests.size > 0) {
@@ -238,7 +253,9 @@ export function createNetworkTracker(options = {}) {
               const startTime = requestStartTimes.get(key);
               const duration = Date.now() - startTime;
               const url = typeof req.url === 'function' ? req.url() : req.url;
-              stuckRequests.push(`  ${url.substring(0, 60)}... (${duration}ms)`);
+              stuckRequests.push(
+                `  ${url.substring(0, 60)}... (${duration}ms)`
+              );
             }
             log.debug(() => `⚠️  Stuck requests:\n${stuckRequests.join('\n')}`);
           }
@@ -249,7 +266,9 @@ export function createNetworkTracker(options = {}) {
 
       // Check periodically for idle state
       checkTimer = setInterval(async () => {
-        if (resolved) return;
+        if (resolved) {
+          return;
+        }
 
         // Check for navigation change (abort wait)
         if (navigationId !== currentNavId) {
@@ -271,9 +290,13 @@ export function createNetworkTracker(options = {}) {
         // Check if idle
         if (pendingRequests.size === 0) {
           // Wait for idle time to confirm
-          await new Promise(r => setTimeout(r, idleTime));
+          await new Promise((r) => setTimeout(r, idleTime));
 
-          if (!resolved && pendingRequests.size === 0 && navigationId === currentNavId) {
+          if (
+            !resolved &&
+            pendingRequests.size === 0 &&
+            navigationId === currentNavId
+          ) {
             cleanup();
             resolve(true);
           }

@@ -23,7 +23,9 @@ export async function launchBrowser(options = {}) {
   } = options;
 
   if (!['playwright', 'puppeteer'].includes(engine)) {
-    throw new Error(`Invalid engine: ${engine}. Expected 'playwright' or 'puppeteer'`);
+    throw new Error(
+      `Invalid engine: ${engine}. Expected 'playwright' or 'puppeteer'`
+    );
   }
 
   // Set environment variables to suppress warnings
@@ -72,7 +74,7 @@ export async function launchBrowser(options = {}) {
   // Using page.bringToFront() - confirmed working solution
   try {
     // Wait for the browser to fully initialize
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
 
     // Bring page to front - this removes focus from address bar
     await page.bringToFront();

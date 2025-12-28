@@ -150,6 +150,7 @@ const { browser, page } = await launchBrowser({ engine: 'puppeteer' });
 ### LOADING STATE
 
 When navigation is detected:
+
 1. Signal current action to stop (AbortController.abort())
 2. Wait for action cleanup (max 10 seconds)
 3. Run cleanup callbacks (ctx.onCleanup)
@@ -159,6 +160,7 @@ When navigation is detected:
 ### WORKING STATE
 
 When page is ready:
+
 1. Find matching trigger (condition check)
 2. Create action context with wrapped commander
 3. Execute action
@@ -210,53 +212,59 @@ Multiple ways to define URL conditions:
 
 ```javascript
 // Exact match
-makeUrlCondition('https://example.com/page')
+makeUrlCondition('https://example.com/page');
 
 // Wildcards
-makeUrlCondition('*checkout*')
+makeUrlCondition('*checkout*');
 
 // Route patterns
-makeUrlCondition('/vacancy/:id')
+makeUrlCondition('/vacancy/:id');
 
 // Regex
-makeUrlCondition(/\/product\/\d+/)
+makeUrlCondition(/\/product\/\d+/);
 
 // Custom function
-makeUrlCondition((url, ctx) => url.includes('/admin'))
+makeUrlCondition((url, ctx) => url.includes('/admin'));
 
 // Combine
-allConditions(condition1, condition2)
-anyCondition(condition1, condition2)
-notCondition(condition)
+allConditions(condition1, condition2);
+anyCondition(condition1, condition2);
+notCondition(condition);
 ```
 
 ## Design Principles Applied
 
 ### Modularity
+
 - Each module has single responsibility
 - Clear boundaries between components
 - Easy to test in isolation
 
 ### Abstraction
+
 - Unified API hides engine differences
 - High-level patterns for common tasks
 
 ### Stable Contracts
+
 - Options object pattern prevents breaking changes
 - Adding new options is backward compatible
 
 ### Separation of Concerns
+
 - Navigation tracking separate from page operations
 - Network tracking separate from element interactions
 - Trigger management separate from action execution
 
 ### Composition Over Complexity
+
 - Complex operations built from simple primitives
 - `clickButton` uses `scrollIntoView`, `click`, verification
 
 ## Future Improvements
 
 See GitHub issues:
+
 - [#94](https://github.com/konard/hh-job-application-automation/issues/94) - Engine adapter interface
 - [#95](https://github.com/konard/hh-job-application-automation/issues/95) - Split large functions
 - [#96](https://github.com/konard/hh-job-application-automation/issues/96) - withNavigationSafety wrapper

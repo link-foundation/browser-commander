@@ -9,7 +9,9 @@
  * @returns {boolean} - True if this is a navigation error
  */
 export function isNavigationError(error) {
-  if (!error || !error.message) return false;
+  if (!error || !error.message) {
+    return false;
+  }
 
   const navigationErrorPatterns = [
     'Execution context was destroyed',
@@ -27,7 +29,7 @@ export function isNavigationError(error) {
     'Page crashed',
   ];
 
-  return navigationErrorPatterns.some(pattern =>
+  return navigationErrorPatterns.some((pattern) =>
     error.message.includes(pattern)
   );
 }
@@ -78,7 +80,11 @@ export async function safeOperation(asyncFn, options = {}) {
  * @param {string} operationName - Name for logging
  * @returns {Function} - Wrapped function
  */
-export function makeNavigationSafe(asyncFn, defaultValue = null, operationName = 'operation') {
+export function makeNavigationSafe(
+  asyncFn,
+  defaultValue = null,
+  operationName = 'operation'
+) {
   return async (...args) => {
     const result = await safeOperation(() => asyncFn(...args), {
       defaultValue,
@@ -98,7 +104,11 @@ export function makeNavigationSafe(asyncFn, defaultValue = null, operationName =
  * @returns {Promise<any>} - Result or default value
  * @deprecated Use withNavigationSafety (HOF version) instead
  */
-export async function executeWithNavigationSafety(asyncFn, defaultValue = null, operationName = 'operation') {
+export async function executeWithNavigationSafety(
+  asyncFn,
+  defaultValue = null,
+  operationName = 'operation'
+) {
   const result = await safeOperation(asyncFn, {
     defaultValue,
     operationName,

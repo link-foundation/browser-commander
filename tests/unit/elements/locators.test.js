@@ -7,7 +7,10 @@ import {
   waitForVisible,
   locator,
 } from '../../../src/elements/locators.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+} from '../../helpers/mocks.js';
 
 describe('locators', () => {
   describe('createPlaywrightLocator', () => {
@@ -27,13 +30,19 @@ describe('locators', () => {
 
     it('should handle :nth-of-type selector', () => {
       const page = createMockPlaywrightPage();
-      const loc = createPlaywrightLocator({ page, selector: 'button:nth-of-type(2)' });
+      const loc = createPlaywrightLocator({
+        page,
+        selector: 'button:nth-of-type(2)',
+      });
       assert.ok(loc);
     });
 
     it('should create locator for complex selector', () => {
       const page = createMockPlaywrightPage();
-      const loc = createPlaywrightLocator({ page, selector: 'div.class > span[data-id="test"]' });
+      const loc = createPlaywrightLocator({
+        page,
+        selector: 'div.class > span[data-id="test"]',
+      });
       assert.ok(loc);
     });
   });
@@ -49,13 +58,21 @@ describe('locators', () => {
 
     it('should return locator for Playwright', async () => {
       const page = createMockPlaywrightPage();
-      const loc = await getLocatorOrElement({ page, engine: 'playwright', selector: 'button' });
+      const loc = await getLocatorOrElement({
+        page,
+        engine: 'playwright',
+        selector: 'button',
+      });
       assert.ok(loc);
     });
 
     it('should return element for Puppeteer', async () => {
       const page = createMockPuppeteerPage();
-      const el = await getLocatorOrElement({ page, engine: 'puppeteer', selector: 'button' });
+      const el = await getLocatorOrElement({
+        page,
+        engine: 'puppeteer',
+        selector: 'button',
+      });
       assert.ok(el);
     });
 
@@ -71,8 +88,14 @@ describe('locators', () => {
     });
 
     it('should return null for Puppeteer when element not found', async () => {
-      const page = createMockPuppeteerPage({ elements: { 'missing': { count: 0 } } });
-      const el = await getLocatorOrElement({ page, engine: 'puppeteer', selector: 'missing' });
+      const page = createMockPuppeteerPage({
+        elements: { missing: { count: 0 } },
+      });
+      const el = await getLocatorOrElement({
+        page,
+        engine: 'puppeteer',
+        selector: 'missing',
+      });
       assert.strictEqual(el, null);
     });
   });
@@ -87,7 +110,9 @@ describe('locators', () => {
     });
 
     it('should wait for Playwright locator to be visible', async () => {
-      const page = createMockPlaywrightPage({ elements: { 'button': { visible: true } } });
+      const page = createMockPlaywrightPage({
+        elements: { button: { visible: true } },
+      });
       const loc = await waitForLocatorOrElement({
         page,
         engine: 'playwright',
@@ -98,7 +123,9 @@ describe('locators', () => {
     });
 
     it('should wait for Puppeteer element to be visible', async () => {
-      const page = createMockPuppeteerPage({ elements: { 'button': { visible: true } } });
+      const page = createMockPuppeteerPage({
+        elements: { button: { visible: true } },
+      });
       const el = await waitForLocatorOrElement({
         page,
         engine: 'puppeteer',
@@ -160,10 +187,11 @@ describe('locators', () => {
 
     it('should throw for Puppeteer when element is null', async () => {
       await assert.rejects(
-        () => waitForVisible({
-          engine: 'puppeteer',
-          locatorOrElement: null,
-        }),
+        () =>
+          waitForVisible({
+            engine: 'puppeteer',
+            locatorOrElement: null,
+          }),
         /locatorOrElement is required/
       );
     });

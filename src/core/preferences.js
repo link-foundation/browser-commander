@@ -32,8 +32,15 @@ export async function disableTranslateInPreferences(options = {}) {
     }
     preferences.translate.enabled = false;
 
-    await fs.writeFile(preferencesPath, JSON.stringify(preferences, null, 2), 'utf8');
+    await fs.writeFile(
+      preferencesPath,
+      JSON.stringify(preferences, null, 2),
+      'utf8'
+    );
   } catch (error) {
-    console.error('⚠️  Warning: Could not modify Preferences file:', error.message);
+    console.error(
+      '⚠️  Warning: Could not modify Preferences file:',
+      error.message
+    );
   }
 }

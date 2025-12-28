@@ -67,7 +67,13 @@ export async function getLocatorOrElement(options = {}) {
  * @throws {Error} - If element not found or not visible within timeout (unless navigation error and throwOnNavigation is false)
  */
 export async function waitForLocatorOrElement(options = {}) {
-  const { page, engine, selector, timeout = TIMING.DEFAULT_TIMEOUT, throwOnNavigation = true } = options;
+  const {
+    page,
+    engine,
+    selector,
+    timeout = TIMING.DEFAULT_TIMEOUT,
+    throwOnNavigation = true,
+  } = options;
 
   if (!selector) {
     throw new Error('selector is required in options');
@@ -91,7 +97,9 @@ export async function waitForLocatorOrElement(options = {}) {
     }
   } catch (error) {
     if (isNavigationError(error)) {
-      console.log('⚠️  Navigation detected during waitForLocatorOrElement, recovering gracefully');
+      console.log(
+        '⚠️  Navigation detected during waitForLocatorOrElement, recovering gracefully'
+      );
       if (throwOnNavigation) {
         throw error;
       }
@@ -110,7 +118,11 @@ export async function waitForLocatorOrElement(options = {}) {
  * @returns {Promise<void>}
  */
 export async function waitForVisible(options = {}) {
-  const { engine, locatorOrElement, timeout = TIMING.DEFAULT_TIMEOUT } = options;
+  const {
+    engine,
+    locatorOrElement,
+    timeout = TIMING.DEFAULT_TIMEOUT,
+  } = options;
 
   if (!locatorOrElement) {
     throw new Error('locatorOrElement is required in options');
@@ -155,34 +167,53 @@ export function locator(options = {}) {
         await page.click(sel, options);
       },
       async fill(text) {
-        await page.$eval(sel, (el, value) => {
-          el.value = value;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-          el.dispatchEvent(new Event('change', { bubbles: true }));
-        }, text);
+        await page.$eval(
+          sel,
+          (el, value) => {
+            el.value = value;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          },
+          text
+        );
       },
       async type(text, options = {}) {
         await page.type(sel, text, options);
       },
       async textContent() {
         const element = await page.$(sel);
-        if (!element) return null;
-        return await page.evaluate(el => el.textContent, element);
+        if (!element) {
+          return null;
+        }
+        return await page.evaluate((el) => el.textContent, element);
       },
       async inputValue() {
         const element = await page.$(sel);
-        if (!element) return '';
-        return await page.evaluate(el => el.value, element);
+        if (!element) {
+          return '';
+        }
+        return await page.evaluate((el) => el.value, element);
       },
       async getAttribute(name) {
         const element = await page.$(sel);
-        if (!element) return null;
-        return await page.evaluate((el, attr) => el.getAttribute(attr), element, name);
+        if (!element) {
+          return null;
+        }
+        return await page.evaluate(
+          (el, attr) => el.getAttribute(attr),
+          element,
+          name
+        );
       },
       async isVisible() {
         const element = await page.$(sel);
-        if (!element) return false;
-        return await page.evaluate(el => el.offsetWidth > 0 && el.offsetHeight > 0, element);
+        if (!element) {
+          return false;
+        }
+        return await page.evaluate(
+          (el) => el.offsetWidth > 0 && el.offsetHeight > 0,
+          element
+        );
       },
       async waitFor(options = {}) {
         const { state = 'visible', timeout = TIMING.DEFAULT_TIMEOUT } = options;
@@ -200,7 +231,9 @@ export function locator(options = {}) {
       },
       async evaluate(fn, arg) {
         const element = await page.$(sel);
-        if (!element) throw new Error(`Element not found: ${sel}`);
+        if (!element) {
+          throw new Error(`Element not found: ${sel}`);
+        }
         return await page.evaluate(fn, element, arg);
       },
     });

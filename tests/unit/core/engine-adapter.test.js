@@ -6,7 +6,10 @@ import {
   PuppeteerAdapter,
   createEngineAdapter,
 } from '../../../src/core/engine-adapter.js';
-import { createMockPlaywrightPage, createMockPuppeteerPage } from '../../helpers/mocks.js';
+import {
+  createMockPlaywrightPage,
+  createMockPuppeteerPage,
+} from '../../helpers/mocks.js';
 
 describe('engine-adapter', () => {
   describe('EngineAdapter (base class)', () => {
@@ -49,28 +52,28 @@ describe('engine-adapter', () => {
     });
 
     it('should query single element', async () => {
-      page = createMockPlaywrightPage({ elements: { 'button': { count: 1 } } });
+      page = createMockPlaywrightPage({ elements: { button: { count: 1 } } });
       adapter = new PlaywrightAdapter(page);
       const element = await adapter.querySelector('button');
       assert.ok(element);
     });
 
     it('should return null when element not found', async () => {
-      page = createMockPlaywrightPage({ elements: { 'button': { count: 0 } } });
+      page = createMockPlaywrightPage({ elements: { button: { count: 0 } } });
       adapter = new PlaywrightAdapter(page);
       const element = await adapter.querySelector('button');
       assert.strictEqual(element, null);
     });
 
     it('should query all elements', async () => {
-      page = createMockPlaywrightPage({ elements: { 'button': { count: 3 } } });
+      page = createMockPlaywrightPage({ elements: { button: { count: 3 } } });
       adapter = new PlaywrightAdapter(page);
       const elements = await adapter.querySelectorAll('button');
       assert.strictEqual(elements.length, 3);
     });
 
     it('should count elements', async () => {
-      page = createMockPlaywrightPage({ elements: { 'button': { count: 5 } } });
+      page = createMockPlaywrightPage({ elements: { button: { count: 5 } } });
       adapter = new PlaywrightAdapter(page);
       const count = await adapter.count('button');
       assert.strictEqual(count, 5);
@@ -101,28 +104,28 @@ describe('engine-adapter', () => {
     });
 
     it('should query single element', async () => {
-      page = createMockPuppeteerPage({ elements: { 'button': { count: 1 } } });
+      page = createMockPuppeteerPage({ elements: { button: { count: 1 } } });
       adapter = new PuppeteerAdapter(page);
       const element = await adapter.querySelector('button');
       assert.ok(element);
     });
 
     it('should return null when element not found', async () => {
-      page = createMockPuppeteerPage({ elements: { 'button': { count: 0 } } });
+      page = createMockPuppeteerPage({ elements: { button: { count: 0 } } });
       adapter = new PuppeteerAdapter(page);
       const element = await adapter.querySelector('button');
       assert.strictEqual(element, null);
     });
 
     it('should query all elements', async () => {
-      page = createMockPuppeteerPage({ elements: { 'button': { count: 3 } } });
+      page = createMockPuppeteerPage({ elements: { button: { count: 3 } } });
       adapter = new PuppeteerAdapter(page);
       const elements = await adapter.querySelectorAll('button');
       assert.strictEqual(elements.length, 3);
     });
 
     it('should count elements', async () => {
-      page = createMockPuppeteerPage({ elements: { 'button': { count: 5 } } });
+      page = createMockPuppeteerPage({ elements: { button: { count: 5 } } });
       adapter = new PuppeteerAdapter(page);
       const count = await adapter.count('button');
       assert.strictEqual(count, 5);

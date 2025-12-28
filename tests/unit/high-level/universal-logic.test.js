@@ -33,7 +33,9 @@ describe('universal-logic', () => {
     it('should return null when page is closed', async () => {
       let pageOpen = true;
       const getUrl = () => 'https://example.com/start';
-      const wait = async () => { pageOpen = false; };
+      const wait = async () => {
+        pageOpen = false;
+      };
       const pageClosedCallback = () => !pageOpen;
 
       const result = await waitForUrlCondition({
@@ -187,7 +189,9 @@ describe('universal-logic', () => {
   describe('findToggleButton', () => {
     it('should find button by data-qa selector', async () => {
       const count = async ({ selector }) => {
-        if (selector === '[data-qa="toggle"]') return 1;
+        if (selector === '[data-qa="toggle"]') {
+          return 1;
+        }
         return 0;
       };
       const findByText = async () => null;
@@ -203,7 +207,9 @@ describe('universal-logic', () => {
 
     it('should fallback to text search', async () => {
       const count = async ({ selector }) => {
-        if (selector === 'button:has-text("Toggle")') return 1;
+        if (selector === 'button:has-text("Toggle")') {
+          return 1;
+        }
         return 0;
       };
       const findByText = async ({ text, selector }) => {
@@ -239,10 +245,12 @@ describe('universal-logic', () => {
     });
 
     it('should try multiple data-qa selectors', async () => {
-      let selectorsTried = [];
+      const selectorsTried = [];
       const count = async ({ selector }) => {
         selectorsTried.push(selector);
-        if (selector === '[data-qa="toggle-3"]') return 1;
+        if (selector === '[data-qa="toggle-3"]') {
+          return 1;
+        }
         return 0;
       };
       const findByText = async () => null;
@@ -250,7 +258,11 @@ describe('universal-logic', () => {
       const result = await findToggleButton({
         count,
         findByText,
-        dataQaSelectors: ['[data-qa="toggle-1"]', '[data-qa="toggle-2"]', '[data-qa="toggle-3"]'],
+        dataQaSelectors: [
+          '[data-qa="toggle-1"]',
+          '[data-qa="toggle-2"]',
+          '[data-qa="toggle-3"]',
+        ],
       });
 
       assert.ok(selectorsTried.includes('[data-qa="toggle-1"]'));
@@ -259,9 +271,11 @@ describe('universal-logic', () => {
     });
 
     it('should try multiple element types for text search', async () => {
-      let typesTried = [];
+      const typesTried = [];
       const count = async ({ selector }) => {
-        if (selector === 'span:has-text("Toggle")') return 1;
+        if (selector === 'span:has-text("Toggle")') {
+          return 1;
+        }
         return 0;
       };
       const findByText = async ({ selector }) => {

@@ -106,23 +106,121 @@ export async function findByText(options = {}) {
 }
 
 /**
- * Normalize selector to handle Puppeteer text selectors
+ * Check if a selector is a Playwright-specific text selector
+ * @param {string} selector - The selector to check
+ * @returns {boolean} - True if selector contains Playwright text pseudo-selectors
+ */
+function isPlaywrightTextSelector(selector) {
+  if (typeof selector !== 'string') {
+    return false;
+  }
+  return selector.includes(':has-text(') || selector.includes(':text-is(');
+}
+
+/**
+ * Parse a Playwright text selector to extract base selector and text
+ * @param {string} selector - Playwright text selector like 'a:has-text("text")'
+ * @returns {Object|null} - { baseSelector, text, exact } or null if not parseable
+ */
+function parsePlaywrightTextSelector(selector) {
+  // Match patterns like 'a:has-text("text")' or 'button:text-is("exact text")'
+  const hasTextMatch = selector.match(/^(.+?):has-text\("(.+?)"\)$/);
+  if (hasTextMatch) {
+    return {
+      baseSelector: hasTextMatch[1],
+      text: hasTextMatch[2],
+      exact: false,
+    };
+  }
+
+  const textIsMatch = selector.match(/^(.+?):text-is\("(.+?)"\)$/);
+  if (textIsMatch) {
+    return {
+      baseSelector: textIsMatch[1],
+      text: textIsMatch[2],
+      exact: true,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Normalize selector to handle both Puppeteer and Playwright text selectors
+ * Converts engine-specific text selectors to valid CSS selectors for browser context
+ *
  * @param {Object} options - Configuration options
  * @param {Object} options.page - Browser page object
+ * @param {string} options.engine - Engine type ('playwright' or 'puppeteer')
  * @param {string|Object} options.selector - CSS selector or text selector object
- * @returns {Promise<string|null>} - CSS selector or null if not found
+ * @returns {Promise<string|null>} - Valid CSS selector or null if not found
  */
 export async function normalizeSelector(options = {}) {
-  const { page, selector } = options;
+  const { page, engine, selector } = options;
 
   if (!selector) {
     throw new Error('selector is required in options');
   }
 
+  // Handle Playwright text selectors (strings containing :has-text or :text-is)
+  // These are valid for Playwright's locator API but NOT for document.querySelectorAll
+  if (
+    typeof selector === 'string' &&
+    engine === 'playwright' &&
+    isPlaywrightTextSelector(selector)
+  ) {
+    const parsed = parsePlaywrightTextSelector(selector);
+    if (!parsed) {
+      // Could not parse, return as-is and hope for the best
+      return selector;
+    }
+
+    try {
+      // Use page.evaluate to find matching element and generate a valid CSS selector
+      const result = await page.evaluate(({ baseSelector, text, exact }) => {
+        const elements = Array.from(document.querySelectorAll(baseSelector));
+        const matchingElement = elements.find((el) => {
+          const elementText = el.textContent.trim();
+          return exact ? elementText === text : elementText.includes(text);
+        });
+
+        if (!matchingElement) {
+          return null;
+        }
+
+        // Generate a unique selector using data-qa or nth-of-type
+        const dataQa = matchingElement.getAttribute('data-qa');
+        if (dataQa) {
+          return `[data-qa="${dataQa}"]`;
+        }
+
+        // Use nth-of-type as fallback
+        const tagName = matchingElement.tagName.toLowerCase();
+        const siblings = Array.from(
+          matchingElement.parentElement.children
+        ).filter((el) => el.tagName.toLowerCase() === tagName);
+        const index = siblings.indexOf(matchingElement);
+        return `${tagName}:nth-of-type(${index + 1})`;
+      }, parsed);
+
+      return result;
+    } catch (error) {
+      if (isNavigationError(error)) {
+        console.log(
+          '⚠️  Navigation detected during normalizeSelector (Playwright), returning null'
+        );
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  // Plain string selector - return as-is
   if (typeof selector === 'string') {
     return selector;
   }
 
+  // Handle Puppeteer text selector objects
   if (selector._isPuppeteerTextSelector) {
     try {
       // Find element by text and generate a unique selector
@@ -161,7 +259,7 @@ export async function normalizeSelector(options = {}) {
     } catch (error) {
       if (isNavigationError(error)) {
         console.log(
-          '⚠️  Navigation detected during normalizeSelector, returning null'
+          '⚠️  Navigation detected during normalizeSelector (Puppeteer), returning null'
         );
         return null;
       }
@@ -183,13 +281,25 @@ export function withTextSelectorSupport(fn, engine, page) {
   return async (options = {}) => {
     let { selector } = options;
 
-    // Normalize Puppeteer text selectors
+    // Normalize Puppeteer text selectors (object format)
     if (
       engine === 'puppeteer' &&
       typeof selector === 'object' &&
       selector._isPuppeteerTextSelector
     ) {
-      selector = await normalizeSelector({ page, selector });
+      selector = await normalizeSelector({ page, engine, selector });
+      if (!selector) {
+        throw new Error('Element with specified text not found');
+      }
+    }
+
+    // Normalize Playwright text selectors (string format with :has-text or :text-is)
+    if (
+      engine === 'playwright' &&
+      typeof selector === 'string' &&
+      isPlaywrightTextSelector(selector)
+    ) {
+      selector = await normalizeSelector({ page, engine, selector });
       if (!selector) {
         throw new Error('Element with specified text not found');
       }

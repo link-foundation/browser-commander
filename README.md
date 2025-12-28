@@ -191,6 +191,21 @@ commander.pageTrigger({
 
 ## API Reference
 
+### launchBrowser(options)
+
+```javascript
+const { browser, page } = await launchBrowser({
+  engine: 'playwright', // 'playwright' or 'puppeteer'
+  headless: false, // Run in headless mode
+  userDataDir: '~/.hh-apply/playwright-data', // Browser profile directory
+  slowMo: 150, // Slow down operations (ms)
+  verbose: false, // Enable debug logging
+  args: ['--no-sandbox', '--disable-setuid-sandbox'], // Custom Chrome args to append
+});
+```
+
+The `args` option allows passing custom Chrome arguments, which is useful for headless server environments (Docker, CI/CD) that require flags like `--no-sandbox`.
+
 ### makeBrowserCommander(options)
 
 ```javascript

@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
   isNavigationError,
+  isTimeoutError,
   safeOperation,
   makeNavigationSafe,
   withNavigationSafety,
@@ -64,6 +65,80 @@ describe('navigation-safety', () => {
     it('should return true for "context was destroyed" error', () => {
       const error = new Error('context was destroyed');
       assert.strictEqual(isNavigationError(error), true);
+    });
+  });
+
+  describe('isTimeoutError', () => {
+    it('should return false for null', () => {
+      assert.strictEqual(isTimeoutError(null), false);
+    });
+
+    it('should return false for undefined', () => {
+      assert.strictEqual(isTimeoutError(undefined), false);
+    });
+
+    it('should return false for error without message or name', () => {
+      assert.strictEqual(isTimeoutError({}), false);
+    });
+
+    it('should return false for regular error', () => {
+      const error = new Error('Some regular error');
+      assert.strictEqual(isTimeoutError(error), false);
+    });
+
+    it('should return true for error with name "TimeoutError"', () => {
+      const error = new Error('Something failed');
+      error.name = 'TimeoutError';
+      assert.strictEqual(isTimeoutError(error), true);
+    });
+
+    it('should return true for "waiting for selector" error', () => {
+      const error = new Error('Waiting for selector ".button" timed out');
+      assert.strictEqual(isTimeoutError(error), true);
+    });
+
+    it('should return true for "timeout" error (case-insensitive)', () => {
+      const error = new Error('Timeout while waiting for element');
+      assert.strictEqual(isTimeoutError(error), true);
+    });
+
+    it('should return true for "timeout exceeded" error', () => {
+      const error = new Error('timeout exceeded');
+      assert.strictEqual(isTimeoutError(error), true);
+    });
+
+    it('should return true for "timed out" error', () => {
+      const error = new Error('Operation timed out after 30000ms');
+      assert.strictEqual(isTimeoutError(error), true);
+    });
+
+    it('should return true for Playwright locator timeout error', () => {
+      const error = new Error(
+        'locator.click: Timeout 30000ms exceeded. Waiting for selector "button.submit"'
+      );
+      assert.strictEqual(isTimeoutError(error), true);
+    });
+
+    it('should return true for Puppeteer waitForSelector timeout', () => {
+      const error = new Error(
+        'waiting for selector `#myElement` failed: timeout 30000ms exceeded'
+      );
+      assert.strictEqual(isTimeoutError(error), true);
+    });
+
+    it('should handle uppercase TIMEOUT in message', () => {
+      const error = new Error('TIMEOUT ERROR occurred');
+      assert.strictEqual(isTimeoutError(error), true);
+    });
+
+    it('should not match navigation errors as timeout errors', () => {
+      const error = new Error('Execution context was destroyed');
+      assert.strictEqual(isTimeoutError(error), false);
+    });
+
+    it('should not match frame detached errors as timeout errors', () => {
+      const error = new Error('frame was detached');
+      assert.strictEqual(isTimeoutError(error), false);
     });
   });
 

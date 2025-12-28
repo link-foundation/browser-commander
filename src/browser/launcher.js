@@ -11,6 +11,7 @@ import { disableTranslateInPreferences } from '../core/preferences.js';
  * @param {boolean} options.headless - Run in headless mode (default: false)
  * @param {number} options.slowMo - Slow down operations by ms (default: 150 for Playwright, 0 for Puppeteer)
  * @param {boolean} options.verbose - Enable verbose logging (default: false)
+ * @param {string[]} options.args - Custom Chrome arguments to append to the default CHROME_ARGS
  * @returns {Promise<Object>} - Object with browser and page
  */
 export async function launchBrowser(options = {}) {
@@ -20,7 +21,11 @@ export async function launchBrowser(options = {}) {
     headless = false,
     slowMo = engine === 'playwright' ? 150 : 0,
     verbose = false,
+    args = [],
   } = options;
+
+  // Combine default CHROME_ARGS with custom args
+  const chromeArgs = [...CHROME_ARGS, ...args];
 
   if (!['playwright', 'puppeteer'].includes(engine)) {
     throw new Error(
@@ -50,7 +55,7 @@ export async function launchBrowser(options = {}) {
       slowMo,
       chromiumSandbox: true,
       viewport: null,
-      args: CHROME_ARGS,
+      args: chromeArgs,
       ignoreDefaultArgs: ['--enable-automation'],
     });
     page = browser.pages()[0];
@@ -59,7 +64,7 @@ export async function launchBrowser(options = {}) {
     browser = await puppeteer.default.launch({
       headless,
       defaultViewport: null,
-      args: ['--start-maximized', ...CHROME_ARGS],
+      args: ['--start-maximized', ...chromeArgs],
       userDataDir,
     });
     const pages = await browser.pages();

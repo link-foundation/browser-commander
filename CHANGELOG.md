@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 5690786: Add Playwright text selector support and use TIMING constants
+  - Add `isPlaywrightTextSelector()` and `parsePlaywrightTextSelector()` functions
+  - Update `normalizeSelector()` to convert Playwright text selectors (`:has-text()`, `:text-is()`) to valid CSS selectors
+  - Update `withTextSelectorSupport()` to handle both Puppeteer and Playwright text selectors
+  - Add `NAVIGATION_TIMEOUT` constant and use it in navigation-manager
+
 ## 0.1.1
 
 ### Patch Changes

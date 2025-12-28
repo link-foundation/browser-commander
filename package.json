@@ -1,6 +1,6 @@
 {
   "name": "browser-commander",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Universal browser automation library that supports both Playwright and Puppeteer with a unified API",
   "main": "src/index.js",
   "type": "module",

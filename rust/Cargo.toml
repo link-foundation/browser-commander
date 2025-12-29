@@ -1,0 +1,56 @@
+[package]
+name = "browser-commander"
+version = "0.4.0"
+edition = "2021"
+authors = ["Link Foundation"]
+description = "Universal browser automation library that supports multiple browser engines with a unified API"
+license = "Unlicense"
+repository = "https://github.com/link-foundation/browser-commander"
+keywords = ["browser", "automation", "testing", "e2e", "web"]
+categories = ["development-tools::testing", "web-programming"]
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.0", features = ["full"] }
+
+# Browser automation
+chromiumoxide = { version = "0.7", features = ["tokio-runtime"] }
+fantoccini = "0.21"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Regex for selector parsing
+regex = "1.0"
+
+# URL handling
+url = "2.0"
+
+# Async utilities
+futures = "0.3"
+async-trait = "0.1"
+tokio-util = "0.7"
+
+# Directory utilities
+dirs = "5.0"
+
+[dev-dependencies]
+tokio-test = "0.4"
+pretty_assertions = "1.0"
+
+[[bin]]
+name = "browser-commander"
+path = "src/main.rs"
+
+[lib]
+name = "browser_commander"
+path = "src/lib.rs"

@@ -7,14 +7,12 @@ use regex::Regex;
 use std::sync::LazyLock;
 
 /// Pattern for detecting text-based selectors like `:text("Submit")`.
-static TEXT_SELECTOR_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"^:text\(["'](.+?)["']\)$"#).expect("Invalid regex pattern")
-});
+static TEXT_SELECTOR_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"^:text\(["'](.+?)["']\)$"#).expect("Invalid regex pattern"));
 
 /// Pattern for detecting nth-of-type selectors.
-static NTH_OF_TYPE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(.+?):nth-of-type\((\d+)\)"#).expect("Invalid regex pattern")
-});
+static NTH_OF_TYPE_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"(.+?):nth-of-type\((\d+)\)"#).expect("Invalid regex pattern"));
 
 /// Represents a parsed selector.
 #[derive(Debug, Clone, PartialEq)]
@@ -22,7 +20,10 @@ pub enum ParsedSelector {
     /// A standard CSS selector.
     Css(String),
     /// A text-based selector.
-    Text { text: String, element: Option<String> },
+    Text {
+        text: String,
+        element: Option<String>,
+    },
     /// An XPath selector.
     XPath(String),
 }

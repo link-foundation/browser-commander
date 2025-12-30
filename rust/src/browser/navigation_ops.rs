@@ -3,8 +3,8 @@
 //! This module provides high-level navigation utilities with
 //! verification and stabilization support.
 
-use crate::core::engine::{EngineAdapter, EngineError};
 use crate::core::constants::TIMING;
+use crate::core::engine::{EngineAdapter, EngineError};
 use crate::core::navigation::is_navigation_error;
 use std::time::{Duration, Instant};
 

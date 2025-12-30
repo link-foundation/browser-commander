@@ -31,7 +31,7 @@ pub enum NavigationError {
 
 /// Common error messages that indicate a navigation error.
 const NAVIGATION_ERROR_PATTERNS: &[&str] = &[
-    "navigat",  // Matches "navigation", "navigated", etc.
+    "navigat", // Matches "navigation", "navigated", etc.
     "detached",
     "context was destroyed",
     "execution context was destroyed",
@@ -44,12 +44,7 @@ const NAVIGATION_ERROR_PATTERNS: &[&str] = &[
 ];
 
 /// Common error messages that indicate a timeout error.
-const TIMEOUT_ERROR_PATTERNS: &[&str] = &[
-    "timed out",
-    "timeout",
-    "exceeded",
-    "waiting for",
-];
+const TIMEOUT_ERROR_PATTERNS: &[&str] = &["timed out", "timeout", "exceeded", "waiting for"];
 
 /// Check if an error message indicates a navigation error.
 ///
@@ -66,7 +61,9 @@ const TIMEOUT_ERROR_PATTERNS: &[&str] = &[
 /// `true` if the error appears to be a navigation error
 pub fn is_navigation_error(error_message: &str) -> bool {
     NAVIGATION_ERROR_PATTERNS.iter().any(|pattern| {
-        error_message.to_lowercase().contains(&pattern.to_lowercase())
+        error_message
+            .to_lowercase()
+            .contains(&pattern.to_lowercase())
     })
 }
 
@@ -81,7 +78,9 @@ pub fn is_navigation_error(error_message: &str) -> bool {
 /// `true` if the error appears to be a timeout error
 pub fn is_timeout_error(error_message: &str) -> bool {
     TIMEOUT_ERROR_PATTERNS.iter().any(|pattern| {
-        error_message.to_lowercase().contains(&pattern.to_lowercase())
+        error_message
+            .to_lowercase()
+            .contains(&pattern.to_lowercase())
     })
 }
 
@@ -98,10 +97,7 @@ pub fn is_timeout_error(error_message: &str) -> bool {
 /// # Returns
 ///
 /// The operation result, or the default value if a navigation error occurred
-pub async fn safe_operation<F, T, E>(
-    operation: F,
-    default: T,
-) -> T
+pub async fn safe_operation<F, T, E>(operation: F, default: T) -> T
 where
     F: std::future::Future<Output = Result<T, E>>,
     E: std::fmt::Display,
@@ -165,7 +161,9 @@ mod tests {
         assert!(is_navigation_error("frame was detached"));
         assert!(is_navigation_error("Target closed"));
         assert!(is_navigation_error("page has been closed"));
-        assert!(is_navigation_error("Session closed. Most likely the page has been closed."));
+        assert!(is_navigation_error(
+            "Session closed. Most likely the page has been closed."
+        ));
         assert!(is_navigation_error("Cannot find context with specified id"));
         assert!(is_navigation_error("Protocol error: Target closed"));
     }

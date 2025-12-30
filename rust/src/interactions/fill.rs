@@ -3,8 +3,8 @@
 //! This module provides utilities for filling form elements
 //! with verification support.
 
-use crate::core::engine::{EngineAdapter, EngineError, FillVerificationResult};
 use crate::core::constants::TIMING;
+use crate::core::engine::{EngineAdapter, EngineError, FillVerificationResult};
 use crate::core::navigation::is_navigation_error;
 use crate::elements::content::is_element_empty;
 use crate::interactions::click::click_element;
@@ -141,10 +141,7 @@ pub async fn verify_fill(
     }
 
     // Final check
-    let actual_value = adapter
-        .input_value(selector)
-        .await?
-        .unwrap_or_default();
+    let actual_value = adapter.input_value(selector).await?.unwrap_or_default();
 
     Ok(FillVerificationResult {
         verified: false,

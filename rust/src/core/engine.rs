@@ -186,11 +186,7 @@ pub trait EngineAdapter: Send + Sync {
     async fn is_enabled(&self, selector: &str) -> Result<bool, EngineError>;
 
     /// Wait for a selector to appear.
-    async fn wait_for_selector(
-        &self,
-        selector: &str,
-        timeout_ms: u64,
-    ) -> Result<(), EngineError>;
+    async fn wait_for_selector(&self, selector: &str, timeout_ms: u64) -> Result<(), EngineError>;
 
     /// Scroll an element into view.
     async fn scroll_into_view(&self, selector: &str) -> Result<(), EngineError>;

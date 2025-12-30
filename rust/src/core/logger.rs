@@ -14,8 +14,7 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 ///
 /// `true` if verbose mode is enabled, `false` otherwise.
 pub fn is_verbose_enabled() -> bool {
-    std::env::var("VERBOSE").is_ok()
-        || std::env::args().any(|arg| arg == "--verbose")
+    std::env::var("VERBOSE").is_ok() || std::env::args().any(|arg| arg == "--verbose")
 }
 
 /// Logger configuration options.
@@ -47,12 +46,9 @@ pub fn init_logger(options: LoggerOptions) {
         Level::ERROR
     };
 
-    let filter = EnvFilter::from_default_env()
-        .add_directive(level.into());
+    let filter = EnvFilter::from_default_env().add_directive(level.into());
 
-    let subscriber = fmt::layer()
-        .with_target(true)
-        .with_level(true);
+    let subscriber = fmt::layer().with_target(true).with_level(true);
 
     tracing_subscriber::registry()
         .with(filter)
@@ -84,7 +80,7 @@ impl Logger {
     /// # Arguments
     ///
     /// * `message_fn` - A function that returns the message to log.
-    ///                  This is only called if verbose mode is enabled.
+    ///   This is only called if verbose mode is enabled.
     pub fn debug<F>(&self, mut message_fn: F)
     where
         F: FnMut() -> String,

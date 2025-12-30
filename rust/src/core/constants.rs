@@ -111,7 +111,10 @@ mod tests {
     #[test]
     fn timing_default_wait_after_scroll_is_1000ms() {
         let timing = Timing::default();
-        assert_eq!(timing.default_wait_after_scroll, Duration::from_millis(1000));
+        assert_eq!(
+            timing.default_wait_after_scroll,
+            Duration::from_millis(1000)
+        );
     }
 
     #[test]

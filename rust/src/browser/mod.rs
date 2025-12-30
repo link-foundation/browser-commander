@@ -9,6 +9,6 @@ pub mod navigation_ops;
 
 pub use launcher::{launch_browser, Browser, LaunchOptions, LaunchResult};
 pub use navigation_ops::{
-    goto, verify_navigation, wait_for_navigation, wait_for_url_stabilization,
-    NavigationOptions, NavigationResult, NavigationVerificationResult, WaitUntil,
+    goto, verify_navigation, wait_for_navigation, wait_for_url_stabilization, NavigationOptions,
+    NavigationResult, NavigationVerificationResult, WaitUntil,
 };

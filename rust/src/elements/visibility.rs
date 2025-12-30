@@ -35,10 +35,7 @@ pub struct VisibilityResult {
 /// # Returns
 ///
 /// `true` if the element is visible, `false` otherwise
-pub async fn is_visible(
-    adapter: &dyn EngineAdapter,
-    selector: &str,
-) -> Result<bool, EngineError> {
+pub async fn is_visible(adapter: &dyn EngineAdapter, selector: &str) -> Result<bool, EngineError> {
     adapter.is_visible(selector).await
 }
 
@@ -52,10 +49,7 @@ pub async fn is_visible(
 /// # Returns
 ///
 /// `true` if the element is enabled, `false` otherwise
-pub async fn is_enabled(
-    adapter: &dyn EngineAdapter,
-    selector: &str,
-) -> Result<bool, EngineError> {
+pub async fn is_enabled(adapter: &dyn EngineAdapter, selector: &str) -> Result<bool, EngineError> {
     adapter.is_enabled(selector).await
 }
 
@@ -69,10 +63,7 @@ pub async fn is_enabled(
 /// # Returns
 ///
 /// The number of matching elements
-pub async fn count(
-    adapter: &dyn EngineAdapter,
-    selector: &str,
-) -> Result<usize, EngineError> {
+pub async fn count(adapter: &dyn EngineAdapter, selector: &str) -> Result<usize, EngineError> {
     adapter.count(selector).await
 }
 
@@ -140,24 +131,49 @@ mod tests {
     #[test]
     fn is_in_viewport_fully_visible() {
         // Element in the center of viewport
-        assert!(is_in_viewport((100.0, 100.0, 50.0, 50.0), 800.0, 600.0, 0.0));
+        assert!(is_in_viewport(
+            (100.0, 100.0, 50.0, 50.0),
+            800.0,
+            600.0,
+            0.0
+        ));
     }
 
     #[test]
     fn is_in_viewport_partially_visible() {
         // Element partially visible at the edge (right side visible)
         // x=60, so right edge is at 110, which is > margin of 50
-        assert!(is_in_viewport((60.0, 100.0, 50.0, 50.0), 800.0, 600.0, 50.0));
+        assert!(is_in_viewport(
+            (60.0, 100.0, 50.0, 50.0),
+            800.0,
+            600.0,
+            50.0
+        ));
         // Element partially visible at left edge (without margin requirement)
-        assert!(is_in_viewport((-10.0, 100.0, 50.0, 50.0), 800.0, 600.0, 0.0));
+        assert!(is_in_viewport(
+            (-10.0, 100.0, 50.0, 50.0),
+            800.0,
+            600.0,
+            0.0
+        ));
     }
 
     #[test]
     fn is_in_viewport_not_visible() {
         // Element completely above viewport
-        assert!(!is_in_viewport((100.0, -200.0, 50.0, 50.0), 800.0, 600.0, 50.0));
+        assert!(!is_in_viewport(
+            (100.0, -200.0, 50.0, 50.0),
+            800.0,
+            600.0,
+            50.0
+        ));
         // Element completely below viewport
-        assert!(!is_in_viewport((100.0, 700.0, 50.0, 50.0), 800.0, 600.0, 50.0));
+        assert!(!is_in_viewport(
+            (100.0, 700.0, 50.0, 50.0),
+            800.0,
+            600.0,
+            50.0
+        ));
     }
 
     #[test]

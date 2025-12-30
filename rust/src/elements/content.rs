@@ -72,7 +72,7 @@ pub async fn is_element_empty(
     selector: &str,
 ) -> Result<bool, EngineError> {
     let value = adapter.input_value(selector).await?;
-    Ok(value.map_or(true, |v| v.trim().is_empty()))
+    Ok(value.is_none_or(|v| v.trim().is_empty()))
 }
 
 /// Information about an element for logging purposes.

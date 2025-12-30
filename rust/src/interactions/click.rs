@@ -3,10 +3,8 @@
 //! This module provides utilities for clicking elements with
 //! pre-click state capture and verification support.
 
-use crate::core::engine::{
-    ClickVerificationResult, EngineAdapter, EngineError, PreClickState,
-};
 use crate::core::constants::TIMING;
+use crate::core::engine::{ClickVerificationResult, EngineAdapter, EngineError, PreClickState};
 use crate::core::navigation::is_navigation_error;
 use crate::interactions::scroll::{scroll_into_view_if_needed, ScrollBehavior, ScrollOptions};
 use std::time::Duration;
@@ -128,12 +126,27 @@ pub async fn capture_pre_click_state(
 
     Ok(PreClickState {
         disabled: result.get("disabled").and_then(|v| v.as_bool()),
-        aria_pressed: result.get("ariaPressed").and_then(|v| v.as_str()).map(String::from),
-        aria_expanded: result.get("ariaExpanded").and_then(|v| v.as_str()).map(String::from),
-        aria_selected: result.get("ariaSelected").and_then(|v| v.as_str()).map(String::from),
+        aria_pressed: result
+            .get("ariaPressed")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        aria_expanded: result
+            .get("ariaExpanded")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        aria_selected: result
+            .get("ariaSelected")
+            .and_then(|v| v.as_str())
+            .map(String::from),
         checked: result.get("checked").and_then(|v| v.as_bool()),
-        class_name: result.get("className").and_then(|v| v.as_str()).map(String::from),
-        is_connected: result.get("isConnected").and_then(|v| v.as_bool()).unwrap_or(false),
+        class_name: result
+            .get("className")
+            .and_then(|v| v.as_str())
+            .map(String::from),
+        is_connected: result
+            .get("isConnected")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
     })
 }
 

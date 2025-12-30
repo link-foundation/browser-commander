@@ -142,10 +142,7 @@ pub struct LaunchResult {
 /// Returns an error if the browser fails to launch
 pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyhow::Error> {
     if options.verbose {
-        tracing::info!(
-            "Launching browser with {} engine...",
-            options.engine
-        );
+        tracing::info!("Launching browser with {} engine...", options.engine);
     }
 
     let user_data_dir = options.get_user_data_dir();

@@ -76,7 +76,9 @@ pub fn same_origin(url1: &str, url2: &str) -> bool {
 ///
 /// The domain/host if available
 pub fn get_domain(url_str: &str) -> Option<String> {
-    parse_url(url_str).ok().and_then(|u| u.host_str().map(String::from))
+    parse_url(url_str)
+        .ok()
+        .and_then(|u| u.host_str().map(String::from))
 }
 
 /// Check if a URL is a data URL.
@@ -151,14 +153,8 @@ mod tests {
 
     #[test]
     fn same_origin_false() {
-        assert!(!same_origin(
-            "https://example.com/",
-            "https://other.com/"
-        ));
-        assert!(!same_origin(
-            "https://example.com/",
-            "http://example.com/"
-        ));
+        assert!(!same_origin("https://example.com/", "https://other.com/"));
+        assert!(!same_origin("https://example.com/", "http://example.com/"));
         assert!(!same_origin(
             "https://example.com/",
             "https://sub.example.com/"

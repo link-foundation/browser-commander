@@ -212,6 +212,7 @@ pub async fn find_toggle_button(
 
 #[cfg(test)]
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]

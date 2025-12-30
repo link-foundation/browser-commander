@@ -3,8 +3,8 @@
 //! This module provides utilities for scrolling elements into view
 //! with verification support.
 
-use crate::core::engine::{EngineAdapter, EngineError, ScrollVerificationResult};
 use crate::core::constants::TIMING;
+use crate::core::engine::{EngineAdapter, EngineError, ScrollVerificationResult};
 use std::time::{Duration, Instant};
 
 /// Scroll behavior options.

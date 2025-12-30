@@ -176,12 +176,7 @@ mod tests {
     #[tokio::test]
     async fn wait_with_cancel_completes_normally() {
         let token = CancellationToken::new();
-        let result = wait_with_cancel(
-            Duration::from_millis(10),
-            &token,
-            Some("test wait"),
-        )
-        .await;
+        let result = wait_with_cancel(Duration::from_millis(10), &token, Some("test wait")).await;
 
         assert!(result.completed);
         assert!(!result.aborted);

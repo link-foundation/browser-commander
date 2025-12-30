@@ -10,8 +10,7 @@ pub mod fill;
 pub mod scroll;
 
 pub use click::{
-    capture_pre_click_state, click_button, click_element, verify_click, ClickOptions,
-    ClickResult,
+    capture_pre_click_state, click_button, click_element, verify_click, ClickOptions, ClickResult,
 };
 pub use fill::{fill_text_area, perform_fill, verify_fill, FillOptions, FillResult};
 pub use scroll::{

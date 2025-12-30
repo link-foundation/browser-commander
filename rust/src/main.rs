@@ -2,7 +2,7 @@
 //!
 //! A command-line interface for the browser-commander library.
 
-use browser_commander::browser::{LaunchOptions, launch_browser};
+use browser_commander::browser::{launch_browser, LaunchOptions};
 use browser_commander::core::logger::{init_logger, LoggerOptions};
 use std::env;
 

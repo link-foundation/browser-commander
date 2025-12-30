@@ -46,10 +46,9 @@ pub mod interactions;
 pub mod utilities;
 
 // Re-export commonly used items at crate root
-pub use browser::{launch_browser, LaunchOptions, Browser, LaunchResult};
+pub use browser::{launch_browser, Browser, LaunchOptions, LaunchResult};
 pub use core::{
-    EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, Timing,
-    CHROME_ARGS, TIMING,
+    EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, Timing, CHROME_ARGS, TIMING,
 };
 
 /// Prelude module for convenient imports.
@@ -60,21 +59,19 @@ pub use core::{
 /// ```
 pub mod prelude {
     pub use crate::browser::{
-        goto, launch_browser, verify_navigation, wait_for_navigation,
-        wait_for_url_stabilization, Browser, LaunchOptions, LaunchResult,
-        NavigationOptions, NavigationResult, WaitUntil,
+        goto, launch_browser, verify_navigation, wait_for_navigation, wait_for_url_stabilization,
+        Browser, LaunchOptions, LaunchResult, NavigationOptions, NavigationResult, WaitUntil,
     };
     pub use crate::core::{
-        is_navigation_error, is_timeout_error, EngineAdapter, EngineError, EngineType,
-        Logger, LoggerOptions, Timing, CHROME_ARGS, TIMING,
+        is_navigation_error, is_timeout_error, EngineAdapter, EngineError, EngineType, Logger,
+        LoggerOptions, Timing, CHROME_ARGS, TIMING,
     };
     pub use crate::elements::{
         count, get_attribute, input_value, is_enabled, is_visible, normalize_selector,
         text_content, ParsedSelector,
     };
     pub use crate::high_level::{
-        check_and_clear_flag, find_toggle_button, install_click_listener,
-        wait_for_url_condition,
+        check_and_clear_flag, find_toggle_button, install_click_listener, wait_for_url_condition,
     };
     pub use crate::interactions::{
         click_button, click_element, fill_text_area, perform_fill, scroll_into_view,
@@ -82,7 +79,7 @@ pub mod prelude {
         ScrollBehavior, ScrollOptions, ScrollResult,
     };
     pub use crate::utilities::{
-        evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin,
-        unfocus_address_bar, wait, wait_with_cancel, WaitResult,
+        evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin, unfocus_address_bar,
+        wait, wait_with_cancel, WaitResult,
     };
 }

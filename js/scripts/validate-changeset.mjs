@@ -15,7 +15,10 @@ import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const PACKAGE_NAME = 'browser-commander';
+// When running from js/ directory, the changeset dir is local
 const CHANGESET_DIR = '.changeset';
+// But git diff output uses repository-root relative paths
+const GIT_CHANGESET_PATH = 'js/.changeset';
 
 /**
  * Ensure a git commit is available locally, fetching if necessary
@@ -46,13 +49,19 @@ function parseAddedChangesets(diffOutput) {
       continue;
     }
     const [status, filePath] = line.split('\t');
+    // Check both local (.changeset/) and repo-root (js/.changeset/) paths
+    const isChangeset =
+      filePath.startsWith(`${CHANGESET_DIR}/`) ||
+      filePath.startsWith(`${GIT_CHANGESET_PATH}/`);
     if (
       status === 'A' &&
-      filePath.startsWith(`${CHANGESET_DIR}/`) &&
+      isChangeset &&
       filePath.endsWith('.md') &&
       !filePath.endsWith('README.md')
     ) {
-      addedChangesets.push(filePath.replace(`${CHANGESET_DIR}/`, ''));
+      // Extract just the filename
+      const fileName = filePath.split('/').pop();
+      addedChangesets.push(fileName);
     }
   }
   return addedChangesets;

@@ -304,13 +304,25 @@ export class PlaywrightAdapter extends EngineAdapter {
 
   async evaluateOnPage(fn, args = []) {
     // Playwright only accepts a single argument (can be array/object)
+    // To match Puppeteer's behavior where args are spread, we wrap the function
+    // and pass all args as a single array, then apply them in the browser context
     if (args.length === 0) {
       return await this.page.evaluate(fn);
     } else if (args.length === 1) {
       return await this.page.evaluate(fn, args[0]);
     } else {
-      // Multiple args - pass as array
-      return await this.page.evaluate(fn, args);
+      // Multiple args - wrap function to accept array and spread them
+      // This makes Playwright behave like Puppeteer's spread behavior
+      // We pass the function string and args array, then reconstruct and call in browser
+      const fnString = fn.toString();
+      return await this.page.evaluate(
+        ({ fnStr, argsArray }) => {
+          // Reconstruct the function in browser context and call with spread args
+          const reconstructedFn = new Function(`return (${fnStr})`)();
+          return reconstructedFn(...argsArray);
+        },
+        { fnStr: fnString, argsArray: args }
+      );
     }
   }
 

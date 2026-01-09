@@ -105,28 +105,15 @@ export function createMockPlaywrightPage(options = {}) {
       return locs.map((l) => l.evaluate(fn, ...args));
     },
     locator: locatorMock,
-    evaluate: async (fn, ...args) => {
+    // Playwright's page.evaluate() only accepts a single argument (not spread)
+    // This is the key difference from Puppeteer
+    evaluate: async (fn, arg) => {
       if (evaluateResult !== null) {
         return evaluateResult;
       }
-      // Create mock window/document context
-      const mockContext = {
-        innerHeight: 800,
-        innerWidth: 1200,
-        sessionStorage: {
-          _data: {},
-          getItem: (key) => mockContext.sessionStorage._data[key] || null,
-          setItem: (key, val) => {
-            mockContext.sessionStorage._data[key] = val;
-          },
-          removeItem: (key) => {
-            delete mockContext.sessionStorage._data[key];
-          },
-        },
-        querySelectorAll: () => [],
-      };
       try {
-        return fn(...args);
+        // Playwright passes exactly one argument (can be object/array)
+        return fn(arg);
       } catch {
         return fn;
       }

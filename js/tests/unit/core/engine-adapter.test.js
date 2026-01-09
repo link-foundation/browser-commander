@@ -78,6 +78,53 @@ describe('engine-adapter', () => {
       const count = await adapter.count('button');
       assert.strictEqual(count, 5);
     });
+
+    describe('evaluateOnPage', () => {
+      it('should handle zero arguments', async () => {
+        page = createMockPlaywrightPage();
+        adapter = new PlaywrightAdapter(page);
+        const result = await adapter.evaluateOnPage(() => 42);
+        assert.strictEqual(result, 42);
+      });
+
+      it('should handle single argument', async () => {
+        page = createMockPlaywrightPage();
+        adapter = new PlaywrightAdapter(page);
+        const result = await adapter.evaluateOnPage((x) => x * 2, [5]);
+        assert.strictEqual(result, 10);
+      });
+
+      it('should handle multiple arguments by spreading them', async () => {
+        page = createMockPlaywrightPage();
+        adapter = new PlaywrightAdapter(page);
+        // This is the bug case - multiple args should be spread, not passed as array
+        const result = await adapter.evaluateOnPage((a, b) => a + b, [3, 7]);
+        assert.strictEqual(result, 10);
+      });
+
+      it('should handle selector + array arguments (real-world bug case)', async () => {
+        page = createMockPlaywrightPage();
+        adapter = new PlaywrightAdapter(page);
+        // This reproduces the original bug: selector and processedIds
+        const result = await adapter.evaluateOnPage(
+          (selector, processedIds) =>
+            `Selector: ${selector}, Count: ${processedIds.length}`,
+          ['[data-qa="test"]', ['id1', 'id2']]
+        );
+        assert.ok(result.includes('Selector: [data-qa="test"]'));
+        assert.ok(result.includes('Count: 2'));
+      });
+
+      it('should handle multiple arguments of different types', async () => {
+        page = createMockPlaywrightPage();
+        adapter = new PlaywrightAdapter(page);
+        const result = await adapter.evaluateOnPage(
+          (str, num, obj) => `${str}-${num}-${obj.key}`,
+          ['hello', 42, { key: 'world' }]
+        );
+        assert.strictEqual(result, 'hello-42-world');
+      });
+    });
   });
 
   describe('PuppeteerAdapter', () => {
@@ -129,6 +176,42 @@ describe('engine-adapter', () => {
       adapter = new PuppeteerAdapter(page);
       const count = await adapter.count('button');
       assert.strictEqual(count, 5);
+    });
+
+    describe('evaluateOnPage', () => {
+      it('should handle zero arguments', async () => {
+        page = createMockPuppeteerPage();
+        adapter = new PuppeteerAdapter(page);
+        const result = await adapter.evaluateOnPage(() => 42);
+        assert.strictEqual(result, 42);
+      });
+
+      it('should handle single argument', async () => {
+        page = createMockPuppeteerPage();
+        adapter = new PuppeteerAdapter(page);
+        const result = await adapter.evaluateOnPage((x) => x * 2, [5]);
+        assert.strictEqual(result, 10);
+      });
+
+      it('should handle multiple arguments by spreading them', async () => {
+        page = createMockPuppeteerPage();
+        adapter = new PuppeteerAdapter(page);
+        // Puppeteer natively spreads args - ensure same behavior as Playwright fix
+        const result = await adapter.evaluateOnPage((a, b) => a + b, [3, 7]);
+        assert.strictEqual(result, 10);
+      });
+
+      it('should handle selector + array arguments (parity with PlaywrightAdapter)', async () => {
+        page = createMockPuppeteerPage();
+        adapter = new PuppeteerAdapter(page);
+        const result = await adapter.evaluateOnPage(
+          (selector, processedIds) =>
+            `Selector: ${selector}, Count: ${processedIds.length}`,
+          ['[data-qa="test"]', ['id1', 'id2']]
+        );
+        assert.ok(result.includes('Selector: [data-qa="test"]'));
+        assert.ok(result.includes('Count: 2'));
+      });
     });
   });
 

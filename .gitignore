@@ -140,6 +140,3 @@ vite.config.ts.timestamp-*
 
 # jscpd reports
 reports/
-
-# js/README.md is copied from root during npm publish
-js/README.md

@@ -223,12 +223,6 @@ jobs:
         id: version
         run: node scripts/version-and-commit.mjs --mode changeset
 
-      - name: Copy README for npm package
-        # Copy root README.md to js/ directory so npm package includes documentation
-        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
-        working-directory: .
-        run: cp README.md js/README.md
-
       - name: Publish to npm
         # Run if version was committed OR if a previous attempt already committed (for re-runs)
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
@@ -279,12 +273,6 @@ jobs:
       - name: Version packages and commit to main
         id: version
         run: node scripts/version-and-commit.mjs --mode instant --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
-
-      - name: Copy README for npm package
-        # Copy root README.md to js/ directory so npm package includes documentation
-        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
-        working-directory: .
-        run: cp README.md js/README.md
 
       - name: Publish to npm
         # Run if version was committed OR if a previous attempt already committed (for re-runs)

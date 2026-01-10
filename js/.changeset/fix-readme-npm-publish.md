@@ -4,4 +4,10 @@
 
 Include README.md in npm package
 
-The npm package was missing the README documentation because the package is published from the js/ subdirectory, but README.md is in the repository root. This fix adds a step in the CI/CD workflow to copy README.md from the repository root to the js/ directory before publishing to npm.
+Added language-specific README.md files for each implementation:
+
+- js/README.md: JavaScript/npm-specific documentation with installation and API usage
+- rust/README.md: Rust/Cargo-specific documentation
+- Root README.md: Common overview linking to both implementations
+
+The npm package now includes the JavaScript-specific README.md directly from the js/ directory.

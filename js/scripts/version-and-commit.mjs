@@ -126,7 +126,9 @@ function countChangesets() {
  */
 async function getVersion(source = 'local') {
   if (source === 'remote') {
-    const result = await $`git show origin/main:package.json`.run({
+    // Use js/package.json for monorepo structure
+    // The workflow runs with working-directory: js, but git show uses repo root paths
+    const result = await $`git show origin/main:js/package.json`.run({
       capture: true,
     });
     return JSON.parse(result.stdout).version;

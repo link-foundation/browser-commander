@@ -207,11 +207,41 @@ describe('selectors', () => {
       assert.strictEqual(result, 'button');
     });
 
-    it('should return non-text-selector object unchanged', async () => {
+    it('should return null for invalid object selector', async () => {
       const page = createMockPlaywrightPage();
       const obj = { someKey: 'value' };
       const result = await normalizeSelector({ page, selector: obj });
-      assert.strictEqual(result, obj);
+      assert.strictEqual(result, null);
+    });
+
+    it('should return null for array selector', async () => {
+      const page = createMockPlaywrightPage();
+      const arr = ['[data-qa="test"]', []];
+      const result = await normalizeSelector({ page, selector: arr });
+      assert.strictEqual(result, null);
+    });
+
+    it('should return null for number selector', async () => {
+      const page = createMockPlaywrightPage();
+      const result = await normalizeSelector({ page, selector: 123 });
+      assert.strictEqual(result, null);
+    });
+
+    it('should accept valid Puppeteer text selector object', async () => {
+      const page = createMockPuppeteerPage();
+      page.evaluate = async () => '[data-qa="test"]';
+      const textSelector = {
+        _isPuppeteerTextSelector: true,
+        baseSelector: 'button',
+        text: 'Click me',
+        exact: false,
+      };
+      const result = await normalizeSelector({
+        page,
+        engine: 'puppeteer',
+        selector: textSelector,
+      });
+      assert.strictEqual(result, '[data-qa="test"]');
     });
   });
 

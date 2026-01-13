@@ -162,6 +162,25 @@ export async function normalizeSelector(options = {}) {
     throw new Error('selector is required in options');
   }
 
+  // DEFENSIVE: Validate selector type - must be string or Puppeteer text selector object
+  // Arrays and other invalid types should be rejected to prevent downstream querySelectorAll errors
+  if (Array.isArray(selector)) {
+    console.warn(
+      `normalizeSelector received invalid selector type: array. Expected string or text selector object.`
+    );
+    return null;
+  }
+
+  if (
+    typeof selector !== 'string' &&
+    (typeof selector !== 'object' || !selector._isPuppeteerTextSelector)
+  ) {
+    console.warn(
+      `normalizeSelector received invalid selector type: ${typeof selector}. Expected string or text selector object.`
+    );
+    return null;
+  }
+
   // Handle Playwright text selectors (strings containing :has-text or :text-is)
   // These are valid for Playwright's locator API but NOT for document.querySelectorAll
   if (
@@ -267,6 +286,8 @@ export async function normalizeSelector(options = {}) {
     }
   }
 
+  // This line should be unreachable after validation, but kept as a safeguard
+  // istanbul ignore next
   return selector;
 }
 

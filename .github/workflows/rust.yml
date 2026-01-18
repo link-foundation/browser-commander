@@ -273,15 +273,28 @@ jobs:
       - name: Check if version already released or no fragments
         id: check
         run: |
+          CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' Cargo.toml | head -1)
+          CRATE_NAME=$(grep -Po '(?<=^name = ")[^"]*' Cargo.toml | head -1)
+
+          # Check if version is published on crates.io (the source of truth for Rust packages)
+          # Note: We check crates.io, not git tags, because git tags can exist without
+          # the package being published (e.g., failed publish, GitHub-only releases)
+          CRATES_IO_RESPONSE=$(curl -s "https://crates.io/api/v1/crates/${CRATE_NAME}/${CURRENT_VERSION}")
+          VERSION_ON_CRATES_IO=false
+          if echo "$CRATES_IO_RESPONSE" | grep -q '"version"'; then
+            VERSION_ON_CRATES_IO=true
+          fi
+
+          echo "Crate: $CRATE_NAME, Version: $CURRENT_VERSION, Published on crates.io: $VERSION_ON_CRATES_IO"
+
           # Check if there are changelog fragments
           if [ "${{ steps.bump_type.outputs.has_fragments }}" != "true" ]; then
-            # No fragments - check if current version tag exists
-            CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' Cargo.toml)
-            if git rev-parse "v$CURRENT_VERSION" >/dev/null 2>&1; then
-              echo "No changelog fragments and v$CURRENT_VERSION already released"
+            # No fragments - check if current version is published on crates.io
+            if [ "$VERSION_ON_CRATES_IO" = "true" ]; then
+              echo "No changelog fragments and v$CURRENT_VERSION already published on crates.io"
               echo "should_release=false" >> $GITHUB_OUTPUT
             else
-              echo "No changelog fragments but v$CURRENT_VERSION not yet released"
+              echo "No changelog fragments but v$CURRENT_VERSION not yet published to crates.io"
               echo "should_release=true" >> $GITHUB_OUTPUT
               echo "skip_bump=true" >> $GITHUB_OUTPUT
             fi

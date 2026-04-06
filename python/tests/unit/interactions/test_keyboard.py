@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from browser_commander.interactions.keyboard import key_down, key_up, press_key, type_text
+import pytest
+
 from browser_commander.core.engine_adapter import PlaywrightAdapter
+from browser_commander.interactions.keyboard import (
+    key_down,
+    key_up,
+    press_key,
+    type_text,
+)
 from tests.helpers.mocks import create_mock_playwright_page
 
 

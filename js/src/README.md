@@ -451,7 +451,7 @@ await commander.keyboard.type('Hello World');
 
 // Modifier key combinations
 await commander.keyboard.down('Control');
-await commander.keyboard.press('a');   // Select All
+await commander.keyboard.press('a'); // Select All
 await commander.keyboard.up('Control');
 ```
 

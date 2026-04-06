@@ -30,10 +30,7 @@ use crate::core::engine::{EngineAdapter, EngineError};
 ///
 /// // press_key(&engine, "Escape").await?;
 /// ```
-pub async fn press_key(
-    engine: &dyn EngineAdapter,
-    key: &str,
-) -> Result<(), EngineError> {
+pub async fn press_key(engine: &dyn EngineAdapter, key: &str) -> Result<(), EngineError> {
     engine.keyboard_press(key).await
 }
 
@@ -50,10 +47,7 @@ pub async fn press_key(
 /// # Errors
 ///
 /// Returns `EngineError` if typing fails.
-pub async fn type_text(
-    engine: &dyn EngineAdapter,
-    text: &str,
-) -> Result<(), EngineError> {
+pub async fn type_text(engine: &dyn EngineAdapter, text: &str) -> Result<(), EngineError> {
     engine.keyboard_type(text).await
 }
 
@@ -69,10 +63,7 @@ pub async fn type_text(
 /// # Errors
 ///
 /// Returns `EngineError` if the key down operation fails.
-pub async fn key_down(
-    engine: &dyn EngineAdapter,
-    key: &str,
-) -> Result<(), EngineError> {
+pub async fn key_down(engine: &dyn EngineAdapter, key: &str) -> Result<(), EngineError> {
     engine.keyboard_down(key).await
 }
 
@@ -86,10 +77,7 @@ pub async fn key_down(
 /// # Errors
 ///
 /// Returns `EngineError` if the key up operation fails.
-pub async fn key_up(
-    engine: &dyn EngineAdapter,
-    key: &str,
-) -> Result<(), EngineError> {
+pub async fn key_up(engine: &dyn EngineAdapter, key: &str) -> Result<(), EngineError> {
     engine.keyboard_up(key).await
 }
 
@@ -163,17 +151,11 @@ mod tests {
             Ok(())
         }
 
-        async fn text_content(
-            &self,
-            _selector: &str,
-        ) -> Result<Option<String>, EngineError> {
+        async fn text_content(&self, _selector: &str) -> Result<Option<String>, EngineError> {
             Ok(None)
         }
 
-        async fn input_value(
-            &self,
-            _selector: &str,
-        ) -> Result<Option<String>, EngineError> {
+        async fn input_value(&self, _selector: &str) -> Result<Option<String>, EngineError> {
             Ok(None)
         }
 
@@ -205,10 +187,7 @@ mod tests {
             Ok(())
         }
 
-        async fn evaluate(
-            &self,
-            _script: &str,
-        ) -> Result<serde_json::Value, EngineError> {
+        async fn evaluate(&self, _script: &str) -> Result<serde_json::Value, EngineError> {
             Ok(serde_json::Value::Null)
         }
 
@@ -279,10 +258,7 @@ mod tests {
     async fn test_key_up() {
         let engine = MockEngine::new();
         key_up(&engine, "Control").await.unwrap();
-        assert_eq!(
-            *engine.up_keys.lock().unwrap(),
-            vec!["Control".to_string()]
-        );
+        assert_eq!(*engine.up_keys.lock().unwrap(), vec!["Control".to_string()]);
     }
 
     #[tokio::test]

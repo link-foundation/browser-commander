@@ -102,12 +102,6 @@ from browser_commander.interactions.click import (
     default_click_verification,
     verify_click,
 )
-from browser_commander.interactions.keyboard import (
-    key_down,
-    key_up,
-    press_key,
-    type_text,
-)
 from browser_commander.interactions.fill import (
     FillResult,
     FillVerificationResult,
@@ -117,6 +111,12 @@ from browser_commander.interactions.fill import (
     fill_text_area,
     perform_fill,
     verify_fill,
+)
+from browser_commander.interactions.keyboard import (
+    key_down,
+    key_up,
+    press_key,
+    type_text,
 )
 
 # Re-export interactions
@@ -208,6 +208,8 @@ __all__ = [
     "is_verbose_enabled",
     # Element visibility
     "is_visible",
+    "key_down",
+    "key_up",
     # Browser management
     "launch_browser",
     "locator",
@@ -217,6 +219,8 @@ __all__ = [
     "normalize_selector",
     "not_condition",
     "perform_fill",
+    # Keyboard interactions
+    "press_key",
     # Element selectors
     "query_selector",
     "query_selector_all",
@@ -227,6 +231,7 @@ __all__ = [
     "scroll_into_view_if_needed",
     # Element content
     "text_content",
+    "type_text",
     "unfocus_address_bar",
     "verify_click",
     "verify_fill",
@@ -245,9 +250,4 @@ __all__ = [
     "wait_for_visible",
     "with_navigation_safety",
     "with_text_selector_support",
-    # Keyboard interactions
-    "press_key",
-    "type_text",
-    "key_down",
-    "key_up",
 ]

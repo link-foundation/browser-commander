@@ -147,7 +147,10 @@ export function createMockPlaywrightPage(options = {}) {
     click: async (sel, opts = {}) => {},
     type: async (sel, text, opts = {}) => {},
     keyboard: {
+      press: async (key) => {},
       type: async (text) => {},
+      down: async (key) => {},
+      up: async (key) => {},
     },
   };
 }
@@ -304,7 +307,10 @@ export function createMockPuppeteerPage(options = {}) {
     click: async (sel, opts = {}) => {},
     type: async (sel, text, opts = {}) => {},
     keyboard: {
+      press: async (key) => {},
       type: async (text) => {},
+      down: async (key) => {},
+      up: async (key) => {},
     },
   };
 

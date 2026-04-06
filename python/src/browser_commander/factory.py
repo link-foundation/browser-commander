@@ -567,6 +567,47 @@ class BrowserCommander:
             "actual_value": result.actual_value,
         }
 
+    # ==================== Keyboard Operations ====================
+    async def keyboard_press(self, key: str) -> None:
+        """Press a key at the page level.
+
+        Args:
+            key: Key to press (e.g. 'Escape', 'Enter', 'Tab', 'ArrowDown')
+        """
+        from browser_commander.interactions.keyboard import press_key
+
+        await press_key(page=self.page, key=key, engine=self.engine)
+
+    async def keyboard_type(self, text: str) -> None:
+        """Type text at the page level.
+
+        Args:
+            text: Text to type
+        """
+        from browser_commander.interactions.keyboard import type_text
+
+        await type_text(page=self.page, text=text, engine=self.engine)
+
+    async def keyboard_down(self, key: str) -> None:
+        """Hold a key down at the page level.
+
+        Args:
+            key: Key to hold down
+        """
+        from browser_commander.interactions.keyboard import key_down
+
+        await key_down(page=self.page, key=key, engine=self.engine)
+
+    async def keyboard_up(self, key: str) -> None:
+        """Release a held key at the page level.
+
+        Args:
+            key: Key to release
+        """
+        from browser_commander.interactions.keyboard import key_up
+
+        await key_up(page=self.page, key=key, engine=self.engine)
+
     # ==================== Scroll Operations ====================
     async def scroll_into_view(
         self,

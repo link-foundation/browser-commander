@@ -202,6 +202,24 @@ pub trait EngineAdapter: Send + Sync {
 
     /// Wait for navigation to complete.
     async fn wait_for_navigation(&self, timeout_ms: u64) -> Result<(), EngineError>;
+
+    // =========================================================================
+    // Page-level Keyboard Operations
+    // =========================================================================
+
+    /// Press a key at the page level (e.g. "Escape", "Enter", "Tab").
+    ///
+    /// Key names follow the Playwright/Puppeteer convention.
+    async fn keyboard_press(&self, key: &str) -> Result<(), EngineError>;
+
+    /// Type text at the page level (dispatches key events for each character).
+    async fn keyboard_type(&self, text: &str) -> Result<(), EngineError>;
+
+    /// Hold a key down at the page level. Must be paired with `keyboard_up`.
+    async fn keyboard_down(&self, key: &str) -> Result<(), EngineError>;
+
+    /// Release a held key at the page level.
+    async fn keyboard_up(&self, key: &str) -> Result<(), EngineError>;
 }
 
 #[cfg(test)]

@@ -74,9 +74,9 @@ pub mod prelude {
         check_and_clear_flag, find_toggle_button, install_click_listener, wait_for_url_condition,
     };
     pub use crate::interactions::{
-        click_button, click_element, fill_text_area, perform_fill, scroll_into_view,
-        scroll_into_view_if_needed, ClickOptions, ClickResult, FillOptions, FillResult,
-        ScrollBehavior, ScrollOptions, ScrollResult,
+        click_button, click_element, fill_text_area, key_down, key_up, perform_fill, press_key,
+        scroll_into_view, scroll_into_view_if_needed, type_text, ClickOptions, ClickResult,
+        FillOptions, FillResult, ScrollBehavior, ScrollOptions, ScrollResult,
     };
     pub use crate::utilities::{
         evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin, unfocus_address_bar,

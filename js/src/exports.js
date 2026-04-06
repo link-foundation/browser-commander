@@ -109,6 +109,8 @@ export {
   verifyFill,
 } from './interactions/fill.js';
 
+export { pressKey, typeText, keyDown, keyUp } from './interactions/keyboard.js';
+
 // Re-export utilities
 export { wait, evaluate, safeEvaluate } from './utilities/wait.js';
 export { getUrl, unfocusAddressBar } from './utilities/url.js';

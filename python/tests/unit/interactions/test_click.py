@@ -93,9 +93,7 @@ class TestDefaultClickVerification:
     async def test_verify_element_removed_from_dom(self):
         page = create_mock_playwright_page()
         adapter = MagicMock()
-        adapter.evaluate_on_element = AsyncMock(
-            return_value={"isConnected": False}
-        )
+        adapter.evaluate_on_element = AsyncMock(return_value={"isConnected": False})
 
         result = await default_click_verification(
             page=page,
@@ -242,9 +240,7 @@ class TestClickElement:
             clicked = True
 
         adapter.click = mock_click
-        adapter.evaluate_on_element = AsyncMock(
-            return_value={"isConnected": True}
-        )
+        adapter.evaluate_on_element = AsyncMock(return_value={"isConnected": True})
 
         result = await click_element(
             page=page,
@@ -268,9 +264,7 @@ class TestClickElement:
             click_options["force"] = force
 
         adapter.click = mock_click
-        adapter.evaluate_on_element = AsyncMock(
-            return_value={"isConnected": True}
-        )
+        adapter.evaluate_on_element = AsyncMock(return_value={"isConnected": True})
 
         await click_element(
             page=page,
@@ -326,9 +320,7 @@ class TestClickButton:
             )
 
     async def test_click_button_interface(self):
-        page = create_mock_playwright_page(
-            elements={"button": None}
-        )
+        page = create_mock_playwright_page(elements={"button": None})
         log = create_mock_logger()
 
         async def wait_fn(ms, reason):

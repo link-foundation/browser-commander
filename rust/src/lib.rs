@@ -46,7 +46,10 @@ pub mod interactions;
 pub mod utilities;
 
 // Re-export commonly used items at crate root
-pub use browser::{emulate_media, launch_browser, Browser, ColorScheme, EmulateMediaOptions, LaunchOptions, LaunchResult};
+pub use browser::{
+    emulate_media, launch_browser, Browser, ColorScheme, EmulateMediaOptions, LaunchOptions,
+    LaunchResult,
+};
 pub use core::{
     EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, Timing, CHROME_ARGS, TIMING,
 };

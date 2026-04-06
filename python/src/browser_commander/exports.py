@@ -185,6 +185,7 @@ __all__ = [
     "default_navigation_verification",
     "default_scroll_verification",
     "detect_engine",
+    "emulate_media",
     "evaluate",
     "fill_text_area",
     "find_by_text",

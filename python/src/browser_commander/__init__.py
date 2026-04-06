@@ -62,6 +62,7 @@ from browser_commander.exports import (
     default_navigation_verification,
     default_scroll_verification,
     detect_engine,
+    emulate_media,
     evaluate,
     fill_text_area,
     find_by_text,
@@ -80,8 +81,6 @@ from browser_commander.exports import (
     is_verbose_enabled,
     # Element visibility
     is_visible,
-    # Browser management
-    emulate_media,
     launch_browser,
     locator,
     log_element_info,
@@ -173,6 +172,7 @@ __all__ = [
     "default_navigation_verification",
     "default_scroll_verification",
     "detect_engine",
+    "emulate_media",
     "evaluate",
     "fill_text_area",
     "find_by_text",
@@ -191,8 +191,6 @@ __all__ = [
     "is_verbose_enabled",
     # Element visibility
     "is_visible",
-    # Browser management
-    "emulate_media",
     "launch_browser",
     "locator",
     "log_element_info",

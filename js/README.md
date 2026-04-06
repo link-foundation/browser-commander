@@ -350,6 +350,67 @@ action: async (ctx) => {
 };
 ```
 
+## Extensibility / Escape Hatch
+
+`browser-commander` cannot anticipate every browser API. When you need an API that is not yet supported, you can access the raw underlying engine objects directly as an **official extensibility escape hatch**.
+
+### Using `commander.page` for engine-specific APIs
+
+`makeBrowserCommander` exposes `commander.page` — this is the **raw Playwright or Puppeteer page object**, not a wrapper. Use it directly for APIs browser-commander doesn't yet support:
+
+```javascript
+const { browser, page } = await launchBrowser({ engine: 'playwright' });
+const commander = makeBrowserCommander({ page });
+
+// Access engine-specific API via commander.page
+// Example: PDF generation (issue #35)
+const pdfBuffer = await commander.page.pdf({
+  format: 'A4',
+  printBackground: true,
+  margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' },
+});
+
+// Example: Color scheme emulation (issue #36)
+await commander.page.emulateMedia({ colorScheme: 'dark' });
+
+// Example: Keyboard interactions (issue #37)
+await commander.page.keyboard.press('Escape');
+
+// Example: Dialog handling (issue #38)
+commander.page.on('dialog', async (dialog) => {
+  await dialog.dismiss();
+});
+```
+
+### Using `launchBrowser` raw return values
+
+`launchBrowser()` returns the raw `{ browser, page }` objects from the underlying engine. You can use these directly:
+
+```javascript
+const { browser, page } = await launchBrowser({ engine: 'playwright' });
+
+// Use raw page directly for engine-specific APIs
+await page.pdf({ format: 'A4' });
+
+// Or create a commander for the unified API
+const commander = makeBrowserCommander({ page });
+```
+
+### No more `_page` hacks
+
+If you previously used `page._page || page` to access the raw page, replace it with `commander.page`:
+
+```javascript
+// BEFORE (fragile hack):
+const rawPage = page._page || page;
+await rawPage.pdf({ format: 'A4' });
+
+// AFTER (official API):
+await commander.page.pdf({ format: 'A4' });
+```
+
+This is the **official extensibility mechanism** while awaiting browser-commander to add first-class support for these APIs. Please [report missing APIs](https://github.com/link-foundation/browser-commander/issues) so they can be added.
+
 ## Debugging
 
 Enable verbose mode for detailed logs:

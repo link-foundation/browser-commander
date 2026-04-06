@@ -28,10 +28,8 @@ __all__ = [
     "NavigationVerificationResult",
     "WaitAfterActionResult",
     "default_navigation_verification",
-    # Navigation
-    "goto",
-    # Launcher
     "emulate_media",
+    "goto",
     "launch_browser",
     "verify_navigation",
     "wait_after_action",

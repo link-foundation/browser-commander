@@ -320,6 +320,74 @@ if commander.should_abort():
     return  # Navigation detected, stop current action
 ```
 
+## Extensibility / Escape Hatch
+
+`browser-commander` cannot anticipate every browser API. When you need an API that is not yet supported, you can access the raw underlying engine objects directly as an **official extensibility escape hatch**.
+
+### Using `commander.page` for engine-specific APIs
+
+`make_browser_commander` exposes `commander.page` — this is the **raw Playwright or Selenium page object**, not a wrapper. Use it directly for APIs browser-commander doesn't yet support:
+
+```python
+from browser_commander import launch_browser, make_browser_commander, LaunchOptions
+
+options = LaunchOptions(engine="playwright")
+result = await launch_browser(options)
+browser, page = result.browser, result.page
+
+commander = make_browser_commander(page=page)
+
+# Access engine-specific API via commander.page
+# Example: PDF generation (issue #35)
+pdf_buffer = await commander.page.pdf(
+    format="A4",
+    print_background=True,
+)
+
+# Example: Color scheme emulation (issue #36)
+await commander.page.emulate_media(color_scheme="dark")
+
+# Example: Keyboard interactions (issue #37)
+await commander.page.keyboard.press("Escape")
+
+# Example: Dialog handling (issue #38)
+async def handle_dialog(dialog):
+    await dialog.dismiss()
+
+commander.page.on("dialog", handle_dialog)
+```
+
+### Using `launch_browser` raw return values
+
+`launch_browser()` returns the raw `browser` and `page` objects from the underlying engine. You can use these directly:
+
+```python
+result = await launch_browser(options)
+browser = result.browser
+page = result.page
+
+# Use raw page directly for engine-specific APIs
+await page.pdf(format="A4")
+
+# Or create a commander for the unified API
+commander = make_browser_commander(page=page)
+```
+
+### No more `_page` hacks
+
+If you previously used `page._page or page` to access the raw page, replace it with `commander.page`:
+
+```python
+# BEFORE (fragile hack):
+raw_page = getattr(page, "_page", page)
+await raw_page.pdf(format="A4")
+
+# AFTER (official API):
+await commander.page.pdf(format="A4")
+```
+
+This is the **official extensibility mechanism** while awaiting browser-commander to add first-class support for these APIs. Please [report missing APIs](https://github.com/link-foundation/browser-commander/issues) so they can be added.
+
 ## Architecture
 
 The Python implementation follows the same architecture as the JavaScript version:

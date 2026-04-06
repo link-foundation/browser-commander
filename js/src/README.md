@@ -341,6 +341,7 @@ browser-commander/
 ├── interactions/
 │   ├── click.js                # clickButton, clickElement
 │   ├── fill.js                 # fillTextArea
+│   ├── keyboard.js             # pressKey, typeText, keyDown, keyUp
 │   └── scroll.js               # scrollIntoView
 ├── utilities/
 │   ├── wait.js                 # wait(), evaluate()
@@ -435,6 +436,36 @@ await commander.fillTextArea({
   checkEmpty: true,
 });
 ```
+
+### commander.keyboard
+
+Page-level keyboard input, independent of any specific element. Useful for
+dismissing dialogs, submitting forms via Enter, tab navigation, etc.
+
+```javascript
+// Press a key (e.g. dismiss a modal)
+await commander.keyboard.press('Escape');
+
+// Type text at the page level (sent to the currently focused element)
+await commander.keyboard.type('Hello World');
+
+// Modifier key combinations
+await commander.keyboard.down('Control');
+await commander.keyboard.press('a');   // Select All
+await commander.keyboard.up('Control');
+```
+
+Also available as flat functions:
+
+```javascript
+await commander.pressKey({ key: 'Enter' });
+await commander.typeText({ text: 'some text' });
+await commander.keyDown({ key: 'Shift' });
+await commander.keyUp({ key: 'Shift' });
+```
+
+Key names follow the [Playwright keyboard convention](https://playwright.dev/docs/api/class-keyboard#keyboard-press):
+`'Escape'`, `'Enter'`, `'Tab'`, `'ArrowUp'`, `'ArrowDown'`, `'Control'`, `'Shift'`, `'Alt'`, etc.
 
 ### commander.destroy()
 

@@ -102,6 +102,12 @@ from browser_commander.interactions.click import (
     default_click_verification,
     verify_click,
 )
+from browser_commander.interactions.keyboard import (
+    key_down,
+    key_up,
+    press_key,
+    type_text,
+)
 from browser_commander.interactions.fill import (
     FillResult,
     FillVerificationResult,
@@ -239,4 +245,9 @@ __all__ = [
     "wait_for_visible",
     "with_navigation_safety",
     "with_text_selector_support",
+    # Keyboard interactions
+    "press_key",
+    "type_text",
+    "key_down",
+    "key_up",
 ]

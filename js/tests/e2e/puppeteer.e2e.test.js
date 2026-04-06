@@ -405,4 +405,75 @@ describe('E2E Tests - Puppeteer Engine', { skip: !process.env.RUN_E2E }, () => {
       assert.ok(elapsed >= 90, `Expected at least 90ms, got ${elapsed}`);
     });
   });
+
+  describe('Keyboard Interactions', () => {
+    it('should press Escape key to close modal', async () => {
+      if (!commander) {
+        return;
+      }
+
+      // Open modal
+      await commander.click({ selector: '[data-testid="btn-open-modal"]' });
+      await commander.wait({ ms: 100 });
+
+      // Verify modal is open
+      const modalOpen = await commander.isVisible({
+        selector: '[data-testid="modal"]',
+      });
+      assert.strictEqual(modalOpen, true);
+
+      // Close modal with Escape key
+      await commander.keyboard.press('Escape');
+      await commander.wait({ ms: 150 });
+
+      // Modal should be closed
+      const modalClosed = await commander.isVisible({
+        selector: '[data-testid="modal"]',
+      });
+      assert.strictEqual(modalClosed, false);
+    });
+
+    it('should type text at page level via keyboard.type', async () => {
+      if (!commander) {
+        return;
+      }
+
+      // Focus the name input
+      await commander.click({ selector: '[data-testid="input-name"]' });
+      await commander.wait({ ms: 50 });
+
+      // Type via page-level keyboard
+      await commander.keyboard.type('Keyboard Test');
+      await commander.wait({ ms: 50 });
+
+      const value = await commander.inputValue({
+        selector: '[data-testid="input-name"]',
+      });
+      assert.ok(value.includes('Keyboard Test'));
+    });
+
+    it('should support pressKey flat function', async () => {
+      if (!commander) {
+        return;
+      }
+
+      // Open modal
+      await commander.click({ selector: '[data-testid="btn-open-modal"]' });
+      await commander.wait({ ms: 100 });
+
+      const modalOpen = await commander.isVisible({
+        selector: '[data-testid="modal"]',
+      });
+      assert.strictEqual(modalOpen, true);
+
+      // Close via flat pressKey
+      await commander.pressKey({ key: 'Escape' });
+      await commander.wait({ ms: 150 });
+
+      const modalClosed = await commander.isVisible({
+        selector: '[data-testid="modal"]',
+      });
+      assert.strictEqual(modalClosed, false);
+    });
+  });
 });

@@ -52,6 +52,7 @@ import {
   checkAndClearFlag,
   findToggleButton,
 } from './high-level/universal-logic.js';
+import { pressKey, typeText, keyDown, keyUp } from './interactions/keyboard.js';
 
 /**
  * Create bound functions for a browser commander instance
@@ -210,6 +211,12 @@ export function createBoundFunctions(options = {}) {
       findByText: findByTextBound,
     });
 
+  // Bound keyboard
+  const pressKeyBound = (opts) => pressKey({ ...opts, page, engine });
+  const typeTextBound = (opts) => typeText({ ...opts, page, engine });
+  const keyDownBound = (opts) => keyDown({ ...opts, page, engine });
+  const keyUpBound = (opts) => keyUp({ ...opts, page, engine });
+
   // Wrap functions with text selector support
   const fillTextAreaWrapped = withTextSelectorSupport(
     fillTextAreaBound,
@@ -294,5 +301,20 @@ export function createBoundFunctions(options = {}) {
     installClickListener: installClickListenerBound,
     checkAndClearFlag: checkAndClearFlagBound,
     findToggleButton: findToggleButtonBound,
+
+    // Page-level keyboard interaction
+    // Usage: await commander.keyboard.press('Escape')
+    keyboard: {
+      press: (key) => pressKeyBound({ key }),
+      type: (text) => typeTextBound({ text }),
+      down: (key) => keyDownBound({ key }),
+      up: (key) => keyUpBound({ key }),
+    },
+
+    // Also expose as individual flat functions for functional-style usage
+    pressKey: pressKeyBound,
+    typeText: typeTextBound,
+    keyDown: keyDownBound,
+    keyUp: keyUpBound,
   };
 }

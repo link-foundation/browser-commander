@@ -52,6 +52,7 @@ import {
   checkAndClearFlag,
   findToggleButton,
 } from './high-level/universal-logic.js';
+import { pdf } from './browser/pdf.js';
 
 /**
  * Create bound functions for a browser commander instance
@@ -210,6 +211,9 @@ export function createBoundFunctions(options = {}) {
       findByText: findByTextBound,
     });
 
+  // Bound pdf generation
+  const pdfBound = (opts = {}) => pdf({ ...opts, page, engine });
+
   // Wrap functions with text selector support
   const fillTextAreaWrapped = withTextSelectorSupport(
     fillTextAreaBound,
@@ -294,5 +298,8 @@ export function createBoundFunctions(options = {}) {
     installClickListener: installClickListenerBound,
     checkAndClearFlag: checkAndClearFlagBound,
     findToggleButton: findToggleButtonBound,
+
+    // PDF generation
+    pdf: pdfBound,
   };
 }

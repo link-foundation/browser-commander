@@ -12,6 +12,7 @@ from browser_commander.browser.launcher import (
     LaunchResult,
     launch_browser,
 )
+from browser_commander.browser.pdf import pdf
 from browser_commander.browser.navigation import (
     GotoResult,
     NavigationVerificationResult,
@@ -210,6 +211,7 @@ __all__ = [
     "needs_scrolling",
     "normalize_selector",
     "not_condition",
+    "pdf",
     "perform_fill",
     # Element selectors
     "query_selector",

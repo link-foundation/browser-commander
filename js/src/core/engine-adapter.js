@@ -197,6 +197,15 @@ export class EngineAdapter {
   getMainFrame() {
     throw new Error('getMainFrame() must be implemented by subclass');
   }
+
+  /**
+   * Generate a PDF of the current page
+   * @param {Object} options - PDF options (format, printBackground, margin, etc.)
+   * @returns {Promise<Buffer>} - PDF buffer
+   */
+  async pdf(options = {}) {
+    throw new Error('pdf() must be implemented by subclass');
+  }
 }
 
 /**
@@ -329,6 +338,10 @@ export class PlaywrightAdapter extends EngineAdapter {
   getMainFrame() {
     return this.page.mainFrame();
   }
+
+  async pdf(options = {}) {
+    return await this.page.pdf(options);
+  }
 }
 
 /**
@@ -444,6 +457,10 @@ export class PuppeteerAdapter extends EngineAdapter {
 
   getMainFrame() {
     return this.page.mainFrame();
+  }
+
+  async pdf(options = {}) {
+    return await this.page.pdf(options);
   }
 }
 

@@ -278,6 +278,27 @@ class EngineAdapter(ABC):
         """
         ...
 
+    async def pdf(self, **options: Any) -> bytes:
+        """Generate a PDF of the current page.
+
+        Args:
+            **options: PDF generation options passed to the underlying engine.
+                Common options:
+                - format: Paper format (e.g. 'A4', 'Letter')
+                - print_background: Print background graphics (Playwright uses snake_case)
+                - margin: Dict with top/right/bottom/left margins
+
+        Returns:
+            PDF content as bytes
+
+        Raises:
+            NotImplementedError: If the engine does not support PDF generation
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support PDF generation. "
+            "PDF generation is only supported by Playwright (Chromium)."
+        )
+
 
 class PlaywrightAdapter(EngineAdapter):
     """Playwright adapter implementation."""
@@ -402,6 +423,21 @@ class PlaywrightAdapter(EngineAdapter):
     ) -> None:
         """Navigate to URL."""
         await self.page.goto(url, timeout=timeout)
+
+    async def pdf(self, **options: Any) -> bytes:
+        """Generate a PDF of the current page using Playwright.
+
+        Args:
+            **options: PDF options forwarded to playwright's page.pdf().
+                Common options:
+                - format: Paper format (e.g. 'A4', 'Letter')
+                - print_background: Print background graphics
+                - margin: Dict with top/right/bottom/left margins
+
+        Returns:
+            PDF content as bytes
+        """
+        return await self.page.pdf(**options)
 
 
 class SeleniumAdapter(EngineAdapter):

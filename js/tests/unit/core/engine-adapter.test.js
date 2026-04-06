@@ -215,6 +215,30 @@ describe('engine-adapter', () => {
     });
   });
 
+  describe('pdf()', () => {
+    it('PlaywrightAdapter.pdf() should return a Buffer', async () => {
+      const page = createMockPlaywrightPage();
+      const adapter = new PlaywrightAdapter(page);
+      const result = await adapter.pdf({ format: 'A4', printBackground: true });
+      assert.ok(result instanceof Buffer || result instanceof Uint8Array);
+    });
+
+    it('PuppeteerAdapter.pdf() should return a Buffer', async () => {
+      const page = createMockPuppeteerPage();
+      const adapter = new PuppeteerAdapter(page);
+      const result = await adapter.pdf({ format: 'A4', printBackground: true });
+      assert.ok(result instanceof Buffer || result instanceof Uint8Array);
+    });
+
+    it('EngineAdapter base class pdf() should throw', async () => {
+      const adapter = new EngineAdapter({});
+      await assert.rejects(
+        async () => adapter.pdf({}),
+        /must be implemented/
+      );
+    });
+  });
+
   describe('createEngineAdapter', () => {
     it('should create PlaywrightAdapter for playwright engine', () => {
       const page = createMockPlaywrightPage();

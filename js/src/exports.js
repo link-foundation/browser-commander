@@ -20,6 +20,7 @@ export {
 export { createNetworkTracker } from './core/network-tracker.js';
 export { createNavigationManager } from './core/navigation-manager.js';
 export { createPageSessionFactory } from './core/page-session.js';
+export { createDialogManager } from './core/dialog-manager.js';
 
 // Re-export engine adapter
 export {
@@ -42,6 +43,7 @@ export {
 
 // Re-export browser management
 export { launchBrowser } from './browser/launcher.js';
+export { emulateMedia } from './browser/media.js';
 export {
   waitForUrlStabilization,
   goto,
@@ -110,6 +112,8 @@ export {
   defaultFillVerification,
   verifyFill,
 } from './interactions/fill.js';
+
+export { pressKey, typeText, keyDown, keyUp } from './interactions/keyboard.js';
 
 // Re-export utilities
 export { wait, evaluate, safeEvaluate } from './utilities/wait.js';

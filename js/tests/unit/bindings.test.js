@@ -139,6 +139,46 @@ describe('bindings', () => {
         typeof bindings.evaluate === 'function',
         'evaluate should be a function'
       );
+
+      // Keyboard - flat functions
+      assert.ok(
+        typeof bindings.pressKey === 'function',
+        'pressKey should be a function'
+      );
+      assert.ok(
+        typeof bindings.typeText === 'function',
+        'typeText should be a function'
+      );
+      assert.ok(
+        typeof bindings.keyDown === 'function',
+        'keyDown should be a function'
+      );
+      assert.ok(
+        typeof bindings.keyUp === 'function',
+        'keyUp should be a function'
+      );
+
+      // Keyboard - object API
+      assert.ok(
+        bindings.keyboard && typeof bindings.keyboard === 'object',
+        'keyboard should be an object'
+      );
+      assert.ok(
+        typeof bindings.keyboard.press === 'function',
+        'keyboard.press should be a function'
+      );
+      assert.ok(
+        typeof bindings.keyboard.type === 'function',
+        'keyboard.type should be a function'
+      );
+      assert.ok(
+        typeof bindings.keyboard.down === 'function',
+        'keyboard.down should be a function'
+      );
+      assert.ok(
+        typeof bindings.keyboard.up === 'function',
+        'keyboard.up should be a function'
+      );
     });
 
     it('should pre-bind page and engine to functions', async () => {
@@ -198,6 +238,38 @@ describe('bindings', () => {
       });
 
       assert.ok(bindings);
+    });
+
+    it('should invoke keyboard.press via bound keyboard object', async () => {
+      const pressedKeys = [];
+      const page = createMockPlaywrightPage();
+      page.keyboard.press = async (key) => pressedKeys.push(key);
+      const log = createMockLogger();
+
+      const bindings = createBoundFunctions({
+        page,
+        engine: 'playwright',
+        log,
+      });
+
+      await bindings.keyboard.press('Escape');
+      assert.deepStrictEqual(pressedKeys, ['Escape']);
+    });
+
+    it('should invoke keyboard.type via bound keyboard object', async () => {
+      const typedTexts = [];
+      const page = createMockPlaywrightPage();
+      page.keyboard.type = async (text) => typedTexts.push(text);
+      const log = createMockLogger();
+
+      const bindings = createBoundFunctions({
+        page,
+        engine: 'playwright',
+        log,
+      });
+
+      await bindings.keyboard.type('hello world');
+      assert.deepStrictEqual(typedTexts, ['hello world']);
     });
 
     it('should integrate with networkTracker when provided', () => {

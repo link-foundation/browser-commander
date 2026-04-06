@@ -177,6 +177,46 @@ export class EngineAdapter {
   }
 
   // ============================================================================
+  // Page-level Keyboard Operations
+  // ============================================================================
+
+  /**
+   * Press a key at the page level (e.g. 'Escape', 'Enter', 'Tab')
+   * @param {string} key - Key name (Playwright/Puppeteer key format)
+   * @returns {Promise<void>}
+   */
+  async keyboardPress(key) {
+    throw new Error('keyboardPress() must be implemented by subclass');
+  }
+
+  /**
+   * Type text at the page level (dispatches key events for each character)
+   * @param {string} text - Text to type
+   * @returns {Promise<void>}
+   */
+  async keyboardType(text) {
+    throw new Error('keyboardType() must be implemented by subclass');
+  }
+
+  /**
+   * Hold a key down at the page level
+   * @param {string} key - Key name
+   * @returns {Promise<void>}
+   */
+  async keyboardDown(key) {
+    throw new Error('keyboardDown() must be implemented by subclass');
+  }
+
+  /**
+   * Release a held key at the page level
+   * @param {string} key - Key name
+   * @returns {Promise<void>}
+   */
+  async keyboardUp(key) {
+    throw new Error('keyboardUp() must be implemented by subclass');
+  }
+
+  // ============================================================================
   // Page-level Operations
   // ============================================================================
 
@@ -305,6 +345,26 @@ export class PlaywrightAdapter extends EngineAdapter {
 
   async focus(locatorOrElement) {
     await locatorOrElement.focus();
+  }
+
+  // ============================================================================
+  // Page-level Keyboard Operations
+  // ============================================================================
+
+  async keyboardPress(key) {
+    await this.page.keyboard.press(key);
+  }
+
+  async keyboardType(text) {
+    await this.page.keyboard.type(text);
+  }
+
+  async keyboardDown(key) {
+    await this.page.keyboard.down(key);
+  }
+
+  async keyboardUp(key) {
+    await this.page.keyboard.up(key);
   }
 
   // ============================================================================
@@ -444,6 +504,26 @@ export class PuppeteerAdapter extends EngineAdapter {
 
   async focus(locatorOrElement) {
     await locatorOrElement.focus();
+  }
+
+  // ============================================================================
+  // Page-level Keyboard Operations
+  // ============================================================================
+
+  async keyboardPress(key) {
+    await this.page.keyboard.press(key);
+  }
+
+  async keyboardType(text) {
+    await this.page.keyboard.type(text);
+  }
+
+  async keyboardDown(key) {
+    await this.page.keyboard.down(key);
+  }
+
+  async keyboardUp(key) {
+    await this.page.keyboard.up(key);
   }
 
   // ============================================================================

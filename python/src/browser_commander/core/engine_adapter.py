@@ -239,6 +239,46 @@ class EngineAdapter(ABC):
         ...
 
     # =========================================================================
+    # Page-level Keyboard Operations
+    # =========================================================================
+
+    @abstractmethod
+    async def keyboard_press(self, key: str) -> None:
+        """Press a key at the page level (e.g. 'Escape', 'Enter', 'Tab').
+
+        Args:
+            key: Key name in Playwright/Puppeteer format
+        """
+        ...
+
+    @abstractmethod
+    async def keyboard_type(self, text: str) -> None:
+        """Type text at the page level (dispatches key events for each character).
+
+        Args:
+            text: Text to type
+        """
+        ...
+
+    @abstractmethod
+    async def keyboard_down(self, key: str) -> None:
+        """Hold a key down at the page level.
+
+        Args:
+            key: Key name
+        """
+        ...
+
+    @abstractmethod
+    async def keyboard_up(self, key: str) -> None:
+        """Release a held key at the page level.
+
+        Args:
+            key: Key name
+        """
+        ...
+
+    # =========================================================================
     # Page-level Operations
     # =========================================================================
 
@@ -403,6 +443,26 @@ class PlaywrightAdapter(EngineAdapter):
         """Focus element."""
         await locator_or_element.focus()
 
+    # =========================================================================
+    # Page-level Keyboard Operations
+    # =========================================================================
+
+    async def keyboard_press(self, key: str) -> None:
+        """Press a key at the page level."""
+        await self.page.keyboard.press(key)
+
+    async def keyboard_type(self, text: str) -> None:
+        """Type text at the page level."""
+        await self.page.keyboard.type(text)
+
+    async def keyboard_down(self, key: str) -> None:
+        """Hold a key down at the page level."""
+        await self.page.keyboard.down(key)
+
+    async def keyboard_up(self, key: str) -> None:
+        """Release a held key at the page level."""
+        await self.page.keyboard.up(key)
+
     async def evaluate_on_page(self, script: str, *args: Any) -> Any:
         """Evaluate JavaScript in page context."""
         if not args:
@@ -556,6 +616,85 @@ class SeleniumAdapter(EngineAdapter):
     async def focus(self, locator_or_element: Any) -> None:
         """Focus element."""
         self.page.execute_script("arguments[0].focus()", locator_or_element)
+
+    # =========================================================================
+    # Page-level Keyboard Operations
+    # =========================================================================
+
+    async def keyboard_press(self, key: str) -> None:
+        """Press a key at the page level using ActionChains."""
+        from selenium.webdriver.common.action_chains import ActionChains
+        from selenium.webdriver.common.keys import Keys
+
+        # Map common Playwright/Puppeteer key names to Selenium Keys
+        key_map = {
+            "Escape": Keys.ESCAPE,
+            "Enter": Keys.RETURN,
+            "Tab": Keys.TAB,
+            "ArrowUp": Keys.ARROW_UP,
+            "ArrowDown": Keys.ARROW_DOWN,
+            "ArrowLeft": Keys.ARROW_LEFT,
+            "ArrowRight": Keys.ARROW_RIGHT,
+            "Backspace": Keys.BACK_SPACE,
+            "Delete": Keys.DELETE,
+            "Home": Keys.HOME,
+            "End": Keys.END,
+            "PageUp": Keys.PAGE_UP,
+            "PageDown": Keys.PAGE_DOWN,
+            "F1": Keys.F1,
+            "F2": Keys.F2,
+            "F3": Keys.F3,
+            "F4": Keys.F4,
+            "F5": Keys.F5,
+            "F6": Keys.F6,
+            "F7": Keys.F7,
+            "F8": Keys.F8,
+            "F9": Keys.F9,
+            "F10": Keys.F10,
+            "F11": Keys.F11,
+            "F12": Keys.F12,
+            "Control": Keys.CONTROL,
+            "Shift": Keys.SHIFT,
+            "Alt": Keys.ALT,
+            "Meta": Keys.META,
+            "Space": Keys.SPACE,
+        }
+        selenium_key = key_map.get(key, key)
+        ActionChains(self.page).send_keys(selenium_key).perform()
+
+    async def keyboard_type(self, text: str) -> None:
+        """Type text at the page level."""
+        from selenium.webdriver.common.action_chains import ActionChains
+
+        ActionChains(self.page).send_keys(text).perform()
+
+    async def keyboard_down(self, key: str) -> None:
+        """Hold a key down at the page level."""
+        from selenium.webdriver.common.action_chains import ActionChains
+        from selenium.webdriver.common.keys import Keys
+
+        key_map = {
+            "Control": Keys.CONTROL,
+            "Shift": Keys.SHIFT,
+            "Alt": Keys.ALT,
+            "Meta": Keys.META,
+        }
+        selenium_key = key_map.get(key, key)
+        ActionChains(self.page).key_down(selenium_key).perform()
+
+    async def keyboard_up(self, key: str) -> None:
+        """Release a held key at the page level."""
+        from selenium.webdriver.common.action_chains import ActionChains
+        from selenium.webdriver.common.keys import Keys
+
+        key_map = {
+            "Control": Keys.CONTROL,
+            "Shift": Keys.SHIFT,
+            "Alt": Keys.ALT,
+            "Meta": Keys.META,
+        }
+        selenium_key = key_map.get(key, key)
+        ActionChains(self.page).key_up(selenium_key).perform()
 
     async def evaluate_on_page(self, script: str, *args: Any) -> Any:
         """Evaluate JavaScript in page context."""

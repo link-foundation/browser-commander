@@ -7,6 +7,7 @@ from browser_commander.browser.launcher import (
     LaunchResult,
     launch_browser,
 )
+from browser_commander.browser.media import emulate_media
 from browser_commander.browser.navigation import (
     GotoResult,
     NavigationVerificationResult,
@@ -28,9 +29,8 @@ __all__ = [
     "NavigationVerificationResult",
     "WaitAfterActionResult",
     "default_navigation_verification",
-    # Navigation
+    "emulate_media",
     "goto",
-    # Launcher
     "launch_browser",
     # PDF generation
     "pdf",

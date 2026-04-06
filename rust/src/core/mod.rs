@@ -7,11 +7,13 @@
 //! - Navigation safety utilities
 
 pub mod constants;
+pub mod dialog;
 pub mod engine;
 pub mod logger;
 pub mod navigation;
 
 pub use constants::{Timing, CHROME_ARGS, TIMING};
+pub use dialog::{DialogEvent, DialogHandler, DialogManager, DialogType};
 pub use engine::{
     ClickVerificationResult, ElementInfo, EngineAdapter, EngineError, EngineType,
     FillVerificationResult, PdfOptions, PreClickState, ScrollVerificationResult,

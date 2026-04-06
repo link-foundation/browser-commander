@@ -9,6 +9,7 @@ import { detectEngine } from './core/engine-detection.js';
 import { createNetworkTracker } from './core/network-tracker.js';
 import { createNavigationManager } from './core/navigation-manager.js';
 import { createPageSessionFactory } from './core/page-session.js';
+import { createDialogManager } from './core/dialog-manager.js';
 import {
   createPageTriggerManager,
   ActionStoppedError,
@@ -35,6 +36,7 @@ export function makeBrowserCommander(options = {}) {
     verbose = false,
     enableNetworkTracking = true,
     enableNavigationManager = true,
+    enableDialogManager = true,
   } = options;
 
   if (!page) {
@@ -60,6 +62,13 @@ export function makeBrowserCommander(options = {}) {
   // Create NavigationManager if enabled
   let navigationManager = null;
   let sessionFactory = null;
+
+  // Create DialogManager if enabled
+  let dialogManager = null;
+  if (enableDialogManager) {
+    dialogManager = createDialogManager({ page, engine, log });
+    dialogManager.startListening();
+  }
 
   // PageTriggerManager (will be initialized after commander is created)
   let pageTriggerManager = null;
@@ -111,6 +120,9 @@ export function makeBrowserCommander(options = {}) {
     if (sessionFactory) {
       await sessionFactory.endAllSessions();
     }
+    if (dialogManager) {
+      dialogManager.stopListening();
+    }
   };
 
   // Build commander object
@@ -125,6 +137,7 @@ export function makeBrowserCommander(options = {}) {
     navigationManager,
     sessionFactory,
     pageTriggerManager,
+    dialogManager,
 
     // All bound functions
     ...boundFunctions,
@@ -170,6 +183,30 @@ export function makeBrowserCommander(options = {}) {
       ? (config) => pageTriggerManager.pageTrigger(config)
       : () => {
           throw new Error('pageTrigger requires enableNavigationManager: true');
+        },
+
+    // Dialog event handling API
+    // Register a handler: commander.onDialog(async (dialog) => { await dialog.dismiss(); })
+    // dialog.type()     → 'alert' | 'confirm' | 'prompt' | 'beforeunload'
+    // dialog.message()  → The dialog message text
+    // dialog.accept(text?) → Accept/confirm (optional text for prompts)
+    // dialog.dismiss()  → Dismiss/cancel the dialog
+    onDialog: dialogManager
+      ? (fn) => dialogManager.onDialog(fn)
+      : () => {
+          throw new Error('onDialog requires enableDialogManager: true');
+        },
+    offDialog: dialogManager
+      ? (fn) => dialogManager.offDialog(fn)
+      : () => {
+          throw new Error('offDialog requires enableDialogManager: true');
+        },
+    clearDialogHandlers: dialogManager
+      ? () => dialogManager.clearDialogHandlers()
+      : () => {
+          throw new Error(
+            'clearDialogHandlers requires enableDialogManager: true'
+          );
         },
 
     // URL condition helpers

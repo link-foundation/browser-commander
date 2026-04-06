@@ -438,5 +438,89 @@ describe(
         assert.ok(elements.length >= 4);
       });
     });
+
+    describe('Keyboard Interactions', () => {
+      it('should press Escape key to close modal', async () => {
+        if (!commander) {
+          return;
+        }
+
+        // Open modal
+        await commander.click({ selector: '[data-testid="btn-open-modal"]' });
+        await commander.wait({ ms: 100 });
+
+        // Verify modal is open
+        const modalOpen = await commander.isVisible({
+          selector: '[data-testid="modal"]',
+        });
+        assert.strictEqual(modalOpen, true);
+
+        // Close modal with Escape key
+        await commander.keyboard.press('Escape');
+        await commander.wait({ ms: 150 });
+
+        // Modal should be closed
+        const modalClosed = await commander.isVisible({
+          selector: '[data-testid="modal"]',
+        });
+        assert.strictEqual(modalClosed, false);
+      });
+
+      it('should type text at page level via keyboard.type', async () => {
+        if (!commander) {
+          return;
+        }
+
+        // Focus the name input
+        await commander.click({ selector: '[data-testid="input-name"]' });
+        await commander.wait({ ms: 50 });
+
+        // Clear and type via page-level keyboard
+        await page.fill('[data-testid="input-name"]', '');
+        await commander.keyboard.type('Keyboard Test');
+        await commander.wait({ ms: 50 });
+
+        const value = await commander.inputValue({
+          selector: '[data-testid="input-name"]',
+        });
+        assert.ok(value.includes('Keyboard Test'));
+      });
+
+      it('should support keyboard.press via pressKey flat function', async () => {
+        if (!commander) {
+          return;
+        }
+
+        // Open modal
+        await commander.click({ selector: '[data-testid="btn-open-modal"]' });
+        await commander.wait({ ms: 100 });
+
+        const modalOpen = await commander.isVisible({
+          selector: '[data-testid="modal"]',
+        });
+        assert.strictEqual(modalOpen, true);
+
+        // Close via flat pressKey
+        await commander.pressKey({ key: 'Escape' });
+        await commander.wait({ ms: 150 });
+
+        const modalClosed = await commander.isVisible({
+          selector: '[data-testid="modal"]',
+        });
+        assert.strictEqual(modalClosed, false);
+      });
+
+      it('should submit form via Enter key', async () => {
+        if (!commander) {
+          return;
+        }
+
+        // Focus submit button and press Enter
+        await page.focus('[data-testid="btn-increment"]');
+        await commander.keyboard.press('Enter');
+        await commander.wait({ ms: 100 });
+        // Test passes if no error is thrown
+      });
+    });
   }
 );

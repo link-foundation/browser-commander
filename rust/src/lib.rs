@@ -46,10 +46,13 @@ pub mod interactions;
 pub mod utilities;
 
 // Re-export commonly used items at crate root
-pub use browser::{launch_browser, Browser, LaunchOptions, LaunchResult};
+pub use browser::{
+    emulate_media, launch_browser, Browser, ColorScheme, EmulateMediaOptions, LaunchOptions,
+    LaunchResult,
+};
 pub use core::{
-    EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, PdfOptions, Timing, CHROME_ARGS,
-    TIMING,
+    DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
+    LoggerOptions, PdfOptions, Timing, CHROME_ARGS, TIMING,
 };
 
 /// Prelude module for convenient imports.
@@ -60,12 +63,14 @@ pub use core::{
 /// ```
 pub mod prelude {
     pub use crate::browser::{
-        goto, launch_browser, verify_navigation, wait_for_navigation, wait_for_url_stabilization,
-        Browser, LaunchOptions, LaunchResult, NavigationOptions, NavigationResult, WaitUntil,
+        emulate_media, goto, launch_browser, verify_navigation, wait_for_navigation,
+        wait_for_url_stabilization, Browser, ColorScheme, EmulateMediaOptions, LaunchOptions,
+        LaunchResult, NavigationOptions, NavigationResult, WaitUntil,
     };
     pub use crate::core::{
-        is_navigation_error, is_timeout_error, EngineAdapter, EngineError, EngineType, Logger,
-        LoggerOptions, PdfOptions, Timing, CHROME_ARGS, TIMING,
+        is_navigation_error, is_timeout_error, DialogEvent, DialogManager, DialogType,
+        EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, PdfOptions, Timing,
+        CHROME_ARGS, TIMING,
     };
     pub use crate::elements::{
         count, get_attribute, input_value, is_enabled, is_visible, normalize_selector,
@@ -75,9 +80,9 @@ pub mod prelude {
         check_and_clear_flag, find_toggle_button, install_click_listener, wait_for_url_condition,
     };
     pub use crate::interactions::{
-        click_button, click_element, fill_text_area, perform_fill, scroll_into_view,
-        scroll_into_view_if_needed, ClickOptions, ClickResult, FillOptions, FillResult,
-        ScrollBehavior, ScrollOptions, ScrollResult,
+        click_button, click_element, fill_text_area, key_down, key_up, perform_fill, press_key,
+        scroll_into_view, scroll_into_view_if_needed, type_text, ClickOptions, ClickResult,
+        FillOptions, FillResult, ScrollBehavior, ScrollOptions, ScrollResult,
     };
     pub use crate::utilities::{
         evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin, unfocus_address_bar,

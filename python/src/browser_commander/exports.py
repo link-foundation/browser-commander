@@ -12,6 +12,7 @@ from browser_commander.browser.launcher import (
     LaunchResult,
     launch_browser,
 )
+from browser_commander.browser.media import emulate_media
 from browser_commander.browser.navigation import (
     GotoResult,
     NavigationVerificationResult,
@@ -27,6 +28,9 @@ from browser_commander.browser.navigation import (
 )
 from browser_commander.browser.pdf import pdf
 from browser_commander.core.constants import CHROME_ARGS, TIMING
+
+# Re-export new core components
+from browser_commander.core.dialog_manager import DialogManager
 
 # Re-export engine adapter
 from browser_commander.core.engine_adapter import (
@@ -44,8 +48,6 @@ from browser_commander.core.navigation_safety import (
     safe_operation,
     with_navigation_safety,
 )
-
-# Re-export new core components
 from browser_commander.core.network_tracker import NetworkTracker
 
 # Page trigger system
@@ -113,6 +115,12 @@ from browser_commander.interactions.fill import (
     perform_fill,
     verify_fill,
 )
+from browser_commander.interactions.keyboard import (
+    key_down,
+    key_up,
+    press_key,
+    type_text,
+)
 
 # Re-export interactions
 from browser_commander.interactions.scroll import (
@@ -143,6 +151,7 @@ __all__ = [
     "ActionStoppedError",
     "ClickResult",
     "ClickVerificationResult",
+    "DialogManager",
     # Engine adapter
     "EngineAdapter",
     "EngineType",
@@ -185,6 +194,7 @@ __all__ = [
     "default_navigation_verification",
     "default_scroll_verification",
     "detect_engine",
+    "emulate_media",
     "evaluate",
     "fill_text_area",
     "find_by_text",
@@ -203,6 +213,8 @@ __all__ = [
     "is_verbose_enabled",
     # Element visibility
     "is_visible",
+    "key_down",
+    "key_up",
     # Browser management
     "launch_browser",
     "locator",
@@ -213,6 +225,8 @@ __all__ = [
     "not_condition",
     "pdf",
     "perform_fill",
+    # Keyboard interactions
+    "press_key",
     # Element selectors
     "query_selector",
     "query_selector_all",
@@ -223,6 +237,7 @@ __all__ = [
     "scroll_into_view_if_needed",
     # Element content
     "text_content",
+    "type_text",
     "unfocus_address_bar",
     "verify_click",
     "verify_fill",

@@ -114,7 +114,15 @@ def create_mock_playwright_page(
     def emit(event: str, data: Any = None) -> None:
         if event in event_listeners:
             for h in event_listeners[event]:
-                h(data)
+                result = h(data)
+                # Schedule coroutines on the running loop if available
+                if asyncio.iscoroutine(result):
+                    try:
+                        loop = asyncio.get_running_loop()
+                        loop.create_task(result)  # noqa: RUF006
+                    except RuntimeError:
+                        # No running loop; run synchronously as best effort
+                        asyncio.run(result)
 
     page.on = on_handler
     page.off = off_handler
@@ -122,8 +130,11 @@ def create_mock_playwright_page(
     page.click = AsyncMock()
     page.type = AsyncMock()
     page.keyboard = MagicMock()
+    page.keyboard.press = AsyncMock()
     page.keyboard.type = AsyncMock()
     page.pdf = AsyncMock(return_value=b"%PDF-1.4 mock playwright")
+    page.keyboard.down = AsyncMock()
+    page.keyboard.up = AsyncMock()
 
     return page
 

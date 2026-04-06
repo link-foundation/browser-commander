@@ -12,6 +12,7 @@ import {
   waitForPageReady,
   waitAfterAction,
 } from './browser/navigation.js';
+import { emulateMedia } from './browser/media.js';
 import {
   createPlaywrightLocator,
   getLocatorOrElement,
@@ -53,6 +54,7 @@ import {
   findToggleButton,
 } from './high-level/universal-logic.js';
 import { pdf } from './browser/pdf.js';
+import { pressKey, typeText, keyDown, keyUp } from './interactions/keyboard.js';
 
 /**
  * Create bound functions for a browser commander instance
@@ -192,6 +194,9 @@ export function createBoundFunctions(options = {}) {
   const fillTextAreaBound = (opts) =>
     fillTextArea({ ...opts, page, engine, wait: waitBound, log });
 
+  // Bound media emulation
+  const emulateMediaBound = (opts) => emulateMedia({ ...opts, page, engine });
+
   // Bound high-level
   const waitForUrlConditionBound = (opts) =>
     waitForUrlCondition({
@@ -213,6 +218,12 @@ export function createBoundFunctions(options = {}) {
 
   // Bound pdf generation
   const pdfBound = (opts = {}) => pdf({ ...opts, page, engine });
+
+  // Bound keyboard
+  const pressKeyBound = (opts) => pressKey({ ...opts, page, engine });
+  const typeTextBound = (opts) => typeText({ ...opts, page, engine });
+  const keyDownBound = (opts) => keyDown({ ...opts, page, engine });
+  const keyUpBound = (opts) => keyUp({ ...opts, page, engine });
 
   // Wrap functions with text selector support
   const fillTextAreaWrapped = withTextSelectorSupport(
@@ -271,6 +282,7 @@ export function createBoundFunctions(options = {}) {
 
     // Main API functions
     wait: waitBound,
+    emulateMedia: emulateMediaBound,
     fillTextArea: fillTextAreaWrapped,
     clickButton: clickButtonWrapped,
     evaluate: evaluateBound,
@@ -301,5 +313,20 @@ export function createBoundFunctions(options = {}) {
 
     // PDF generation
     pdf: pdfBound,
+
+    // Page-level keyboard interaction
+    // Usage: await commander.keyboard.press('Escape')
+    keyboard: {
+      press: (key) => pressKeyBound({ key }),
+      type: (text) => typeTextBound({ text }),
+      down: (key) => keyDownBound({ key }),
+      up: (key) => keyUpBound({ key }),
+    },
+
+    // Also expose as individual flat functions for functional-style usage
+    pressKey: pressKeyBound,
+    typeText: typeTextBound,
+    keyDown: keyDownBound,
+    keyUp: keyUpBound,
   };
 }

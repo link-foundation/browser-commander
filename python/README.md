@@ -148,6 +148,35 @@ result = await launch_browser(options)
 browser, page = result.browser, result.page
 ```
 
+The `color_scheme` option emulates `prefers-color-scheme` at launch time:
+
+```python
+options = LaunchOptions(
+    engine="playwright",
+    color_scheme="dark",  # 'light', 'dark', or 'no-preference'
+)
+result = await launch_browser(options)
+```
+
+### emulate_media(page, engine, color_scheme)
+
+Emulate media features (e.g. `prefers-color-scheme`) for a page after launch:
+
+```python
+from browser_commander import emulate_media
+
+# Set dark mode
+await emulate_media(page, engine="playwright", color_scheme="dark")
+
+# Set light mode
+await emulate_media(page, engine="playwright", color_scheme="light")
+
+# Reset to system default
+await emulate_media(page, engine="playwright", color_scheme=None)
+```
+
+Works with both Playwright (`page.emulate_media`) and Selenium (via CDP `Emulation.setEmulatedMedia`).
+
 ### make_browser_commander(page, options)
 
 ```python

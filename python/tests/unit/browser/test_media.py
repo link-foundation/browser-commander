@@ -139,8 +139,6 @@ class TestEmulateMediaSelenium:
         assert driver.cdp_calls == [
             {
                 "cmd": "Emulation.setEmulatedMedia",
-                "params": {
-                    "features": [{"name": "prefers-color-scheme", "value": ""}]
-                },
+                "params": {"features": [{"name": "prefers-color-scheme", "value": ""}]},
             }
         ]

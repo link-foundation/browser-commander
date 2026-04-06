@@ -170,5 +170,62 @@ describe('factory', () => {
       // Should not throw
       await commander.destroy();
     });
+
+    // Extensibility escape hatch tests (issue #39)
+    it('should expose the raw page object as commander.page (extensibility escape hatch)', () => {
+      const page = createMockPlaywrightPage();
+      page.locator = (sel) => ({
+        count: async () => 1,
+        waitFor: async () => {},
+      });
+      page.context = () => ({});
+
+      const commander = makeBrowserCommander({ page });
+
+      // commander.page must be the exact same object as the raw page passed in
+      // This is the official extensibility escape hatch for APIs not yet in browser-commander
+      assert.strictEqual(
+        commander.page,
+        page,
+        'commander.page must be the raw engine page (not a wrapper)'
+      );
+    });
+
+    it('should allow using commander.page to call engine-specific APIs not in browser-commander', () => {
+      const page = createMockPlaywrightPage();
+      page.locator = (sel) => ({
+        count: async () => 1,
+        waitFor: async () => {},
+      });
+      page.context = () => ({});
+
+      // Add a custom method to simulate engine-specific API (e.g. page.pdf(), page.emulateMedia())
+      page.customEngineMethod = () => 'engine-specific-result';
+
+      const commander = makeBrowserCommander({ page });
+
+      // Users can call engine-specific APIs via commander.page without needing _page hacks
+      const result = commander.page.customEngineMethod();
+      assert.strictEqual(
+        result,
+        'engine-specific-result',
+        'commander.page should allow calling engine-specific APIs'
+      );
+    });
+
+    it('should expose raw page with Puppeteer page too (extensibility escape hatch)', () => {
+      const page = createMockPuppeteerPage();
+      delete page.locator;
+      delete page.context;
+      page.$eval = async () => {};
+
+      const commander = makeBrowserCommander({ page });
+
+      assert.strictEqual(
+        commander.page,
+        page,
+        'commander.page must be the raw Puppeteer page (not a wrapper)'
+      );
+    });
   });
 });

@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from browser_commander.core.engine_adapter import create_engine_adapter
-from browser_commander.core.engine_detection import EngineType
+from browser_commander.core.engine_detection import EngineType, detect_engine
 
 
 async def press_key(
@@ -30,7 +30,7 @@ async def press_key(
     Args:
         page: Browser page object
         key: Key to press
-        engine: Engine type ('playwright' or 'selenium')
+        engine: Engine type ('playwright' or 'selenium'), auto-detected if not provided
         adapter: Pre-created engine adapter (optional, created if not provided)
 
     Raises:
@@ -40,7 +40,9 @@ async def press_key(
         msg = "press_key: key is required"
         raise ValueError(msg)
 
-    resolved_adapter = adapter or create_engine_adapter(page, engine)
+    resolved_adapter = adapter or create_engine_adapter(
+        page, engine or detect_engine(page)
+    )
     await resolved_adapter.keyboard_press(key)
 
 
@@ -58,7 +60,7 @@ async def type_text(
     Args:
         page: Browser page object
         text: Text to type
-        engine: Engine type ('playwright' or 'selenium')
+        engine: Engine type ('playwright' or 'selenium'), auto-detected if not provided
         adapter: Pre-created engine adapter (optional, created if not provided)
 
     Raises:
@@ -68,7 +70,9 @@ async def type_text(
         msg = "type_text: text is required"
         raise ValueError(msg)
 
-    resolved_adapter = adapter or create_engine_adapter(page, engine)
+    resolved_adapter = adapter or create_engine_adapter(
+        page, engine or detect_engine(page)
+    )
     await resolved_adapter.keyboard_type(text)
 
 
@@ -85,7 +89,7 @@ async def key_down(
     Args:
         page: Browser page object
         key: Key to hold down
-        engine: Engine type ('playwright' or 'selenium')
+        engine: Engine type ('playwright' or 'selenium'), auto-detected if not provided
         adapter: Pre-created engine adapter (optional, created if not provided)
 
     Raises:
@@ -95,7 +99,9 @@ async def key_down(
         msg = "key_down: key is required"
         raise ValueError(msg)
 
-    resolved_adapter = adapter or create_engine_adapter(page, engine)
+    resolved_adapter = adapter or create_engine_adapter(
+        page, engine or detect_engine(page)
+    )
     await resolved_adapter.keyboard_down(key)
 
 
@@ -110,7 +116,7 @@ async def key_up(
     Args:
         page: Browser page object
         key: Key to release
-        engine: Engine type ('playwright' or 'selenium')
+        engine: Engine type ('playwright' or 'selenium'), auto-detected if not provided
         adapter: Pre-created engine adapter (optional, created if not provided)
 
     Raises:
@@ -120,5 +126,7 @@ async def key_up(
         msg = "key_up: key is required"
         raise ValueError(msg)
 
-    resolved_adapter = adapter or create_engine_adapter(page, engine)
+    resolved_adapter = adapter or create_engine_adapter(
+        page, engine or detect_engine(page)
+    )
     await resolved_adapter.keyboard_up(key)

@@ -116,6 +116,13 @@ fill_text_area(&page, "textarea.message", "Hello world", None).await?;
 
 // Scroll element into view
 scroll_into_view(&page, ".target-element", None).await?;
+
+// Keyboard interactions
+press_key(&engine, "Escape").await?;
+press_key(&engine, "Enter").await?;
+type_text(&engine, "Hello World").await?;
+key_down(&engine, "Control").await?;
+key_up(&engine, "Control").await?;
 ```
 
 ### Element Queries
@@ -157,7 +164,7 @@ let result: String = evaluate(&page, "document.title").await?;
 
 - `core` - Core types and traits (constants, engine adapter, logger)
 - `elements` - Element operations (selectors, visibility, content)
-- `interactions` - User interactions (click, scroll, fill)
+- `interactions` - User interactions (click, scroll, fill, keyboard)
 - `browser` - Browser management (launcher, navigation)
 - `utilities` - General utilities (URL handling, wait operations)
 - `high_level` - High-level DRY utilities

@@ -290,6 +290,24 @@ await commander.fillTextArea({
 });
 ```
 
+### Keyboard Interactions
+
+```javascript
+import { pressKey, typeText, keyDown, keyUp } from 'browser-commander';
+
+// Press a single key
+await pressKey({ page, engine: 'playwright', key: 'Escape' });
+await pressKey({ page, engine: 'playwright', key: 'Enter' });
+await pressKey({ page, engine: 'playwright', key: 'Tab' });
+
+// Type text
+await typeText({ page, engine: 'playwright', text: 'Hello World' });
+
+// Hold and release modifier keys
+await keyDown({ page, engine: 'playwright', key: 'Control' });
+await keyUp({ page, engine: 'playwright', key: 'Control' });
+```
+
 ### commander.destroy()
 
 ```javascript

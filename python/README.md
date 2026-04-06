@@ -223,6 +223,24 @@ result = await commander.fill_text_area(
 print(f"Filled: {result['filled']}, Value: {result['actual_value']}")
 ```
 
+### Keyboard Interactions
+
+```python
+from browser_commander import press_key, type_text, key_down, key_up
+
+# Press a single key
+await press_key(page=page, key="Escape", engine="playwright")
+await press_key(page=page, key="Enter", engine="playwright")
+await press_key(page=page, key="Tab", engine="playwright")
+
+# Type text
+await type_text(page=page, text="Hello World", engine="playwright")
+
+# Hold and release modifier keys
+await key_down(page=page, key="Control", engine="playwright")
+await key_up(page=page, key="Control", engine="playwright")
+```
+
 ### Element Selection Methods
 
 ```python

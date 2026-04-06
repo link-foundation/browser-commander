@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from browser_commander.interactions.click import (
-    ClickResult,
     ClickVerificationResult,
     capture_pre_click_state,
     click_button,

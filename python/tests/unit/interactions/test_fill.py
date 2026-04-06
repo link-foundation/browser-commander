@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from browser_commander.interactions.fill import (
-    FillResult,
     FillVerificationResult,
     check_if_element_empty,
     default_fill_verification,

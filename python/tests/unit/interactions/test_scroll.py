@@ -7,8 +7,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from browser_commander.interactions.scroll import (
-    ScrollResult,
-    ScrollVerificationResult,
     default_scroll_verification,
     needs_scrolling,
     scroll_into_view,

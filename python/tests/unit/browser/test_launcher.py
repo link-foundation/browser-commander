@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from browser_commander.browser.launcher import LaunchOptions
 from browser_commander.core.constants import CHROME_ARGS
 

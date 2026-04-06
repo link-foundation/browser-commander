@@ -2,25 +2,19 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 from browser_commander.browser.navigation import (
-    GotoResult,
-    NavigationVerificationResult,
-    WaitAfterActionResult,
     default_navigation_verification,
     goto,
     verify_navigation,
     wait_after_action,
-    wait_for_navigation,
     wait_for_url_stabilization,
 )
 from tests.helpers.mocks import (
     create_mock_logger,
-    create_mock_navigation_manager,
-    create_mock_network_tracker,
     create_mock_playwright_page,
 )
 

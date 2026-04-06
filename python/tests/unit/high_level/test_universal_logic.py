@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from browser_commander.high_level.universal_logic import (
     check_and_clear_flag,
     find_toggle_button,

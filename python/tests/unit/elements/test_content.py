@@ -160,7 +160,7 @@ class TestGetAttribute:
 
 
 # ---------------------------------------------------------------------------
-# get_input_value (helper)
+# TestGetInputValue (get_input_value helper)
 # ---------------------------------------------------------------------------
 class TestGetInputValue:
     async def test_raises_when_locator_not_provided(self):

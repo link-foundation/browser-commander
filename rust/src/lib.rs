@@ -48,7 +48,8 @@ pub mod utilities;
 // Re-export commonly used items at crate root
 pub use browser::{launch_browser, Browser, LaunchOptions, LaunchResult};
 pub use core::{
-    EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, Timing, CHROME_ARGS, TIMING,
+    DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
+    LoggerOptions, Timing, CHROME_ARGS, TIMING,
 };
 
 /// Prelude module for convenient imports.
@@ -63,8 +64,8 @@ pub mod prelude {
         Browser, LaunchOptions, LaunchResult, NavigationOptions, NavigationResult, WaitUntil,
     };
     pub use crate::core::{
-        is_navigation_error, is_timeout_error, EngineAdapter, EngineError, EngineType, Logger,
-        LoggerOptions, Timing, CHROME_ARGS, TIMING,
+        is_navigation_error, is_timeout_error, DialogEvent, DialogManager, DialogType, EngineAdapter,
+        EngineError, EngineType, Logger, LoggerOptions, Timing, CHROME_ARGS, TIMING,
     };
     pub use crate::elements::{
         count, get_attribute, input_value, is_enabled, is_visible, normalize_selector,

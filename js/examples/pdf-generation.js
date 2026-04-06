@@ -36,7 +36,9 @@ async function generatePdf() {
     browser = await puppeteer.launch({ headless: true });
     page = await browser.newPage();
   } else {
-    console.error(`Unknown engine: ${engine}. Use 'playwright' or 'puppeteer'.`);
+    console.error(
+      `Unknown engine: ${engine}. Use 'playwright' or 'puppeteer'.`
+    );
     process.exit(1);
   }
 
@@ -58,7 +60,9 @@ async function generatePdf() {
     const outputPath = path.join(__dirname, 'output.pdf');
     fs.writeFileSync(outputPath, pdfBuffer);
 
-    console.log(`PDF generated successfully: ${outputPath} (${pdfBuffer.length} bytes)`);
+    console.log(
+      `PDF generated successfully: ${outputPath} (${pdfBuffer.length} bytes)`
+    );
 
     await commander.destroy();
   } finally {

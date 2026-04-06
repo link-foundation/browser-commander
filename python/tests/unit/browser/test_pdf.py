@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -90,7 +90,7 @@ class TestPlaywrightAdapterPdf:
 
 
 class TestSeleniumAdapterPdf:
-    """Tests for SeleniumAdapter.pdf() – should raise NotImplementedError."""
+    """Tests for SeleniumAdapter.pdf() - should raise NotImplementedError."""
 
     @pytest.mark.asyncio
     async def test_raises_not_implemented(self) -> None:

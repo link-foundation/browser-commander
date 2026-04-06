@@ -12,7 +12,6 @@ from browser_commander.browser.launcher import (
     LaunchResult,
     launch_browser,
 )
-from browser_commander.browser.pdf import pdf
 from browser_commander.browser.navigation import (
     GotoResult,
     NavigationVerificationResult,
@@ -26,6 +25,7 @@ from browser_commander.browser.navigation import (
     wait_for_page_ready,
     wait_for_url_stabilization,
 )
+from browser_commander.browser.pdf import pdf
 from browser_commander.core.constants import CHROME_ARGS, TIMING
 
 # Re-export engine adapter

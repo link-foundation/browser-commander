@@ -232,10 +232,7 @@ describe('engine-adapter', () => {
 
     it('EngineAdapter base class pdf() should throw', async () => {
       const adapter = new EngineAdapter({});
-      await assert.rejects(
-        async () => adapter.pdf({}),
-        /must be implemented/
-      );
+      await assert.rejects(async () => adapter.pdf({}), /must be implemented/);
     });
   });
 

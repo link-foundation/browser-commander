@@ -12,6 +12,7 @@ from browser_commander.browser.launcher import (
     LaunchResult,
     launch_browser,
 )
+from browser_commander.browser.media import emulate_media
 from browser_commander.browser.navigation import (
     GotoResult,
     NavigationVerificationResult,
@@ -190,6 +191,7 @@ __all__ = [
     "default_navigation_verification",
     "default_scroll_verification",
     "detect_engine",
+    "emulate_media",
     "evaluate",
     "fill_text_area",
     "find_by_text",

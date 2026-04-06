@@ -12,6 +12,7 @@ import {
   waitForPageReady,
   waitAfterAction,
 } from './browser/navigation.js';
+import { emulateMedia } from './browser/media.js';
 import {
   createPlaywrightLocator,
   getLocatorOrElement,
@@ -192,6 +193,9 @@ export function createBoundFunctions(options = {}) {
   const fillTextAreaBound = (opts) =>
     fillTextArea({ ...opts, page, engine, wait: waitBound, log });
 
+  // Bound media emulation
+  const emulateMediaBound = (opts) => emulateMedia({ ...opts, page, engine });
+
   // Bound high-level
   const waitForUrlConditionBound = (opts) =>
     waitForUrlCondition({
@@ -274,6 +278,7 @@ export function createBoundFunctions(options = {}) {
 
     // Main API functions
     wait: waitBound,
+    emulateMedia: emulateMediaBound,
     fillTextArea: fillTextAreaWrapped,
     clickButton: clickButtonWrapped,
     evaluate: evaluateBound,

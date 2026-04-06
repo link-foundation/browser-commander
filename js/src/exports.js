@@ -42,6 +42,7 @@ export {
 
 // Re-export browser management
 export { launchBrowser } from './browser/launcher.js';
+export { emulateMedia } from './browser/media.js';
 export {
   waitForUrlStabilization,
   goto,

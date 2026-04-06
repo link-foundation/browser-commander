@@ -3,6 +3,7 @@
 //! This module provides utilities for launching browser instances
 //! with appropriate configuration.
 
+use crate::browser::media::ColorScheme;
 use crate::core::constants::CHROME_ARGS;
 use crate::core::engine::EngineType;
 use std::path::PathBuf;
@@ -22,6 +23,8 @@ pub struct LaunchOptions {
     pub verbose: bool,
     /// Additional Chrome arguments.
     pub args: Vec<String>,
+    /// Color scheme to emulate. `None` uses the system default.
+    pub color_scheme: Option<ColorScheme>,
 }
 
 impl Default for LaunchOptions {
@@ -33,6 +36,7 @@ impl Default for LaunchOptions {
             slow_mo: 0,
             verbose: false,
             args: Vec::new(),
+            color_scheme: None,
         }
     }
 }
@@ -81,6 +85,12 @@ impl LaunchOptions {
     /// Add additional Chrome arguments.
     pub fn with_args(mut self, args: Vec<String>) -> Self {
         self.args = args;
+        self
+    }
+
+    /// Set the color scheme for media emulation.
+    pub fn color_scheme(mut self, color_scheme: ColorScheme) -> Self {
+        self.color_scheme = Some(color_scheme);
         self
     }
 

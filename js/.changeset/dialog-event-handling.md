@@ -1,5 +1,5 @@
 ---
-"browser-commander": minor
+'browser-commander': minor
 ---
 
 Add unified dialog event handling API (`page.on('dialog', handler)`)

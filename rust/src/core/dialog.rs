@@ -135,11 +135,7 @@ pub struct DialogManager {
 
 impl fmt::Debug for DialogManager {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let count = self
-            .handlers
-            .lock()
-            .map(|h| h.len())
-            .unwrap_or(0);
+        let count = self.handlers.lock().map(|h| h.len()).unwrap_or(0);
         f.debug_struct("DialogManager")
             .field("engine", &self.engine)
             .field("handler_count", &count)

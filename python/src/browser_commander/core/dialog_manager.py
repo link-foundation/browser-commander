@@ -69,7 +69,9 @@ class DialogManager:
 
         if not self._handlers:
             self.log.debug(
-                lambda: f'⚠️  No dialog handlers registered — auto-dismissing "{dialog_type}" dialog'
+                lambda: (
+                    f'⚠️  No dialog handlers registered — auto-dismissing "{dialog_type}" dialog'
+                )
             )
             try:
                 await dialog.dismiss()
@@ -89,7 +91,9 @@ class DialogManager:
 
         if not handled:
             self.log.debug(
-                lambda: f'⚠️  All dialog handlers failed — auto-dismissing "{dialog_type}" dialog'
+                lambda: (
+                    f'⚠️  All dialog handlers failed — auto-dismissing "{dialog_type}" dialog'
+                )
             )
             try:
                 await dialog.dismiss()

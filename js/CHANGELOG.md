@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.7.0
+
+### Minor Changes
+
+- Add emulateMedia API for unified color scheme emulation across all engines
+
+  Implements `emulateMedia({ colorScheme })` as a unified API for color scheme emulation (prefers-color-scheme) across Playwright and Puppeteer engines. Also adds `colorScheme` as a launch option to `launchBrowser`.
+
+  Fixes #36
+
+- 785eb13: Add unified dialog event handling API (`page.on('dialog', handler)`)
+  - New `DialogManager` (`core/dialog-manager.js`) that registers `page.on('dialog')` for both Playwright and Puppeteer
+  - `commander.onDialog(handler)` — register a handler for browser dialogs (alert, confirm, prompt, beforeunload)
+  - `commander.offDialog(handler)` — remove a previously registered handler
+  - `commander.clearDialogHandlers()` — remove all dialog handlers
+  - Auto-dismiss behavior when no handlers are registered (prevents page from freezing)
+  - `enableDialogManager` option (default: `true`) to opt out if needed
+  - Exports `createDialogManager` for low-level usage
+  - 19 new unit tests covering all dialog handling scenarios
+
+- 80ec5f7: Add page-level keyboard interaction support (issue #37)
+
+  Expose keyboard input methods on the commander object, enabling users to press
+  keys, type text, and hold modifier keys without accessing the raw page object
+  directly. New API: `commander.keyboard.press()`, `commander.keyboard.type()`,
+  `commander.keyboard.down()`, `commander.keyboard.up()`, and flat aliases
+  `commander.pressKey()`, `commander.typeText()`, `commander.keyDown()`,
+  `commander.keyUp()`.
+
 ## 0.6.0
 
 ### Minor Changes

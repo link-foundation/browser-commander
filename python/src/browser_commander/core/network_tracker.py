@@ -82,7 +82,9 @@ class NetworkTracker:
             self._idle_timer = None
 
         self.log.debug(
-            lambda: f"Request started: {url[:80]}... (pending: {len(self._pending_requests)})"
+            lambda: (
+                f"Request started: {url[:80]}... (pending: {len(self._pending_requests)})"
+            )
         )
 
         # Notify listeners
@@ -103,7 +105,9 @@ class NetworkTracker:
             del self._request_start_times[key]
 
         self.log.debug(
-            lambda: f"Request ended: {url[:80]}... (pending: {len(self._pending_requests)})"
+            lambda: (
+                f"Request ended: {url[:80]}... (pending: {len(self._pending_requests)})"
+            )
         )
 
         # Notify listeners
@@ -195,8 +199,10 @@ class NetworkTracker:
             elapsed = time.time() * 1000 - start_time
             if elapsed >= timeout:
                 self.log.debug(
-                    lambda: f"Network idle timeout after {timeout}ms "
-                    f"({len(self._pending_requests)} pending)"
+                    lambda: (
+                        f"Network idle timeout after {timeout}ms "
+                        f"({len(self._pending_requests)} pending)"
+                    )
                 )
                 return False
 

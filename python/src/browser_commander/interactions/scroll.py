@@ -152,7 +152,9 @@ async def verify_scroll(
         if last_result.verified:
             if log:
                 log.debug(
-                    lambda _a=attempts: f"Scroll verification succeeded after {_a} attempt(s)"
+                    lambda _a=attempts: (
+                        f"Scroll verification succeeded after {_a} attempt(s)"
+                    )
                 )
             return ScrollVerificationResult(
                 verified=True,
@@ -174,8 +176,10 @@ async def verify_scroll(
 
     if log:
         log.debug(
-            lambda: f"Scroll verification failed after {attempts} attempts - "
-            "element not in viewport"
+            lambda: (
+                f"Scroll verification failed after {attempts} attempts - "
+                "element not in viewport"
+            )
         )
 
     return ScrollVerificationResult(
@@ -352,8 +356,10 @@ async def scroll_into_view_if_needed(
 
     if not needs_scroll:
         log.debug(
-            lambda: f"Element already in view (within {threshold}% threshold), "
-            "skipping scroll"
+            lambda: (
+                f"Element already in view (within {threshold}% threshold), "
+                "skipping scroll"
+            )
         )
         return ScrollResult(scrolled=False, verified=True, skipped=True)
 

@@ -28,6 +28,9 @@ from browser_commander.browser.navigation import (
 )
 from browser_commander.core.constants import CHROME_ARGS, TIMING
 
+# Re-export new core components
+from browser_commander.core.dialog_manager import DialogManager
+
 # Re-export engine adapter
 from browser_commander.core.engine_adapter import (
     EngineAdapter,
@@ -44,8 +47,6 @@ from browser_commander.core.navigation_safety import (
     safe_operation,
     with_navigation_safety,
 )
-
-# Re-export new core components
 from browser_commander.core.network_tracker import NetworkTracker
 
 # Page trigger system
@@ -149,6 +150,7 @@ __all__ = [
     "ActionStoppedError",
     "ClickResult",
     "ClickVerificationResult",
+    "DialogManager",
     # Engine adapter
     "EngineAdapter",
     "EngineType",

@@ -20,6 +20,7 @@ export {
 export { createNetworkTracker } from './core/network-tracker.js';
 export { createNavigationManager } from './core/navigation-manager.js';
 export { createPageSessionFactory } from './core/page-session.js';
+export { createDialogManager } from './core/dialog-manager.js';
 
 // Re-export engine adapter
 export {

@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from browser_commander.core.dialog_manager import DialogManager
 from browser_commander.core.engine_detection import EngineType, detect_engine
 from browser_commander.core.logger import Logger, create_logger
 from browser_commander.core.navigation_manager import NavigationManager
@@ -33,6 +34,7 @@ class BrowserCommander:
         verbose: bool = False,
         enable_network_tracking: bool = True,
         enable_navigation_manager: bool = True,
+        enable_dialog_manager: bool = True,
     ) -> None:
         """Initialize browser commander.
 
@@ -41,6 +43,7 @@ class BrowserCommander:
             verbose: Enable verbose logging
             enable_network_tracking: Enable network request tracking (default: True)
             enable_navigation_manager: Enable navigation manager (default: True)
+            enable_dialog_manager: Enable dialog event handling (default: True)
         """
         self.page = page
         self.engine: EngineType = detect_engine(page)
@@ -57,6 +60,16 @@ class BrowserCommander:
                 idle_timeout=30000,
             )
             self.network_tracker.start_tracking()
+
+        # Create DialogManager if enabled
+        self.dialog_manager: DialogManager | None = None
+        if enable_dialog_manager:
+            self.dialog_manager = DialogManager(
+                page=page,
+                engine=self.engine,
+                log=self.log,
+            )
+            self.dialog_manager.start_listening()
 
         # Create NavigationManager if enabled
         self.navigation_manager: NavigationManager | None = None
@@ -107,6 +120,50 @@ class BrowserCommander:
         """Check if error is ActionStoppedError."""
         return is_action_stopped_error(error)
 
+    # ==================== Dialog Event Handling ====================
+    def on_dialog(self, handler: Any) -> None:
+        """Register a dialog event handler.
+
+        The handler receives a dialog object with:
+        - dialog.type - 'alert' | 'confirm' | 'prompt' | 'beforeunload'
+        - dialog.message - The dialog message text
+        - dialog.accept(text=None) - Accept/confirm the dialog
+        - dialog.dismiss() - Dismiss/cancel the dialog
+
+        Both sync and async handlers are supported.
+
+        Example::
+
+            async def handle_dialog(dialog):
+                await dialog.dismiss()
+
+            commander.on_dialog(handle_dialog)
+
+        Args:
+            handler: Callable receiving a dialog object
+        """
+        if not self.dialog_manager:
+            raise RuntimeError("on_dialog requires enable_dialog_manager=True")
+        self.dialog_manager.on_dialog(handler)
+
+    def off_dialog(self, handler: Any) -> None:
+        """Remove a dialog event handler.
+
+        Args:
+            handler: The handler to remove
+        """
+        if not self.dialog_manager:
+            raise RuntimeError("off_dialog requires enable_dialog_manager=True")
+        self.dialog_manager.off_dialog(handler)
+
+    def clear_dialog_handlers(self) -> None:
+        """Remove all registered dialog event handlers."""
+        if not self.dialog_manager:
+            raise RuntimeError(
+                "clear_dialog_handlers requires enable_dialog_manager=True"
+            )
+        self.dialog_manager.clear_dialog_handlers()
+
     # ==================== Navigation Management ====================
     def should_abort(self) -> bool:
         """Check if current operation should abort due to navigation."""
@@ -145,6 +202,9 @@ class BrowserCommander:
 
         if self.navigation_manager:
             self.navigation_manager.stop_listening()
+
+        if self.dialog_manager:
+            self.dialog_manager.stop_listening()
 
     # ==================== Wait Functions ====================
     async def wait(self, ms: int, reason: str | None = None) -> dict:
@@ -647,6 +707,7 @@ def make_browser_commander(
     verbose: bool = False,
     enable_network_tracking: bool = True,
     enable_navigation_manager: bool = True,
+    enable_dialog_manager: bool = True,
 ) -> BrowserCommander:
     """Create a browser commander instance for a specific page.
 
@@ -655,6 +716,7 @@ def make_browser_commander(
         verbose: Enable verbose logging
         enable_network_tracking: Enable network request tracking (default: True)
         enable_navigation_manager: Enable navigation manager (default: True)
+        enable_dialog_manager: Enable dialog event handling (default: True)
 
     Returns:
         BrowserCommander instance
@@ -664,4 +726,5 @@ def make_browser_commander(
         verbose=verbose,
         enable_network_tracking=enable_network_tracking,
         enable_navigation_manager=enable_navigation_manager,
+        enable_dialog_manager=enable_dialog_manager,
     )

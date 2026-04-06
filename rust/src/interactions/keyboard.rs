@@ -7,9 +7,9 @@
 //! - Tab navigation
 //! - Keyboard shortcuts (e.g. `Control+A`)
 
-use crate::core::engine::{EngineAdapter, EngineError};
 #[cfg(test)]
 use crate::core::engine::PdfOptions;
+use crate::core::engine::{EngineAdapter, EngineError};
 
 /// Press a key at the page level.
 ///

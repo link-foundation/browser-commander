@@ -2,6 +2,7 @@ import path from 'path';
 import os from 'os';
 import { CHROME_ARGS } from '../core/constants.js';
 import { disableTranslateInPreferences } from '../core/preferences.js';
+import { emulateMedia } from './media.js';
 
 /**
  * Launch browser with default configuration
@@ -12,6 +13,7 @@ import { disableTranslateInPreferences } from '../core/preferences.js';
  * @param {number} options.slowMo - Slow down operations by ms (default: 150 for Playwright, 0 for Puppeteer)
  * @param {boolean} options.verbose - Enable verbose logging (default: false)
  * @param {string[]} options.args - Custom Chrome arguments to append to the default CHROME_ARGS
+ * @param {string|null} [options.colorScheme] - Emulate color scheme: 'light', 'dark', 'no-preference', or null to reset
  * @returns {Promise<Object>} - Object with browser and page
  */
 export async function launchBrowser(options = {}) {
@@ -22,6 +24,7 @@ export async function launchBrowser(options = {}) {
     slowMo = engine === 'playwright' ? 150 : 0,
     verbose = false,
     args = [],
+    colorScheme,
   } = options;
 
   // Combine default CHROME_ARGS with custom args
@@ -50,14 +53,22 @@ export async function launchBrowser(options = {}) {
 
   if (engine === 'playwright') {
     const { chromium } = await import('playwright');
-    browser = await chromium.launchPersistentContext(userDataDir, {
+    const contextOptions = {
       headless,
       slowMo,
       chromiumSandbox: true,
       viewport: null,
       args: chromeArgs,
       ignoreDefaultArgs: ['--enable-automation'],
-    });
+    };
+    // Playwright supports colorScheme as a context-level launch option
+    if (colorScheme !== undefined) {
+      contextOptions.colorScheme = colorScheme;
+    }
+    browser = await chromium.launchPersistentContext(
+      userDataDir,
+      contextOptions
+    );
     page = browser.pages()[0];
   } else {
     const puppeteer = await import('puppeteer');
@@ -73,6 +84,20 @@ export async function launchBrowser(options = {}) {
 
   if (verbose) {
     console.log(`✅ Browser launched with ${engine} engine`);
+  }
+
+  // Apply color scheme emulation if requested (Puppeteer needs page-level emulation)
+  if (colorScheme !== undefined && engine === 'puppeteer') {
+    try {
+      await emulateMedia({ page, engine, colorScheme });
+      if (verbose) {
+        console.log(`✅ Color scheme set to "${colorScheme}"`);
+      }
+    } catch (error) {
+      if (verbose) {
+        console.log(`⚠️  Could not set color scheme: ${error.message}`);
+      }
+    }
   }
 
   // Unfocus address bar automatically after browser launch

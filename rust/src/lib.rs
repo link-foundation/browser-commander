@@ -46,7 +46,7 @@ pub mod interactions;
 pub mod utilities;
 
 // Re-export commonly used items at crate root
-pub use browser::{launch_browser, Browser, LaunchOptions, LaunchResult};
+pub use browser::{emulate_media, launch_browser, Browser, ColorScheme, EmulateMediaOptions, LaunchOptions, LaunchResult};
 pub use core::{
     EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, Timing, CHROME_ARGS, TIMING,
 };
@@ -59,8 +59,9 @@ pub use core::{
 /// ```
 pub mod prelude {
     pub use crate::browser::{
-        goto, launch_browser, verify_navigation, wait_for_navigation, wait_for_url_stabilization,
-        Browser, LaunchOptions, LaunchResult, NavigationOptions, NavigationResult, WaitUntil,
+        emulate_media, goto, launch_browser, verify_navigation, wait_for_navigation,
+        wait_for_url_stabilization, Browser, ColorScheme, EmulateMediaOptions, LaunchOptions,
+        LaunchResult, NavigationOptions, NavigationResult, WaitUntil,
     };
     pub use crate::core::{
         is_navigation_error, is_timeout_error, EngineAdapter, EngineError, EngineType, Logger,

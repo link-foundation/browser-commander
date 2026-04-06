@@ -81,6 +81,7 @@ from browser_commander.exports import (
     # Element visibility
     is_visible,
     # Browser management
+    emulate_media,
     launch_browser,
     locator,
     log_element_info,
@@ -191,6 +192,7 @@ __all__ = [
     # Element visibility
     "is_visible",
     # Browser management
+    "emulate_media",
     "launch_browser",
     "locator",
     "log_element_info",

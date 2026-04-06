@@ -206,6 +206,38 @@ const { browser, page } = await launchBrowser({
 
 The `args` option allows passing custom Chrome arguments, which is useful for headless server environments (Docker, CI/CD) that require flags like `--no-sandbox`.
 
+The `colorScheme` option allows setting the initial color scheme (`'light'`, `'dark'`, or `'no-preference'`) at launch time for screenshot services and testing tools:
+
+```javascript
+const { browser, page } = await launchBrowser({
+  engine: 'playwright',
+  colorScheme: 'dark', // 'light', 'dark', or 'no-preference'
+});
+```
+
+### commander.emulateMedia(options)
+
+Emulate media features (e.g. `prefers-color-scheme`) for the current page:
+
+```javascript
+// Set dark mode
+await commander.emulateMedia({ colorScheme: 'dark' });
+
+// Set light mode
+await commander.emulateMedia({ colorScheme: 'light' });
+
+// Reset to system default
+await commander.emulateMedia({ colorScheme: null });
+```
+
+Works with both Playwright (`page.emulateMedia`) and Puppeteer (`page.emulateMediaFeatures`). Can also be used as a standalone function:
+
+```javascript
+import { emulateMedia } from 'browser-commander';
+
+await emulateMedia({ page, engine: 'playwright', colorScheme: 'dark' });
+```
+
 ### makeBrowserCommander(options)
 
 ```javascript

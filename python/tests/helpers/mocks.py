@@ -132,6 +132,7 @@ def create_mock_playwright_page(
     page.keyboard = MagicMock()
     page.keyboard.press = AsyncMock()
     page.keyboard.type = AsyncMock()
+    page.pdf = AsyncMock(return_value=b"%PDF-1.4 mock playwright")
     page.keyboard.down = AsyncMock()
     page.keyboard.up = AsyncMock()
 

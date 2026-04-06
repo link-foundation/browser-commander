@@ -55,6 +55,8 @@ export {
   verifyNavigation,
 } from './browser/navigation.js';
 
+export { pdf } from './browser/pdf.js';
+
 // Re-export element operations
 export {
   createPlaywrightLocator,

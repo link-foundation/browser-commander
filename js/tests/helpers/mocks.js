@@ -152,6 +152,7 @@ export function createMockPlaywrightPage(options = {}) {
       down: async (key) => {},
       up: async (key) => {},
     },
+    pdf: async (opts = {}) => Buffer.from('%PDF-1.4 mock playwright'),
   };
 }
 
@@ -312,6 +313,7 @@ export function createMockPuppeteerPage(options = {}) {
       down: async (key) => {},
       up: async (key) => {},
     },
+    pdf: async (opts = {}) => Buffer.from('%PDF-1.4 mock puppeteer'),
   };
 
   return page;

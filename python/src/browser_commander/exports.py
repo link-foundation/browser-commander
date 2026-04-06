@@ -26,6 +26,7 @@ from browser_commander.browser.navigation import (
     wait_for_page_ready,
     wait_for_url_stabilization,
 )
+from browser_commander.browser.pdf import pdf
 from browser_commander.core.constants import CHROME_ARGS, TIMING
 
 # Re-export new core components
@@ -222,6 +223,7 @@ __all__ = [
     "needs_scrolling",
     "normalize_selector",
     "not_condition",
+    "pdf",
     "perform_fill",
     # Keyboard interactions
     "press_key",

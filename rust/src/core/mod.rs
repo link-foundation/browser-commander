@@ -16,7 +16,7 @@ pub use constants::{Timing, CHROME_ARGS, TIMING};
 pub use dialog::{DialogEvent, DialogHandler, DialogManager, DialogType};
 pub use engine::{
     ClickVerificationResult, ElementInfo, EngineAdapter, EngineError, EngineType,
-    FillVerificationResult, PreClickState, ScrollVerificationResult,
+    FillVerificationResult, PdfOptions, PreClickState, ScrollVerificationResult,
 };
 pub use logger::{init_logger, is_verbose_enabled, Logger, LoggerOptions};
 pub use navigation::{

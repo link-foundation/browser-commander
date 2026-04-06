@@ -114,6 +114,24 @@ pub struct FillVerificationResult {
     pub attempts: u32,
 }
 
+/// Options for PDF generation.
+#[derive(Debug, Clone, Default)]
+pub struct PdfOptions {
+    /// Paper format (e.g. "A4", "Letter").
+    pub format: Option<String>,
+    /// Print background graphics.
+    pub print_background: bool,
+    /// Page margins as CSS strings (e.g. "1cm").
+    pub margin_top: Option<String>,
+    pub margin_right: Option<String>,
+    pub margin_bottom: Option<String>,
+    pub margin_left: Option<String>,
+    /// Scale of the webpage rendering (0.1–2.0).
+    pub scale: Option<f64>,
+    /// Optional file path to save the PDF.
+    pub path: Option<String>,
+}
+
 /// Pre-click state captured for verification.
 #[derive(Debug, Clone, Default)]
 pub struct PreClickState {
@@ -196,6 +214,12 @@ pub trait EngineAdapter: Send + Sync {
 
     /// Take a screenshot.
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError>;
+
+    /// Generate a PDF of the current page.
+    ///
+    /// Only supported by Chromium-based engines (chromiumoxide).
+    /// Returns an error for engines that do not support PDF generation.
+    async fn pdf(&self, options: PdfOptions) -> Result<Vec<u8>, EngineError>;
 
     /// Bring the page to front.
     async fn bring_to_front(&self) -> Result<(), EngineError>;
@@ -281,6 +305,34 @@ mod tests {
         } else {
             panic!("Expected InvalidEngine error");
         }
+    }
+
+    #[test]
+    fn pdf_options_default() {
+        let opts = PdfOptions::default();
+        assert!(opts.format.is_none());
+        assert!(!opts.print_background);
+        assert!(opts.margin_top.is_none());
+        assert!(opts.path.is_none());
+        assert!(opts.scale.is_none());
+    }
+
+    #[test]
+    fn pdf_options_can_be_constructed() {
+        let opts = PdfOptions {
+            format: Some("A4".to_string()),
+            print_background: true,
+            margin_top: Some("1cm".to_string()),
+            margin_right: Some("1cm".to_string()),
+            margin_bottom: Some("1cm".to_string()),
+            margin_left: Some("1cm".to_string()),
+            scale: Some(1.0),
+            path: None,
+        };
+        assert_eq!(opts.format.as_deref(), Some("A4"));
+        assert!(opts.print_background);
+        assert_eq!(opts.margin_top.as_deref(), Some("1cm"));
+        assert_eq!(opts.scale, Some(1.0));
     }
 
     #[test]

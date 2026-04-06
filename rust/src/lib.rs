@@ -52,7 +52,7 @@ pub use browser::{
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
-    LoggerOptions, Timing, CHROME_ARGS, TIMING,
+    LoggerOptions, PdfOptions, Timing, CHROME_ARGS, TIMING,
 };
 
 /// Prelude module for convenient imports.
@@ -69,7 +69,8 @@ pub mod prelude {
     };
     pub use crate::core::{
         is_navigation_error, is_timeout_error, DialogEvent, DialogManager, DialogType,
-        EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, Timing, CHROME_ARGS, TIMING,
+        EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, PdfOptions, Timing,
+        CHROME_ARGS, TIMING,
     };
     pub use crate::elements::{
         count, get_attribute, input_value, is_enabled, is_visible, normalize_selector,

@@ -627,6 +627,39 @@ class BrowserCommander:
             "actual_value": result.actual_value,
         }
 
+    # ==================== PDF Generation ====================
+    async def pdf(self, **options: Any) -> bytes:
+        """Generate a PDF of the current page.
+
+        Only supported by Playwright (Chromium). Raises NotImplementedError
+        for Selenium.
+
+        Args:
+            **options: PDF generation options forwarded to the underlying engine.
+                Common options (Playwright):
+                - format: Paper format (e.g. 'A4', 'Letter')
+                - print_background: Print background graphics
+                - margin: Dict with top/right/bottom/left margins
+                - path: Optional file path to save the PDF
+
+        Returns:
+            PDF content as bytes
+
+        Example::
+
+            pdf_bytes = await commander.pdf(
+                format='A4',
+                print_background=True,
+                margin={'top': '1cm', 'right': '1cm', 'bottom': '1cm', 'left': '1cm'},
+            )
+
+        Raises:
+            NotImplementedError: If the engine does not support PDF generation
+        """
+        from browser_commander.browser.pdf import pdf
+
+        return await pdf(self.page, self.engine, **options)
+
     # ==================== Keyboard Operations ====================
     async def keyboard_press(self, key: str) -> None:
         """Press a key at the page level.

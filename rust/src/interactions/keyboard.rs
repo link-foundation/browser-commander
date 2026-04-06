@@ -7,6 +7,8 @@
 //! - Tab navigation
 //! - Keyboard shortcuts (e.g. `Control+A`)
 
+#[cfg(test)]
+use crate::core::engine::PdfOptions;
 use crate::core::engine::{EngineAdapter, EngineError};
 
 /// Press a key at the page level.
@@ -221,6 +223,12 @@ mod tests {
         async fn keyboard_up(&self, key: &str) -> Result<(), EngineError> {
             self.up_keys.lock().unwrap().push(key.to_string());
             Ok(())
+        }
+
+        async fn pdf(&self, _options: PdfOptions) -> Result<Vec<u8>, EngineError> {
+            Err(EngineError::Browser(
+                "PDF not supported in mock engine".to_string(),
+            ))
         }
     }
 

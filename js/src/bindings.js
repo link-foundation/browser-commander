@@ -53,6 +53,7 @@ import {
   checkAndClearFlag,
   findToggleButton,
 } from './high-level/universal-logic.js';
+import { pdf } from './browser/pdf.js';
 import { pressKey, typeText, keyDown, keyUp } from './interactions/keyboard.js';
 
 /**
@@ -215,6 +216,9 @@ export function createBoundFunctions(options = {}) {
       findByText: findByTextBound,
     });
 
+  // Bound pdf generation
+  const pdfBound = (opts = {}) => pdf({ ...opts, page, engine });
+
   // Bound keyboard
   const pressKeyBound = (opts) => pressKey({ ...opts, page, engine });
   const typeTextBound = (opts) => typeText({ ...opts, page, engine });
@@ -306,6 +310,9 @@ export function createBoundFunctions(options = {}) {
     installClickListener: installClickListenerBound,
     checkAndClearFlag: checkAndClearFlagBound,
     findToggleButton: findToggleButtonBound,
+
+    // PDF generation
+    pdf: pdfBound,
 
     // Page-level keyboard interaction
     // Usage: await commander.keyboard.press('Escape')

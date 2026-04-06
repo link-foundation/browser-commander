@@ -20,6 +20,7 @@ from browser_commander.browser.navigation import (
     wait_for_page_ready,
     wait_for_url_stabilization,
 )
+from browser_commander.browser.pdf import pdf
 
 __all__ = [
     "GotoResult",
@@ -31,6 +32,8 @@ __all__ = [
     "emulate_media",
     "goto",
     "launch_browser",
+    # PDF generation
+    "pdf",
     "verify_navigation",
     "wait_after_action",
     "wait_for_navigation",

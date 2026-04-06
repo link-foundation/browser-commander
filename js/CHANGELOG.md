@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- a681a87: Add unified `page.pdf(options)` method to `EngineAdapter`, `PlaywrightAdapter`, and `PuppeteerAdapter`, eliminating the need for users to access raw page objects via the `page._page || page` workaround. The `pdf()` method is also exposed on the `BrowserCommander` facade via `commander.pdf({ pdfOptions })`.
+
 ## 0.7.0
 
 ### Minor Changes

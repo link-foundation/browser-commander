@@ -128,7 +128,9 @@ async def verify_fill(
         if last_result.verified:
             if log:
                 log.debug(
-                    lambda _a=attempts: f"Fill verification succeeded after {_a} attempt(s)"
+                    lambda _a=attempts: (
+                        f"Fill verification succeeded after {_a} attempt(s)"
+                    )
                 )
             return FillVerificationResult(
                 verified=True,
@@ -150,8 +152,10 @@ async def verify_fill(
 
     if log:
         log.debug(
-            lambda: f"Fill verification failed after {attempts} attempts. "
-            f'Expected: "{expected_text}", Got: "{last_result.actual_value}"'
+            lambda: (
+                f"Fill verification failed after {attempts} attempts. "
+                f'Expected: "{expected_text}", Got: "{last_result.actual_value}"'
+            )
         )
 
     return FillVerificationResult(
@@ -254,8 +258,10 @@ async def perform_fill(
 
             if not verification_result.verified and log:
                 log.debug(
-                    lambda: f'Fill verification failed: expected "{text}", '
-                    f'got "{verification_result.actual_value}"'
+                    lambda: (
+                        f'Fill verification failed: expected "{text}", '
+                        f'got "{verification_result.actual_value}"'
+                    )
                 )
 
             return FillResult(
@@ -339,8 +345,10 @@ async def fill_text_area(
                     locator_or_element=locator_or_element,
                 )
                 log.debug(
-                    lambda: f"Textarea already has content, skipping: "
-                    f'"{current_value[:30]}..."'
+                    lambda: (
+                        f"Textarea already has content, skipping: "
+                        f'"{current_value[:30]}..."'
+                    )
                 )
                 return FillResult(
                     filled=False,
@@ -393,8 +401,10 @@ async def fill_text_area(
             log.debug(lambda: "Fill verification passed")
         else:
             log.debug(
-                lambda: f'Fill verification failed: expected "{text}", '
-                f'got "{fill_result.actual_value}"'
+                lambda: (
+                    f'Fill verification failed: expected "{text}", '
+                    f'got "{fill_result.actual_value}"'
+                )
             )
 
         return FillResult(

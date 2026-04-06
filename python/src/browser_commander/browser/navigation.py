@@ -183,9 +183,10 @@ async def verify_navigation(
         if last_result.verified:
             if log:
                 log.debug(
-                    lambda _a=attempts,
-                    _r=last_result: f"Navigation verification succeeded after "
-                    f"{_a} attempt(s): {_r.reason}"
+                    lambda _a=attempts, _r=last_result: (
+                        f"Navigation verification succeeded after "
+                        f"{_a} attempt(s): {_r.reason}"
+                    )
                 )
             return NavigationVerificationResult(
                 verified=last_result.verified,
@@ -210,8 +211,10 @@ async def verify_navigation(
 
     if log:
         log.debug(
-            lambda: f"Navigation verification failed after {attempts} "
-            f"attempts: {last_result.reason}"
+            lambda: (
+                f"Navigation verification failed after {attempts} "
+                f"attempts: {last_result.reason}"
+            )
         )
 
     return NavigationVerificationResult(
@@ -288,14 +291,17 @@ async def wait_for_url_stabilization(
         if current_url == last_url:
             stable_count += 1
             log.debug(
-                lambda _sc=stable_count,
-                _cu=current_url: f"URL stable for {_sc}/{stable_checks} checks: {_cu}"
+                lambda _sc=stable_count, _cu=current_url: (
+                    f"URL stable for {_sc}/{stable_checks} checks: {_cu}"
+                )
             )
         else:
             stable_count = 0
             last_url = current_url
             log.debug(
-                lambda _cu=current_url: f"URL changed to: {_cu}, resetting stability counter"
+                lambda _cu=current_url: (
+                    f"URL changed to: {_cu}, resetting stability counter"
+                )
             )
 
     log.debug(lambda: f"URL stabilized ({reason})")

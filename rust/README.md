@@ -170,6 +170,38 @@ For convenience, import everything commonly needed with:
 use browser_commander::prelude::*;
 ```
 
+## Extensibility / Escape Hatch
+
+`browser-commander` cannot anticipate every browser API. When you need an API that is not yet supported, you can access the raw underlying engine objects directly as an **official extensibility escape hatch**.
+
+### Using `LaunchResult` raw fields
+
+`launch_browser()` returns a `LaunchResult` with a `browser` field that contains the engine type and configuration. When using the underlying engine crate (e.g. `chromiumoxide`) directly, the raw browser and page objects are accessible from the engine crate:
+
+```rust
+use browser_commander::prelude::*;
+
+let options = LaunchOptions::chromiumoxide().headless(true);
+let result = launch_browser(options).await?;
+
+// Access engine metadata
+println!("Engine: {:?}", result.browser.engine);
+println!("User data dir: {:?}", result.browser.user_data_dir);
+
+// For engine-specific APIs not yet in browser-commander,
+// use the underlying engine crate directly alongside browser-commander.
+// For example, with chromiumoxide:
+//   let (browser, mut handler) = Browser::launch(BrowserConfig::builder()...).await?;
+//   let page = browser.new_page("about:blank").await?;
+//   // Use page.pdf(), page.emulate_media(), page.keyboard() etc.
+```
+
+### Why This Matters
+
+- Users can adopt browser-commander incrementally while retaining access to full engine APIs
+- No need for fragile `_page` private-field hacks
+- Missing APIs can be [reported as issues](https://github.com/link-foundation/browser-commander/issues) while users remain unblocked
+
 ## License
 
 [UNLICENSE](../LICENSE)

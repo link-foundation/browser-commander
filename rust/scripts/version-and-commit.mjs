@@ -60,8 +60,7 @@ function setOutput(key, value) {
   if (outputFile) {
     appendFileSync(outputFile, `${key}=${value}\n`);
   }
-  // Also log for visibility
-  console.log(`::set-output name=${key}::${value}`);
+  console.log(`Output: ${key}=${value}`);
 }
 
 /**
@@ -120,17 +119,44 @@ function updateCargoToml(newVersion) {
 }
 
 /**
- * Check if a git tag exists for this version
+ * Check if a version is published on crates.io
+ * @param {string} crateName
  * @param {string} version
  * @returns {Promise<boolean>}
  */
-async function checkTagExists(version) {
+async function checkVersionOnCratesIo(crateName, version) {
   try {
-    await $`git rev-parse v${version}`.run({ capture: true });
-    return true;
+    const response = await fetch(
+      `https://crates.io/api/v1/crates/${crateName}/${version}`
+    );
+    if (response.ok) {
+      const data = await response.json();
+      return Boolean(data.version);
+    }
+    return false;
   } catch {
     return false;
   }
+}
+
+/**
+ * Find the next available version that is not yet published on crates.io
+ * @param {string} crateName
+ * @param {{major: number, minor: number, patch: number}} current
+ * @param {string} bumpType
+ * @returns {Promise<string>}
+ */
+async function findNextAvailableVersion(crateName, current, bumpType) {
+  let version = calculateNewVersion(current, bumpType);
+
+  while (await checkVersionOnCratesIo(crateName, version)) {
+    console.log(`Version ${version} already published on crates.io, trying next...`);
+    const parts = version.split('.').map(Number);
+    const next = { major: parts[0], minor: parts[1], patch: parts[2] };
+    version = calculateNewVersion(next, 'patch');
+  }
+
+  return version;
 }
 
 /**
@@ -215,15 +241,23 @@ async function main() {
     await $`git config user.email "github-actions[bot]@users.noreply.github.com"`;
 
     const current = getCurrentVersion();
-    const newVersion = calculateNewVersion(current, bumpType);
+    const currentVersionStr = `${current.major}.${current.minor}.${current.patch}`;
 
-    // Check if this version was already released
-    if (await checkTagExists(newVersion)) {
-      console.log(`Tag v${newVersion} already exists`);
-      setOutput('already_released', 'true');
-      setOutput('new_version', newVersion);
-      return;
+    // Get crate name from Cargo.toml
+    const cargoToml = readFileSync('Cargo.toml', 'utf-8');
+    const nameMatch = cargoToml.match(/^name\s*=\s*"([^"]+)"/m);
+    const crateName = nameMatch ? nameMatch[1] : 'unknown';
+
+    // Check if the current version is already published on crates.io
+    if (await checkVersionOnCratesIo(crateName, currentVersionStr)) {
+      console.log(`Current version ${currentVersionStr} is already published on crates.io`);
+    } else {
+      console.log(`Current version ${currentVersionStr} is NOT published on crates.io`);
     }
+
+    // Find the next version that is not yet published on crates.io
+    const newVersion = await findNextAvailableVersion(crateName, current, bumpType);
+    console.log(`Next available version: ${newVersion}`);
 
     // Update version in Cargo.toml
     updateCargoToml(newVersion);

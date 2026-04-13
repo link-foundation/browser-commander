@@ -1,6 +1,6 @@
 [package]
 name = "browser-commander"
-version = "0.4.0"
+version = "0.9.0"
 edition = "2021"
 authors = ["Link Foundation"]
 description = "Universal browser automation library that supports multiple browser engines with a unified API"

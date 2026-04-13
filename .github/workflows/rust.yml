@@ -279,9 +279,9 @@ jobs:
           # Check if version is published on crates.io (the source of truth for Rust packages)
           # Note: We check crates.io, not git tags, because git tags can exist without
           # the package being published (e.g., failed publish, GitHub-only releases)
-          CRATES_IO_RESPONSE=$(curl -s "https://crates.io/api/v1/crates/${CRATE_NAME}/${CURRENT_VERSION}")
+          CRATES_IO_RESPONSE=$(curl -s -H "User-Agent: browser-commander CI (github.com/link-foundation/browser-commander)" "https://crates.io/api/v1/crates/${CRATE_NAME}/${CURRENT_VERSION}")
           VERSION_ON_CRATES_IO=false
-          if echo "$CRATES_IO_RESPONSE" | grep -q '"version"'; then
+          if echo "$CRATES_IO_RESPONSE" | grep -q '"num"'; then
             VERSION_ON_CRATES_IO=true
           fi
 

@@ -152,7 +152,7 @@ async function main() {
         errorMessage.includes('already exists')
       ) {
         console.log(
-          `Version ${version} already exists on crates.io - this is OK`
+          `::warning::Version ${version} already exists on crates.io - no new version was published`
         );
         setOutput('publish_result', 'already_exists');
       } else {

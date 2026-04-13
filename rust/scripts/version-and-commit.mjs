@@ -127,7 +127,12 @@ function updateCargoToml(newVersion) {
 async function checkVersionOnCratesIo(crateName, version) {
   try {
     const response = await fetch(
-      `https://crates.io/api/v1/crates/${crateName}/${version}`
+      `https://crates.io/api/v1/crates/${crateName}/${version}`,
+      {
+        headers: {
+          'User-Agent': 'browser-commander-ci (github.com/link-foundation/browser-commander)',
+        },
+      }
     );
     if (response.ok) {
       const data = await response.json();
@@ -147,9 +152,17 @@ async function checkVersionOnCratesIo(crateName, version) {
  * @returns {Promise<string>}
  */
 async function findNextAvailableVersion(crateName, current, bumpType) {
+  const MAX_ATTEMPTS = 20;
   let version = calculateNewVersion(current, bumpType);
+  let attempts = 0;
 
   while (await checkVersionOnCratesIo(crateName, version)) {
+    attempts++;
+    if (attempts >= MAX_ATTEMPTS) {
+      throw new Error(
+        `Could not find an available version after ${MAX_ATTEMPTS} attempts (last tried: ${version})`
+      );
+    }
     console.log(`Version ${version} already published on crates.io, trying next...`);
     const parts = version.split('.').map(Number);
     const next = { major: parts[0], minor: parts[1], patch: parts[2] };

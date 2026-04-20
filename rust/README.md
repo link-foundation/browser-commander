@@ -37,21 +37,22 @@ use browser_commander::prelude::*;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Launch a browser with chromiumoxide engine
-    let options = LaunchOptions::chromiumoxide()
-        .headless(true);
-
+    let options = LaunchOptions::chromiumoxide().headless(true);
     let result = launch_browser(options).await?;
     println!("Browser launched: {:?}", result.browser.engine);
 
+    // `result.page` is an `Arc<dyn EngineAdapter>` you can pass to any
+    // of the navigation / interaction helpers.
+    let page = result.page.as_ref();
+
     // Navigate to a URL
-    let page = &result.page;
-    goto(page, "https://example.com", None).await?;
+    page.goto("https://example.com").await?;
 
     // Click a button
-    click_button(page, "button.submit", None).await?;
+    page.click("button.submit").await?;
 
     // Fill a text field
-    fill_text_area(page, "input[name='email']", "test@example.com", None).await?;
+    page.fill("input[name='email']", "test@example.com").await?;
 
     Ok(())
 }

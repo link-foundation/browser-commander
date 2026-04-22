@@ -14,16 +14,19 @@
 //! # Example
 //!
 //! ```rust,no_run
-//! use browser_commander::browser::{LaunchOptions, launch_browser};
+//! use browser_commander::browser::{launch_browser, LaunchOptions};
 //!
 //! #[tokio::main]
 //! async fn main() -> anyhow::Result<()> {
 //!     // Launch a browser
-//!     let options = LaunchOptions::chromiumoxide()
-//!         .headless(true);
-//!
+//!     let options = LaunchOptions::chromiumoxide().headless(true);
 //!     let result = launch_browser(options).await?;
-//!     println!("Browser launched: {:?}", result.browser.engine);
+//!
+//!     // The returned `page` is an `Arc<dyn EngineAdapter>` and can be
+//!     // passed to any of the crate's navigation / interaction helpers.
+//!     let page = result.page.as_ref();
+//!     page.goto("https://example.com").await?;
+//!     println!("Current URL: {}", page.url().await?);
 //!
 //!     Ok(())
 //! }
@@ -47,8 +50,8 @@ pub mod utilities;
 
 // Re-export commonly used items at crate root
 pub use browser::{
-    emulate_media, launch_browser, Browser, ColorScheme, EmulateMediaOptions, LaunchOptions,
-    LaunchResult,
+    emulate_media, launch_browser, Browser, ChromiumoxidePage, ColorScheme, EmulateMediaOptions,
+    LaunchOptions, LaunchResult,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,

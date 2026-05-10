@@ -12,6 +12,7 @@ use futures::StreamExt;
 
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::media::ColorScheme;
+use crate::browser::node_bridge::NodeBridgePage;
 use crate::core::constants::CHROME_ARGS;
 use crate::core::engine::{EngineAdapter, EngineType};
 
@@ -41,6 +42,10 @@ pub struct LaunchOptions {
     /// capabilities). This translates to the `--no-sandbox` /
     /// `--disable-setuid-sandbox` Chromium flags.
     pub sandbox: bool,
+    /// Node.js executable for Playwright/Puppeteer fallback engines.
+    pub node_executable: Option<PathBuf>,
+    /// Working directory used to resolve Playwright/Puppeteer Node packages.
+    pub node_working_dir: Option<PathBuf>,
 }
 
 impl Default for LaunchOptions {
@@ -55,11 +60,22 @@ impl Default for LaunchOptions {
             color_scheme: None,
             launch_timeout: None,
             sandbox: true,
+            node_executable: None,
+            node_working_dir: None,
         }
     }
 }
 
 impl LaunchOptions {
+    /// Set the browser automation engine.
+    pub fn engine(mut self, engine: EngineType) -> Self {
+        self.engine = engine;
+        if engine == EngineType::Playwright && self.slow_mo == 0 {
+            self.slow_mo = 150;
+        }
+        self
+    }
+
     /// Create options for chromiumoxide engine.
     pub fn chromiumoxide() -> Self {
         Self {
@@ -72,6 +88,23 @@ impl LaunchOptions {
     pub fn fantoccini() -> Self {
         Self {
             engine: EngineType::Fantoccini,
+            ..Default::default()
+        }
+    }
+
+    /// Create options for Playwright through the Node.js CLI bridge.
+    pub fn playwright() -> Self {
+        Self {
+            engine: EngineType::Playwright,
+            slow_mo: 150,
+            ..Default::default()
+        }
+    }
+
+    /// Create options for Puppeteer through the Node.js CLI bridge.
+    pub fn puppeteer() -> Self {
+        Self {
+            engine: EngineType::Puppeteer,
             ..Default::default()
         }
     }
@@ -124,6 +157,18 @@ impl LaunchOptions {
         self
     }
 
+    /// Override the Node.js executable used by Playwright/Puppeteer engines.
+    pub fn node_executable(mut self, executable: impl Into<PathBuf>) -> Self {
+        self.node_executable = Some(executable.into());
+        self
+    }
+
+    /// Set the directory where Node resolves `playwright` or `puppeteer`.
+    pub fn node_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.node_working_dir = Some(dir.into());
+        self
+    }
+
     /// Get all Chrome arguments (default + custom).
     pub fn all_chrome_args(&self) -> Vec<String> {
         let mut all_args: Vec<String> = CHROME_ARGS.iter().map(|s| s.to_string()).collect();
@@ -164,7 +209,7 @@ pub struct LaunchResult {
     pub browser: Browser,
     /// A live page/adapter tied to the launched browser.
     ///
-    /// For `Chromiumoxide`, this is a [`ChromiumoxidePage`](crate::browser::ChromiumoxidePage)
+    /// For `Chromiumoxide`, this is a [`ChromiumoxidePage`]
     /// implementing [`EngineAdapter`]. Pass `launch_result.page.as_ref()` to
     /// `goto`, `click`, `evaluate`, and other helpers.
     pub page: Arc<dyn EngineAdapter>,
@@ -185,6 +230,12 @@ impl std::fmt::Debug for LaunchResult {
 /// the CDP handshake, opens a blank page, and returns a [`LaunchResult`]
 /// containing both the metadata (`browser`) and a live page adapter (`page`)
 /// implementing [`EngineAdapter`].
+///
+/// For the `Playwright` and `Puppeteer` engines, this starts a local Node.js
+/// subprocess and uses the official Node package as a CLI bridge. The selected
+/// package must be available to Node module resolution, usually by running
+/// `npm install playwright` or `npm install puppeteer` in the configured
+/// `node_working_dir`.
 ///
 /// The `Fantoccini` engine is not yet implemented as a managed launcher; use
 /// chromiumoxide or connect to an externally-managed WebDriver session.
@@ -210,11 +261,32 @@ pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyh
 
     match options.engine {
         EngineType::Chromiumoxide => launch_chromiumoxide(options, user_data_dir).await,
+        EngineType::Playwright | EngineType::Puppeteer => {
+            launch_node_bridge(options, user_data_dir).await
+        }
         EngineType::Fantoccini => Err(anyhow::anyhow!(
             "fantoccini engine launch is not yet implemented; \
              connect to an existing WebDriver session or use EngineType::Chromiumoxide"
         )),
     }
+}
+
+async fn launch_node_bridge(
+    options: LaunchOptions,
+    user_data_dir: PathBuf,
+) -> Result<LaunchResult, anyhow::Error> {
+    let engine = options.engine;
+    let headless = options.headless;
+    let adapter = NodeBridgePage::launch(options, user_data_dir.clone()).await?;
+
+    Ok(LaunchResult {
+        browser: Browser {
+            engine,
+            user_data_dir,
+            headless,
+        },
+        page: Arc::new(adapter),
+    })
 }
 
 async fn launch_chromiumoxide(
@@ -316,6 +388,8 @@ mod tests {
         assert_eq!(options.slow_mo, 0);
         assert!(!options.verbose);
         assert!(options.args.is_empty());
+        assert!(options.node_executable.is_none());
+        assert!(options.node_working_dir.is_none());
     }
 
     #[test]
@@ -337,6 +411,29 @@ mod tests {
     fn launch_options_fantoccini() {
         let options = LaunchOptions::fantoccini();
         assert_eq!(options.engine, EngineType::Fantoccini);
+    }
+
+    #[test]
+    fn launch_options_playwright() {
+        let options = LaunchOptions::playwright();
+        assert_eq!(options.engine, EngineType::Playwright);
+        assert_eq!(options.slow_mo, 150);
+    }
+
+    #[test]
+    fn launch_options_puppeteer() {
+        let options = LaunchOptions::puppeteer();
+        assert_eq!(options.engine, EngineType::Puppeteer);
+    }
+
+    #[test]
+    fn launch_options_node_bridge_configuration() {
+        let options = LaunchOptions::playwright()
+            .node_executable("/custom/node")
+            .node_working_dir("/project/js");
+
+        assert_eq!(options.node_executable, Some(PathBuf::from("/custom/node")));
+        assert_eq!(options.node_working_dir, Some(PathBuf::from("/project/js")));
     }
 
     #[test]
@@ -375,5 +472,14 @@ mod tests {
         let options = LaunchOptions::fantoccini();
         let err = launch_browser(options).await.unwrap_err();
         assert!(err.to_string().contains("fantoccini"));
+    }
+
+    #[tokio::test]
+    async fn launch_playwright_reports_missing_node_executable() {
+        let options = LaunchOptions::playwright()
+            .headless(true)
+            .node_executable("browser-commander-missing-node");
+        let err = launch_browser(options).await.unwrap_err();
+        assert!(err.to_string().contains("failed to start Node.js bridge"));
     }
 }

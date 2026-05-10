@@ -8,6 +8,7 @@ pub mod chromiumoxide_adapter;
 pub mod launcher;
 pub mod media;
 pub mod navigation_ops;
+pub mod node_bridge;
 
 pub use chromiumoxide_adapter::ChromiumoxidePage;
 pub use launcher::{launch_browser, Browser, LaunchOptions, LaunchResult};
@@ -16,3 +17,4 @@ pub use navigation_ops::{
     goto, verify_navigation, wait_for_navigation, wait_for_url_stabilization, NavigationOptions,
     NavigationResult, NavigationVerificationResult, WaitUntil,
 };
+pub use node_bridge::NodeBridgePage;

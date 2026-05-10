@@ -51,7 +51,7 @@ pub mod utilities;
 // Re-export commonly used items at crate root
 pub use browser::{
     emulate_media, launch_browser, Browser, ChromiumoxidePage, ColorScheme, EmulateMediaOptions,
-    LaunchOptions, LaunchResult,
+    LaunchOptions, LaunchResult, NodeBridgePage,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,

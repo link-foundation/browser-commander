@@ -1,7 +1,7 @@
 //! Browser engine detection and abstraction.
 //!
 //! This module provides traits and types for abstracting over different
-//! browser automation engines (currently focused on Chromium-based browsers).
+//! browser automation engines.
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -15,6 +15,10 @@ pub enum EngineType {
     Chromiumoxide,
     /// WebDriver-based engine (similar to Playwright's approach)
     Fantoccini,
+    /// Playwright driven through the Node.js package as a CLI bridge.
+    Playwright,
+    /// Puppeteer driven through the Node.js package as a CLI bridge.
+    Puppeteer,
 }
 
 impl std::fmt::Display for EngineType {
@@ -22,6 +26,8 @@ impl std::fmt::Display for EngineType {
         match self {
             EngineType::Chromiumoxide => write!(f, "chromiumoxide"),
             EngineType::Fantoccini => write!(f, "fantoccini"),
+            EngineType::Playwright => write!(f, "playwright"),
+            EngineType::Puppeteer => write!(f, "puppeteer"),
         }
     }
 }
@@ -31,8 +37,10 @@ impl std::str::FromStr for EngineType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "chromiumoxide" | "cdp" | "puppeteer" => Ok(EngineType::Chromiumoxide),
-            "fantoccini" | "webdriver" | "playwright" => Ok(EngineType::Fantoccini),
+            "chromiumoxide" | "cdp" => Ok(EngineType::Chromiumoxide),
+            "fantoccini" | "webdriver" => Ok(EngineType::Fantoccini),
+            "playwright" => Ok(EngineType::Playwright),
+            "puppeteer" => Ok(EngineType::Puppeteer),
             _ => Err(EngineError::InvalidEngine(s.to_string())),
         }
     }
@@ -42,7 +50,9 @@ impl std::str::FromStr for EngineType {
 #[derive(Debug, Error)]
 pub enum EngineError {
     /// Invalid engine type specified.
-    #[error("Invalid engine: {0}. Expected 'chromiumoxide' or 'fantoccini'")]
+    #[error(
+        "Invalid engine: {0}. Expected 'chromiumoxide', 'fantoccini', 'playwright', or 'puppeteer'"
+    )]
     InvalidEngine(String),
 
     /// Element not found.
@@ -254,6 +264,8 @@ mod tests {
     fn engine_type_display() {
         assert_eq!(EngineType::Chromiumoxide.to_string(), "chromiumoxide");
         assert_eq!(EngineType::Fantoccini.to_string(), "fantoccini");
+        assert_eq!(EngineType::Playwright.to_string(), "playwright");
+        assert_eq!(EngineType::Puppeteer.to_string(), "puppeteer");
     }
 
     #[test]
@@ -268,7 +280,11 @@ mod tests {
         );
         assert_eq!(
             "puppeteer".parse::<EngineType>().unwrap(),
-            EngineType::Chromiumoxide
+            EngineType::Puppeteer
+        );
+        assert_eq!(
+            "puppeteer".parse::<EngineType>().unwrap().to_string(),
+            "puppeteer"
         );
         assert_eq!(
             "fantoccini".parse::<EngineType>().unwrap(),
@@ -280,7 +296,11 @@ mod tests {
         );
         assert_eq!(
             "playwright".parse::<EngineType>().unwrap(),
-            EngineType::Fantoccini
+            EngineType::Playwright
+        );
+        assert_eq!(
+            "playwright".parse::<EngineType>().unwrap().to_string(),
+            "playwright"
         );
     }
 
@@ -293,6 +313,14 @@ mod tests {
         assert_eq!(
             "Fantoccini".parse::<EngineType>().unwrap(),
             EngineType::Fantoccini
+        );
+        assert_eq!(
+            "Playwright".parse::<EngineType>().unwrap(),
+            EngineType::Playwright
+        );
+        assert_eq!(
+            "Puppeteer".parse::<EngineType>().unwrap(),
+            EngineType::Puppeteer
         );
     }
 

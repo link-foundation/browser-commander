@@ -18,6 +18,16 @@ npm install playwright
 npm install puppeteer
 ```
 
+## Documentation
+
+Generate the JavaScript API reference locally with:
+
+```bash
+npm run docs:api
+```
+
+The repository Documentation workflow also combines this JSDoc output with Rust `cargo doc` output for GitHub Pages publishing from `main`.
+
 ## Core Concept: Page State Machine
 
 Browser Commander manages the browser as a state machine with two states:

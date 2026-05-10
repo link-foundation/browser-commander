@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 # jscpd reports
 reports/
+
+# Generated API documentation
+js/docs-api/

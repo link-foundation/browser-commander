@@ -146,7 +146,7 @@ export async function checkIfElementEmpty(options = {}) {
  * @param {number} options.verificationTimeout - Verification timeout in ms (default: TIMING.VERIFICATION_TIMEOUT)
  * @param {Function} options.log - Logger instance (optional)
  * @param {Object} options.adapter - Engine adapter (optional, will be created if not provided)
- * @returns {Promise<{filled: boolean, verified: boolean, actualValue?: string}>}
+ * @returns {Promise<Object>} Fill result.
  */
 export async function performFill(options = {}) {
   const {
@@ -240,7 +240,7 @@ export async function performFill(options = {}) {
  * @param {boolean} options.verify - Whether to verify the fill operation (default: true)
  * @param {Function} options.verifyFn - Custom verification function (optional, uses defaultFillVerification if not provided)
  * @param {number} options.verificationTimeout - Verification timeout in ms (default: TIMING.VERIFICATION_TIMEOUT)
- * @returns {Promise<{filled: boolean, verified: boolean, skipped: boolean, actualValue?: string}>}
+ * @returns {Promise<Object>} Fill result.
  *   - filled: true if fill operation was attempted
  *   - verified: true if fill was verified successfully (only meaningful if filled is true)
  *   - skipped: true if element already had content and checkEmpty was true

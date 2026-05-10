@@ -4,6 +4,7 @@
 
 use browser_commander::browser::{launch_browser, LaunchOptions};
 use browser_commander::core::logger::{init_logger, LoggerOptions};
+use browser_commander::core::EngineType;
 use std::env;
 
 #[tokio::main]
@@ -28,12 +29,17 @@ async fn main() -> anyhow::Result<()> {
     match args[1].as_str() {
         "launch" => {
             let headless = args.iter().any(|a| a == "--headless");
+            let engine = option_value(&args, "--engine")
+                .map(|value| value.parse::<EngineType>())
+                .transpose()?
+                .unwrap_or(EngineType::Chromiumoxide);
 
-            let options = LaunchOptions::chromiumoxide()
+            let options = LaunchOptions::default()
+                .engine(engine)
                 .headless(headless)
                 .verbose(verbose);
 
-            println!("Launching browser...");
+            println!("Launching browser with {engine}...");
             let result = launch_browser(options).await?;
             println!("Browser launched: {:?}", result.browser);
         }
@@ -57,7 +63,14 @@ fn print_help() {
     println!("  version    Show version information");
     println!();
     println!("Options:");
+    println!("  --engine <name>  chromiumoxide, fantoccini, playwright, or puppeteer");
     println!("  --headless     Run browser in headless mode");
     println!("  --verbose, -v  Enable verbose logging");
     println!("  --help, -h     Show this help message");
+}
+
+fn option_value(args: &[String], name: &str) -> Option<String> {
+    args.windows(2)
+        .find(|window| window[0] == name)
+        .map(|window| window[1].clone())
 }

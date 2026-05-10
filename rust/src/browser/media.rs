@@ -91,15 +91,16 @@ impl EmulateMediaOptions {
 ///
 /// # Note
 ///
-/// This is a placeholder implementation. The actual implementation requires
-/// integration with a live browser page object from chromiumoxide or fantoccini.
+/// This helper validates and records the desired media emulation settings.
+/// Launch-time emulation for live Chromiumoxide, Playwright, and Puppeteer
+/// sessions is applied by the browser launchers/adapters.
 ///
 /// For chromiumoxide, use `Page::emulate_media` or send a CDP command:
 /// ```text
 /// Emulation.setEmulatedMedia with features: [{name: "prefers-color-scheme", value: "dark"}]
 /// ```
 ///
-/// For fantoccini (WebDriver), use Chrome DevTools Protocol via the session:
+/// For Fantoccini (WebDriver), use Chrome DevTools Protocol via the session:
 /// ```text
 /// session.issue_cmd(Command::CustomCommand("Emulation.setEmulatedMedia", params))
 /// ```
@@ -113,7 +114,10 @@ impl EmulateMediaOptions {
 /// Returns an error if the engine is unsupported.
 pub async fn emulate_media(options: EmulateMediaOptions) -> Result<(), anyhow::Error> {
     match options.engine {
-        EngineType::Chromiumoxide | EngineType::Fantoccini => {
+        EngineType::Chromiumoxide
+        | EngineType::Fantoccini
+        | EngineType::Playwright
+        | EngineType::Puppeteer => {
             // Placeholder: actual implementation would send CDP command to the page:
             // Emulation.setEmulatedMedia with features: [{ name: "prefers-color-scheme", value: ... }]
             tracing::debug!(

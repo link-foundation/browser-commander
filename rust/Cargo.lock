@@ -284,6 +284,7 @@ version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "base64 0.22.1",
  "chromiumoxide",
  "dirs",
  "fantoccini",

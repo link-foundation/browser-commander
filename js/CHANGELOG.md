@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1
+
+### Patch Changes
+
+- ffc59e6: Add generated JSDoc API documentation support for the JavaScript package.
+
 ## 0.8.0
 
 ### Minor Changes

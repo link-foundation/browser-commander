@@ -1,0 +1,119 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "js/**"
+      - "rust/**"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "js/**"
+      - "rust/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build-docs:
+    name: Build Combined Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install JavaScript dependencies
+        working-directory: js
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+        run: npm ci
+
+      - name: Generate JavaScript API docs
+        working-directory: js
+        run: npm run docs:api
+
+      - name: Generate Rust API docs
+        working-directory: rust
+        run: cargo doc --no-deps --all-features
+
+      - name: Assemble Pages artifact
+        run: |
+          mkdir -p public/javascript public/rust
+          cp -R js/docs-api/. public/javascript/
+          cp -R rust/target/doc/. public/rust/
+          cat > public/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>Browser Commander Documentation</title>
+              <style>
+                body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5; }
+                main { max-width: 720px; }
+                a { color: #075985; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <h1>Browser Commander Documentation</h1>
+                <p>Generated API documentation for the JavaScript and Rust implementations.</p>
+                <ul>
+                  <li><a href="./javascript/">JavaScript API docs</a></li>
+                  <li><a href="./rust/browser_commander/">Rust API docs</a></li>
+                </ul>
+              </main>
+            </body>
+          </html>
+          HTML
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-commander-docs
+          path: public
+
+      - name: Upload Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy-docs:
+    name: Deploy GitHub Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build-docs]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

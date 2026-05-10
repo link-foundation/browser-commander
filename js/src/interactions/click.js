@@ -173,7 +173,7 @@ export async function verifyClick(options = {}) {
  * @param {boolean} options.verify - Whether to verify the click operation (default: true)
  * @param {Function} options.verifyFn - Custom verification function (optional)
  * @param {Object} options.adapter - Engine adapter (optional, will be created if not provided)
- * @returns {Promise<{clicked: boolean, verified: boolean, reason?: string}>}
+ * @returns {Promise<Object>} Click result.
  */
 export async function clickElement(options = {}) {
   const {
@@ -352,7 +352,7 @@ async function prepareElement(options = {}) {
  * @param {boolean} options.noAutoScroll - Prevent Playwright's automatic scrolling
  * @param {boolean} options.verify - Whether to verify the click operation
  * @param {Function} options.verifyFn - Custom verification function (optional)
- * @returns {Promise<{clicked: boolean, verified: boolean, reason?: string, navigated: boolean}>}
+ * @returns {Promise<Object>} Click result.
  */
 async function executeClick(options = {}) {
   const {
@@ -567,7 +567,7 @@ async function handleNavigationAfterClick(options = {}) {
  * @param {number} options.timeout - Timeout in ms (default: TIMING.DEFAULT_TIMEOUT)
  * @param {boolean} options.verify - Whether to verify the click operation (default: true)
  * @param {Function} options.verifyFn - Custom verification function (optional)
- * @returns {Promise<{clicked: boolean, navigated: boolean, verified: boolean, reason?: string}>}
+ * @returns {Promise<Object>} Click result.
  *   - clicked: true if click was performed
  *   - navigated: true if click caused navigation
  *   - verified: true if click was verified (navigation counts as verification)

@@ -118,6 +118,7 @@ export default [
       'node_modules/**',
       'coverage/**',
       'dist/**',
+      'docs-api/**',
       '*.min.js',
       '.eslintcache',
     ],

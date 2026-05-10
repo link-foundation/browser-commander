@@ -8,7 +8,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-browser-commander = "0.4"
+browser-commander = "0.9"
 tokio = { version = "1.0", features = ["full"] }
 ```
 
@@ -61,6 +61,8 @@ async fn main() -> anyhow::Result<()> {
 ## Features
 
 - **Unified API** across multiple browser engines
+- **Native Rust Chromiumoxide support**
+- **Playwright and Puppeteer support through a Node.js bridge**
 - **Built-in navigation safety handling**
 - **Element visibility and scroll management**
 - **Click, fill, and other interaction support with verification**
@@ -80,6 +82,41 @@ let options = LaunchOptions::chromiumoxide()
 
 let result = launch_browser(options).await?;
 ```
+
+### Playwright and Puppeteer
+
+Rust does not have official Playwright or Puppeteer bindings. To keep the same engine names available from Rust, Browser Commander starts a local Node.js bridge and delegates operations to the official Node packages.
+
+Install the package you want Node to resolve:
+
+```bash
+npm install playwright
+npm install puppeteer
+```
+
+Then configure the bridge working directory if the packages are not installed from the process current directory:
+
+```rust
+use browser_commander::prelude::*;
+
+let playwright = LaunchOptions::playwright()
+    .headless(true)
+    .node_working_dir("./js");
+
+let puppeteer = LaunchOptions::puppeteer()
+    .headless(true)
+    .node_working_dir("./js");
+```
+
+You can also set a custom Node executable:
+
+```rust
+let options = LaunchOptions::playwright()
+    .node_executable("/usr/local/bin/node")
+    .node_working_dir("./js");
+```
+
+`LaunchOptions::fantoccini()` is still accepted for source compatibility, but `launch_browser()` does not yet start a managed WebDriver process.
 
 ### Navigation
 

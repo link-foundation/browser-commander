@@ -220,7 +220,7 @@ export async function waitForUrlStabilization(options = {}) {
  * @param {boolean} options.verify - Whether to verify the navigation (default: true)
  * @param {Function} options.verifyFn - Custom verification function (optional)
  * @param {number} options.verificationTimeout - Verification timeout in ms (default: TIMING.VERIFICATION_TIMEOUT)
- * @returns {Promise<{navigated: boolean, verified: boolean, actualUrl?: string, reason?: string}>}
+ * @returns {Promise<Object>} Navigation result.
  */
 export async function goto(options = {}) {
   const {

@@ -25,7 +25,6 @@ export async function waitForUrlCondition(options = {}) {
   const {
     getUrl,
     wait,
-    evaluate,
     targetUrl,
     description,
     customCheck,

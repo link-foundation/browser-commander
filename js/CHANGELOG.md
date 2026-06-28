@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1
+
+### Patch Changes
+
+- cbd4fe1: Remove CI warning noise from workflow actions, release logging, and lint output.
+
 ## 0.9.0
 
 ### Minor Changes

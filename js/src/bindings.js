@@ -283,7 +283,9 @@ export function createBoundFunctions(options = {}) {
     // Main API functions
     wait: waitBound,
     emulateMedia: emulateMediaBound,
+    fill: fillTextAreaWrapped,
     fillTextArea: fillTextAreaWrapped,
+    click: clickButtonWrapped,
     clickButton: clickButtonWrapped,
     evaluate: evaluateBound,
     safeEvaluate: safeEvaluateBound,

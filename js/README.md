@@ -87,6 +87,53 @@ await commander.destroy();
 await browser.close();
 ```
 
+## Browser Commander Tests
+
+`browser-commander/tests` adds browser fixtures and scheduling helpers on top of
+[`test-anywhere`](https://github.com/link-foundation/test-anywhere). It keeps
+tests portable across Node.js, Bun, and Deno while running the same browser
+scenario against Playwright and Puppeteer.
+
+```javascript
+import { assert, browserTest } from 'browser-commander/tests';
+
+browserTest(
+  'loads example.com',
+  async ({ commander, engine }) => {
+    await commander.goto({
+      url: 'https://example.com',
+      waitForNetworkIdle: false,
+    });
+
+    const heading = await commander.textContent({ selector: 'h1' });
+    assert.ok(heading.includes('Example Domain'), `${engine} should work`);
+  },
+  {
+    engines: ['playwright', 'puppeteer'],
+    launchOptions: { headless: true },
+    retries: 1,
+    timeoutMs: 60000,
+  }
+);
+```
+
+The test helpers provide:
+
+- `browserTest()` and `defineBrowserTests()` for Playwright/Puppeteer matrices.
+- Automatic fixture cleanup with `commander.destroy()` and `browser.close()`.
+- `retries`, per-test `timeoutMs`, and failure artifacts under
+  `test-results/browser-commander` by default.
+- Historical duration tracking in `tests/.browser-commander-test-timings.json`
+  when a `tests` directory exists.
+- Longest-first ordering and balanced shard planning. Set
+  `BROWSER_COMMANDER_TEST_SHARD=1/3` to select a shard.
+- Re-exported `test-anywhere` APIs such as `test`, `describe`, `it`, `assert`,
+  `expect`, and lifecycle hooks.
+
+See
+[`examples/browser-commander-tests.example.js`](examples/browser-commander-tests.example.js)
+for a runnable example.
+
 ## URL Condition Helpers
 
 The `makeUrlCondition` helper makes it easy to create URL matching conditions:

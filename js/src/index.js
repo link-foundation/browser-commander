@@ -11,7 +11,10 @@
  */
 
 // Export the factory function
-export { makeBrowserCommander } from './factory.js';
+export {
+  makeBrowserCommander,
+  makeBrowserCommander as createCommander,
+} from './factory.js';
 
 // Re-export all public APIs from exports module
 export * from './exports.js';

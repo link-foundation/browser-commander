@@ -59,6 +59,15 @@ For installation and usage instructions, see the documentation for your preferre
 - **Rust**: See [rust/README.md](rust/README.md)
 - **Python**: See [python/README.md](python/README.md)
 
+## Testing Layer
+
+The JavaScript package now exposes `browser-commander/tests`, a
+`test-anywhere`-based browser test layer with Playwright/Puppeteer engine
+matrices, fixture cleanup, retries, failure artifacts, historical duration
+tracking, longest-first ordering, and balanced shard planning. See
+[js/README.md#browser-commander-tests](js/README.md#browser-commander-tests) and
+[js/examples/browser-commander-tests.example.js](js/examples/browser-commander-tests.example.js).
+
 ## Architecture
 
 See [js/src/ARCHITECTURE.md](js/src/ARCHITECTURE.md) for detailed architecture documentation.

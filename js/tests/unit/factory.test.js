@@ -25,7 +25,9 @@ describe('factory', () => {
 
       assert.ok(commander);
       assert.ok(typeof commander.clickButton === 'function');
+      assert.ok(typeof commander.click === 'function');
       assert.ok(typeof commander.fillTextArea === 'function');
+      assert.ok(typeof commander.fill === 'function');
       assert.ok(typeof commander.goto === 'function');
       assert.ok(typeof commander.wait === 'function');
     });
@@ -41,6 +43,7 @@ describe('factory', () => {
 
       assert.ok(commander);
       assert.ok(typeof commander.clickButton === 'function');
+      assert.ok(typeof commander.click === 'function');
     });
 
     it('should accept verbose option', () => {
@@ -78,6 +81,8 @@ describe('factory', () => {
       // Interactions
       assert.ok(typeof commander.clickButton === 'function');
       assert.ok(typeof commander.fillTextArea === 'function');
+      assert.ok(typeof commander.click === 'function');
+      assert.ok(typeof commander.fill === 'function');
 
       // Element state
       assert.ok(typeof commander.isVisible === 'function');

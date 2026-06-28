@@ -94,8 +94,16 @@ describe('bindings', () => {
         'clickButton should be a function'
       );
       assert.ok(
+        typeof bindings.click === 'function',
+        'click should be a function'
+      );
+      assert.ok(
         typeof bindings.fillTextArea === 'function',
         'fillTextArea should be a function'
+      );
+      assert.ok(
+        typeof bindings.fill === 'function',
+        'fill should be a function'
       );
       assert.ok(
         typeof bindings.scrollIntoViewIfNeeded === 'function',

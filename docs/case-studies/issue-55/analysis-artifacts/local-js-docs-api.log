@@ -1,0 +1,4 @@
+
+> browser-commander@0.9.0 docs:api
+> jsdoc -c jsdoc.json
+

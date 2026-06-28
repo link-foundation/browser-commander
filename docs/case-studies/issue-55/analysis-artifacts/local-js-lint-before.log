@@ -1,0 +1,112 @@
+
+> browser-commander@0.9.0 lint
+> eslint .
+
+
+/tmp/gh-issue-solver-1782679216564/js/src/bindings.js
+  70:8  warning  Function 'createBoundFunctions' has too many lines (223). Maximum allowed is 150  max-lines-per-function
+
+/tmp/gh-issue-solver-1782679216564/js/src/browser/launcher.js
+  19:8  warning  Async function 'launchBrowser' has a complexity of 22. Maximum allowed is 15  complexity
+
+/tmp/gh-issue-solver-1782679216564/js/src/browser/navigation.js
+   24:8  warning  Async function 'defaultNavigationVerification' has no 'await' expression                       require-await
+  225:8  warning  Async function 'goto' has a complexity of 27. Maximum allowed is 15                            complexity
+  235:5  warning  'waitForNetworkIdle' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  398:5  warning  'page' is assigned a value but never used. Allowed unused vars must match /^_/u                no-unused-vars
+
+/tmp/gh-issue-solver-1782679216564/js/src/core/dialog-manager.js
+  22:17  warning  'engine' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+/tmp/gh-issue-solver-1782679216564/js/src/core/engine-adapter.js
+   42:17  warning  'selector' is defined but never used. Allowed unused args must match /^_/u          no-unused-vars
+   51:3   warning  Async method 'querySelector' has no 'await' expression                              require-await
+   51:23  warning  'selector' is defined but never used. Allowed unused args must match /^_/u          no-unused-vars
+   60:3   warning  Async method 'querySelectorAll' has no 'await' expression                           require-await
+   60:26  warning  'selector' is defined but never used. Allowed unused args must match /^_/u          no-unused-vars
+   70:3   warning  Async method 'waitForSelector' has no 'await' expression                            require-await
+   70:35  warning  'options' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+   80:3   warning  Async method 'waitForVisible' has no 'await' expression                             require-await
+   80:42  warning  'timeout' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+   89:3   warning  Async method 'count' has no 'await' expression                                      require-await
+   89:15  warning  'selector' is defined but never used. Allowed unused args must match /^_/u          no-unused-vars
+  104:3   warning  Async method 'evaluateOnElement' has no 'await' expression                          require-await
+  104:27  warning  'locatorOrElement' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  104:45  warning  'fn' is defined but never used. Allowed unused args must match /^_/u                no-unused-vars
+  104:49  warning  'args' is defined but never used. Allowed unused args must match /^_/u              no-unused-vars
+  113:3   warning  Async method 'getTextContent' has no 'await' expression                             require-await
+  113:24  warning  'locatorOrElement' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  122:3   warning  Async method 'getInputValue' has no 'await' expression                              require-await
+  122:23  warning  'locatorOrElement' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  132:3   warning  Async method 'getAttribute' has no 'await' expression                               require-await
+  132:22  warning  'locatorOrElement' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  132:40  warning  'attribute' is defined but never used. Allowed unused args must match /^_/u         no-unused-vars
+  146:3   warning  Async method 'click' has no 'await' expression                                      require-await
+  146:33  warning  'options' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+  156:3   warning  Async method 'type' has no 'await' expression                                       require-await
+  156:14  warning  'locatorOrElement' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  156:32  warning  'text' is defined but never used. Allowed unused args must match /^_/u              no-unused-vars
+  166:3   warning  Async method 'fill' has no 'await' expression                                       require-await
+  166:14  warning  'locatorOrElement' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  166:32  warning  'text' is defined but never used. Allowed unused args must match /^_/u              no-unused-vars
+  175:3   warning  Async method 'focus' has no 'await' expression                                      require-await
+  175:15  warning  'locatorOrElement' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  188:3   warning  Async method 'keyboardPress' has no 'await' expression                              require-await
+  188:23  warning  'key' is defined but never used. Allowed unused args must match /^_/u               no-unused-vars
+  197:3   warning  Async method 'keyboardType' has no 'await' expression                               require-await
+  197:22  warning  'text' is defined but never used. Allowed unused args must match /^_/u              no-unused-vars
+  206:3   warning  Async method 'keyboardDown' has no 'await' expression                               require-await
+  206:22  warning  'key' is defined but never used. Allowed unused args must match /^_/u               no-unused-vars
+  215:3   warning  Async method 'keyboardUp' has no 'await' expression                                 require-await
+  215:20  warning  'key' is defined but never used. Allowed unused args must match /^_/u               no-unused-vars
+  229:3   warning  Async method 'evaluateOnPage' has no 'await' expression                             require-await
+  229:28  warning  'args' is assigned a value but never used. Allowed unused args must match /^_/u     no-unused-vars
+  246:3   warning  Async method 'pdf' has no 'await' expression                                        require-await
+  246:13  warning  'options' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+  438:3   warning  Async method 'waitForVisible' has no 'await' expression                             require-await
+  438:42  warning  'timeout' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/tmp/gh-issue-solver-1782679216564/js/src/core/navigation-manager.js
+   23:8  warning  Function 'createNavigationManager' has too many lines (291). Maximum allowed is 150  max-lines-per-function
+  350:3  warning  Async function 'waitForNavigation' has no 'await' expression                         require-await
+
+/tmp/gh-issue-solver-1782679216564/js/src/core/network-tracker.js
+   18:8   warning  Function 'createNetworkTracker' has too many lines (241). Maximum allowed is 150                           max-lines-per-function
+  212:11  warning  'startTime' is assigned a value but never used. Allowed unused vars must match /^_/u                       no-unused-vars
+  320:17  warning  'key' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+
+/tmp/gh-issue-solver-1782679216564/js/src/core/page-session.js
+   21:8   warning  Function 'createPageSessionFactory' has too many lines (174). Maximum allowed is 150  max-lines-per-function
+   33:3   warning  Function 'createSession' has too many lines (156). Maximum allowed is 150             max-lines-per-function
+   68:32  warning  'previousUrl' is defined but never used. Allowed unused args must match /^_/u         no-unused-vars
+  118:18  warning  'e' is defined but never used                                                         no-unused-vars
+  164:5   warning  Async function 'ifActive' has no 'await' expression                                   require-await
+  210:5   warning  Async function 'waitForNetworkIdle' has no 'await' expression                         require-await
+  223:5   warning  Async function 'waitForPageReady' has no 'await' expression                           require-await
+
+/tmp/gh-issue-solver-1782679216564/js/src/core/page-trigger-manager.js
+  163:8  warning  Function 'createPageTriggerManager' has too many lines (255). Maximum allowed is 150  max-lines-per-function
+  313:3  warning  Async function 'startAction' has no 'await' expression                                require-await
+
+/tmp/gh-issue-solver-1782679216564/js/src/elements/selectors.js
+   85:8  warning  Async function 'findByText' has no 'await' expression                             require-await
+  158:8  warning  Async function 'normalizeSelector' has a complexity of 17. Maximum allowed is 15  complexity
+
+/tmp/gh-issue-solver-1782679216564/js/src/factory.js
+  33:8  warning  Function 'makeBrowserCommander' has a complexity of 23. Maximum allowed is 15  complexity
+
+/tmp/gh-issue-solver-1782679216564/js/src/high-level/universal-logic.js
+  28:5  warning  'evaluate' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+/tmp/gh-issue-solver-1782679216564/js/src/interactions/click.js
+  178:8  warning  Async function 'clickElement' has a complexity of 17. Maximum allowed is 15                complexity
+  260:1  warning  Async function 'detectNavigation' has no 'await' expression                                require-await
+  414:1  warning  Async function 'handleNavigationAfterClick' has a complexity of 17. Maximum allowed is 15  complexity
+  576:8  warning  Async function 'clickButton' has a complexity of 19. Maximum allowed is 15                 complexity
+
+/tmp/gh-issue-solver-1782679216564/js/src/interactions/fill.js
+  151:8  warning  Async function 'performFill' has a complexity of 16. Maximum allowed is 15   complexity
+  249:8  warning  Async function 'fillTextArea' has a complexity of 19. Maximum allowed is 15  complexity
+
+✖ 77 problems (0 errors, 77 warnings)
+

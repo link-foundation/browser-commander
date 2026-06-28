@@ -20,6 +20,7 @@ Downloaded GitHub Actions evidence:
 - `ci-logs/run-28326104183.log`: Documentation workflow log.
 - `ci-metadata/run-28326104220.json`: JS CI/CD Pipeline workflow, succeeded with warnings.
 - `ci-logs/run-28326104220.log`: JS CI/CD Pipeline log.
+- `ci-logs/run-28336189483.log`: PR JS CI/CD Pipeline rerun after the Node 24 workflow update, failed because the package test script passed a directory to `node --test`.
 - `ci-metadata/recent-runs-issue-55-branch.json`: no runs existed on `issue-55-7cb0893ca811` before this PR was pushed.
 - `ci-metadata/pages-api-state.json` and `ci-metadata/pages-api-state.stderr`: repository Pages API returned HTTP 404.
 
@@ -43,8 +44,16 @@ Local verification logs:
 - `analysis-artifacts/local-js-docs-api.log`
 - `analysis-artifacts/local-rust-docs.log`
 - `analysis-artifacts/local-ci-policy-after.log`
+- `analysis-artifacts/local-ci-policy-after-node-runner.log`
 - `analysis-artifacts/local-workflow-yaml-parse.log`
 - `analysis-artifacts/local-js-validate-changeset.log`
+- `analysis-artifacts/local-js-validate-changeset-after-node-runner.log`
+- `analysis-artifacts/local-js-check-after-node-runner.log`
+- `analysis-artifacts/local-js-test-after-node-runner.log`
+- `analysis-artifacts/local-js-coverage-after-node-runner.log`
+- `analysis-artifacts/local-node24-version.log`
+- `analysis-artifacts/local-node24-js-test-after-node-runner.log`
+- `analysis-artifacts/local-js-e2e-playwright-smoke.log`
 
 ## Timeline
 
@@ -54,6 +63,7 @@ Local verification logs:
 - 2026-06-28 14:57:01 UTC: JS CI/CD Pipeline completed successfully, but with warning and false-positive-looking log output.
 - 2026-06-28 20:39:18 UTC: issue 55 was opened.
 - 2026-06-28 20:40:24 UTC: draft PR 56 was opened from `issue-55-7cb0893ca811`.
+- 2026-06-28 21:13:42 UTC: PR JS CI/CD Pipeline run `28336189483` started at SHA `bcdab508d7c60e864d278b504901d23b4a1c72c5`; after the Node 24 workflow update, all OS test jobs failed before running tests because the package test script passed `tests/unit/` as a directory to `node --test`.
 
 ## Root Causes
 
@@ -106,7 +116,28 @@ Online references used:
 - GitHub changelog: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
 - GitHub Pages publishing source docs: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
 
-### 3. ESLint Was Passing With 77 Warnings
+### 3. Node 24 Rejected Directory-Style Test Targets
+
+After the workflow runtime was updated to Node 24, the PR JS CI run failed in
+all OS matrix jobs before executing the test suite:
+
+- `ci-logs/run-28336189483.log:1061`: macOS could not find module `js/tests/unit`.
+- `ci-logs/run-28336189483.log:1305`: Windows could not find module `js/tests/unit`.
+- `ci-logs/run-28336189483.log:1561`: Ubuntu could not find module `js/tests/unit`.
+
+The package scripts passed `tests/unit/` directly to `node --test`. Node 24
+treated that directory path as a module entry point.
+
+Fix:
+
+- Added `js/scripts/run-tests.mjs`, which expands test directories into explicit
+  sorted `*.test.js` file paths before invoking `node --test`.
+- Updated unit, coverage, and e2e npm scripts to use the helper. The e2e scripts
+  also now set `RUN_E2E=true` through the helper instead of using a shell-specific
+  inline environment assignment.
+- Added unit coverage for the test-runner helper.
+
+### 4. ESLint Was Passing With 77 Warnings
 
 The JS CI/CD Pipeline succeeded, but ESLint reported:
 
@@ -126,7 +157,7 @@ Fix:
 After the fix, `analysis-artifacts/local-js-lint-after.log` contains only the
 lint command header and exits successfully.
 
-### 4. Release Logs Printed Expected npm 404s as Errors
+### 5. Release Logs Printed Expected npm 404s as Errors
 
 The successful JS release printed expected registry misses as npm errors:
 
@@ -188,9 +219,16 @@ Local checks run after the fixes:
 - `GITHUB_BASE_REF=main node scripts/validate-changeset.mjs`
   - `analysis-artifacts/local-js-validate-changeset.log`: exactly one patch changeset passed validation.
 - `npm test`
-  - `analysis-artifacts/local-js-test.log:749`: 456 tests.
-  - `analysis-artifacts/local-js-test.log:751`: 456 passing.
-  - `analysis-artifacts/local-js-test.log:752`: 0 failing.
+  - `analysis-artifacts/local-js-test-after-node-runner.log`: 458 tests.
+  - `analysis-artifacts/local-js-test-after-node-runner.log`: 458 passing.
+  - `analysis-artifacts/local-js-test-after-node-runner.log`: 0 failing.
+- `npm run test:coverage`
+  - `analysis-artifacts/local-js-coverage-after-node-runner.log`: 458 tests, 458 passing, 0 failing.
+- `npx -y node@24 scripts/run-tests.mjs --reporter spec tests/unit`
+  - `analysis-artifacts/local-node24-version.log`: verified Node v24.18.0.
+  - `analysis-artifacts/local-node24-js-test-after-node-runner.log`: 458 tests, 458 passing, 0 failing under Node 24.
+- `node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/playwright.e2e.test.js`
+  - `analysis-artifacts/local-js-e2e-playwright-smoke.log`: 27 tests, 27 passing, 0 failing.
 - `npm run docs:api`
   - `analysis-artifacts/local-js-docs-api.log`: clean exit.
 - `cargo doc --no-deps --all-features`

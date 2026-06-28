@@ -1,4 +1,10 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
@@ -9,6 +15,11 @@ import {
   formatRegistryPackagePath,
   isVersionPublished,
 } from '../../../scripts/npm-registry.mjs';
+import {
+  buildNodeTestArgs,
+  parseTestRunnerArgs,
+  resolveTestFiles,
+} from '../../../scripts/run-tests.mjs';
 
 describe('npm release helpers', () => {
   describe('removeDeprecatedAlwaysAuth', () => {
@@ -76,5 +87,52 @@ describe('npm release helpers', () => {
         '%40scope%2Fpackage'
       );
     });
+  });
+});
+
+describe('test runner helper', () => {
+  it('expands test directories into stable explicit test files', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'browser-commander-tests-'));
+
+    try {
+      writeFileSync(join(dir, 'root.test.js'), '');
+      writeFileSync(join(dir, 'ignored.js'), '');
+
+      const nestedDir = join(dir, 'nested');
+      mkdirSync(nestedDir);
+      writeFileSync(join(nestedDir, 'nested.test.js'), '');
+
+      assert.deepEqual(resolveTestFiles([dir], dir), [
+        join('nested', 'nested.test.js'),
+        'root.test.js',
+      ]);
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  });
+
+  it('builds node --test arguments with reporter and coverage options', () => {
+    const options = parseTestRunnerArgs([
+      '--coverage',
+      '--reporter',
+      'spec',
+      '--env',
+      'RUN_E2E=true',
+      'tests/unit',
+    ]);
+
+    assert.deepEqual(options, {
+      coverage: true,
+      env: { RUN_E2E: 'true' },
+      reporter: 'spec',
+      targets: ['tests/unit'],
+    });
+    assert.deepEqual(buildNodeTestArgs(options, ['tests/unit/a.test.js']), [
+      '--test',
+      '--experimental-test-coverage',
+      '--test-reporter',
+      'spec',
+      'tests/unit/a.test.js',
+    ]);
   });
 });

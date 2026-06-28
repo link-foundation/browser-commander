@@ -1,0 +1,3317 @@
+
+> browser-commander@0.9.0 test:coverage
+> node scripts/run-tests.mjs --coverage tests/unit
+
+TAP version 13
+# Subtest: bindings
+    # Subtest: createBoundFunctions
+        # Subtest: should create bindings with minimal options
+        ok 1 - should create bindings with minimal options
+          ---
+          duration_ms: 3.487802
+          ...
+        # Subtest: should create bindings with all options
+        ok 2 - should create bindings with all options
+          ---
+          duration_ms: 0.764763
+          ...
+        # Subtest: should have all expected bound functions
+        ok 3 - should have all expected bound functions
+          ---
+          duration_ms: 0.341711
+          ...
+        # Subtest: should pre-bind page and engine to functions
+        ok 4 - should pre-bind page and engine to functions
+          ---
+          duration_ms: 0.253809
+          ...
+        # Subtest: should pre-bind log to functions
+        ok 5 - should pre-bind log to functions
+          ---
+          duration_ms: 14.203368
+          ...
+        # Subtest: should allow verbose option
+        ok 6 - should allow verbose option
+          ---
+          duration_ms: 0.541078
+          ...
+        # Subtest: should integrate with navigationManager when provided
+        ok 7 - should integrate with navigationManager when provided
+          ---
+          duration_ms: 0.242541
+          ...
+        # Subtest: should invoke keyboard.press via bound keyboard object
+        ok 8 - should invoke keyboard.press via bound keyboard object
+          ---
+          duration_ms: 1.380243
+          ...
+        # Subtest: should invoke keyboard.type via bound keyboard object
+        ok 9 - should invoke keyboard.type via bound keyboard object
+          ---
+          duration_ms: 3.611678
+          ...
+        # Subtest: should integrate with networkTracker when provided
+        ok 10 - should integrate with networkTracker when provided
+          ---
+          duration_ms: 0.286949
+          ...
+        1..10
+    ok 1 - createBoundFunctions
+      ---
+      duration_ms: 31.073952
+      type: 'suite'
+      ...
+    1..1
+ok 1 - bindings
+  ---
+  duration_ms: 32.362048
+  type: 'suite'
+  ...
+# Subtest: launcher
+    # Subtest: launchBrowser args option
+        # Subtest: should export CHROME_ARGS constant
+        ok 1 - should export CHROME_ARGS constant
+          ---
+          duration_ms: 14.015447
+          ...
+        # Subtest: should include expected default Chrome args
+        ok 2 - should include expected default Chrome args
+          ---
+          duration_ms: 0.564493
+          ...
+        # Subtest: launchBrowser function should accept args option
+        ok 3 - launchBrowser function should accept args option
+          ---
+          duration_ms: 6.390662
+          ...
+        # Subtest: launchBrowser should throw for invalid engine
+        ok 4 - launchBrowser should throw for invalid engine
+          ---
+          duration_ms: 1.481004
+          ...
+        # Subtest: launchBrowser should accept args in options
+        ok 5 - launchBrowser should accept args in options
+          ---
+          duration_ms: 0.462451
+          ...
+        1..5
+    ok 1 - launchBrowser args option
+      ---
+      duration_ms: 23.935473
+      type: 'suite'
+      ...
+    1..1
+ok 2 - launcher
+  ---
+  duration_ms: 29.347603
+  type: 'suite'
+  ...
+# Subtest: emulateMedia
+    # Subtest: input validation
+        # Subtest: should throw if page is not provided
+        ok 1 - should throw if page is not provided
+          ---
+          duration_ms: 2.985662
+          ...
+        # Subtest: should throw if engine is not provided
+        ok 2 - should throw if engine is not provided
+          ---
+          duration_ms: 0.639997
+          ...
+        # Subtest: should throw for invalid colorScheme
+        ok 3 - should throw for invalid colorScheme
+          ---
+          duration_ms: 0.413308
+          ...
+        # Subtest: should throw for unsupported engine
+        ok 4 - should throw for unsupported engine
+          ---
+          duration_ms: 0.251957
+          ...
+        1..4
+    ok 1 - input validation
+      ---
+      duration_ms: 5.408443
+      type: 'suite'
+      ...
+    # Subtest: Playwright engine
+        # Subtest: should call page.emulateMedia with colorScheme: dark
+        ok 1 - should call page.emulateMedia with colorScheme: dark
+          ---
+          duration_ms: 5.842643
+          ...
+        # Subtest: should call page.emulateMedia with colorScheme: light
+        ok 2 - should call page.emulateMedia with colorScheme: light
+          ---
+          duration_ms: 0.362683
+          ...
+        # Subtest: should call page.emulateMedia with colorScheme: no-preference
+        ok 3 - should call page.emulateMedia with colorScheme: no-preference
+          ---
+          duration_ms: 1.624959
+          ...
+        # Subtest: should call page.emulateMedia with colorScheme: null to reset
+        ok 4 - should call page.emulateMedia with colorScheme: null to reset
+          ---
+          duration_ms: 0.317465
+          ...
+        # Subtest: should call page.emulateMedia with empty options when no colorScheme given
+        ok 5 - should call page.emulateMedia with empty options when no colorScheme given
+          ---
+          duration_ms: 0.265237
+          ...
+        1..5
+    ok 2 - Playwright engine
+      ---
+      duration_ms: 10.097942
+      type: 'suite'
+      ...
+    # Subtest: Puppeteer engine
+        # Subtest: should call page.emulateMediaFeatures with dark colorScheme
+        ok 1 - should call page.emulateMediaFeatures with dark colorScheme
+          ---
+          duration_ms: 0.589141
+          ...
+        # Subtest: should call page.emulateMediaFeatures with light colorScheme
+        ok 2 - should call page.emulateMediaFeatures with light colorScheme
+          ---
+          duration_ms: 1.676406
+          ...
+        # Subtest: should call page.emulateMediaFeatures with no-preference colorScheme
+        ok 3 - should call page.emulateMediaFeatures with no-preference colorScheme
+          ---
+          duration_ms: 0.333478
+          ...
+        # Subtest: should reset by passing empty string when colorScheme is null
+        ok 4 - should reset by passing empty string when colorScheme is null
+          ---
+          duration_ms: 0.28744
+          ...
+        # Subtest: should reset by passing empty string when colorScheme is undefined
+        ok 5 - should reset by passing empty string when colorScheme is undefined
+          ---
+          duration_ms: 3.029097
+          ...
+        1..5
+    ok 3 - Puppeteer engine
+      ---
+      duration_ms: 6.251534
+      type: 'suite'
+      ...
+    1..3
+ok 3 - emulateMedia
+  ---
+  duration_ms: 23.240785
+  type: 'suite'
+  ...
+# Subtest: navigation
+    # Subtest: defaultNavigationVerification
+        # Subtest: should verify exact URL match
+        ok 1 - should verify exact URL match
+          ---
+          duration_ms: 1.823376
+          ...
+        # Subtest: should verify URL pattern match
+        ok 2 - should verify URL pattern match
+          ---
+          duration_ms: 0.281001
+          ...
+        # Subtest: should fail verification on URL mismatch
+        ok 3 - should fail verification on URL mismatch
+          ---
+          duration_ms: 1.298552
+          ...
+        # Subtest: should verify URL changed from start
+        ok 4 - should verify URL changed from start
+          ---
+          duration_ms: 0.275051
+          ...
+        # Subtest: should verify navigation completed without expectations
+        ok 5 - should verify navigation completed without expectations
+          ---
+          duration_ms: 0.18118
+          ...
+        1..5
+    ok 1 - defaultNavigationVerification
+      ---
+      duration_ms: 7.973857
+      type: 'suite'
+      ...
+    # Subtest: verifyNavigation
+        # Subtest: should verify navigation with retry logic
+        ok 1 - should verify navigation with retry logic
+          ---
+          duration_ms: 0.516282
+          ...
+# ⚠️  waitForNavigation was interrupted, continuing gracefully
+        # Subtest: should fail after timeout
+        ok 2 - should fail after timeout
+          ---
+          duration_ms: 59.765033
+          ...
+        1..2
+    ok 2 - verifyNavigation
+      ---
+      duration_ms: 60.570387
+      type: 'suite'
+      ...
+    # Subtest: waitForUrlStabilization
+        # Subtest: should delegate to navigationManager if available
+        ok 1 - should delegate to navigationManager if available
+          ---
+          duration_ms: 0.642851
+          ...
+        # Subtest: should use polling approach without navigationManager
+        ok 2 - should use polling approach without navigationManager
+          ---
+          duration_ms: 0.130184
+          ...
+        1..2
+    ok 3 - waitForUrlStabilization
+      ---
+      duration_ms: 0.893025
+      type: 'suite'
+      ...
+    # Subtest: goto
+        # Subtest: should throw when url is not provided
+        ok 1 - should throw when url is not provided
+          ---
+          duration_ms: 0.767207
+          ...
+        # Subtest: should navigate using navigationManager
+        ok 2 - should navigate using navigationManager
+          ---
+          duration_ms: 0.232837
+          ...
+        # Subtest: should navigate without navigationManager
+        ok 3 - should navigate without navigationManager
+          ---
+          duration_ms: 0.191065
+          ...
+        1..3
+    ok 4 - goto
+      ---
+      duration_ms: 1.327915
+      type: 'suite'
+      ...
+    # Subtest: waitForNavigation
+        # Subtest: should delegate to navigationManager if available
+        ok 1 - should delegate to navigationManager if available
+          ---
+          duration_ms: 6.225494
+          ...
+        # Subtest: should use page.waitForNavigation without navigationManager
+        ok 2 - should use page.waitForNavigation without navigationManager
+          ---
+          duration_ms: 0.165667
+          ...
+        # Subtest: should handle navigation errors
+        ok 3 - should handle navigation errors
+          ---
+          duration_ms: 0.833145
+          ...
+        1..3
+    ok 5 - waitForNavigation
+      ---
+      duration_ms: 7.377876
+      type: 'suite'
+      ...
+    # Subtest: waitForPageReady
+        # Subtest: should delegate to navigationManager if available
+        ok 1 - should delegate to navigationManager if available
+          ---
+          duration_ms: 0.325947
+          ...
+        # Subtest: should use networkTracker if navigationManager not available
+        ok 2 - should use networkTracker if navigationManager not available
+          ---
+          duration_ms: 0.300669
+          ...
+        # Subtest: should use minimal fallback without both managers
+        ok 3 - should use minimal fallback without both managers
+          ---
+          duration_ms: 5.474051
+          ...
+        1..3
+    ok 6 - waitForPageReady
+      ---
+      duration_ms: 6.292034
+      type: 'suite'
+      ...
+    # Subtest: waitAfterAction
+        # Subtest: should detect URL change as navigation
+        ok 1 - should detect URL change as navigation
+          ---
+          duration_ms: 0.433827
+          ...
+        # Subtest: should wait for network idle without navigation
+        ok 2 - should wait for network idle without navigation
+          ---
+          duration_ms: 0.277274
+          ...
+        1..2
+    ok 7 - waitAfterAction
+      ---
+      duration_ms: 0.844172
+      type: 'suite'
+      ...
+    1..7
+ok 4 - navigation
+  ---
+  duration_ms: 91.77177
+  type: 'suite'
+  ...
+# Subtest: browser/pdf
+    # Subtest: pdf() with Playwright engine
+        # Subtest: should return a Buffer
+        ok 1 - should return a Buffer
+          ---
+          duration_ms: 2.463693
+          ...
+        # Subtest: should pass pdf options to the underlying page
+        ok 2 - should pass pdf options to the underlying page
+          ---
+          duration_ms: 1.315757
+          ...
+        # Subtest: should work with empty options
+        ok 3 - should work with empty options
+          ---
+          duration_ms: 0.339237
+          ...
+        1..3
+    ok 1 - pdf() with Playwright engine
+      ---
+      duration_ms: 5.174924
+      type: 'suite'
+      ...
+    # Subtest: pdf() with Puppeteer engine
+        # Subtest: should return a Buffer
+        ok 1 - should return a Buffer
+          ---
+          duration_ms: 0.836139
+          ...
+        # Subtest: should pass pdf options to the underlying page
+        ok 2 - should pass pdf options to the underlying page
+          ---
+          duration_ms: 3.570557
+          ...
+        1..2
+    ok 2 - pdf() with Puppeteer engine
+      ---
+      duration_ms: 4.619133
+      type: 'suite'
+      ...
+    1..2
+ok 5 - browser/pdf
+  ---
+  duration_ms: 10.92642
+  type: 'suite'
+  ...
+# Subtest: constants
+    # Subtest: CHROME_ARGS
+        # Subtest: should be an array
+        ok 1 - should be an array
+          ---
+          duration_ms: 1.17156
+          ...
+        # Subtest: should contain expected browser arguments
+        ok 2 - should contain expected browser arguments
+          ---
+          duration_ms: 0.240809
+          ...
+        # Subtest: should contain crash-related flags
+        ok 3 - should contain crash-related flags
+          ---
+          duration_ms: 0.124906
+          ...
+        # Subtest: should have at least 5 arguments
+        ok 4 - should have at least 5 arguments
+          ---
+          duration_ms: 0.1334
+          ...
+        1..4
+    ok 1 - CHROME_ARGS
+      ---
+      duration_ms: 8.680844
+      type: 'suite'
+      ...
+    # Subtest: TIMING
+        # Subtest: should be an object
+        ok 1 - should be an object
+          ---
+          duration_ms: 0.22028
+          ...
+        # Subtest: should have SCROLL_ANIMATION_WAIT property
+        ok 2 - should have SCROLL_ANIMATION_WAIT property
+          ---
+          duration_ms: 0.095192
+          ...
+        # Subtest: should have DEFAULT_WAIT_AFTER_SCROLL property
+        ok 3 - should have DEFAULT_WAIT_AFTER_SCROLL property
+          ---
+          duration_ms: 0.068412
+          ...
+        # Subtest: should have VISIBILITY_CHECK_TIMEOUT property
+        ok 4 - should have VISIBILITY_CHECK_TIMEOUT property
+          ---
+          duration_ms: 9.175674
+          ...
+        # Subtest: should have DEFAULT_TIMEOUT property
+        ok 5 - should have DEFAULT_TIMEOUT property
+          ---
+          duration_ms: 0.197606
+          ...
+        # Subtest: should have VERIFICATION_TIMEOUT property
+        ok 6 - should have VERIFICATION_TIMEOUT property
+          ---
+          duration_ms: 0.106329
+          ...
+        # Subtest: should have VERIFICATION_RETRY_INTERVAL property
+        ok 7 - should have VERIFICATION_RETRY_INTERVAL property
+          ---
+          duration_ms: 0.098547
+          ...
+        # Subtest: should have reasonable timeout values
+        ok 8 - should have reasonable timeout values
+          ---
+          duration_ms: 0.266537
+          ...
+        1..8
+    ok 2 - TIMING
+      ---
+      duration_ms: 10.53811
+      type: 'suite'
+      ...
+    1..2
+ok 6 - constants
+  ---
+  duration_ms: 20.304528
+  type: 'suite'
+  ...
+# Subtest: dialog-manager
+    # Subtest: createDialogManager
+        # Subtest: should throw when page is not provided
+        ok 1 - should throw when page is not provided
+          ---
+          duration_ms: 2.678144
+          ...
+        # Subtest: should create dialog manager
+        ok 2 - should create dialog manager
+          ---
+          duration_ms: 3.085411
+          ...
+        # Subtest: should start listening without error
+        ok 3 - should start listening without error
+          ---
+          duration_ms: 0.367319
+          ...
+        # Subtest: should not start listening twice
+        ok 4 - should not start listening twice
+          ---
+          duration_ms: 0.157055
+          ...
+        # Subtest: should stop listening without error
+        ok 5 - should stop listening without error
+          ---
+          duration_ms: 0.38123
+          ...
+        # Subtest: should not stop if not started
+        ok 6 - should not stop if not started
+          ---
+          duration_ms: 0.205708
+          ...
+        1..6
+    ok 1 - createDialogManager
+      ---
+      duration_ms: 8.041118
+      type: 'suite'
+      ...
+    # Subtest: onDialog
+        # Subtest: should throw when handler is not a function
+        ok 1 - should throw when handler is not a function
+          ---
+          duration_ms: 0.536251
+          ...
+        # Subtest: should register a dialog handler
+        ok 2 - should register a dialog handler
+          ---
+          duration_ms: 0.640808
+          ...
+        # Subtest: should call multiple handlers in order
+        ok 3 - should call multiple handlers in order
+          ---
+          duration_ms: 31.704936
+          ...
+        # Subtest: should pass dialog type and message to handler
+        ok 4 - should pass dialog type and message to handler
+          ---
+          duration_ms: 1.172844
+          ...
+        # Subtest: should allow accepting prompts with text
+        ok 5 - should allow accepting prompts with text
+          ---
+          duration_ms: 0.327739
+          ...
+        1..5
+    ok 2 - onDialog
+      ---
+      duration_ms: 34.73918
+      type: 'suite'
+      ...
+    # Subtest: offDialog
+        # Subtest: should remove a dialog handler
+        ok 1 - should remove a dialog handler
+          ---
+          duration_ms: 1.59931
+          ...
+        # Subtest: should handle removing non-existent handler gracefully
+        ok 2 - should handle removing non-existent handler gracefully
+          ---
+          duration_ms: 0.192528
+          ...
+        1..2
+    ok 3 - offDialog
+      ---
+      duration_ms: 1.98048
+      type: 'suite'
+      ...
+    # Subtest: clearDialogHandlers
+        # Subtest: should remove all handlers
+        ok 1 - should remove all handlers
+          ---
+          duration_ms: 1.672018
+          ...
+        1..1
+    ok 4 - clearDialogHandlers
+      ---
+      duration_ms: 1.789174
+      type: 'suite'
+      ...
+    # Subtest: auto-dismiss
+        # Subtest: should auto-dismiss when no handlers are registered
+        ok 1 - should auto-dismiss when no handlers are registered
+          ---
+          duration_ms: 0.35435
+          ...
+        # Subtest: should continue after handler error
+        ok 2 - should continue after handler error
+          ---
+          duration_ms: 1.892969
+          ...
+        1..2
+    ok 5 - auto-dismiss
+      ---
+      duration_ms: 2.419226
+      type: 'suite'
+      ...
+    # Subtest: integration with makeBrowserCommander
+        # Subtest: should expose onDialog on commander
+        ok 1 - should expose onDialog on commander
+          ---
+          duration_ms: 91.911019
+          ...
+        # Subtest: should handle dialog via commander.onDialog
+        ok 2 - should handle dialog via commander.onDialog
+          ---
+          duration_ms: 0.986725
+          ...
+        # Subtest: should throw onDialog when enableDialogManager is false
+        ok 3 - should throw onDialog when enableDialogManager is false
+          ---
+          duration_ms: 2.074
+          ...
+        1..3
+    ok 6 - integration with makeBrowserCommander
+      ---
+      duration_ms: 95.237771
+      type: 'suite'
+      ...
+    1..6
+ok 7 - dialog-manager
+  ---
+  duration_ms: 145.59881
+  type: 'suite'
+  ...
+# Subtest: engine-adapter
+    # Subtest: EngineAdapter (base class)
+        # Subtest: should throw on abstract methods
+        ok 1 - should throw on abstract methods
+          ---
+          duration_ms: 3.268265
+          ...
+        1..1
+    ok 1 - EngineAdapter (base class)
+      ---
+      duration_ms: 3.94769
+      type: 'suite'
+      ...
+    # Subtest: PlaywrightAdapter
+        # Subtest: should create adapter
+        ok 1 - should create adapter
+          ---
+          duration_ms: 0.852634
+          ...
+        # Subtest: should return playwright as engine name
+        ok 2 - should return playwright as engine name
+          ---
+          duration_ms: 0.179979
+          ...
+        # Subtest: should create locator from selector
+        ok 3 - should create locator from selector
+          ---
+          duration_ms: 0.347639
+          ...
+        # Subtest: should handle :nth-of-type selector
+        ok 4 - should handle :nth-of-type selector
+          ---
+          duration_ms: 0.188602
+          ...
+        # Subtest: should query single element
+        ok 5 - should query single element
+          ---
+          duration_ms: 0.184746
+          ...
+        # Subtest: should return null when element not found
+        ok 6 - should return null when element not found
+          ---
+          duration_ms: 0.179628
+          ...
+        # Subtest: should query all elements
+        ok 7 - should query all elements
+          ---
+          duration_ms: 0.46746
+          ...
+        # Subtest: should count elements
+        ok 8 - should count elements
+          ---
+          duration_ms: 0.217525
+          ...
+        # Subtest: evaluateOnPage
+            # Subtest: should handle zero arguments
+            ok 1 - should handle zero arguments
+              ---
+              duration_ms: 1.847752
+              ...
+            # Subtest: should handle single argument
+            ok 2 - should handle single argument
+              ---
+              duration_ms: 0.18728
+              ...
+            # Subtest: should handle multiple arguments by spreading them
+            ok 3 - should handle multiple arguments by spreading them
+              ---
+              duration_ms: 0.20033
+              ...
+            # Subtest: should handle selector + array arguments (real-world bug case)
+            ok 4 - should handle selector + array arguments (real-world bug case)
+              ---
+              duration_ms: 0.163935
+              ...
+            # Subtest: should handle multiple arguments of different types
+            ok 5 - should handle multiple arguments of different types
+              ---
+              duration_ms: 0.152287
+              ...
+            1..5
+        ok 9 - evaluateOnPage
+          ---
+          duration_ms: 2.722609
+          type: 'suite'
+          ...
+        1..9
+    ok 2 - PlaywrightAdapter
+      ---
+      duration_ms: 5.660129
+      type: 'suite'
+      ...
+    # Subtest: PuppeteerAdapter
+        # Subtest: should create adapter
+        ok 1 - should create adapter
+          ---
+          duration_ms: 2.773786
+          ...
+        # Subtest: should return puppeteer as engine name
+        ok 2 - should return puppeteer as engine name
+          ---
+          duration_ms: 0.149654
+          ...
+        # Subtest: should return selector string as locator
+        ok 3 - should return selector string as locator
+          ---
+          duration_ms: 0.141652
+          ...
+        # Subtest: should query single element
+        ok 4 - should query single element
+          ---
+          duration_ms: 0.230644
+          ...
+        # Subtest: should return null when element not found
+        ok 5 - should return null when element not found
+          ---
+          duration_ms: 0.123635
+          ...
+        # Subtest: should query all elements
+        ok 6 - should query all elements
+          ---
+          duration_ms: 0.16755
+          ...
+        # Subtest: should count elements
+        ok 7 - should count elements
+          ---
+          duration_ms: 5.73442
+          ...
+        # Subtest: evaluateOnPage
+            # Subtest: should handle zero arguments
+            ok 1 - should handle zero arguments
+              ---
+              duration_ms: 0.772705
+              ...
+            # Subtest: should handle single argument
+            ok 2 - should handle single argument
+              ---
+              duration_ms: 0.242171
+              ...
+            # Subtest: should handle multiple arguments by spreading them
+            ok 3 - should handle multiple arguments by spreading them
+              ---
+              duration_ms: 0.137926
+              ...
+            # Subtest: should handle selector + array arguments (parity with PlaywrightAdapter)
+            ok 4 - should handle selector + array arguments (parity with PlaywrightAdapter)
+              ---
+              duration_ms: 0.171807
+              ...
+            1..4
+        ok 8 - evaluateOnPage
+          ---
+          duration_ms: 1.541394
+          type: 'suite'
+          ...
+        1..8
+    ok 3 - PuppeteerAdapter
+      ---
+      duration_ms: 11.184616
+      type: 'suite'
+      ...
+    # Subtest: pdf()
+        # Subtest: PlaywrightAdapter.pdf() should return a Buffer
+        ok 1 - PlaywrightAdapter.pdf() should return a Buffer
+          ---
+          duration_ms: 0.322482
+          ...
+        # Subtest: PuppeteerAdapter.pdf() should return a Buffer
+        ok 2 - PuppeteerAdapter.pdf() should return a Buffer
+          ---
+          duration_ms: 0.184076
+          ...
+        # Subtest: EngineAdapter base class pdf() should throw
+        ok 3 - EngineAdapter base class pdf() should throw
+          ---
+          duration_ms: 3.762553
+          ...
+        1..3
+    ok 4 - pdf()
+      ---
+      duration_ms: 4.446175
+      type: 'suite'
+      ...
+    # Subtest: createEngineAdapter
+        # Subtest: should create PlaywrightAdapter for playwright engine
+        ok 1 - should create PlaywrightAdapter for playwright engine
+          ---
+          duration_ms: 0.285868
+          ...
+        # Subtest: should create PuppeteerAdapter for puppeteer engine
+        ok 2 - should create PuppeteerAdapter for puppeteer engine
+          ---
+          duration_ms: 0.109073
+          ...
+        # Subtest: should throw for unknown engine
+        ok 3 - should throw for unknown engine
+          ---
+          duration_ms: 0.132808
+          ...
+        # Subtest: should throw when page is not provided
+        ok 4 - should throw when page is not provided
+          ---
+          duration_ms: 0.426467
+          ...
+        # Subtest: should throw when page is undefined
+        ok 5 - should throw when page is undefined
+          ---
+          duration_ms: 0.228733
+          ...
+        1..5
+    ok 5 - createEngineAdapter
+      ---
+      duration_ms: 1.373392
+      type: 'suite'
+      ...
+    1..5
+ok 8 - engine-adapter
+  ---
+  duration_ms: 27.726709
+  type: 'suite'
+  ...
+# Subtest: engine-detection
+    # Subtest: detectEngine
+        # Subtest: should detect Playwright page
+        ok 1 - should detect Playwright page
+          ---
+          duration_ms: 1.639571
+          ...
+        # Subtest: should detect Puppeteer page
+        ok 2 - should detect Puppeteer page
+          ---
+          duration_ms: 0.217095
+          ...
+        # Subtest: should throw error for unknown engine
+        ok 3 - should throw error for unknown engine
+          ---
+          duration_ms: 0.531264
+          ...
+        # Subtest: should detect Playwright when locator is function and context exists
+        ok 4 - should detect Playwright when locator is function and context exists
+          ---
+          duration_ms: 0.158016
+          ...
+        # Subtest: should detect Puppeteer when $eval exists but no context
+        ok 5 - should detect Puppeteer when $eval exists but no context
+          ---
+          duration_ms: 0.129483
+          ...
+        # Subtest: should handle page with context as object
+        ok 6 - should handle page with context as object
+          ---
+          duration_ms: 0.122694
+          ...
+        1..6
+    ok 1 - detectEngine
+      ---
+      duration_ms: 4.111775
+      type: 'suite'
+      ...
+    1..1
+ok 9 - engine-detection
+  ---
+  duration_ms: 5.999717
+  type: 'suite'
+  ...
+# Subtest: logger
+    # Subtest: isVerboseEnabled
+        # Subtest: should return false when VERBOSE env is not set
+        ok 1 - should return false when VERBOSE env is not set
+          ---
+          duration_ms: 1.65222
+          ...
+        # Subtest: should return true when VERBOSE env is set
+        ok 2 - should return true when VERBOSE env is set
+          ---
+          duration_ms: 0.352828
+          ...
+        # Subtest: should return true when VERBOSE env is set to any value
+        ok 3 - should return true when VERBOSE env is set to any value
+          ---
+          duration_ms: 0.293097
+          ...
+        # Subtest: should return true when --verbose flag is in argv
+        ok 4 - should return true when --verbose flag is in argv
+          ---
+          duration_ms: 0.546227
+          ...
+        1..4
+    ok 1 - isVerboseEnabled
+      ---
+      duration_ms: 8.848845
+      type: 'suite'
+      ...
+    # Subtest: createLogger
+        # Subtest: should create a logger instance
+        ok 1 - should create a logger instance
+          ---
+          duration_ms: 0.530483
+          ...
+        # Subtest: should create logger with verbose disabled by default
+        ok 2 - should create logger with verbose disabled by default
+          ---
+          duration_ms: 0.246578
+          ...
+        # Subtest: should create logger with verbose enabled
+        ok 3 - should create logger with verbose enabled
+          ---
+          duration_ms: 0.919835
+          ...
+        # Subtest: should create logger with verbose disabled
+        ok 4 - should create logger with verbose disabled
+          ---
+          duration_ms: 0.469802
+          ...
+        # Subtest: should handle empty options
+        ok 5 - should handle empty options
+          ---
+          duration_ms: 0.225828
+          ...
+        # Subtest: should have debug method
+        ok 6 - should have debug method
+          ---
+          duration_ms: 0.2141
+          ...
+        1..6
+    ok 2 - createLogger
+      ---
+      duration_ms: 2.867476
+      type: 'suite'
+      ...
+    1..2
+ok 10 - logger
+  ---
+  duration_ms: 12.824007
+  type: 'suite'
+  ...
+# ⚠️  Navigation detected during operation, recovering gracefully
+# Subtest: navigation-safety
+    # Subtest: isNavigationError
+        # Subtest: should return false for null
+        ok 1 - should return false for null
+          ---
+          duration_ms: 1.372972
+          ...
+        # Subtest: should return false for undefined
+        ok 2 - should return false for undefined
+          ---
+          duration_ms: 2.379096
+          ...
+        # Subtest: should return false for error without message
+        ok 3 - should return false for error without message
+          ---
+          duration_ms: 0.202623
+          ...
+        # Subtest: should return false for regular error
+        ok 4 - should return false for regular error
+          ---
+          duration_ms: 0.247259
+          ...
+        # Subtest: should return true for "Execution context was destroyed" error
+        ok 5 - should return true for "Execution context was destroyed" error
+          ---
+          duration_ms: 0.117085
+          ...
+        # Subtest: should return true for "detached Frame" error
+        ok 6 - should return true for "detached Frame" error
+          ---
+          duration_ms: 0.087612
+          ...
+        # Subtest: should return true for "Target closed" error
+        ok 7 - should return true for "Target closed" error
+          ---
+          duration_ms: 0.092238
+          ...
+        # Subtest: should return true for "Session closed" error
+        ok 8 - should return true for "Session closed" error
+          ---
+          duration_ms: 0.077176
+          ...
+        # Subtest: should return true for "Protocol error" error
+        ok 9 - should return true for "Protocol error" error
+          ---
+          duration_ms: 0.083695
+          ...
+        # Subtest: should return true for "frame was detached" error
+        ok 10 - should return true for "frame was detached" error
+          ---
+          duration_ms: 0.171737
+          ...
+        # Subtest: should return true for "Page crashed" error
+        ok 11 - should return true for "Page crashed" error
+          ---
+          duration_ms: 0.099688
+          ...
+        # Subtest: should return true for "context was destroyed" error
+        ok 12 - should return true for "context was destroyed" error
+          ---
+          duration_ms: 0.183284
+          ...
+        1..12
+    ok 1 - isNavigationError
+      ---
+      duration_ms: 6.150092
+      type: 'suite'
+      ...
+    # Subtest: isTimeoutError
+        # Subtest: should return false for null
+        ok 1 - should return false for null
+          ---
+          duration_ms: 0.319938
+          ...
+        # Subtest: should return false for undefined
+        ok 2 - should return false for undefined
+          ---
+          duration_ms: 0.096203
+          ...
+        # Subtest: should return false for error without message or name
+        ok 3 - should return false for error without message or name
+          ---
+          duration_ms: 0.10022
+          ...
+        # Subtest: should return false for regular error
+        ok 4 - should return false for regular error
+          ---
+          duration_ms: 0.096635
+          ...
+        # Subtest: should return true for error with name "TimeoutError"
+        ok 5 - should return true for error with name "TimeoutError"
+          ---
+          duration_ms: 0.185377
+          ...
+        # Subtest: should return true for "waiting for selector" error
+        ok 6 - should return true for "waiting for selector" error
+          ---
+          duration_ms: 0.103325
+          ...
+        # Subtest: should return true for "timeout" error (case-insensitive)
+        ok 7 - should return true for "timeout" error (case-insensitive)
+          ---
+          duration_ms: 0.085848
+          ...
+        # Subtest: should return true for "timeout exceeded" error
+        ok 8 - should return true for "timeout exceeded" error
+          ---
+          duration_ms: 0.255072
+          ...
+        # Subtest: should return true for "timed out" error
+        ok 9 - should return true for "timed out" error
+          ---
+          duration_ms: 0.111006
+          ...
+        # Subtest: should return true for Playwright locator timeout error
+        ok 10 - should return true for Playwright locator timeout error
+          ---
+          duration_ms: 0.102814
+          ...
+        # Subtest: should return true for Puppeteer waitForSelector timeout
+        ok 11 - should return true for Puppeteer waitForSelector timeout
+          ---
+          duration_ms: 0.094401
+          ...
+        # Subtest: should handle uppercase TIMEOUT in message
+        ok 12 - should handle uppercase TIMEOUT in message
+          ---
+          duration_ms: 0.172158
+          ...
+        # Subtest: should not match navigation errors as timeout errors
+        ok 13 - should not match navigation errors as timeout errors
+          ---
+          duration_ms: 0.100601
+          ...
+        # Subtest: should not match frame detached errors as timeout errors
+        ok 14 - should not match frame detached errors as timeout errors
+          ---
+          duration_ms: 0.088253
+          ...
+        1..14
+    ok 2 - isTimeoutError
+      ---
+      duration_ms: 2.34141
+      type: 'suite'
+      ...
+    # Subtest: safeOperation
+        # Subtest: should return success result on successful operation
+        ok 1 - should return success result on successful operation
+          ---
+          duration_ms: 0.731043
+          ...
+        # Subtest: should return default value on navigation error
+        ok 2 - should return default value on navigation error
+          ---
+          duration_ms: 3.544256
+          ...
+        # Subtest: should rethrow non-navigation errors
+        ok 3 - should rethrow non-navigation errors
+          ---
+          duration_ms: 1.45861
+          ...
+        # Subtest: should use null as default value when not specified
+        ok 4 - should use null as default value when not specified
+          ---
+          duration_ms: 0.262282
+          ...
+        # Subtest: should handle operation name for logging
+        ok 5 - should handle operation name for logging
+          ---
+          duration_ms: 1.195247
+          ...
+        1..5
+    ok 3 - safeOperation
+      ---
+      duration_ms: 7.546188
+      type: 'suite'
+      ...
+    # Subtest: makeNavigationSafe
+        # Subtest: should wrap async function
+        ok 1 - should wrap async function
+          ---
+          duration_ms: 0.258998
+          ...
+        # Subtest: should return default value on navigation error
+        ok 2 - should return default value on navigation error
+          ---
+          duration_ms: 1.608413
+          ...
+        # Subtest: should pass arguments to wrapped function
+        ok 3 - should pass arguments to wrapped function
+          ---
+          duration_ms: 0.142182
+          ...
+        1..3
+    ok 4 - makeNavigationSafe
+      ---
+      duration_ms: 2.154239
+      type: 'suite'
+      ...
+    # Subtest: withNavigationSafety
+        # Subtest: should return function result on success
+        ok 1 - should return function result on success
+          ---
+          duration_ms: 0.238436
+          ...
+        # Subtest: should call onNavigationError callback on navigation error
+        ok 2 - should call onNavigationError callback on navigation error
+          ---
+          duration_ms: 2.598504
+          ...
+        # Subtest: should return undefined when rethrow is false and no callback
+        ok 3 - should return undefined when rethrow is false and no callback
+          ---
+          duration_ms: 0.236895
+          ...
+        # Subtest: should rethrow navigation error when rethrow is true and no callback
+        ok 4 - should rethrow navigation error when rethrow is true and no callback
+          ---
+          duration_ms: 0.677273
+          ...
+        # Subtest: should rethrow non-navigation errors
+        ok 5 - should rethrow non-navigation errors
+          ---
+          duration_ms: 0.155113
+          ...
+        # Subtest: should pass arguments through
+        ok 6 - should pass arguments through
+          ---
+          duration_ms: 0.104127
+          ...
+        1..6
+    ok 5 - withNavigationSafety
+      ---
+      duration_ms: 4.218836
+      type: 'suite'
+      ...
+    1..5
+ok 11 - navigation-safety
+  ---
+  duration_ms: 23.604438
+  type: 'suite'
+  ...
+# Subtest: network-tracker
+    # Subtest: createNetworkTracker
+        # Subtest: should throw when page is not provided
+        ok 1 - should throw when page is not provided
+          ---
+          duration_ms: 5.202045
+          ...
+        # Subtest: should create network tracker
+        ok 2 - should create network tracker
+          ---
+          duration_ms: 0.423934
+          ...
+        # Subtest: should start tracking without error
+        ok 3 - should start tracking without error
+          ---
+          duration_ms: 3.79363
+          ...
+        # Subtest: should stop tracking without error
+        ok 4 - should stop tracking without error
+          ---
+          duration_ms: 0.495711
+          ...
+        # Subtest: should not start tracking twice
+        ok 5 - should not start tracking twice
+          ---
+          duration_ms: 3.82055
+          ...
+        # Subtest: should not stop tracking if not started
+        ok 6 - should not stop tracking if not started
+          ---
+          duration_ms: 0.260519
+          ...
+        # Subtest: should return 0 pending count initially
+        ok 7 - should return 0 pending count initially
+          ---
+          duration_ms: 1.325951
+          ...
+        # Subtest: should return empty pending URLs initially
+        ok 8 - should return empty pending URLs initially
+          ---
+          duration_ms: 0.367429
+          ...
+        # Subtest: should reset without error
+        ok 9 - should reset without error
+          ---
+          duration_ms: 0.223754
+          ...
+        # Subtest: should add event listener
+        ok 10 - should add event listener
+          ---
+          duration_ms: 2.312086
+          ...
+        # Subtest: should remove event listener
+        ok 11 - should remove event listener
+          ---
+          duration_ms: 0.46782
+          ...
+        # Subtest: should handle invalid event names gracefully
+        ok 12 - should handle invalid event names gracefully
+          ---
+          duration_ms: 0.224134
+          ...
+        # Subtest: should accept custom idle timeout
+        ok 13 - should accept custom idle timeout
+          ---
+          duration_ms: 0.244105
+          ...
+        # Subtest: should accept custom request timeout
+        ok 14 - should accept custom request timeout
+          ---
+          duration_ms: 0.212257
+          ...
+        1..14
+    ok 1 - createNetworkTracker
+      ---
+      duration_ms: 23.832009
+      type: 'suite'
+      ...
+    # Subtest: waitForNetworkIdle
+        # Subtest: should resolve immediately when no pending requests
+        ok 1 - should resolve immediately when no pending requests
+          ---
+          duration_ms: 60.691208
+          ...
+        # Subtest: should accept timeout option
+        ok 2 - should accept timeout option
+          ---
+          duration_ms: 11.865004
+          ...
+        1..2
+    ok 2 - waitForNetworkIdle
+      ---
+      duration_ms: 72.91649
+      type: 'suite'
+      ...
+    1..2
+ok 12 - network-tracker
+  ---
+  duration_ms: 102.87818
+  type: 'suite'
+  ...
+# Subtest: page-trigger-manager
+    # Subtest: ActionStoppedError
+        # Subtest: should create error with default message
+        ok 1 - should create error with default message
+          ---
+          duration_ms: 3.36563
+          ...
+        # Subtest: should create error with custom message
+        ok 2 - should create error with custom message
+          ---
+          duration_ms: 0.293618
+          ...
+        # Subtest: should be instance of Error
+        ok 3 - should be instance of Error
+          ---
+          duration_ms: 0.237965
+          ...
+        1..3
+    ok 1 - ActionStoppedError
+      ---
+      duration_ms: 12.091902
+      type: 'suite'
+      ...
+    # Subtest: isActionStoppedError
+        # Subtest: should return true for ActionStoppedError
+        ok 1 - should return true for ActionStoppedError
+          ---
+          duration_ms: 0.219167
+          ...
+        # Subtest: should return true for error with isActionStopped flag
+        ok 2 - should return true for error with isActionStopped flag
+          ---
+          duration_ms: 0.11447
+          ...
+        # Subtest: should return true for error with ActionStoppedError name
+        ok 3 - should return true for error with ActionStoppedError name
+          ---
+          duration_ms: 0.087821
+          ...
+        # Subtest: should return false for regular error
+        ok 4 - should return false for regular error
+          ---
+          duration_ms: 0.090255
+          ...
+        # Subtest: should return falsy for null
+        ok 5 - should return falsy for null
+          ---
+          duration_ms: 0.089243
+          ...
+        # Subtest: should return falsy for undefined
+        ok 6 - should return falsy for undefined
+          ---
+          duration_ms: 0.076745
+          ...
+        1..6
+    ok 2 - isActionStoppedError
+      ---
+      duration_ms: 0.872324
+      type: 'suite'
+      ...
+    # Subtest: makeUrlCondition
+        # Subtest: function patterns
+            # Subtest: should wrap function pattern
+            ok 1 - should wrap function pattern
+              ---
+              duration_ms: 0.268572
+              ...
+            # Subtest: should pass context to function
+            ok 2 - should pass context to function
+              ---
+              duration_ms: 0.099818
+              ...
+            1..2
+        ok 1 - function patterns
+          ---
+          duration_ms: 0.456972
+          type: 'suite'
+          ...
+        # Subtest: RegExp patterns
+            # Subtest: should match RegExp pattern
+            ok 1 - should match RegExp pattern
+              ---
+              duration_ms: 5.854579
+              ...
+            1..1
+        ok 2 - RegExp patterns
+          ---
+          duration_ms: 5.992836
+          type: 'suite'
+          ...
+        # Subtest: string patterns
+            # Subtest: should match exact URL
+            ok 1 - should match exact URL
+              ---
+              duration_ms: 2.566366
+              ...
+            # Subtest: should match *substring* pattern (contains)
+            ok 2 - should match *substring* pattern (contains)
+              ---
+              duration_ms: 0.243113
+              ...
+            # Subtest: should match *suffix pattern (ends with)
+            ok 3 - should match *suffix pattern (ends with)
+              ---
+              duration_ms: 0.1339
+              ...
+            # Subtest: should match prefix* pattern (starts with)
+            ok 4 - should match prefix* pattern (starts with)
+              ---
+              duration_ms: 0.123254
+              ...
+            # Subtest: should match express-style :param patterns
+            ok 5 - should match express-style :param patterns
+              ---
+              duration_ms: 0.191357
+              ...
+            # Subtest: should match express-style patterns with multiple params
+            ok 6 - should match express-style patterns with multiple params
+              ---
+              duration_ms: 0.146709
+              ...
+            # Subtest: should match URL containing path (no wildcards, no params)
+            ok 7 - should match URL containing path (no wildcards, no params)
+              ---
+              duration_ms: 0.119308
+              ...
+            1..7
+        ok 3 - string patterns
+          ---
+          duration_ms: 3.909564
+          type: 'suite'
+          ...
+        # Subtest: invalid patterns
+            # Subtest: should throw for invalid pattern type
+            ok 1 - should throw for invalid pattern type
+              ---
+              duration_ms: 9.418457
+              ...
+            # Subtest: should throw for null pattern
+            ok 2 - should throw for null pattern
+              ---
+              duration_ms: 0.305346
+              ...
+            1..2
+        ok 4 - invalid patterns
+          ---
+          duration_ms: 9.906637
+          type: 'suite'
+          ...
+        1..4
+    ok 3 - makeUrlCondition
+      ---
+      duration_ms: 20.539889
+      type: 'suite'
+      ...
+    # Subtest: condition combinators
+        # Subtest: allConditions
+            # Subtest: should return true when all conditions match
+            ok 1 - should return true when all conditions match
+              ---
+              duration_ms: 3.480782
+              ...
+            # Subtest: should return false when any condition fails
+            ok 2 - should return false when any condition fails
+              ---
+              duration_ms: 0.153039
+              ...
+            1..2
+        ok 1 - allConditions
+          ---
+          duration_ms: 3.788332
+          type: 'suite'
+          ...
+        # Subtest: anyCondition
+            # Subtest: should return true when any condition matches
+            ok 1 - should return true when any condition matches
+              ---
+              duration_ms: 0.19397
+              ...
+            # Subtest: should return false when no conditions match
+            ok 2 - should return false when no conditions match
+              ---
+              duration_ms: 0.124195
+              ...
+            1..2
+        ok 2 - anyCondition
+          ---
+          duration_ms: 0.444705
+          type: 'suite'
+          ...
+        # Subtest: notCondition
+            # Subtest: should negate condition
+            ok 1 - should negate condition
+              ---
+              duration_ms: 0.132909
+              ...
+            1..1
+        ok 3 - notCondition
+          ---
+          duration_ms: 0.202812
+          type: 'suite'
+          ...
+        1..3
+    ok 4 - condition combinators
+      ---
+      duration_ms: 4.675448
+      type: 'suite'
+      ...
+    # Subtest: createPageTriggerManager
+        # Subtest: should throw error when navigationManager is not provided
+        ok 1 - should throw error when navigationManager is not provided
+          ---
+          duration_ms: 8.707093
+          ...
+        # Subtest: should create page trigger manager
+        ok 2 - should create page trigger manager
+          ---
+          duration_ms: 1.975001
+          ...
+        # Subtest: should register a trigger
+        ok 3 - should register a trigger
+          ---
+          duration_ms: 0.421529
+          ...
+        # Subtest: should throw when condition is not a function
+        ok 4 - should throw when condition is not a function
+          ---
+          duration_ms: 5.636995
+          ...
+        # Subtest: should throw when action is not a function
+        ok 5 - should throw when action is not a function
+          ---
+          duration_ms: 0.431184
+          ...
+        # Subtest: should unregister trigger
+        ok 6 - should unregister trigger
+          ---
+          duration_ms: 0.343644
+          ...
+        # Subtest: should report not running initially
+        ok 7 - should report not running initially
+          ---
+          duration_ms: 0.22106
+          ...
+        # Subtest: should return null for getCurrentTriggerName when no action running
+        ok 8 - should return null for getCurrentTriggerName when no action running
+          ---
+          duration_ms: 5.902021
+          ...
+        # Subtest: should destroy without error
+        ok 9 - should destroy without error
+          ---
+          duration_ms: 0.432807
+          ...
+        1..9
+    ok 5 - createPageTriggerManager
+      ---
+      duration_ms: 33.730182
+      type: 'suite'
+      ...
+    1..5
+ok 13 - page-trigger-manager
+  ---
+  duration_ms: 80.824399
+  type: 'suite'
+  ...
+# ⚠️  Navigation detected during textContent, returning null
+# ⚠️  Navigation detected during inputValue, returning empty string
+# ⚠️  Navigation detected during getAttribute, returning null
+# ⚠️  Navigation detected during getInputValue, returning empty string
+# Subtest: content
+    # Subtest: textContent
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 13.056274
+          ...
+        # Subtest: should return text content for Playwright
+        ok 2 - should return text content for Playwright
+          ---
+          duration_ms: 2.365245
+          ...
+        # Subtest: should return text content for Puppeteer
+        ok 3 - should return text content for Puppeteer
+          ---
+          duration_ms: 2.050845
+          ...
+        # Subtest: should return null when element not found
+        ok 4 - should return null when element not found
+          ---
+          duration_ms: 0.356042
+          ...
+        # Subtest: should handle navigation errors
+        ok 5 - should handle navigation errors
+          ---
+          duration_ms: 4.2946
+          ...
+        1..5
+    ok 1 - textContent
+      ---
+      duration_ms: 24.654789
+      type: 'suite'
+      ...
+    # Subtest: inputValue
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 2.101069
+          ...
+        # Subtest: should return input value for Playwright
+        ok 2 - should return input value for Playwright
+          ---
+          duration_ms: 0.258387
+          ...
+        # Subtest: should return input value for Puppeteer
+        ok 3 - should return input value for Puppeteer
+          ---
+          duration_ms: 2.835267
+          ...
+        # Subtest: should return empty string when element not found
+        ok 4 - should return empty string when element not found
+          ---
+          duration_ms: 0.283213
+          ...
+        # Subtest: should handle navigation errors
+        ok 5 - should handle navigation errors
+          ---
+          duration_ms: 0.465857
+          ...
+        1..5
+    ok 2 - inputValue
+      ---
+      duration_ms: 6.264553
+      type: 'suite'
+      ...
+    # Subtest: getAttribute
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.566076
+          ...
+        # Subtest: should throw when attribute is not provided
+        ok 2 - should throw when attribute is not provided
+          ---
+          duration_ms: 0.224716
+          ...
+        # Subtest: should return attribute value for Playwright
+        ok 3 - should return attribute value for Playwright
+          ---
+          duration_ms: 1.618029
+          ...
+        # Subtest: should return null when attribute not found
+        ok 4 - should return null when attribute not found
+          ---
+          duration_ms: 0.23421
+          ...
+        # Subtest: should return null when element not found
+        ok 5 - should return null when element not found
+          ---
+          duration_ms: 0.230234
+          ...
+        # Subtest: should handle navigation errors
+        ok 6 - should handle navigation errors
+          ---
+          duration_ms: 2.016843
+          ...
+        1..6
+    ok 3 - getAttribute
+      ---
+      duration_ms: 6.532655
+      type: 'suite'
+      ...
+    # Subtest: getInputValue
+        # Subtest: should throw when locatorOrElement is not provided
+        ok 1 - should throw when locatorOrElement is not provided
+          ---
+          duration_ms: 1.768964
+          ...
+        # Subtest: should return value from locator
+        ok 2 - should return value from locator
+          ---
+          duration_ms: 2.788167
+          ...
+        # Subtest: should handle navigation errors
+        ok 3 - should handle navigation errors
+          ---
+          duration_ms: 1.894992
+          ...
+        1..3
+    ok 4 - getInputValue
+      ---
+      duration_ms: 6.737509
+      type: 'suite'
+      ...
+    # Subtest: logElementInfo
+        # Subtest: should not throw when locatorOrElement is not provided
+        ok 1 - should not throw when locatorOrElement is not provided
+          ---
+          duration_ms: 6.387777
+          ...
+        # Subtest: should log element information
+        ok 2 - should log element information
+          ---
+          duration_ms: 0.523843
+          ...
+        # Subtest: should handle navigation errors
+        ok 3 - should handle navigation errors
+          ---
+          duration_ms: 0.34079
+          ...
+        1..3
+    ok 5 - logElementInfo
+      ---
+      duration_ms: 7.500089
+      type: 'suite'
+      ...
+    1..5
+ok 14 - content
+  ---
+  duration_ms: 55.34643
+  type: 'suite'
+  ...
+# ⚠️  Navigation detected during waitForLocatorOrElement, recovering gracefully
+# Subtest: locators
+    # Subtest: createPlaywrightLocator
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 4.157024
+          ...
+        # Subtest: should create locator from simple selector
+        ok 2 - should create locator from simple selector
+          ---
+          duration_ms: 0.635039
+          ...
+        # Subtest: should handle :nth-of-type selector
+        ok 3 - should handle :nth-of-type selector
+          ---
+          duration_ms: 0.303222
+          ...
+        # Subtest: should create locator for complex selector
+        ok 4 - should create locator for complex selector
+          ---
+          duration_ms: 0.174971
+          ...
+        1..4
+    ok 1 - createPlaywrightLocator
+      ---
+      duration_ms: 6.293036
+      type: 'suite'
+      ...
+    # Subtest: getLocatorOrElement
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.811303
+          ...
+        # Subtest: should return locator for Playwright
+        ok 2 - should return locator for Playwright
+          ---
+          duration_ms: 0.197626
+          ...
+        # Subtest: should return element for Puppeteer
+        ok 3 - should return element for Puppeteer
+          ---
+          duration_ms: 0.72932
+          ...
+        # Subtest: should return existing locator/element unchanged
+        ok 4 - should return existing locator/element unchanged
+          ---
+          duration_ms: 0.249543
+          ...
+        # Subtest: should return null for Puppeteer when element not found
+        ok 5 - should return null for Puppeteer when element not found
+          ---
+          duration_ms: 0.203474
+          ...
+        1..5
+    ok 2 - getLocatorOrElement
+      ---
+      duration_ms: 2.459887
+      type: 'suite'
+      ...
+    # Subtest: waitForLocatorOrElement
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.542571
+          ...
+        # Subtest: should wait for Playwright locator to be visible
+        ok 2 - should wait for Playwright locator to be visible
+          ---
+          duration_ms: 0.283313
+          ...
+        # Subtest: should wait for Puppeteer element to be visible
+        ok 3 - should wait for Puppeteer element to be visible
+          ---
+          duration_ms: 0.166118
+          ...
+        # Subtest: should handle navigation errors with throwOnNavigation false
+        ok 4 - should handle navigation errors with throwOnNavigation false
+          ---
+          duration_ms: 1.631398
+          ...
+        1..4
+    ok 3 - waitForLocatorOrElement
+      ---
+      duration_ms: 2.857411
+      type: 'suite'
+      ...
+    # Subtest: waitForVisible
+        # Subtest: should throw when locatorOrElement is not provided
+        ok 1 - should throw when locatorOrElement is not provided
+          ---
+          duration_ms: 0.383853
+          ...
+        # Subtest: should wait for Playwright locator visibility
+        ok 2 - should wait for Playwright locator visibility
+          ---
+          duration_ms: 0.336312
+          ...
+        # Subtest: should handle Puppeteer elements (no-op since already fetched)
+        ok 3 - should handle Puppeteer elements (no-op since already fetched)
+          ---
+          duration_ms: 0.16075
+          ...
+        # Subtest: should throw for Puppeteer when element is null
+        ok 4 - should throw for Puppeteer when element is null
+          ---
+          duration_ms: 0.164045
+          ...
+        1..4
+    ok 4 - waitForVisible
+      ---
+      duration_ms: 1.24456
+      type: 'suite'
+      ...
+    # Subtest: locator
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.25423
+          ...
+        # Subtest: should create Playwright locator
+        ok 2 - should create Playwright locator
+          ---
+          duration_ms: 0.116184
+          ...
+        # Subtest: should create Puppeteer locator wrapper
+        ok 3 - should create Puppeteer locator wrapper
+          ---
+          duration_ms: 0.317955
+          ...
+        # Subtest: should allow chained nth calls on Puppeteer wrapper
+        ok 4 - should allow chained nth calls on Puppeteer wrapper
+          ---
+          duration_ms: 0.131386
+          ...
+        1..4
+    ok 5 - locator
+      ---
+      duration_ms: 0.971302
+      type: 'suite'
+      ...
+    1..5
+ok 15 - locators
+  ---
+  duration_ms: 15.156662
+  type: 'suite'
+  ...
+# ⚠️  Navigation detected during querySelector, returning null
+# ⚠️  Navigation detected during querySelectorAll, returning empty array
+# normalizeSelector received invalid selector type: object. Expected string or text selector object.
+# normalizeSelector received invalid selector type: array. Expected string or text selector object.
+# normalizeSelector received invalid selector type: number. Expected string or text selector object.
+# ⚠️  Navigation detected during waitForSelector, recovering gracefully
+# Subtest: selectors
+    # Subtest: querySelector
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 2.216563
+          ...
+        # Subtest: should find element with Playwright
+        ok 2 - should find element with Playwright
+          ---
+          duration_ms: 0.671834
+          ...
+        # Subtest: should find element with Puppeteer
+        ok 3 - should find element with Puppeteer
+          ---
+          duration_ms: 0.697072
+          ...
+        # Subtest: should return null when element not found with Playwright
+        ok 4 - should return null when element not found with Playwright
+          ---
+          duration_ms: 0.343123
+          ...
+        # Subtest: should handle navigation errors
+        ok 5 - should handle navigation errors
+          ---
+          duration_ms: 1.55208
+          ...
+        1..5
+    ok 1 - querySelector
+      ---
+      duration_ms: 6.466635
+      type: 'suite'
+      ...
+    # Subtest: querySelectorAll
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.439356
+          ...
+        # Subtest: should find all elements with Playwright
+        ok 2 - should find all elements with Playwright
+          ---
+          duration_ms: 0.174741
+          ...
+        # Subtest: should find all elements with Puppeteer
+        ok 3 - should find all elements with Puppeteer
+          ---
+          duration_ms: 0.191256
+          ...
+        # Subtest: should return empty array when no elements found
+        ok 4 - should return empty array when no elements found
+          ---
+          duration_ms: 0.137886
+          ...
+        # Subtest: should handle navigation errors
+        ok 5 - should handle navigation errors
+          ---
+          duration_ms: 0.365767
+          ...
+        1..5
+    ok 2 - querySelectorAll
+      ---
+      duration_ms: 1.515776
+      type: 'suite'
+      ...
+    # Subtest: findByText
+        # Subtest: should throw when text is not provided
+        ok 1 - should throw when text is not provided
+          ---
+          duration_ms: 0.350544
+          ...
+        # Subtest: should return Playwright text selector
+        ok 2 - should return Playwright text selector
+          ---
+          duration_ms: 0.159539
+          ...
+        # Subtest: should return Playwright exact text selector
+        ok 3 - should return Playwright exact text selector
+          ---
+          duration_ms: 0.126469
+          ...
+        # Subtest: should return Puppeteer text selector object
+        ok 4 - should return Puppeteer text selector object
+          ---
+          duration_ms: 0.248202
+          ...
+        # Subtest: should use default selector when not provided
+        ok 5 - should use default selector when not provided
+          ---
+          duration_ms: 0.137445
+          ...
+        1..5
+    ok 3 - findByText
+      ---
+      duration_ms: 1.215167
+      type: 'suite'
+      ...
+    # Subtest: normalizeSelector
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.486868
+          ...
+        # Subtest: should return string selector unchanged
+        ok 2 - should return string selector unchanged
+          ---
+          duration_ms: 0.142873
+          ...
+        # Subtest: should return null for invalid object selector
+        ok 3 - should return null for invalid object selector
+          ---
+          duration_ms: 1.76633
+          ...
+        # Subtest: should return null for array selector
+        ok 4 - should return null for array selector
+          ---
+          duration_ms: 0.296123
+          ...
+        # Subtest: should return null for number selector
+        ok 5 - should return null for number selector
+          ---
+          duration_ms: 0.20723
+          ...
+        # Subtest: should accept valid Puppeteer text selector object
+        ok 6 - should accept valid Puppeteer text selector object
+          ---
+          duration_ms: 0.198156
+          ...
+        1..6
+    ok 4 - normalizeSelector
+      ---
+      duration_ms: 3.362055
+      type: 'suite'
+      ...
+    # Subtest: withTextSelectorSupport
+        # Subtest: should wrap function and pass through options
+        ok 1 - should wrap function and pass through options
+          ---
+          duration_ms: 2.028662
+          ...
+        # Subtest: should pass through string selectors unchanged for Puppeteer
+        ok 2 - should pass through string selectors unchanged for Puppeteer
+          ---
+          duration_ms: 0.230704
+          ...
+        1..2
+    ok 5 - withTextSelectorSupport
+      ---
+      duration_ms: 2.383432
+      type: 'suite'
+      ...
+    # Subtest: waitForSelector
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.355551
+          ...
+        # Subtest: should wait for selector with Playwright
+        ok 2 - should wait for selector with Playwright
+          ---
+          duration_ms: 0.433818
+          ...
+        # Subtest: should wait for selector with Puppeteer
+        ok 3 - should wait for selector with Puppeteer
+          ---
+          duration_ms: 0.244105
+          ...
+        # Subtest: should handle navigation errors with throwOnNavigation false
+        ok 4 - should handle navigation errors with throwOnNavigation false
+          ---
+          duration_ms: 0.381951
+          ...
+        1..4
+    ok 6 - waitForSelector
+      ---
+      duration_ms: 6.488988
+      type: 'suite'
+      ...
+    1..6
+ok 16 - selectors
+  ---
+  duration_ms: 22.738644
+  type: 'suite'
+  ...
+# ⚠️  Navigation detected during enabled check, returning false
+# ⚠️  Navigation detected during element count, returning 0
+# Subtest: visibility
+    # Subtest: isVisible
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 3.391229
+          ...
+        # Subtest: should return true for visible element with Playwright
+        ok 2 - should return true for visible element with Playwright
+          ---
+          duration_ms: 0.794517
+          ...
+        # Subtest: should return false for non-visible element with Playwright
+        ok 3 - should return false for non-visible element with Playwright
+          ---
+          duration_ms: 0.392857
+          ...
+        # Subtest: should return true for visible element with Puppeteer
+        ok 4 - should return true for visible element with Puppeteer
+          ---
+          duration_ms: 0.906655
+          ...
+        # Subtest: should return false when element not found with Puppeteer
+        ok 5 - should return false when element not found with Puppeteer
+          ---
+          duration_ms: 0.225807
+          ...
+        # Subtest: should handle navigation errors
+        ok 6 - should handle navigation errors
+          ---
+          duration_ms: 0.268732
+          ...
+        1..6
+    ok 1 - isVisible
+      ---
+      duration_ms: 6.999893
+      type: 'suite'
+      ...
+    # Subtest: isEnabled
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.434469
+          ...
+        # Subtest: should return true for enabled element with Playwright
+        ok 2 - should return true for enabled element with Playwright
+          ---
+          duration_ms: 0.404074
+          ...
+        # Subtest: should return false for disabled element with Playwright
+        ok 3 - should return false for disabled element with Playwright
+          ---
+          duration_ms: 0.308601
+          ...
+        # Subtest: should check for custom disabled classes
+        ok 4 - should check for custom disabled classes
+          ---
+          duration_ms: 0.21508
+          ...
+        # Subtest: should handle navigation errors
+        ok 5 - should handle navigation errors
+          ---
+          duration_ms: 1.671348
+          ...
+        1..5
+    ok 2 - isEnabled
+      ---
+      duration_ms: 3.301134
+      type: 'suite'
+      ...
+    # Subtest: count
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.580608
+          ...
+        # Subtest: should return element count with Playwright
+        ok 2 - should return element count with Playwright
+          ---
+          duration_ms: 0.191476
+          ...
+        # Subtest: should return element count with Puppeteer
+        ok 3 - should return element count with Puppeteer
+          ---
+          duration_ms: 0.278956
+          ...
+        # Subtest: should return 0 when no elements found
+        ok 4 - should return 0 when no elements found
+          ---
+          duration_ms: 0.351575
+          ...
+        # Subtest: should handle Puppeteer text selector objects
+        ok 5 - should handle Puppeteer text selector objects
+          ---
+          duration_ms: 0.182143
+          ...
+        # Subtest: should handle navigation errors
+        ok 6 - should handle navigation errors
+          ---
+          duration_ms: 0.44102
+          ...
+        1..6
+    ok 3 - count
+      ---
+      duration_ms: 2.640376
+      type: 'suite'
+      ...
+    1..3
+ok 17 - visibility
+  ---
+  duration_ms: 14.033644
+  type: 'suite'
+  ...
+# 🔌 Network tracking started
+# 🔌 Dialog manager started
+# 🔌 Navigation manager started
+# 📋 PageTriggerManager initialized
+# Subtest: factory
+    # Subtest: makeBrowserCommander
+        # Subtest: should throw when page is not provided
+        ok 1 - should throw when page is not provided
+          ---
+          duration_ms: 4.81116
+          ...
+        # Subtest: should create commander with Playwright page
+        ok 2 - should create commander with Playwright page
+          ---
+          duration_ms: 10.353244
+          ...
+        # Subtest: should create commander with Puppeteer page
+        ok 3 - should create commander with Puppeteer page
+          ---
+          duration_ms: 3.906058
+          ...
+        # Subtest: should accept verbose option
+        ok 4 - should accept verbose option
+          ---
+          duration_ms: 2.016484
+          ...
+        # Subtest: should have all expected methods
+        ok 5 - should have all expected methods
+          ---
+          duration_ms: 2.985342
+          ...
+        # Subtest: should return engine type
+        ok 6 - should return engine type
+          ---
+          duration_ms: 0.48187
+          ...
+        # Subtest: should expose page object
+        ok 7 - should expose page object
+          ---
+          duration_ms: 0.335811
+          ...
+        # Subtest: should allow disabling network tracking
+        ok 8 - should allow disabling network tracking
+          ---
+          duration_ms: 0.226507
+          ...
+        # Subtest: should allow disabling navigation manager
+        ok 9 - should allow disabling navigation manager
+          ---
+          duration_ms: 0.229594
+          ...
+        # Subtest: should have destroy method
+        ok 10 - should have destroy method
+          ---
+          duration_ms: 0.656982
+          ...
+        # Subtest: should expose the raw page object as commander.page (extensibility escape hatch)
+        ok 11 - should expose the raw page object as commander.page (extensibility escape hatch)
+          ---
+          duration_ms: 0.226779
+          ...
+        # Subtest: should allow using commander.page to call engine-specific APIs not in browser-commander
+        ok 12 - should allow using commander.page to call engine-specific APIs not in browser-commander
+          ---
+          duration_ms: 0.206509
+          ...
+        # Subtest: should expose raw page with Puppeteer page too (extensibility escape hatch)
+        ok 13 - should expose raw page with Puppeteer page too (extensibility escape hatch)
+          ---
+          duration_ms: 0.179247
+          ...
+        1..13
+    ok 1 - makeBrowserCommander
+      ---
+      duration_ms: 27.998746
+      type: 'suite'
+      ...
+    1..1
+ok 18 - factory
+  ---
+  duration_ms: 29.877405
+  type: 'suite'
+  ...
+# ⚠️  Temporary error while checking URL: Temporary error... (retrying)
+# ⚠️  Navigation detected during installClickListener, skipping
+# ⚠️  Navigation detected during checkAndClearFlag, returning false
+# Subtest: universal-logic
+    # Subtest: waitForUrlCondition
+        # Subtest: should return true when target URL is reached
+        ok 1 - should return true when target URL is reached
+          ---
+          duration_ms: 1.616206
+          ...
+        # Subtest: should return null when page is closed
+        ok 2 - should return null when page is closed
+          ---
+          duration_ms: 0.351455
+          ...
+        # Subtest: should return custom check result when provided
+        ok 3 - should return custom check result when provided
+          ---
+          duration_ms: 0.30838
+          ...
+        # Subtest: should continue when customCheck returns undefined
+        ok 4 - should continue when customCheck returns undefined
+          ---
+          duration_ms: 0.372808
+          ...
+        # Subtest: should handle errors gracefully
+        ok 5 - should handle errors gracefully
+          ---
+          duration_ms: 1.710917
+          ...
+        1..5
+    ok 1 - waitForUrlCondition
+      ---
+      duration_ms: 7.531126
+      type: 'suite'
+      ...
+    # Subtest: installClickListener
+        # Subtest: should install click listener
+        ok 1 - should install click listener
+          ---
+          duration_ms: 0.661248
+          ...
+        # Subtest: should return false on navigation error
+        ok 2 - should return false on navigation error
+          ---
+          duration_ms: 0.649731
+          ...
+        1..2
+    ok 2 - installClickListener
+      ---
+      duration_ms: 1.476437
+      type: 'suite'
+      ...
+    # Subtest: checkAndClearFlag
+        # Subtest: should return true when flag is set
+        ok 1 - should return true when flag is set
+          ---
+          duration_ms: 0.342322
+          ...
+        # Subtest: should return false when flag is not set
+        ok 2 - should return false when flag is not set
+          ---
+          duration_ms: 0.16034
+          ...
+        # Subtest: should return false on navigation error
+        ok 3 - should return false on navigation error
+          ---
+          duration_ms: 0.291636
+          ...
+        1..3
+    ok 3 - checkAndClearFlag
+      ---
+      duration_ms: 1.029258
+      type: 'suite'
+      ...
+    # Subtest: findToggleButton
+        # Subtest: should find button by data-qa selector
+        ok 1 - should find button by data-qa selector
+          ---
+          duration_ms: 0.454469
+          ...
+        # Subtest: should fallback to text search
+        ok 2 - should fallback to text search
+          ---
+          duration_ms: 0.270044
+          ...
+        # Subtest: should return null when button not found
+        ok 3 - should return null when button not found
+          ---
+          duration_ms: 0.309122
+          ...
+        # Subtest: should try multiple data-qa selectors
+        ok 4 - should try multiple data-qa selectors
+          ---
+          duration_ms: 0.392936
+          ...
+        # Subtest: should try multiple element types for text search
+        ok 5 - should try multiple element types for text search
+          ---
+          duration_ms: 0.24781
+          ...
+        1..5
+    ok 4 - findToggleButton
+      ---
+      duration_ms: 1.869053
+      type: 'suite'
+      ...
+    1..4
+ok 19 - universal-logic
+  ---
+  duration_ms: 13.804943
+  type: 'suite'
+  ...
+# ⚠️  Navigation/stop detected during click, recovering gracefully
+# Subtest: click
+    # Subtest: defaultClickVerification
+        # Subtest: should verify click by checking element state
+        ok 1 - should verify click by checking element state
+          ---
+          duration_ms: 7.92176
+          ...
+        # Subtest: should verify when className changed
+        ok 2 - should verify when className changed
+          ---
+          duration_ms: 0.627076
+          ...
+        # Subtest: should verify when element is still connected
+        ok 3 - should verify when element is still connected
+          ---
+          duration_ms: 0.26834
+          ...
+        # Subtest: should verify when element removed from DOM
+        ok 4 - should verify when element removed from DOM
+          ---
+          duration_ms: 0.174
+          ...
+        # Subtest: should handle navigation errors
+        ok 5 - should handle navigation errors
+          ---
+          duration_ms: 1.602545
+          ...
+        1..5
+    ok 1 - defaultClickVerification
+      ---
+      duration_ms: 11.584554
+      type: 'suite'
+      ...
+    # Subtest: capturePreClickState
+        # Subtest: should capture element state
+        ok 1 - should capture element state
+          ---
+          duration_ms: 0.221151
+          ...
+        # Subtest: should return empty object on navigation error
+        ok 2 - should return empty object on navigation error
+          ---
+          duration_ms: 0.849199
+          ...
+        1..2
+    ok 2 - capturePreClickState
+      ---
+      duration_ms: 1.187195
+      type: 'suite'
+      ...
+    # Subtest: verifyClick
+        # Subtest: should use custom verify function
+        ok 1 - should use custom verify function
+          ---
+          duration_ms: 0.316903
+          ...
+        # Subtest: should log verification result
+        ok 2 - should log verification result
+          ---
+          duration_ms: 0.198688
+          ...
+        1..2
+    ok 3 - verifyClick
+      ---
+      duration_ms: 0.618525
+      type: 'suite'
+      ...
+    # Subtest: clickElement
+        # Subtest: should throw when locatorOrElement is not provided
+        ok 1 - should throw when locatorOrElement is not provided
+          ---
+          duration_ms: 1.41183
+          ...
+        # Subtest: should click element
+        ok 2 - should click element
+          ---
+          duration_ms: 0.19386
+          ...
+        # Subtest: should click with force option when noAutoScroll is true
+        ok 3 - should click with force option when noAutoScroll is true
+          ---
+          duration_ms: 0.512907
+          ...
+        # Subtest: should handle navigation errors
+        ok 4 - should handle navigation errors
+          ---
+          duration_ms: 1.430008
+          ...
+        1..4
+    ok 4 - clickElement
+      ---
+      duration_ms: 7.944554
+      type: 'suite'
+      ...
+    # Subtest: clickButton
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 0.433218
+          ...
+        # Subtest: should click button with full flow
+        ok 2 - should click button with full flow
+          ---
+          duration_ms: 4.293116
+          ...
+        1..2
+    ok 5 - clickButton
+      ---
+      duration_ms: 4.889548
+      type: 'suite'
+      ...
+    1..5
+ok 20 - click
+  ---
+  duration_ms: 27.390488
+  type: 'suite'
+  ...
+# ⚠️  Navigation detected during getInputValue, returning empty string
+# Subtest: fill
+    # Subtest: defaultFillVerification
+        # Subtest: should verify exact match
+        ok 1 - should verify exact match
+          ---
+          duration_ms: 1.795103
+          ...
+        # Subtest: should verify partial match
+        ok 2 - should verify partial match
+          ---
+          duration_ms: 0.310514
+          ...
+        # Subtest: should fail verification on mismatch
+        ok 3 - should fail verification on mismatch
+          ---
+          duration_ms: 0.204215
+          ...
+        # Subtest: should handle navigation errors
+        ok 4 - should handle navigation errors
+          ---
+          duration_ms: 4.644341
+          ...
+        1..4
+    ok 1 - defaultFillVerification
+      ---
+      duration_ms: 7.963221
+      type: 'suite'
+      ...
+    # Subtest: verifyFill
+        # Subtest: should verify fill with retry logic
+        ok 1 - should verify fill with retry logic
+          ---
+          duration_ms: 0.96422
+          ...
+# ⚠️  Navigation detected during checkIfElementEmpty, returning true
+# ⚠️  Navigation detected during performFill, recovering gracefully
+        # Subtest: should fail after timeout
+        ok 2 - should fail after timeout
+          ---
+          duration_ms: 58.669797
+          ...
+        1..2
+    ok 2 - verifyFill
+      ---
+      duration_ms: 60.028196
+      type: 'suite'
+      ...
+    # Subtest: checkIfElementEmpty
+        # Subtest: should throw when locatorOrElement is not provided
+        ok 1 - should throw when locatorOrElement is not provided
+          ---
+          duration_ms: 4.739283
+          ...
+        # Subtest: should throw when page is not provided and no adapter
+        ok 2 - should throw when page is not provided and no adapter
+          ---
+          duration_ms: 0.530353
+          ...
+        # Subtest: should return true for empty element
+        ok 3 - should return true for empty element
+          ---
+          duration_ms: 1.057601
+          ...
+        # Subtest: should return true for whitespace-only element
+        ok 4 - should return true for whitespace-only element
+          ---
+          duration_ms: 0.318366
+          ...
+        # Subtest: should return false for element with content
+        ok 5 - should return false for element with content
+          ---
+          duration_ms: 0.161221
+          ...
+        # Subtest: should handle navigation errors
+        ok 6 - should handle navigation errors
+          ---
+          duration_ms: 0.505305
+          ...
+        1..6
+    ok 3 - checkIfElementEmpty
+      ---
+      duration_ms: 7.691284
+      type: 'suite'
+      ...
+    # Subtest: performFill
+        # Subtest: should throw when text is not provided
+        ok 1 - should throw when text is not provided
+          ---
+          duration_ms: 6.05539
+          ...
+        # Subtest: should throw when locatorOrElement is not provided
+        ok 2 - should throw when locatorOrElement is not provided
+          ---
+          duration_ms: 0.320088
+          ...
+        # Subtest: should fill with typing simulation
+        ok 3 - should fill with typing simulation
+          ---
+          duration_ms: 0.229853
+          ...
+        # Subtest: should fill without typing simulation
+        ok 4 - should fill without typing simulation
+          ---
+          duration_ms: 0.18745
+          ...
+        # Subtest: should handle navigation errors
+        ok 5 - should handle navigation errors
+          ---
+          duration_ms: 0.359428
+          ...
+        1..5
+    ok 4 - performFill
+      ---
+      duration_ms: 7.396715
+      type: 'suite'
+      ...
+    # Subtest: fillTextArea
+        # Subtest: should throw when selector is not provided
+        ok 1 - should throw when selector is not provided
+          ---
+          duration_ms: 4.363611
+          ...
+        # Subtest: should throw when text is not provided
+        ok 2 - should throw when text is not provided
+          ---
+          duration_ms: 0.369532
+          ...
+        # Subtest: should throw when page is not provided
+        ok 3 - should throw when page is not provided
+          ---
+          duration_ms: 0.249954
+          ...
+        1..3
+    ok 5 - fillTextArea
+      ---
+      duration_ms: 5.199021
+      type: 'suite'
+      ...
+    1..5
+ok 21 - fill
+  ---
+  duration_ms: 89.668306
+  type: 'suite'
+  ...
+# Subtest: keyboard interactions
+    # Subtest: pressKey
+        # Subtest: should press a key using Playwright adapter
+        ok 1 - should press a key using Playwright adapter
+          ---
+          duration_ms: 7.62778
+          ...
+        # Subtest: should press a key using Puppeteer adapter
+        ok 2 - should press a key using Puppeteer adapter
+          ---
+          duration_ms: 0.781268
+          ...
+        # Subtest: should accept a pre-created adapter
+        ok 3 - should accept a pre-created adapter
+          ---
+          duration_ms: 0.263924
+          ...
+        # Subtest: should throw when key is not provided
+        ok 4 - should throw when key is not provided
+          ---
+          duration_ms: 1.179142
+          ...
+        1..4
+    ok 1 - pressKey
+      ---
+      duration_ms: 10.955224
+      type: 'suite'
+      ...
+    # Subtest: typeText
+        # Subtest: should type text using Playwright adapter
+        ok 1 - should type text using Playwright adapter
+          ---
+          duration_ms: 0.377483
+          ...
+        # Subtest: should type text using Puppeteer adapter
+        ok 2 - should type text using Puppeteer adapter
+          ---
+          duration_ms: 0.218127
+          ...
+        # Subtest: should accept a pre-created adapter
+        ok 3 - should accept a pre-created adapter
+          ---
+          duration_ms: 0.209503
+          ...
+        # Subtest: should throw when text is not provided
+        ok 4 - should throw when text is not provided
+          ---
+          duration_ms: 0.216314
+          ...
+        1..4
+    ok 2 - typeText
+      ---
+      duration_ms: 1.622896
+      type: 'suite'
+      ...
+    # Subtest: keyDown
+        # Subtest: should hold a key down using Playwright adapter
+        ok 1 - should hold a key down using Playwright adapter
+          ---
+          duration_ms: 0.350534
+          ...
+        # Subtest: should hold a key down using Puppeteer adapter
+        ok 2 - should hold a key down using Puppeteer adapter
+          ---
+          duration_ms: 0.363944
+          ...
+        # Subtest: should accept a pre-created adapter
+        ok 3 - should accept a pre-created adapter
+          ---
+          duration_ms: 0.198477
+          ...
+        # Subtest: should throw when key is not provided
+        ok 4 - should throw when key is not provided
+          ---
+          duration_ms: 0.207009
+          ...
+        1..4
+    ok 3 - keyDown
+      ---
+      duration_ms: 1.317389
+      type: 'suite'
+      ...
+    # Subtest: keyUp
+        # Subtest: should release a key using Playwright adapter
+        ok 1 - should release a key using Playwright adapter
+          ---
+          duration_ms: 0.351104
+          ...
+        # Subtest: should release a key using Puppeteer adapter
+        ok 2 - should release a key using Puppeteer adapter
+          ---
+          duration_ms: 0.237155
+          ...
+        # Subtest: should accept a pre-created adapter
+        ok 3 - should accept a pre-created adapter
+          ---
+          duration_ms: 0.129403
+          ...
+        # Subtest: should throw when key is not provided
+        ok 4 - should throw when key is not provided
+          ---
+          duration_ms: 0.223654
+          ...
+        1..4
+    ok 4 - keyUp
+      ---
+      duration_ms: 1.135226
+      type: 'suite'
+      ...
+    # Subtest: PlaywrightAdapter keyboard methods
+        # Subtest: should delegate keyboardPress to page.keyboard.press
+        ok 1 - should delegate keyboardPress to page.keyboard.press
+          ---
+          duration_ms: 0.340108
+          ...
+        # Subtest: should delegate keyboardType to page.keyboard.type
+        ok 2 - should delegate keyboardType to page.keyboard.type
+          ---
+          duration_ms: 0.383172
+          ...
+        # Subtest: should delegate keyboardDown to page.keyboard.down
+        ok 3 - should delegate keyboardDown to page.keyboard.down
+          ---
+          duration_ms: 0.22013
+          ...
+        # Subtest: should delegate keyboardUp to page.keyboard.up
+        ok 4 - should delegate keyboardUp to page.keyboard.up
+          ---
+          duration_ms: 1.516246
+          ...
+        1..4
+    ok 5 - PlaywrightAdapter keyboard methods
+      ---
+      duration_ms: 2.807486
+      type: 'suite'
+      ...
+    # Subtest: PuppeteerAdapter keyboard methods
+        # Subtest: should delegate keyboardPress to page.keyboard.press
+        ok 1 - should delegate keyboardPress to page.keyboard.press
+          ---
+          duration_ms: 0.478645
+          ...
+        # Subtest: should delegate keyboardType to page.keyboard.type
+        ok 2 - should delegate keyboardType to page.keyboard.type
+          ---
+          duration_ms: 0.248762
+          ...
+        # Subtest: should delegate keyboardDown to page.keyboard.down
+        ok 3 - should delegate keyboardDown to page.keyboard.down
+          ---
+          duration_ms: 0.173679
+          ...
+        # Subtest: should delegate keyboardUp to page.keyboard.up
+        ok 4 - should delegate keyboardUp to page.keyboard.up
+          ---
+          duration_ms: 0.18805
+          ...
+        1..4
+    ok 6 - PuppeteerAdapter keyboard methods
+      ---
+      duration_ms: 1.635594
+      type: 'suite'
+      ...
+    1..6
+ok 22 - keyboard interactions
+  ---
+  duration_ms: 25.080114
+  type: 'suite'
+  ...
+# Subtest: scroll
+    # Subtest: defaultScrollVerification
+        # Subtest: should verify element is in viewport for Playwright
+        ok 1 - should verify element is in viewport for Playwright
+          ---
+          duration_ms: 7.434992
+          ...
+        # Subtest: should return false when element not in viewport
+        ok 2 - should return false when element not in viewport
+          ---
+          duration_ms: 0.313689
+          ...
+        # Subtest: should handle navigation errors
+        ok 3 - should handle navigation errors
+          ---
+          duration_ms: 0.558475
+          ...
+        1..3
+    ok 1 - defaultScrollVerification
+      ---
+      duration_ms: 13.49482
+      type: 'suite'
+      ...
+    # Subtest: verifyScroll
+        # Subtest: should verify scroll with retry logic
+        ok 1 - should verify scroll with retry logic
+          ---
+          duration_ms: 0.719345
+          ...
+# ⚠️  Navigation/stop detected during scrollIntoView, skipping
+# ⚠️  Navigation/stop detected during needsScrolling, returning false
+        # Subtest: should fail after timeout if element never in viewport
+        ok 2 - should fail after timeout if element never in viewport
+          ---
+          duration_ms: 58.374636
+          ...
+        1..2
+    ok 2 - verifyScroll
+      ---
+      duration_ms: 59.48772
+      type: 'suite'
+      ...
+    # Subtest: scrollIntoView
+        # Subtest: should throw when locatorOrElement is not provided
+        ok 1 - should throw when locatorOrElement is not provided
+          ---
+          duration_ms: 4.130093
+          ...
+        # Subtest: should scroll element into view for Playwright
+        ok 2 - should scroll element into view for Playwright
+          ---
+          duration_ms: 0.611133
+          ...
+        # Subtest: should use smooth behavior by default
+        ok 3 - should use smooth behavior by default
+          ---
+          duration_ms: 0.299208
+          ...
+        # Subtest: should use instant behavior when specified
+        ok 4 - should use instant behavior when specified
+          ---
+          duration_ms: 0.201812
+          ...
+        # Subtest: should handle navigation errors
+        ok 5 - should handle navigation errors
+          ---
+          duration_ms: 2.205696
+          ...
+        1..5
+    ok 3 - scrollIntoView
+      ---
+      duration_ms: 7.810393
+      type: 'suite'
+      ...
+    # Subtest: needsScrolling
+        # Subtest: should throw when locatorOrElement is not provided
+        ok 1 - should throw when locatorOrElement is not provided
+          ---
+          duration_ms: 0.514709
+          ...
+        # Subtest: should return true when element needs scrolling
+        ok 2 - should return true when element needs scrolling
+          ---
+          duration_ms: 3.912518
+          ...
+        # Subtest: should return false when element is in view
+        ok 3 - should return false when element is in view
+          ---
+          duration_ms: 0.400419
+          ...
+        # Subtest: should handle navigation errors
+        ok 4 - should handle navigation errors
+          ---
+          duration_ms: 2.091726
+          ...
+        1..4
+    ok 4 - needsScrolling
+      ---
+      duration_ms: 7.249405
+      type: 'suite'
+      ...
+    # Subtest: scrollIntoViewIfNeeded
+        # Subtest: should throw when locatorOrElement is not provided
+        ok 1 - should throw when locatorOrElement is not provided
+          ---
+          duration_ms: 1.815883
+          ...
+        # Subtest: should skip scrolling when element is in view
+        ok 2 - should skip scrolling when element is in view
+          ---
+          duration_ms: 0.34809
+          ...
+        # Subtest: should scroll when element needs scrolling
+        ok 3 - should scroll when element needs scrolling
+          ---
+          duration_ms: 0.360188
+          ...
+        1..3
+    ok 5 - scrollIntoViewIfNeeded
+      ---
+      duration_ms: 6.315039
+      type: 'suite'
+      ...
+    1..5
+ok 23 - scroll
+  ---
+  duration_ms: 95.930847
+  type: 'suite'
+  ...
+# Subtest: npm release helpers
+    # Subtest: removeDeprecatedAlwaysAuth
+        # Subtest: removes always-auth while preserving other config
+        ok 1 - removes always-auth while preserving other config
+          ---
+          duration_ms: 4.952162
+          ...
+        # Subtest: returns false when no config path exists
+        ok 2 - returns false when no config path exists
+          ---
+          duration_ms: 0.363053
+          ...
+        1..2
+    ok 1 - removeDeprecatedAlwaysAuth
+      ---
+      duration_ms: 6.565522
+      type: 'suite'
+      ...
+    # Subtest: isVersionPublished
+        # Subtest: returns false for npm registry 404 responses without logging npm errors
+        ok 1 - returns false for npm registry 404 responses without logging npm errors
+          ---
+          duration_ms: 1.187825
+          ...
+        # Subtest: handles scoped package names
+        ok 2 - handles scoped package names
+          ---
+          duration_ms: 0.746746
+          ...
+        1..2
+    ok 2 - isVersionPublished
+      ---
+      duration_ms: 2.172727
+      type: 'suite'
+      ...
+    1..2
+ok 24 - npm release helpers
+  ---
+  duration_ms: 15.959092
+  type: 'suite'
+  ...
+# Subtest: test runner helper
+    # Subtest: expands test directories into stable explicit test files
+    ok 1 - expands test directories into stable explicit test files
+      ---
+      duration_ms: 16.557146
+      ...
+    # Subtest: builds node --test arguments with reporter and coverage options
+    ok 2 - builds node --test arguments with reporter and coverage options
+      ---
+      duration_ms: 0.584083
+      ...
+    1..2
+ok 25 - test runner helper
+  ---
+  duration_ms: 17.343441
+  type: 'suite'
+  ...
+# Subtest: browser-commander/tests
+    # Subtest: normalizes supported browser engines
+    ok 1 - normalizes supported browser engines
+      ---
+      duration_ms: 2.429751
+      ...
+    # Subtest: updates cumulative timing averages
+    ok 2 - updates cumulative timing averages
+      ---
+      duration_ms: 0.8831
+      ...
+    # Subtest: records timing data to disk
+    ok 3 - records timing data to disk
+      ---
+      duration_ms: 3.286702
+      ...
+    # Subtest: orders historically slow tests first while preserving ties
+    ok 4 - orders historically slow tests first while preserving ties
+      ---
+      duration_ms: 0.42792
+      ...
+    # Subtest: plans balanced shards using longest tests first
+    ok 5 - plans balanced shards using longest tests first
+      ---
+      duration_ms: 0.693196
+      ...
+    # Subtest: parses Playwright-style shard strings
+    ok 6 - parses Playwright-style shard strings
+      ---
+      duration_ms: 0.311325
+      ...
+    # Subtest: creates and closes a browser fixture with injected launchers
+    ok 7 - creates and closes a browser fixture with injected launchers
+      ---
+      duration_ms: 0.531955
+      ...
+    # Subtest: cleans up fixture after successful callbacks
+    ok 8 - cleans up fixture after successful callbacks
+      ---
+      duration_ms: 0.364244
+      ...
+    # Subtest: retries failing operations
+    ok 9 - retries failing operations
+      ---
+      duration_ms: 0.482441
+      ...
+    # Subtest: times out slow operations
+    ok 10 - times out slow operations
+      ---
+      duration_ms: 19.099946
+      ...
+    # Subtest: writes error and screenshot artifacts on failure
+    ok 11 - writes error and screenshot artifacts on failure
+      ---
+      duration_ms: 5.859789
+      ...
+    # Subtest: captures failure artifacts before closing failed browser scenarios
+    ok 12 - captures failure artifacts before closing failed browser scenarios
+      ---
+      duration_ms: 6.206066
+      ...
+    # Subtest: orders registered browser entries by engine-specific timing history
+    ok 13 - orders registered browser entries by engine-specific timing history
+      ---
+      duration_ms: 11.319198
+      ...
+    # Subtest: registers browser tests without duration recording for unit testing
+    ok 14 - registers browser tests without duration recording for unit testing
+      ---
+      duration_ms: 0.603783
+      ...
+    1..14
+ok 26 - browser-commander/tests
+  ---
+  duration_ms: 54.482348
+  type: 'suite'
+  ...
+# Subtest: url utilities
+    # Subtest: getUrl
+        # Subtest: should return current page URL
+        ok 1 - should return current page URL
+          ---
+          duration_ms: 2.085447
+          ...
+        # Subtest: should return different URLs for different pages
+        ok 2 - should return different URLs for different pages
+          ---
+          duration_ms: 0.271525
+          ...
+        1..2
+    ok 1 - getUrl
+      ---
+      duration_ms: 3.522324
+      type: 'suite'
+      ...
+    # Subtest: unfocusAddressBar
+        # Subtest: should throw when page is not provided
+        ok 1 - should throw when page is not provided
+          ---
+          duration_ms: 0.991511
+          ...
+        # Subtest: should call bringToFront on page
+        ok 2 - should call bringToFront on page
+          ---
+          duration_ms: 0.237626
+          ...
+        # Subtest: should not throw when bringToFront fails
+        ok 3 - should not throw when bringToFront fails
+          ---
+          duration_ms: 0.196454
+          ...
+        # Subtest: should handle page without bringToFront method gracefully
+        ok 4 - should handle page without bringToFront method gracefully
+          ---
+          duration_ms: 0.20706
+          ...
+        1..4
+    ok 2 - unfocusAddressBar
+      ---
+      duration_ms: 1.875654
+      type: 'suite'
+      ...
+    1..2
+ok 27 - url utilities
+  ---
+  duration_ms: 6.409629
+  type: 'suite'
+  ...
+# Subtest: wait utilities
+    # Subtest: wait
+        # Subtest: should throw when ms is not provided
+        ok 1 - should throw when ms is not provided
+          ---
+          duration_ms: 4.44236
+          ...
+        # Subtest: should wait for specified time
+        ok 2 - should wait for specified time
+          ---
+          duration_ms: 53.463595
+          ...
+        # Subtest: should return completed status without abort signal
+        ok 3 - should return completed status without abort signal
+          ---
+          duration_ms: 10.714794
+          ...
+        # Subtest: should accept reason for logging
+        ok 4 - should accept reason for logging
+          ---
+          duration_ms: 11.533196
+          ...
+        # Subtest: should handle abort signal that is already aborted
+        ok 5 - should handle abort signal that is already aborted
+          ---
+          duration_ms: 0.967956
+          ...
+        # Subtest: should abort wait when signal is aborted
+        ok 6 - should abort wait when signal is aborted
+          ---
+          duration_ms: 13.232718
+          ...
+        # Subtest: should complete when not aborted
+        ok 7 - should complete when not aborted
+          ---
+          duration_ms: 8.827623
+          ...
+        1..7
+    ok 1 - wait
+      ---
+      duration_ms: 114.255424
+      type: 'suite'
+      ...
+    # Subtest: evaluate
+        # Subtest: should throw when fn is not provided
+        ok 1 - should throw when fn is not provided
+          ---
+          duration_ms: 9.962289
+          ...
+        # Subtest: should evaluate function on Playwright page
+        ok 2 - should evaluate function on Playwright page
+          ---
+          duration_ms: 0.887816
+          ...
+        # Subtest: should evaluate function on Puppeteer page
+        ok 3 - should evaluate function on Puppeteer page
+          ---
+          duration_ms: 0.774418
+          ...
+        # Subtest: should pass arguments to function
+        ok 4 - should pass arguments to function
+          ---
+          duration_ms: 3.710156
+          ...
+        # Subtest: should use provided adapter
+        ok 5 - should use provided adapter
+          ---
+          duration_ms: 2.921726
+          ...
+        1..5
+    ok 2 - evaluate
+      ---
+      duration_ms: 18.876673
+      type: 'suite'
+      ...
+    # Subtest: safeEvaluate
+        # Subtest: should return success result on successful evaluation
+        ok 1 - should return success result on successful evaluation
+          ---
+          duration_ms: 0.611003
+          ...
+        # Subtest: should return default value on navigation error
+        ok 2 - should return default value on navigation error
+          ---
+          duration_ms: 0.652185
+          ...
+        # Subtest: should use null as default value when not specified
+        ok 3 - should use null as default value when not specified
+          ---
+          duration_ms: 0.247159
+          ...
+        # Subtest: should rethrow non-navigation errors
+        ok 4 - should rethrow non-navigation errors
+          ---
+          duration_ms: 0.231506
+          ...
+        1..4
+    ok 3 - safeEvaluate
+      ---
+      duration_ms: 1.993741
+      type: 'suite'
+      ...
+    1..3
+ok 28 - wait utilities
+  ---
+  duration_ms: 136.60016
+  type: 'suite'
+  ...
+1..28
+# tests 458
+# suites 131
+# pass 458
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1830.282377
+# start of coverage report
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# file                                           | line % | branch % | funcs % | uncovered lines
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# scripts/clean-npm-config.mjs                   |  69.23 |    75.00 |   66.67 | 18-19 25-32 38-39
+# scripts/npm-registry.mjs                       |  74.19 |    75.00 |  100.00 | 22-29
+# scripts/run-tests.mjs                          |  75.00 |    70.97 |   83.33 | 12-13 22-23 63-66 72-73 113-114 122 124-125 134-135 155-174 177-180 186-192
+# src/bindings.js                                |  85.93 |    88.89 |   13.46 | 96-101 104-108 111-114 117-123 126-132 179-187 202-206 213-216
+# src/browser/launcher.js                        |  32.52 |    33.33 |   50.00 | 38-89 91-114 116-122
+# src/browser/media.js                           | 100.00 |   100.00 |  100.00 | 
+# src/browser/navigation.js                      |  76.17 |    66.67 |   32.00 | 45-46 63-72 113 119-121 129 176-180 189 192-198 261-276 280-290 297-302 309-314 318-333 337-348 378-379 425-426 477-482 485-499
+# src/browser/pdf.js                             | 100.00 |   100.00 |  100.00 | 
+# src/core/constants.js                          | 100.00 |   100.00 |  100.00 | 
+# src/core/dialog-manager.js                     |  91.77 |    85.71 |   44.44 | 51 56-57 74-83
+# src/core/engine-adapter.js                     |  82.62 |   100.00 |   48.61 | 58-59 67-68 77-78 87-88 96-97 111-112 120-121 129-130 139-140 153-154 163-164 173-174 182-183 195-196 204-205 213-214 222-223 236-237 244-245 297-300 303-306 317-322 345-346 349-350 353-354 405-406 440-442 445-449 461-466 477-482 489-490 493-496 499-509 512-513 545-546
+# src/core/engine-detection.js                   |  71.43 |    75.00 |  100.00 | 17-24 31-32 39-40 44-45
+# src/core/logger.js                             | 100.00 |   100.00 |  100.00 | 
+# src/core/navigation-manager.js                 |  41.55 |    87.50 |   30.00 | 27-28 64-100 106-171 184-257 263-301 312-342 351-374 380-381 387-388 394-395 403-404 414-422 429-430 473-474
+# src/core/navigation-safety.js                  |  93.65 |    93.75 |   83.33 | 63 108-118
+# src/core/network-tracker.js                    |  55.65 |    80.65 |   61.11 | 53-58 64-90 96-118 124-134 151-153 186-189 195-197 223-304 320-322 356-358
+# src/core/page-session.js                       |  17.73 |    75.00 |   50.00 | 34-275 281-282 290-291
+# src/core/page-trigger-manager.js               |  55.48 |    94.55 |   64.29 | 114-118 233-245 255-305 314-374 382-498 504-505 511-512 538
+# src/core/preferences.js                        |  19.57 |   100.00 |    0.00 | 10-46
+# src/elements/content.js                        |  94.92 |    84.21 |   75.00 | 37-38 75-76 120-121 150-151 195-196
+# src/elements/locators.js                       |  78.60 |    96.77 |   36.84 | 136-137 163-164 167 170-178 181 184-188 191-195 198-206 209-216 219-221 227 230 233-237
+# src/elements/selectors.js                      |  66.14 |    76.67 |   63.64 | 34-35 72-73 113-118 125-146 189 191-235 248-270 279-286 288-291 309 311-315 321 323-327 375-376 379-380
+# src/elements/visibility.js                     |  80.72 |    87.50 |   75.00 | 43-50 89-105 140-144 164-165
+# src/factory.js                                 |  97.82 |   100.00 |   16.00 | 185 202 207-209
+# src/high-level/universal-logic.js              |  83.90 |    90.00 |   77.78 | 36-37 60-61 65-67 104-123 152-157
+# src/interactions/click.js                      |  66.67 |    56.25 |   43.48 | 40-46 58-59 61-62 64-65 91-92 110-116 122-123 157-160 200-206 218-232 247-248 260-277 318-319 323-338 381-388 429-473 477-515 520-534 539-543 620-626 642-648 670-683
+# src/interactions/fill.js                       |  61.62 |    78.26 |   37.50 | 29-33 82-84 92 132-133 175-179 191-213 223-224 277-382
+# src/interactions/keyboard.js                   | 100.00 |   100.00 |  100.00 | 
+# src/interactions/scroll.js                     |  75.66 |    67.44 |   31.58 | 7-18 23-33 57-62 68-69 115-119 127 164-168 171-182 186-199 209-210 233-234 242-243 296 315-317 330-334
+# src/tests/index.js                             |  86.88 |    74.38 |   95.83 | 58-59 64-65 72 115-116 119-120 133-134 136-137 166 193-194 218-219 225-228 250-251 253-254 313-315 331-332 350-351 429-431 484-485 496-497 513-514 541-547 622-623 650-677 696-709
+# src/utilities/url.js                           | 100.00 |   100.00 |  100.00 | 
+# src/utilities/wait.js                          |  95.56 |    93.33 |   76.92 | 60-61 127-130
+# tests/helpers/mocks.js                         |  72.25 |    89.83 |   30.08 | 36 40 43 72-77 95-96 99-100 103-105 118-119 122 185 212-239 242-243 266-271 280-281 284 294-300 303-306 339-344 347-352 355-360 364 389 392-394 397-402 405 434-435 446-448 454-455 462 465 468-470 473 476 485-490 497-499 502-504 507-509 512-514 517-526 529-535
+# tests/unit/bindings.test.js                    | 100.00 |   100.00 |  100.00 | 
+# tests/unit/browser/launcher.test.js            |  92.06 |   100.00 |   66.67 | 24-26 34-36 44-45 53-54
+# tests/unit/browser/media.test.js               | 100.00 |   100.00 |  100.00 | 
+# tests/unit/browser/navigation.test.js          | 100.00 |   100.00 |   93.18 | 
+# tests/unit/browser/pdf.test.js                 | 100.00 |    84.62 |  100.00 | 
+# tests/unit/core/constants.test.js              | 100.00 |   100.00 |  100.00 | 
+# tests/unit/core/dialog-manager.test.js         |  99.03 |    98.00 |   92.31 | 219-220 223
+# tests/unit/core/engine-adapter.test.js         | 100.00 |    96.43 |   94.64 | 
+# tests/unit/core/engine-detection.test.js       | 100.00 |   100.00 |   36.00 | 
+# tests/unit/core/logger.test.js                 |  98.75 |    89.47 |  100.00 | 16
+# tests/unit/core/navigation-safety.test.js      | 100.00 |   100.00 |  100.00 | 
+# tests/unit/core/network-tracker.test.js        | 100.00 |    95.65 |   87.50 | 
+# tests/unit/core/page-trigger-manager.test.js   | 100.00 |   100.00 |   90.32 | 
+# tests/unit/elements/content.test.js            | 100.00 |   100.00 |   93.88 | 
+# tests/unit/elements/locators.test.js           | 100.00 |   100.00 |   97.37 | 
+# tests/unit/elements/selectors.test.js          | 100.00 |   100.00 |  100.00 | 
+# tests/unit/elements/visibility.test.js         | 100.00 |   100.00 |  100.00 | 
+# tests/unit/factory.test.js                     |  91.53 |    94.74 |   43.59 | 19-20 52-53 65-66 105-106 120-121 133-134 150-151 167-168 183-184 202-203
+# tests/unit/high-level/universal-logic.test.js  |  99.00 |    94.74 |   93.75 | 195 213 219
+# tests/unit/interactions/click.test.js          |  99.12 |    97.30 |   89.74 | 335-337
+# tests/unit/interactions/fill.test.js           | 100.00 |   100.00 |   90.38 | 
+# tests/unit/interactions/keyboard.test.js       | 100.00 |   100.00 |  100.00 | 
+# tests/unit/interactions/scroll.test.js         |  99.39 |    97.73 |   95.35 | 283-284
+# tests/unit/scripts/npm-release-helpers.test.js | 100.00 |   100.00 |  100.00 | 
+# tests/unit/tests/index.test.js                 |  99.73 |   100.00 |   83.33 | 335
+# tests/unit/utilities/url.test.js               |  96.83 |    92.86 |  100.00 | 59-60
+# tests/unit/utilities/wait.test.js              | 100.00 |   100.00 |   77.78 | 
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# all files                                      |  83.48 |    90.02 |   73.61 |
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# end of coverage report

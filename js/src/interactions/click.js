@@ -257,7 +257,7 @@ export async function clickElement(options = {}) {
  * @param {Function} options.log - Logger instance
  * @returns {Promise<{navigated: boolean, newUrl: string}>}
  */
-async function detectNavigation(options = {}) {
+function detectNavigation(options = {}) {
   const { page, navigationManager, startUrl, log } = options;
 
   const currentUrl = page.url();

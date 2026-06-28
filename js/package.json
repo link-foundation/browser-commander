@@ -9,12 +9,12 @@
     "./tests": "./src/tests/index.js"
   },
   "scripts": {
-    "test": "node --test --test-reporter spec tests/unit/",
-    "test:unit": "node --test --test-reporter spec tests/unit/",
-    "test:coverage": "node --test --experimental-test-coverage tests/unit/",
-    "test:e2e": "RUN_E2E=true node --test tests/e2e/",
-    "test:e2e:playwright": "RUN_E2E=true node --test tests/e2e/playwright.e2e.test.js",
-    "test:e2e:puppeteer": "RUN_E2E=true node --test tests/e2e/puppeteer.e2e.test.js",
+    "test": "node scripts/run-tests.mjs --reporter spec tests/unit",
+    "test:unit": "node scripts/run-tests.mjs --reporter spec tests/unit",
+    "test:coverage": "node scripts/run-tests.mjs --coverage tests/unit",
+    "test:e2e": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e",
+    "test:e2e:playwright": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/playwright.e2e.test.js",
+    "test:e2e:puppeteer": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/puppeteer.e2e.test.js",
     "test:all": "npm run test:unit && npm run test:e2e",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

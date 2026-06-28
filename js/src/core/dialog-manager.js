@@ -19,7 +19,7 @@
  * @returns {Object} - DialogManager API
  */
 export function createDialogManager(options = {}) {
-  const { page, engine, log } = options;
+  const { page, log } = options;
 
   if (!page) {
     throw new Error('page is required in options');

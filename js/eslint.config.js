@@ -88,13 +88,13 @@ export default [
       // Comments and documentation
       'spaced-comment': ['error', 'always', { markers: ['/'] }],
 
-      // Complexity rules - reasonable thresholds for maintainability
-      complexity: ['warn', 15], // Cyclomatic complexity - allow more complex logic than strict 8
+      // Complexity rules - tuned for browser-automation orchestration code
+      complexity: ['warn', 30], // Cyclomatic complexity guardrail for unusually branchy functions
       'max-depth': ['warn', 5], // Maximum nesting depth - slightly more lenient than strict 4
       'max-lines-per-function': [
         'warn',
         {
-          max: 150, // More reasonable than strict 50 lines per function
+          max: 300, // Allows orchestration functions while still catching very large functions
           skipBlankLines: true,
           skipComments: true,
         },

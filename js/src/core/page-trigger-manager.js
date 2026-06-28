@@ -310,7 +310,7 @@ export function createPageTriggerManager(options = {}) {
    * @param {string} url - URL to start action for
    * @param {Object} commander - BrowserCommander instance
    */
-  async function startAction(url, commander) {
+  function startAction(url, commander) {
     // Create context for condition checking
     const conditionCtx = {
       url,
@@ -321,7 +321,7 @@ export function createPageTriggerManager(options = {}) {
     const matchingTrigger = findMatchingTrigger(conditionCtx);
     if (!matchingTrigger) {
       log.debug(() => `📋 No trigger registered for: ${url}`);
-      return;
+      return Promise.resolve();
     }
 
     log.debug(() => `🚀 Starting action "${matchingTrigger.name}" for: ${url}`);
@@ -369,6 +369,8 @@ export function createPageTriggerManager(options = {}) {
         }
       }
     })();
+
+    return Promise.resolve();
   }
 
   /**

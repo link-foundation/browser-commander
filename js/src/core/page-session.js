@@ -65,7 +65,7 @@ export function createPageSessionFactory(options = {}) {
     /**
      * Handle navigation - deactivate session if URL no longer matches
      */
-    function handleUrlChange({ previousUrl, newUrl }) {
+    function handleUrlChange({ newUrl }) {
       if (!isActive) {
         return;
       }
@@ -115,7 +115,7 @@ export function createPageSessionFactory(options = {}) {
       for (const { target, event, handler } of eventListeners) {
         try {
           target.off(event, handler);
-        } catch (e) {
+        } catch {
           // Ignore removal errors
         }
       }
@@ -166,7 +166,7 @@ export function createPageSessionFactory(options = {}) {
         log.debug(() => `⏭️  Skipping action - session "${name}" is inactive`);
         return null;
       }
-      return fn();
+      return await fn();
     }
 
     /**
@@ -214,7 +214,7 @@ export function createPageSessionFactory(options = {}) {
       if (!networkTracker) {
         return true;
       }
-      return networkTracker.waitForNetworkIdle(opts);
+      return await networkTracker.waitForNetworkIdle(opts);
     }
 
     /**
@@ -224,7 +224,7 @@ export function createPageSessionFactory(options = {}) {
       if (!isActive) {
         return false;
       }
-      return navigationManager.waitForPageReady(opts);
+      return await navigationManager.waitForPageReady(opts);
     }
 
     /**

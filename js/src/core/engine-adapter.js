@@ -13,6 +13,12 @@
 
 import { TIMING } from './constants.js';
 
+function notImplemented(methodName) {
+  return Promise.reject(
+    new Error(`${methodName}() must be implemented by subclass`)
+  );
+}
+
 /**
  * Base class defining the engine adapter interface
  * All engine-specific operations should be defined here
@@ -39,7 +45,7 @@ export class EngineAdapter {
    * @param {string} selector - CSS selector
    * @returns {Object} - Locator (Playwright) or ElementHandle (Puppeteer)
    */
-  createLocator(selector) {
+  createLocator(_selector) {
     throw new Error('createLocator() must be implemented by subclass');
   }
 
@@ -48,8 +54,8 @@ export class EngineAdapter {
    * @param {string} selector - CSS selector
    * @returns {Promise<Object|null>} - Locator/Element or null
    */
-  async querySelector(selector) {
-    throw new Error('querySelector() must be implemented by subclass');
+  querySelector(_selector) {
+    return notImplemented('querySelector');
   }
 
   /**
@@ -57,8 +63,8 @@ export class EngineAdapter {
    * @param {string} selector - CSS selector
    * @returns {Promise<Array>} - Array of locators/elements
    */
-  async querySelectorAll(selector) {
-    throw new Error('querySelectorAll() must be implemented by subclass');
+  querySelectorAll(_selector) {
+    return notImplemented('querySelectorAll');
   }
 
   /**
@@ -67,8 +73,8 @@ export class EngineAdapter {
    * @param {Object} options - Wait options {visible, timeout}
    * @returns {Promise<void>}
    */
-  async waitForSelector(selector, options = {}) {
-    throw new Error('waitForSelector() must be implemented by subclass');
+  waitForSelector(_selector, _options = {}) {
+    return notImplemented('waitForSelector');
   }
 
   /**
@@ -77,8 +83,8 @@ export class EngineAdapter {
    * @param {number} timeout - Timeout in ms
    * @returns {Promise<Object>} - The locator/element
    */
-  async waitForVisible(locatorOrElement, timeout = TIMING.DEFAULT_TIMEOUT) {
-    throw new Error('waitForVisible() must be implemented by subclass');
+  waitForVisible(_locatorOrElement, _timeout = TIMING.DEFAULT_TIMEOUT) {
+    return notImplemented('waitForVisible');
   }
 
   /**
@@ -86,8 +92,8 @@ export class EngineAdapter {
    * @param {string} selector - CSS selector
    * @returns {Promise<number>} - Number of matching elements
    */
-  async count(selector) {
-    throw new Error('count() must be implemented by subclass');
+  count(_selector) {
+    return notImplemented('count');
   }
 
   // ============================================================================
@@ -101,8 +107,8 @@ export class EngineAdapter {
    * @param {any} args - Arguments to pass (optional)
    * @returns {Promise<any>} - Result of evaluation
    */
-  async evaluateOnElement(locatorOrElement, fn, args) {
-    throw new Error('evaluateOnElement() must be implemented by subclass');
+  evaluateOnElement(_locatorOrElement, _fn, _args) {
+    return notImplemented('evaluateOnElement');
   }
 
   /**
@@ -110,8 +116,8 @@ export class EngineAdapter {
    * @param {Object} locatorOrElement - Locator or element
    * @returns {Promise<string|null>} - Text content
    */
-  async getTextContent(locatorOrElement) {
-    throw new Error('getTextContent() must be implemented by subclass');
+  getTextContent(_locatorOrElement) {
+    return notImplemented('getTextContent');
   }
 
   /**
@@ -119,8 +125,8 @@ export class EngineAdapter {
    * @param {Object} locatorOrElement - Locator or element
    * @returns {Promise<string>} - Input value
    */
-  async getInputValue(locatorOrElement) {
-    throw new Error('getInputValue() must be implemented by subclass');
+  getInputValue(_locatorOrElement) {
+    return notImplemented('getInputValue');
   }
 
   /**
@@ -129,8 +135,8 @@ export class EngineAdapter {
    * @param {string} attribute - Attribute name
    * @returns {Promise<string|null>} - Attribute value
    */
-  async getAttribute(locatorOrElement, attribute) {
-    throw new Error('getAttribute() must be implemented by subclass');
+  getAttribute(_locatorOrElement, _attribute) {
+    return notImplemented('getAttribute');
   }
 
   // ============================================================================
@@ -143,8 +149,8 @@ export class EngineAdapter {
    * @param {Object} options - Click options {force, etc.}
    * @returns {Promise<void>}
    */
-  async click(locatorOrElement, options = {}) {
-    throw new Error('click() must be implemented by subclass');
+  click(_locatorOrElement, _options = {}) {
+    return notImplemented('click');
   }
 
   /**
@@ -153,8 +159,8 @@ export class EngineAdapter {
    * @param {string} text - Text to type
    * @returns {Promise<void>}
    */
-  async type(locatorOrElement, text) {
-    throw new Error('type() must be implemented by subclass');
+  type(_locatorOrElement, _text) {
+    return notImplemented('type');
   }
 
   /**
@@ -163,8 +169,8 @@ export class EngineAdapter {
    * @param {string} text - Text to fill
    * @returns {Promise<void>}
    */
-  async fill(locatorOrElement, text) {
-    throw new Error('fill() must be implemented by subclass');
+  fill(_locatorOrElement, _text) {
+    return notImplemented('fill');
   }
 
   /**
@@ -172,8 +178,8 @@ export class EngineAdapter {
    * @param {Object} locatorOrElement - Locator or element
    * @returns {Promise<void>}
    */
-  async focus(locatorOrElement) {
-    throw new Error('focus() must be implemented by subclass');
+  focus(_locatorOrElement) {
+    return notImplemented('focus');
   }
 
   // ============================================================================
@@ -185,8 +191,8 @@ export class EngineAdapter {
    * @param {string} key - Key name (Playwright/Puppeteer key format)
    * @returns {Promise<void>}
    */
-  async keyboardPress(key) {
-    throw new Error('keyboardPress() must be implemented by subclass');
+  keyboardPress(_key) {
+    return notImplemented('keyboardPress');
   }
 
   /**
@@ -194,8 +200,8 @@ export class EngineAdapter {
    * @param {string} text - Text to type
    * @returns {Promise<void>}
    */
-  async keyboardType(text) {
-    throw new Error('keyboardType() must be implemented by subclass');
+  keyboardType(_text) {
+    return notImplemented('keyboardType');
   }
 
   /**
@@ -203,8 +209,8 @@ export class EngineAdapter {
    * @param {string} key - Key name
    * @returns {Promise<void>}
    */
-  async keyboardDown(key) {
-    throw new Error('keyboardDown() must be implemented by subclass');
+  keyboardDown(_key) {
+    return notImplemented('keyboardDown');
   }
 
   /**
@@ -212,8 +218,8 @@ export class EngineAdapter {
    * @param {string} key - Key name
    * @returns {Promise<void>}
    */
-  async keyboardUp(key) {
-    throw new Error('keyboardUp() must be implemented by subclass');
+  keyboardUp(_key) {
+    return notImplemented('keyboardUp');
   }
 
   // ============================================================================
@@ -226,8 +232,8 @@ export class EngineAdapter {
    * @param {Array} args - Arguments to pass
    * @returns {Promise<any>} - Result of evaluation
    */
-  async evaluateOnPage(fn, args = []) {
-    throw new Error('evaluateOnPage() must be implemented by subclass');
+  evaluateOnPage(_fn, _args = []) {
+    return notImplemented('evaluateOnPage');
   }
 
   /**
@@ -243,8 +249,8 @@ export class EngineAdapter {
    * @param {Object} options - PDF options (format, printBackground, margin, etc.)
    * @returns {Promise<Buffer>} - PDF buffer
    */
-  async pdf(options = {}) {
-    throw new Error('pdf() must be implemented by subclass');
+  pdf(_options = {}) {
+    return notImplemented('pdf');
   }
 }
 
@@ -435,7 +441,7 @@ export class PuppeteerAdapter extends EngineAdapter {
     await this.page.waitForSelector(selector, { visible, timeout });
   }
 
-  async waitForVisible(locatorOrElement, timeout = TIMING.DEFAULT_TIMEOUT) {
+  waitForVisible(locatorOrElement, _timeout = TIMING.DEFAULT_TIMEOUT) {
     // For Puppeteer, locatorOrElement is already an ElementHandle
     // We can't wait on it directly, so we just return it
     // The caller should have already used waitForSelector

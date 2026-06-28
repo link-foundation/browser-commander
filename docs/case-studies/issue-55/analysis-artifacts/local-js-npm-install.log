@@ -1,0 +1,23 @@
+
+> browser-commander@0.9.0 prepare
+> husky || true
+
+.git can't be found
+added 424 packages, and audited 425 packages in 23s
+
+79 packages are looking for funding
+  run `npm fund` for details
+
+24 vulnerabilities (18 moderate, 5 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   puppeteer@24.32.0 (postinstall: node install.mjs)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.

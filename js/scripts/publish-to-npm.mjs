@@ -13,6 +13,8 @@
 
 import { readFileSync, appendFileSync } from 'fs';
 
+import { isVersionPublished } from './npm-registry.mjs';
+
 const PACKAGE_NAME = 'browser-commander';
 
 // Load use-m dynamically
@@ -74,25 +76,22 @@ async function main() {
     console.log(
       `Checking if version ${currentVersion} is already published...`
     );
-    const checkResult =
-      await $`npm view "${PACKAGE_NAME}@${currentVersion}" version`.run({
-        capture: true,
-      });
+    const versionIsPublished = await isVersionPublished(
+      PACKAGE_NAME,
+      currentVersion
+    );
 
-    // command-stream returns { code: 0 } on success, { code: 1 } on failure (e.g., E404)
-    // Exit code 0 means version exists, non-zero means version not found
-    if (checkResult.code === 0) {
+    if (versionIsPublished) {
       console.log(`Version ${currentVersion} is already published to npm`);
       setOutput('published', 'true');
       setOutput('published_version', currentVersion);
       setOutput('already_published', 'true');
       return;
-    } else {
-      // Version not found on npm (E404), proceed with publish
-      console.log(
-        `Version ${currentVersion} not found on npm, proceeding with publish...`
-      );
     }
+
+    console.log(
+      `Version ${currentVersion} not found on npm, proceeding with publish...`
+    );
 
     // Publish to npm using OIDC trusted publishing with retry logic
     for (let i = 1; i <= MAX_RETRIES; i++) {

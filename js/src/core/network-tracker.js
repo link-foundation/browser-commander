@@ -209,7 +209,6 @@ export function createNetworkTracker(options = {}) {
   async function waitForNetworkIdle(opts = {}) {
     const { timeout = 30000, idleTime = idleTimeout } = opts;
 
-    const startTime = Date.now();
     const currentNavId = navigationId;
 
     // If already idle, wait for idle time
@@ -317,7 +316,7 @@ export function createNetworkTracker(options = {}) {
    */
   function getPendingUrls() {
     const urls = [];
-    for (const [key, req] of pendingRequests) {
+    for (const req of pendingRequests.values()) {
       const url = typeof req.url === 'function' ? req.url() : req.url;
       urls.push(url);
     }

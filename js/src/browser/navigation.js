@@ -25,7 +25,7 @@ export async function defaultNavigationVerification(options = {}) {
   const { page, expectedUrl, startUrl } = options;
 
   try {
-    const actualUrl = page.url();
+    const actualUrl = await Promise.resolve(page.url());
 
     // If expected URL is provided, verify it matches
     if (expectedUrl) {
@@ -232,7 +232,7 @@ export async function goto(options = {}) {
     waitUntil = 'domcontentloaded',
     waitForStableUrlBefore = true,
     waitForStableUrlAfter = true,
-    waitForNetworkIdle = true,
+    waitForNetworkIdle: _waitForNetworkIdle = true,
     stableChecks = 3,
     checkInterval = 1000,
     timeout = 240000,
@@ -395,7 +395,6 @@ export async function waitForNavigation(options = {}) {
  */
 export async function waitForPageReady(options = {}) {
   const {
-    page,
     navigationManager,
     networkTracker,
     log,

@@ -1,0 +1,211 @@
+TAP version 13
+# Skipping E2E tests - playwright not available or test app not running
+# Error: browserType.launch: Executable doesn't exist at /home/box/.cache/ms-playwright/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell
+# ╔═════════════════════════════════════════════════════════════════════════╗
+# ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+# ║ Please run the following command to download new browsers:              ║
+# ║                                                                         ║
+# ║     npx playwright install                                              ║
+# ║                                                                         ║
+# ║ <3 Playwright Team                                                      ║
+# ╚═════════════════════════════════════════════════════════════════════════╝
+# Subtest: E2E Tests - Playwright Engine
+    # Subtest: Navigation
+        # Subtest: should navigate to test app
+        ok 1 - should navigate to test app
+          ---
+          duration_ms: 0.739405
+          ...
+        # Subtest: should get page title
+        ok 2 - should get page title
+          ---
+          duration_ms: 0.181161
+          ...
+        1..2
+    ok 1 - Navigation
+      ---
+      duration_ms: 1.37128
+      type: 'suite'
+      ...
+    # Subtest: Form Interactions
+        # Subtest: should fill text input
+        ok 1 - should fill text input
+          ---
+          duration_ms: 0.209462
+          ...
+        # Subtest: should fill email input
+        ok 2 - should fill email input
+          ---
+          duration_ms: 0.095594
+          ...
+        # Subtest: should fill textarea
+        ok 3 - should fill textarea
+          ---
+          duration_ms: 0.182292
+          ...
+        # Subtest: should select radio button
+        ok 4 - should select radio button
+          ---
+          duration_ms: 0.122593
+          ...
+        # Subtest: should check checkbox
+        ok 5 - should check checkbox
+          ---
+          duration_ms: 0.15398
+          ...
+        # Subtest: should select from dropdown
+        ok 6 - should select from dropdown
+          ---
+          duration_ms: 0.108413
+          ...
+        # Subtest: should check terms checkbox and submit form
+        ok 7 - should check terms checkbox and submit form
+          ---
+          duration_ms: 0.165627
+          ...
+        1..7
+    ok 2 - Form Interactions
+      ---
+      duration_ms: 1.385841
+      type: 'suite'
+      ...
+    # Subtest: Interactive Elements
+        # Subtest: should increment counter
+        ok 1 - should increment counter
+          ---
+          duration_ms: 0.216022
+          ...
+        # Subtest: should decrement counter
+        ok 2 - should decrement counter
+          ---
+          duration_ms: 0.143524
+          ...
+        # Subtest: should toggle switch
+        ok 3 - should toggle switch
+          ---
+          duration_ms: 0.142604
+          ...
+        # Subtest: should open and close dropdown
+        ok 4 - should open and close dropdown
+          ---
+          duration_ms: 0.088181
+          ...
+        # Subtest: should open and close modal
+        ok 5 - should open and close modal
+          ---
+          duration_ms: 0.072529
+          ...
+        # Subtest: should load dynamic content
+        ok 6 - should load dynamic content
+          ---
+          duration_ms: 0.256083
+          ...
+        1..6
+    ok 3 - Interactive Elements
+      ---
+      duration_ms: 1.149528
+      type: 'suite'
+      ...
+    # Subtest: Scroll Operations
+        # Subtest: should scroll to target element
+        ok 1 - should scroll to target element
+          ---
+          duration_ms: 0.219559
+          ...
+        # Subtest: should click button after scrolling
+        ok 2 - should click button after scrolling
+          ---
+          duration_ms: 0.198085
+          ...
+        1..2
+    ok 4 - Scroll Operations
+      ---
+      duration_ms: 0.602289
+      type: 'suite'
+      ...
+    # Subtest: Element State
+        # Subtest: should check element visibility
+        ok 1 - should check element visibility
+          ---
+          duration_ms: 0.268712
+          ...
+        # Subtest: should check non-existent element visibility
+        ok 2 - should check non-existent element visibility
+          ---
+          duration_ms: 0.125137
+          ...
+        # Subtest: should count elements
+        ok 3 - should count elements
+          ---
+          duration_ms: 0.135312
+          ...
+        # Subtest: should get element attribute
+        ok 4 - should get element attribute
+          ---
+          duration_ms: 0.08621
+          ...
+        1..4
+    ok 5 - Element State
+      ---
+      duration_ms: 0.794567
+      type: 'suite'
+      ...
+    # Subtest: Query Selectors
+        # Subtest: should find element by text
+        ok 1 - should find element by text
+          ---
+          duration_ms: 0.151937
+          ...
+        # Subtest: should query all matching elements
+        ok 2 - should query all matching elements
+          ---
+          duration_ms: 0.097896
+          ...
+        1..2
+    ok 6 - Query Selectors
+      ---
+      duration_ms: 0.336643
+      type: 'suite'
+      ...
+    # Subtest: Keyboard Interactions
+        # Subtest: should press Escape key to close modal
+        ok 1 - should press Escape key to close modal
+          ---
+          duration_ms: 3.530417
+          ...
+        # Subtest: should type text at page level via keyboard.type
+        ok 2 - should type text at page level via keyboard.type
+          ---
+          duration_ms: 0.343874
+          ...
+        # Subtest: should support keyboard.press via pressKey flat function
+        ok 3 - should support keyboard.press via pressKey flat function
+          ---
+          duration_ms: 0.157436
+          ...
+        # Subtest: should submit form via Enter key
+        ok 4 - should submit form via Enter key
+          ---
+          duration_ms: 0.096796
+          ...
+        1..4
+    ok 7 - Keyboard Interactions
+      ---
+      duration_ms: 4.38245
+      type: 'suite'
+      ...
+    1..7
+ok 1 - E2E Tests - Playwright Engine
+  ---
+  duration_ms: 527.063358
+  type: 'suite'
+  ...
+1..1
+# tests 27
+# suites 8
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 635.341879

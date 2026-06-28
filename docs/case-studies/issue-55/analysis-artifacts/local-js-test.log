@@ -1,0 +1,756 @@
+
+> browser-commander@0.9.0 test
+> node --test --test-reporter spec tests/unit/
+
+▶ bindings
+  ▶ createBoundFunctions
+    ✔ should create bindings with minimal options (1.907903ms)
+    ✔ should create bindings with all options (0.478775ms)
+    ✔ should have all expected bound functions (1.310169ms)
+    ✔ should pre-bind page and engine to functions (0.288021ms)
+    ✔ should pre-bind log to functions (6.59714ms)
+    ✔ should allow verbose option (0.322952ms)
+    ✔ should integrate with navigationManager when provided (0.275202ms)
+    ✔ should invoke keyboard.press via bound keyboard object (0.918211ms)
+    ✔ should invoke keyboard.type via bound keyboard object (0.570723ms)
+    ✔ should integrate with networkTracker when provided (0.275942ms)
+  ✔ createBoundFunctions (13.949639ms)
+✔ bindings (14.663126ms)
+▶ launcher
+  ▶ launchBrowser args option
+    ✔ should export CHROME_ARGS constant (18.064179ms)
+    ✔ should include expected default Chrome args (0.570503ms)
+    ✔ launchBrowser function should accept args option (12.848133ms)
+    ✔ launchBrowser should throw for invalid engine (2.706275ms)
+    ✔ launchBrowser should accept args in options (2.277395ms)
+  ✔ launchBrowser args option (37.517616ms)
+✔ launcher (40.185142ms)
+▶ emulateMedia
+  ▶ input validation
+    ✔ should throw if page is not provided (1.382286ms)
+    ✔ should throw if engine is not provided (0.339618ms)
+    ✔ should throw for invalid colorScheme (0.207871ms)
+    ✔ should throw for unsupported engine (0.192948ms)
+  ✔ input validation (2.867195ms)
+  ▶ Playwright engine
+    ✔ should call page.emulateMedia with colorScheme: dark (1.053955ms)
+    ✔ should call page.emulateMedia with colorScheme: light (0.256363ms)
+    ✔ should call page.emulateMedia with colorScheme: no-preference (0.272117ms)
+    ✔ should call page.emulateMedia with colorScheme: null to reset (0.537023ms)
+    ✔ should call page.emulateMedia with empty options when no colorScheme given (0.349342ms)
+  ✔ Playwright engine (3.132522ms)
+  ▶ Puppeteer engine
+    ✔ should call page.emulateMediaFeatures with dark colorScheme (2.694677ms)
+    ✔ should call page.emulateMediaFeatures with light colorScheme (0.782981ms)
+    ✔ should call page.emulateMediaFeatures with no-preference colorScheme (0.296102ms)
+    ✔ should reset by passing empty string when colorScheme is null (0.139478ms)
+    ✔ should reset by passing empty string when colorScheme is undefined (0.110805ms)
+  ✔ Puppeteer engine (6.54318ms)
+✔ emulateMedia (13.369492ms)
+▶ navigation
+  ▶ defaultNavigationVerification
+    ✔ should verify exact URL match (4.580516ms)
+    ✔ should verify URL pattern match (0.299137ms)
+    ✔ should fail verification on URL mismatch (0.191847ms)
+    ✔ should verify URL changed from start (2.366807ms)
+    ✔ should verify navigation completed without expectations (0.417855ms)
+  ✔ defaultNavigationVerification (8.573585ms)
+  ▶ verifyNavigation
+    ✔ should verify navigation with retry logic (0.389562ms)
+⚠️  waitForNavigation was interrupted, continuing gracefully
+    ✔ should fail after timeout (53.053706ms)
+  ✔ verifyNavigation (54.272257ms)
+  ▶ waitForUrlStabilization
+    ✔ should delegate to navigationManager if available (0.804051ms)
+    ✔ should use polling approach without navigationManager (1.096248ms)
+  ✔ waitForUrlStabilization (2.264734ms)
+  ▶ goto
+    ✔ should throw when url is not provided (2.439286ms)
+    ✔ should navigate using navigationManager (0.434769ms)
+    ✔ should navigate without navigationManager (1.465781ms)
+  ✔ goto (4.671772ms)
+  ▶ waitForNavigation
+    ✔ should delegate to navigationManager if available (0.278106ms)
+    ✔ should use page.waitForNavigation without navigationManager (0.181391ms)
+    ✔ should handle navigation errors (2.036283ms)
+  ✔ waitForNavigation (2.665404ms)
+  ▶ waitForPageReady
+    ✔ should delegate to navigationManager if available (0.305388ms)
+    ✔ should use networkTracker if navigationManager not available (1.517709ms)
+    ✔ should use minimal fallback without both managers (0.278086ms)
+  ✔ waitForPageReady (2.278917ms)
+  ▶ waitAfterAction
+    ✔ should detect URL change as navigation (2.753005ms)
+    ✔ should wait for network idle without navigation (3.510948ms)
+  ✔ waitAfterAction (6.477141ms)
+✔ navigation (82.403533ms)
+▶ browser/pdf
+  ▶ pdf() with Playwright engine
+    ✔ should return a Buffer (1.375696ms)
+    ✔ should pass pdf options to the underlying page (0.951973ms)
+    ✔ should work with empty options (0.176324ms)
+  ✔ pdf() with Playwright engine (3.540993ms)
+  ▶ pdf() with Puppeteer engine
+    ✔ should return a Buffer (0.439356ms)
+    ✔ should pass pdf options to the underlying page (0.199659ms)
+  ✔ pdf() with Puppeteer engine (0.887946ms)
+✔ browser/pdf (5.25231ms)
+▶ constants
+  ▶ CHROME_ARGS
+    ✔ should be an array (5.032261ms)
+    ✔ should contain expected browser arguments (0.340619ms)
+    ✔ should contain crash-related flags (0.163304ms)
+    ✔ should have at least 5 arguments (0.190014ms)
+  ✔ CHROME_ARGS (6.457651ms)
+  ▶ TIMING
+    ✔ should be an object (0.224896ms)
+    ✔ should have SCROLL_ANIMATION_WAIT property (0.142013ms)
+    ✔ should have DEFAULT_WAIT_AFTER_SCROLL property (0.169303ms)
+    ✔ should have VISIBILITY_CHECK_TIMEOUT property (0.096964ms)
+    ✔ should have DEFAULT_TIMEOUT property (0.241371ms)
+    ✔ should have VERIFICATION_TIMEOUT property (1.798097ms)
+    ✔ should have VERIFICATION_RETRY_INTERVAL property (0.205307ms)
+    ✔ should have reasonable timeout values (0.137555ms)
+  ✔ TIMING (3.600651ms)
+✔ constants (10.813673ms)
+▶ dialog-manager
+  ▶ createDialogManager
+    ✔ should throw when page is not provided (1.968752ms)
+    ✔ should create dialog manager (0.40233ms)
+    ✔ should start listening without error (0.276854ms)
+    ✔ should not start listening twice (0.254321ms)
+    ✔ should stop listening without error (0.215543ms)
+    ✔ should not stop if not started (0.351785ms)
+  ✔ createDialogManager (4.323151ms)
+  ▶ onDialog
+    ✔ should throw when handler is not a function (0.578535ms)
+    ✔ should register a dialog handler (0.438405ms)
+    ✔ should call multiple handlers in order (21.740806ms)
+    ✔ should pass dialog type and message to handler (1.879209ms)
+    ✔ should allow accepting prompts with text (0.409092ms)
+  ✔ onDialog (27.746081ms)
+  ▶ offDialog
+    ✔ should remove a dialog handler (0.663822ms)
+    ✔ should handle removing non-existent handler gracefully (1.623596ms)
+  ✔ offDialog (2.558765ms)
+  ▶ clearDialogHandlers
+    ✔ should remove all handlers (0.397234ms)
+  ✔ clearDialogHandlers (0.506987ms)
+  ▶ auto-dismiss
+    ✔ should auto-dismiss when no handlers are registered (3.978877ms)
+    ✔ should continue after handler error (0.563212ms)
+  ✔ auto-dismiss (6.319126ms)
+  ▶ integration with makeBrowserCommander
+    ✔ should expose onDialog on commander (60.412625ms)
+    ✔ should handle dialog via commander.onDialog (2.183443ms)
+    ✔ should throw onDialog when enableDialogManager is false (2.214439ms)
+  ✔ integration with makeBrowserCommander (65.163846ms)
+✔ dialog-manager (112.836359ms)
+▶ engine-adapter
+  ▶ EngineAdapter (base class)
+    ✔ should throw on abstract methods (1.170941ms)
+  ✔ EngineAdapter (base class) (1.820411ms)
+  ▶ PlaywrightAdapter
+    ✔ should create adapter (0.848168ms)
+    ✔ should return playwright as engine name (0.289532ms)
+    ✔ should create locator from selector (0.408501ms)
+    ✔ should handle :nth-of-type selector (0.233329ms)
+    ✔ should query single element (0.232888ms)
+    ✔ should return null when element not found (0.229552ms)
+    ✔ should query all elements (0.176974ms)
+    ✔ should count elements (0.286438ms)
+    ▶ evaluateOnPage
+      ✔ should handle zero arguments (0.392196ms)
+      ✔ should handle single argument (0.2477ms)
+      ✔ should handle multiple arguments by spreading them (0.323032ms)
+      ✔ should handle selector + array arguments (real-world bug case) (0.219988ms)
+      ✔ should handle multiple arguments of different types (0.182192ms)
+    ✔ evaluateOnPage (1.573402ms)
+  ✔ PlaywrightAdapter (6.500025ms)
+  ▶ PuppeteerAdapter
+    ✔ should create adapter (0.530824ms)
+    ✔ should return puppeteer as engine name (0.144185ms)
+    ✔ should return selector string as locator (0.121801ms)
+    ✔ should query single element (0.359989ms)
+    ✔ should return null when element not found (0.269893ms)
+    ✔ should query all elements (0.246739ms)
+    ✔ should count elements (0.190104ms)
+    ▶ evaluateOnPage
+      ✔ should handle zero arguments (0.30113ms)
+      ✔ should handle single argument (0.27381ms)
+      ✔ should handle multiple arguments by spreading them (0.171095ms)
+      ✔ should handle selector + array arguments (parity with PlaywrightAdapter) (1.422226ms)
+    ✔ evaluateOnPage (2.362641ms)
+  ✔ PuppeteerAdapter (5.26536ms)
+  ▶ pdf()
+    ✔ PlaywrightAdapter.pdf() should return a Buffer (0.283774ms)
+    ✔ PuppeteerAdapter.pdf() should return a Buffer (0.505776ms)
+    ✔ EngineAdapter base class pdf() should throw (0.456331ms)
+  ✔ pdf() (1.403528ms)
+  ▶ createEngineAdapter
+    ✔ should create PlaywrightAdapter for playwright engine (0.204445ms)
+    ✔ should create PuppeteerAdapter for puppeteer engine (0.103666ms)
+    ✔ should throw for unknown engine (0.389942ms)
+    ✔ should throw when page is not provided (0.523983ms)
+    ✔ should throw when page is undefined (0.166719ms)
+  ✔ createEngineAdapter (5.948451ms)
+✔ engine-adapter (22.018238ms)
+▶ engine-detection
+  ▶ detectEngine
+    ✔ should detect Playwright page (2.711533ms)
+    ✔ should detect Puppeteer page (0.201622ms)
+    ✔ should throw error for unknown engine (0.481639ms)
+    ✔ should detect Playwright when locator is function and context exists (0.159138ms)
+    ✔ should detect Puppeteer when $eval exists but no context (0.168111ms)
+    ✔ should handle page with context as object (0.135392ms)
+  ✔ detectEngine (4.810751ms)
+✔ engine-detection (5.560381ms)
+▶ logger
+  ▶ isVerboseEnabled
+    ✔ should return false when VERBOSE env is not set (1.307124ms)
+    ✔ should return true when VERBOSE env is set (0.326858ms)
+    ✔ should return true when VERBOSE env is set to any value (0.385557ms)
+    ✔ should return true when --verbose flag is in argv (0.40085ms)
+  ✔ isVerboseEnabled (3.209115ms)
+  ▶ createLogger
+    ✔ should create a logger instance (0.616772ms)
+    ✔ should create logger with verbose disabled by default (0.400188ms)
+    ✔ should create logger with verbose enabled (2.158536ms)
+    ✔ should create logger with verbose disabled (0.23418ms)
+    ✔ should handle empty options (0.398625ms)
+    ✔ should have debug method (0.306498ms)
+  ✔ createLogger (4.534137ms)
+✔ logger (9.161833ms)
+⚠️  Navigation detected during operation, recovering gracefully
+▶ navigation-safety
+  ▶ isNavigationError
+    ✔ should return false for null (1.301816ms)
+    ✔ should return false for undefined (0.458075ms)
+    ✔ should return false for error without message (0.161201ms)
+    ✔ should return false for regular error (0.176324ms)
+    ✔ should return true for "Execution context was destroyed" error (0.138356ms)
+    ✔ should return true for "detached Frame" error (0.177004ms)
+    ✔ should return true for "Target closed" error (0.244866ms)
+    ✔ should return true for "Session closed" error (0.208211ms)
+    ✔ should return true for "Protocol error" error (0.20085ms)
+    ✔ should return true for "frame was detached" error (0.273619ms)
+    ✔ should return true for "Page crashed" error (2.070244ms)
+    ✔ should return true for "context was destroyed" error (0.297495ms)
+  ✔ isNavigationError (7.044419ms)
+  ▶ isTimeoutError
+    ✔ should return false for null (0.472267ms)
+    ✔ should return false for undefined (0.1145ms)
+    ✔ should return false for error without message or name (0.1275ms)
+    ✔ should return false for regular error (0.271996ms)
+    ✔ should return true for error with name "TimeoutError" (0.152748ms)
+    ✔ should return true for "waiting for selector" error (0.24011ms)
+    ✔ should return true for "timeout" error (case-insensitive) (0.125037ms)
+    ✔ should return true for "timeout exceeded" error (0.097835ms)
+    ✔ should return true for "timed out" error (0.096284ms)
+    ✔ should return true for Playwright locator timeout error (0.121001ms)
+    ✔ should return true for Puppeteer waitForSelector timeout (0.16731ms)
+    ✔ should handle uppercase TIMEOUT in message (0.099298ms)
+    ✔ should not match navigation errors as timeout errors (0.07358ms)
+    ✔ should not match frame detached errors as timeout errors (0.070084ms)
+  ✔ isTimeoutError (2.764562ms)
+  ▶ safeOperation
+    ✔ should return success result on successful operation (0.40146ms)
+    ✔ should return default value on navigation error (0.393057ms)
+    ✔ should rethrow non-navigation errors (0.496492ms)
+    ✔ should use null as default value when not specified (0.267509ms)
+    ✔ should handle operation name for logging (0.123935ms)
+  ✔ safeOperation (1.878227ms)
+  ▶ makeNavigationSafe
+    ✔ should wrap async function (0.891623ms)
+    ✔ should return default value on navigation error (1.765979ms)
+    ✔ should pass arguments to wrapped function (0.22065ms)
+  ✔ makeNavigationSafe (4.443592ms)
+  ▶ withNavigationSafety
+    ✔ should return function result on success (0.251146ms)
+    ✔ should call onNavigationError callback on navigation error (0.17384ms)
+    ✔ should return undefined when rethrow is false and no callback (4.076863ms)
+    ✔ should rethrow navigation error when rethrow is true and no callback (0.592325ms)
+    ✔ should rethrow non-navigation errors (0.201942ms)
+    ✔ should pass arguments through (1.563437ms)
+  ✔ withNavigationSafety (7.156487ms)
+✔ navigation-safety (24.285037ms)
+▶ network-tracker
+  ▶ createNetworkTracker
+    ✔ should throw when page is not provided (1.740361ms)
+    ✔ should create network tracker (0.384034ms)
+    ✔ should start tracking without error (0.31438ms)
+    ✔ should stop tracking without error (0.3414ms)
+    ✔ should not start tracking twice (0.231366ms)
+    ✔ should not stop tracking if not started (0.296063ms)
+    ✔ should return 0 pending count initially (0.35428ms)
+    ✔ should return empty pending URLs initially (1.792178ms)
+    ✔ should reset without error (0.322793ms)
+    ✔ should add event listener (0.411996ms)
+    ✔ should remove event listener (0.246979ms)
+    ✔ should handle invalid event names gracefully (0.176934ms)
+    ✔ should accept custom idle timeout (0.274109ms)
+    ✔ should accept custom request timeout (0.156964ms)
+  ✔ createNetworkTracker (8.350111ms)
+  ▶ waitForNetworkIdle
+    ✔ should resolve immediately when no pending requests (27.532191ms)
+    ✔ should accept timeout option (12.795725ms)
+  ✔ waitForNetworkIdle (40.731158ms)
+✔ network-tracker (52.230526ms)
+▶ page-trigger-manager
+  ▶ ActionStoppedError
+    ✔ should create error with default message (1.596226ms)
+    ✔ should create error with custom message (0.121622ms)
+    ✔ should be instance of Error (0.113129ms)
+  ✔ ActionStoppedError (2.447758ms)
+  ▶ isActionStoppedError
+    ✔ should return true for ActionStoppedError (0.579667ms)
+    ✔ should return true for error with isActionStopped flag (0.157886ms)
+    ✔ should return true for error with ActionStoppedError name (0.129884ms)
+    ✔ should return false for regular error (0.157776ms)
+    ✔ should return falsy for null (0.083094ms)
+    ✔ should return falsy for undefined (0.201441ms)
+  ✔ isActionStoppedError (3.293163ms)
+  ▶ makeUrlCondition
+    ▶ function patterns
+      ✔ should wrap function pattern (0.83658ms)
+      ✔ should pass context to function (0.283524ms)
+    ✔ function patterns (1.328305ms)
+    ▶ RegExp patterns
+      ✔ should match RegExp pattern (0.311926ms)
+    ✔ RegExp patterns (0.459366ms)
+    ▶ string patterns
+      ✔ should match exact URL (0.384725ms)
+      ✔ should match *substring* pattern (contains) (0.149043ms)
+      ✔ should match *suffix pattern (ends with) (0.137416ms)
+      ✔ should match prefix* pattern (starts with) (0.217315ms)
+      ✔ should match express-style :param patterns (0.429062ms)
+      ✔ should match express-style patterns with multiple params (0.331466ms)
+      ✔ should match URL containing path (no wildcards, no params) (0.115313ms)
+    ✔ string patterns (2.041031ms)
+    ▶ invalid patterns
+      ✔ should throw for invalid pattern type (0.381371ms)
+      ✔ should throw for null pattern (0.089854ms)
+    ✔ invalid patterns (0.544323ms)
+  ✔ makeUrlCondition (4.611132ms)
+  ▶ condition combinators
+    ▶ allConditions
+      ✔ should return true when all conditions match (0.199188ms)
+      ✔ should return false when any condition fails (0.195062ms)
+    ✔ allConditions (0.478595ms)
+    ▶ anyCondition
+      ✔ should return true when any condition matches (1.423486ms)
+      ✔ should return false when no conditions match (0.169082ms)
+    ✔ anyCondition (5.350837ms)
+    ▶ notCondition
+      ✔ should negate condition (0.280138ms)
+    ✔ notCondition (0.398355ms)
+  ✔ condition combinators (7.842612ms)
+  ▶ createPageTriggerManager
+    ✔ should throw error when navigationManager is not provided (0.931763ms)
+    ✔ should create page trigger manager (0.219827ms)
+    ✔ should register a trigger (3.125781ms)
+    ✔ should throw when condition is not a function (0.295663ms)
+    ✔ should throw when action is not a function (0.191466ms)
+    ✔ should unregister trigger (0.436242ms)
+    ✔ should report not running initially (0.54936ms)
+    ✔ should return null for getCurrentTriggerName when no action running (0.24024ms)
+    ✔ should destroy without error (3.20475ms)
+  ✔ createPageTriggerManager (9.538347ms)
+✔ page-trigger-manager (28.884732ms)
+⚠️  Navigation detected during textContent, returning null
+⚠️  Navigation detected during inputValue, returning empty string
+⚠️  Navigation detected during getAttribute, returning null
+⚠️  Navigation detected during getInputValue, returning empty string
+▶ content
+  ▶ textContent
+    ✔ should throw when selector is not provided (1.719871ms)
+    ✔ should return text content for Playwright (1.488925ms)
+    ✔ should return text content for Puppeteer (0.551885ms)
+    ✔ should return null when element not found (0.248722ms)
+    ✔ should handle navigation errors (1.379843ms)
+  ✔ textContent (6.233578ms)
+  ▶ inputValue
+    ✔ should throw when selector is not provided (0.741438ms)
+    ✔ should return input value for Playwright (0.327419ms)
+    ✔ should return input value for Puppeteer (0.248962ms)
+    ✔ should return empty string when element not found (0.319217ms)
+    ✔ should handle navigation errors (0.362962ms)
+  ✔ inputValue (2.33512ms)
+  ▶ getAttribute
+    ✔ should throw when selector is not provided (0.436973ms)
+    ✔ should throw when attribute is not provided (0.320969ms)
+    ✔ should return attribute value for Playwright (0.26137ms)
+    ✔ should return null when attribute not found (0.202102ms)
+    ✔ should return null when element not found (0.183424ms)
+    ✔ should handle navigation errors (0.316643ms)
+  ✔ getAttribute (2.251256ms)
+  ▶ getInputValue
+    ✔ should throw when locatorOrElement is not provided (0.294399ms)
+    ✔ should return value from locator (0.258406ms)
+    ✔ should handle navigation errors (0.313448ms)
+  ✔ getInputValue (1.039083ms)
+  ▶ logElementInfo
+    ✔ should not throw when locatorOrElement is not provided (0.319888ms)
+    ✔ should log element information (0.223023ms)
+    ✔ should handle navigation errors (1.963484ms)
+  ✔ logElementInfo (2.678464ms)
+✔ content (15.596832ms)
+⚠️  Navigation detected during waitForLocatorOrElement, recovering gracefully
+▶ locators
+  ▶ createPlaywrightLocator
+    ✔ should throw when selector is not provided (1.299042ms)
+    ✔ should create locator from simple selector (0.379267ms)
+    ✔ should handle :nth-of-type selector (0.212958ms)
+    ✔ should create locator for complex selector (0.221762ms)
+  ✔ createPlaywrightLocator (2.838303ms)
+  ▶ getLocatorOrElement
+    ✔ should throw when selector is not provided (2.180659ms)
+    ✔ should return locator for Playwright (0.165127ms)
+    ✔ should return element for Puppeteer (0.408921ms)
+    ✔ should return existing locator/element unchanged (0.147391ms)
+    ✔ should return null for Puppeteer when element not found (0.248481ms)
+  ✔ getLocatorOrElement (3.715383ms)
+  ▶ waitForLocatorOrElement
+    ✔ should throw when selector is not provided (0.436773ms)
+    ✔ should wait for Playwright locator to be visible (0.225347ms)
+    ✔ should wait for Puppeteer element to be visible (0.148362ms)
+    ✔ should handle navigation errors with throwOnNavigation false (1.534924ms)
+  ✔ waitForLocatorOrElement (2.507277ms)
+  ▶ waitForVisible
+    ✔ should throw when locatorOrElement is not provided (0.297925ms)
+    ✔ should wait for Playwright locator visibility (0.194871ms)
+    ✔ should handle Puppeteer elements (no-op since already fetched) (0.118148ms)
+    ✔ should throw for Puppeteer when element is null (0.246089ms)
+  ✔ waitForVisible (1.066003ms)
+  ▶ locator
+    ✔ should throw when selector is not provided (0.379407ms)
+    ✔ should create Playwright locator (0.16725ms)
+    ✔ should create Puppeteer locator wrapper (0.35464ms)
+    ✔ should allow chained nth calls on Puppeteer wrapper (0.168542ms)
+  ✔ locator (1.240454ms)
+✔ locators (12.344189ms)
+⚠️  Navigation detected during querySelector, returning null
+⚠️  Navigation detected during querySelectorAll, returning empty array
+normalizeSelector received invalid selector type: object. Expected string or text selector object.
+normalizeSelector received invalid selector type: array. Expected string or text selector object.
+normalizeSelector received invalid selector type: number. Expected string or text selector object.
+⚠️  Navigation detected during waitForSelector, recovering gracefully
+▶ selectors
+  ▶ querySelector
+    ✔ should throw when selector is not provided (2.324604ms)
+    ✔ should find element with Playwright (0.76908ms)
+    ✔ should find element with Puppeteer (0.937871ms)
+    ✔ should return null when element not found with Playwright (0.355973ms)
+    ✔ should handle navigation errors (1.457858ms)
+  ✔ querySelector (9.131138ms)
+  ▶ querySelectorAll
+    ✔ should throw when selector is not provided (0.52187ms)
+    ✔ should find all elements with Playwright (0.333629ms)
+    ✔ should find all elements with Puppeteer (0.249072ms)
+    ✔ should return empty array when no elements found (0.325897ms)
+    ✔ should handle navigation errors (0.888609ms)
+  ✔ querySelectorAll (2.72287ms)
+  ▶ findByText
+    ✔ should throw when text is not provided (0.504343ms)
+    ✔ should return Playwright text selector (0.346908ms)
+    ✔ should return Playwright exact text selector (0.181291ms)
+    ✔ should return Puppeteer text selector object (0.150765ms)
+    ✔ should use default selector when not provided (0.151397ms)
+  ✔ findByText (1.693681ms)
+  ▶ normalizeSelector
+    ✔ should throw when selector is not provided (3.571929ms)
+    ✔ should return string selector unchanged (0.378024ms)
+    ✔ should return null for invalid object selector (0.645756ms)
+    ✔ should return null for array selector (0.480778ms)
+    ✔ should return null for number selector (4.77693ms)
+    ✔ should accept valid Puppeteer text selector object (0.372326ms)
+  ✔ normalizeSelector (10.654945ms)
+  ▶ withTextSelectorSupport
+    ✔ should wrap function and pass through options (0.380789ms)
+    ✔ should pass through string selectors unchanged for Puppeteer (0.162754ms)
+  ✔ withTextSelectorSupport (0.656972ms)
+  ▶ waitForSelector
+    ✔ should throw when selector is not provided (0.644864ms)
+    ✔ should wait for selector with Playwright (0.406276ms)
+    ✔ should wait for selector with Puppeteer (3.468474ms)
+    ✔ should handle navigation errors with throwOnNavigation false (0.991161ms)
+  ✔ waitForSelector (11.468652ms)
+✔ selectors (37.721219ms)
+⚠️  Navigation detected during enabled check, returning false
+⚠️  Navigation detected during element count, returning 0
+▶ visibility
+  ▶ isVisible
+    ✔ should throw when selector is not provided (1.823264ms)
+    ✔ should return true for visible element with Playwright (0.587728ms)
+    ✔ should return false for non-visible element with Playwright (0.332517ms)
+    ✔ should return true for visible element with Puppeteer (0.510503ms)
+    ✔ should return false when element not found with Puppeteer (0.179698ms)
+    ✔ should handle navigation errors (0.198737ms)
+  ✔ isVisible (4.492575ms)
+  ▶ isEnabled
+    ✔ should throw when selector is not provided (0.430643ms)
+    ✔ should return true for enabled element with Playwright (0.293539ms)
+    ✔ should return false for disabled element with Playwright (0.317926ms)
+    ✔ should check for custom disabled classes (0.226279ms)
+    ✔ should handle navigation errors (6.705523ms)
+  ✔ isEnabled (8.512754ms)
+  ▶ count
+    ✔ should throw when selector is not provided (0.543152ms)
+    ✔ should return element count with Playwright (0.212708ms)
+    ✔ should return element count with Puppeteer (0.18017ms)
+    ✔ should return 0 when no elements found (0.123634ms)
+    ✔ should handle Puppeteer text selector objects (3.382075ms)
+    ✔ should handle navigation errors (0.402202ms)
+  ✔ count (5.183217ms)
+✔ visibility (21.37602ms)
+🔌 Network tracking started
+🔌 Dialog manager started
+🔌 Navigation manager started
+📋 PageTriggerManager initialized
+▶ factory
+  ▶ makeBrowserCommander
+    ✔ should throw when page is not provided (1.85981ms)
+    ✔ should create commander with Playwright page (1.781963ms)
+    ✔ should create commander with Puppeteer page (0.866935ms)
+    ✔ should accept verbose option (1.226202ms)
+    ✔ should have all expected methods (0.429281ms)
+    ✔ should return engine type (0.279008ms)
+    ✔ should expose page object (0.364194ms)
+    ✔ should allow disabling network tracking (0.375301ms)
+    ✔ should allow disabling navigation manager (0.375341ms)
+    ✔ should have destroy method (0.701569ms)
+    ✔ should expose the raw page object as commander.page (extensibility escape hatch) (0.543662ms)
+    ✔ should allow using commander.page to call engine-specific APIs not in browser-commander (0.361049ms)
+    ✔ should expose raw page with Puppeteer page too (extensibility escape hatch) (0.208843ms)
+  ✔ makeBrowserCommander (10.459793ms)
+✔ factory (11.128333ms)
+⚠️  Temporary error while checking URL: Temporary error... (retrying)
+⚠️  Navigation detected during installClickListener, skipping
+⚠️  Navigation detected during checkAndClearFlag, returning false
+▶ universal-logic
+  ▶ waitForUrlCondition
+    ✔ should return true when target URL is reached (1.106884ms)
+    ✔ should return null when page is closed (0.337004ms)
+    ✔ should return custom check result when provided (0.330154ms)
+    ✔ should continue when customCheck returns undefined (0.197925ms)
+    ✔ should handle errors gracefully (2.510262ms)
+  ✔ waitForUrlCondition (5.426741ms)
+  ▶ installClickListener
+    ✔ should install click listener (0.472966ms)
+    ✔ should return false on navigation error (0.489532ms)
+  ✔ installClickListener (1.267073ms)
+  ▶ checkAndClearFlag
+    ✔ should return true when flag is set (0.266198ms)
+    ✔ should return false when flag is not set (0.224845ms)
+    ✔ should return false on navigation error (0.441991ms)
+  ✔ checkAndClearFlag (1.120775ms)
+  ▶ findToggleButton
+    ✔ should find button by data-qa selector (0.512596ms)
+    ✔ should fallback to text search (0.494058ms)
+    ✔ should return null when button not found (0.1874ms)
+    ✔ should try multiple data-qa selectors (0.273929ms)
+    ✔ should try multiple element types for text search (0.30819ms)
+  ✔ findToggleButton (3.749024ms)
+✔ universal-logic (12.549185ms)
+⚠️  Navigation/stop detected during click, recovering gracefully
+▶ click
+  ▶ defaultClickVerification
+    ✔ should verify click by checking element state (1.139152ms)
+    ✔ should verify when className changed (0.162413ms)
+    ✔ should verify when element is still connected (0.125678ms)
+    ✔ should verify when element removed from DOM (0.149505ms)
+    ✔ should handle navigation errors (0.247671ms)
+  ✔ defaultClickVerification (2.372627ms)
+  ▶ capturePreClickState
+    ✔ should capture element state (0.162052ms)
+    ✔ should return empty object on navigation error (0.518004ms)
+  ✔ capturePreClickState (0.789901ms)
+  ▶ verifyClick
+    ✔ should use custom verify function (0.256945ms)
+    ✔ should log verification result (0.146018ms)
+  ✔ verifyClick (0.502661ms)
+  ▶ clickElement
+    ✔ should throw when locatorOrElement is not provided (0.462991ms)
+    ✔ should click element (0.195072ms)
+    ✔ should click with force option when noAutoScroll is true (0.194941ms)
+    ✔ should handle navigation errors (0.737322ms)
+  ✔ clickElement (1.738419ms)
+  ▶ clickButton
+    ✔ should throw when selector is not provided (0.329412ms)
+    ✔ should click button with full flow (0.671313ms)
+  ✔ clickButton (1.127976ms)
+✔ click (8.176501ms)
+⚠️  Navigation detected during getInputValue, returning empty string
+▶ fill
+  ▶ defaultFillVerification
+    ✔ should verify exact match (1.341014ms)
+    ✔ should verify partial match (0.259558ms)
+    ✔ should fail verification on mismatch (0.201972ms)
+    ✔ should handle navigation errors (1.241405ms)
+  ✔ defaultFillVerification (3.687832ms)
+  ▶ verifyFill
+    ✔ should verify fill with retry logic (1.179883ms)
+⚠️  Navigation detected during checkIfElementEmpty, returning true
+⚠️  Navigation detected during performFill, recovering gracefully
+    ✔ should fail after timeout (57.336717ms)
+  ✔ verifyFill (58.979403ms)
+  ▶ checkIfElementEmpty
+    ✔ should throw when locatorOrElement is not provided (2.162171ms)
+    ✔ should throw when page is not provided and no adapter (0.416011ms)
+    ✔ should return true for empty element (0.346839ms)
+    ✔ should return true for whitespace-only element (1.00359ms)
+    ✔ should return false for element with content (0.268491ms)
+    ✔ should handle navigation errors (1.691509ms)
+  ✔ checkIfElementEmpty (6.31623ms)
+  ▶ performFill
+    ✔ should throw when text is not provided (0.606646ms)
+    ✔ should throw when locatorOrElement is not provided (1.764738ms)
+    ✔ should fill with typing simulation (0.386338ms)
+    ✔ should fill without typing simulation (2.792554ms)
+    ✔ should handle navigation errors (0.359979ms)
+  ✔ performFill (6.355219ms)
+  ▶ fillTextArea
+    ✔ should throw when selector is not provided (2.686756ms)
+    ✔ should throw when text is not provided (0.196374ms)
+    ✔ should throw when page is not provided (0.122663ms)
+  ✔ fillTextArea (3.110749ms)
+✔ fill (81.221977ms)
+▶ keyboard interactions
+  ▶ pressKey
+    ✔ should press a key using Playwright adapter (2.251315ms)
+    ✔ should press a key using Puppeteer adapter (0.516182ms)
+    ✔ should accept a pre-created adapter (0.304125ms)
+    ✔ should throw when key is not provided (0.84246ms)
+  ✔ pressKey (4.884371ms)
+  ▶ typeText
+    ✔ should type text using Playwright adapter (0.692515ms)
+    ✔ should type text using Puppeteer adapter (0.225818ms)
+    ✔ should accept a pre-created adapter (0.245256ms)
+    ✔ should throw when text is not provided (0.346238ms)
+  ✔ typeText (3.652138ms)
+  ▶ keyDown
+    ✔ should hold a key down using Playwright adapter (1.877256ms)
+    ✔ should hold a key down using Puppeteer adapter (0.390714ms)
+    ✔ should accept a pre-created adapter (0.222393ms)
+    ✔ should throw when key is not provided (0.410383ms)
+  ✔ keyDown (3.154194ms)
+  ▶ keyUp
+    ✔ should release a key using Playwright adapter (0.300249ms)
+    ✔ should release a key using Puppeteer adapter (0.224025ms)
+    ✔ should accept a pre-created adapter (0.333859ms)
+    ✔ should throw when key is not provided (0.211306ms)
+  ✔ keyUp (1.275075ms)
+  ▶ PlaywrightAdapter keyboard methods
+    ✔ should delegate keyboardPress to page.keyboard.press (0.315641ms)
+    ✔ should delegate keyboardType to page.keyboard.type (0.401691ms)
+    ✔ should delegate keyboardDown to page.keyboard.down (0.211917ms)
+    ✔ should delegate keyboardUp to page.keyboard.up (0.325787ms)
+  ✔ PlaywrightAdapter keyboard methods (1.425491ms)
+  ▶ PuppeteerAdapter keyboard methods
+    ✔ should delegate keyboardPress to page.keyboard.press (0.500097ms)
+    ✔ should delegate keyboardType to page.keyboard.type (0.172468ms)
+    ✔ should delegate keyboardDown to page.keyboard.down (0.142844ms)
+    ✔ should delegate keyboardUp to page.keyboard.up (0.146048ms)
+  ✔ PuppeteerAdapter keyboard methods (1.298871ms)
+✔ keyboard interactions (17.106148ms)
+▶ scroll
+  ▶ defaultScrollVerification
+    ✔ should verify element is in viewport for Playwright (1.40508ms)
+    ✔ should return false when element not in viewport (0.215942ms)
+    ✔ should handle navigation errors (0.556411ms)
+  ✔ defaultScrollVerification (3.217499ms)
+  ▶ verifyScroll
+    ✔ should verify scroll with retry logic (1.79297ms)
+⚠️  Navigation/stop detected during scrollIntoView, skipping
+⚠️  Navigation/stop detected during needsScrolling, returning false
+    ✔ should fail after timeout if element never in viewport (55.042038ms)
+  ✔ verifyScroll (58.160118ms)
+  ▶ scrollIntoView
+    ✔ should throw when locatorOrElement is not provided (1.738799ms)
+    ✔ should scroll element into view for Playwright (1.454334ms)
+    ✔ should use smooth behavior by default (0.323994ms)
+    ✔ should use instant behavior when specified (0.192106ms)
+    ✔ should handle navigation errors (1.446172ms)
+  ✔ scrollIntoView (10.503819ms)
+  ▶ needsScrolling
+    ✔ should throw when locatorOrElement is not provided (1.894501ms)
+    ✔ should return true when element needs scrolling (3.668964ms)
+    ✔ should return false when element is in view (0.322092ms)
+    ✔ should handle navigation errors (0.400789ms)
+  ✔ needsScrolling (6.705282ms)
+  ▶ scrollIntoViewIfNeeded
+    ✔ should throw when locatorOrElement is not provided (0.518585ms)
+    ✔ should skip scrolling when element is in view (0.343825ms)
+    ✔ should scroll when element needs scrolling (0.473087ms)
+  ✔ scrollIntoViewIfNeeded (1.540953ms)
+✔ scroll (81.476798ms)
+▶ npm release helpers
+  ▶ removeDeprecatedAlwaysAuth
+    ✔ removes always-auth while preserving other config (2.775348ms)
+    ✔ returns false when no config path exists (0.128842ms)
+  ✔ removeDeprecatedAlwaysAuth (3.535505ms)
+  ▶ isVersionPublished
+    ✔ returns false for npm registry 404 responses without logging npm errors (0.864121ms)
+    ✔ handles scoped package names (0.137765ms)
+  ✔ isVersionPublished (1.176919ms)
+✔ npm release helpers (5.437878ms)
+▶ browser-commander/tests
+  ✔ normalizes supported browser engines (1.698359ms)
+  ✔ updates cumulative timing averages (0.599797ms)
+  ✔ records timing data to disk (1.86715ms)
+  ✔ orders historically slow tests first while preserving ties (0.266958ms)
+  ✔ plans balanced shards using longest tests first (0.475421ms)
+  ✔ parses Playwright-style shard strings (0.352617ms)
+  ✔ creates and closes a browser fixture with injected launchers (0.396613ms)
+  ✔ cleans up fixture after successful callbacks (0.359517ms)
+  ✔ retries failing operations (0.423623ms)
+  ✔ times out slow operations (20.639319ms)
+  ✔ writes error and screenshot artifacts on failure (5.345981ms)
+  ✔ captures failure artifacts before closing failed browser scenarios (5.386902ms)
+  ✔ orders registered browser entries by engine-specific timing history (0.958202ms)
+  ✔ registers browser tests without duration recording for unit testing (0.510623ms)
+✔ browser-commander/tests (40.922023ms)
+▶ url utilities
+  ▶ getUrl
+    ✔ should return current page URL (2.938071ms)
+    ✔ should return different URLs for different pages (0.177004ms)
+  ✔ getUrl (3.754282ms)
+  ▶ unfocusAddressBar
+    ✔ should throw when page is not provided (0.794338ms)
+    ✔ should call bringToFront on page (0.194351ms)
+    ✔ should not throw when bringToFront fails (0.185167ms)
+    ✔ should handle page without bringToFront method gracefully (0.229964ms)
+  ✔ unfocusAddressBar (1.658849ms)
+✔ url utilities (6.273548ms)
+▶ wait utilities
+  ▶ wait
+    ✔ should throw when ms is not provided (1.631128ms)
+    ✔ should wait for specified time (51.495868ms)
+    ✔ should return completed status without abort signal (10.580915ms)
+    ✔ should accept reason for logging (11.066871ms)
+    ✔ should handle abort signal that is already aborted (0.633678ms)
+    ✔ should abort wait when signal is aborted (11.583944ms)
+    ✔ should complete when not aborted (11.737193ms)
+  ✔ wait (100.467862ms)
+  ▶ evaluate
+    ✔ should throw when fn is not provided (0.855849ms)
+    ✔ should evaluate function on Playwright page (0.583642ms)
+    ✔ should evaluate function on Puppeteer page (0.647347ms)
+    ✔ should pass arguments to function (0.379337ms)
+    ✔ should use provided adapter (0.26103ms)
+  ✔ evaluate (3.12441ms)
+  ▶ safeEvaluate
+    ✔ should return success result on successful evaluation (1.603476ms)
+    ✔ should return default value on navigation error (0.437814ms)
+    ✔ should use null as default value when not specified (0.273039ms)
+    ✔ should rethrow non-navigation errors (0.390153ms)
+  ✔ safeEvaluate (2.930881ms)
+✔ wait utilities (107.45139ms)
+ℹ tests 456
+ℹ suites 130
+ℹ pass 456
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1004.691335

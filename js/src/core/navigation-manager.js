@@ -370,7 +370,7 @@ export function createNavigationManager(options = {}) {
       });
     }
 
-    return navigationPromise;
+    return await navigationPromise;
   }
 
   /**

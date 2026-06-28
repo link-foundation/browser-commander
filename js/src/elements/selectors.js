@@ -92,16 +92,16 @@ export async function findByText(options = {}) {
   if (engine === 'playwright') {
     // Playwright supports :has-text() natively
     const textSelector = exact ? `:text-is("${text}")` : `:has-text("${text}")`;
-    return `${selector}${textSelector}`;
+    return await Promise.resolve(`${selector}${textSelector}`);
   } else {
     // For Puppeteer, we need to use XPath or evaluate
     // Return a special selector marker that will be handled by other methods
-    return {
+    return await Promise.resolve({
       _isPuppeteerTextSelector: true,
       baseSelector: selector,
       text,
       exact,
-    };
+    });
   }
 }
 

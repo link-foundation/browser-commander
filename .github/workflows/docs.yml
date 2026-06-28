@@ -26,6 +26,8 @@ concurrency:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build-docs:
@@ -33,12 +35,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20.x"
+          node-version: "24.x"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -90,23 +92,31 @@ jobs:
           HTML
 
       - name: Upload docs artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: browser-commander-docs
           path: public
 
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
+        uses: actions/configure-pages@v6
+
       - name: Upload Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
+        uses: actions/upload-pages-artifact@v5
         with:
           path: public
+
+      - name: Skip Pages deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES != 'true'
+        run: echo "GitHub Pages deployment is disabled. Set repository variable DEPLOY_GITHUB_PAGES=true after Pages is configured."
 
   deploy-docs:
     name: Deploy GitHub Pages
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [build-docs]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
     permissions:
       pages: write
       id-token: write
@@ -116,4 +126,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

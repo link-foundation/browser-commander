@@ -1,0 +1,1384 @@
+Build Combined Docs	UNKNOWN STEP	﻿2026-06-28T14:55:14.8481192Z Current runner version: '2.335.1'
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8509338Z ##[group]Runner Image Provisioner
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8510180Z Hosted Compute Agent
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8510844Z Version: 20260611.554
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8511483Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8512220Z Build Date: 2026-06-11T21:40:46Z
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8513350Z Worker ID: {2056cd04-a6db-485a-b35b-cc33c46f6f06}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8514095Z Azure Region: northcentralus
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8514729Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8516209Z ##[group]Operating System
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8516898Z Ubuntu
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8517708Z 24.04.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8518227Z LTS
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8518722Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8519387Z ##[group]Runner Image
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8520026Z Image: ubuntu-24.04
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8520638Z Version: 20260622.220.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8521908Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260622.220/images/ubuntu/Ubuntu2404-Readme.md
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8523470Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260622.220
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8524506Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8525633Z ##[group]GITHUB_TOKEN Permissions
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8528250Z Contents: read
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8529190Z Metadata: read
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8529856Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8531998Z Secret source: Actions
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8533151Z Prepare workflow directory
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8884739Z Prepare all required actions
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:14.8925245Z Getting action download info
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.1363077Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.2109677Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.2948187Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.4421159Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.5552755Z Download action repository 'actions/upload-pages-artifact@v3' (SHA:56afc609e74202658d3ffba0e8f6dda462b719fa)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.8011963Z Getting action download info
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9060820Z Complete job name: Build Combined Docs
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9826794Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9836892Z ##[group]Run actions/checkout@v4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9838146Z with:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9838659Z   repository: link-foundation/browser-commander
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9843348Z   token: ***
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9843845Z   ssh-strict: true
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9844345Z   ssh-user: git
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9844877Z   persist-credentials: true
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9845427Z   clean: true
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9845933Z   sparse-checkout-cone-mode: true
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9846456Z   fetch-depth: 1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9846892Z   fetch-tags: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9847548Z   show-progress: true
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9847998Z   lfs: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9848434Z   submodules: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9848884Z   set-safe-directory: true
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:15.9849657Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0823012Z Syncing repository: link-foundation/browser-commander
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0824950Z ##[group]Getting Git version info
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0825780Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0826871Z [command]/usr/bin/git version
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0905490Z git version 2.54.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0960329Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0975297Z Temporarily overriding HOME='/home/runner/work/_temp/70a83302-111d-4c45-81ed-d4e2f83813d4' before making global git config changes
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0978157Z Adding repository directory to the temporary git global config as a safe directory
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.0981667Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1029159Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1033158Z ##[group]Initializing the repository
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1038076Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1146194Z hint: Using 'master' as the name for the initial branch. This default branch name
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1148331Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1150182Z hint: to use in all of your new repositories, which will suppress this warning,
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1151565Z hint: call:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1152211Z hint:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1153149Z hint: 	git config --global init.defaultBranch <name>
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1153914Z hint:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1154572Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1155639Z hint: 'development'. The just-created branch can be renamed via this command:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1156494Z hint:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1156967Z hint: 	git branch -m <name>
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1157857Z hint:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1158568Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1160594Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1164227Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1206325Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1207875Z ##[group]Disabling automatic garbage collection
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1211375Z [command]/usr/bin/git config --local gc.auto 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1240105Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1240831Z ##[group]Setting up auth
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1246762Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1279763Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1608321Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1639337Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1863758Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.1896388Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.2120019Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.2155561Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.2156782Z ##[group]Fetching the repository
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.2165445Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +26c6d7a7baf949e48742fa75d17847686a07301d:refs/remotes/origin/main
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7029906Z From https://github.com/link-foundation/browser-commander
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7031184Z  * [new ref]         26c6d7a7baf949e48742fa75d17847686a07301d -> origin/main
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7320281Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7322018Z ##[group]Determining the checkout info
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7338075Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7339316Z [command]/usr/bin/git sparse-checkout disable
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7390383Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7420928Z ##[group]Checking out the ref
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7423798Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7784358Z Switched to a new branch 'main'
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7790022Z branch 'main' set up to track 'origin/main'.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7796050Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7848593Z [command]/usr/bin/git log -1 --format=%H
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.7876638Z 26c6d7a7baf949e48742fa75d17847686a07301d
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.8204029Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.8208241Z ##[group]Run actions/setup-node@v4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.8209162Z with:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.8209946Z   node-version: 20.x
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.8210757Z   always-auth: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.8211554Z   check-latest: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.8215999Z   token: ***
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:16.8216803Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:17.1330286Z Attempting to download 20.x...
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:17.1441146Z (node:2260) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:17.1444139Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:17.6963270Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:18.0978696Z Extracting ...
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:18.1114530Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/182dae0f-af28-4c40-ac40-1c0416c920b1 -f /home/runner/work/_temp/8918fd78-28e9-4dc7-8fcd-ebde0acc47da
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:19.1277793Z Adding to the cache ...
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.0252484Z ##[group]Environment details
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.2572980Z node: v20.20.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.2573804Z npm: 10.8.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.2574369Z yarn: 1.22.22
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.2575294Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.2904498Z ##[group]Run dtolnay/rust-toolchain@stable
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.2904853Z with:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.2905062Z   toolchain: stable
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.2905283Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3026710Z ##[group]Run : parse toolchain version
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3027331Z ^[[36;1m: parse toolchain version^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3027668Z ^[[36;1mif [[ -z $toolchain ]]; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3028216Z ^[[36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3028806Z ^[[36;1m  echo "'toolchain' is a required input" >&2^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3029110Z ^[[36;1m  exit 1^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3029446Z ^[[36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3029877Z ^[[36;1m  if [[ Linux == macOS ]]; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3030470Z ^[[36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3031004Z ^[[36;1m  else^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3031421Z ^[[36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3031880Z ^[[36;1m  fi^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3032182Z ^[[36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3032721Z ^[[36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3033217Z ^[[36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3033761Z ^[[36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3034268Z ^[[36;1melse^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3034517Z ^[[36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3034813Z ^[[36;1mfi^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3197715Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3198158Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3198425Z   toolchain: stable
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3198712Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3332684Z ##[group]Run : construct rustup command line
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3333035Z ^[[36;1m: construct rustup command line^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3333507Z ^[[36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3334148Z ^[[36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3334671Z ^[[36;1mecho "downgrade=" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3366132Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3366484Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3366676Z   targets: 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3366869Z   components: 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3367363Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3458322Z ##[group]Run : set $CARGO_HOME
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3458632Z ^[[36;1m: set $CARGO_HOME^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3458978Z ^[[36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3489399Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3489777Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3605420Z ##[group]Run : install rustup if needed
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3605743Z ^[[36;1m: install rustup if needed^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3606054Z ^[[36;1mif ! command -v rustup &>/dev/null; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3606820Z ^[[36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3607952Z ^[[36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3608253Z ^[[36;1mfi^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3638480Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3638828Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3639032Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3639291Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3723691Z ##[group]Run rustup toolchain install stable --profile minimal --no-self-update
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3724290Z ^[[36;1mrustup toolchain install stable --profile minimal --no-self-update^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3754796Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3755150Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3755360Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3755628Z   RUSTUP_PERMIT_COPY_RENAME: 1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.3755874Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.5423377Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6223860Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6309093Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.96.0 (ac68faa20 2026-05-25)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6309607Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6360890Z ##[group]Run rustup default stable
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6361209Z ^[[36;1mrustup default stable^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6394855Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6395245Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6395468Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6395743Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6505794Z info: using existing install for stable-x86_64-unknown-linux-gnu
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6513084Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6513676Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6630347Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.96.0 (ac68faa20 2026-05-25)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6630832Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6655633Z ##[group]Run : create cachekey
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6655943Z ^[[36;1m: create cachekey^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6656483Z ^[[36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6657561Z ^[[36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6658130Z ^[[36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6692240Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6692787Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6692997Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.6693256Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7111758Z ##[group]Run : disable incremental compilation
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7112169Z ^[[36;1m: disable incremental compilation^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7112519Z ^[[36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7112869Z ^[[36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7113180Z ^[[36;1mfi^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7146555Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7146915Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7147446Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7147722Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7230662Z ##[group]Run : enable colors in Cargo output
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7230998Z ^[[36;1m: enable colors in Cargo output^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7231313Z ^[[36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7231658Z ^[[36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7231992Z ^[[36;1mfi^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7263375Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7263727Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7263929Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7264192Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7264412Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7343681Z ##[group]Run : enable Cargo sparse registry
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7344025Z ^[[36;1m: enable Cargo sparse registry^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7344405Z ^[[36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7345147Z ^[[36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7345923Z ^[[36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7346523Z ^[[36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7347638Z ^[[36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7348227Z ^[[36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7348828Z ^[[36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7349372Z ^[[36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7349733Z ^[[36;1m  fi^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7349948Z ^[[36;1mfi^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7380551Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7380902Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7381108Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7381367Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7381589Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7381818Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7741382Z ##[group]Run : work around spurious network errors in curl 8.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7741870Z ^[[36;1m: work around spurious network errors in curl 8.0^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7742463Z ^[[36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7743114Z ^[[36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7743596Z ^[[36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7743923Z ^[[36;1mfi^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7776327Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7776694Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7776904Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7777558Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7777890Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.7778123Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8000266Z ##[group]Run rustc +stable --version --verbose
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8000637Z ^[[36;1mrustc +stable --version --verbose^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8032612Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8033152Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8033373Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8033644Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8033873Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8034104Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8215317Z rustc 1.96.0 (ac68faa20 2026-05-25)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8216154Z binary: rustc
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8216991Z commit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8217932Z commit-date: 2026-05-25
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8218460Z host: x86_64-unknown-linux-gnu
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8219175Z release: 1.96.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8219898Z LLVM version: 22.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8318629Z ##[group]Run npm ci
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8318906Z ^[[36;1mnpm ci^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8352761Z shell: /usr/bin/bash -e {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8353031Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8353240Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8353517Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8353753Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8354044Z   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8354337Z   PUPPETEER_SKIP_DOWNLOAD: true
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:21.8354590Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0004278Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0005055Z > browser-commander@0.8.1 prepare
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0005452Z > husky || true
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0005604Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0452391Z .git can't be found
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0453138Z added 424 packages, and audited 425 packages in 6s
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0453582Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0453895Z 79 packages are looking for funding
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0454460Z   run `npm fund` for details
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0653532Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0655109Z 24 vulnerabilities (18 moderate, 5 high, 1 critical)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0657609Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0658133Z To address issues that do not require attention, run:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0658790Z   npm audit fix
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0659038Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0659489Z To address all issues (including breaking changes), run:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0660139Z   npm audit fix --force
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0660455Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0660666Z Run `npm audit` for details.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0919069Z ##[group]Run npm run docs:api
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0919408Z ^[[36;1mnpm run docs:api^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0957466Z shell: /usr/bin/bash -e {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0957723Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0957934Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0958207Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0958438Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.0958659Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.2092898Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.2093534Z > browser-commander@0.8.1 docs:api
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.2093991Z > jsdoc -c jsdoc.json
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:28.2094180Z 
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.3127790Z ##[group]Run cargo doc --no-deps --all-features
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.3128242Z ^[[36;1mcargo doc --no-deps --all-features^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.3161069Z shell: /usr/bin/bash -e {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.3161324Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.3161532Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.3161819Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.3162041Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.3162264Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.4684285Z ^[[1m^[[92m    Updating^[[0m crates.io index
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.9133262Z ^[[1m^[[92m Downloading^[[0m crates ...
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.9762801Z ^[[1m^[[92m  Downloaded^[[0m async-global-executor v2.4.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.9858338Z ^[[1m^[[92m  Downloaded^[[0m autocfg v1.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.9890226Z ^[[1m^[[92m  Downloaded^[[0m bytes v1.11.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.9954735Z ^[[1m^[[92m  Downloaded^[[0m openssl-probe v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.9975562Z ^[[1m^[[92m  Downloaded^[[0m cpufeatures v0.2.17
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:29.9997717Z ^[[1m^[[92m  Downloaded^[[0m option-ext v0.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0012925Z ^[[1m^[[92m  Downloaded^[[0m mime v0.3.17
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0045622Z ^[[1m^[[92m  Downloaded^[[0m thiserror v1.0.69
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0114526Z ^[[1m^[[92m  Downloaded^[[0m rand_chacha v0.3.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0137727Z ^[[1m^[[92m  Downloaded^[[0m piper v0.2.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0164819Z ^[[1m^[[92m  Downloaded^[[0m tower-layer v0.3.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0181984Z ^[[1m^[[92m  Downloaded^[[0m serde_urlencoded v0.7.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0206931Z ^[[1m^[[92m  Downloaded^[[0m try-lock v0.2.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0225229Z ^[[1m^[[92m  Downloaded^[[0m ppv-lite86 v0.2.21
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0245565Z ^[[1m^[[92m  Downloaded^[[0m quote v1.0.42
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0281337Z ^[[1m^[[92m  Downloaded^[[0m openssl-sys v0.9.111
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0346656Z ^[[1m^[[92m  Downloaded^[[0m stable_deref_trait v1.2.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0363154Z ^[[1m^[[92m  Downloaded^[[0m want v0.3.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0381868Z ^[[1m^[[92m  Downloaded^[[0m zerofrom-derive v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0398088Z ^[[1m^[[92m  Downloaded^[[0m version_check v0.9.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0420995Z ^[[1m^[[92m  Downloaded^[[0m yoke-derive v0.8.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0440450Z ^[[1m^[[92m  Downloaded^[[0m tokio-macros v2.6.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0460905Z ^[[1m^[[92m  Downloaded^[[0m zerovec-derive v0.11.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0488898Z ^[[1m^[[92m  Downloaded^[[0m writeable v0.6.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0518519Z ^[[1m^[[92m  Downloaded^[[0m yoke v0.8.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0547687Z ^[[1m^[[92m  Downloaded^[[0m zmij v1.0.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0577454Z ^[[1m^[[92m  Downloaded^[[0m socket2 v0.6.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0607814Z ^[[1m^[[92m  Downloaded^[[0m value-bag v1.12.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0646686Z ^[[1m^[[92m  Downloaded^[[0m serde v1.0.228
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0692576Z ^[[1m^[[92m  Downloaded^[[0m zerotrie v0.2.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0738028Z ^[[1m^[[92m  Downloaded^[[0m unicode-segmentation v1.12.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0777553Z ^[[1m^[[92m  Downloaded^[[0m url v2.5.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0815494Z ^[[1m^[[92m  Downloaded^[[0m iri-string v0.7.10
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0903395Z ^[[1m^[[92m  Downloaded^[[0m zerovec v0.11.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.0963621Z ^[[1m^[[92m  Downloaded^[[0m time v0.3.44
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.1066437Z ^[[1m^[[92m  Downloaded^[[0m tower-http v0.6.8
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.1154423Z ^[[1m^[[92m  Downloaded^[[0m regex v1.12.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.1232219Z ^[[1m^[[92m  Downloaded^[[0m tracing-subscriber v0.3.22
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.1323458Z ^[[1m^[[92m  Downloaded^[[0m openssl v0.10.75
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.1423545Z ^[[1m^[[92m  Downloaded^[[0m vcpkg v0.2.15
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.1973049Z ^[[1m^[[92m  Downloaded^[[0m syn v1.0.109
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.2074185Z ^[[1m^[[92m  Downloaded^[[0m zerocopy v0.8.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.2342044Z ^[[1m^[[92m  Downloaded^[[0m tokio-util v0.7.17
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.2424629Z ^[[1m^[[92m  Downloaded^[[0m syn v2.0.111
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.2534608Z ^[[1m^[[92m  Downloaded^[[0m serde_json v1.0.148
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.2611964Z ^[[1m^[[92m  Downloaded^[[0m regex-syntax v0.8.8
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.2683313Z ^[[1m^[[92m  Downloaded^[[0m async-std v1.13.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.2920222Z ^[[1m^[[92m  Downloaded^[[0m rustix v0.38.44
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.3188747Z ^[[1m^[[92m  Downloaded^[[0m idna v1.1.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.3225284Z ^[[1m^[[92m  Downloaded^[[0m rustix v1.1.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.3507996Z ^[[1m^[[92m  Downloaded^[[0m tower v0.5.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.3618456Z ^[[1m^[[92m  Downloaded^[[0m tracing v0.1.44
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.3778566Z ^[[1m^[[92m  Downloaded^[[0m reqwest v0.12.28
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.3833641Z ^[[1m^[[92m  Downloaded^[[0m chromiumoxide_cdp v0.7.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.3932203Z ^[[1m^[[92m  Downloaded^[[0m icu_properties_data v2.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4037380Z ^[[1m^[[92m  Downloaded^[[0m hyper v1.8.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4106404Z ^[[1m^[[92m  Downloaded^[[0m futures-util v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4240672Z ^[[1m^[[92m  Downloaded^[[0m serde_core v1.0.228
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4273040Z ^[[1m^[[92m  Downloaded^[[0m http v0.2.12
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4310710Z ^[[1m^[[92m  Downloaded^[[0m aho-corasick v1.1.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4364499Z ^[[1m^[[92m  Downloaded^[[0m regex-automata v0.4.13
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4517189Z ^[[1m^[[92m  Downloaded^[[0m typenum v1.19.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4547587Z ^[[1m^[[92m  Downloaded^[[0m mio v1.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4608363Z ^[[1m^[[92m  Downloaded^[[0m hyper-util v0.1.19
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4672538Z ^[[1m^[[92m  Downloaded^[[0m http v1.4.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.4709520Z ^[[1m^[[92m  Downloaded^[[0m libc v0.2.178
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5083243Z ^[[1m^[[92m  Downloaded^[[0m rand v0.8.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5119082Z ^[[1m^[[92m  Downloaded^[[0m memchr v2.7.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5184479Z ^[[1m^[[92m  Downloaded^[[0m icu_normalizer v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5221103Z ^[[1m^[[92m  Downloaded^[[0m icu_locale_core v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5290904Z ^[[1m^[[92m  Downloaded^[[0m fantoccini v0.21.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5332383Z ^[[1m^[[92m  Downloaded^[[0m chromiumoxide v0.7.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5378511Z ^[[1m^[[92m  Downloaded^[[0m icu_collections v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5443212Z ^[[1m^[[92m  Downloaded^[[0m cc v1.2.51
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5496778Z ^[[1m^[[92m  Downloaded^[[0m base64 v0.21.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5538640Z ^[[1m^[[92m  Downloaded^[[0m tungstenite v0.23.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5573184Z ^[[1m^[[92m  Downloaded^[[0m tokio v1.48.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.5996511Z ^[[1m^[[92m  Downloaded^[[0m tracing-core v0.1.36
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6025088Z ^[[1m^[[92m  Downloaded^[[0m proc-macro2 v1.0.104
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6056010Z ^[[1m^[[92m  Downloaded^[[0m polling v3.11.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6088254Z ^[[1m^[[92m  Downloaded^[[0m icu_provider v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6114680Z ^[[1m^[[92m  Downloaded^[[0m icu_normalizer_data v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6136424Z ^[[1m^[[92m  Downloaded^[[0m futures v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6184899Z ^[[1m^[[92m  Downloaded^[[0m async-tungstenite v0.27.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6215367Z ^[[1m^[[92m  Downloaded^[[0m sharded-slab v0.1.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6249613Z ^[[1m^[[92m  Downloaded^[[0m serde_derive v1.0.228
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6281640Z ^[[1m^[[92m  Downloaded^[[0m log v0.4.29
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6306796Z ^[[1m^[[92m  Downloaded^[[0m icu_properties v2.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6329600Z ^[[1m^[[92m  Downloaded^[[0m base64 v0.22.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6368234Z ^[[1m^[[92m  Downloaded^[[0m anyhow v1.0.100
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6410379Z ^[[1m^[[92m  Downloaded^[[0m unicode-ident v1.0.22
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6438814Z ^[[1m^[[92m  Downloaded^[[0m smallvec v1.15.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6460952Z ^[[1m^[[92m  Downloaded^[[0m ryu v1.0.22
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6494303Z ^[[1m^[[92m  Downloaded^[[0m rand_core v0.6.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6508146Z ^[[1m^[[92m  Downloaded^[[0m litemap v0.8.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6531852Z ^[[1m^[[92m  Downloaded^[[0m httparse v1.10.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6557317Z ^[[1m^[[92m  Downloaded^[[0m getrandom v0.2.16
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6588506Z ^[[1m^[[92m  Downloaded^[[0m futures-lite v2.6.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6605951Z ^[[1m^[[92m  Downloaded^[[0m crossbeam-utils v0.8.21
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6633307Z ^[[1m^[[92m  Downloaded^[[0m chromiumoxide_pdl v0.7.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6650490Z ^[[1m^[[92m  Downloaded^[[0m which v6.0.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6666690Z ^[[1m^[[92m  Downloaded^[[0m webdriver v0.50.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6684268Z ^[[1m^[[92m  Downloaded^[[0m utf8_iter v1.0.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6695476Z ^[[1m^[[92m  Downloaded^[[0m tracing-attributes v0.1.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6723900Z ^[[1m^[[92m  Downloaded^[[0m thiserror-impl v1.0.69
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6736879Z ^[[1m^[[92m  Downloaded^[[0m nu-ansi-term v0.50.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6761888Z ^[[1m^[[92m  Downloaded^[[0m ipnet v2.11.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6779090Z ^[[1m^[[92m  Downloaded^[[0m event-listener v5.4.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6800139Z ^[[1m^[[92m  Downloaded^[[0m tracing-log v0.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6814045Z ^[[1m^[[92m  Downloaded^[[0m time-macros v0.2.24
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6836512Z ^[[1m^[[92m  Downloaded^[[0m thread_local v1.1.9
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6855877Z ^[[1m^[[92m  Downloaded^[[0m synstructure v0.13.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6866064Z ^[[1m^[[92m  Downloaded^[[0m sync_wrapper v1.0.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6875401Z ^[[1m^[[92m  Downloaded^[[0m slab v0.4.11
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6889066Z ^[[1m^[[92m  Downloaded^[[0m shlex v1.3.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6902658Z ^[[1m^[[92m  Downloaded^[[0m pkg-config v0.3.32
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6919358Z ^[[1m^[[92m  Downloaded^[[0m native-tls v0.2.14
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6940215Z ^[[1m^[[92m  Downloaded^[[0m futures-channel v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6958953Z ^[[1m^[[92m  Downloaded^[[0m data-encoding v2.9.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6969629Z ^[[1m^[[92m  Downloaded^[[0m concurrent-queue v2.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.6987168Z ^[[1m^[[92m  Downloaded^[[0m bitflags v2.10.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7036164Z ^[[1m^[[92m  Downloaded^[[0m async-task v4.7.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7063469Z ^[[1m^[[92m  Downloaded^[[0m lock_api v0.4.14
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7076713Z ^[[1m^[[92m  Downloaded^[[0m kv-log-macro v1.0.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7096582Z ^[[1m^[[92m  Downloaded^[[0m http-body-util v0.1.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7115444Z ^[[1m^[[92m  Downloaded^[[0m heck v0.4.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7128977Z ^[[1m^[[92m  Downloaded^[[0m futures-timer v3.0.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7148109Z ^[[1m^[[92m  Downloaded^[[0m find-msvc-tools v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7164887Z ^[[1m^[[92m  Downloaded^[[0m digest v0.10.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7184734Z ^[[1m^[[92m  Downloaded^[[0m async-process v2.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7203042Z ^[[1m^[[92m  Downloaded^[[0m tokio-native-tls v0.3.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7221773Z ^[[1m^[[92m  Downloaded^[[0m tinystr v0.8.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7242564Z ^[[1m^[[92m  Downloaded^[[0m signal-hook-registry v1.4.8
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7254483Z ^[[1m^[[92m  Downloaded^[[0m num-conv v0.1.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7263965Z ^[[1m^[[92m  Downloaded^[[0m itoa v1.0.17
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7279525Z ^[[1m^[[92m  Downloaded^[[0m futures-executor v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7293264Z ^[[1m^[[92m  Downloaded^[[0m either v1.15.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7308349Z ^[[1m^[[92m  Downloaded^[[0m dunce v1.0.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7317690Z ^[[1m^[[92m  Downloaded^[[0m displaydoc v0.2.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7349281Z ^[[1m^[[92m  Downloaded^[[0m deranged v0.5.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7363040Z ^[[1m^[[92m  Downloaded^[[0m zerofrom v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7372703Z ^[[1m^[[92m  Downloaded^[[0m linux-raw-sys v0.4.15
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7826020Z ^[[1m^[[92m  Downloaded^[[0m utf-8 v0.7.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7837914Z ^[[1m^[[92m  Downloaded^[[0m time-core v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7848794Z ^[[1m^[[92m  Downloaded^[[0m futures-macro v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7859884Z ^[[1m^[[92m  Downloaded^[[0m cookie v0.18.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7883836Z ^[[1m^[[92m  Downloaded^[[0m cookie v0.16.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7907491Z ^[[1m^[[92m  Downloaded^[[0m async-lock v3.4.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7929934Z ^[[1m^[[92m  Downloaded^[[0m futures-task v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7941525Z ^[[1m^[[92m  Downloaded^[[0m futures-io v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7949805Z ^[[1m^[[92m  Downloaded^[[0m form_urlencoded v1.2.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7957773Z ^[[1m^[[92m  Downloaded^[[0m fastrand v2.3.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7971238Z ^[[1m^[[92m  Downloaded^[[0m byteorder v1.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.7987507Z ^[[1m^[[92m  Downloaded^[[0m blocking v1.6.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8000003Z ^[[1m^[[92m  Downloaded^[[0m async-signal v0.2.13
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8014513Z ^[[1m^[[92m  Downloaded^[[0m futures-core v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8027765Z ^[[1m^[[92m  Downloaded^[[0m async-trait v0.1.89
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8065294Z ^[[1m^[[92m  Downloaded^[[0m potential_utf v0.1.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8075983Z ^[[1m^[[92m  Downloaded^[[0m pin-project-lite v0.2.16
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8134663Z ^[[1m^[[92m  Downloaded^[[0m idna_adapter v1.2.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8144069Z ^[[1m^[[92m  Downloaded^[[0m event-listener-strategy v0.5.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8155857Z ^[[1m^[[92m  Downloaded^[[0m tower-service v0.3.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8163754Z ^[[1m^[[92m  Downloaded^[[0m sha1 v0.10.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8180219Z ^[[1m^[[92m  Downloaded^[[0m powerfmt v0.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8191309Z ^[[1m^[[92m  Downloaded^[[0m matchers v0.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8202008Z ^[[1m^[[92m  Downloaded^[[0m lazy_static v1.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8219783Z ^[[1m^[[92m  Downloaded^[[0m futures-sink v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8227868Z ^[[1m^[[92m  Downloaded^[[0m http-body v1.0.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8237437Z ^[[1m^[[92m  Downloaded^[[0m foreign-types v0.3.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8245535Z ^[[1m^[[92m  Downloaded^[[0m errno v0.3.14
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8260579Z ^[[1m^[[92m  Downloaded^[[0m dirs v5.0.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8273034Z ^[[1m^[[92m  Downloaded^[[0m crypto-common v0.1.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8282336Z ^[[1m^[[92m  Downloaded^[[0m linux-raw-sys v0.11.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8822234Z ^[[1m^[[92m  Downloaded^[[0m scopeguard v1.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8833861Z ^[[1m^[[92m  Downloaded^[[0m foreign-types-shared v0.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8840721Z ^[[1m^[[92m  Downloaded^[[0m cfg-if v1.0.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8853952Z ^[[1m^[[92m  Downloaded^[[0m hyper-tls v0.6.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8867947Z ^[[1m^[[92m  Downloaded^[[0m generic-array v0.14.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8881876Z ^[[1m^[[92m  Downloaded^[[0m fnv v1.0.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8890355Z ^[[1m^[[92m  Downloaded^[[0m pin-utils v0.1.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8902017Z ^[[1m^[[92m  Downloaded^[[0m parking_lot v0.12.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8926749Z ^[[1m^[[92m  Downloaded^[[0m home v0.5.12
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8936392Z ^[[1m^[[92m  Downloaded^[[0m event-listener v2.5.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8948370Z ^[[1m^[[92m  Downloaded^[[0m dirs-sys v0.4.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8960192Z ^[[1m^[[92m  Downloaded^[[0m percent-encoding v2.3.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8968555Z ^[[1m^[[92m  Downloaded^[[0m parking_lot_core v0.9.12
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.8989213Z ^[[1m^[[92m  Downloaded^[[0m parking v2.2.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9000446Z ^[[1m^[[92m  Downloaded^[[0m once_cell v1.21.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9025137Z ^[[1m^[[92m  Downloaded^[[0m chromiumoxide_types v0.7.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9033021Z ^[[1m^[[92m  Downloaded^[[0m block-buffer v0.10.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9043246Z ^[[1m^[[92m  Downloaded^[[0m atomic-waker v1.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9055249Z ^[[1m^[[92m  Downloaded^[[0m async-io v2.6.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9084424Z ^[[1m^[[92m  Downloaded^[[0m openssl-macros v0.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9091662Z ^[[1m^[[92m  Downloaded^[[0m async-executor v1.13.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9110144Z ^[[1m^[[92m  Downloaded^[[0m async-attributes v1.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9122206Z ^[[1m^[[92m  Downloaded^[[0m async-channel v2.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9134315Z ^[[1m^[[92m  Downloaded^[[0m async-channel v1.9.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9870140Z ^[[1m^[[92m   Compiling^[[0m proc-macro2 v1.0.104
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9871537Z ^[[1m^[[92m   Compiling^[[0m quote v1.0.42
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9872626Z ^[[1m^[[92m   Compiling^[[0m unicode-ident v1.0.22
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:30.9873552Z ^[[1m^[[92m   Compiling^[[0m libc v0.2.178
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:31.2039933Z ^[[1m^[[92m    Checking^[[0m pin-project-lite v0.2.16
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:31.2479858Z ^[[1m^[[92m    Checking^[[0m cfg-if v1.0.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:31.2689054Z ^[[1m^[[92m   Compiling^[[0m serde_core v1.0.228
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:31.4043479Z ^[[1m^[[92m   Compiling^[[0m serde v1.0.228
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:31.5929128Z ^[[1m^[[92m    Checking^[[0m futures-core v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:31.6918789Z ^[[1m^[[92m    Checking^[[0m memchr v2.7.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.1498851Z ^[[1m^[[92m    Checking^[[0m itoa v1.0.17
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.2448716Z ^[[1m^[[92m   Compiling^[[0m syn v2.0.111
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.2568529Z ^[[1m^[[92m    Checking^[[0m futures-io v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.3039216Z ^[[1m^[[92m    Checking^[[0m smallvec v1.15.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.3259304Z ^[[1m^[[92m   Compiling^[[0m version_check v0.9.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.4189648Z ^[[1m^[[92m    Checking^[[0m bitflags v2.10.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.5229901Z ^[[1m^[[92m    Checking^[[0m once_cell v1.21.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.6149220Z ^[[1m^[[92m    Checking^[[0m stable_deref_trait v1.2.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.6478709Z ^[[1m^[[92m    Checking^[[0m slab v0.4.11
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.6587434Z ^[[1m^[[92m   Compiling^[[0m crossbeam-utils v0.8.21
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.7579699Z ^[[1m^[[92m    Checking^[[0m errno v0.3.14
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.8218083Z ^[[1m^[[92m    Checking^[[0m signal-hook-registry v1.4.8
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:32.9330387Z ^[[1m^[[92m   Compiling^[[0m parking_lot_core v0.9.12
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.0959587Z ^[[1m^[[92m    Checking^[[0m futures-sink v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.1459237Z ^[[1m^[[92m    Checking^[[0m parking v2.2.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.1719300Z ^[[1m^[[92m    Checking^[[0m concurrent-queue v2.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.2098951Z ^[[1m^[[92m    Checking^[[0m value-bag v1.12.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.3179366Z ^[[1m^[[92m    Checking^[[0m scopeguard v1.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.3589216Z ^[[1m^[[92m    Checking^[[0m lock_api v0.4.14
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.3965077Z ^[[1m^[[92m    Checking^[[0m log v0.4.29
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.5349055Z ^[[1m^[[92m    Checking^[[0m pin-utils v0.1.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.5628972Z ^[[1m^[[92m    Checking^[[0m futures-channel v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.6102440Z ^[[1m^[[92m    Checking^[[0m socket2 v0.6.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.6689186Z ^[[1m^[[92m    Checking^[[0m parking_lot v0.12.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.7148648Z ^[[1m^[[92m    Checking^[[0m mio v1.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.8125802Z ^[[1m^[[92m    Checking^[[0m atomic-waker v1.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.8548819Z ^[[1m^[[92m    Checking^[[0m litemap v0.8.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.8783811Z ^[[1m^[[92m   Compiling^[[0m shlex v1.3.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.9678934Z ^[[1m^[[92m   Compiling^[[0m find-msvc-tools v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:33.9918762Z ^[[1m^[[92m    Checking^[[0m writeable v0.6.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.0058678Z ^[[1m^[[92m    Checking^[[0m fastrand v2.3.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.0989054Z ^[[1m^[[92m    Checking^[[0m futures-task v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.1309078Z ^[[1m^[[92m   Compiling^[[0m cc v1.2.51
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.1569268Z ^[[1m^[[92m   Compiling^[[0m typenum v1.19.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.1931401Z ^[[1m^[[92m   Compiling^[[0m vcpkg v0.2.15
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.3819147Z ^[[1m^[[92m   Compiling^[[0m pkg-config v0.3.32
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.8579089Z ^[[1m^[[92m   Compiling^[[0m icu_normalizer_data v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.8906616Z ^[[1m^[[92m   Compiling^[[0m icu_properties_data v2.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.9609244Z ^[[1m^[[92m    Checking^[[0m percent-encoding v2.3.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:34.9875309Z ^[[1m^[[92m   Compiling^[[0m rustix v1.1.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.0499110Z ^[[1m^[[92m   Compiling^[[0m httparse v1.10.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.3052417Z ^[[1m^[[92m    Checking^[[0m futures-lite v2.6.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.3210247Z ^[[1m^[[92m    Checking^[[0m event-listener v5.4.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.4789289Z ^[[1m^[[92m   Compiling^[[0m openssl-sys v0.9.111
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.4878745Z ^[[1m^[[92m   Compiling^[[0m generic-array v0.14.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.5878910Z ^[[1m^[[92m   Compiling^[[0m autocfg v1.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.8338886Z ^[[1m^[[92m   Compiling^[[0m zmij v1.0.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.9690315Z ^[[1m^[[92m   Compiling^[[0m synstructure v0.13.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:35.9765966Z ^[[1m^[[92m    Checking^[[0m linux-raw-sys v0.11.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:36.0178619Z ^[[1m^[[92m   Compiling^[[0m async-io v2.6.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:36.2359282Z ^[[1m^[[92m    Checking^[[0m event-listener-strategy v0.5.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:36.8138787Z ^[[1m^[[92m    Checking^[[0m tracing-core v0.1.36
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:36.9258830Z ^[[1m^[[92m   Compiling^[[0m zerocopy v0.8.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:37.1089194Z ^[[1m^[[92m   Compiling^[[0m serde_json v1.0.148
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:37.3469119Z ^[[1m^[[92m    Checking^[[0m aho-corasick v1.1.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:37.6859200Z ^[[1m^[[92m   Compiling^[[0m serde_derive v1.0.228
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:37.7256489Z ^[[1m^[[92m   Compiling^[[0m zerofrom-derive v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:38.4218719Z ^[[1m^[[92m   Compiling^[[0m yoke-derive v0.8.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:39.2704963Z ^[[1m^[[92m    Checking^[[0m zerofrom v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:39.3469122Z ^[[1m^[[92m   Compiling^[[0m zerovec-derive v0.11.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:39.3739207Z ^[[1m^[[92m    Checking^[[0m yoke v0.8.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:39.4913229Z ^[[1m^[[92m   Compiling^[[0m displaydoc v0.2.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:40.0008739Z ^[[1m^[[92m   Compiling^[[0m tokio-macros v2.6.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:40.4789621Z ^[[1m^[[92m    Checking^[[0m zerovec v0.11.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:40.4910632Z ^[[1m^[[92m   Compiling^[[0m futures-macro v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:40.6429040Z ^[[1m^[[92m    Checking^[[0m zerotrie v0.2.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:40.8699231Z ^[[1m^[[92m    Checking^[[0m polling v3.11.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:40.9880451Z ^[[1m^[[92m    Checking^[[0m tinystr v0.8.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:41.0191781Z ^[[1m^[[92m    Checking^[[0m potential_utf v0.1.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:41.0889011Z ^[[1m^[[92m    Checking^[[0m icu_collections v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:41.1078887Z ^[[1m^[[92m    Checking^[[0m icu_locale_core v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:41.2799318Z ^[[1m^[[92m    Checking^[[0m futures-util v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:41.3558962Z ^[[1m^[[92m   Compiling^[[0m tracing-attributes v0.1.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:41.6888787Z ^[[1m^[[92m    Checking^[[0m icu_provider v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:41.8758838Z ^[[1m^[[92m    Checking^[[0m icu_normalizer v2.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:41.8848676Z ^[[1m^[[92m    Checking^[[0m bytes v1.11.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:42.1539255Z ^[[1m^[[92m    Checking^[[0m icu_properties v2.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:42.3408809Z ^[[1m^[[92m    Checking^[[0m http v1.4.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:42.5461474Z ^[[1m^[[92m    Checking^[[0m tokio v1.48.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:42.9498901Z ^[[1m^[[92m    Checking^[[0m http-body v1.0.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.0208726Z ^[[1m^[[92m    Checking^[[0m regex-syntax v0.8.8
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.1174076Z ^[[1m^[[92m    Checking^[[0m tower-service v0.3.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.1658441Z ^[[1m^[[92m   Compiling^[[0m thiserror v1.0.69
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.3419733Z ^[[1m^[[92m    Checking^[[0m try-lock v0.2.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.3809383Z ^[[1m^[[92m    Checking^[[0m async-task v4.7.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.5199103Z ^[[1m^[[92m    Checking^[[0m want v0.3.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.6258666Z ^[[1m^[[92m    Checking^[[0m idna_adapter v1.2.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.6809174Z ^[[1m^[[92m    Checking^[[0m tracing v0.1.44
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:43.8109102Z ^[[1m^[[92m   Compiling^[[0m thiserror-impl v1.0.69
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:44.4809270Z ^[[1m^[[92m    Checking^[[0m regex-automata v0.4.13
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:44.8571141Z ^[[1m^[[92m    Checking^[[0m async-channel v2.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:44.9811855Z ^[[1m^[[92m    Checking^[[0m form_urlencoded v1.2.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.0569057Z ^[[1m^[[92m    Checking^[[0m getrandom v0.2.16
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.1514923Z ^[[1m^[[92m    Checking^[[0m utf8_iter v1.0.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.2212089Z ^[[1m^[[92m   Compiling^[[0m num-conv v0.1.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.3218756Z ^[[1m^[[92m   Compiling^[[0m openssl v0.10.75
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.4708939Z ^[[1m^[[92m    Checking^[[0m powerfmt v0.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.5728867Z ^[[1m^[[92m    Checking^[[0m foreign-types-shared v0.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.6058919Z ^[[1m^[[92m   Compiling^[[0m time-core v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.7078571Z ^[[1m^[[92m   Compiling^[[0m syn v1.0.109
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:45.9138801Z ^[[1m^[[92m   Compiling^[[0m time-macros v0.2.24
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.1338778Z ^[[1m^[[92m    Checking^[[0m hyper v1.8.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.1819213Z ^[[1m^[[92m    Checking^[[0m ppv-lite86 v0.2.21
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.5208905Z ^[[1m^[[92m    Checking^[[0m foreign-types v0.3.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.5498699Z ^[[1m^[[92m    Checking^[[0m deranged v0.5.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.7048742Z ^[[1m^[[92m    Checking^[[0m idna v1.1.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.7195643Z ^[[1m^[[92m    Checking^[[0m rand_core v0.6.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.8689597Z ^[[1m^[[92m    Checking^[[0m crypto-common v0.1.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.9128627Z ^[[1m^[[92m    Checking^[[0m block-buffer v0.10.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.9328842Z ^[[1m^[[92m   Compiling^[[0m openssl-macros v0.1.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:46.9589773Z ^[[1m^[[92m    Checking^[[0m async-lock v3.4.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:47.1319488Z ^[[1m^[[92m    Checking^[[0m piper v0.2.4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:47.3518764Z ^[[1m^[[92m    Checking^[[0m base64 v0.22.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:47.4478626Z ^[[1m^[[92m    Checking^[[0m ipnet v2.11.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:47.5498517Z ^[[1m^[[92m   Compiling^[[0m native-tls v0.2.14
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:47.6258228Z ^[[1m^[[92m    Checking^[[0m time v0.3.44
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:47.6390641Z ^[[1m^[[92m    Checking^[[0m hyper-util v0.1.19
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:47.9540782Z ^[[1m^[[92m    Checking^[[0m blocking v1.6.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:48.0719246Z ^[[1m^[[92m    Checking^[[0m digest v0.10.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:48.2089007Z ^[[1m^[[92m    Checking^[[0m url v2.5.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:48.4957871Z ^[[1m^[[92m    Checking^[[0m rand_chacha v0.3.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:48.6389060Z ^[[1m^[[92m    Checking^[[0m async-signal v0.2.13
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:48.7497466Z ^[[1m^[[92m    Checking^[[0m async-executor v1.13.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:48.8546607Z ^[[1m^[[92m    Checking^[[0m http-body-util v0.1.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:48.8907796Z ^[[1m^[[92m   Compiling^[[0m cookie v0.16.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:48.9928788Z ^[[1m^[[92m    Checking^[[0m sync_wrapper v1.0.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.0388834Z ^[[1m^[[92m    Checking^[[0m fnv v1.0.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.0448769Z ^[[1m^[[92m    Checking^[[0m cpufeatures v0.2.17
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.0755897Z ^[[1m^[[92m    Checking^[[0m tower-layer v0.3.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.0848617Z ^[[1m^[[92m    Checking^[[0m either v1.15.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.1969155Z ^[[1m^[[92m    Checking^[[0m openssl-probe v0.1.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.2378861Z ^[[1m^[[92m   Compiling^[[0m rustix v0.38.44
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.2479125Z ^[[1m^[[92m    Checking^[[0m event-listener v2.5.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.3239434Z ^[[1m^[[92m    Checking^[[0m async-channel v1.9.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.4268985Z ^[[1m^[[92m    Checking^[[0m tower v0.5.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.5159192Z ^[[1m^[[92m    Checking^[[0m sha1 v0.10.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.6608911Z ^[[1m^[[92m    Checking^[[0m async-global-executor v2.4.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.7568842Z ^[[1m^[[92m    Checking^[[0m async-process v2.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:49.8290551Z ^[[1m^[[92m    Checking^[[0m rand v0.8.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.0679108Z ^[[1m^[[92m    Checking^[[0m regex v1.12.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.3208909Z ^[[1m^[[92m    Checking^[[0m chromiumoxide_types v0.7.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.3608595Z ^[[1m^[[92m    Checking^[[0m kv-log-macro v1.0.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.3688535Z ^[[1m^[[92m   Compiling^[[0m cookie v0.18.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.3959203Z ^[[1m^[[92m    Checking^[[0m data-encoding v2.9.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.4748694Z ^[[1m^[[92m    Checking^[[0m linux-raw-sys v0.4.15
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.5013676Z ^[[1m^[[92m    Checking^[[0m byteorder v1.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.6429546Z ^[[1m^[[92m    Checking^[[0m ryu v1.0.22
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.6754464Z ^[[1m^[[92m    Checking^[[0m utf-8 v0.7.6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.7269505Z ^[[1m^[[92m    Checking^[[0m heck v0.4.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.7354624Z ^[[1m^[[92m    Checking^[[0m iri-string v0.7.10
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.7531825Z ^[[1m^[[92m    Checking^[[0m tungstenite v0.23.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:50.8018729Z ^[[1m^[[92m    Checking^[[0m chromiumoxide_pdl v0.7.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:51.4878970Z ^[[1m^[[92m    Checking^[[0m serde_urlencoded v0.7.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:51.6798745Z ^[[1m^[[92m    Checking^[[0m tokio-native-tls v0.3.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:51.9619448Z ^[[1m^[[92m    Checking^[[0m tower-http v0.6.8
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:51.9698707Z ^[[1m^[[92m    Checking^[[0m http v0.2.12
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.1818641Z ^[[1m^[[92m    Checking^[[0m futures-executor v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.2668788Z ^[[1m^[[92m    Checking^[[0m home v0.5.12
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.3089324Z ^[[1m^[[92m    Checking^[[0m base64 v0.21.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.3749061Z ^[[1m^[[92m   Compiling^[[0m async-attributes v1.1.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.4906175Z ^[[1m^[[92m    Checking^[[0m option-ext v0.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.5111688Z ^[[1m^[[92m    Checking^[[0m unicode-segmentation v1.12.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.5248088Z ^[[1m^[[92m   Compiling^[[0m anyhow v1.0.100
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.5624728Z ^[[1m^[[92m    Checking^[[0m lazy_static v1.5.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.5929492Z ^[[1m^[[92m    Checking^[[0m async-std v1.13.2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.6010712Z ^[[1m^[[92m    Checking^[[0m sharded-slab v0.1.7
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.7956802Z ^[[1m^[[92m    Checking^[[0m webdriver v0.50.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.8028360Z ^[[1m^[[92m    Checking^[[0m dirs-sys v0.4.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.8678861Z ^[[1m^[[92m    Checking^[[0m which v6.0.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:52.9728682Z ^[[1m^[[92m    Checking^[[0m futures v0.3.31
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:53.0088650Z ^[[1m^[[92m    Checking^[[0m reqwest v0.12.28
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:53.0278796Z ^[[1m^[[92m    Checking^[[0m hyper-tls v0.6.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:53.3008820Z ^[[1m^[[92m    Checking^[[0m chromiumoxide_cdp v0.7.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:53.5338902Z ^[[1m^[[92m    Checking^[[0m matchers v0.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:53.5979467Z ^[[1m^[[92m    Checking^[[0m tracing-log v0.2.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:53.6838932Z ^[[1m^[[92m    Checking^[[0m thread_local v1.1.9
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:53.7878688Z ^[[1m^[[92m    Checking^[[0m futures-timer v3.0.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:53.9008793Z ^[[1m^[[92m    Checking^[[0m mime v0.3.17
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:54.0249113Z ^[[1m^[[92m    Checking^[[0m nu-ansi-term v0.50.3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:54.1308828Z ^[[1m^[[92m    Checking^[[0m dunce v1.0.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:54.1699125Z ^[[1m^[[92m    Checking^[[0m fantoccini v0.21.5
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:54.1818965Z ^[[1m^[[92m    Checking^[[0m tracing-subscriber v0.3.22
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:54.4297726Z ^[[1m^[[92m    Checking^[[0m async-tungstenite v0.27.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:54.6648880Z ^[[1m^[[92m    Checking^[[0m dirs v5.0.1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:54.8538662Z ^[[1m^[[92m    Checking^[[0m tokio-util v0.7.17
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:55:55.0109575Z ^[[1m^[[92m   Compiling^[[0m async-trait v0.1.89
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:18.9724169Z ^[[1m^[[92m    Checking^[[0m chromiumoxide v0.7.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:19.9429057Z ^[[1m^[[92m Documenting^[[0m browser-commander v0.9.0 (/home/runner/work/browser-commander/browser-commander/rust)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4093596Z ^[[1m^[[92m    Finished^[[0m `dev` profile [unoptimized + debuginfo] target(s) in 54.05s
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4628059Z ^[[1m^[[92m   Generated^[[0m /home/runner/work/browser-commander/browser-commander/rust/target/doc/browser_commander/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4793744Z ##[group]Run mkdir -p public/javascript public/rust
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4794755Z ^[[36;1mmkdir -p public/javascript public/rust^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4795379Z ^[[36;1mcp -R js/docs-api/. public/javascript/^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4796055Z ^[[36;1mcp -R rust/target/doc/. public/rust/^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4796630Z ^[[36;1mcat > public/index.html <<'HTML'^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4797445Z ^[[36;1m<!doctype html>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4797907Z ^[[36;1m<html lang="en">^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4798331Z ^[[36;1m  <head>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4798715Z ^[[36;1m    <meta charset="utf-8">^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4799417Z ^[[36;1m    <meta name="viewport" content="width=device-width, initial-scale=1">^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4800239Z ^[[36;1m    <title>Browser Commander Documentation</title>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4800836Z ^[[36;1m    <style>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4801504Z ^[[36;1m      body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5; }^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4802348Z ^[[36;1m      main { max-width: 720px; }^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4802867Z ^[[36;1m      a { color: #075985; }^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4803312Z ^[[36;1m    </style>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4803677Z ^[[36;1m  </head>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4804032Z ^[[36;1m  <body>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4804385Z ^[[36;1m    <main>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4804831Z ^[[36;1m      <h1>Browser Commander Documentation</h1>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4805709Z ^[[36;1m      <p>Generated API documentation for the JavaScript and Rust implementations.</p>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4806503Z ^[[36;1m      <ul>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4807016Z ^[[36;1m        <li><a href="./javascript/">JavaScript API docs</a></li>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4808150Z ^[[36;1m        <li><a href="./rust/browser_commander/">Rust API docs</a></li>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4808808Z ^[[36;1m      </ul>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4809175Z ^[[36;1m    </main>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4809562Z ^[[36;1m  </body>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4809914Z ^[[36;1m</html>^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4810288Z ^[[36;1mHTML^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4845377Z shell: /usr/bin/bash -e {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4845648Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4845854Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4846124Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4846350Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.4846574Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5202998Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5204550Z ##[group]Run actions/upload-artifact@v4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5204828Z with:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5205103Z   name: browser-commander-docs
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5205450Z   path: public
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5205668Z   if-no-files-found: warn
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5205907Z   compression-level: 6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5206126Z   overwrite: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5206474Z   include-hidden-files: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5206735Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5206927Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5207423Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5207760Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.5207980Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.6925404Z (node:4454) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.6926973Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.7723974Z With the provided path, there will be 376 files uploaded
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.7729730Z Artifact name is valid!
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.7730309Z Root directory input is valid!
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:23.9524222Z Beginning upload of artifact content to blob storage
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.3630511Z (node:4454) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.7091101Z Uploaded bytes 2881162
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.7428792Z Finished uploading artifact content to blob storage!
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.7429813Z SHA256 digest of uploaded artifact zip is 2a9fff18bf1372b02ca56ddfb0699987969571f3c0cd7afd94623a12c4e3ca52
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.7431345Z Finalizing artifact upload
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9099832Z Artifact browser-commander-docs.zip successfully finalized. Artifact ID 7935750597
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9101045Z Artifact browser-commander-docs has been successfully uploaded! Final size is 2881162 bytes. Artifact ID is 7935750597
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9108083Z Artifact download URL: https://github.com/link-foundation/browser-commander/actions/runs/28326104183/artifacts/7935750597
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9331254Z ##[group]Run actions/upload-pages-artifact@v3
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9331592Z with:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9331789Z   path: public
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9332005Z   name: github-pages
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9332225Z   retention-days: 1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9332443Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9332635Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9332897Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9333125Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9333353Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9352498Z ##[group]Run echo ::group::Archive artifact
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9352829Z ^[[36;1mecho ::group::Archive artifact^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9353091Z ^[[36;1mtar \^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9353327Z ^[[36;1m  --dereference --hard-dereference \^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9353653Z ^[[36;1m  --directory "$INPUT_PATH" \^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9353963Z ^[[36;1m  -cvf "$RUNNER_TEMP/artifact.tar" \^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9354253Z ^[[36;1m  --exclude=.git \^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9354535Z ^[[36;1m  --exclude=.github \^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9354775Z ^[[36;1m  .^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9354974Z ^[[36;1mecho ::endgroup::^[[0m
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9533688Z shell: /usr/bin/sh -e {0}
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9533966Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9534191Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9534490Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9534726Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9534970Z   INPUT_PATH: public
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9535200Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9607894Z ##[group]Archive artifact
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9620883Z ./
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9621261Z ./rust/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9621666Z ./rust/src-files.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9622029Z ./rust/help.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9622337Z ./rust/src/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9622760Z ./rust/src/browser_commander/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9623368Z ./rust/src/browser_commander/core/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9623993Z ./rust/src/browser_commander/core/constants.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9624466Z ./rust/src/browser_commander/core/navigation.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9625246Z ./rust/src/browser_commander/core/mod.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9626010Z ./rust/src/browser_commander/core/logger.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9626536Z ./rust/src/browser_commander/core/dialog.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9627342Z ./rust/src/browser_commander/core/engine.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9627846Z ./rust/src/browser_commander/utilities/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9628422Z ./rust/src/browser_commander/utilities/wait.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9629021Z ./rust/src/browser_commander/utilities/url.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9629586Z ./rust/src/browser_commander/utilities/mod.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9630238Z ./rust/src/browser_commander/interactions/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9630838Z ./rust/src/browser_commander/interactions/click.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9631641Z ./rust/src/browser_commander/interactions/fill.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9632219Z ./rust/src/browser_commander/interactions/keyboard.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9632993Z ./rust/src/browser_commander/interactions/mod.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9633771Z ./rust/src/browser_commander/interactions/scroll.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9634501Z ./rust/src/browser_commander/browser/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9635102Z ./rust/src/browser_commander/browser/node_bridge.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9636293Z ./rust/src/browser_commander/browser/media.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9636984Z ./rust/src/browser_commander/browser/launcher.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9637871Z ./rust/src/browser_commander/browser/navigation_ops.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9638597Z ./rust/src/browser_commander/browser/mod.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9639240Z ./rust/src/browser_commander/browser/chromiumoxide_adapter.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9639833Z ./rust/src/browser_commander/lib.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9640302Z ./rust/src/browser_commander/high_level/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9640726Z ./rust/src/browser_commander/high_level/universal_logic.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9641311Z ./rust/src/browser_commander/high_level/mod.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9642015Z ./rust/src/browser_commander/elements/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9642553Z ./rust/src/browser_commander/elements/content.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9643078Z ./rust/src/browser_commander/elements/mod.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9643700Z ./rust/src/browser_commander/elements/selectors.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9644156Z ./rust/src/browser_commander/elements/visibility.rs.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9644505Z ./rust/browser_commander/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9645033Z ./rust/browser_commander/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9645501Z ./rust/browser_commander/core/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9645879Z ./rust/browser_commander/core/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9646405Z ./rust/browser_commander/core/constants/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9646913Z ./rust/browser_commander/core/constants/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9648092Z ./rust/browser_commander/core/constants/constant.CHROME_ARGS.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9649094Z ./rust/browser_commander/core/constants/struct.Timing.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9649929Z ./rust/browser_commander/core/constants/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9650649Z ./rust/browser_commander/core/constants/static.TIMING.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9651325Z ./rust/browser_commander/core/engine/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9652001Z ./rust/browser_commander/core/engine/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9652904Z ./rust/browser_commander/core/engine/struct.FillVerificationResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9653955Z ./rust/browser_commander/core/engine/struct.ClickVerificationResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9654629Z ./rust/browser_commander/core/engine/enum.EngineError.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9655122Z ./rust/browser_commander/core/engine/struct.PreClickState.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9655601Z ./rust/browser_commander/core/engine/enum.EngineType.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9656080Z ./rust/browser_commander/core/engine/struct.ElementInfo.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9656556Z ./rust/browser_commander/core/engine/struct.PdfOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9657417Z ./rust/browser_commander/core/engine/struct.ScrollVerificationResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9658366Z ./rust/browser_commander/core/engine/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9659177Z ./rust/browser_commander/core/engine/trait.EngineAdapter.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9659896Z ./rust/browser_commander/core/logger/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9660559Z ./rust/browser_commander/core/logger/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9661335Z ./rust/browser_commander/core/logger/fn.init_logger.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9661991Z ./rust/browser_commander/core/logger/struct.Logger.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9662457Z ./rust/browser_commander/core/logger/fn.is_verbose_enabled.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9662950Z ./rust/browser_commander/core/logger/struct.LoggerOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9663382Z ./rust/browser_commander/core/logger/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9663736Z ./rust/browser_commander/core/navigation/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9664133Z ./rust/browser_commander/core/navigation/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9664600Z ./rust/browser_commander/core/navigation/fn.safe_operation.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9665097Z ./rust/browser_commander/core/navigation/struct.SafeResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9665597Z ./rust/browser_commander/core/navigation/fn.is_timeout_error.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9666111Z ./rust/browser_commander/core/navigation/fn.is_navigation_error.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9666849Z ./rust/browser_commander/core/navigation/enum.NavigationError.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9667547Z ./rust/browser_commander/core/navigation/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9667926Z ./rust/browser_commander/core/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9668255Z ./rust/browser_commander/core/dialog/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9668636Z ./rust/browser_commander/core/dialog/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9669110Z ./rust/browser_commander/core/dialog/enum.DialogType.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9669582Z ./rust/browser_commander/core/dialog/struct.DialogManager.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9670068Z ./rust/browser_commander/core/dialog/struct.DialogEvent.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9670486Z ./rust/browser_commander/core/dialog/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9671073Z ./rust/browser_commander/core/dialog/type.DialogHandler.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9671465Z ./rust/browser_commander/all.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9671778Z ./rust/browser_commander/utilities/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9672141Z ./rust/browser_commander/utilities/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9672522Z ./rust/browser_commander/utilities/url/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9672913Z ./rust/browser_commander/utilities/url/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9673348Z ./rust/browser_commander/utilities/url/fn.same_origin.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9673790Z ./rust/browser_commander/utilities/url/fn.is_data_url.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9674230Z ./rust/browser_commander/utilities/url/fn.get_domain.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9674706Z ./rust/browser_commander/utilities/url/fn.unfocus_address_bar.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9675151Z ./rust/browser_commander/utilities/url/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9675692Z ./rust/browser_commander/utilities/url/fn.get_url.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9676120Z ./rust/browser_commander/utilities/url/fn.parse_url.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9676579Z ./rust/browser_commander/utilities/url/fn.is_about_url.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9677190Z ./rust/browser_commander/utilities/url/fn.is_blob_url.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9677839Z ./rust/browser_commander/utilities/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9678500Z ./rust/browser_commander/utilities/wait/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9679181Z ./rust/browser_commander/utilities/wait/fn.wait.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9679942Z ./rust/browser_commander/utilities/wait/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9680772Z ./rust/browser_commander/utilities/wait/fn.safe_evaluate.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9681656Z ./rust/browser_commander/utilities/wait/fn.wait_with_cancel.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9682456Z ./rust/browser_commander/utilities/wait/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9683261Z ./rust/browser_commander/utilities/wait/struct.WaitResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9684083Z ./rust/browser_commander/utilities/wait/fn.evaluate.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9685005Z ./rust/browser_commander/utilities/wait/struct.SafeEvaluateResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9685820Z ./rust/browser_commander/interactions/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9686501Z ./rust/browser_commander/interactions/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9687414Z ./rust/browser_commander/interactions/scroll/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9688210Z ./rust/browser_commander/interactions/scroll/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9689114Z ./rust/browser_commander/interactions/scroll/fn.verify_scroll.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9690094Z ./rust/browser_commander/interactions/scroll/struct.ScrollOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9691100Z ./rust/browser_commander/interactions/scroll/enum.ScrollBehavior.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9692163Z ./rust/browser_commander/interactions/scroll/fn.scroll_into_view_if_needed.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9693102Z ./rust/browser_commander/interactions/scroll/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9693978Z ./rust/browser_commander/interactions/scroll/fn.scroll_into_view.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9694954Z ./rust/browser_commander/interactions/scroll/struct.ScrollResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9695743Z ./rust/browser_commander/interactions/fill/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9696497Z ./rust/browser_commander/interactions/fill/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9697565Z ./rust/browser_commander/interactions/fill/struct.FillResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9698696Z ./rust/browser_commander/interactions/fill/fn.perform_fill.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9699511Z ./rust/browser_commander/interactions/fill/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9700349Z ./rust/browser_commander/interactions/fill/fn.fill_text_area.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9701228Z ./rust/browser_commander/interactions/fill/fn.verify_fill.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9702137Z ./rust/browser_commander/interactions/fill/struct.FillOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9702941Z ./rust/browser_commander/interactions/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9703625Z ./rust/browser_commander/interactions/keyboard/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9704424Z ./rust/browser_commander/interactions/keyboard/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9705494Z ./rust/browser_commander/interactions/keyboard/fn.type_text.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9706403Z ./rust/browser_commander/interactions/keyboard/fn.key_down.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9707516Z ./rust/browser_commander/interactions/keyboard/fn.press_key.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9708380Z ./rust/browser_commander/interactions/keyboard/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9709239Z ./rust/browser_commander/interactions/keyboard/fn.key_up.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9709984Z ./rust/browser_commander/interactions/click/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9710742Z ./rust/browser_commander/interactions/click/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9711625Z ./rust/browser_commander/interactions/click/fn.click_button.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9712558Z ./rust/browser_commander/interactions/click/struct.ClickResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9713406Z ./rust/browser_commander/interactions/click/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9714288Z ./rust/browser_commander/interactions/click/struct.ClickOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9715220Z ./rust/browser_commander/interactions/click/fn.verify_click.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9716129Z ./rust/browser_commander/interactions/click/fn.click_element.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9717306Z ./rust/browser_commander/interactions/click/fn.capture_pre_click_state.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9718120Z ./rust/browser_commander/prelude/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9718751Z ./rust/browser_commander/prelude/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9719421Z ./rust/browser_commander/prelude/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9720015Z ./rust/browser_commander/browser/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9720639Z ./rust/browser_commander/browser/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9721316Z ./rust/browser_commander/browser/node_bridge/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9722086Z ./rust/browser_commander/browser/node_bridge/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9723052Z ./rust/browser_commander/browser/node_bridge/struct.NodeBridgePage.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9723867Z ./rust/browser_commander/browser/node_bridge/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9724275Z ./rust/browser_commander/browser/navigation_ops/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9724735Z ./rust/browser_commander/browser/navigation_ops/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9725279Z ./rust/browser_commander/browser/navigation_ops/fn.wait_for_navigation.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9725837Z ./rust/browser_commander/browser/navigation_ops/enum.WaitUntil.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9726424Z ./rust/browser_commander/browser/navigation_ops/fn.wait_for_url_stabilization.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9727203Z ./rust/browser_commander/browser/navigation_ops/fn.verify_navigation.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9728178Z ./rust/browser_commander/browser/navigation_ops/struct.NavigationResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9729416Z ./rust/browser_commander/browser/navigation_ops/struct.NavigationVerificationResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9730165Z ./rust/browser_commander/browser/navigation_ops/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9731023Z ./rust/browser_commander/browser/navigation_ops/fn.goto.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9732092Z ./rust/browser_commander/browser/navigation_ops/struct.NavigationOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9732978Z ./rust/browser_commander/browser/launcher/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9733734Z ./rust/browser_commander/browser/launcher/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9734615Z ./rust/browser_commander/browser/launcher/fn.launch_browser.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9735546Z ./rust/browser_commander/browser/launcher/struct.LaunchOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9736337Z ./rust/browser_commander/browser/launcher/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9737386Z ./rust/browser_commander/browser/launcher/struct.Browser.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9738343Z ./rust/browser_commander/browser/launcher/struct.LaunchResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9739128Z ./rust/browser_commander/browser/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9739835Z ./rust/browser_commander/browser/chromiumoxide_adapter/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9740750Z ./rust/browser_commander/browser/chromiumoxide_adapter/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9741561Z ./rust/browser_commander/browser/chromiumoxide_adapter/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9742680Z ./rust/browser_commander/browser/chromiumoxide_adapter/struct.ChromiumoxidePage.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9743389Z ./rust/browser_commander/browser/media/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9744036Z ./rust/browser_commander/browser/media/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9744842Z ./rust/browser_commander/browser/media/enum.ColorScheme.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9745344Z ./rust/browser_commander/browser/media/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9745827Z ./rust/browser_commander/browser/media/struct.EmulateMediaOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9746334Z ./rust/browser_commander/browser/media/fn.emulate_media.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9746726Z ./rust/browser_commander/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9747200Z ./rust/browser_commander/high_level/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9747659Z ./rust/browser_commander/high_level/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9748369Z ./rust/browser_commander/high_level/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9748975Z ./rust/browser_commander/high_level/universal_logic/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9749445Z ./rust/browser_commander/high_level/universal_logic/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9750041Z ./rust/browser_commander/high_level/universal_logic/fn.wait_for_url_condition.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9750679Z ./rust/browser_commander/high_level/universal_logic/fn.install_click_listener.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9751221Z ./rust/browser_commander/high_level/universal_logic/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9751781Z ./rust/browser_commander/high_level/universal_logic/fn.check_and_clear_flag.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9752383Z ./rust/browser_commander/high_level/universal_logic/fn.find_toggle_button.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9752830Z ./rust/browser_commander/elements/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9753182Z ./rust/browser_commander/elements/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9753547Z ./rust/browser_commander/elements/content/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9753955Z ./rust/browser_commander/elements/content/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9754429Z ./rust/browser_commander/elements/content/fn.get_attribute.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9754939Z ./rust/browser_commander/elements/content/struct.ElementLogInfo.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9755492Z ./rust/browser_commander/elements/content/fn.truncate_for_preview.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9756015Z ./rust/browser_commander/elements/content/fn.is_element_empty.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9756501Z ./rust/browser_commander/elements/content/fn.input_value.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9756936Z ./rust/browser_commander/elements/content/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9757744Z ./rust/browser_commander/elements/content/fn.text_content.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9758504Z ./rust/browser_commander/elements/selectors/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9759265Z ./rust/browser_commander/elements/selectors/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9760022Z ./rust/browser_commander/elements/selectors/fn.parse_nth_of_type.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9760996Z ./rust/browser_commander/elements/selectors/fn.has_nth_of_type.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9761535Z ./rust/browser_commander/elements/selectors/fn.normalize_selector.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9762097Z ./rust/browser_commander/elements/selectors/fn.escape_selector_value.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9762658Z ./rust/browser_commander/elements/selectors/enum.ParsedSelector.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9763197Z ./rust/browser_commander/elements/selectors/fn.build_text_selector.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9763674Z ./rust/browser_commander/elements/selectors/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9764336Z ./rust/browser_commander/elements/selectors/fn.is_text_selector.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9764950Z ./rust/browser_commander/elements/selectors/fn.extract_text_from_selector.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9765424Z ./rust/browser_commander/elements/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9765788Z ./rust/browser_commander/elements/visibility/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9766210Z ./rust/browser_commander/elements/visibility/sidebar-items.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9766673Z ./rust/browser_commander/elements/visibility/fn.count.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9767330Z ./rust/browser_commander/elements/visibility/fn.needs_scrolling.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9767810Z ./rust/browser_commander/elements/visibility/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9768470Z ./rust/browser_commander/elements/visibility/struct.VisibilityResult.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9769074Z ./rust/browser_commander/elements/visibility/fn.is_in_viewport.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9769579Z ./rust/browser_commander/elements/visibility/fn.is_visible.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9770128Z ./rust/browser_commander/elements/visibility/struct.VisibilityOptions.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9770681Z ./rust/browser_commander/elements/visibility/fn.is_enabled.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9771039Z ./rust/search.index/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9771279Z ./rust/search.index/desc/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9771581Z ./rust/search.index/desc/35b02b5a5d.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9771892Z ./rust/search.index/5e595fe8ac.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9772188Z ./rust/search.index/7a3792fd73.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9772452Z ./rust/search.index/name/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9772972Z ./rust/search.index/name/4723eebb95.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9773548Z ./rust/search.index/502f11a5e9.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9774073Z ./rust/search.index/4c647d4256.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9774835Z ./rust/search.index/21babf50dc.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9775368Z ./rust/search.index/47d0e7ea26.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9775891Z ./rust/search.index/2b437a5fb0.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9776366Z ./rust/search.index/alias/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9776885Z ./rust/search.index/alias/62150c532c.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9777663Z ./rust/search.index/5007ea6a4d.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9778183Z ./rust/search.index/79a2d8ae36.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9778661Z ./rust/search.index/path/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9779152Z ./rust/search.index/path/f329df4260.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9779470Z ./rust/search.index/09ffe4884f.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9779762Z ./rust/search.index/01dcd03340.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9780057Z ./rust/search.index/1abaca0b1f.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9780344Z ./rust/search.index/166f9f3aa8.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9780629Z ./rust/search.index/5c84507c4b.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9780911Z ./rust/search.index/663234066e.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9781197Z ./rust/search.index/5c7904837e.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9781489Z ./rust/search.index/4f469d06de.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9781772Z ./rust/search.index/0736be9299.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9782058Z ./rust/search.index/6599a8384e.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9782349Z ./rust/search.index/752602dce8.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9782634Z ./rust/search.index/2eaa34809f.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9782922Z ./rust/search.index/04dd86e822.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9783227Z ./rust/search.index/normalizedName/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9783578Z ./rust/search.index/normalizedName/3fc03b6002.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9783919Z ./rust/search.index/3482078520.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9784205Z ./rust/search.index/5521fd1484.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9784495Z ./rust/search.index/26f4ccc71b.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9784785Z ./rust/search.index/499ca00061.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9785100Z ./rust/search.index/generic_inverted_index/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9785501Z ./rust/search.index/generic_inverted_index/5081741849.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9785865Z ./rust/search.index/085c6486b8.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9786152Z ./rust/search.index/2706c29053.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9786443Z ./rust/search.index/3c91cfafb9.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9786736Z ./rust/search.index/1c7043d77d.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9787200Z ./rust/search.index/53a4424400.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9787501Z ./rust/search.index/128869e6ed.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9787976Z ./rust/search.index/5cdc1ca422.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9788272Z ./rust/search.index/769b726055.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9788562Z ./rust/search.index/38e8d485cc.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9788854Z ./rust/search.index/408d6ca25b.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9789138Z ./rust/search.index/14ad64842e.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9789412Z ./rust/search.index/entry/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9789706Z ./rust/search.index/entry/edcd49ad58.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9790022Z ./rust/search.index/1bc0eaaf4f.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9790318Z ./rust/search.index/4d7c0a6e73.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9790605Z ./rust/search.index/75234c788f.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9790890Z ./rust/search.index/4e513d2713.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9791156Z ./rust/search.index/type/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9791561Z ./rust/search.index/type/e8c348e119.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9791865Z ./rust/search.index/function/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9792175Z ./rust/search.index/function/04fea182dd.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9792496Z ./rust/search.index/74fe949aab.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9792793Z ./rust/search.index/67c463afa8.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9793082Z ./rust/search.index/304eeef1c7.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9793371Z ./rust/search.index/crateNames/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9793689Z ./rust/search.index/crateNames/b3ccc74694.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9794019Z ./rust/search.index/6e1b579294.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9794305Z ./rust/search.index/252cc266c5.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9794587Z ./rust/search.index/2d15b2740b.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9794874Z ./rust/search.index/758927e2c0.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9795154Z ./rust/search.index/508f78485c.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9795416Z ./rust/search.index/root.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9795689Z ./rust/search.index/5809569e23.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9795980Z ./rust/search.index/7db82c1940.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9796269Z ./rust/search.index/19515bff33.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9796557Z ./rust/search.index/584cadd113.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9796841Z ./rust/search.index/114eb493ae.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9797302Z ./rust/search.index/777018ab88.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9797587Z ./rust/search.index/324d553b91.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9797848Z ./rust/trait.impl/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9798085Z ./rust/trait.impl/core/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9798352Z ./rust/trait.impl/core/convert/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9798670Z ./rust/trait.impl/core/convert/trait.From.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9798972Z ./rust/trait.impl/core/fmt/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9799281Z ./rust/trait.impl/core/fmt/trait.Debug.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9799633Z ./rust/trait.impl/core/fmt/trait.Display.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9799941Z ./rust/trait.impl/core/cmp/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9800256Z ./rust/trait.impl/core/cmp/trait.PartialEq.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9800606Z ./rust/trait.impl/core/cmp/trait.Eq.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9800915Z ./rust/trait.impl/core/default/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9801245Z ./rust/trait.impl/core/default/trait.Default.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9801586Z ./rust/trait.impl/core/marker/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9801940Z ./rust/trait.impl/core/marker/trait.UnsafeUnpin.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9802312Z ./rust/trait.impl/core/marker/trait.Send.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9802671Z ./rust/trait.impl/core/marker/trait.Unpin.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9803025Z ./rust/trait.impl/core/marker/trait.Copy.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9803364Z ./rust/trait.impl/core/marker/trait.Sync.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9803770Z ./rust/trait.impl/core/marker/trait.StructuralPartialEq.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9804180Z ./rust/trait.impl/core/marker/trait.Freeze.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9804492Z ./rust/trait.impl/core/hash/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9804795Z ./rust/trait.impl/core/hash/trait.Hash.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9805092Z ./rust/trait.impl/core/ops/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9805375Z ./rust/trait.impl/core/ops/drop/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9805697Z ./rust/trait.impl/core/ops/drop/trait.Drop.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9806004Z ./rust/trait.impl/core/panic/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9806320Z ./rust/trait.impl/core/panic/unwind_safe/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9806734Z ./rust/trait.impl/core/panic/unwind_safe/trait.UnwindSafe.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9807375Z ./rust/trait.impl/core/panic/unwind_safe/trait.RefUnwindSafe.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9807935Z ./rust/trait.impl/core/str/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9808217Z ./rust/trait.impl/core/str/traits/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9808570Z ./rust/trait.impl/core/str/traits/trait.FromStr.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9808896Z ./rust/trait.impl/core/clone/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9809210Z ./rust/trait.impl/core/clone/trait.Clone.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9809522Z ./rust/trait.impl/core/error/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9809826Z ./rust/trait.impl/core/error/trait.Error.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9810157Z ./rust/trait.impl/browser_commander/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9810483Z ./rust/trait.impl/browser_commander/core/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9810850Z ./rust/trait.impl/browser_commander/core/engine/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9811335Z ./rust/trait.impl/browser_commander/core/engine/trait.EngineAdapter.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9812238Z ./rust/trait.impl/serde_core/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9812818Z ./rust/trait.impl/serde_core/ser/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9813423Z ./rust/trait.impl/serde_core/ser/trait.Serialize.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9813796Z ./rust/trait.impl/serde_core/de/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9814172Z ./rust/trait.impl/serde_core/de/trait.Deserialize.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9814534Z ./rust/type.impl/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9814774Z ./rust/type.impl/alloc/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9815043Z ./rust/type.impl/alloc/sync/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9815357Z ./rust/type.impl/alloc/sync/struct.Arc.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9815637Z ./rust/crates.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9815858Z ./rust/static.files/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9816173Z ./rust/static.files/LICENSE-APACHE-a60eea81.txt
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9816596Z ./rust/static.files/NanumBarunGothic-13b3dcba.ttf.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9817221Z ./rust/static.files/SourceSerif4-LICENSE-a2cfd9d5.md
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9817921Z ./rust/static.files/SourceCodePro-Semibold-aa29a496.ttf.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9818443Z ./rust/static.files/SourceSerif4-Semibold-457a13ac.ttf.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9818857Z ./rust/static.files/noscript-f7c3ffd8.css
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9819269Z ./rust/static.files/NanumBarunGothic-LICENSE-a37d393b.txt
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9819719Z ./rust/static.files/FiraMono-Medium-86f75c8c.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9820123Z ./rust/static.files/FiraSans-Italic-81dc35de.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9820539Z ./rust/static.files/SourceCodePro-LICENSE-67f54ca7.txt
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9820921Z ./rust/static.files/main-5013f961.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9821246Z ./rust/static.files/rustdoc-17e0aaed.css
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9821586Z ./rust/static.files/rust-logo-9a9549ea.svg
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9821931Z ./rust/static.files/normalize-9960930a.css
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9822326Z ./rust/static.files/SourceCodePro-It-fc8b9304.ttf.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9822729Z ./rust/static.files/Fira-LICENSE-05ab6dbd.txt
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9823086Z ./rust/static.files/COPYRIGHT-685a456c.txt
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9823453Z ./rust/static.files/LICENSE-MIT-23f18e03.txt
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9823803Z ./rust/static.files/stringdex-2da4960a.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9824140Z ./rust/static.files/settings-170eb4bf.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9824506Z ./rust/static.files/scrape-examples-2bbcccac.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9824880Z ./rust/static.files/search-b5634cc7.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9825294Z ./rust/static.files/SourceCodePro-Regular-8badfe75.ttf.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9825742Z ./rust/static.files/FiraMono-Regular-87c26294.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9826134Z ./rust/static.files/favicon-32x32-eab170b8.png
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9826557Z ./rust/static.files/SourceSerif4-Bold-6d4fd4c0.ttf.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9826997Z ./rust/static.files/SourceSerif4-It-ca3b17ed.ttf.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9827758Z ./rust/static.files/FiraSans-MediumItalic-ccf7e434.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9828169Z ./rust/static.files/src-script-813739b1.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9828548Z ./rust/static.files/FiraSans-Medium-e1aa3f0a.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9828922Z ./rust/static.files/storage-41dd4d93.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9829262Z ./rust/static.files/favicon-044be391.svg
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9829683Z ./rust/static.files/SourceSerif4-Regular-6b053e98.ttf.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9830124Z ./rust/static.files/FiraSans-Regular-0fe48ade.woff2
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9830641Z ./rust/settings.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9830857Z ./rust/.lock
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9831053Z ./javascript/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9831316Z ./javascript/ActionStoppedError.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9831614Z ./javascript/factory.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9831920Z ./javascript/PlaywrightAdapter.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9832236Z ./javascript/utilities_url.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9832511Z ./javascript/scripts/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9832780Z ./javascript/scripts/prettify/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9833098Z ./javascript/scripts/prettify/prettify.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9833438Z ./javascript/scripts/prettify/lang-css.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9833823Z ./javascript/scripts/prettify/Apache-License-2.0.txt
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9834356Z ./javascript/scripts/linenumber.js
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9834708Z ./javascript/interactions_keyboard.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9835032Z ./javascript/browser_pdf.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9835336Z ./javascript/PuppeteerAdapter.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9835664Z ./javascript/core_dialog-manager.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9835993Z ./javascript/utilities_wait.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9836311Z ./javascript/core_preferences.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9836622Z ./javascript/core_logger.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9836892Z ./javascript/fonts/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9837362Z ./javascript/fonts/OpenSans-BoldItalic-webfont.svg
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9837788Z ./javascript/fonts/OpenSans-LightItalic-webfont.svg
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9838182Z ./javascript/fonts/OpenSans-Bold-webfont.svg
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9838567Z ./javascript/fonts/OpenSans-Italic-webfont.woff
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9838957Z ./javascript/fonts/OpenSans-Regular-webfont.svg
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9839340Z ./javascript/fonts/OpenSans-Light-webfont.svg
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9839747Z ./javascript/fonts/OpenSans-BoldItalic-webfont.woff
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9840155Z ./javascript/fonts/OpenSans-Bold-webfont.woff
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9840551Z ./javascript/fonts/OpenSans-BoldItalic-webfont.eot
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9840947Z ./javascript/fonts/OpenSans-Italic-webfont.eot
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9841350Z ./javascript/fonts/OpenSans-Regular-webfont.eot
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9841757Z ./javascript/fonts/OpenSans-LightItalic-webfont.woff
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9842179Z ./javascript/fonts/OpenSans-LightItalic-webfont.eot
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9842582Z ./javascript/fonts/OpenSans-Italic-webfont.svg
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9842954Z ./javascript/fonts/OpenSans-Light-webfont.eot
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9843333Z ./javascript/fonts/OpenSans-Bold-webfont.eot
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9843706Z ./javascript/fonts/OpenSans-Light-webfont.woff
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9844085Z ./javascript/fonts/OpenSans-Regular-webfont.woff
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9844464Z ./javascript/core_navigation-manager.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9844809Z ./javascript/browser_launcher.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9845150Z ./javascript/core_engine-detection.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9845482Z ./javascript/browser_media.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9845804Z ./javascript/core_network-tracker.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9846144Z ./javascript/browser_navigation.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9846464Z ./javascript/tests_index.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9846777Z ./javascript/interactions_scroll.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9847228Z ./javascript/elements_content.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9847593Z ./javascript/core_page-trigger-manager.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9847904Z ./javascript/index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9848188Z ./javascript/interactions_click.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9848515Z ./javascript/elements_selectors.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9848814Z ./javascript/bindings.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9849149Z ./javascript/high-level_universal-logic.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9849524Z ./javascript/core_navigation-safety.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9849869Z ./javascript/core_constants.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9850206Z ./javascript/core_page-session.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9850539Z ./javascript/elements_visibility.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9850859Z ./javascript/EngineAdapter.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9851129Z ./javascript/styles/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9851559Z ./javascript/styles/prettify-jsdoc.css
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9851893Z ./javascript/styles/prettify-tomorrow.css
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9852226Z ./javascript/styles/jsdoc-default.css
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9852558Z ./javascript/core_engine-adapter.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9852889Z ./javascript/elements_locators.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9853175Z ./javascript/global.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9853471Z ./javascript/interactions_fill.js.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9853731Z ./index.html
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9854169Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9921245Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9922514Z ##[group]Run actions/upload-artifact@v4
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9922786Z with:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9922987Z   name: github-pages
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9923247Z   path: /home/runner/work/_temp/artifact.tar
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9923531Z   retention-days: 1
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9923749Z   if-no-files-found: error
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9923987Z   compression-level: 6
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9924201Z   overwrite: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9924421Z   include-hidden-files: false
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9924660Z env:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9924853Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9925109Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9925332Z   CARGO_TERM_COLOR: always
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:24.9925563Z ##[endgroup]
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.1672907Z (node:4471) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.1674498Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.1741162Z With the provided path, there will be 1 file uploaded
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.1750999Z Artifact name is valid!
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.1752558Z Root directory input is valid!
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.3673825Z Beginning upload of artifact content to blob storage
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.5380669Z (node:4471) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.8108495Z Uploaded bytes 2566258
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.8442643Z Finished uploading artifact content to blob storage!
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.8444300Z SHA256 digest of uploaded artifact zip is 0cc25738d9fd21a22b2f443fbf0f276a5983f32dfb6af6878a62676963110498
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:25.8445412Z Finalizing artifact upload
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.0094716Z Artifact github-pages.zip successfully finalized. Artifact ID 7935750747
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.0096415Z Artifact github-pages has been successfully uploaded! Final size is 2566258 bytes. Artifact ID is 7935750747
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.0103230Z Artifact download URL: https://github.com/link-foundation/browser-commander/actions/runs/28326104183/artifacts/7935750747
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.0285483Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.0286762Z Post job cleanup.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.1545970Z (node:4483) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.1547505Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.1711077Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.1712508Z Post job cleanup.
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.2555466Z [command]/usr/bin/git version
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.2626201Z git version 2.54.0
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.2665653Z Temporarily overriding HOME='/home/runner/work/_temp/b8e97a11-c4a3-464a-8673-70dcc97cc57d' before making global git config changes
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.2666895Z Adding repository directory to the temporary git global config as a safe directory
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.2672018Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.2711626Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.2747612Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.2984388Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.3013677Z http.https://github.com/.extraheader
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.3028329Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.3062430Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.3325604Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.3363097Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.3752220Z Cleaning up orphan processes
+Build Combined Docs	UNKNOWN STEP	2026-06-28T14:56:26.4140976Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Deploy GitHub Pages	UNKNOWN STEP	﻿2026-06-28T14:56:32.4683829Z Current runner version: '2.335.1'
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4710379Z ##[group]Runner Image Provisioner
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4711260Z Hosted Compute Agent
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4711927Z Version: 20260611.554
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4712604Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4713359Z Build Date: 2026-06-11T21:40:46Z
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4714140Z Worker ID: {58324d39-3c88-46d3-9582-90a601479a6f}
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4714859Z Azure Region: westus
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4715424Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4716963Z ##[group]Operating System
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4717943Z Ubuntu
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4718543Z 24.04.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4719123Z LTS
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4719669Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4720307Z ##[group]Runner Image
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4720915Z Image: ubuntu-24.04
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4721631Z Version: 20260622.220.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4722953Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260622.220/images/ubuntu/Ubuntu2404-Readme.md
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4724568Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260622.220
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4725544Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4726726Z ##[group]GITHUB_TOKEN Permissions
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4728772Z Metadata: read
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4730065Z Pages: write
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4730652Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4733141Z Secret source: Actions
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.4734157Z Prepare workflow directory
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.5095395Z Prepare all required actions
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.5135846Z Getting action download info
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:32.8520927Z Download action repository 'actions/deploy-pages@v4' (SHA:d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e)
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6084299Z Complete job name: Deploy GitHub Pages
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6903424Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6913314Z ##[group]Run actions/deploy-pages@v4
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6914195Z with:
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6919321Z   token: ***
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6919829Z   timeout: 600000
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6920330Z   error_count: 10
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6920832Z   reporting_interval: 5000
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6921396Z   artifact_name: github-pages
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6921966Z   preview: false
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.6922819Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.8841926Z (node:2154) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:33.8844063Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.1272481Z Fetching artifact metadata for "github-pages" in this workflow run
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.3691593Z Found 2 artifact(s)
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.3704984Z Creating Pages deployment with payload:
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.3706761Z {
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.3708292Z 	"artifact_id": 7935750747,
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.3710298Z 	"pages_build_version": "26c6d7a7baf949e48742fa75d17847686a07301d",
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.3900318Z 	"oidc_token": "***"
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.3901501Z }
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.6576789Z ##[error]Creating Pages deployment failed
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.6622551Z ##[error]HttpError: Not Found
+Deploy GitHub Pages	UNKNOWN STEP	    at /home/runner/work/_actions/actions/deploy-pages/v4/node_modules/@octokit/request/dist-node/index.js:124:1
+Deploy GitHub Pages	UNKNOWN STEP	    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+Deploy GitHub Pages	UNKNOWN STEP	    at createPagesDeployment (/home/runner/work/_actions/actions/deploy-pages/v4/src/internal/api-client.js:125:1)
+Deploy GitHub Pages	UNKNOWN STEP	    at Deployment.create (/home/runner/work/_actions/actions/deploy-pages/v4/src/internal/deployment.js:74:1)
+Deploy GitHub Pages	UNKNOWN STEP	    at main (/home/runner/work/_actions/actions/deploy-pages/v4/src/index.js:30:1)
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.6655262Z ##[error]Error: Failed to create deployment (status: 404) with build version 26c6d7a7baf949e48742fa75d17847686a07301d. Request ID 3800:128A50:CB987B9:D018E9E:6A413622 Ensure GitHub Pages has been enabled: https://github.com/link-foundation/browser-commander/settings/pages
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.7023160Z Evaluate and set environment url
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.7029820Z Evaluated environment url: 
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.7032115Z Cleaning up orphan processes
+Deploy GitHub Pages	UNKNOWN STEP	2026-06-28T14:56:34.7465289Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/deploy-pages@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0
+
+### Minor Changes
+
+- 21c63ac: Add the `browser-commander/tests` export with `test-anywhere`-based browser
+  test helpers for Playwright and Puppeteer, duration-aware ordering, balanced
+  shard planning, retries, timeouts, and failure artifacts.
+
 ## 0.8.1
 
 ### Patch Changes

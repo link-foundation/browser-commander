@@ -3,6 +3,10 @@ import os from 'os';
 import { CHROME_ARGS } from '../core/constants.js';
 import { disableTranslateInPreferences } from '../core/preferences.js';
 import { emulateMedia } from './media.js';
+import {
+  buildPlaywrightLaunchOptions,
+  buildPuppeteerLaunchOptions,
+} from './launch-options.js';
 
 /**
  * Launch browser with default configuration
@@ -14,6 +18,8 @@ import { emulateMedia } from './media.js';
  * @param {boolean} options.verbose - Enable verbose logging (default: false)
  * @param {string[]} options.args - Custom Chrome arguments to append to the default CHROME_ARGS
  * @param {string|null} [options.colorScheme] - Emulate color scheme: 'light', 'dark', 'no-preference', or null to reset
+ * @param {string} [options.channel] - Installed browser channel, such as 'chrome', 'chrome-beta', or 'msedge'
+ * @param {string} [options.executablePath] - Explicit path to a Chrome or Chromium executable
  * @returns {Promise<Object>} - Object with browser and page
  */
 export async function launchBrowser(options = {}) {
@@ -25,6 +31,8 @@ export async function launchBrowser(options = {}) {
     verbose = false,
     args = [],
     colorScheme,
+    channel,
+    executablePath,
   } = options;
 
   // Combine default CHROME_ARGS with custom args
@@ -53,18 +61,14 @@ export async function launchBrowser(options = {}) {
 
   if (engine === 'playwright') {
     const { chromium } = await import('playwright');
-    const contextOptions = {
+    const contextOptions = buildPlaywrightLaunchOptions({
       headless,
       slowMo,
-      chromiumSandbox: true,
-      viewport: null,
-      args: chromeArgs,
-      ignoreDefaultArgs: ['--enable-automation'],
-    };
-    // Playwright supports colorScheme as a context-level launch option
-    if (colorScheme !== undefined) {
-      contextOptions.colorScheme = colorScheme;
-    }
+      chromeArgs,
+      colorScheme,
+      channel,
+      executablePath,
+    });
     browser = await chromium.launchPersistentContext(
       userDataDir,
       contextOptions
@@ -72,12 +76,15 @@ export async function launchBrowser(options = {}) {
     page = browser.pages()[0];
   } else {
     const puppeteer = await import('puppeteer');
-    browser = await puppeteer.default.launch({
-      headless,
-      defaultViewport: null,
-      args: ['--start-maximized', ...chromeArgs],
-      userDataDir,
-    });
+    browser = await puppeteer.default.launch(
+      buildPuppeteerLaunchOptions({
+        headless,
+        chromeArgs,
+        userDataDir,
+        channel,
+        executablePath,
+      })
+    );
     const pages = await browser.pages();
     page = pages[0];
   }

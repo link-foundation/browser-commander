@@ -78,6 +78,8 @@ export {
 export { isVisible, isEnabled, count } from './elements/visibility.js';
 
 export {
+  content,
+  innerText,
   textContent,
   inputValue,
   getAttribute,

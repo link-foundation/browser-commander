@@ -44,6 +44,7 @@ export function createMockPlaywrightPage(options = {}) {
       },
       focus: async () => {},
       textContent: async () => elementData.textContent,
+      innerText: async () => elementData.innerText ?? elementData.textContent,
       inputValue: async () => elementData.value,
       getAttribute: async (name) => elementData[name] || null,
       isVisible: async () => elementData.visible,
@@ -56,6 +57,7 @@ export function createMockPlaywrightPage(options = {}) {
         const mockEl = {
           tagName: 'DIV',
           textContent: elementData.textContent,
+          innerText: elementData.innerText ?? elementData.textContent,
           value: elementData.value,
           className: elementData.className,
           disabled: !elementData.enabled,
@@ -105,6 +107,7 @@ export function createMockPlaywrightPage(options = {}) {
       return locs.map((l) => l.evaluate(fn, ...args));
     },
     locator: locatorMock,
+    content: async () => '<html><body>Mock page</body></html>',
     // Playwright's page.evaluate() only accepts a single argument (not spread)
     // This is the key difference from Puppeteer
     evaluate: async (fn, arg) => {
@@ -213,6 +216,8 @@ export function createMockPuppeteerPage(options = {}) {
       const mockEl = {
         tagName: 'DIV',
         textContent: elementData.textContent || 'Mock text',
+        innerText:
+          elementData.innerText ?? elementData.textContent ?? 'Mock text',
         value: elementData.value || '',
         className: elementData.className || 'mock-class',
         disabled: !elementData.enabled,
@@ -252,6 +257,7 @@ export function createMockPuppeteerPage(options = {}) {
           const mockEl = {
             tagName: 'DIV',
             textContent: 'Mock text',
+            innerText: 'Mock text',
             value: '',
             className: 'mock-class',
             disabled: false,
@@ -280,6 +286,7 @@ export function createMockPuppeteerPage(options = {}) {
         return fn;
       }
     },
+    content: async () => '<html><body>Mock page</body></html>',
     mainFrame: () => ({
       url: () => url,
     }),

@@ -3,6 +3,61 @@ import { getLocatorOrElement } from './locators.js';
 import { createEngineAdapter } from '../core/engine-adapter.js';
 
 /**
+ * Get the full HTML of the current page
+ * @param {Object} options - Configuration options
+ * @param {Object} options.page - Browser page object
+ * @param {string} options.engine - Engine type ('playwright' or 'puppeteer')
+ * @param {Object} options.adapter - Engine adapter (optional, will be created if not provided)
+ * @returns {Promise<string|null>} - Serialized page HTML, or null during navigation
+ */
+export async function content(options = {}) {
+  const { page, engine, adapter: providedAdapter } = options;
+
+  try {
+    const adapter = providedAdapter || createEngineAdapter(page, engine);
+    return await adapter.getPageContent();
+  } catch (error) {
+    if (isNavigationError(error)) {
+      console.log('⚠️  Navigation detected during content, returning null');
+      return null;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Get rendered text from an element, defaulting to the document body
+ * @param {Object} options - Configuration options
+ * @param {Object} options.page - Browser page object
+ * @param {string} options.engine - Engine type ('playwright' or 'puppeteer')
+ * @param {string|Object} [options.selector='body'] - CSS selector or element
+ * @param {Object} options.adapter - Engine adapter (optional, will be created if not provided)
+ * @returns {Promise<string|null>} - Rendered text, or null if unavailable
+ */
+export async function innerText(options = {}) {
+  const { page, engine, selector = 'body', adapter: providedAdapter } = options;
+
+  try {
+    const adapter = providedAdapter || createEngineAdapter(page, engine);
+    const locatorOrElement = await getLocatorOrElement({
+      page,
+      engine,
+      selector,
+    });
+    if (!locatorOrElement) {
+      return null;
+    }
+    return await adapter.getInnerText(locatorOrElement);
+  } catch (error) {
+    if (isNavigationError(error)) {
+      console.log('⚠️  Navigation detected during innerText, returning null');
+      return null;
+    }
+    throw error;
+  }
+}
+
+/**
  * Get text content
  * @param {Object} options - Configuration options
  * @param {Object} options.page - Browser page object

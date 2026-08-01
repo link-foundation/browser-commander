@@ -17,6 +17,7 @@ const temporaryDirectory = await mkdtemp(
 );
 const firstProfile = path.join(temporaryDirectory, "first-profile");
 const secondProfile = path.join(temporaryDirectory, "second-profile");
+const storageStatePath = path.join(temporaryDirectory, "storage-state.json");
 let firstBrowser;
 let secondBrowser;
 
@@ -45,7 +46,7 @@ try {
       url: "https://example.com",
     });
   }
-  const storageState = await saveStorageState(first.page);
+  await saveStorageState(first.page, storageStatePath);
   await firstBrowser.close();
   firstBrowser = undefined;
 
@@ -54,7 +55,7 @@ try {
     executablePath: browserExecutable,
     userDataDir: secondProfile,
     headless: true,
-    storageState,
+    storageState: storageStatePath,
   });
   secondBrowser = second.browser;
   await second.page.goto("https://example.com");

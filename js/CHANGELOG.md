@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0
+
+### Minor Changes
+
+- fe688ac: Add `channel` and `executablePath` launch options for reusing an installed Chrome-family browser.
+
 ## 0.9.1
 
 ### Patch Changes

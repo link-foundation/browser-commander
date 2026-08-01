@@ -43,6 +43,7 @@ export {
 
 // Re-export browser management
 export { launchBrowser } from './browser/launcher.js';
+export { saveStorageState } from './browser/storage-state.js';
 export { emulateMedia } from './browser/media.js';
 export {
   waitForUrlStabilization,

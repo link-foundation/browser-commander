@@ -18,6 +18,7 @@ This matrix tracks the shared API surface across the maintained language impleme
 | --------------------------------------- | --------------------- | -------------------- | ------------------ | ---------------------- | --------------------- |
 | Launch browser                          | Supported             | Supported            | Supported          | Supported              | Supported             |
 | Persistent user data directory          | Supported             | Supported            | Supported          | Supported              | Supported             |
+| Portable cookie/localStorage state      | Supported             | Supported            | Not implemented    | Not implemented        | Not implemented       |
 | Custom Chrome args                      | Supported             | Supported            | Supported          | Supported              | Supported             |
 | Headless launch                         | Supported             | Supported            | Supported          | Supported              | Supported             |
 | Color scheme at launch                  | Supported             | Supported            | Supported          | Supported              | Supported             |

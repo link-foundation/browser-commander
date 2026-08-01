@@ -100,6 +100,22 @@ const { browser, page } = await launchBrowser({
 });
 ```
 
+Reuse a saved authenticated session by passing Playwright-compatible storage
+state as a JSON file path or object. Cookies and localStorage are restored for
+both engines:
+
+```javascript
+import { launchBrowser, saveStorageState } from 'browser-commander';
+
+const { browser, page } = await launchBrowser({
+  engine: 'playwright',
+  storageState: './gmail-state.json',
+});
+
+// Save the current session for a later launch.
+await saveStorageState(page, './gmail-state.json');
+```
+
 ## Browser Commander Tests
 
 `browser-commander/tests` adds browser fixtures and scheduling helpers on top of
@@ -271,10 +287,25 @@ const { browser, page } = await launchBrowser({
   slowMo: 150, // Slow down operations (ms)
   verbose: false, // Enable debug logging
   args: ['--no-sandbox', '--disable-setuid-sandbox'], // Custom Chrome args to append
+  storageState: './session-state.json', // Saved cookies and localStorage, as a path or object
 });
 ```
 
 The `args` option allows passing custom Chrome arguments, which is useful for headless server environments (Docker, CI/CD) that require flags like `--no-sandbox`.
+
+The `storageState` option accepts a Playwright-compatible JSON path or object.
+Each engine restores its cookies and origin-specific localStorage before
+navigation, including when Playwright uses a persistent context.
+
+### saveStorageState(page, filePath)
+
+Save the current cookies and localStorage in Playwright's portable storage
+state format. The helper supports pages from either engine and also returns the
+saved object:
+
+```javascript
+const state = await saveStorageState(page, './session-state.json');
+```
 
 The `colorScheme` option allows setting the initial color scheme (`'light'`, `'dark'`, or `'no-preference'`) at launch time for screenshot services and testing tools:
 

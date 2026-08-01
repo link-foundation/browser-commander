@@ -7,6 +7,11 @@ import {
   buildPlaywrightLaunchOptions,
   buildPuppeteerLaunchOptions,
 } from './launch-options.js';
+import {
+  loadStorageState,
+  restorePlaywrightStorageState,
+  restorePuppeteerStorageState,
+} from './storage-state.js';
 
 /**
  * Launch browser with default configuration
@@ -20,6 +25,7 @@ import {
  * @param {string|null} [options.colorScheme] - Emulate color scheme: 'light', 'dark', 'no-preference', or null to reset
  * @param {string} [options.channel] - Installed browser channel, such as 'chrome', 'chrome-beta', or 'msedge'
  * @param {string} [options.executablePath] - Explicit path to a Chrome or Chromium executable
+ * @param {string|Object} [options.storageState] - Playwright-compatible storage state path or object
  * @returns {Promise<Object>} - Object with browser and page
  */
 export async function launchBrowser(options = {}) {
@@ -33,6 +39,7 @@ export async function launchBrowser(options = {}) {
     colorScheme,
     channel,
     executablePath,
+    storageState,
   } = options;
 
   // Combine default CHROME_ARGS with custom args
@@ -43,6 +50,8 @@ export async function launchBrowser(options = {}) {
       `Invalid engine: ${engine}. Expected 'playwright' or 'puppeteer'`
     );
   }
+
+  const resolvedStorageState = await loadStorageState(storageState);
 
   // Set environment variables to suppress warnings
   process.env.GOOGLE_API_KEY = 'no';
@@ -74,6 +83,10 @@ export async function launchBrowser(options = {}) {
       contextOptions
     );
     page = browser.pages()[0];
+    await restorePlaywrightStorageState({
+      context: browser,
+      storageState: resolvedStorageState,
+    });
   } else {
     const puppeteer = await import('puppeteer');
     browser = await puppeteer.default.launch(
@@ -87,6 +100,10 @@ export async function launchBrowser(options = {}) {
     );
     const pages = await browser.pages();
     page = pages[0];
+    await restorePuppeteerStorageState({
+      page,
+      storageState: resolvedStorageState,
+    });
   }
 
   if (verbose) {

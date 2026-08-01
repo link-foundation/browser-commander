@@ -82,6 +82,12 @@ commander.pageTrigger({
 // 4. Navigate - action auto-starts when page is ready
 await commander.goto({ url: 'https://example.com' });
 
+// Or safely replace the document with in-memory HTML
+await commander.setContent({
+  html: '<h1>Hi</h1>',
+  waitUntil: 'networkidle',
+});
+
 // 5. Cleanup
 await commander.destroy();
 await browser.close();

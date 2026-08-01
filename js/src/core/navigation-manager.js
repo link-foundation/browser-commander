@@ -11,6 +11,47 @@
 import { isNavigationError } from './navigation-safety.js';
 import { TIMING } from './constants.js';
 
+async function setManagedContent(options = {}) {
+  const {
+    page,
+    log,
+    html,
+    waitUntil = 'load',
+    timeout = 60000,
+    currentUrl,
+    triggerNavigationStart,
+    updateCurrentUrl,
+    waitForPageReady,
+    completeNavigation,
+  } = options;
+
+  if (typeof html !== 'string') {
+    throw new Error('html is required in options');
+  }
+
+  log.debug(() => '🚀 Loading in-memory HTML content');
+
+  try {
+    // Treat document replacement as a controlled navigation so active page
+    // triggers stop before the old document is discarded.
+    await triggerNavigationStart({ url: currentUrl, isExternal: false });
+    await page.setContent(html, { waitUntil, timeout });
+
+    // setContent normally preserves the URL, but inline scripts can navigate.
+    updateCurrentUrl();
+    await waitForPageReady({ timeout, reason: 'after setContent' });
+    return true;
+  } catch (error) {
+    // Do not leave the manager in its loading state when setContent fails.
+    completeNavigation();
+    if (isNavigationError(error)) {
+      log.debug(() => '⚠️  Content loading was interrupted, recovering...');
+      return false;
+    }
+    throw error;
+  }
+}
+
 /**
  * Create a NavigationManager instance for a page
  * @param {Object} options - Configuration options
@@ -341,6 +382,18 @@ export function createNavigationManager(options = {}) {
     }
   }
 
+  const setContent = (opts = {}) =>
+    setManagedContent({
+      page,
+      log,
+      ...opts,
+      currentUrl,
+      triggerNavigationStart,
+      updateCurrentUrl: () => (currentUrl = page.url()),
+      waitForPageReady,
+      completeNavigation,
+    });
+
   /**
    * Wait for any pending navigation to complete
    * @param {Object} options - Configuration options
@@ -371,27 +424,6 @@ export function createNavigationManager(options = {}) {
     }
 
     return await navigationPromise;
-  }
-
-  /**
-   * Check if we're currently navigating
-   */
-  function isCurrentlyNavigating() {
-    return isNavigating;
-  }
-
-  /**
-   * Get current URL
-   */
-  function getCurrentUrl() {
-    return currentUrl;
-  }
-
-  /**
-   * Get current session ID
-   */
-  function getSessionId() {
-    return sessionId;
   }
 
   /**
@@ -476,13 +508,14 @@ export function createNavigationManager(options = {}) {
   return {
     // Navigation
     navigate,
+    setContent,
     waitForNavigation,
     waitForPageReady,
 
     // State
-    isNavigating: isCurrentlyNavigating,
-    getCurrentUrl,
-    getSessionId,
+    isNavigating: () => isNavigating,
+    getCurrentUrl: () => currentUrl,
+    getSessionId: () => sessionId,
 
     // Abort handling - use these to stop operations when navigation occurs
     getAbortSignal,

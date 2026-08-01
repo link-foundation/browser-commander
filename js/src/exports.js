@@ -47,6 +47,7 @@ export { emulateMedia } from './browser/media.js';
 export {
   waitForUrlStabilization,
   goto,
+  setContent,
   waitForNavigation,
   waitForPageReady,
   waitAfterAction,

@@ -1,8 +1,8 @@
 /**
  * Example: PDF generation via browser-commander
  *
- * This example shows how to use the unified page.pdf() method
- * instead of the old workaround: `const rawPage = page._page || page`.
+ * This example shows how to load in-memory HTML and generate a PDF through the
+ * unified commander API.
  *
  * Supports both Playwright and Puppeteer engines.
  *
@@ -45,8 +45,11 @@ async function generatePdf() {
   try {
     const commander = makeBrowserCommander({ page, verbose: false });
 
-    // Navigate to a page
-    await page.goto('https://example.com');
+    // Load HTML assembled in memory using the managed navigation lifecycle.
+    await commander.setContent({
+      html: '<main><h1>Browser Commander</h1><p>Generated in memory.</p></main>',
+      waitUntil: 'load',
+    });
 
     // Generate PDF using the unified API (no workarounds needed!)
     const pdfBuffer = await commander.pdf({

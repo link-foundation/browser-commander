@@ -90,6 +90,7 @@ export function createMockPlaywrightPage(options = {}) {
     _isPlaywrightPage: true,
     url: () => url,
     goto: async (targetUrl, opts = {}) => {},
+    setContent: async (html, opts = {}) => {},
     waitForNavigation: async (opts = {}) => {},
     waitForSelector: async (sel, opts = {}) => locatorMock(sel),
     $: async (sel) => locatorMock(sel),
@@ -196,6 +197,7 @@ export function createMockPuppeteerPage(options = {}) {
     _isPuppeteerPage: true,
     url: () => url,
     goto: async (targetUrl, opts = {}) => {},
+    setContent: async (html, opts = {}) => {},
     waitForNavigation: async (opts = {}) => {},
     waitForSelector: async (sel, opts = {}) => elementMock(sel),
     $: async (sel) => {
@@ -441,6 +443,7 @@ export function createMockNavigationManager(options = {}) {
       url = opts.url || url;
       return true;
     },
+    setContent: async (opts = {}) => true,
     waitForNavigation: async (opts = {}) => true,
     waitForPageReady: async (opts = {}) => true,
     isNavigating: () => navigating,

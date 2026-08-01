@@ -8,6 +8,7 @@ import { getUrl, unfocusAddressBar } from './utilities/url.js';
 import {
   waitForUrlStabilization,
   goto,
+  setContent,
   waitForNavigation,
   waitForPageReady,
   waitAfterAction,
@@ -113,6 +114,12 @@ export function createBoundFunctions(options = {}) {
       ...opts,
       page,
       waitForUrlStabilization: waitForUrlStabilizationBound,
+      navigationManager,
+    });
+  const setContentBound = (opts) =>
+    setContent({
+      ...opts,
+      page,
       navigationManager,
     });
   const waitForNavigationBound = (opts) =>
@@ -312,6 +319,7 @@ export function createBoundFunctions(options = {}) {
     querySelectorAll: querySelectorAllBound,
     waitForUrlStabilization: waitForUrlStabilizationBound,
     goto: gotoBound,
+    setContent: setContentBound,
     getUrl: getUrlBound,
     waitForNavigation: waitForNavigationBound,
     waitForPageReady: waitForPageReadyBound,

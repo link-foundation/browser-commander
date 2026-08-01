@@ -417,6 +417,19 @@ await commander.goto({
 });
 ```
 
+### commander.setContent(options)
+
+Load an in-memory HTML document while preserving the same page-trigger cleanup
+and readiness guarantees as `goto()`:
+
+```javascript
+await commander.setContent({
+  html: '<h1>Hi</h1>',
+  waitUntil: 'networkidle', // Playwright/Puppeteer option
+  timeout: 60000,
+});
+```
+
 ### commander.clickButton(options)
 
 ```javascript

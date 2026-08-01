@@ -522,5 +522,24 @@ describe(
         // Test passes if no error is thrown
       });
     });
+
+    describe('In-memory Content', () => {
+      it('should load HTML through commander.setContent', async () => {
+        if (!commander) {
+          return;
+        }
+
+        const result = await commander.setContent({
+          html: '<main><h1 data-testid="content-title">In memory</h1></main>',
+          waitUntil: 'load',
+        });
+        const title = await commander.textContent({
+          selector: '[data-testid="content-title"]',
+        });
+
+        assert.strictEqual(result.loaded, true);
+        assert.strictEqual(title, 'In memory');
+      });
+    });
   }
 );

@@ -62,6 +62,10 @@ describe('bindings', () => {
         'goto should be a function'
       );
       assert.ok(
+        typeof bindings.setContent === 'function',
+        'setContent should be a function'
+      );
+      assert.ok(
         typeof bindings.getUrl === 'function',
         'getUrl should be a function'
       );

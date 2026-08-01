@@ -349,6 +349,64 @@ export async function goto(options = {}) {
 }
 
 /**
+ * Replace the current document with an in-memory HTML string.
+ * When NavigationManager is available, this uses the same managed lifecycle as
+ * goto so active page triggers are stopped before the document is replaced.
+ *
+ * @param {Object} options - Configuration options
+ * @param {Object} options.page - Browser page object
+ * @param {Object} options.navigationManager - NavigationManager instance (preferred)
+ * @param {string} options.html - HTML to load
+ * @param {string} options.waitUntil - Wait until condition (default: 'load')
+ * @param {number} options.timeout - Content loading timeout in ms (default: 60000)
+ * @returns {Promise<Object>} Content loading result
+ */
+export async function setContent(options = {}) {
+  const {
+    page,
+    navigationManager,
+    html,
+    waitUntil = 'load',
+    timeout = 60000,
+  } = options;
+
+  if (typeof html !== 'string') {
+    throw new Error('html is required in options');
+  }
+
+  try {
+    let loaded;
+    if (navigationManager) {
+      loaded = await navigationManager.setContent({
+        html,
+        waitUntil,
+        timeout,
+      });
+    } else {
+      await page.setContent(html, { waitUntil, timeout });
+      loaded = true;
+    }
+
+    return loaded
+      ? { loaded: true, actualUrl: page.url() }
+      : {
+          loaded: false,
+          actualUrl: page.url(),
+          reason: 'content loading stopped/interrupted',
+        };
+  } catch (error) {
+    if (isNavigationError(error) || isActionStoppedError(error)) {
+      return {
+        loaded: false,
+        actualUrl: page.url(),
+        reason: 'content loading stopped/interrupted',
+      };
+    }
+    throw error;
+  }
+}
+
+/**
  * Wait for navigation
  * @param {Object} options - Configuration options
  * @param {Object} options.page - Browser page object

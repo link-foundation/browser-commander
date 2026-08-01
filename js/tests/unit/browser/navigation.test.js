@@ -5,6 +5,7 @@ import {
   verifyNavigation,
   waitForUrlStabilization,
   goto,
+  setContent,
   waitForNavigation,
   waitForPageReady,
   waitAfterAction,
@@ -200,6 +201,66 @@ describe('navigation', () => {
 
       assert.strictEqual(gotoCalled, true);
       assert.strictEqual(result.navigated, true);
+    });
+  });
+
+  describe('setContent', () => {
+    it('should throw when html is not provided', async () => {
+      const page = createMockPlaywrightPage();
+
+      await assert.rejects(() => setContent({ page }), /html is required/);
+    });
+
+    it('should load content using navigationManager', async () => {
+      const page = createMockPlaywrightPage();
+      const navigationManager = createMockNavigationManager();
+      let receivedOptions;
+      navigationManager.setContent = async (options) => {
+        receivedOptions = options;
+        return true;
+      };
+
+      const result = await setContent({
+        page,
+        navigationManager,
+        html: '<h1>Hi</h1>',
+        waitUntil: 'networkidle',
+        timeout: 5000,
+      });
+
+      assert.deepStrictEqual(receivedOptions, {
+        html: '<h1>Hi</h1>',
+        waitUntil: 'networkidle',
+        timeout: 5000,
+      });
+      assert.deepStrictEqual(result, {
+        loaded: true,
+        actualUrl: 'https://example.com',
+      });
+    });
+
+    it('should load content directly without navigationManager', async () => {
+      const page = createMockPlaywrightPage();
+      let receivedArguments;
+      page.setContent = async (...args) => {
+        receivedArguments = args;
+      };
+
+      const result = await setContent({
+        page,
+        html: '',
+        waitUntil: 'load',
+        timeout: 5000,
+      });
+
+      assert.deepStrictEqual(receivedArguments, [
+        '',
+        { waitUntil: 'load', timeout: 5000 },
+      ]);
+      assert.deepStrictEqual(result, {
+        loaded: true,
+        actualUrl: 'https://example.com',
+      });
     });
   });
 

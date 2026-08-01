@@ -108,6 +108,21 @@ let puppeteer = LaunchOptions::puppeteer()
     .node_working_dir("./js");
 ```
 
+Reuse a system-installed Chrome-family browser by selecting its channel or
+providing an explicit executable path. `channel` applies to the Playwright and
+Puppeteer bridge engines; `executable_path` also applies to Chromiumoxide:
+
+```rust
+let playwright = LaunchOptions::playwright()
+    .channel("chrome")
+    .headless(true)
+    .node_working_dir("./js");
+
+let chromiumoxide = LaunchOptions::chromiumoxide()
+    .executable_path("/usr/bin/google-chrome")
+    .headless(true);
+```
+
 You can also set a custom Node executable:
 
 ```rust

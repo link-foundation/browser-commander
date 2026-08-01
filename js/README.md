@@ -87,6 +87,19 @@ await commander.destroy();
 await browser.close();
 ```
 
+To reuse an installed Chrome-family browser instead of downloading the
+engine's bundled Chromium, select a browser channel or provide its executable
+path. Both options are passed directly to Playwright or Puppeteer:
+
+```javascript
+const { browser, page } = await launchBrowser({
+  engine: 'playwright',
+  channel: 'chrome',
+  // Or: executablePath: '/usr/bin/google-chrome',
+  headless: true,
+});
+```
+
 ## Browser Commander Tests
 
 `browser-commander/tests` adds browser fixtures and scheduling helpers on top of

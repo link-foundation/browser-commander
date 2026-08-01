@@ -31,6 +31,10 @@ pub struct LaunchOptions {
     pub verbose: bool,
     /// Additional Chrome arguments.
     pub args: Vec<String>,
+    /// Installed browser channel for Playwright/Puppeteer (for example, `chrome`).
+    pub channel: Option<String>,
+    /// Explicit path to a Chrome or Chromium executable.
+    pub executable_path: Option<PathBuf>,
     /// Color scheme to emulate. `None` uses the system default.
     pub color_scheme: Option<ColorScheme>,
     /// Optional timeout for the browser launch handshake.
@@ -57,6 +61,8 @@ impl Default for LaunchOptions {
             slow_mo: 0,
             verbose: false,
             args: Vec::new(),
+            channel: None,
+            executable_path: None,
             color_scheme: None,
             launch_timeout: None,
             sandbox: true,
@@ -136,6 +142,18 @@ impl LaunchOptions {
     /// Add additional Chrome arguments.
     pub fn with_args(mut self, args: Vec<String>) -> Self {
         self.args = args;
+        self
+    }
+
+    /// Select an installed browser channel for Playwright or Puppeteer.
+    pub fn channel(mut self, channel: impl Into<String>) -> Self {
+        self.channel = Some(channel.into());
+        self
+    }
+
+    /// Select an explicit Chrome or Chromium executable.
+    pub fn executable_path(mut self, executable_path: impl Into<PathBuf>) -> Self {
+        self.executable_path = Some(executable_path.into());
         self
     }
 
@@ -308,6 +326,10 @@ async fn launch_chromiumoxide(
         builder = builder.no_sandbox();
     }
 
+    if let Some(ref executable_path) = options.executable_path {
+        builder = builder.chrome_executable(executable_path);
+    }
+
     if let Some(timeout) = options.launch_timeout {
         builder = builder.launch_timeout(timeout);
     }
@@ -388,6 +410,8 @@ mod tests {
         assert_eq!(options.slow_mo, 0);
         assert!(!options.verbose);
         assert!(options.args.is_empty());
+        assert!(options.channel.is_none());
+        assert!(options.executable_path.is_none());
         assert!(options.node_executable.is_none());
         assert!(options.node_working_dir.is_none());
     }
@@ -430,10 +454,17 @@ mod tests {
     fn launch_options_node_bridge_configuration() {
         let options = LaunchOptions::playwright()
             .node_executable("/custom/node")
-            .node_working_dir("/project/js");
+            .node_working_dir("/project/js")
+            .channel("chrome-beta")
+            .executable_path("/opt/google/chrome-beta");
 
         assert_eq!(options.node_executable, Some(PathBuf::from("/custom/node")));
         assert_eq!(options.node_working_dir, Some(PathBuf::from("/project/js")));
+        assert_eq!(options.channel.as_deref(), Some("chrome-beta"));
+        assert_eq!(
+            options.executable_path,
+            Some(PathBuf::from("/opt/google/chrome-beta"))
+        );
     }
 
     #[test]

@@ -109,21 +109,9 @@ impl NodeBridgePage {
             stderr_task: Arc::new(Mutex::new(stderr_task)),
         };
 
-        page.request(
-            "launch",
-            json!({
-                "engine": engine.to_string(),
-                "userDataDir": path_to_string(&user_data_dir),
-                "headless": options.headless,
-                "slowMo": options.slow_mo,
-                "verbose": options.verbose,
-                "args": options.all_chrome_args(),
-                "colorScheme": options.color_scheme.as_ref().map(|cs| cs.as_str()),
-                "sandbox": options.sandbox,
-            }),
-        )
-        .await
-        .map_err(|err| anyhow::anyhow!("{}", err))?;
+        page.request("launch", launch_params(&options, &user_data_dir))
+            .await
+            .map_err(|err| anyhow::anyhow!("{}", err))?;
 
         Ok(page)
     }
@@ -217,6 +205,21 @@ impl NodeBridgePage {
         let value = self.request(method, params).await?;
         Ok(value.as_bool().unwrap_or(false))
     }
+}
+
+fn launch_params(options: &LaunchOptions, user_data_dir: &Path) -> Value {
+    json!({
+        "engine": options.engine.to_string(),
+        "userDataDir": path_to_string(user_data_dir),
+        "headless": options.headless,
+        "slowMo": options.slow_mo,
+        "verbose": options.verbose,
+        "args": options.all_chrome_args(),
+        "colorScheme": options.color_scheme.as_ref().map(|cs| cs.as_str()),
+        "sandbox": options.sandbox,
+        "channel": options.channel,
+        "executablePath": options.executable_path.as_deref().map(path_to_string),
+    })
 }
 
 impl std::fmt::Debug for NodeBridgePage {
@@ -467,4 +470,29 @@ fn element_info_from_value(value: &Value) -> Result<Option<ElementInfo>, EngineE
             .unwrap_or(true),
         bounding_box,
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn launch_params_forward_browser_selection() {
+        let options = LaunchOptions::playwright()
+            .channel("chrome-beta")
+            .executable_path("/opt/google/chrome-beta");
+
+        let params = launch_params(&options, Path::new("/tmp/browser-data"));
+
+        assert_eq!(params["channel"], "chrome-beta");
+        assert_eq!(params["executablePath"], "/opt/google/chrome-beta");
+    }
+
+    #[test]
+    fn launch_params_default_browser_selection_is_null() {
+        let params = launch_params(&LaunchOptions::puppeteer(), Path::new("/tmp/browser-data"));
+
+        assert!(params["channel"].is_null());
+        assert!(params["executablePath"].is_null());
+    }
 }

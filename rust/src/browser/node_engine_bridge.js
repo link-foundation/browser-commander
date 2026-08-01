@@ -101,6 +101,12 @@ async function launchPlaywright(params) {
   if (params.colorScheme !== null && params.colorScheme !== undefined) {
     contextOptions.colorScheme = params.colorScheme;
   }
+  if (params.channel !== null && params.channel !== undefined) {
+    contextOptions.channel = params.channel;
+  }
+  if (params.executablePath !== null && params.executablePath !== undefined) {
+    contextOptions.executablePath = params.executablePath;
+  }
 
   context = await chromium.launchPersistentContext(
     params.userDataDir,
@@ -113,13 +119,20 @@ async function launchPlaywright(params) {
 
 async function launchPuppeteer(params) {
   const puppeteer = await import("puppeteer");
-  browser = await puppeteer.default.launch({
+  const launchOptions = {
     headless: params.headless,
     slowMo: params.slowMo,
     defaultViewport: null,
     args: ["--start-maximized", ...chromeArgs(params)],
     userDataDir: params.userDataDir,
-  });
+  };
+  if (params.channel !== null && params.channel !== undefined) {
+    launchOptions.channel = params.channel;
+  }
+  if (params.executablePath !== null && params.executablePath !== undefined) {
+    launchOptions.executablePath = params.executablePath;
+  }
+  browser = await puppeteer.default.launch(launchOptions);
   const pages = await browser.pages();
   page = pages[0] ?? (await browser.newPage());
 

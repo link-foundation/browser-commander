@@ -31,6 +31,8 @@ import {
 } from './elements/selectors.js';
 import { isVisible, isEnabled, count } from './elements/visibility.js';
 import {
+  content,
+  innerText,
   textContent,
   inputValue,
   getAttribute,
@@ -86,7 +88,13 @@ export function createBoundFunctions(options = {}) {
       : null;
     return wait({ ...opts, log, abortSignal: opts.abortSignal || abortSignal });
   };
-  const evaluateBound = (opts) => evaluate({ ...opts, page, engine });
+  const evaluateBound = (fnOrOptions, ...args) => {
+    const opts =
+      typeof fnOrOptions === 'function'
+        ? { fn: fnOrOptions, args }
+        : fnOrOptions;
+    return evaluate({ ...opts, page, engine });
+  };
   const safeEvaluateBound = (opts) => safeEvaluate({ ...opts, page, engine });
   const getUrlBound = () => getUrl({ page });
   const unfocusAddressBarBound = (opts = {}) =>
@@ -165,6 +173,16 @@ export function createBoundFunctions(options = {}) {
   const countBound = (opts) => count({ ...opts, page, engine });
 
   // Bound content
+  const contentBound = (opts = {}) => content({ ...opts, page, engine });
+  const innerTextBound = (selectorOrOptions = 'body') => {
+    const opts =
+      typeof selectorOrOptions === 'object' &&
+      selectorOrOptions !== null &&
+      Object.hasOwn(selectorOrOptions, 'selector')
+        ? selectorOrOptions
+        : { selector: selectorOrOptions };
+    return innerText({ ...opts, page, engine });
+  };
   const textContentBound = (opts) => textContent({ ...opts, page, engine });
   const inputValueBound = (opts) => inputValue({ ...opts, page, engine });
   const getAttributeBound = (opts) => getAttribute({ ...opts, page, engine });
@@ -310,6 +328,8 @@ export function createBoundFunctions(options = {}) {
     isVisible: isVisibleWrapped,
     isEnabled: isEnabledWrapped,
     count: countBound,
+    content: contentBound,
+    innerText: innerTextBound,
     textContent: textContentWrapped,
     inputValue: inputValueWrapped,
     locator: locatorBound,

@@ -134,6 +134,14 @@ describe('bindings', () => {
         'textContent should be a function'
       );
       assert.ok(
+        typeof bindings.content === 'function',
+        'content should be a function'
+      );
+      assert.ok(
+        typeof bindings.innerText === 'function',
+        'innerText should be a function'
+      );
+      assert.ok(
         typeof bindings.inputValue === 'function',
         'inputValue should be a function'
       );
@@ -206,6 +214,62 @@ describe('bindings', () => {
       // getUrl should work without passing page
       const url = bindings.getUrl();
       assert.strictEqual(url, 'https://example.com');
+    });
+
+    it('should expose page content with no arguments', async () => {
+      const page = createMockPlaywrightPage();
+      const bindings = createBoundFunctions({
+        page,
+        engine: 'playwright',
+        log: createMockLogger(),
+      });
+
+      assert.strictEqual(
+        await bindings.content(),
+        '<html><body>Mock page</body></html>'
+      );
+    });
+
+    it('should expose innerText with a selector or the body by default', async () => {
+      const page = createMockPlaywrightPage({
+        elements: {
+          body: { innerText: 'Body text', count: 1 },
+          main: { innerText: 'Main text', count: 1 },
+        },
+      });
+      const bindings = createBoundFunctions({
+        page,
+        engine: 'playwright',
+        log: createMockLogger(),
+      });
+
+      assert.strictEqual(await bindings.innerText(), 'Body text');
+      assert.strictEqual(await bindings.innerText('main'), 'Main text');
+    });
+
+    it('should evaluate a function with positional arguments', async () => {
+      const page = createMockPlaywrightPage();
+      const bindings = createBoundFunctions({
+        page,
+        engine: 'playwright',
+        log: createMockLogger(),
+      });
+
+      assert.strictEqual(await bindings.evaluate((a, b) => a + b, 2, 3), 5);
+    });
+
+    it('should preserve the evaluate options-object API', async () => {
+      const page = createMockPlaywrightPage();
+      const bindings = createBoundFunctions({
+        page,
+        engine: 'playwright',
+        log: createMockLogger(),
+      });
+
+      assert.strictEqual(
+        await bindings.evaluate({ fn: (a, b) => a + b, args: [2, 3] }),
+        5
+      );
     });
 
     it('should pre-bind log to functions', async () => {

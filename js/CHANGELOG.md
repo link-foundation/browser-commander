@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0
+
+### Minor Changes
+
+- 8ef86eb: Add page HTML, rendered text, and positional page evaluation APIs to commander instances.
+
 ## 0.10.0
 
 ### Minor Changes

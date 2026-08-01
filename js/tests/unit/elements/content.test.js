@@ -1,6 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
+  content,
+  innerText,
   textContent,
   inputValue,
   getAttribute,
@@ -14,6 +16,106 @@ import {
 } from '../../helpers/mocks.js';
 
 describe('content', () => {
+  describe('content', () => {
+    for (const [engine, createPage] of [
+      ['playwright', createMockPlaywrightPage],
+      ['puppeteer', createMockPuppeteerPage],
+    ]) {
+      it(`should return the full page HTML for ${engine}`, async () => {
+        const page = createPage();
+        page.content = async () =>
+          '<!doctype html><html><body>Hello</body></html>';
+
+        const html = await content({ page, engine });
+
+        assert.strictEqual(
+          html,
+          '<!doctype html><html><body>Hello</body></html>'
+        );
+      });
+    }
+
+    it('should return null on navigation errors', async () => {
+      const page = createMockPlaywrightPage();
+      page.content = async () => {
+        throw new Error('Execution context was destroyed');
+      };
+
+      assert.strictEqual(await content({ page, engine: 'playwright' }), null);
+    });
+  });
+
+  describe('innerText', () => {
+    it('should return rendered text for Playwright', async () => {
+      const page = createMockPlaywrightPage({
+        elements: { main: { innerText: 'Rendered text', count: 1 } },
+      });
+
+      const text = await innerText({
+        page,
+        engine: 'playwright',
+        selector: 'main',
+      });
+
+      assert.strictEqual(text, 'Rendered text');
+    });
+
+    it('should return rendered text for Puppeteer', async () => {
+      const page = createMockPuppeteerPage({
+        elements: { main: { innerText: 'Rendered text', count: 1 } },
+      });
+      page.evaluate = async () => 'Rendered text';
+
+      const text = await innerText({
+        page,
+        engine: 'puppeteer',
+        selector: 'main',
+      });
+
+      assert.strictEqual(text, 'Rendered text');
+    });
+
+    it('should default to the document body', async () => {
+      const page = createMockPlaywrightPage({
+        elements: { body: { innerText: 'Page text', count: 1 } },
+      });
+
+      assert.strictEqual(
+        await innerText({ page, engine: 'playwright' }),
+        'Page text'
+      );
+    });
+
+    it('should return null when the element is not found', async () => {
+      const page = createMockPuppeteerPage({
+        elements: { main: { count: 0 } },
+      });
+
+      assert.strictEqual(
+        await innerText({ page, engine: 'puppeteer', selector: 'main' }),
+        null
+      );
+    });
+
+    it('should return null on navigation errors', async () => {
+      const page = createMockPlaywrightPage();
+      page.locator = () => ({
+        count: async () => 1,
+        first() {
+          return this;
+        },
+        innerText: async () => {
+          throw new Error('Execution context was destroyed');
+        },
+      });
+
+      assert.strictEqual(
+        await innerText({ page, engine: 'playwright', selector: 'main' }),
+        null
+      );
+    });
+  });
+
   describe('textContent', () => {
     it('should throw when selector is not provided', async () => {
       const page = createMockPlaywrightPage();

@@ -366,6 +366,27 @@ await commander.fillTextArea({
 });
 ```
 
+### Page Content Extraction
+
+Read the current page without reaching through to the engine-specific page API:
+
+```javascript
+const html = await commander.content();
+const pageText = await commander.innerText(); // document.body
+const mainText = await commander.innerText('main');
+const title = await commander.evaluate(() => document.title);
+const total = await commander.evaluate((a, b) => a + b, 2, 3);
+```
+
+The existing options-object form of `evaluate` remains supported:
+
+```javascript
+const total = await commander.evaluate({
+  fn: (a, b) => a + b,
+  args: [2, 3],
+});
+```
+
 ### Keyboard Interactions
 
 ```javascript

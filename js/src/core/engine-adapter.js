@@ -121,6 +121,15 @@ export class EngineAdapter {
   }
 
   /**
+   * Get rendered text from an element
+   * @param {Object} locatorOrElement - Locator or element
+   * @returns {Promise<string>} - Rendered text
+   */
+  getInnerText(_locatorOrElement) {
+    return notImplemented('getInnerText');
+  }
+
+  /**
    * Get input value
    * @param {Object} locatorOrElement - Locator or element
    * @returns {Promise<string>} - Input value
@@ -237,6 +246,14 @@ export class EngineAdapter {
   }
 
   /**
+   * Get the full HTML of the current page
+   * @returns {Promise<string>} - Serialized page HTML
+   */
+  getPageContent() {
+    return notImplemented('getPageContent');
+  }
+
+  /**
    * Get the main frame
    * @returns {Object} - Main frame
    */
@@ -325,6 +342,10 @@ export class PlaywrightAdapter extends EngineAdapter {
     return await locatorOrElement.textContent();
   }
 
+  async getInnerText(locatorOrElement) {
+    return await locatorOrElement.innerText();
+  }
+
   async getInputValue(locatorOrElement) {
     return await locatorOrElement.inputValue();
   }
@@ -401,6 +422,10 @@ export class PlaywrightAdapter extends EngineAdapter {
     }
   }
 
+  async getPageContent() {
+    return await this.page.content();
+  }
+
   getMainFrame() {
     return this.page.mainFrame();
   }
@@ -467,6 +492,10 @@ export class PuppeteerAdapter extends EngineAdapter {
 
   async getTextContent(locatorOrElement) {
     return await this.page.evaluate((el) => el.textContent, locatorOrElement);
+  }
+
+  async getInnerText(locatorOrElement) {
+    return await this.page.evaluate((el) => el.innerText, locatorOrElement);
   }
 
   async getInputValue(locatorOrElement) {
@@ -539,6 +568,10 @@ export class PuppeteerAdapter extends EngineAdapter {
   async evaluateOnPage(fn, args = []) {
     // Puppeteer accepts spread arguments
     return await this.page.evaluate(fn, ...args);
+  }
+
+  async getPageContent() {
+    return await this.page.content();
   }
 
   getMainFrame() {

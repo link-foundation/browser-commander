@@ -42,6 +42,8 @@ export {
 } from './core/page-trigger-manager.js';
 
 // Re-export browser management
+export { connectBrowser } from './browser/connector.js';
+export { launchAndConnectRealBrowser } from './browser/real-browser.js';
 export { launchBrowser } from './browser/launcher.js';
 export { saveStorageState } from './browser/storage-state.js';
 export { emulateMedia } from './browser/media.js';

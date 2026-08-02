@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.0
+
+### Minor Changes
+
+- d22b80e: Add the `launchRealBrowser()` API name for launching and attaching to a genuine installed Chrome-family browser.
+
 ## 0.13.0
 
 ### Minor Changes

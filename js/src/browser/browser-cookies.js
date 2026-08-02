@@ -1,8 +1,6 @@
 import path from 'node:path';
 import os from 'node:os';
 
-import Database from 'better-sqlite3';
-
 import {
   clearBrowserCookieMemoryCache,
   getCachedCredential,
@@ -22,6 +20,10 @@ import {
   readSafeStoragePassword,
   readWindowsEncryptionKey,
 } from './browser-cookie-credentials.js';
+import {
+  openSqliteDatabase,
+  preserveIntegerPrecision,
+} from './browser-cookie-database.js';
 import {
   findCookieDatabase,
   listBrowserProfiles,
@@ -52,7 +54,7 @@ function firefoxExpires(value) {
 }
 
 function queryRows(database, query, domainFilter) {
-  const statement = database.prepare(query).safeIntegers();
+  const statement = preserveIntegerPrecision(database.prepare(query));
   return domainFilter ? statement.all(`%${domainFilter}%`) : statement.all();
 }
 
@@ -237,9 +239,12 @@ async function mapChromiumRows(rows, databaseVersion, context) {
   return cookies;
 }
 
-function openCookieDatabase(cookiePath) {
+async function openCookieDatabase(cookiePath) {
   try {
-    return new Database(cookiePath, { fileMustExist: true, readonly: true });
+    return await openSqliteDatabase(cookiePath, {
+      fileMustExist: true,
+      readOnly: true,
+    });
   } catch (error) {
     throw new Error(`Could not open browser cookie database: ${error.message}`);
   }
@@ -293,7 +298,7 @@ export async function readBrowserCookiesWithDependencies(
     return cachedCookies;
   }
 
-  const database = openCookieDatabase(cookiePath);
+  const database = await openCookieDatabase(cookiePath);
   let cookies;
   try {
     if (browser === 'firefox') {

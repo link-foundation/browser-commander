@@ -22,8 +22,6 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterEach, describe, it } from 'node:test';
 
-import Database from 'better-sqlite3';
-
 import {
   clearBrowserCookieMemoryCache,
   decryptChromiumCookie,
@@ -31,6 +29,7 @@ import {
   readBrowserCookies,
   readBrowserCookiesWithDependencies,
 } from '../../../src/browser/browser-cookies.js';
+import { openSqliteDatabase } from '../../../src/browser/browser-cookie-database.js';
 import { getCachedCredential } from '../../../src/browser/browser-cookie-cache.js';
 import { readSafeStoragePassword } from '../../../src/browser/browser-cookie-credentials.js';
 import { decodeChromiumCookiePlaintext } from '../../../src/browser/browser-cookie-crypto.js';
@@ -94,7 +93,7 @@ async function createChromiumProfile({ homeDir, rows, profile = 'Default' }) {
     })
   );
 
-  const database = new Database(cookiePath);
+  const database = await openSqliteDatabase(cookiePath);
   database.exec(`
     CREATE TABLE meta (key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, value LONGVARCHAR);
     INSERT INTO meta (key, value) VALUES ('version', '24');
@@ -143,7 +142,7 @@ async function createFirefoxProfile({ homeDir, rows }) {
     path.join(root, 'profiles.ini'),
     `[Profile0]\nName=default-release\nIsRelative=1\nPath=${profileName}\nDefault=1\n`
   );
-  const database = new Database(cookiePath);
+  const database = await openSqliteDatabase(cookiePath);
   database.exec(`
     CREATE TABLE moz_cookies (
       name TEXT,

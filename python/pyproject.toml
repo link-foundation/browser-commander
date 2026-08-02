@@ -39,7 +39,8 @@ selenium = ["selenium>=4.15.0"]
 all = ["playwright>=1.40.0", "selenium>=4.15.0"]
 dev = [
     "ruff>=0.8.0",
-    "mypy>=1.13.0",
+    # mypy 2.x no longer supports type-checking Python 3.9, which this package supports.
+    "mypy>=1.13.0,<2.0",
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",

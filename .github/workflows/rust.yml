@@ -29,13 +29,12 @@ on:
         required: false
         type: string
 
-concurrency:
-  group: rust-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
 
 defaults:
   run:
@@ -46,6 +45,10 @@ jobs:
   detect-changes:
     name: Detect Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-detect-changes
+      cancel-in-progress: true
     if: github.event_name != 'workflow_dispatch'
     outputs:
       rs-changed: ${{ steps.changes.outputs.rs-changed }}
@@ -79,6 +82,10 @@ jobs:
   changelog:
     name: Changelog Fragment Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-changelog
+      cancel-in-progress: true
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
     steps:
@@ -119,6 +126,10 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-lint
+      cancel-in-progress: true
     needs: [detect-changes]
     if: |
       always() && !cancelled() && (
@@ -169,6 +180,10 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+      cancel-in-progress: true
     needs: [detect-changes, changelog]
     # Run if: push event, OR changelog succeeded, OR changelog was skipped (docs-only PR)
     # Note: always() is required to evaluate the condition when dependencies are skipped.
@@ -205,6 +220,10 @@ jobs:
   build:
     name: Build Package
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-build
+      cancel-in-progress: true
     needs: [lint, test]
     # Note: always() ensures this job runs even when lint/test jobs use always().
     if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
@@ -237,6 +256,10 @@ jobs:
   auto-release:
     name: Auto Release
     needs: [lint, test, build]
+    timeout-minutes: 30
+    concurrency:
+      group: main-writer-${{ github.repository }}-main
+      cancel-in-progress: false
     # Note: always() is required to evaluate the condition when dependencies use always().
     # The build job ensures lint and test passed before this job runs.
     if: |
@@ -346,6 +369,10 @@ jobs:
   manual-release:
     name: Manual Release
     needs: [lint, test, build]
+    timeout-minutes: 30
+    concurrency:
+      group: main-writer-${{ github.repository }}-main
+      cancel-in-progress: false
     # Note: always() is required to evaluate the condition when dependencies use always().
     # The build job ensures lint and test passed before this job runs.
     if: |

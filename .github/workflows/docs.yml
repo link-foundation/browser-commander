@@ -20,20 +20,24 @@ on:
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
-concurrency:
-  group: docs-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
-
 permissions:
   contents: read
   pages: write
   id-token: write
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
 
 jobs:
   build-docs:
     name: Build Combined Docs
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-build-docs
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
 
@@ -50,7 +54,7 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
           PUPPETEER_SKIP_DOWNLOAD: "true"
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Generate JavaScript API docs
         working-directory: js
@@ -115,6 +119,9 @@ jobs:
     name: Deploy GitHub Pages
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    concurrency:
+      group: main-writer-${{ github.repository }}-main
+      cancel-in-progress: false
     needs: [build-docs]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
     permissions:

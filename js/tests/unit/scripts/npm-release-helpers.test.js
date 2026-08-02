@@ -127,12 +127,25 @@ describe('test runner helper', () => {
       reporter: 'spec',
       targets: ['tests/unit'],
     });
-    assert.deepEqual(buildNodeTestArgs(options, ['tests/unit/a.test.js']), [
-      '--test',
-      '--experimental-test-coverage',
-      '--test-reporter',
-      'spec',
-      'tests/unit/a.test.js',
-    ]);
+    assert.deepEqual(
+      buildNodeTestArgs(options, ['tests/unit/a.test.js'], '24.18.0'),
+      [
+        '--test',
+        '--test-isolation=none',
+        '--experimental-test-coverage',
+        '--test-reporter',
+        'spec',
+        'tests/unit/a.test.js',
+      ]
+    );
+  });
+
+  it('keeps process isolation on Node versions without isolation controls', () => {
+    const options = parseTestRunnerArgs(['tests/unit']);
+
+    assert.deepEqual(
+      buildNodeTestArgs(options, ['tests/unit/a.test.js'], '20.20.2'),
+      ['--test', 'tests/unit/a.test.js']
+    );
   });
 });

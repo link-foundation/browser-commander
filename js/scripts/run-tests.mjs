@@ -137,8 +137,26 @@ export function resolveTestFiles(targets, cwd = process.cwd()) {
   return uniqueFiles.map((file) => relative(cwd, file));
 }
 
-export function buildNodeTestArgs(options, testFiles) {
+function supportsTestIsolation(nodeVersion) {
+  const majorVersion = Number.parseInt(nodeVersion.split('.')[0], 10);
+  return Number.isInteger(majorVersion) && majorVersion >= 24;
+}
+
+export function buildNodeTestArgs(
+  options,
+  testFiles,
+  nodeVersion = process.versions.node
+) {
   const args = ['--test'];
+
+  // Node's default process isolation serializes each test file's results over
+  // a child-process channel. Node 24 on macOS can intermittently corrupt that
+  // stream (ERR_TEST_FAILURE: "Unable to deserialize cloned data"). Running
+  // supported runtimes in-process removes that transport while keeping the
+  // Node 20-compatible fallback for consumers on the minimum engine version.
+  if (supportsTestIsolation(nodeVersion)) {
+    args.push('--test-isolation=none');
+  }
 
   if (options.coverage) {
     args.push('--experimental-test-coverage');

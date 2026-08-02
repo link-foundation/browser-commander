@@ -14,18 +14,22 @@ on:
       - 'scripts/check-ci-workflows.mjs'
   workflow_dispatch:
 
-concurrency:
-  group: ci-policy-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-
 permissions:
   contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
 
 jobs:
   check:
     name: Check CI Workflow Policy
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-check
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
 

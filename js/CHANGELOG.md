@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+
+### Minor Changes
+
+- 46d0049: Add CDP attachment through `connectBrowser()` for Playwright and Puppeteer, plus `launchAndConnectRealBrowser()` for starting an installed Chrome-family browser with a dedicated automation profile.
+
 ## 0.12.0
 
 ### Minor Changes

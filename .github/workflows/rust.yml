@@ -264,19 +264,17 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-coverage
       cancel-in-progress: true
-    needs: [detect-changes, test]
+    needs: [test]
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    # !cancelled() is required because detect-changes is skipped on
-    # workflow_dispatch; without it a skipped dependency would skip this job.
-    # See: https://github.com/actions/runner/issues/491
-    if: |
-      !cancelled() && needs.test.result == 'success' && (
-        github.event_name == 'push' ||
-        github.event_name == 'workflow_dispatch' ||
-        needs.detect-changes.outputs.rs-changed == 'true' ||
-        needs.detect-changes.outputs.toml-changed == 'true'
-      )
+    # Same gate as build: whenever the suite actually ran and passed, report its
+    # coverage. Re-testing the detect-changes outputs here would add a second,
+    # stricter filter that silently drops the report on runs where the tests did
+    # execute -- coverage would stop updating with nothing saying so.
+    # !cancelled() is required because test can itself follow a skipped
+    # dependency. See: https://github.com/actions/runner/issues/491
+    if: >-
+      !cancelled() && needs.test.result == 'success'
     steps:
       - uses: actions/checkout@v6
 

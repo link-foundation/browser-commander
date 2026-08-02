@@ -72,6 +72,21 @@ by file against `.github/workflows/**` and `scripts/**`.
   policy. `js/src/browser/browser-cookie-database.js` already falls back to the
   built-in `node:sqlite` on Node 22+, which is why the tests still pass.
 
+**`ResourceWarning: unclosed database in <sqlite3.Connection ...>`** (Python suite,
+all three operating systems)
+
+- Evidence: `ci-logs-after/run-30750290211.log` and the other two Python jobs.
+- Root cause: `browser_cookies.py` used the connection returned by
+  `_open_cookie_database` directly as a context manager.
+  `sqlite3.Connection.__exit__` only commits or rolls back the transaction — it
+  does **not** close the connection — so every cookie read leaked a handle.
+- Fix: wrap the connection in `contextlib.closing`. A reproducing test
+  (`test_closes_the_cookie_database_connection`) asserts every opened connection
+  raises `ProgrammingError: closed database` afterwards; it fails without the fix.
+- The JavaScript implementation was checked for the same defect and has none:
+  `js/src/browser/browser-cookies.js` already closes the database in a `finally`
+  block, so the error path does not leak either.
+
 ### 4.2 Errors — workflows that would not parse
 
 `if: !cancelled() && ...` written as a single-line value is **invalid YAML**: a

@@ -137,10 +137,19 @@ still explained the old `always()` behaviour were rewritten.
 The same defects exist in the templates the repository was seeded from and are
 reported there, each with a reproducible example, a workaround and a code fix:
 
-- js template — `instant-release` and `changeset-pr` publish without `needs:` on lint/test.
-- js/python/rust templates — free-form `workflow_dispatch` inputs and
-  `github.base_ref` interpolated into `run:` bodies.
-- python/rust templates — changelog fragment checks that warn but never fail.
+- js template — `instant-release` and `changeset-pr` have no `needs:` at all, so a
+  manual dispatch publishes to npm with lint and tests never having run.
+- js template — [issue #119](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/119)
+- python template — `origin/${{ github.base_ref }}` is interpolated into the
+  changelog `run:` body, and the changelog check warns instead of failing (the
+  rust template's equivalent already exits 1) —
+  [issue #45](https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/45)
+
+The rust template was checked for the same defects and has none: its
+`manual-release` is gated on `needs.build.result == 'success'`, its release
+inputs already go through `env:`, and `scripts/check-changelog-fragment.rs`
+exits 1 on a missing fragment. The js template also passes its release inputs
+through `env:`.
 
 ## 7. Deliberately left open
 

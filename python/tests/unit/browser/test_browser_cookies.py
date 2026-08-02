@@ -357,21 +357,27 @@ def test_in_process_credential_cache_expires_after_ttl(tmp_path: Path) -> None:
         directory=tmp_path,
         ttl_seconds=60,
     )
-    assert get_cached_credential(
-        cache,
-        "chrome:linux:ttl-test",
-        create,
-        refresh=False,
-        metadata={},
-        now=now,
-    )[0] == 1
+    assert (
+        get_cached_credential(
+            cache,
+            "chrome:linux:ttl-test",
+            create,
+            refresh=False,
+            metadata={},
+            now=now,
+        )[0]
+        == 1
+    )
     current_time += 61
-    assert get_cached_credential(
-        cache,
-        "chrome:linux:ttl-test",
-        create,
-        refresh=False,
-        metadata={},
-        now=now,
-    )[0] == 2
+    assert (
+        get_cached_credential(
+            cache,
+            "chrome:linux:ttl-test",
+            create,
+            refresh=False,
+            metadata={},
+            now=now,
+        )[0]
+        == 2
+    )
     assert credential_reads == 2

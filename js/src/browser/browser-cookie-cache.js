@@ -24,14 +24,14 @@ export function clearBrowserCookieMemoryCache() {
 }
 
 export function normalizeCookieCache(cache, homeDir, ttlMinutes) {
-  if (cache === false) {
-    return { enabled: false };
-  }
   const selectedTtl = ttlMinutes ?? cache?.ttlMinutes ?? DEFAULT_TTL_MINUTES;
   if (!Number.isFinite(selectedTtl) || selectedTtl < 0) {
     throw new RangeError(
       'cookie cache ttlMinutes must be a non-negative number'
     );
+  }
+  if (cache === false) {
+    return { enabled: false, ttlSeconds: selectedTtl * 60 };
   }
   return {
     enabled: true,
@@ -167,14 +167,17 @@ async function loadOrCreateCredential({
   metadata,
 }) {
   if (!cache.enabled) {
-    return create();
+    return { key: Buffer.from(await create()), savedAt: now() / 1000 };
   }
   await ensureCacheDirectory(cache.dir);
   const cachedPath = cachePath(cache.dir, 'credential', identity);
   const lockPath = `${cachedPath}.lock`;
   const initial = await readFreshJson(cachedPath, cache.ttlSeconds, now);
   if (!refresh && initial?.kind === 'derived-key') {
-    return Buffer.from(initial.key, 'base64');
+    return {
+      key: Buffer.from(initial.key, 'base64'),
+      savedAt: initial.savedAt,
+    };
   }
 
   const acquired = await acquireCredentialLock(lockPath, cachedPath, {
@@ -184,7 +187,10 @@ async function loadOrCreateCredential({
     ttlSeconds: cache.ttlSeconds,
   });
   if (acquired.cached) {
-    return Buffer.from(acquired.cached.key, 'base64');
+    return {
+      key: Buffer.from(acquired.cached.key, 'base64'),
+      savedAt: acquired.cached.savedAt,
+    };
   }
 
   try {
@@ -193,17 +199,21 @@ async function loadOrCreateCredential({
       afterLock?.kind === 'derived-key' &&
       (!refresh || afterLock.savedAt !== initial?.savedAt)
     ) {
-      return Buffer.from(afterLock.key, 'base64');
+      return {
+        key: Buffer.from(afterLock.key, 'base64'),
+        savedAt: afterLock.savedAt,
+      };
     }
     const key = Buffer.from(await create());
+    const savedAt = now() / 1000;
     await writeOwnerOnlyJson(cachedPath, {
       version: 1,
       kind: 'derived-key',
-      savedAt: now() / 1000,
+      savedAt,
       key: key.toString('base64'),
       ...metadata,
     });
-    return key;
+    return { key, savedAt };
   } finally {
     await acquired.close();
     await rm(lockPath, { force: true });
@@ -212,13 +222,19 @@ async function loadOrCreateCredential({
 
 export async function getCachedCredential(options) {
   const memoryIdentity = `${options.cache.dir ?? 'disabled'}:${options.identity}`;
+  const now = options.now ?? Date.now;
   if (!options.refresh && credentialPromises.has(memoryIdentity)) {
-    return credentialPromises.get(memoryIdentity);
+    const cached = await credentialPromises.get(memoryIdentity);
+    const age = now() / 1000 - cached.savedAt;
+    if (age >= 0 && age <= options.cache.ttlSeconds) {
+      return cached.key;
+    }
+    credentialPromises.delete(memoryIdentity);
   }
-  const promise = loadOrCreateCredential({ now: Date.now, ...options });
+  const promise = loadOrCreateCredential({ ...options, now });
   credentialPromises.set(memoryIdentity, promise);
   try {
-    return await promise;
+    return (await promise).key;
   } catch (error) {
     if (credentialPromises.get(memoryIdentity) === promise) {
       credentialPromises.delete(memoryIdentity);

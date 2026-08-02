@@ -17,7 +17,7 @@ from typing import Callable
 DEFAULT_TTL_MINUTES = 60.0
 LOCK_STALE_SECONDS = 30.0
 LOCK_WAIT_SECONDS = 30.0
-_credential_memory_cache: dict[str, bytes] = {}
+_credential_memory_cache: dict[str, tuple[bytes, float]] = {}
 _memory_lock = threading.Lock()
 
 
@@ -40,8 +40,6 @@ def normalize_cookie_cache(
     cache: object, home_dir: Path, ttl_minutes: float | None
 ) -> NormalizedCookieCache:
     """Normalize the public cache object without importing its dataclass."""
-    if cache is False:
-        return NormalizedCookieCache(enabled=False)
     selected_ttl = (
         ttl_minutes
         if ttl_minutes is not None
@@ -49,6 +47,11 @@ def normalize_cookie_cache(
     )
     if not isinstance(selected_ttl, (int, float)) or selected_ttl < 0:
         raise ValueError("cookie cache ttl_minutes must be a non-negative number")
+    if cache is False:
+        return NormalizedCookieCache(
+            enabled=False,
+            ttl_seconds=float(selected_ttl) * 60,
+        )
     configured_dir = getattr(cache, "dir", None)
     directory = (
         Path(configured_dir).expanduser().resolve()
@@ -188,16 +191,16 @@ def _load_or_create_credential(
     refresh: bool,
     metadata: dict,
     now: Callable[[], float],
-) -> bytes:
+) -> tuple[bytes, float]:
     if not cache.enabled:
-        return bytes(create())
+        return bytes(create()), now()
     assert cache.directory is not None
     _ensure_cache_directory(cache.directory)
     cached_path = _cache_path(cache, "credential", identity)
     lock_path = cached_path.with_suffix(".json.lock")
     initial = _read_fresh_json(cached_path, cache.ttl_seconds, now)
     if not refresh and initial and initial.get("kind") == "derived-key":
-        return base64.b64decode(initial["key"])
+        return base64.b64decode(initial["key"]), float(initial["savedAt"])
 
     descriptor, waited_cache = _acquire_lock_or_cached(
         lock_path,
@@ -208,7 +211,10 @@ def _load_or_create_credential(
         now=now,
     )
     if waited_cache:
-        return base64.b64decode(waited_cache["key"])
+        return (
+            base64.b64decode(waited_cache["key"]),
+            float(waited_cache["savedAt"]),
+        )
 
     assert descriptor is not None
     os.close(descriptor)
@@ -223,19 +229,23 @@ def _load_or_create_credential(
                 != (initial.get("savedAt") if initial else None)
             )
         ):
-            return base64.b64decode(after_lock["key"])
+            return (
+                base64.b64decode(after_lock["key"]),
+                float(after_lock["savedAt"]),
+            )
         key = bytes(create())
+        saved_at = now()
         _write_owner_only_json(
             cached_path,
             {
                 "version": 1,
                 "kind": "derived-key",
-                "savedAt": now(),
+                "savedAt": saved_at,
                 "key": base64.b64encode(key).decode(),
                 **metadata,
             },
         )
-        return key
+        return key, saved_at
     finally:
         with suppress(FileNotFoundError):
             lock_path.unlink()
@@ -256,8 +266,13 @@ def get_cached_credential(
         with _memory_lock:
             cached = _credential_memory_cache.get(memory_identity)
         if cached is not None:
-            return cached
-    key = _load_or_create_credential(
+            key, saved_at = cached
+            age = now() - saved_at
+            if 0 <= age <= cache.ttl_seconds:
+                return key
+            with _memory_lock:
+                _credential_memory_cache.pop(memory_identity, None)
+    key, saved_at = _load_or_create_credential(
         cache,
         identity,
         create,
@@ -266,5 +281,5 @@ def get_cached_credential(
         now=now,
     )
     with _memory_lock:
-        _credential_memory_cache[memory_identity] = key
+        _credential_memory_cache[memory_identity] = (key, saved_at)
     return key

@@ -18,7 +18,14 @@ const DEFAULT_TTL_MINUTES: f64 = 60.0;
 const LOCK_STALE_SECONDS: f64 = 30.0;
 const LOCK_WAIT_SECONDS: f64 = 30.0;
 
-static CREDENTIAL_MEMORY_CACHE: OnceLock<Mutex<HashMap<String, Vec<u8>>>> = OnceLock::new();
+static CREDENTIAL_MEMORY_CACHE: OnceLock<Mutex<HashMap<String, CachedCredential>>> =
+    OnceLock::new();
+
+#[derive(Debug, Clone)]
+struct CachedCredential {
+    key: Vec<u8>,
+    saved_at: f64,
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct NormalizedCookieCache {
@@ -48,7 +55,7 @@ pub(crate) fn normalize_cookie_cache(
     })
 }
 
-fn memory_cache() -> &'static Mutex<HashMap<String, Vec<u8>>> {
+fn memory_cache() -> &'static Mutex<HashMap<String, CachedCredential>> {
     CREDENTIAL_MEMORY_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -242,15 +249,20 @@ fn acquire_lock_or_cached(
     ))
 }
 
-fn decode_cached_key(value: &Value) -> Result<Vec<u8>> {
-    BASE64
+fn decode_cached_credential(value: &Value) -> Result<CachedCredential> {
+    let key = BASE64
         .decode(
             value
                 .get("key")
                 .and_then(Value::as_str)
                 .ok_or_else(|| anyhow!("derived-key cache has no key"))?,
         )
-        .context("derived-key cache contains invalid base64")
+        .context("derived-key cache contains invalid base64")?;
+    let saved_at = value
+        .get("savedAt")
+        .and_then(Value::as_f64)
+        .ok_or_else(|| anyhow!("derived-key cache has no savedAt timestamp"))?;
+    Ok(CachedCredential { key, saved_at })
 }
 
 pub(crate) fn get_cached_credential<F>(
@@ -265,21 +277,23 @@ where
 {
     let memory_identity = format!("{}:{identity}", cache.directory.display());
     if !refresh {
-        if let Some(key) = memory_cache()
+        let mut memory = memory_cache()
             .lock()
-            .map_err(|_| anyhow!("cookie credential memory cache is poisoned"))?
-            .get(&memory_identity)
-            .cloned()
-        {
-            return Ok(key);
+            .map_err(|_| anyhow!("cookie credential memory cache is poisoned"))?;
+        if let Some(cached) = memory.get(&memory_identity) {
+            let age = now_seconds() - cached.saved_at;
+            if age >= 0.0 && age <= cache.ttl_seconds {
+                return Ok(cached.key.clone());
+            }
         }
+        memory.remove(&memory_identity);
     }
-    let key = load_or_create_credential(cache, identity, refresh, metadata, create)?;
+    let credential = load_or_create_credential(cache, identity, refresh, metadata, create)?;
     memory_cache()
         .lock()
         .map_err(|_| anyhow!("cookie credential memory cache is poisoned"))?
-        .insert(memory_identity, key.clone());
-    Ok(key)
+        .insert(memory_identity, credential.clone());
+    Ok(credential.key)
 }
 
 fn load_or_create_credential<F>(
@@ -288,12 +302,15 @@ fn load_or_create_credential<F>(
     refresh: bool,
     metadata: Map<String, Value>,
     create: F,
-) -> Result<Vec<u8>>
+) -> Result<CachedCredential>
 where
     F: FnOnce() -> Result<Vec<u8>>,
 {
     if !cache.enabled {
-        return create();
+        return Ok(CachedCredential {
+            key: create()?,
+            saved_at: now_seconds(),
+        });
     }
     ensure_cache_directory(&cache.directory)?;
     let cached_path = cache_path(cache, "credential", identity);
@@ -304,7 +321,7 @@ where
             .as_ref()
             .filter(|value| value.get("kind").and_then(Value::as_str) == Some("derived-key"))
         {
-            return decode_cached_key(value);
+            return decode_cached_credential(value);
         }
     }
     let initial_saved_at = initial
@@ -318,26 +335,27 @@ where
         refresh,
         initial_saved_at,
     )? {
-        LockResult::Cached(value) => decode_cached_key(&value),
+        LockResult::Cached(value) => decode_cached_credential(&value),
         LockResult::Acquired(lock) => {
             drop(lock);
-            let result = (|| -> Result<Vec<u8>> {
+            let result = (|| -> Result<CachedCredential> {
                 if let Some(value) = read_fresh_json(&cached_path, cache.ttl_seconds) {
                     let saved_at = value.get("savedAt").and_then(Value::as_f64);
                     if value.get("kind").and_then(Value::as_str) == Some("derived-key")
                         && (!refresh || saved_at != initial_saved_at)
                     {
-                        return decode_cached_key(&value);
+                        return decode_cached_credential(&value);
                     }
                 }
                 let key = create()?;
+                let saved_at = now_seconds();
                 let mut value = metadata;
                 value.insert("version".into(), json!(1));
                 value.insert("kind".into(), json!("derived-key"));
-                value.insert("savedAt".into(), json!(now_seconds()));
+                value.insert("savedAt".into(), json!(saved_at));
                 value.insert("key".into(), json!(BASE64.encode(&key)));
                 write_owner_only_json(&cached_path, &Value::Object(value))?;
-                Ok(key)
+                Ok(CachedCredential { key, saved_at })
             })();
             let _ = fs::remove_file(lock_path);
             result

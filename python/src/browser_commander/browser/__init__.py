@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from browser_commander.browser.connector import ConnectOptions, connect_browser
 from browser_commander.browser.launcher import (
     LaunchOptions,
     LaunchResult,
@@ -23,11 +24,13 @@ from browser_commander.browser.navigation import (
 from browser_commander.browser.pdf import pdf
 
 __all__ = [
+    "ConnectOptions",
     "GotoResult",
     "LaunchOptions",
     "LaunchResult",
     "NavigationVerificationResult",
     "WaitAfterActionResult",
+    "connect_browser",
     "default_navigation_verification",
     "emulate_media",
     "goto",

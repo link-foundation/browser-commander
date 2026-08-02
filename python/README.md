@@ -150,6 +150,32 @@ result = await launch_browser(options)
 browser, page = result.browser, result.page
 ```
 
+### connect_browser(options)
+
+Attach Playwright or Selenium to an already-running Chrome-family browser over
+CDP. Exactly one HTTP `cdp_endpoint` or browser `ws_endpoint` is required:
+
+```python
+from browser_commander import ConnectOptions, connect_browser
+
+result = await connect_browser(
+    ConnectOptions(
+        engine="playwright",  # or "selenium"
+        cdp_endpoint="http://127.0.0.1:9222",
+        seed_cookies=[
+            {"name": "session", "value": "saved", "url": "https://example.com"}
+        ],
+    )
+)
+browser, page = result.browser, result.page
+```
+
+The returned page is the raw engine page/driver and can be passed directly to
+`make_browser_commander()`. For Chrome 136 and newer, start the browser with a
+non-default `--user-data-dir`; remote debugging is intentionally disabled for
+the default Chrome profile. Cookie seeding uses only values supplied by the
+caller and does not read the default profile.
+
 The `color_scheme` option emulates `prefers-color-scheme` at launch time:
 
 ```python

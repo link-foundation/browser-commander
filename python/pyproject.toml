@@ -32,6 +32,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+dependencies = ["cryptography>=42.0.0"]
 
 [project.optional-dependencies]
 playwright = ["playwright>=1.40.0"]

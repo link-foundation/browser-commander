@@ -443,3 +443,30 @@ pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec
     write_cookie_result_cache(&cache, &identity, &serialized)?;
     Ok(cookies)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn operation_key_cache_reads_a_refreshed_credential_once() -> Result<()> {
+        let mut keys = OperationKeyCache::default();
+        let mut calls = 0;
+        assert_eq!(
+            keys.get_or_try_create("safe-storage", || {
+                calls += 1;
+                Ok(vec![7_u8; 16])
+            })?,
+            vec![7_u8; 16]
+        );
+        assert_eq!(
+            keys.get_or_try_create("safe-storage", || {
+                calls += 1;
+                Ok(vec![8_u8; 16])
+            })?,
+            vec![7_u8; 16]
+        );
+        assert_eq!(calls, 1);
+        Ok(())
+    }
+}

@@ -32,6 +32,8 @@ import {
   readBrowserCookiesWithDependencies,
 } from '../../../src/browser/browser-cookies.js';
 import { getCachedCredential } from '../../../src/browser/browser-cookie-cache.js';
+import { readSafeStoragePassword } from '../../../src/browser/browser-cookie-credentials.js';
+import { decodeChromiumCookiePlaintext } from '../../../src/browser/browser-cookie-crypto.js';
 import {
   listBrowserProfiles as publicListBrowserProfiles,
   readBrowserCookies as publicReadBrowserCookies,
@@ -483,5 +485,98 @@ describe('installed browser cookie import', () => {
         }),
       /app-bound.*cannot be decrypted outside the browser/i
     );
+  });
+
+  it('removes and validates the version-24 host hash after legacy DPAPI', () => {
+    const host = '.legacy.example';
+    const plaintext = Buffer.concat([
+      createHash('sha256').update(host).digest(),
+      Buffer.from('legacy-session'),
+    ]);
+
+    assert.equal(
+      decodeChromiumCookiePlaintext({
+        plaintext,
+        host,
+        databaseVersion: 24,
+      }),
+      'legacy-session'
+    );
+    assert.throws(
+      () =>
+        decodeChromiumCookiePlaintext({
+          plaintext,
+          host: '.wrong.example',
+          databaseVersion: 24,
+        }),
+      /domain hash does not match/i
+    );
+  });
+
+  it('uses Chromium product casing for the KWallet folder', async () => {
+    const calls = [];
+    const password = await readSafeStoragePassword({
+      browser: 'chrome',
+      platform: 'linux',
+      environment: {},
+      runCredentialCommand: async (command, args) => {
+        calls.push([command, args]);
+        if (command === 'secret-tool') {
+          throw new Error('libsecret unavailable');
+        }
+        return 'kwallet-password';
+      },
+    });
+
+    assert.equal(password, 'kwallet-password');
+    assert.deepEqual(calls[1], [
+      'kwallet-query',
+      [
+        '-r',
+        'Chrome Safe Storage',
+        '-f',
+        'Chrome Keys',
+        'kdewallet',
+      ],
+    ]);
+  });
+
+  it('refreshes the OS credential only once for one multi-cookie import', async () => {
+    temporaryDirectory = await mkdtemp(
+      path.join(os.tmpdir(), 'browser-commander-cookie-refresh-')
+    );
+    const password = 'one refresh password';
+    const host = '.refresh.example';
+    await createChromiumProfile({
+      homeDir: temporaryDirectory,
+      rows: ['first', 'second'].map((name) => ({
+        host,
+        name,
+        encryptedValue: encryptCbcCookie({ host, value: name, password }),
+      })),
+    });
+    let credentialReads = 0;
+
+    const cookies = await readBrowserCookiesWithDependencies(
+      { browser: 'chrome', cache: false, refresh: true },
+      {
+        platform: 'linux',
+        homeDir: temporaryDirectory,
+        environment: {},
+        readSafeStoragePassword: async () => {
+          credentialReads += 1;
+          return password;
+        },
+      }
+    );
+
+    assert.deepEqual(
+      cookies.map(({ name, value }) => ({ name, value })),
+      [
+        { name: 'first', value: 'first' },
+        { name: 'second', value: 'second' },
+      ]
+    );
+    assert.equal(credentialReads, 1);
   });
 });

@@ -137,3 +137,15 @@ pub(crate) fn read_windows_encryption_key(local_state_path: &Path) -> Result<Vec
         .ok_or_else(|| anyhow!("Chromium Local State key does not have a DPAPI prefix"))?;
     decrypt_windows_dpapi(protected)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn kwallet_identity_uses_chromium_product_casing() {
+        let identity = safe_storage_identity("chrome").unwrap();
+        assert_eq!(identity.folder, "Chrome Keys");
+        assert_eq!(identity.service, "Chrome Safe Storage");
+    }
+}

@@ -26,6 +26,7 @@ from browser_commander import (
 from browser_commander.browser import (
     list_browser_profiles as browser_list_browser_profiles,
 )
+from browser_commander.browser import browser_cookie_credentials as cookie_credentials
 from browser_commander.browser.browser_cookie_cache import (
     NormalizedCookieCache,
     get_cached_credential,
@@ -37,6 +38,9 @@ from browser_commander.browser.browser_cookies import (
     list_browser_profiles,
     read_browser_cookies,
     read_browser_cookies_with_dependencies,
+)
+from browser_commander.browser.browser_cookie_crypto import (
+    decode_chromium_cookie_plaintext,
 )
 
 CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600
@@ -381,3 +385,91 @@ def test_in_process_credential_cache_expires_after_ttl(tmp_path: Path) -> None:
         == 2
     )
     assert credential_reads == 2
+
+
+def test_legacy_dpapi_plaintext_validates_version_24_host_hash() -> None:
+    host = ".legacy.example"
+    plaintext = hashlib.sha256(host.encode()).digest() + b"legacy-session"
+
+    assert (
+        decode_chromium_cookie_plaintext(
+            plaintext,
+            host=host,
+            database_version=24,
+        )
+        == "legacy-session"
+    )
+    try:
+        decode_chromium_cookie_plaintext(
+            plaintext,
+            host=".wrong.example",
+            database_version=24,
+        )
+    except ValueError as error:
+        assert "domain hash does not match" in str(error)
+    else:
+        raise AssertionError("a mismatched legacy DPAPI host hash must fail")
+
+
+def test_linux_kwallet_uses_chromium_product_casing(monkeypatch) -> None:
+    calls: list[list[str]] = []
+
+    def run(command: list[str], _environment: dict[str, str]) -> str:
+        calls.append(command)
+        if command[0] == "secret-tool":
+            raise FileNotFoundError
+        return "kwallet-password"
+
+    monkeypatch.setattr(cookie_credentials, "_run_credential_command", run)
+    assert (
+        cookie_credentials.read_safe_storage_password(
+            browser="chrome",
+            platform="linux",
+            environment={},
+        )
+        == "kwallet-password"
+    )
+    assert calls[1] == [
+        "kwallet-query",
+        "-r",
+        "Chrome Safe Storage",
+        "-f",
+        "Chrome Keys",
+        "kdewallet",
+    ]
+
+
+def test_refresh_reads_credential_once_for_multi_cookie_import(tmp_path: Path) -> None:
+    password = "one refresh password"
+    host = ".refresh.example"
+    _create_chromium_profile(
+        tmp_path,
+        [
+            {
+                "host": host,
+                "name": name,
+                "encrypted_value": _encrypt_cbc_cookie(host, name, password),
+            }
+            for name in ("first", "second")
+        ],
+    )
+    credential_reads = 0
+
+    def read_password(**_kwargs: object) -> str:
+        nonlocal credential_reads
+        credential_reads += 1
+        return password
+
+    cookies = read_browser_cookies_with_dependencies(
+        BrowserCookieReadOptions(browser="chrome", cache=False, refresh=True),
+        platform="linux",
+        home_dir=tmp_path,
+        environment={},
+        read_safe_storage_password=read_password,
+    )
+
+    assert [(cookie["name"], cookie["value"]) for cookie in cookies] == [
+        ("first", "first"),
+        ("second", "second"),
+    ]
+    assert credential_reads == 1

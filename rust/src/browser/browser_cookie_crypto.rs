@@ -125,4 +125,19 @@ mod tests {
                 .contains("app-bound")
         );
     }
+
+    #[test]
+    fn legacy_dpapi_plaintext_validates_version_24_host_hash() {
+        let host = ".legacy.example";
+        let mut plaintext = Sha256::digest(host.as_bytes()).to_vec();
+        plaintext.extend_from_slice(b"legacy-session");
+        assert_eq!(
+            decode_chromium_plaintext(&plaintext, host, 24).unwrap(),
+            "legacy-session"
+        );
+        assert!(decode_chromium_plaintext(&plaintext, ".wrong.example", 24)
+            .unwrap_err()
+            .to_string()
+            .contains("domain hash does not match"));
+    }
 }

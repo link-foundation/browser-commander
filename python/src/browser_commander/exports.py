@@ -7,6 +7,13 @@ from __future__ import annotations
 
 # Re-export core utilities
 # Re-export browser management
+from browser_commander.browser.browser_cookies import (
+    BrowserCookieCacheOptions,
+    BrowserCookieReadOptions,
+    BrowserProfile,
+    list_browser_profiles,
+    read_browser_cookies,
+)
 from browser_commander.browser.connector import ConnectOptions, connect_browser
 from browser_commander.browser.launcher import (
     LaunchOptions,
@@ -151,7 +158,10 @@ from browser_commander.utilities.wait import (
     wait,
 )
 
-__all__ = [
+__all__ = [  # noqa: RUF022 - grouped by public API area
+    "BrowserCookieCacheOptions",
+    "BrowserCookieReadOptions",
+    "BrowserProfile",
     # Core utilities
     "CHROME_ARGS",
     "TIMING",
@@ -230,6 +240,7 @@ __all__ = [
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",
+    "list_browser_profiles",
     "locator",
     "log_element_info",
     "make_url_condition",
@@ -243,6 +254,7 @@ __all__ = [
     # Element selectors
     "query_selector",
     "query_selector_all",
+    "read_browser_cookies",
     "safe_evaluate",
     "safe_operation",
     # Scroll interactions

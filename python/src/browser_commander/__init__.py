@@ -18,6 +18,9 @@ from browser_commander.exports import (
     CHROME_ARGS,
     TIMING,
     ActionStoppedError,
+    BrowserCookieCacheOptions,
+    BrowserCookieReadOptions,
+    BrowserProfile,
     ClickResult,
     ClickVerificationResult,
     ConnectOptions,
@@ -88,6 +91,7 @@ from browser_commander.exports import (
     launch_and_connect_real_browser,
     launch_browser,
     launch_real_browser,
+    list_browser_profiles,
     locator,
     log_element_info,
     make_url_condition,
@@ -98,6 +102,7 @@ from browser_commander.exports import (
     # Element selectors
     query_selector,
     query_selector_all,
+    read_browser_cookies,
     safe_evaluate,
     safe_operation,
     # Scroll interactions
@@ -134,6 +139,9 @@ __all__ = [
     "ActionStoppedError",
     # Factory
     "BrowserCommander",
+    "BrowserCookieCacheOptions",
+    "BrowserCookieReadOptions",
+    "BrowserProfile",
     "ClickResult",
     "ClickVerificationResult",
     "ConnectOptions",
@@ -204,6 +212,7 @@ __all__ = [
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",
+    "list_browser_profiles",
     "locator",
     "log_element_info",
     "make_browser_commander",
@@ -215,6 +224,7 @@ __all__ = [
     # Element selectors
     "query_selector",
     "query_selector_all",
+    "read_browser_cookies",
     "safe_evaluate",
     "safe_operation",
     # Scroll interactions

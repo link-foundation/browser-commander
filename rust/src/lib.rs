@@ -50,10 +50,12 @@ pub mod utilities;
 
 // Re-export commonly used items at crate root
 pub use browser::{
-    build_real_browser_args, connect_browser, emulate_media, launch_and_connect_real_browser,
-    launch_browser, launch_real_browser, Browser, BrowserProcess, ChromiumoxidePage, ColorScheme,
-    ConnectOptions, EmulateMediaOptions, LaunchOptions, LaunchResult, NodeBridgePage,
-    RealBrowserLaunchResult, RealBrowserOptions,
+    build_real_browser_args, clear_browser_cookie_memory_cache, connect_browser, emulate_media,
+    launch_and_connect_real_browser, launch_browser, launch_real_browser, list_browser_profiles,
+    read_browser_cookies, Browser, BrowserCookie, BrowserCookieReadOptions, BrowserProcess,
+    BrowserProfile, BrowserProfileOptions, ChromiumoxidePage, ColorScheme, ConnectOptions,
+    EmulateMediaOptions, LaunchOptions, LaunchResult, NodeBridgePage, RealBrowserLaunchResult,
+    RealBrowserOptions, SUPPORTED_COOKIE_BROWSERS,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
@@ -68,11 +70,13 @@ pub use core::{
 /// ```
 pub mod prelude {
     pub use crate::browser::{
-        connect_browser, emulate_media, goto, launch_and_connect_real_browser, launch_browser,
-        launch_real_browser, verify_navigation, wait_for_navigation, wait_for_url_stabilization,
-        Browser, BrowserProcess, ColorScheme, ConnectOptions, EmulateMediaOptions, LaunchOptions,
-        LaunchResult, NavigationOptions, NavigationResult, RealBrowserLaunchResult,
-        RealBrowserOptions, WaitUntil,
+        clear_browser_cookie_memory_cache, connect_browser, emulate_media, goto,
+        launch_and_connect_real_browser, launch_browser, launch_real_browser,
+        list_browser_profiles, read_browser_cookies, verify_navigation, wait_for_navigation,
+        wait_for_url_stabilization, Browser, BrowserCookie, BrowserCookieReadOptions,
+        BrowserProcess, BrowserProfile, BrowserProfileOptions, ColorScheme, ConnectOptions,
+        EmulateMediaOptions, LaunchOptions, LaunchResult, NavigationOptions, NavigationResult,
+        RealBrowserLaunchResult, RealBrowserOptions, WaitUntil,
     };
     pub use crate::core::{
         is_navigation_error, is_timeout_error, DialogEvent, DialogManager, DialogType,

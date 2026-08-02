@@ -171,6 +171,57 @@ Cookies can be supplied explicitly with `ConnectOptions::seed_cookies()`.
 Because connection is attach-only, it cannot retrofit launch flags. Start the
 external process with the documented defaults or use `launch_real_browser()`.
 
+### Installed browser cookies
+
+Discover profiles and read cookies in the same shape accepted by browser
+contexts:
+
+```rust
+use browser_commander::{
+    list_browser_profiles, read_browser_cookies, BrowserCookieReadOptions,
+    BrowserProfileOptions,
+};
+
+let profiles = list_browser_profiles(
+    BrowserProfileOptions::default().browser("chrome"),
+)?;
+println!("{profiles:#?}");
+
+let cookies = read_browser_cookies(
+    BrowserCookieReadOptions::new("chrome")
+        .profile("Default")
+        .domain_filter("example.com")
+        .ttl_minutes(60.0),
+)?;
+# Ok::<(), anyhow::Error>(())
+```
+
+Each `BrowserCookie` contains `name`, `value`, `domain`, `path`, `expires`,
+`http_only`, `secure`, and `same_site` (serialized as the Playwright-compatible
+`httpOnly` and `sameSite` names). The explicit helper supports Chrome, Edge,
+Brave, Chromium, and Firefox and never sends imported data anywhere.
+
+Decrypted results and derived keys default to
+`~/.browser-commander/cookie-cache/` with owner-only permissions. A process
+lock and the default 60-minute TTL keep Keychain, libsecret/KWallet, or DPAPI
+access to at most one read across concurrent and repeated processes. Use
+`.refresh(true)` to coordinate a new read, `.cache_dir(...)` and
+`.ttl_minutes(...)` to customize storage, or `.cache(false)` to opt out.
+
+| Browser family                | macOS                                | Linux                                                                       | Windows                                       |
+| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------- |
+| Chrome, Edge, Brave, Chromium | Keychain + AES-128-CBC (`v10`/`v11`) | libsecret/KWallet + AES-128-CBC (`v11`), or the Chromium `v10` fallback key | DPAPI-protected AES-256-GCM key (`v10`/`v11`) |
+| Firefox                       | `cookies.sqlite`                     | `cookies.sqlite`                                                            | `cookies.sqlite`                              |
+
+Chromium database-version-24 domain hashes and 1601-based timestamps are
+handled automatically. Current Windows Chromium may use app-bound `v20`
+encryption, which requires the browser's privileged service and cannot be
+decrypted by an ordinary external process. The helper reports this boundary;
+use a browser-supported export or saved Browser Commander storage state for
+those cookies. `.ignore_decryption_errors(true)` returns the remaining
+decryptable cookies. Treat imported cookies like passwords: use a short TTL,
+never commit cache files, and seed only a dedicated automation profile.
+
 ### Launch and Connect to an Installed Browser
 
 `launch_real_browser()` discovers and starts genuine installed Chrome, Edge,

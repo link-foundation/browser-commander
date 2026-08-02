@@ -44,6 +44,10 @@ export {
 // Re-export browser management
 export { connectBrowser } from './browser/connector.js';
 export {
+  listBrowserProfiles,
+  readBrowserCookies,
+} from './browser/browser-cookies.js';
+export {
   launchAndConnectRealBrowser,
   launchRealBrowser,
 } from './browser/real-browser.js';

@@ -181,10 +181,59 @@ The returned page is the raw engine page/driver and can be passed directly to
 `make_browser_commander()`. For Chrome 136 and newer, start the browser with a
 non-default `--user-data-dir`; remote debugging is intentionally disabled for
 the default Chrome profile. Cookie seeding uses only values supplied by the
-caller and does not read the default profile.
-Because connection is attach-only, it cannot retrofit launch flags. Start the
-external process with the documented defaults and a dedicated debugging
-profile, or use `launch_real_browser()`.
+caller and does not read the default profile. Because connection is attach-only,
+it cannot retrofit launch flags. Start the external process with the documented
+defaults and a dedicated debugging profile, or use `launch_real_browser()`.
+The installed-browser import below provides an explicit local way to obtain
+those values.
+
+### Installed browser cookies
+
+Discover profiles and read cookies in the exact Playwright/Puppeteer cookie
+shape:
+
+```python
+from browser_commander import (
+    BrowserCookieCacheOptions,
+    BrowserCookieReadOptions,
+    list_browser_profiles,
+    read_browser_cookies,
+)
+
+print(list_browser_profiles("chrome"))
+
+cookies = read_browser_cookies(
+    BrowserCookieReadOptions(
+        browser="chrome",  # chrome, edge, brave, chromium, or firefox
+        profile="Default",  # optional; defaults to the selected browser profile
+        domain_filter="example.com",
+        cache=BrowserCookieCacheOptions(ttl_minutes=60),
+    )
+)
+```
+
+Each cookie contains `name`, `value`, `domain`, `path`, `expires`, `httpOnly`,
+`secure`, and `sameSite`. The helper runs only when explicitly called and never
+sends cookie data anywhere. Decrypted result and derived-key files default to
+`~/.browser-commander/cookie-cache/` with owner-only permissions. A process lock
+and the default 60-minute TTL keep Keychain, libsecret/KWallet, or DPAPI access
+to at most one read across concurrent and repeated processes. Set `refresh=True`
+to force a new credential read, customize `dir`/`ttl_minutes`, or set
+`cache=False` to opt out.
+
+| Browser family                | macOS                                | Linux                                                                       | Windows                                       |
+| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------- |
+| Chrome, Edge, Brave, Chromium | Keychain + AES-128-CBC (`v10`/`v11`) | libsecret/KWallet + AES-128-CBC (`v11`), or the Chromium `v10` fallback key | DPAPI-protected AES-256-GCM key (`v10`/`v11`) |
+| Firefox                       | `cookies.sqlite`                     | `cookies.sqlite`                                                            | `cookies.sqlite`                              |
+
+Chromium database-version-24 domain hashes and its 1601-based timestamps are
+handled automatically. Current Windows Chromium may use app-bound `v20`
+encryption, which intentionally requires the browser's privileged service and
+cannot be decrypted by an ordinary external process. The helper reports this
+boundary; use a browser-supported export or saved Browser Commander storage
+state for those cookies. `ignore_decryption_errors=True` returns any remaining
+decryptable cookies. Treat imported cookies like passwords: keep cache paths
+private, use a short TTL, never commit them, and seed only a dedicated profile.
 
 ### launch_real_browser(options)
 

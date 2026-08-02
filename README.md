@@ -26,6 +26,11 @@ safe, dedicated automation profile before attaching. Use
 `launchRealBrowser()` in JavaScript and `launch_real_browser()` in Python or
 Rust.
 
+All implementations also expose installed-browser profile discovery and local
+cookie import for Chrome, Edge, Brave, Chromium, and Firefox. Cookie values are
+returned in the automation-engine shape and cached locally with owner-only
+permissions so platform credential stores are touched at most once per TTL.
+
 ## Core Concept: Page State Machine
 
 Browser Commander manages the browser as a state machine with two states:

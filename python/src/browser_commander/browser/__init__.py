@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+from browser_commander.browser.browser_cookies import (
+    BrowserCookieCacheOptions,
+    BrowserCookieReadOptions,
+    BrowserProfile,
+    list_browser_profiles,
+    read_browser_cookies,
+)
 from browser_commander.browser.connector import ConnectOptions, connect_browser
 from browser_commander.browser.launcher import (
     LaunchOptions,
@@ -30,6 +37,9 @@ from browser_commander.browser.real_browser import (
 )
 
 __all__ = [
+    "BrowserCookieCacheOptions",
+    "BrowserCookieReadOptions",
+    "BrowserProfile",
     "ConnectOptions",
     "GotoResult",
     "LaunchOptions",
@@ -45,8 +55,10 @@ __all__ = [
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",
+    "list_browser_profiles",
     # PDF generation
     "pdf",
+    "read_browser_cookies",
     "verify_navigation",
     "wait_after_action",
     "wait_for_navigation",

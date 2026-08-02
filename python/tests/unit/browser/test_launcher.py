@@ -82,3 +82,9 @@ class TestChromeArgs:
         assert resolve_chrome_args(
             extra_args=["--lang=en-US"], ignore_default_args=True
         ) == ["--lang=en-US"]
+
+    def test_can_ignore_password_store_default_specifically(self):
+        args = resolve_chrome_args(ignore_default_args=["--password-store=basic"])
+
+        assert "--password-store=basic" not in args
+        assert "--no-first-run" in args

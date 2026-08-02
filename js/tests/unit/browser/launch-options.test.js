@@ -32,6 +32,15 @@ describe('browser launch options', () => {
     assert.equal(options.ignoreDefaultArgs, true);
   });
 
+  it('can opt out of the password-store default specifically', () => {
+    const options = resolveChromeArgs({
+      ignoreDefaultArgs: ['--password-store=basic'],
+    });
+
+    assert.equal(options.args.includes('--password-store=basic'), false);
+    assert.ok(options.args.includes('--no-first-run'));
+  });
+
   it('forwards ignored defaults to both browser engines', () => {
     const playwright = buildPlaywrightLaunchOptions({
       headless: false,

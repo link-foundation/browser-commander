@@ -554,6 +554,16 @@ mod tests {
     }
 
     #[test]
+    fn all_chrome_args_can_ignore_password_store_default_specifically() {
+        let options = LaunchOptions::default()
+            .ignore_default_args(vec!["--password-store=basic".to_string()]);
+
+        let args = options.all_chrome_args();
+        assert!(!args.contains(&"--password-store=basic".to_string()));
+        assert!(args.contains(&"--no-first-run".to_string()));
+    }
+
+    #[test]
     fn all_chrome_args_includes_custom() {
         let options = LaunchOptions::default().with_args(vec!["--custom".to_string()]);
         let args = options.all_chrome_args();

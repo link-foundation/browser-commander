@@ -9,6 +9,7 @@
 
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { pathToFileURL } from 'url';
 
 const WORKFLOW_DIR = '.github/workflows';
 
@@ -53,6 +54,11 @@ const DISALLOWED_PATTERNS = [
     pattern: /node-version:\s*['"]?20\.x['"]?/,
     replacement: "node-version: '24.x'",
   },
+  {
+    pattern: /^\s*-?\s*run:\s*npm install\s*$/,
+    replacement:
+      'npm ci --ignore-scripts for deterministic dependency-only workflow installs',
+  },
 ];
 
 function report(file, lineNumber, message) {
@@ -64,10 +70,113 @@ function findLineNumber(lines, pattern) {
   return index === -1 ? 1 : index + 1;
 }
 
-function checkWorkflow(filePath) {
+export function checkWorkflow(filePath) {
   const content = readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
   let failures = 0;
+
+  const jobsLineIndex = lines.findIndex((line) => line === 'jobs:');
+  const workflowPreamble =
+    jobsLineIndex === -1 ? lines : lines.slice(0, jobsLineIndex);
+
+  if (workflowPreamble.some((line) => line === 'concurrency:')) {
+    report(
+      filePath,
+      findLineNumber(lines, /^concurrency:$/),
+      'Use job-scoped concurrency so superseded checks can be cancelled without interrupting release or deployment writers.'
+    );
+    failures++;
+  }
+
+  if (
+    content.includes('actions/checkout@') &&
+    !content.includes('GIT_CONFIG_KEY_0: init.defaultBranch')
+  ) {
+    report(
+      filePath,
+      findLineNumber(lines, /actions\/checkout@/),
+      'Set init.defaultBranch=main through workflow env so actions/checkout does not emit default-branch warning noise.'
+    );
+    failures++;
+  }
+
+  if (jobsLineIndex !== -1) {
+    const jobStarts = [];
+
+    for (let index = jobsLineIndex + 1; index < lines.length; index += 1) {
+      if (/^  [A-Za-z0-9_-]+:$/.test(lines[index])) {
+        jobStarts.push(index);
+      }
+    }
+
+    for (const [jobIndex, start] of jobStarts.entries()) {
+      const end = jobStarts[jobIndex + 1] ?? lines.length;
+      const block = lines.slice(start, end);
+      const jobName = lines[start].trim().slice(0, -1);
+
+      if (!block.some((line) => /^    timeout-minutes:/.test(line))) {
+        report(
+          filePath,
+          start + 1,
+          `Job ${jobName} must set timeout-minutes so stalled checks and writers terminate predictably.`
+        );
+        failures++;
+      }
+
+      if (!block.some((line) => /^    concurrency:/.test(line))) {
+        report(
+          filePath,
+          start + 1,
+          `Job ${jobName} must use job-scoped concurrency.`
+        );
+        failures++;
+      } else {
+        const blockText = block.join('\n');
+        const hasGroup = /^      group:/m.test(blockText);
+        const hasCancellationPolicy = /^      cancel-in-progress:/m.test(
+          blockText
+        );
+
+        if (!hasGroup || !hasCancellationPolicy) {
+          report(
+            filePath,
+            start + 1,
+            `Job ${jobName} concurrency must define both group and cancel-in-progress.`
+          );
+          failures++;
+        }
+
+        if (
+          blockText.includes('cancel-in-progress: false') &&
+          !blockText.includes(
+            'group: main-writer-${{ github.repository }}-main'
+          )
+        ) {
+          report(
+            filePath,
+            start + 1,
+            `Non-cancellable writer ${jobName} must use the repository-wide main-writer group.`
+          );
+          failures++;
+        }
+      }
+
+      const executableBlockText = block
+        .filter((line) => !line.trimStart().startsWith('#'))
+        .join('\n');
+      if (
+        executableBlockText.includes('always()') &&
+        !executableBlockText.includes('!cancelled()')
+      ) {
+        report(
+          filePath,
+          start + 1,
+          `Job ${jobName} uses always() without !cancelled(), so downstream work can continue after cancellation.`
+        );
+        failures++;
+      }
+    }
+  }
 
   for (const { pattern, replacement } of DISALLOWED_PATTERNS) {
     for (const [index, line] of lines.entries()) {
@@ -105,7 +214,7 @@ function checkWorkflow(filePath) {
   return failures;
 }
 
-function main() {
+export function main() {
   const workflowFiles = readdirSync(WORKFLOW_DIR)
     .filter((fileName) => fileName.endsWith('.yml') || fileName.endsWith('.yaml'))
     .map((fileName) => join(WORKFLOW_DIR, fileName))
@@ -124,4 +233,9 @@ function main() {
   console.log(`CI workflow policy passed for ${workflowFiles.length} workflow(s).`);
 }
 
-main();
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main();
+}

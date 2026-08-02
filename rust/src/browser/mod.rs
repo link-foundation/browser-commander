@@ -5,12 +5,14 @@
 //! - Navigation operations
 
 pub mod chromiumoxide_adapter;
+pub mod connector;
 pub mod launcher;
 pub mod media;
 pub mod navigation_ops;
 pub mod node_bridge;
 
 pub use chromiumoxide_adapter::ChromiumoxidePage;
+pub use connector::{connect_browser, ConnectOptions};
 pub use launcher::{launch_browser, Browser, LaunchOptions, LaunchResult};
 pub use media::{emulate_media, ColorScheme, EmulateMediaOptions};
 pub use navigation_ops::{

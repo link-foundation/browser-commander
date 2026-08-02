@@ -17,6 +17,7 @@ use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 
+use crate::browser::connector::ConnectOptions;
 use crate::browser::launcher::LaunchOptions;
 use crate::core::engine::{ElementInfo, EngineAdapter, EngineError, EngineType, PdfOptions};
 
@@ -51,16 +52,48 @@ impl NodeBridgePage {
         options: LaunchOptions,
         user_data_dir: PathBuf,
     ) -> Result<Self, anyhow::Error> {
-        let engine = options.engine;
+        let page = Self::start(
+            options.engine,
+            options.node_executable.as_deref(),
+            options.node_working_dir.as_deref(),
+        )
+        .await?;
+
+        page.request("launch", launch_params(&options, &user_data_dir))
+            .await
+            .map_err(|err| anyhow::anyhow!("{}", err))?;
+
+        Ok(page)
+    }
+
+    pub(crate) async fn connect(options: ConnectOptions) -> Result<Self, anyhow::Error> {
+        let page = Self::start(
+            options.engine,
+            options.node_executable.as_deref(),
+            options.node_working_dir.as_deref(),
+        )
+        .await?;
+
+        page.request("connect", connect_params(&options))
+            .await
+            .map_err(|err| anyhow::anyhow!("{}", err))?;
+
+        Ok(page)
+    }
+
+    async fn start(
+        engine: EngineType,
+        node_executable: Option<&Path>,
+        node_working_dir: Option<&Path>,
+    ) -> Result<Self, anyhow::Error> {
         if !matches!(engine, EngineType::Playwright | EngineType::Puppeteer) {
             return Err(anyhow::anyhow!(
                 "Node bridge only supports playwright and puppeteer engines"
             ));
         }
 
-        let node = options
-            .node_executable
-            .clone()
+        let node = node_executable
+            .map(Path::to_path_buf)
             .unwrap_or_else(|| PathBuf::from("node"));
         let mut command = Command::new(node);
         command
@@ -71,7 +104,7 @@ impl NodeBridgePage {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        if let Some(ref working_dir) = options.node_working_dir {
+        if let Some(working_dir) = node_working_dir {
             command.current_dir(working_dir);
         }
 
@@ -98,7 +131,7 @@ impl NodeBridgePage {
             })
         });
 
-        let page = Self {
+        Ok(Self {
             engine,
             inner: Arc::new(Mutex::new(NodeBridgeProcess {
                 child,
@@ -107,13 +140,7 @@ impl NodeBridgePage {
                 next_id: 0,
             })),
             stderr_task: Arc::new(Mutex::new(stderr_task)),
-        };
-
-        page.request("launch", launch_params(&options, &user_data_dir))
-            .await
-            .map_err(|err| anyhow::anyhow!("{}", err))?;
-
-        Ok(page)
+        })
     }
 
     /// Close the browser subprocess. Dropping the adapter also terminates it.
@@ -220,6 +247,23 @@ fn launch_params(options: &LaunchOptions, user_data_dir: &Path) -> Value {
         "channel": options.channel,
         "executablePath": options.executable_path.as_deref().map(path_to_string),
     })
+}
+
+fn connect_params(options: &ConnectOptions) -> Value {
+    json!({
+        "engine": options.engine.to_string(),
+        "cdpEndpoint": options.cdp_endpoint,
+        "wsEndpoint": options.ws_endpoint,
+        "slowMo": options.slow_mo,
+        "timeout": duration_millis(options.timeout),
+        "protocolTimeout": duration_millis(options.protocol_timeout),
+        "seedCookies": options.seed_cookies,
+        "verbose": options.verbose,
+    })
+}
+
+fn duration_millis(duration: Option<std::time::Duration>) -> Option<u64> {
+    duration.map(|value| value.as_millis().min(u64::MAX as u128) as u64)
 }
 
 impl std::fmt::Debug for NodeBridgePage {
@@ -494,5 +538,21 @@ mod tests {
 
         assert!(params["channel"].is_null());
         assert!(params["executablePath"].is_null());
+    }
+
+    #[test]
+    fn connect_params_forward_endpoint_timeouts_and_cookies() {
+        let options = ConnectOptions::puppeteer()
+            .ws_endpoint("ws://127.0.0.1:9222/devtools/browser/id")
+            .timeout(std::time::Duration::from_millis(1_500))
+            .protocol_timeout(std::time::Duration::from_secs(2))
+            .seed_cookies(vec![json!({"name": "SID", "value": "saved"})]);
+
+        let params = connect_params(&options);
+
+        assert_eq!(params["wsEndpoint"], options.ws_endpoint.unwrap());
+        assert_eq!(params["timeout"], 1_500);
+        assert_eq!(params["protocolTimeout"], 2_000);
+        assert_eq!(params["seedCookies"][0]["name"], "SID");
     }
 }

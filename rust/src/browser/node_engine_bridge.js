@@ -47,7 +47,7 @@ function send(response) {
 
 function ensurePage() {
   if (!page) {
-    throw new Error("Browser page is not initialized. Send launch first.");
+    throw new Error("Browser page is not initialized. Send launch or connect first.");
   }
   return page;
 }
@@ -141,6 +141,44 @@ async function launchPuppeteer(params) {
   }
 }
 
+async function connectPlaywright(params) {
+  const { chromium } = await import("playwright");
+  browser = await chromium.connectOverCDP(
+    params.cdpEndpoint ?? params.wsEndpoint,
+    compactObject({
+      slowMo: params.slowMo,
+      timeout: params.timeout,
+    }),
+  );
+  context = browser.contexts()[0];
+  if (!context) {
+    throw new Error("Connected browser did not expose a default context");
+  }
+  const pages = context.pages();
+  page = pages[0] ?? (await context.newPage());
+  if (params.seedCookies?.length) {
+    await context.addCookies(params.seedCookies);
+  }
+}
+
+async function connectPuppeteer(params) {
+  const puppeteer = await import("puppeteer");
+  browser = await puppeteer.default.connect(
+    compactObject({
+      browserURL: params.cdpEndpoint,
+      browserWSEndpoint: params.wsEndpoint,
+      defaultViewport: null,
+      slowMo: params.slowMo,
+      protocolTimeout: params.protocolTimeout,
+    }),
+  );
+  const pages = await browser.pages();
+  page = pages[0] ?? (await browser.newPage());
+  if (params.seedCookies?.length) {
+    await page.setCookie(...params.seedCookies);
+  }
+}
+
 async function applyColorScheme(colorScheme) {
   const currentPage = ensurePage();
   if (engineName === "playwright") {
@@ -179,10 +217,33 @@ async function handleLaunch(params) {
   return { engine: engineName };
 }
 
+async function handleConnect(params) {
+  engineName = params.engine;
+  verbose = Boolean(params.verbose);
+
+  if (engineName === "playwright") {
+    await connectPlaywright(params);
+  } else if (engineName === "puppeteer") {
+    await connectPuppeteer(params);
+  } else {
+    throw new Error(`Unsupported bridge engine: ${engineName}`);
+  }
+
+  try {
+    await page.bringToFront();
+  } catch (error) {
+    log(`bringToFront failed: ${error.message}`);
+  }
+
+  return { engine: engineName };
+}
+
 async function handleCommand(method, params) {
   switch (method) {
     case "launch":
       return await handleLaunch(params);
+    case "connect":
+      return await handleConnect(params);
     case "close":
       if (browser) {
         await browser.close();

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from browser_commander.browser.launcher import LaunchOptions
+from browser_commander.browser.launcher import LaunchOptions, resolve_chrome_args
 from browser_commander.core.constants import CHROME_ARGS
 
 
@@ -34,6 +34,14 @@ class TestLaunchOptions:
         options = LaunchOptions(args=custom_args)
         assert options.args == custom_args
 
+    def test_extra_args_and_ignored_defaults_are_stored(self):
+        options = LaunchOptions(
+            extra_args=["--lang=en-US"],
+            ignore_default_args=["--no-default-browser-check"],
+        )
+        assert options.extra_args == ["--lang=en-US"]
+        assert options.ignore_default_args == ["--no-default-browser-check"]
+
     def test_custom_user_data_dir(self):
         options = LaunchOptions(user_data_dir="/tmp/test-profile")
         assert options.user_data_dir == "/tmp/test-profile"
@@ -54,5 +62,23 @@ class TestChromeArgs:
 
     def test_chrome_args_includes_expected_defaults(self):
         assert "--disable-session-crashed-bubble" in CHROME_ARGS
+        assert "--password-store=basic" in CHROME_ARGS
         assert "--no-first-run" in CHROME_ARGS
         assert "--no-default-browser-check" in CHROME_ARGS
+
+    def test_resolves_additive_args_and_per_flag_opt_out(self):
+        args = resolve_chrome_args(
+            args=["--legacy-arg"],
+            extra_args=["--lang=en-US"],
+            ignore_default_args=["--no-default-browser-check"],
+        )
+
+        assert "--password-store=basic" in args
+        assert "--no-first-run" in args
+        assert "--no-default-browser-check" not in args
+        assert args[-2:] == ["--legacy-arg", "--lang=en-US"]
+
+    def test_can_ignore_all_defaults(self):
+        assert resolve_chrome_args(
+            extra_args=["--lang=en-US"], ignore_default_args=True
+        ) == ["--lang=en-US"]

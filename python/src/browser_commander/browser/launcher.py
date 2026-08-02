@@ -24,6 +24,8 @@ class LaunchOptions:
     slow_mo: int | None = None  # Default: 150 for Playwright, 0 for Selenium
     verbose: bool = False
     args: list[str] = field(default_factory=list)
+    extra_args: list[str] = field(default_factory=list)
+    ignore_default_args: bool | list[str] = field(default_factory=list)
     color_scheme: ColorScheme | None = None
 
 
@@ -33,6 +35,22 @@ class LaunchResult:
 
     browser: Any
     page: Any
+
+
+def resolve_chrome_args(
+    *,
+    args: list[str] | None = None,
+    extra_args: list[str] | None = None,
+    ignore_default_args: bool | list[str] | None = None,
+) -> list[str]:
+    """Resolve safe defaults followed by compatibility and extra arguments."""
+
+    if ignore_default_args is True:
+        defaults: list[str] = []
+    else:
+        ignored = set(ignore_default_args or [])
+        defaults = [argument for argument in CHROME_ARGS if argument not in ignored]
+    return [*defaults, *(args or []), *(extra_args or [])]
 
 
 async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
@@ -55,7 +73,6 @@ async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
     headless = options.headless
     slow_mo = options.slow_mo
     verbose = options.verbose
-    extra_args = options.args
     color_scheme = options.color_scheme
 
     # Set default user data directory
@@ -66,8 +83,11 @@ async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
     if slow_mo is None:
         slow_mo = 150 if engine == "playwright" else 0
 
-    # Combine default CHROME_ARGS with custom args
-    chrome_args = CHROME_ARGS + extra_args
+    chrome_args = resolve_chrome_args(
+        args=options.args,
+        extra_args=options.extra_args,
+        ignore_default_args=options.ignore_default_args,
+    )
 
     if engine not in ("playwright", "selenium"):
         msg = f"Invalid engine: {engine}. Expected 'playwright' or 'selenium'"
@@ -94,7 +114,22 @@ async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
             "chromium_sandbox": True,
             "viewport": None,
             "args": chrome_args,
-            "ignore_default_args": ["--enable-automation"],
+            "ignore_default_args": (
+                True
+                if options.ignore_default_args is True
+                else list(
+                    dict.fromkeys(
+                        [
+                            "--enable-automation",
+                            *(
+                                options.ignore_default_args
+                                if isinstance(options.ignore_default_args, list)
+                                else []
+                            ),
+                        ]
+                    )
+                )
+            ),
         }
         # Playwright supports color_scheme as a context-level launch option
         if color_scheme is not None:

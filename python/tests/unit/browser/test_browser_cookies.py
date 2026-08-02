@@ -58,7 +58,7 @@ def _encrypt_cbc_cookie(host: str, value: str, password: str) -> bytes:
 
 
 def _encrypt_gcm_cookie(host: str, value: str, key: bytes) -> bytes:
-    nonce = b"fixture-nonce"
+    nonce = b"fixture12345"
     encryptor = Cipher(algorithms.AES(key), modes.GCM(nonce)).encryptor()
     plaintext = hashlib.sha256(host.encode()).digest() + value.encode()
     ciphertext = encryptor.update(plaintext) + encryptor.finalize()

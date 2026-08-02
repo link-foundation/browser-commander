@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.0
+
+### Minor Changes
+
+- b3560c8: Apply automation-friendly Chromium launch defaults, including `--password-store=basic`, and add append/opt-out launch argument controls.
+
 ## 0.14.0
 
 ### Minor Changes

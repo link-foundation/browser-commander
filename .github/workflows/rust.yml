@@ -148,6 +148,17 @@ jobs:
       )
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Full history: simulate-fresh-merge.sh needs a merge base.
+          fetch-depth: 0
+
+      # Lint the state that will exist after the merge, not the stale merge
+      # preview GitHub built when the pull request was last synced.
+      - name: Simulate fresh merge with base branch (PR only)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: bash scripts/simulate-fresh-merge.sh
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -200,6 +211,18 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Full history: simulate-fresh-merge.sh needs a merge base.
+          fetch-depth: 0
+
+      # Test the state that will exist after the merge. This is the check that
+      # catches a semantic conflict: two pull requests that each pass alone but
+      # break the suite once both are on the base branch.
+      - name: Simulate fresh merge with base branch (PR only)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: bash scripts/simulate-fresh-merge.sh
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

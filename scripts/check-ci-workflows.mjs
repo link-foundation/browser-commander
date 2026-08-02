@@ -185,10 +185,17 @@ export function checkWorkflow(filePath) {
   }
 
   for (const [index, line] of lines.entries()) {
-    if (
-      line.includes('${{ github.head_ref }}') &&
-      !/^\s*GITHUB_HEAD_REF:/.test(line)
-    ) {
+    // An attacker-influenced ref is safe once it is bound to an environment
+    // variable, because the shell then receives it as data instead of as text
+    // spliced into the script. Any SCREAMING_SNAKE_CASE name qualifies: the
+    // name itself carries no security meaning, so pinning the rule to one
+    // spelling would reject equally safe bindings such as `BASE_REF:`.
+    const isEnvBinding =
+      /^\s*[A-Z][A-Z0-9_]*:\s*\$\{\{\s*github\.(head|base)_ref\s*\}\}\s*$/.test(
+        line
+      );
+
+    if (line.includes('${{ github.head_ref }}') && !isEnvBinding) {
       report(
         filePath,
         index + 1,
@@ -197,10 +204,7 @@ export function checkWorkflow(filePath) {
       failures++;
     }
 
-    if (
-      line.includes('${{ github.base_ref }}') &&
-      !/^\s*GITHUB_BASE_REF:/.test(line)
-    ) {
+    if (line.includes('${{ github.base_ref }}') && !isEnvBinding) {
       report(
         filePath,
         index + 1,

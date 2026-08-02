@@ -170,4 +170,57 @@ jobs:
       console.error = originalError;
     }
   });
+
+  it('accepts a base_ref bound to any environment variable name', () => {
+    const workflow = `name: Test
+on: pull_request
+env:
+  GIT_CONFIG_KEY_0: init.defaultBranch
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: \${{ github.workflow }}-\${{ github.ref }}-test
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - name: Simulate fresh merge
+        env:
+          BASE_REF: \${{ github.base_ref }}
+        run: bash scripts/simulate-fresh-merge.sh
+`;
+
+    withWorkflow(workflow, (filePath) => {
+      assert.equal(checkWorkflow(filePath), 0);
+    });
+  });
+
+  it('still rejects a base_ref spliced into a run body', () => {
+    const workflow = `name: Test
+on: pull_request
+env:
+  GIT_CONFIG_KEY_0: init.defaultBranch
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: \${{ github.workflow }}-\${{ github.ref }}-test
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - run: git fetch origin \${{ github.base_ref }}
+`;
+    const originalError = console.error;
+    console.error = () => {};
+
+    try {
+      withWorkflow(workflow, (filePath) => {
+        assert.ok(checkWorkflow(filePath) > 0);
+      });
+    } finally {
+      console.error = originalError;
+    }
+  });
 });

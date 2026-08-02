@@ -134,6 +134,9 @@ function isExcludedFromCodeChanges(filePath) {
     'experiments/',
     'examples/',
     'js/examples/',
+    // Investigation artifacts (downloaded CI logs, run metadata) are evidence,
+    // not source; they must not make a docs-only change look like a code change.
+    'dev/log/',
   ];
 
   for (const folder of excludedFolders) {

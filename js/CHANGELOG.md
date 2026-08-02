@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.12.0
+
+### Minor Changes
+
+- Add `commander.setContent()` for safely loading in-memory HTML through the managed navigation lifecycle.
+
+  Add portable cookie and localStorage restoration through `launchBrowser({ storageState })` and the `saveStorageState()` helper for Playwright and Puppeteer.
+
+  Avoid intermittent Node 24 test-runner transport failures on macOS by running test files without child-process isolation.
+
 ## 0.11.0
 
 ### Minor Changes

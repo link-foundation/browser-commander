@@ -140,12 +140,12 @@ still explained the old `always()` behaviour were rewritten.
 | 4 | Static analysis | Present (eslint, ruff, clippy) |
 | 5 | Fast-fail job ordering | Present |
 | 6 | Changeset-based versioning with docs-only exemptions | Present; the changelog gates now actually fail |
-| 7 | Validate the actual merge result | Not yet — see §7 |
+| 7 | Validate the actual merge result | **Added** — `scripts/simulate-fresh-merge.sh`, wired into the lint and test jobs of js/python/rust |
 | 8 | Pre-commit hooks | Present (husky) |
-| 9 | Release automation, no manual version changes | Releases are now gated; a version-modification check is still open (§7) |
+| 9 | Release automation, no manual version changes | Releases are now gated; **added** `scripts/check-version-modification.mjs` + the `version-check` job |
 | 10 | Concurrency control | Present and enforced by the policy checker |
 | 11 | Secrets detection | **Added** — secretlint in `quality.yml` + `.secretlintrc.json` |
-| 12 | Documentation validation | Partially — line limits added; link checking still open (§7) |
+| 12 | Documentation validation | **Added** — line limits plus `links.yml` (lychee + Wayback Machine fallback) |
 
 ## 6. Upstream reports
 
@@ -166,20 +166,37 @@ inputs already go through `env:`, and `scripts/check-changelog-fragment.rs`
 exits 1 on a missing fragment. The js template also passes its release inputs
 through `env:`.
 
-## 7. Deliberately left open
+## 7. Template features that were missing, and are now implemented
 
-These are genuine template features that are not defects in the current pipeline,
-and each is a self-contained change better reviewed on its own:
+An earlier revision of this document listed these four as "deliberately left
+open" on the grounds that each needed per-language machinery. That reasoning was
+wrong for the first two: `simulate-fresh-merge.sh` is byte-identical in all three
+templates, and a version check only needs three one-line regexes. All four are
+implemented in this PR, each as a single language-agnostic gate rather than three
+copies that would drift apart.
 
-- Fresh-merge simulation (principle 7) — needs a per-language build harness.
-- Version-modification check (principle 9) — needs a per-language version-file parser.
-- Link checking / `validate-docs` (principle 12) — needs a link allow-list first.
-- Coverage jobs for Python and Rust.
+| Gap | Implementation | Regression test |
+| --- | --- | --- |
+| Fresh-merge simulation (principle 7) | `scripts/simulate-fresh-merge.sh`, invoked from the `lint` and `test` jobs of `js.yml`, `python.yml` and `rust.yml` (each with `fetch-depth: 0`) | The base ref is bound through `env: BASE_REF`; `ci-workflow-policy.test.js` gained two cases covering the generalised injection rule |
+| Version-modification check (principle 9) | `scripts/check-version-modification.mjs` + the `version-check` job in `quality.yml`; covers `js/package.json`, `python/pyproject.toml` and `rust/Cargo.toml`, and skips `changeset-release/*` branches | `js/tests/unit/scripts/check-version-modification.test.js`, 6 cases |
+| Link checking (principle 12) | `.github/workflows/links.yml` — lychee with `fail: false`, then `scripts/check-web-archive.mjs`; a link only fails the job when the Wayback Machine has no copy either | Found a real defect on its first run: `https://pptr.dev/api/puppeteer.page.on` 404s in `docs/case-studies/issue-38/README.md`, corrected to `puppeteer.dialog` |
+| Coverage jobs | Rust gained a `cargo-llvm-cov` `coverage` job; both the Rust and Python uploads gate on `CODECOV_TOKEN` and set `fail_ci_if_error: true` | The Python upload previously used `fail_ci_if_error: false`, so a failed upload still reported success — a false negative of the class this issue targets |
+
+Two design notes worth keeping:
+
+- `check-ci-workflows.mjs` originally whitelisted only the literal name
+  `GITHUB_BASE_REF:` when checking that `github.base_ref` is not spliced into a
+  `run:` body. That rejected the equally safe `BASE_REF:` binding the fresh-merge
+  step uses. The rule now accepts any `SCREAMING_SNAKE_CASE` name: the name
+  carries no security meaning, only the binding does.
+- The link checker deliberately does not fail on the first 404. A link check that
+  goes red because a third-party host rate-limited the runner is itself a false
+  positive, which is precisely what this issue is about.
 
 ## 8. Verification
 
-- All six workflow files parse as YAML.
-- `node scripts/check-ci-workflows.mjs` passes for all six.
+- All seven workflow files parse as YAML.
+- `node scripts/check-ci-workflows.mjs` passes for all seven.
 - `scripts/check-file-line-limits.sh` passes.
 - secretlint passes with `.secretlintrc.json`.
 - `npm run lint`, `npm run format:check` pass.
@@ -191,3 +208,10 @@ and each is a self-contained change better reviewed on its own:
   need `node:sqlite`, which the local Node 20.20.2 does not provide. CI runs
   Node 24, where the same tests pass; the failures are an artefact of the local
   toolchain and are unrelated to this change.
+- `lychee` over every tracked `*.md` and `*.html`: 131 links, 128 OK, 0 errors
+  after the `pptr.dev` correction.
+- The CI evidence logs cited in §1 were being silently excluded by the generic
+  `*.log` rule in `.gitignore`, so none of them were actually in the repository.
+  A `!dev/log/**/*.log` negation now commits them (19 files, 7.7 MB); the
+  machine-generated `dev/log/**/sessions/` transcripts stay ignored because they
+  can echo credentials. secretlint passes over the newly included files.

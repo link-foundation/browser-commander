@@ -23,13 +23,16 @@ from browser_commander import (
 from browser_commander import (
     read_browser_cookies as public_read_browser_cookies,
 )
+from browser_commander.browser import browser_cookie_credentials as cookie_credentials
 from browser_commander.browser import (
     list_browser_profiles as browser_list_browser_profiles,
 )
-from browser_commander.browser import browser_cookie_credentials as cookie_credentials
 from browser_commander.browser.browser_cookie_cache import (
     NormalizedCookieCache,
     get_cached_credential,
+)
+from browser_commander.browser.browser_cookie_crypto import (
+    decode_chromium_cookie_plaintext,
 )
 from browser_commander.browser.browser_cookies import (
     BrowserProfile,
@@ -38,9 +41,6 @@ from browser_commander.browser.browser_cookies import (
     list_browser_profiles,
     read_browser_cookies,
     read_browser_cookies_with_dependencies,
-)
-from browser_commander.browser.browser_cookie_crypto import (
-    decode_chromium_cookie_plaintext,
 )
 
 CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600

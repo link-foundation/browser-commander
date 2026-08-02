@@ -531,13 +531,7 @@ describe('installed browser cookie import', () => {
     assert.equal(password, 'kwallet-password');
     assert.deepEqual(calls[1], [
       'kwallet-query',
-      [
-        '-r',
-        'Chrome Safe Storage',
-        '-f',
-        'Chrome Keys',
-        'kdewallet',
-      ],
+      ['-r', 'Chrome Safe Storage', '-f', 'Chrome Keys', 'kdewallet'],
     ]);
   });
 

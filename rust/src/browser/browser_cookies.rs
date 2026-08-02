@@ -1,5 +1,6 @@
 //! Import cookies from installed Chrome-family and Firefox profiles.
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
@@ -15,7 +16,8 @@ use super::browser_cookie_credentials::{
     decrypt_windows_dpapi, read_safe_storage_password, read_windows_encryption_key,
 };
 use super::browser_cookie_crypto::{
-    chromium_same_site, decrypt_chromium_cookie, derive_chromium_cookie_key, firefox_same_site,
+    chromium_same_site, decode_chromium_plaintext, decrypt_chromium_cookie,
+    derive_chromium_cookie_key, firefox_same_site,
 };
 use super::browser_profiles::{
     find_cookie_database, normalize_cookie_browser, resolve_browser_profile, BrowserProfile,
@@ -156,6 +158,33 @@ struct ChromiumRow {
     same_site: i64,
 }
 
+#[derive(Default)]
+struct OperationKeyCache {
+    attempts: HashMap<String, std::result::Result<Vec<u8>, String>>,
+}
+
+struct CookieDecryptionState<'a> {
+    cache: &'a NormalizedCookieCache,
+    operation_keys: OperationKeyCache,
+}
+
+impl OperationKeyCache {
+    fn get_or_try_create<F>(&mut self, identity: &str, create: F) -> Result<Vec<u8>>
+    where
+        F: FnOnce() -> Result<Vec<u8>>,
+    {
+        if !self.attempts.contains_key(identity) {
+            self.attempts.insert(
+                identity.to_string(),
+                create().map_err(|error| error.to_string()),
+            );
+        }
+        self.attempts[identity]
+            .clone()
+            .map_err(|error| anyhow!(error))
+    }
+}
+
 fn open_cookie_database(path: &std::path::Path) -> Result<Connection> {
     Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)
         .with_context(|| format!("Could not open browser cookie database: {}", path.display()))
@@ -263,42 +292,48 @@ fn chromium_key_for_prefix(
     browser: &str,
     platform: &str,
     profile: &BrowserProfile,
-    cache: &NormalizedCookieCache,
     refresh: bool,
+    state: &mut CookieDecryptionState<'_>,
 ) -> Result<Vec<u8>> {
     if platform == "linux" && prefix == b"v10" {
         return derive_chromium_cookie_key("peanuts", "linux");
     }
     if platform == "linux" || platform == "darwin" {
-        return get_cached_credential(
-            cache,
-            &format!("{browser}:{platform}:safe-storage"),
-            refresh,
-            credential_metadata(browser, platform, "safe-storage"),
-            || {
-                derive_chromium_cookie_key(
-                    &read_safe_storage_password(browser, platform)?,
-                    platform,
-                )
-            },
-        );
+        let identity = format!("{browser}:{platform}:safe-storage");
+        return state.operation_keys.get_or_try_create(&identity, || {
+            get_cached_credential(
+                state.cache,
+                &identity,
+                refresh,
+                credential_metadata(browser, platform, "safe-storage"),
+                || {
+                    derive_chromium_cookie_key(
+                        &read_safe_storage_password(browser, platform)?,
+                        platform,
+                    )
+                },
+            )
+        });
     }
     if platform == "win32" {
-        return get_cached_credential(
-            cache,
-            &format!("{browser}:win32:legacy-aes-key"),
-            refresh,
-            credential_metadata(browser, platform, "dpapi"),
-            || {
-                read_windows_encryption_key(
-                    &profile
-                        .path
-                        .parent()
-                        .unwrap_or(&profile.path)
-                        .join("Local State"),
-                )
-            },
-        );
+        let identity = format!("{browser}:win32:legacy-aes-key");
+        return state.operation_keys.get_or_try_create(&identity, || {
+            get_cached_credential(
+                state.cache,
+                &identity,
+                refresh,
+                credential_metadata(browser, platform, "dpapi"),
+                || {
+                    read_windows_encryption_key(
+                        &profile
+                            .path
+                            .parent()
+                            .unwrap_or(&profile.path)
+                            .join("Local State"),
+                    )
+                },
+            )
+        });
     }
     Err(anyhow!(
         "Chromium cookie decryption is unsupported on {platform}"
@@ -319,8 +354,8 @@ fn decrypt_chromium_row(
     browser: &str,
     platform: &str,
     profile: &BrowserProfile,
-    cache: &NormalizedCookieCache,
     refresh: bool,
+    state: &mut CookieDecryptionState<'_>,
 ) -> Result<BrowserCookie> {
     let value = if !row.value.is_empty() {
         row.value
@@ -338,11 +373,14 @@ fn decrypt_chromium_row(
                     &[0_u8; 32],
                 )?
             } else {
-                String::from_utf8(decrypt_windows_dpapi(&row.encrypted_value)?)
-                    .context("DPAPI cookie is not valid UTF-8")?
+                decode_chromium_plaintext(
+                    &decrypt_windows_dpapi(&row.encrypted_value)?,
+                    &row.host,
+                    database_version,
+                )?
             }
         } else {
-            let key = chromium_key_for_prefix(prefix, browser, platform, profile, cache, refresh)?;
+            let key = chromium_key_for_prefix(prefix, browser, platform, profile, refresh, state)?;
             decrypt_chromium_cookie(
                 &row.encrypted_value,
                 &row.host,
@@ -376,6 +414,10 @@ fn read_chromium_cookies(
 ) -> Result<Vec<BrowserCookie>> {
     let version = read_database_version(database);
     let mut cookies = Vec::new();
+    let mut state = CookieDecryptionState {
+        cache,
+        operation_keys: OperationKeyCache::default(),
+    };
     for row in read_chromium_rows(database, options.domain_filter.as_deref())? {
         let name = row.name.clone();
         let host = row.host.clone();
@@ -385,8 +427,8 @@ fn read_chromium_cookies(
             &options.browser,
             &options.platform,
             profile,
-            cache,
             options.refresh,
+            &mut state,
         ) {
             Ok(cookie) => cookies.push(cookie),
             Err(_) if options.ignore_decryption_errors => {}

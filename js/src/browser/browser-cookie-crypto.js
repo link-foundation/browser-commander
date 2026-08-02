@@ -41,6 +41,17 @@ function decodeCookieValue(plaintext) {
   return new TextDecoder('utf-8', { fatal: true }).decode(plaintext);
 }
 
+/** Validate and decode plaintext returned by a Chromium platform decryptor. */
+export function decodeChromiumCookiePlaintext({
+  plaintext,
+  host,
+  databaseVersion = 0,
+}) {
+  return decodeCookieValue(
+    removeDomainHash(Buffer.from(plaintext), host, databaseVersion)
+  );
+}
+
 function decryptCbcCookie(encryptedValue, key) {
   const decipher = createDecipheriv('aes-128-cbc', key, CHROMIUM_CBC_IV);
   return Buffer.concat([
@@ -89,7 +100,11 @@ export function decryptChromiumCookie({
     platform === 'win32'
       ? decryptGcmCookie(encrypted, key)
       : decryptCbcCookie(encrypted, key);
-  return decodeCookieValue(removeDomainHash(plaintext, host, databaseVersion));
+  return decodeChromiumCookiePlaintext({
+    plaintext,
+    host,
+    databaseVersion,
+  });
 }
 
 export function chromiumSameSite(value) {

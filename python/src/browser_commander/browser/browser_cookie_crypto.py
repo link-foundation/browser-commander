@@ -53,6 +53,16 @@ def _decrypt_gcm(encrypted_value: bytes, key: bytes) -> bytes:
     return decryptor.update(ciphertext) + decryptor.finalize()
 
 
+def decode_chromium_cookie_plaintext(
+    plaintext: bytes,
+    *,
+    host: str,
+    database_version: int = 0,
+) -> str:
+    """Validate and decode plaintext returned by a platform decryptor."""
+    return _remove_domain_hash(plaintext, host, database_version).decode("utf-8")
+
+
 def decrypt_chromium_cookie(
     encrypted_value: bytes,
     *,
@@ -75,7 +85,11 @@ def decrypt_chromium_cookie(
         if platform == "win32"
         else _decrypt_cbc(encrypted_value, key)
     )
-    return _remove_domain_hash(plaintext, host, database_version).decode("utf-8")
+    return decode_chromium_cookie_plaintext(
+        plaintext,
+        host=host,
+        database_version=database_version,
+    )
 
 
 def chromium_same_site(value: int) -> str:

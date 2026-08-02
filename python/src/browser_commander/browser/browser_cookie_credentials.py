@@ -13,11 +13,24 @@ from ctypes import wintypes
 from pathlib import Path
 
 SAFE_STORAGE = {
-    "brave": {"application": "brave", "service": "Brave Safe Storage"},
-    "chrome": {"application": "chrome", "service": "Chrome Safe Storage"},
-    "chromium": {"application": "chromium", "service": "Chromium Safe Storage"},
+    "brave": {
+        "application": "brave",
+        "folder": "Brave Keys",
+        "service": "Brave Safe Storage",
+    },
+    "chrome": {
+        "application": "chrome",
+        "folder": "Chrome Keys",
+        "service": "Chrome Safe Storage",
+    },
+    "chromium": {
+        "application": "chromium",
+        "folder": "Chromium Keys",
+        "service": "Chromium Safe Storage",
+    },
     "edge": {
         "application": "microsoft-edge",
+        "folder": "Microsoft Edge Keys",
         "service": "Microsoft Edge Safe Storage",
     },
 }
@@ -54,7 +67,7 @@ def _read_linux_safe_storage_password(
                 "-r",
                 identity["service"],
                 "-f",
-                f"{identity['application']} Keys",
+                identity["folder"],
                 "kdewallet",
             ],
             environment,

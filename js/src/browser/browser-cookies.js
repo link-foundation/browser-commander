@@ -1,6 +1,5 @@
 import path from 'node:path';
 import os from 'node:os';
-import { TextDecoder } from 'node:util';
 
 import Database from 'better-sqlite3';
 
@@ -13,6 +12,7 @@ import {
 } from './browser-cookie-cache.js';
 import {
   chromiumSameSite,
+  decodeChromiumCookiePlaintext,
   decryptChromiumCookie,
   deriveChromiumCookieKey,
   firefoxSameSite,
@@ -112,48 +112,62 @@ function chromiumKeyForPrefix(context, prefix) {
     return deriveChromiumCookieKey('peanuts', 'linux');
   }
   if (context.platform === 'linux' || context.platform === 'darwin') {
-    return getCachedCredential({
-      cache: context.cache,
-      identity: `${context.browser}:${context.platform}:safe-storage`,
-      refresh: context.refresh,
-      now: context.now,
-      metadata: {
-        browser: context.browser,
-        platform: context.platform,
-        source: 'safe-storage',
-      },
-      create: async () =>
-        deriveChromiumCookieKey(
-          await context.readSafeStoragePassword({
+    const identity = `${context.browser}:${context.platform}:safe-storage`;
+    if (!context.credentialKeys.has(identity)) {
+      context.credentialKeys.set(
+        identity,
+        getCachedCredential({
+          cache: context.cache,
+          identity,
+          refresh: context.refresh,
+          now: context.now,
+          metadata: {
             browser: context.browser,
             platform: context.platform,
-            environment: context.environment,
-          }),
-          context.platform
-        ),
-    });
+            source: 'safe-storage',
+          },
+          create: async () =>
+            deriveChromiumCookieKey(
+              await context.readSafeStoragePassword({
+                browser: context.browser,
+                platform: context.platform,
+                environment: context.environment,
+              }),
+              context.platform
+            ),
+        })
+      );
+    }
+    return context.credentialKeys.get(identity);
   }
   if (context.platform === 'win32') {
-    return getCachedCredential({
-      cache: context.cache,
-      identity: `${context.browser}:win32:legacy-aes-key`,
-      refresh: context.refresh,
-      now: context.now,
-      metadata: {
-        browser: context.browser,
-        platform: context.platform,
-        source: 'dpapi',
-      },
-      create: () =>
-        context.readWindowsEncryptionKey({
-          localStatePath: path.join(
-            path.dirname(context.profile.path),
-            'Local State'
-          ),
-          environment: context.environment,
-          decryptDpapi: context.decryptWindowsDpapi,
-        }),
-    });
+    const identity = `${context.browser}:win32:legacy-aes-key`;
+    if (!context.credentialKeys.has(identity)) {
+      context.credentialKeys.set(
+        identity,
+        getCachedCredential({
+          cache: context.cache,
+          identity,
+          refresh: context.refresh,
+          now: context.now,
+          metadata: {
+            browser: context.browser,
+            platform: context.platform,
+            source: 'dpapi',
+          },
+          create: () =>
+            context.readWindowsEncryptionKey({
+              localStatePath: path.join(
+                path.dirname(context.profile.path),
+                'Local State'
+              ),
+              environment: context.environment,
+              decryptDpapi: context.decryptWindowsDpapi,
+            }),
+        })
+      );
+    }
+    return context.credentialKeys.get(identity);
   }
   throw new Error(
     `Chromium cookie decryption is unsupported on ${context.platform}`
@@ -182,7 +196,11 @@ async function decryptChromiumRow(row, databaseVersion, context) {
     const plaintext = await context.decryptWindowsDpapi(encryptedValue, {
       environment: context.environment,
     });
-    return new TextDecoder('utf8', { fatal: true }).decode(plaintext);
+    return decodeChromiumCookiePlaintext({
+      plaintext,
+      host: row.host_key,
+      databaseVersion,
+    });
   }
   const key = await chromiumKeyForPrefix(context, prefix);
   return decryptChromiumCookie({
@@ -285,6 +303,7 @@ export async function readBrowserCookiesWithDependencies(
       cookies = await mapChromiumRows(rows, databaseVersion, {
         browser,
         cache,
+        credentialKeys: new Map(),
         decryptWindowsDpapi:
           dependencies.decryptWindowsDpapi ?? decryptWindowsDpapi,
         environment,

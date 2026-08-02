@@ -56,6 +56,15 @@ fn decrypt_gcm(encrypted: &[u8], key: &[u8]) -> Result<Vec<u8>> {
         .map_err(|_| anyhow!("Chromium AES-GCM cookie authentication failed"))
 }
 
+pub(crate) fn decode_chromium_plaintext(
+    plaintext: &[u8],
+    host: &str,
+    database_version: i64,
+) -> Result<String> {
+    String::from_utf8(remove_domain_hash(plaintext, host, database_version)?.to_vec())
+        .context("decrypted cookie is not valid UTF-8")
+}
+
 pub(crate) fn decrypt_chromium_cookie(
     encrypted: &[u8],
     host: &str,
@@ -80,8 +89,7 @@ pub(crate) fn decrypt_chromium_cookie(
     } else {
         decrypt_cbc(encrypted, key)?
     };
-    String::from_utf8(remove_domain_hash(&plaintext, host, database_version)?.to_vec())
-        .context("decrypted cookie is not valid UTF-8")
+    decode_chromium_plaintext(&plaintext, host, database_version)
 }
 
 pub(crate) fn chromium_same_site(value: i64) -> &'static str {

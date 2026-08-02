@@ -27,6 +27,7 @@ from browser_commander.browser.browser_cookie_credentials import (
 )
 from browser_commander.browser.browser_cookie_crypto import (
     chromium_same_site,
+    decode_chromium_cookie_plaintext,
     decrypt_chromium_cookie,
     derive_chromium_cookie_key,
     firefox_same_site,
@@ -154,17 +155,22 @@ def _chromium_key_for_prefix(prefix: bytes, context: dict) -> bytes:
             )
             return derive_chromium_cookie_key(password, platform)
 
-        return get_cached_credential(
-            context["cache"],
-            f"{context['browser']}:{platform}:safe-storage",
-            create_key,
-            refresh=context["refresh"],
-            metadata={
-                "browser": context["browser"],
-                "platform": platform,
-                "source": "safe-storage",
-            },
-            now=context["now"],
+        identity = f"{context['browser']}:{platform}:safe-storage"
+        return _operation_credential(
+            context,
+            identity,
+            lambda: get_cached_credential(
+                context["cache"],
+                identity,
+                create_key,
+                refresh=context["refresh"],
+                metadata={
+                    "browser": context["browser"],
+                    "platform": platform,
+                    "source": "safe-storage",
+                },
+                now=context["now"],
+            ),
         )
     if platform == "win32":
 
@@ -175,19 +181,39 @@ def _chromium_key_for_prefix(prefix: bytes, context: dict) -> bytes:
                 decrypt_dpapi=context["decrypt_windows_dpapi"],
             )
 
-        return get_cached_credential(
-            context["cache"],
-            f"{context['browser']}:win32:legacy-aes-key",
-            create_windows_key,
-            refresh=context["refresh"],
-            metadata={
-                "browser": context["browser"],
-                "platform": platform,
-                "source": "dpapi",
-            },
-            now=context["now"],
+        identity = f"{context['browser']}:win32:legacy-aes-key"
+        return _operation_credential(
+            context,
+            identity,
+            lambda: get_cached_credential(
+                context["cache"],
+                identity,
+                create_windows_key,
+                refresh=context["refresh"],
+                metadata={
+                    "browser": context["browser"],
+                    "platform": platform,
+                    "source": "dpapi",
+                },
+                now=context["now"],
+            ),
         )
     raise RuntimeError(f"Chromium cookie decryption is unsupported on {platform}")
+
+
+def _operation_credential(
+    context: dict, identity: str, create: Callable[[], bytes]
+) -> bytes:
+    attempts = context["credential_attempts"]
+    if identity not in attempts:
+        try:
+            attempts[identity] = bytes(create())
+        except Exception as error:
+            attempts[identity] = error
+    result = attempts[identity]
+    if isinstance(result, Exception):
+        raise result
+    return result
 
 
 def _decrypt_chromium_row(
@@ -208,7 +234,12 @@ def _decrypt_chromium_row(
                 platform="win32",
                 key=bytes(32),
             )
-        return context["decrypt_windows_dpapi"](encrypted_value).decode("utf-8")
+        plaintext = context["decrypt_windows_dpapi"](encrypted_value)
+        return decode_chromium_cookie_plaintext(
+            plaintext,
+            host=row["host_key"],
+            database_version=database_version,
+        )
     key = _chromium_key_for_prefix(prefix, context)
     return decrypt_chromium_cookie(
         encrypted_value,
@@ -312,6 +343,7 @@ def read_browser_cookies_with_dependencies(
         {
             "browser": browser,
             "cache": cache,
+            "credential_attempts": {},
             "decrypt_windows_dpapi": decrypt_windows_dpapi,
             "environment": environment,
             "ignore_decryption_errors": options.ignore_decryption_errors,

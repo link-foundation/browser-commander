@@ -11,6 +11,7 @@ use serde_json::Value;
 
 struct SafeStorageIdentity {
     application: &'static str,
+    folder: &'static str,
     service: &'static str,
 }
 
@@ -18,18 +19,22 @@ fn safe_storage_identity(browser: &str) -> Result<SafeStorageIdentity> {
     let identity = match browser {
         "brave" => SafeStorageIdentity {
             application: "brave",
+            folder: "Brave Keys",
             service: "Brave Safe Storage",
         },
         "chrome" => SafeStorageIdentity {
             application: "chrome",
+            folder: "Chrome Keys",
             service: "Chrome Safe Storage",
         },
         "chromium" => SafeStorageIdentity {
             application: "chromium",
+            folder: "Chromium Keys",
             service: "Chromium Safe Storage",
         },
         "edge" => SafeStorageIdentity {
             application: "microsoft-edge",
+            folder: "Microsoft Edge Keys",
             service: "Microsoft Edge Safe Storage",
         },
         _ => return Err(anyhow!("No Safe Storage identity is known for {browser}")),
@@ -72,13 +77,7 @@ pub(crate) fn read_safe_storage_password(browser: &str, platform: &str) -> Resul
         }
         if let Ok(password) = run_credential_command(
             "kwallet-query",
-            &[
-                "-r",
-                identity.service,
-                "-f",
-                &format!("{} Keys", identity.application),
-                "kdewallet",
-            ],
+            &["-r", identity.service, "-f", identity.folder, "kdewallet"],
         ) {
             if !password.is_empty() {
                 return Ok(password);

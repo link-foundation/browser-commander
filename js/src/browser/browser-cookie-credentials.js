@@ -5,11 +5,24 @@ import { promisify } from 'node:util';
 const execFile = promisify(execFileCallback);
 
 const SAFE_STORAGE = {
-  brave: { application: 'brave', service: 'Brave Safe Storage' },
-  chrome: { application: 'chrome', service: 'Chrome Safe Storage' },
-  chromium: { application: 'chromium', service: 'Chromium Safe Storage' },
+  brave: {
+    application: 'brave',
+    folder: 'Brave Keys',
+    service: 'Brave Safe Storage',
+  },
+  chrome: {
+    application: 'chrome',
+    folder: 'Chrome Keys',
+    service: 'Chrome Safe Storage',
+  },
+  chromium: {
+    application: 'chromium',
+    folder: 'Chromium Keys',
+    service: 'Chromium Safe Storage',
+  },
   edge: {
     application: 'microsoft-edge',
+    folder: 'Microsoft Edge Keys',
     service: 'Microsoft Edge Safe Storage',
   },
 };
@@ -24,10 +37,10 @@ async function runCredentialCommand(command, args, environment) {
   return stdout.trim();
 }
 
-async function readLinuxSafeStoragePassword(browser, environment) {
+async function readLinuxSafeStoragePassword(browser, environment, runCommand) {
   const identity = SAFE_STORAGE[browser];
   try {
-    const password = await runCredentialCommand(
+    const password = await runCommand(
       'secret-tool',
       ['lookup', 'application', identity.application],
       environment
@@ -39,15 +52,9 @@ async function readLinuxSafeStoragePassword(browser, environment) {
     // Try KWallet before reporting that v11 key storage is unavailable.
   }
   try {
-    const password = await runCredentialCommand(
+    const password = await runCommand(
       'kwallet-query',
-      [
-        '-r',
-        identity.service,
-        '-f',
-        `${identity.application} Keys`,
-        'kdewallet',
-      ],
+      ['-r', identity.service, '-f', identity.folder, 'kdewallet'],
       environment
     );
     if (password) {
@@ -66,13 +73,14 @@ export async function readSafeStoragePassword({
   browser,
   platform = process.platform,
   environment = process.env,
+  runCredentialCommand: runCommand = runCredentialCommand,
 }) {
   const identity = SAFE_STORAGE[browser];
   if (!identity) {
     throw new Error(`No Safe Storage identity is known for ${browser}`);
   }
   if (platform === 'darwin') {
-    const password = await runCredentialCommand(
+    const password = await runCommand(
       'security',
       ['find-generic-password', '-w', '-s', identity.service],
       environment
@@ -83,7 +91,7 @@ export async function readSafeStoragePassword({
     return password;
   }
   if (platform === 'linux') {
-    return readLinuxSafeStoragePassword(browser, environment);
+    return readLinuxSafeStoragePassword(browser, environment, runCommand);
   }
   throw new Error(`Safe Storage passwords are not used on ${platform}`);
 }

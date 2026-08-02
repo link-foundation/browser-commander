@@ -100,6 +100,33 @@ export function checkWorkflow(filePath) {
     failures++;
   }
 
+  for (const [index, line] of lines.entries()) {
+    if (
+      line.includes('${{ github.head_ref }}') &&
+      !/^\s*GITHUB_HEAD_REF:/.test(line)
+    ) {
+      report(
+        filePath,
+        index + 1,
+        'Pass github.head_ref through an environment variable instead of interpolating untrusted PR data directly.'
+      );
+      failures++;
+    }
+  }
+
+  if (content.includes('codecov/codecov-action@v6')) {
+    for (const [index, line] of lines.entries()) {
+      if (/^\s+file:/.test(line)) {
+        report(
+          filePath,
+          index + 1,
+          'Codecov v6 uses the files input; the singular file input is unsupported.'
+        );
+        failures++;
+      }
+    }
+  }
+
   if (jobsLineIndex !== -1) {
     const jobStarts = [];
 
@@ -216,7 +243,9 @@ export function checkWorkflow(filePath) {
 
 export function main() {
   const workflowFiles = readdirSync(WORKFLOW_DIR)
-    .filter((fileName) => fileName.endsWith('.yml') || fileName.endsWith('.yaml'))
+    .filter(
+      (fileName) => fileName.endsWith('.yml') || fileName.endsWith('.yaml')
+    )
     .map((fileName) => join(WORKFLOW_DIR, fileName))
     .sort();
 
@@ -230,7 +259,9 @@ export function main() {
     process.exit(1);
   }
 
-  console.log(`CI workflow policy passed for ${workflowFiles.length} workflow(s).`);
+  console.log(
+    `CI workflow policy passed for ${workflowFiles.length} workflow(s).`
+  );
 }
 
 if (

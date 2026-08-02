@@ -54,13 +54,17 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: npm install
+      - run: echo "\${{ github.head_ref }}"
+      - uses: codecov/codecov-action@v6
+        with:
+          file: coverage.xml
 `;
     const originalError = console.error;
     console.error = () => {};
 
     try {
       withWorkflow(workflow, (filePath) => {
-        assert.equal(checkWorkflow(filePath), 5);
+        assert.equal(checkWorkflow(filePath), 7);
       });
     } finally {
       console.error = originalError;

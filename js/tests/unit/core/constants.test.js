@@ -10,6 +10,7 @@ describe('constants', () => {
 
     it('should contain expected browser arguments', () => {
       assert.ok(CHROME_ARGS.includes('--disable-infobars'));
+      assert.ok(CHROME_ARGS.includes('--password-store=basic'));
       assert.ok(CHROME_ARGS.includes('--no-first-run'));
       assert.ok(CHROME_ARGS.includes('--no-default-browser-check'));
     });

@@ -13,6 +13,7 @@ use tokio::net::TcpStream;
 
 use crate::browser::connector::{connect_browser, ConnectOptions};
 use crate::browser::launcher::{Browser, LaunchResult};
+use crate::core::constants::CHROME_ARGS;
 use crate::core::engine::{EngineAdapter, EngineType};
 
 const MANAGED_ARGUMENTS: [&str; 3] = [
@@ -38,6 +39,12 @@ pub struct RealBrowserOptions {
     pub headless: bool,
     /// Additional browser arguments.
     pub args: Vec<String>,
+    /// Additional browser arguments appended after the compatibility `args`.
+    pub extra_args: Vec<String>,
+    /// Browser Commander default arguments to omit.
+    pub ignore_default_args: Vec<String>,
+    /// Omit every Browser Commander default argument.
+    pub ignore_all_default_args: bool,
     /// Maximum time to wait for Chrome's `/json/version` endpoint.
     pub startup_timeout: Duration,
     /// Delay Playwright/Puppeteer operations by this many milliseconds.
@@ -66,6 +73,9 @@ impl Default for RealBrowserOptions {
             remote_debugging_port: 0,
             headless: false,
             args: Vec::new(),
+            extra_args: Vec::new(),
+            ignore_default_args: Vec::new(),
+            ignore_all_default_args: false,
             startup_timeout: Duration::from_secs(30),
             slow_mo: 0,
             timeout: None,
@@ -134,6 +144,24 @@ impl RealBrowserOptions {
     /// Set additional browser arguments.
     pub fn with_args(mut self, args: Vec<String>) -> Self {
         self.args = args;
+        self
+    }
+
+    /// Add browser arguments after the compatibility `args` field.
+    pub fn with_extra_args(mut self, args: Vec<String>) -> Self {
+        self.extra_args = args;
+        self
+    }
+
+    /// Omit selected Browser Commander defaults.
+    pub fn ignore_default_args(mut self, args: Vec<String>) -> Self {
+        self.ignore_default_args = args;
+        self
+    }
+
+    /// Omit every Browser Commander default argument.
+    pub fn ignore_all_default_args(mut self) -> Self {
+        self.ignore_all_default_args = true;
         self
     }
 
@@ -529,7 +557,8 @@ pub fn resolve_system_browser_executable(
 
 /// Build the protected command line for an installed browser process.
 pub fn build_real_browser_args(options: &RealBrowserOptions) -> Result<Vec<String>, anyhow::Error> {
-    for argument in &options.args {
+    let custom_args = options.args.iter().chain(&options.extra_args);
+    for argument in custom_args.clone() {
         if MANAGED_ARGUMENTS
             .iter()
             .any(|managed| argument == managed || argument.starts_with(&format!("{managed}=")))
@@ -544,13 +573,25 @@ pub fn build_real_browser_args(options: &RealBrowserOptions) -> Result<Vec<Strin
         "--remote-debugging-address=127.0.0.1".to_string(),
         format!("--remote-debugging-port={}", options.remote_debugging_port),
         format!("--user-data-dir={}", options.get_user_data_dir().display()),
-        "--no-first-run".to_string(),
-        "--no-default-browser-check".to_string(),
     ];
+    if !options.ignore_all_default_args {
+        arguments.extend(
+            CHROME_ARGS
+                .iter()
+                .filter(|argument| {
+                    !options
+                        .ignore_default_args
+                        .iter()
+                        .any(|item| item == **argument)
+                })
+                .map(|argument| argument.to_string()),
+        );
+    }
     if options.headless {
         arguments.push("--headless=new".to_string());
     }
     arguments.extend(options.args.clone());
+    arguments.extend(options.extra_args.clone());
     Ok(arguments)
 }
 

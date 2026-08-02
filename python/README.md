@@ -145,10 +145,17 @@ options = LaunchOptions(
     slow_mo=150,  # Slow down operations (ms)
     verbose=False,  # Enable debug logging
     args=["--no-sandbox"],  # Custom Chrome args
+    extra_args=["--lang=en-US"],  # Appended after legacy args
+    ignore_default_args=["--disable-infobars"],  # Per-default opt-out
 )
 result = await launch_browser(options)
 browser, page = result.browser, result.page
 ```
+
+Both launch APIs apply the documented
+[automation-friendly defaults](../docs/feature-parity.md#automation-friendly-launch-defaults),
+including `--password-store=basic` to avoid an extra OS credential dialog.
+Set `ignore_default_args=True` to omit every optional default.
 
 ### connect_browser(options)
 
@@ -175,6 +182,9 @@ The returned page is the raw engine page/driver and can be passed directly to
 non-default `--user-data-dir`; remote debugging is intentionally disabled for
 the default Chrome profile. Cookie seeding uses only values supplied by the
 caller and does not read the default profile.
+Because connection is attach-only, it cannot retrofit launch flags. Start the
+external process with the documented defaults and a dedicated debugging
+profile, or use `launch_real_browser()`.
 
 ### launch_real_browser(options)
 
@@ -190,6 +200,8 @@ result = await launch_real_browser(
         engine="playwright",  # or "selenium"
         channel="chrome",  # chrome, msedge, brave, or chromium
         user_data_dir="/tmp/browser-commander-profile",
+        extra_args=["--lang=en-US"],
+        ignore_default_args=["--disable-infobars"],
         seed_cookies=[
             {"name": "session", "value": "saved", "url": "https://example.com"}
         ],
@@ -205,6 +217,9 @@ The helper also supports beta/dev/canary channels and an explicit
 custom arguments from overriding its loopback address, debugging port, or
 profile. The returned `browser_process` can be terminated explicitly after
 closing the browser. `launch_and_connect_real_browser()` is an alias.
+The remote-debugging address, port, and profile remain managed; headless mode
+is opt-in and uses `--headless=new`. The older `args` field remains an
+append-only compatibility alias.
 
 The `color_scheme` option emulates `prefers-color-scheme` at launch time:
 

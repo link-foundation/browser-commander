@@ -1,3 +1,47 @@
+import { CHROME_ARGS } from '../core/constants.js';
+
+function stringArray(value, name) {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
+    throw new TypeError(`${name} must be an array of strings`);
+  }
+  return value;
+}
+
+/** Resolve Browser Commander defaults, compatibility args, and extra args. */
+export function resolveChromeArgs({
+  args = [],
+  extraArgs = [],
+  ignoreDefaultArgs = [],
+} = {}) {
+  stringArray(args, 'args');
+  stringArray(extraArgs, 'extraArgs');
+  if (
+    typeof ignoreDefaultArgs !== 'boolean' &&
+    !Array.isArray(ignoreDefaultArgs)
+  ) {
+    throw new TypeError('ignoreDefaultArgs must be a boolean or string array');
+  }
+  if (Array.isArray(ignoreDefaultArgs)) {
+    stringArray(ignoreDefaultArgs, 'ignoreDefaultArgs');
+  }
+
+  const normalizedIgnoreDefaultArgs =
+    ignoreDefaultArgs === false ? [] : ignoreDefaultArgs;
+  const ignored = new Set(
+    normalizedIgnoreDefaultArgs === true
+      ? CHROME_ARGS
+      : normalizedIgnoreDefaultArgs
+  );
+  return {
+    args: [
+      ...CHROME_ARGS.filter((argument) => !ignored.has(argument)),
+      ...args,
+      ...extraArgs,
+    ],
+    ignoreDefaultArgs: normalizedIgnoreDefaultArgs,
+  };
+}
+
 function setBrowserSelectionOptions(options, { channel, executablePath }) {
   if (channel !== undefined) {
     options.channel = channel;
@@ -15,14 +59,21 @@ export function buildPlaywrightLaunchOptions({
   colorScheme,
   channel,
   executablePath,
+  ignoreDefaultArgs = [],
 }) {
+  const normalizedIgnoreDefaultArgs =
+    ignoreDefaultArgs === false ? [] : ignoreDefaultArgs;
+  const engineIgnoreDefaultArgs =
+    normalizedIgnoreDefaultArgs === true
+      ? true
+      : [...new Set(['--enable-automation', ...normalizedIgnoreDefaultArgs])];
   const options = {
     headless,
     slowMo,
     chromiumSandbox: true,
     viewport: null,
     args: chromeArgs,
-    ignoreDefaultArgs: ['--enable-automation'],
+    ignoreDefaultArgs: engineIgnoreDefaultArgs,
   };
 
   if (colorScheme !== undefined) {
@@ -38,14 +89,21 @@ export function buildPuppeteerLaunchOptions({
   userDataDir,
   channel,
   executablePath,
+  ignoreDefaultArgs = [],
 }) {
-  return setBrowserSelectionOptions(
-    {
-      headless,
-      defaultViewport: null,
-      args: ['--start-maximized', ...chromeArgs],
-      userDataDir,
-    },
-    { channel, executablePath }
-  );
+  const normalizedIgnoreDefaultArgs =
+    ignoreDefaultArgs === false ? [] : ignoreDefaultArgs;
+  const options = {
+    headless,
+    defaultViewport: null,
+    args: ['--start-maximized', ...chromeArgs],
+    userDataDir,
+  };
+  if (
+    normalizedIgnoreDefaultArgs === true ||
+    normalizedIgnoreDefaultArgs.length > 0
+  ) {
+    options.ignoreDefaultArgs = normalizedIgnoreDefaultArgs;
+  }
+  return setBrowserSelectionOptions(options, { channel, executablePath });
 }

@@ -35,11 +35,30 @@ def test_builds_protected_loopback_command() -> None:
         "--remote-debugging-address=127.0.0.1",
         "--remote-debugging-port=9333",
         "--user-data-dir=/tmp/browser-commander-dedicated",
+        "--disable-session-crashed-bubble",
+        "--hide-crash-restore-bubble",
+        "--disable-infobars",
+        "--password-store=basic",
         "--no-first-run",
         "--no-default-browser-check",
+        "--disable-crash-restore",
         "--headless=new",
         "--lang=en-US",
     ]
+
+
+def test_supports_additive_arguments_and_per_default_opt_out() -> None:
+    arguments = build_real_browser_args(
+        user_data_dir="/tmp/browser-commander-dedicated",
+        args=["--legacy-arg"],
+        extra_args=["--lang=en-US"],
+        ignore_default_args=["--no-first-run"],
+    )
+
+    assert "--password-store=basic" in arguments
+    assert "--no-first-run" not in arguments
+    assert "--no-default-browser-check" in arguments
+    assert arguments[-2:] == ["--legacy-arg", "--lang=en-US"]
 
 
 def test_rejects_default_profiles_and_managed_arguments(tmp_path: Any) -> None:

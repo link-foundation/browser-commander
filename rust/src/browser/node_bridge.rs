@@ -242,6 +242,11 @@ fn launch_params(options: &LaunchOptions, user_data_dir: &Path) -> Value {
         "slowMo": options.slow_mo,
         "verbose": options.verbose,
         "args": options.all_chrome_args(),
+        "ignoreDefaultArgs": if options.ignore_all_default_args {
+            Value::Bool(true)
+        } else {
+            json!(options.ignore_default_args)
+        },
         "colorScheme": options.color_scheme.as_ref().map(|cs| cs.as_str()),
         "sandbox": options.sandbox,
         "channel": options.channel,
@@ -538,6 +543,20 @@ mod tests {
 
         assert!(params["channel"].is_null());
         assert!(params["executablePath"].is_null());
+    }
+
+    #[test]
+    fn launch_params_forward_ignored_defaults() {
+        let options =
+            LaunchOptions::playwright().ignore_default_args(vec!["--no-first-run".to_string()]);
+
+        let params = launch_params(&options, Path::new("/tmp/browser-data"));
+
+        assert_eq!(params["ignoreDefaultArgs"][0], "--no-first-run");
+        assert!(!params["args"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("--no-first-run")));
     }
 
     #[test]

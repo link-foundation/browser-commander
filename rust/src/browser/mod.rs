@@ -10,6 +10,7 @@ pub mod launcher;
 pub mod media;
 pub mod navigation_ops;
 pub mod node_bridge;
+pub mod real_browser;
 
 pub use chromiumoxide_adapter::ChromiumoxidePage;
 pub use connector::{connect_browser, ConnectOptions};
@@ -20,3 +21,8 @@ pub use navigation_ops::{
     NavigationResult, NavigationVerificationResult, WaitUntil,
 };
 pub use node_bridge::NodeBridgePage;
+pub use real_browser::{
+    assert_dedicated_user_data_dir, build_real_browser_args, default_real_browser_user_data_dir,
+    launch_and_connect_real_browser, launch_real_browser, resolve_system_browser_executable,
+    BrowserProcess, RealBrowserLaunchResult, RealBrowserOptions,
+};

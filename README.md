@@ -21,9 +21,10 @@ A universal browser automation library with a unified API across multiple browse
 See [docs/feature-parity.md](docs/feature-parity.md) for the cross-language feature matrix and [docs/case-studies/issue-51/README.md](docs/case-studies/issue-51/README.md) for the implementation notes.
 
 All three implementations can attach to a running Chrome-family browser over
-CDP. The JavaScript package also provides `launchAndConnectRealBrowser()` to
-find and start an installed Chrome, Edge, Brave, or Chromium with a safe,
-dedicated automation profile before attaching.
+CDP or find and start an installed Chrome, Edge, Brave, or Chromium with a
+safe, dedicated automation profile before attaching. Use
+`launchRealBrowser()` in JavaScript and `launch_real_browser()` in Python or
+Rust.
 
 All implementations also expose installed-browser profile discovery and local
 cookie import for Chrome, Edge, Brave, Chromium, and Firefox. Cookie values are

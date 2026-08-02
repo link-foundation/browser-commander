@@ -35,6 +35,12 @@ from browser_commander.browser.navigation import (
     wait_for_url_stabilization,
 )
 from browser_commander.browser.pdf import pdf
+from browser_commander.browser.real_browser import (
+    RealBrowserOptions,
+    RealBrowserResult,
+    launch_and_connect_real_browser,
+    launch_real_browser,
+)
 from browser_commander.core.constants import CHROME_ARGS, TIMING
 
 # Re-export new core components
@@ -180,6 +186,8 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     # Page trigger system
     "PageTriggerManager",
     "PlaywrightAdapter",
+    "RealBrowserOptions",
+    "RealBrowserResult",
     "ScrollResult",
     "ScrollVerificationResult",
     "SeleniumAdapter",
@@ -229,7 +237,9 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "key_down",
     "key_up",
     # Browser management
+    "launch_and_connect_real_browser",
     "launch_browser",
+    "launch_real_browser",
     "list_browser_profiles",
     "locator",
     "log_element_info",

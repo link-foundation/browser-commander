@@ -198,10 +198,10 @@ access to at most one read across concurrent and repeated processes. Use
 `.refresh(true)` to coordinate a new read, `.cache_dir(...)` and
 `.ttl_minutes(...)` to customize storage, or `.cache(false)` to opt out.
 
-| Browser family | macOS | Linux | Windows |
-| --- | --- | --- | --- |
+| Browser family                | macOS                                | Linux                                                                       | Windows                                       |
+| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------- |
 | Chrome, Edge, Brave, Chromium | Keychain + AES-128-CBC (`v10`/`v11`) | libsecret/KWallet + AES-128-CBC (`v11`), or the Chromium `v10` fallback key | DPAPI-protected AES-256-GCM key (`v10`/`v11`) |
-| Firefox | `cookies.sqlite` | `cookies.sqlite` | `cookies.sqlite` |
+| Firefox                       | `cookies.sqlite`                     | `cookies.sqlite`                                                            | `cookies.sqlite`                              |
 
 Chromium database-version-24 domain hashes and 1601-based timestamps are
 handled automatically. Current Windows Chromium may use app-bound `v20`
@@ -211,6 +211,38 @@ use a browser-supported export or saved Browser Commander storage state for
 those cookies. `.ignore_decryption_errors(true)` returns the remaining
 decryptable cookies. Treat imported cookies like passwords: use a short TTL,
 never commit cache files, and seed only a dedicated automation profile.
+
+### Launch and Connect to an Installed Browser
+
+`launch_real_browser()` discovers and starts genuine installed Chrome, Edge,
+Brave, or Chromium with a dedicated profile, waits for its loopback CDP
+endpoint, and attaches with Chromiumoxide or the Playwright/Puppeteer bridges:
+
+```rust
+use browser_commander::prelude::*;
+use serde_json::json;
+
+let result = launch_real_browser(
+    RealBrowserOptions::playwright()
+        .channel("chrome")
+        .user_data_dir("/tmp/browser-commander-profile")
+        .seed_cookies(vec![json!({
+            "name": "session",
+            "value": "saved",
+            "url": "https://example.com"
+        })])
+        .node_working_dir("./js"),
+).await?;
+
+result.page.goto("https://example.com").await?;
+println!("CDP endpoint: {}", result.cdp_endpoint);
+```
+
+An explicit `executable_path` can replace channel discovery. Known default
+profiles and custom arguments that override the loopback address, debugging
+port, or profile are rejected. `RealBrowserLaunchResult` owns a
+`browser_process` handle and terminates the spawned browser when dropped.
+`launch_and_connect_real_browser()` is an alias.
 
 ### Navigation
 

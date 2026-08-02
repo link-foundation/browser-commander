@@ -50,10 +50,12 @@ pub mod utilities;
 
 // Re-export commonly used items at crate root
 pub use browser::{
-    clear_browser_cookie_memory_cache, connect_browser, emulate_media, launch_browser,
-    list_browser_profiles, read_browser_cookies, Browser, BrowserCookie, BrowserCookieReadOptions,
+    build_real_browser_args, clear_browser_cookie_memory_cache, connect_browser, emulate_media,
+    launch_and_connect_real_browser, launch_browser, launch_real_browser, list_browser_profiles,
+    read_browser_cookies, Browser, BrowserCookie, BrowserCookieReadOptions, BrowserProcess,
     BrowserProfile, BrowserProfileOptions, ChromiumoxidePage, ColorScheme, ConnectOptions,
-    EmulateMediaOptions, LaunchOptions, LaunchResult, NodeBridgePage, SUPPORTED_COOKIE_BROWSERS,
+    EmulateMediaOptions, LaunchOptions, LaunchResult, NodeBridgePage, RealBrowserLaunchResult,
+    RealBrowserOptions, SUPPORTED_COOKIE_BROWSERS,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
@@ -68,11 +70,13 @@ pub use core::{
 /// ```
 pub mod prelude {
     pub use crate::browser::{
-        clear_browser_cookie_memory_cache, connect_browser, emulate_media, goto, launch_browser,
+        clear_browser_cookie_memory_cache, connect_browser, emulate_media, goto,
+        launch_and_connect_real_browser, launch_browser, launch_real_browser,
         list_browser_profiles, read_browser_cookies, verify_navigation, wait_for_navigation,
         wait_for_url_stabilization, Browser, BrowserCookie, BrowserCookieReadOptions,
-        BrowserProfile, BrowserProfileOptions, ColorScheme, ConnectOptions, EmulateMediaOptions,
-        LaunchOptions, LaunchResult, NavigationOptions, NavigationResult, WaitUntil,
+        BrowserProcess, BrowserProfile, BrowserProfileOptions, ColorScheme, ConnectOptions,
+        EmulateMediaOptions, LaunchOptions, LaunchResult, NavigationOptions, NavigationResult,
+        RealBrowserLaunchResult, RealBrowserOptions, WaitUntil,
     };
     pub use crate::core::{
         is_navigation_error, is_timeout_error, DialogEvent, DialogManager, DialogType,

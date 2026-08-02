@@ -40,6 +40,8 @@ from browser_commander.exports import (
     # Page trigger system
     PageTriggerManager,
     PlaywrightAdapter,
+    RealBrowserOptions,
+    RealBrowserResult,
     ScrollResult,
     ScrollVerificationResult,
     SeleniumAdapter,
@@ -86,7 +88,9 @@ from browser_commander.exports import (
     is_verbose_enabled,
     # Element visibility
     is_visible,
+    launch_and_connect_real_browser,
     launch_browser,
+    launch_real_browser,
     list_browser_profiles,
     locator,
     log_element_info,
@@ -157,6 +161,8 @@ __all__ = [
     # Page trigger system
     "PageTriggerManager",
     "PlaywrightAdapter",
+    "RealBrowserOptions",
+    "RealBrowserResult",
     "ScrollResult",
     "ScrollVerificationResult",
     "SeleniumAdapter",
@@ -203,7 +209,9 @@ __all__ = [
     "is_verbose_enabled",
     # Element visibility
     "is_visible",
+    "launch_and_connect_real_browser",
     "launch_browser",
+    "launch_real_browser",
     "list_browser_profiles",
     "locator",
     "log_element_info",

@@ -118,16 +118,16 @@ const { browser, page } = await connectBrowser({
 const commander = makeBrowserCommander({ page });
 ```
 
-`launchAndConnectRealBrowser()` can find and start a genuine installed Chrome,
+`launchRealBrowser()` can find and start a genuine installed Chrome,
 Edge, Brave, or Chromium with a loopback CDP endpoint and then attach to it. It
 always uses a dedicated profile; Chrome 136 and newer do not honor remote
 debugging switches for the default profile. See the
 [Chrome remote-debugging security change](https://developer.chrome.com/blog/remote-debugging-port).
 
 ```javascript
-import { launchAndConnectRealBrowser } from 'browser-commander';
+import { launchRealBrowser } from 'browser-commander';
 
-const connection = await launchAndConnectRealBrowser({
+const connection = await launchRealBrowser({
   engine: 'puppeteer',
   channel: 'chrome',
   userDataDir: '/tmp/my-automation-profile',
@@ -173,6 +173,7 @@ default 60-minute TTL and a cross-process lock ensure that concurrent or repeate
 scripts touch Keychain, libsecret/KWallet, or DPAPI at most once per TTL window.
 Set `refresh: true` to force a new read, customize `cache.dir`/`ttlMinutes`, or
 set `cache: false` to opt out of disk caching.
+`launchAndConnectRealBrowser()` remains available as a descriptive alias.
 
 Reuse a saved authenticated session by passing Playwright-compatible storage
 state as a JSON file path or object. Cookies and localStorage are restored for
@@ -392,7 +393,7 @@ const { browser, page } = await connectBrowser({
 Playwright accepts `timeout` and Puppeteer accepts `protocolTimeout`.
 `storageState` can also seed Playwright-compatible cookies and localStorage.
 
-### launchAndConnectRealBrowser(options)
+### launchRealBrowser(options)
 
 Start an installed browser and connect through `connectBrowser()`. Use
 `channel` (`chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`,
@@ -402,6 +403,7 @@ a managed directory under `~/.browser-commander/real-browser/`, rejects known
 default browser-profile paths, protects its remote-debugging arguments, and
 returns the spawned `browserProcess`, resolved `cdpEndpoint`, executable path,
 and profile path alongside `{ browser, page }`.
+`launchAndConnectRealBrowser()` is an alias with identical behavior.
 
 ### listBrowserProfiles(options)
 

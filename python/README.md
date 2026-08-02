@@ -225,6 +225,36 @@ state for those cookies. `ignore_decryption_errors=True` returns any remaining
 decryptable cookies. Treat imported cookies like passwords: keep cache paths
 private, use a short TTL, never commit them, and seed only a dedicated profile.
 
+### launch_real_browser(options)
+
+Discover and start a genuine installed Chrome, Edge, Brave, or Chromium with a
+dedicated profile, wait for its loopback CDP endpoint, and attach with
+Playwright or Selenium:
+
+```python
+from browser_commander import RealBrowserOptions, launch_real_browser
+
+result = await launch_real_browser(
+    RealBrowserOptions(
+        engine="playwright",  # or "selenium"
+        channel="chrome",  # chrome, msedge, brave, or chromium
+        user_data_dir="/tmp/browser-commander-profile",
+        seed_cookies=[
+            {"name": "session", "value": "saved", "url": "https://example.com"}
+        ],
+    )
+)
+
+browser, page = result.browser, result.page
+print(result.cdp_endpoint, result.executable_path)
+```
+
+The helper also supports beta/dev/canary channels and an explicit
+`executable_path`. It rejects known default browser profiles and prevents
+custom arguments from overriding its loopback address, debugging port, or
+profile. The returned `browser_process` can be terminated explicitly after
+closing the browser. `launch_and_connect_real_browser()` is an alias.
+
 The `color_scheme` option emulates `prefers-color-scheme` at launch time:
 
 ```python

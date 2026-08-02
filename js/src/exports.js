@@ -47,7 +47,10 @@ export {
   listBrowserProfiles,
   readBrowserCookies,
 } from './browser/browser-cookies.js';
-export { launchAndConnectRealBrowser } from './browser/real-browser.js';
+export {
+  launchAndConnectRealBrowser,
+  launchRealBrowser,
+} from './browser/real-browser.js';
 export { launchBrowser } from './browser/launcher.js';
 export { saveStorageState } from './browser/storage-state.js';
 export { emulateMedia } from './browser/media.js';

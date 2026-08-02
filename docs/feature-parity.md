@@ -44,6 +44,39 @@ This matrix tracks the shared API surface across the maintained language impleme
 | Rust API docs           | `cd rust && cargo doc --no-deps --all-features` | Built by `.github/workflows/docs.yml`    |
 | Combined Pages artifact | Generated from both outputs                     | Uploaded on PRs and deployed from `main` |
 
+## Real-Browser Lifecycle Parity
+
+| Capability                              | JavaScript            | Rust                                 | Python                  |
+| --------------------------------------- | --------------------- | ------------------------------------ | ----------------------- |
+| Attach to an existing CDP endpoint      | Playwright, Puppeteer | Chromiumoxide, Playwright, Puppeteer | Playwright, Selenium    |
+| Discover an installed Chrome-family app | Linux, macOS, Windows | Linux, macOS, Windows                | Linux, macOS, Windows   |
+| Launch with a dedicated profile         | `launchRealBrowser()` | `launch_real_browser()`              | `launch_real_browser()` |
+| Loopback-only CDP readiness probe       | Supported             | Supported                            | Supported               |
+| Seed cookies after connection           | Supported             | Supported                            | Supported               |
+| Return browser and page handles         | Raw engine handles    | Shared `EngineAdapter`               | Raw engine handles      |
+
+## Installed-Browser Cookie Parity
+
+| Capability                                                        | JavaScript | Rust      | Python    |
+| ----------------------------------------------------------------- | ---------- | --------- | --------- |
+| Discover Chrome, Edge, Brave, Chromium, and Firefox profiles      | Supported  | Supported | Supported |
+| Read Playwright-compatible cookie fields                          | Supported  | Supported | Supported |
+| Filter by domain and choose a named profile                       | Supported  | Supported | Supported |
+| Chromium version-24 host-hash validation and timestamp conversion | Supported  | Supported | Supported |
+| macOS Keychain + AES-128-CBC                                      | Supported  | Supported | Supported |
+| Linux libsecret/KWallet + AES-128-CBC                             | Supported  | Supported | Supported |
+| Windows DPAPI key + legacy AES-256-GCM                            | Supported  | Supported | Supported |
+| Firefox `cookies.sqlite`                                          | Supported  | Supported | Supported |
+| Owner-only derived-key/result cache with TTL and refresh controls | Supported  | Supported | Supported |
+| Cross-process credential-read lock                                | Supported  | Supported | Supported |
+
+Current Windows Chromium app-bound `v20` values require Chromium's privileged
+service and are intentionally reported as unsupported for ordinary external
+processes. All three APIs can skip those individual values when partial import
+is acceptable. The shared derived-key cache uses one schema and lock identity,
+so JavaScript, Rust, and Python processes do not independently prompt within a
+TTL window.
+
 ## Compatibility Notes
 
 - Existing Rust aliases remain compatible: `chromiumoxide` and `cdp` parse as `EngineType::Chromiumoxide`; `fantoccini` and `webdriver` parse as `EngineType::Fantoccini`.

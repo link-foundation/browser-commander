@@ -362,6 +362,15 @@ export async function launchAndConnectRealBrowser(options = {}) {
   return await launchAndConnectRealBrowserWithDependencies(options);
 }
 
+/**
+ * Short Playwright-style name for {@link launchAndConnectRealBrowser}.
+ *
+ * Both names are the same function so existing callers can keep using the
+ * descriptive name while new code can use the API proposed for real-browser
+ * launch.
+ */
+export const launchRealBrowser = launchAndConnectRealBrowser;
+
 /** Dependency-injected implementation used by the public helper and tests. */
 export async function launchAndConnectRealBrowserWithDependencies(
   options = {},

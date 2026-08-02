@@ -9,8 +9,12 @@ import {
   buildRealBrowserArgs,
   launchAndConnectRealBrowser,
   launchAndConnectRealBrowserWithDependencies,
+  launchRealBrowser,
 } from '../../../src/browser/real-browser.js';
-import { launchAndConnectRealBrowser as publicHelper } from '../../../src/index.js';
+import {
+  launchAndConnectRealBrowser as publicHelper,
+  launchRealBrowser as publicShortHelper,
+} from '../../../src/index.js';
 
 describe('launchAndConnectRealBrowser', () => {
   let temporaryDirectory;
@@ -24,6 +28,8 @@ describe('launchAndConnectRealBrowser', () => {
 
   it('is exported from the package API', () => {
     assert.equal(publicHelper, launchAndConnectRealBrowser);
+    assert.equal(launchRealBrowser, launchAndConnectRealBrowser);
+    assert.equal(publicShortHelper, launchRealBrowser);
   });
 
   it('builds a loopback-only CDP command with a dedicated profile', () => {

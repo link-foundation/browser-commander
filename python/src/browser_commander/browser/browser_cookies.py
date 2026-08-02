@@ -8,6 +8,7 @@ import sqlite3
 import sys
 import time
 from collections.abc import Mapping
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Literal
@@ -283,7 +284,11 @@ def _read_uncached_cookies(
     domain_filter: str | None,
     context: dict,
 ) -> list[dict]:
-    with _open_cookie_database(cookie_path) as database:
+    # closing() is required: sqlite3.Connection.__exit__ only commits or rolls
+    # back the transaction, it does not close the connection. Using the bare
+    # connection as a context manager leaked a handle per read and produced
+    # "ResourceWarning: unclosed database" in every CI test run.
+    with closing(_open_cookie_database(cookie_path)) as database:
         if browser == "firefox":
             return _map_firefox_rows(_read_firefox_rows(database, domain_filter))
         database_version = _read_database_version(database)

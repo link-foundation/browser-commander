@@ -59,7 +59,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -88,7 +88,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
@@ -96,18 +96,25 @@ jobs:
         run: pip install "scriv[toml]"
 
       - name: Check for changelog fragments
+        # GITHUB_BASE_REF is passed as an environment variable rather than
+        # interpolated into the script body: a branch name is attacker-controlled
+        # data on pull_request events.
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
         run: |
+          set -euo pipefail
+
           # Get list of fragment files (excluding README and template)
           FRAGMENTS=$(find changelog.d -name "*.md" ! -name "README.md" ! -name "*.j2" 2>/dev/null | wc -l)
 
           # Get changed files in PR
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          CHANGED_FILES=$(git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD")
 
           # Check if any source files changed (excluding docs and config)
-          SOURCE_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^python/(src/|tests/|scripts/)" | wc -l)
+          SOURCE_CHANGED=$(printf '%s\n' "$CHANGED_FILES" | grep -cE "^python/(src/|tests/|scripts/)" || true)
 
           if [ "$SOURCE_CHANGED" -gt 0 ] && [ "$FRAGMENTS" -eq 0 ]; then
-            echo "::warning::No changelog fragment found. Please run 'scriv create' and document your changes."
+            echo "::error::No changelog fragment found. Please run 'scriv create' and document your changes."
             echo ""
             echo "To create a changelog fragment:"
             echo "  pip install 'scriv[toml]'"
@@ -115,12 +122,10 @@ jobs:
             echo ""
             echo "This is similar to adding a changeset in JavaScript projects."
             echo "See changelog.d/README.md for more information."
-            # Note: This is a warning, not a failure, to allow flexibility
-            # Change 'exit 0' to 'exit 1' to make it required
-            exit 0
+            exit 1
           fi
 
-          echo "✓ Changelog check passed"
+          echo "Changelog check passed"
 
   # === LINT AND FORMAT CHECK ===
   lint:
@@ -131,19 +136,42 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-lint
       cancel-in-progress: true
     needs: [detect-changes]
+    # !cancelled() is required because detect-changes is skipped on
+    # workflow_dispatch. Without it, a skipped dependency skips this job too,
+    # which in turn skipped manual-release (it needs lint), making the manual
+    # release path unreachable.
+    # See: https://github.com/actions/runner/issues/491
     if: |
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch' ||
-      needs.detect-changes.outputs.py-changed == 'true' ||
-      needs.detect-changes.outputs.tests-changed == 'true' ||
-      needs.detect-changes.outputs.docs-changed == 'true' ||
-      needs.detect-changes.outputs.package-changed == 'true' ||
-      needs.detect-changes.outputs.workflow-changed == 'true'
+      !cancelled() && (
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        needs.detect-changes.outputs.py-changed == 'true' ||
+        needs.detect-changes.outputs.tests-changed == 'true' ||
+        needs.detect-changes.outputs.docs-changed == 'true' ||
+        needs.detect-changes.outputs.package-changed == 'true' ||
+        needs.detect-changes.outputs.workflow-changed == 'true'
+      )
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Full history: simulate-fresh-merge.sh needs a merge base.
+          fetch-depth: 0
+
+      # Lint the state that will exist after the merge, not the stale merge
+      # preview GitHub built when the pull request was last synced.
+      - name: Simulate fresh merge with base branch (PR only)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        # The job default working-directory is the language subdirectory, and
+        # the shared script lives at the repository root. shell: bash is
+        # explicit because the Windows runners default to pwsh.
+        working-directory: .
+        shell: bash
+        run: bash scripts/simulate-fresh-merge.sh
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -174,7 +202,10 @@ jobs:
       cancel-in-progress: true
     needs: [detect-changes, changelog]
     # Run if: push event, OR changelog succeeded, OR changelog was skipped (docs-only PR)
-    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+    if: >-
+      !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -182,9 +213,26 @@ jobs:
         python-version: ['3.13']
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Full history: simulate-fresh-merge.sh needs a merge base.
+          fetch-depth: 0
+
+      # Test the state that will exist after the merge. This is the check that
+      # catches a semantic conflict: two pull requests that each pass alone but
+      # break the suite once both are on the base branch.
+      - name: Simulate fresh merge with base branch (PR only)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        # The job default working-directory is the language subdirectory, and
+        # the shared script lives at the repository root. shell: bash is
+        # explicit because the Windows runners default to pwsh.
+        working-directory: .
+        shell: bash
+        run: bash scripts/simulate-fresh-merge.sh
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -196,13 +244,28 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v --cov=src --cov-report=xml --cov-report=term
 
+      # Gate on the token rather than uploading unconditionally: without it the
+      # action fails on forks, which have no secrets. With the token present an
+      # upload error is a real failure, so fail_ci_if_error is true. It was
+      # false, which meant a genuinely failed upload still reported success --
+      # the coverage report silently stopped updating and nothing said so.
       - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
-        uses: codecov/codecov-action@v6
+        if: >-
+          matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' &&
+          env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v7
         with:
+          token: ${{ env.CODECOV_TOKEN }}
           files: ./python/coverage.xml
-          fail_ci_if_error: false
+          disable_search: true
+          fail_ci_if_error: true
           flags: python
+
+      - name: Report skipped Codecov upload
+        if: >-
+          matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' &&
+          env.CODECOV_TOKEN == ''
+        run: echo "::notice::Skipping Codecov upload because CODECOV_TOKEN is not configured"
 
   # === BUILD PACKAGE ===
   build:
@@ -213,21 +276,19 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-build
       cancel-in-progress: true
     needs: [detect-changes, lint, test]
-    # Run if: push/dispatch event, OR lint/test succeeded, OR lint/test were skipped (docs-only PR)
+    # Build only after the quality gates pass. 'skipped' is accepted because a
+    # docs-only pull request legitimately skips lint/test; 'failure' never is.
+    # The previous condition short-circuited on `github.event_name == 'push'`,
+    # so a failing lint on main still produced a build artifact.
     if: |
-      always() && !cancelled() && (
-        github.event_name == 'push' ||
-        github.event_name == 'workflow_dispatch' ||
-        (
-          (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
-          (needs.test.result == 'success' || needs.test.result == 'skipped')
-        )
-      )
+      !cancelled() &&
+      (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped')
     steps:
       - uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -256,7 +317,16 @@ jobs:
     concurrency:
       group: main-writer-${{ github.repository }}-main
       cancel-in-progress: false
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # !cancelled() plus explicit success checks: a cancelled or failed gate must
+    # never publish, and a gate that was skipped for an unrelated reason must
+    # not be treated as a pass.
+    if: |
+      !cancelled() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.lint.result == 'success' &&
+      needs.test.result == 'success' &&
+      needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -267,7 +337,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -323,7 +393,15 @@ jobs:
     concurrency:
       group: main-writer-${{ github.repository }}-main
       cancel-in-progress: false
-    if: github.event_name == 'workflow_dispatch'
+    # Previously this job could never run: detect-changes is skipped on
+    # workflow_dispatch, which skipped lint, which skipped this job because a
+    # skipped dependency skips dependents unless the condition survives it.
+    if: |
+      !cancelled() &&
+      github.event_name == 'workflow_dispatch' &&
+      needs.lint.result == 'success' &&
+      needs.test.result == 'success' &&
+      needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -335,7 +413,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -362,10 +440,15 @@ jobs:
 
       - name: Version and commit
         id: version
+        # RELEASE_DESCRIPTION is a free-form workflow_dispatch input, so it is
+        # passed through the environment instead of being interpolated into the
+        # shell command.
+        env:
+          RELEASE_DESCRIPTION: ${{ github.event.inputs.description }}
         run: |
           python scripts/version_and_commit.py \
             --bump-type "${{ github.event.inputs.bump_type }}" \
-            --description "${{ github.event.inputs.description }}"
+            --description "$RELEASE_DESCRIPTION"
 
       - name: Build package
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'

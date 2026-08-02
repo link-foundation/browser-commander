@@ -143,3 +143,11 @@ reports/
 
 # Generated API documentation
 js/docs-api/
+
+# Investigation evidence under dev/log/ is committed on purpose: the analysis
+# documents cite these CI logs, so they must live in the repository. The generic
+# `*.log` rule above would otherwise exclude them.
+!dev/log/**/*.log
+
+# Solver session transcripts are machine-generated and may echo credentials.
+dev/log/**/sessions/

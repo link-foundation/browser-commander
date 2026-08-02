@@ -1,0 +1,180 @@
+Check CI Workflow Policy	Set up job	﻿2026-08-02T13:36:29.5194589Z Current runner version: '2.336.0'
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5222068Z ##[group]Runner Image Provisioner
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5223349Z Hosted Compute Agent
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5224055Z Version: 20260707.563
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5224739Z Commit: 02667638d2b423fbc733a8e32a88b44996a3ba6e
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5225555Z Build Date: 2026-07-07T19:33:50Z
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5226279Z Worker ID: {76f244ef-2b39-4ce1-9cd6-aae2c9039bdf}
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5227015Z Azure Region: westus
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5227615Z ##[endgroup]
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5229477Z ##[group]Operating System
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5230133Z Ubuntu
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5230754Z 24.04.4
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5231262Z LTS
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5231816Z ##[endgroup]
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5232759Z ##[group]Runner Image
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5233432Z Image: ubuntu-24.04
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5234062Z Version: 20260720.247.2
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5235144Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5236928Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5237913Z ##[endgroup]
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5239069Z ##[group]GITHUB_TOKEN Permissions
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5241182Z Contents: read
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5241901Z Metadata: read
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5242772Z ##[endgroup]
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5244884Z Secret source: Actions
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5246106Z Prepare workflow directory
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5717165Z Prepare all required actions
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.5768513Z Getting action download info
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:29.9179000Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:30.3791735Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Check CI Workflow Policy	Set up job	2026-08-02T13:36:30.9788466Z Complete job name: Check CI Workflow Policy
+Check CI Workflow Policy	Run actions/checkout@v6	﻿2026-08-02T13:36:31.0594286Z ##[group]Run actions/checkout@v6
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0595284Z with:
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0595816Z   repository: link-foundation/browser-commander
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0600131Z   token: ***
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0600608Z   ssh-strict: true
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0601085Z   ssh-user: git
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0601586Z   persist-credentials: true
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0602121Z   clean: true
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0602821Z   sparse-checkout-cone-mode: true
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0603400Z   fetch-depth: 1
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0603890Z   fetch-tags: false
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0604372Z   show-progress: true
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0604858Z   lfs: false
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0605306Z   submodules: false
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0605819Z   set-safe-directory: true
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0606376Z   allow-unsafe-pr-checkout: false
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0607219Z env:
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0607688Z   GIT_CONFIG_COUNT: 1
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0608220Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0608826Z   GIT_CONFIG_VALUE_0: main
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.0609404Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1647883Z Syncing repository: link-foundation/browser-commander
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1650062Z ##[group]Getting Git version info
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1650995Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1652684Z [command]/usr/bin/git version
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1748029Z git version 2.54.0
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1775931Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1794413Z Temporarily overriding HOME='/home/runner/work/_temp/3a632f1c-16ac-49de-8d8a-83488c9653e7' before making global git config changes
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1797447Z Adding repository directory to the temporary git global config as a safe directory
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1800155Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1858213Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1864188Z ##[group]Determining repository object format
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1870802Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1872096Z ##[group]Initializing the repository
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.1874130Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2065586Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2071869Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2130722Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2132895Z ##[group]Disabling automatic garbage collection
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2136260Z [command]/usr/bin/git config --local gc.auto 0
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2176216Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2177922Z ##[group]Setting up auth
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2184260Z Removing SSH command configuration
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2188211Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2233416Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2674983Z Removing HTTP extra header
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2683478Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2725786Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2955090Z Removing includeIf entries pointing to credentials config files
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.2963563Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3005439Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3241892Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3288176Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3325678Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3367168Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3402185Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3433069Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3434706Z ##[group]Fetching the repository
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.3443287Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +8e33720bfa3fac58322c566445ec7160969e49a6:refs/remotes/pull/76/merge
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9833445Z From https://github.com/link-foundation/browser-commander
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9835091Z  * [new ref]         8e33720bfa3fac58322c566445ec7160969e49a6 -> pull/76/merge
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9870655Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9872037Z ##[group]Determining the checkout info
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9873599Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9877766Z [command]/usr/bin/git sparse-checkout disable
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9927076Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9961584Z ##[group]Checking out the ref
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:31.9965228Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/76/merge
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0322484Z Note: switching to 'refs/remotes/pull/76/merge'.
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0323321Z 
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0323851Z You are in 'detached HEAD' state. You can look around, make experimental
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0325379Z changes and commit them, and you can discard any commits you make in this
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0327227Z state without impacting any branches by switching back to a branch.
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0328415Z 
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0329243Z If you want to create a new branch to retain commits you create, you may
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0330892Z do so (now or later) by using -c with the switch command. Example:
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0331852Z 
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0332717Z   git switch -c <new-branch-name>
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0333646Z 
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0334141Z Or undo this operation with:
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0334871Z 
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0335298Z   git switch -
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0335920Z 
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0336681Z Turn off this advice by setting config variable advice.detachedHead to false
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0338036Z 
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0339486Z HEAD is now at 8e33720 Merge e90764cd97467ab36982cc48533b81700c64830b into 6b2a62a0649f761b5f57549339dca117c83fffb2
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0343497Z ##[endgroup]
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0382822Z [command]/usr/bin/git log -1 --format=%H
+Check CI Workflow Policy	Run actions/checkout@v6	2026-08-02T13:36:32.0410066Z 8e33720bfa3fac58322c566445ec7160969e49a6
+Check CI Workflow Policy	Setup Node.js	﻿2026-08-02T13:36:32.0720495Z ##[group]Run actions/setup-node@v6
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0721319Z with:
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0721835Z   node-version: 24.x
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0722799Z   check-latest: false
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0727108Z   token: ***
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0727649Z   package-manager-cache: true
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0728392Z env:
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0728906Z   GIT_CONFIG_COUNT: 1
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0729529Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0730348Z   GIT_CONFIG_VALUE_0: main
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.0730937Z ##[endgroup]
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.2251556Z Found in cache @ /opt/hostedtoolcache/node/24.18.0/x64
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.2256358Z ##[group]Environment details
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.6958034Z node: v24.18.0
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.6959811Z npm: 11.16.0
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.6961014Z yarn: 1.22.22
+Check CI Workflow Policy	Setup Node.js	2026-08-02T13:36:32.6964083Z ##[endgroup]
+Check CI Workflow Policy	Check workflows	﻿2026-08-02T13:36:32.7149582Z ##[group]Run node scripts/check-ci-workflows.mjs
+Check CI Workflow Policy	Check workflows	2026-08-02T13:36:32.7151411Z ^[[36;1mnode scripts/check-ci-workflows.mjs^[[0m
+Check CI Workflow Policy	Check workflows	2026-08-02T13:36:32.7213406Z shell: /usr/bin/bash -e {0}
+Check CI Workflow Policy	Check workflows	2026-08-02T13:36:32.7214522Z env:
+Check CI Workflow Policy	Check workflows	2026-08-02T13:36:32.7215322Z   GIT_CONFIG_COUNT: 1
+Check CI Workflow Policy	Check workflows	2026-08-02T13:36:32.7216325Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check CI Workflow Policy	Check workflows	2026-08-02T13:36:32.7217511Z   GIT_CONFIG_VALUE_0: main
+Check CI Workflow Policy	Check workflows	2026-08-02T13:36:32.7218482Z ##[endgroup]
+Check CI Workflow Policy	Check workflows	2026-08-02T13:36:32.7704966Z CI workflow policy passed for 6 workflow(s).
+Check CI Workflow Policy	Post Setup Node.js	﻿2026-08-02T13:36:32.7965758Z Post job cleanup.
+Check CI Workflow Policy	Post Run actions/checkout@v6	﻿2026-08-02T13:36:32.9526647Z Post job cleanup.
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.0664263Z [command]/usr/bin/git version
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.0693718Z git version 2.54.0
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.0723005Z Temporarily overriding HOME='/home/runner/work/_temp/ae0e751f-956c-4524-b98f-43380e117527' before making global git config changes
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.0728282Z Adding repository directory to the temporary git global config as a safe directory
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.0733664Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.1665953Z Removing SSH command configuration
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.1673481Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.1721745Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.1968872Z Removing HTTP extra header
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.1976702Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2029177Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2264555Z Removing includeIf entries pointing to credentials config files
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2273571Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2578269Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2587339Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2593412Z includeif.gitdir:/github/workspace/.git.path
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2596630Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2603741Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2633059Z /home/runner/work/_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2647356Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2688157Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2714482Z /home/runner/work/_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.2727153Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.3275195Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.3306992Z /github/runner_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.3319630Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.3362716Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.3389080Z /github/runner_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.3403600Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.4699222Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check CI Workflow Policy	Post Run actions/checkout@v6	2026-08-02T13:36:33.4932883Z Removing credentials config '/home/runner/work/_temp/git-credentials-e47f443f-9eb9-4a8e-8194-3f37edf2b371.config'
+Check CI Workflow Policy	Complete job	﻿2026-08-02T13:36:33.5103373Z Cleaning up orphan processes

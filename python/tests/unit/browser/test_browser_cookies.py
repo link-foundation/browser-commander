@@ -8,6 +8,7 @@ import os
 import sqlite3
 import stat
 import subprocess
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -94,7 +95,8 @@ def _create_chromium_profile(
         ),
         encoding="utf-8",
     )
-    with sqlite3.connect(cookie_path) as database:
+    # closing() closes the handle; the inner `with database` still commits.
+    with closing(sqlite3.connect(cookie_path)) as database, database:
         database.executescript(
             """
             CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
@@ -140,7 +142,11 @@ def _create_firefox_profile(home_dir: Path) -> Path:
         "Path=fixture.default-release\nDefault=1\n",
         encoding="utf-8",
     )
-    with sqlite3.connect(profile_path / "cookies.sqlite") as database:
+    # closing() closes the handle; the inner `with database` still commits.
+    with (
+        closing(sqlite3.connect(profile_path / "cookies.sqlite")) as database,
+        database,
+    ):
         database.executescript(
             """
             CREATE TABLE moz_cookies (
@@ -525,3 +531,36 @@ def test_partial_result_cache_is_not_reused_for_strict_import(tmp_path: Path) ->
             BrowserCookieReadOptions(browser="chrome", cache=cache),
             **dependencies,
         )
+
+
+def test_closes_the_cookie_database_connection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """sqlite3.Connection.__exit__ only ends the transaction, it does not close.
+
+    Reading cookies used to leave one connection open per read, which surfaced in
+    CI as "ResourceWarning: unclosed database" for every cookie test.
+    """
+    _create_firefox_profile(tmp_path)
+
+    opened: list[sqlite3.Connection] = []
+    real_connect = sqlite3.connect
+
+    def tracking_connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        connection = real_connect(*args, **kwargs)
+        opened.append(connection)
+        return connection
+
+    monkeypatch.setattr(sqlite3, "connect", tracking_connect)
+
+    read_browser_cookies_with_dependencies(
+        BrowserCookieReadOptions(browser="firefox"),
+        platform="linux",
+        home_dir=tmp_path,
+        environment={},
+    )
+
+    assert opened, "the cookie read did not open a database"
+    for connection in opened:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")

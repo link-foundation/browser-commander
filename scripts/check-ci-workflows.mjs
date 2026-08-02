@@ -47,8 +47,16 @@ const DISALLOWED_PATTERNS = [
     replacement: 'actions/cache@v5',
   },
   {
-    pattern: /\bcodecov\/codecov-action@v[1-5]\b/,
-    replacement: 'codecov/codecov-action@v6',
+    pattern: /\bactions\/setup-python@v[1-5]\b/,
+    replacement: 'actions/setup-python@v6',
+  },
+  {
+    pattern: /\bpeter-evans\/create-pull-request@v[1-7]\b/,
+    replacement: 'peter-evans/create-pull-request@v8',
+  },
+  {
+    pattern: /\bcodecov\/codecov-action@v[1-6]\b/,
+    replacement: 'codecov/codecov-action@v7',
   },
   {
     pattern: /node-version:\s*['"]?20\.x['"]?/,
@@ -68,6 +76,82 @@ function report(file, lineNumber, message) {
 function findLineNumber(lines, pattern) {
   const index = lines.findIndex((line) => pattern.test(line));
   return index === -1 ? 1 : index + 1;
+}
+
+/**
+ * Collect the names of workflow_dispatch inputs declared as `type: choice`.
+ *
+ * GitHub constrains a choice input to its declared options, so interpolating one
+ * into a shell body cannot smuggle arbitrary script. Free-form inputs (string,
+ * boolean rendered as text, or an input with no declared type) are attacker
+ * controlled for anyone who can trigger the workflow and must go through env.
+ */
+function collectChoiceInputs(lines) {
+  const choiceInputs = new Set();
+  const inputsIndex = lines.findIndex((line) => /^(\s+)inputs:\s*$/.test(line));
+  if (inputsIndex === -1) return choiceInputs;
+
+  const inputsIndent = lines[inputsIndex].search(/\S/);
+  const nameIndent = inputsIndent + 2;
+  let currentInput = null;
+
+  for (const line of lines.slice(inputsIndex + 1)) {
+    if (line.trim() === '') continue;
+    const indent = line.search(/\S/);
+    if (indent <= inputsIndent) break;
+
+    const declaration = /^\s*([A-Za-z0-9_-]+):\s*$/.exec(line);
+    if (indent === nameIndent && declaration) {
+      currentInput = declaration[1];
+      continue;
+    }
+
+    if (currentInput && /^\s*type:\s*choice\s*$/.test(line)) {
+      choiceInputs.add(currentInput);
+    }
+  }
+
+  return choiceInputs;
+}
+
+/**
+ * Flag untrusted expressions interpolated straight into `run:` shell bodies.
+ *
+ * Only shell bodies matter here: the same expression inside an action `with:`
+ * input is passed as data, not evaluated by bash.
+ */
+function checkRunBodyInjection(filePath, lines) {
+  const choiceInputs = collectChoiceInputs(lines);
+  let failures = 0;
+  let runIndent = null;
+
+  for (const [index, line] of lines.entries()) {
+    const runStart = /^(\s*)(?:- )?run:\s*(.*)$/.exec(line);
+    if (runStart) {
+      runIndent = runStart[1].length;
+    } else if (runIndent !== null) {
+      const indent = line.length - line.trimStart().length;
+      if (line.trim() !== '' && indent <= runIndent) {
+        runIndent = null;
+      }
+    }
+
+    if (runIndent === null) continue;
+
+    for (const match of line.matchAll(
+      /\$\{\{\s*github\.event\.inputs\.([A-Za-z0-9_-]+)/g
+    )) {
+      if (choiceInputs.has(match[1])) continue;
+      report(
+        filePath,
+        index + 1,
+        `Pass github.event.inputs.${match[1]} through an environment variable; a free-form workflow input is attacker-controlled inside a run body.`
+      );
+      failures++;
+    }
+  }
+
+  return failures;
 }
 
 export function checkWorkflow(filePath) {
@@ -101,10 +185,17 @@ export function checkWorkflow(filePath) {
   }
 
   for (const [index, line] of lines.entries()) {
-    if (
-      line.includes('${{ github.head_ref }}') &&
-      !/^\s*GITHUB_HEAD_REF:/.test(line)
-    ) {
+    // An attacker-influenced ref is safe once it is bound to an environment
+    // variable, because the shell then receives it as data instead of as text
+    // spliced into the script. Any SCREAMING_SNAKE_CASE name qualifies: the
+    // name itself carries no security meaning, so pinning the rule to one
+    // spelling would reject equally safe bindings such as `BASE_REF:`.
+    const isEnvBinding =
+      /^\s*[A-Z][A-Z0-9_]*:\s*\$\{\{\s*github\.(head|base)_ref\s*\}\}\s*$/.test(
+        line
+      );
+
+    if (line.includes('${{ github.head_ref }}') && !isEnvBinding) {
       report(
         filePath,
         index + 1,
@@ -112,15 +203,37 @@ export function checkWorkflow(filePath) {
       );
       failures++;
     }
+
+    if (line.includes('${{ github.base_ref }}') && !isEnvBinding) {
+      report(
+        filePath,
+        index + 1,
+        'Pass github.base_ref through an environment variable instead of interpolating untrusted PR data directly.'
+      );
+      failures++;
+    }
+
+    // A YAML plain scalar may not start with "!", which is the tag indicator.
+    // `if: !cancelled() && ...` therefore makes the whole workflow unparseable.
+    if (/^\s*if:\s*!/.test(line)) {
+      report(
+        filePath,
+        index + 1,
+        'A condition starting with ! must use a block scalar (if: >-) or quotes; a plain YAML scalar cannot begin with the tag indicator.'
+      );
+      failures++;
+    }
   }
 
-  if (content.includes('codecov/codecov-action@v6')) {
+  failures += checkRunBodyInjection(filePath, lines);
+
+  if (content.includes('codecov/codecov-action@v7')) {
     for (const [index, line] of lines.entries()) {
       if (/^\s+file:/.test(line)) {
         report(
           filePath,
           index + 1,
-          'Codecov v6 uses the files input; the singular file input is unsupported.'
+          'Codecov v7 uses the files input; the singular file input is unsupported.'
         );
         failures++;
       }

@@ -1,0 +1,956 @@
+Build Combined Docs	Set up job	﻿2026-08-02T14:25:46.4439974Z Current runner version: '2.336.0'
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4468332Z ##[group]Runner Image Provisioner
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4469188Z Hosted Compute Agent
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4469785Z Version: 20260707.563
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4470501Z Commit: 02667638d2b423fbc733a8e32a88b44996a3ba6e
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4471238Z Build Date: 2026-07-07T19:33:50Z
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4471963Z Worker ID: {45bd59ca-48fc-4a06-92c4-fbacfe800ca3}
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4472684Z Azure Region: centralus
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4473281Z ##[endgroup]
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4474943Z ##[group]Operating System
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4475589Z Ubuntu
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4476119Z 24.04.4
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4476718Z LTS
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4477259Z ##[endgroup]
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4478094Z ##[group]Runner Image
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4478717Z Image: ubuntu-24.04
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4479263Z Version: 20260720.247.2
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4480348Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4482139Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4483106Z ##[endgroup]
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4484421Z ##[group]GITHUB_TOKEN Permissions
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4487153Z Contents: read
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4488016Z Metadata: read
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4488715Z Pages: write
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4489256Z ##[endgroup]
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4491424Z Secret source: Actions
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4492587Z Prepare workflow directory
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4903187Z Prepare all required actions
+Build Combined Docs	Set up job	2026-08-02T14:25:46.4952498Z Getting action download info
+Build Combined Docs	Set up job	2026-08-02T14:25:46.7612850Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Build Combined Docs	Set up job	2026-08-02T14:25:47.1967191Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Build Combined Docs	Set up job	2026-08-02T14:25:47.7148702Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:4cda84d5c5c54efe2404f9d843567869ab1699d4)
+Build Combined Docs	Set up job	2026-08-02T14:25:47.8548276Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+Build Combined Docs	Set up job	2026-08-02T14:25:47.9288416Z Download action repository 'actions/configure-pages@v6' (SHA:45bfe0192ca1faeb007ade9deae92b16b8254a0d)
+Build Combined Docs	Set up job	2026-08-02T14:25:48.2499028Z Download action repository 'actions/upload-pages-artifact@v5' (SHA:fc324d3547104276b827a68afc52ff2a11cc49c9)
+Build Combined Docs	Set up job	2026-08-02T14:25:48.5728650Z Getting action download info
+Build Combined Docs	Set up job	2026-08-02T14:25:48.6675888Z Download action repository 'actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f' (SHA:bbbca2ddaa5d8feaa63e36b76fdaad77386f024f)
+Build Combined Docs	Set up job	2026-08-02T14:25:48.8366572Z Complete job name: Build Combined Docs
+Build Combined Docs	Run actions/checkout@v6	﻿2026-08-02T14:25:48.9396073Z ##[group]Run actions/checkout@v6
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9397436Z with:
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9398585Z   repository: link-foundation/browser-commander
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9407812Z   token: ***
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9408626Z   ssh-strict: true
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9409459Z   ssh-user: git
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9410306Z   persist-credentials: true
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9411265Z   clean: true
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9412206Z   sparse-checkout-cone-mode: true
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9413273Z   fetch-depth: 1
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9414160Z   fetch-tags: false
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9415464Z   show-progress: true
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9416745Z   lfs: false
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9417691Z   submodules: false
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9418567Z   set-safe-directory: true
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9419664Z   allow-unsafe-pr-checkout: false
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9421003Z env:
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9421796Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9422779Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9423823Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:48.9424769Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0433897Z Syncing repository: link-foundation/browser-commander
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0438248Z ##[group]Getting Git version info
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0440783Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0444274Z [command]/usr/bin/git version
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0562817Z git version 2.54.0
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0622692Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0639814Z Temporarily overriding HOME='/home/runner/work/_temp/726f0829-30e9-4fd8-a315-99c56d4ae7fd' before making global git config changes
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0644560Z Adding repository directory to the temporary git global config as a safe directory
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0648906Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0703977Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0708501Z ##[group]Determining repository object format
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0711430Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0713755Z ##[group]Initializing the repository
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0716273Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0859625Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0871657Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0924627Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0940550Z ##[group]Disabling automatic garbage collection
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0942874Z [command]/usr/bin/git config --local gc.auto 0
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0973457Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0975961Z ##[group]Setting up auth
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0982132Z Removing SSH command configuration
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.0985728Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.1043046Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.1426106Z Removing HTTP extra header
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.1433481Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.1471018Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.1686318Z Removing includeIf entries pointing to credentials config files
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.1692370Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.1727963Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.1960609Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.2010283Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.2043273Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.2080108Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.2113585Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.2143412Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.2144859Z ##[group]Fetching the repository
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:49.2153266Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +00a80629d551144c710d51bfb123b91f9577fccc:refs/remotes/pull/76/merge
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0131197Z From https://github.com/link-foundation/browser-commander
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0133042Z  * [new ref]         00a80629d551144c710d51bfb123b91f9577fccc -> pull/76/merge
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0170144Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0171120Z ##[group]Determining the checkout info
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0172203Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0177409Z [command]/usr/bin/git sparse-checkout disable
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0225249Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0256473Z ##[group]Checking out the ref
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0260724Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/76/merge
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0820354Z Note: switching to 'refs/remotes/pull/76/merge'.
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0821054Z 
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0821379Z You are in 'detached HEAD' state. You can look around, make experimental
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0822055Z changes and commit them, and you can discard any commits you make in this
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0822686Z state without impacting any branches by switching back to a branch.
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0823056Z 
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0823314Z If you want to create a new branch to retain commits you create, you may
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0823910Z do so (now or later) by using -c with the switch command. Example:
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0824245Z 
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0824403Z   git switch -c <new-branch-name>
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0824630Z 
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0824777Z Or undo this operation with:
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0824999Z 
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0825126Z   git switch -
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0825313Z 
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0825657Z Turn off this advice by setting config variable advice.detachedHead to false
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0826307Z 
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0830636Z HEAD is now at 00a8062 Merge 96132e3664ca6a542ac7e9df200e9ee040938aae into 6b2a62a0649f761b5f57549339dca117c83fffb2
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0833241Z ##[endgroup]
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0882468Z [command]/usr/bin/git log -1 --format=%H
+Build Combined Docs	Run actions/checkout@v6	2026-08-02T14:25:50.0910702Z 00a80629d551144c710d51bfb123b91f9577fccc
+Build Combined Docs	Setup Node.js	﻿2026-08-02T14:25:50.1179034Z ##[group]Run actions/setup-node@v6
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1179427Z with:
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1179689Z   node-version: 24.x
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1179978Z   check-latest: false
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1182836Z   token: ***
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1183129Z   package-manager-cache: true
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1183452Z env:
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1183694Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1183993Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1184338Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.1184628Z ##[endgroup]
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.2549098Z Found in cache @ /opt/hostedtoolcache/node/24.18.0/x64
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.2550138Z ##[group]Environment details
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.7139331Z node: v24.18.0
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.7139796Z npm: 11.16.0
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.7140052Z yarn: 1.22.22
+Build Combined Docs	Setup Node.js	2026-08-02T14:25:50.7140691Z ##[endgroup]
+Build Combined Docs	Setup Rust	﻿2026-08-02T14:25:50.7469036Z ##[group]Run dtolnay/rust-toolchain@stable
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7469483Z with:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7469755Z   toolchain: stable
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7470026Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7470265Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7470544Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7470858Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7471123Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7563601Z ##[start-action display=Run : parse toolchain version;id=__dtolnay_rust-toolchain.parse]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7610036Z ##[group]Run : parse toolchain version
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7610482Z ^[[36;1m: parse toolchain version^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7610817Z ^[[36;1mif [[ -z $toolchain ]]; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7611414Z ^[[36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7612041Z ^[[36;1m  echo "'toolchain' is a required input" >&2^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7612385Z ^[[36;1m  exit 1^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7612776Z ^[[36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7613278Z ^[[36;1m  if [[ Linux == macOS ]]; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7614059Z ^[[36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7614655Z ^[[36;1m  else^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7615116Z ^[[36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7615621Z ^[[36;1m  fi^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7615973Z ^[[36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7616565Z ^[[36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7617077Z ^[[36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7617835Z ^[[36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7618402Z ^[[36;1melse^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7618691Z ^[[36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7619043Z ^[[36;1mfi^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7676021Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7676469Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7676709Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7676998Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7677318Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7678272Z   toolchain: stable
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7678601Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7797070Z ##[end-action id=__dtolnay_rust-toolchain.parse;outcome=success;conclusion=success;duration_ms=23]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7828643Z ##[start-action display=Run : construct rustup command line;id=__dtolnay_rust-toolchain.flags]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7858635Z ##[group]Run : construct rustup command line
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7859028Z ^[[36;1m: construct rustup command line^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7859544Z ^[[36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7860228Z ^[[36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7860761Z ^[[36;1mecho "downgrade=" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7902297Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7902701Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7902933Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7903212Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7903530Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7903795Z   targets: 
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7904019Z   components: 
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7904253Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7984931Z ##[end-action id=__dtolnay_rust-toolchain.flags;outcome=success;conclusion=success;duration_ms=15]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.7989068Z ##[start-action display=Run : set $CARGO_HOME;id=__dtolnay_rust-toolchain.__run]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8018473Z ##[group]Run : set $CARGO_HOME
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8018798Z ^[[36;1m: set $CARGO_HOME^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8019175Z ^[[36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8062415Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8062827Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8063062Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8063345Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8063663Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8063927Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8140533Z ##[end-action id=__dtolnay_rust-toolchain.__run;outcome=success;conclusion=success;duration_ms=15]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8143350Z ##[start-action display=Run : install rustup if needed;id=__dtolnay_rust-toolchain.__run_2]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8177927Z ##[group]Run : install rustup if needed
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8178333Z ^[[36;1m: install rustup if needed^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8178683Z ^[[36;1mif ! command -v rustup &>/dev/null; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8179518Z ^[[36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8180476Z ^[[36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8180809Z ^[[36;1mfi^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8222008Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8222418Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8222650Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8222926Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8223241Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8223514Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8223795Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8293703Z ##[end-action id=__dtolnay_rust-toolchain.__run_2;outcome=success;conclusion=success;duration_ms=14]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8298335Z ##[start-action display=Run : install rustup if needed on windows;id=__dtolnay_rust-toolchain.__run_3]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8303985Z ##[end-action id=__dtolnay_rust-toolchain.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8308208Z ##[start-action display=rustup toolchain install stable;id=__dtolnay_rust-toolchain.__run_4]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8337834Z ##[group]Run rustup toolchain install stable --profile minimal --no-self-update
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8338525Z ^[[36;1mrustup toolchain install stable --profile minimal --no-self-update^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8381025Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8381440Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8381677Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8381965Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8382284Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8382567Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8382869Z   RUSTUP_PERMIT_COPY_RENAME: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:50.8383145Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.0349056Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1440586Z 
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1524841Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.97.1 (8bab26f4f 2026-07-14)
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1525357Z 
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1557931Z ##[end-action id=__dtolnay_rust-toolchain.__run_4;outcome=success;conclusion=success;duration_ms=324]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1562582Z ##[start-action display=Run rustup default stable;id=__dtolnay_rust-toolchain.__run_5]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1592720Z ##[group]Run rustup default stable
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1593079Z ^[[36;1mrustup default stable^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1638094Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1638508Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1638741Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1639027Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1639341Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1639621Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1639905Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1760061Z info: using existing install for stable-x86_64-unknown-linux-gnu
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1767956Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1768893Z 
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1846698Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.97.1 (8bab26f4f 2026-07-14)
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1847428Z 
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1864055Z ##[end-action id=__dtolnay_rust-toolchain.__run_5;outcome=success;conclusion=success;duration_ms=30]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1869210Z ##[start-action display=Run : create cachekey;id=__dtolnay_rust-toolchain.rustc-version]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1900853Z ##[group]Run : create cachekey
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1901190Z ^[[36;1m: create cachekey^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1901741Z ^[[36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1902449Z ^[[36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1903001Z ^[[36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1949775Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1950205Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1950440Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1950892Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1951213Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1951492Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.1951783Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2337974Z ##[end-action id=__dtolnay_rust-toolchain.rustc-version;outcome=success;conclusion=success;duration_ms=46]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2341359Z ##[start-action display=Run : disable incremental compilation;id=__dtolnay_rust-toolchain.__run_6]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2371381Z ##[group]Run : disable incremental compilation
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2371792Z ^[[36;1m: disable incremental compilation^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2372168Z ^[[36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2372547Z ^[[36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2372874Z ^[[36;1mfi^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2418350Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2418780Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2419014Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2419300Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2419609Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2419892Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2420177Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2491621Z ##[end-action id=__dtolnay_rust-toolchain.__run_6;outcome=success;conclusion=success;duration_ms=14]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2494038Z ##[start-action display=Run : enable colors in Cargo output;id=__dtolnay_rust-toolchain.__run_7]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2533917Z ##[group]Run : enable colors in Cargo output
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2534326Z ^[[36;1m: enable colors in Cargo output^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2534696Z ^[[36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2535093Z ^[[36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2535432Z ^[[36;1mfi^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2576378Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2576790Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2577019Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2577296Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2577877Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2578183Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2578469Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2578716Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2648198Z ##[end-action id=__dtolnay_rust-toolchain.__run_7;outcome=success;conclusion=success;duration_ms=15]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2653458Z ##[start-action display=Run : enable Cargo sparse registry;id=__dtolnay_rust-toolchain.__run_8]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2684523Z ##[group]Run : enable Cargo sparse registry
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2684924Z ^[[36;1m: enable Cargo sparse registry^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2685340Z ^[[36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2686120Z ^[[36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2687052Z ^[[36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2687975Z ^[[36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2688589Z ^[[36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2689143Z ^[[36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2689768Z ^[[36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2690336Z ^[[36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2690727Z ^[[36;1m  fi^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2690955Z ^[[36;1mfi^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2731874Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2732275Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2732508Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2732792Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2733110Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2733553Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2733844Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2734103Z   CARGO_TERM_COLOR: always
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.2734362Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3101864Z ##[end-action id=__dtolnay_rust-toolchain.__run_8;outcome=success;conclusion=success;duration_ms=44]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3106337Z ##[start-action display=Run : work around spurious network errors in curl 8.0;id=__dtolnay_rust-toolchain.__run_9]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3137166Z ##[group]Run : work around spurious network errors in curl 8.0
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3137983Z ^[[36;1m: work around spurious network errors in curl 8.0^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3138611Z ^[[36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3139281Z ^[[36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3139797Z ^[[36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3140148Z ^[[36;1mfi^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3185015Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3185416Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3185648Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3185926Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3186237Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3186515Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3186797Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3187049Z   CARGO_TERM_COLOR: always
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3187302Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3398641Z ##[end-action id=__dtolnay_rust-toolchain.__run_9;outcome=success;conclusion=success;duration_ms=29]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3402864Z ##[start-action display=Run rustc +stable --version --verbose;id=__dtolnay_rust-toolchain.__run_10]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3434465Z ##[group]Run rustc +stable --version --verbose
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3434887Z ^[[36;1mrustc +stable --version --verbose^[[0m
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3480359Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3480778Z env:
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3481005Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3481282Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3481597Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3481883Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3482173Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3482432Z   CARGO_TERM_COLOR: always
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3482688Z ##[endgroup]
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3670654Z rustc 1.97.1 (8bab26f4f 2026-07-14)
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3671784Z binary: rustc
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3672605Z commit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3673200Z commit-date: 2026-07-14
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3673608Z host: x86_64-unknown-linux-gnu
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3673922Z release: 1.97.1
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3674208Z LLVM version: 22.1.6
+Build Combined Docs	Setup Rust	2026-08-02T14:25:51.3695046Z ##[end-action id=__dtolnay_rust-toolchain.__run_10;outcome=success;conclusion=success;duration_ms=29]
+Build Combined Docs	Install JavaScript dependencies	﻿2026-08-02T14:25:51.3761764Z ##[group]Run npm ci --ignore-scripts
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3762192Z ^[[36;1mnpm ci --ignore-scripts^[[0m
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3807475Z shell: /usr/bin/bash -e {0}
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3808096Z env:
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3808336Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3808615Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3808933Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3809218Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3809506Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3809760Z   CARGO_TERM_COLOR: always
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3810044Z   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3810357Z   PUPPETEER_SKIP_DOWNLOAD: true
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:51.3810643Z ##[endgroup]
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:53.4858054Z npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5771267Z 
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5772025Z added 457 packages, and audited 458 packages in 6s
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5772756Z 
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5773036Z 88 packages are looking for funding
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5774005Z   run `npm fund` for details
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5860901Z 
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5861492Z 12 vulnerabilities (4 moderate, 7 high, 1 critical)
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5861951Z 
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5862168Z To address all issues, run:
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5862464Z   npm audit fix
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5862612Z 
+Build Combined Docs	Install JavaScript dependencies	2026-08-02T14:25:57.5862764Z Run `npm audit` for details.
+Build Combined Docs	Generate JavaScript API docs	﻿2026-08-02T14:25:57.6460764Z ##[group]Run npm run docs:api
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6461099Z ^[[36;1mnpm run docs:api^[[0m
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6507207Z shell: /usr/bin/bash -e {0}
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6507475Z env:
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6507912Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6508181Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6508456Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6508697Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6508950Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6509166Z   CARGO_TERM_COLOR: always
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.6509379Z ##[endgroup]
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.7499333Z 
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.7499842Z > browser-commander@0.16.0 docs:api
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.7500465Z > jsdoc -c jsdoc.json
+Build Combined Docs	Generate JavaScript API docs	2026-08-02T14:25:57.7500758Z 
+Build Combined Docs	Generate Rust API docs	﻿2026-08-02T14:25:58.6793528Z ##[group]Run cargo doc --no-deps --all-features
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6794261Z ^[[36;1mcargo doc --no-deps --all-features^[[0m
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6857898Z shell: /usr/bin/bash -e {0}
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6858351Z env:
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6858670Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6859084Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6859561Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6859976Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6860409Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6860822Z   CARGO_TERM_COLOR: always
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.6861190Z ##[endgroup]
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:58.8624348Z ^[[1m^[[92m    Updating^[[0m crates.io index
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.6302608Z ^[[1m^[[92m Downloading^[[0m crates ...
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.6824781Z ^[[1m^[[92m  Downloaded^[[0m aead v0.5.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7044103Z ^[[1m^[[92m  Downloaded^[[0m want v0.3.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7062819Z ^[[1m^[[92m  Downloaded^[[0m idna_adapter v1.2.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7108765Z ^[[1m^[[92m  Downloaded^[[0m aes v0.8.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7128480Z ^[[1m^[[92m  Downloaded^[[0m which v6.0.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7152040Z ^[[1m^[[92m  Downloaded^[[0m writeable v0.6.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7181209Z ^[[1m^[[92m  Downloaded^[[0m webdriver v0.50.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7205305Z ^[[1m^[[92m  Downloaded^[[0m atomic-waker v1.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7222417Z ^[[1m^[[92m  Downloaded^[[0m zerofrom v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7234423Z ^[[1m^[[92m  Downloaded^[[0m cfg-if v1.0.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7275135Z ^[[1m^[[92m  Downloaded^[[0m fastrand v2.3.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7275910Z ^[[1m^[[92m  Downloaded^[[0m kv-log-macro v1.0.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7315820Z ^[[1m^[[92m  Downloaded^[[0m mime v0.3.17
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7329838Z ^[[1m^[[92m  Downloaded^[[0m itoa v1.0.17
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7339053Z ^[[1m^[[92m  Downloaded^[[0m fnv v1.0.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7350516Z ^[[1m^[[92m  Downloaded^[[0m futures-io v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7367962Z ^[[1m^[[92m  Downloaded^[[0m heck v0.4.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7381575Z ^[[1m^[[92m  Downloaded^[[0m http-body v1.0.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7392836Z ^[[1m^[[92m  Downloaded^[[0m fallible-streaming-iterator v0.1.9
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7404439Z ^[[1m^[[92m  Downloaded^[[0m futures-core v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7419475Z ^[[1m^[[92m  Downloaded^[[0m futures-sink v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7460116Z ^[[1m^[[92m  Downloaded^[[0m memchr v2.7.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7528726Z ^[[1m^[[92m  Downloaded^[[0m foreign-types-shared v0.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7529905Z ^[[1m^[[92m  Downloaded^[[0m generic-array v0.14.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7546864Z ^[[1m^[[92m  Downloaded^[[0m form_urlencoded v1.2.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7568724Z ^[[1m^[[92m  Downloaded^[[0m opaque-debug v0.3.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7598954Z ^[[1m^[[92m  Downloaded^[[0m scopeguard v1.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7608607Z ^[[1m^[[92m  Downloaded^[[0m home v0.5.12
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7609356Z ^[[1m^[[92m  Downloaded^[[0m byteorder v1.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7629800Z ^[[1m^[[92m  Downloaded^[[0m async-process v2.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7647837Z ^[[1m^[[92m  Downloaded^[[0m autocfg v1.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7677484Z ^[[1m^[[92m  Downloaded^[[0m num-conv v0.1.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7686239Z ^[[1m^[[92m  Downloaded^[[0m openssl-macros v0.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7698553Z ^[[1m^[[92m  Downloaded^[[0m openssl-probe v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7715916Z ^[[1m^[[92m  Downloaded^[[0m option-ext v0.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7728021Z ^[[1m^[[92m  Downloaded^[[0m piper v0.2.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7750223Z ^[[1m^[[92m  Downloaded^[[0m sha1 v0.10.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7771858Z ^[[1m^[[92m  Downloaded^[[0m cbc v0.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7793896Z ^[[1m^[[92m  Downloaded^[[0m rand_chacha v0.3.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7814020Z ^[[1m^[[92m  Downloaded^[[0m async-global-executor v2.4.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7848739Z ^[[1m^[[92m  Downloaded^[[0m block-padding v0.3.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7859246Z ^[[1m^[[92m  Downloaded^[[0m cpufeatures v0.2.17
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7876784Z ^[[1m^[[92m  Downloaded^[[0m futures-macro v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7886653Z ^[[1m^[[92m  Downloaded^[[0m crypto-common v0.1.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7896480Z ^[[1m^[[92m  Downloaded^[[0m dunce v1.0.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7905107Z ^[[1m^[[92m  Downloaded^[[0m errno v0.3.14
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7922642Z ^[[1m^[[92m  Downloaded^[[0m foreign-types v0.3.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7941347Z ^[[1m^[[92m  Downloaded^[[0m ghash v0.5.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7942851Z ^[[1m^[[92m  Downloaded^[[0m powerfmt v0.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7953664Z ^[[1m^[[92m  Downloaded^[[0m serde_urlencoded v0.7.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7970499Z ^[[1m^[[92m  Downloaded^[[0m sync_wrapper v1.0.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7979166Z ^[[1m^[[92m  Downloaded^[[0m chromiumoxide_types v0.7.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7988362Z ^[[1m^[[92m  Downloaded^[[0m zerofrom-derive v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.7998013Z ^[[1m^[[92m  Downloaded^[[0m matchers v0.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8010847Z ^[[1m^[[92m  Downloaded^[[0m async-attributes v1.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8026150Z ^[[1m^[[92m  Downloaded^[[0m dirs v5.0.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8041319Z ^[[1m^[[92m  Downloaded^[[0m dirs-sys v0.4.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8056100Z ^[[1m^[[92m  Downloaded^[[0m event-listener-strategy v0.5.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8070961Z ^[[1m^[[92m  Downloaded^[[0m hyper-tls v0.6.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8085541Z ^[[1m^[[92m  Downloaded^[[0m pin-utils v0.1.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8097929Z ^[[1m^[[92m  Downloaded^[[0m utf8_iter v1.0.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8109840Z ^[[1m^[[92m  Downloaded^[[0m block-buffer v0.10.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8122593Z ^[[1m^[[92m  Downloaded^[[0m futures-task v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8136120Z ^[[1m^[[92m  Downloaded^[[0m futures-timer v3.0.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8157032Z ^[[1m^[[92m  Downloaded^[[0m subtle v2.6.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8179092Z ^[[1m^[[92m  Downloaded^[[0m blocking v1.6.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8183899Z ^[[1m^[[92m  Downloaded^[[0m event-listener v2.5.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8198788Z ^[[1m^[[92m  Downloaded^[[0m lazy_static v1.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8219048Z ^[[1m^[[92m  Downloaded^[[0m try-lock v0.2.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8230024Z ^[[1m^[[92m  Downloaded^[[0m ahash v0.8.12
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8259707Z ^[[1m^[[92m  Downloaded^[[0m cipher v0.4.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8276836Z ^[[1m^[[92m  Downloaded^[[0m stable_deref_trait v1.2.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8286645Z ^[[1m^[[92m  Downloaded^[[0m percent-encoding v2.3.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8300468Z ^[[1m^[[92m  Downloaded^[[0m inout v0.1.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8315004Z ^[[1m^[[92m  Downloaded^[[0m concurrent-queue v2.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8331966Z ^[[1m^[[92m  Downloaded^[[0m parking v2.2.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8345352Z ^[[1m^[[92m  Downloaded^[[0m yoke-derive v0.8.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8356610Z ^[[1m^[[92m  Downloaded^[[0m async-lock v3.4.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8385312Z ^[[1m^[[92m  Downloaded^[[0m async-tungstenite v0.27.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8422853Z ^[[1m^[[92m  Downloaded^[[0m hmac v0.12.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8444683Z ^[[1m^[[92m  Downloaded^[[0m rand_core v0.6.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8460541Z ^[[1m^[[92m  Downloaded^[[0m tower-service v0.3.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8469400Z ^[[1m^[[92m  Downloaded^[[0m version_check v0.9.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8482597Z ^[[1m^[[92m  Downloaded^[[0m async-executor v1.13.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8504644Z ^[[1m^[[92m  Downloaded^[[0m digest v0.10.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8526452Z ^[[1m^[[92m  Downloaded^[[0m displaydoc v0.2.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8568704Z ^[[1m^[[92m  Downloaded^[[0m find-msvc-tools v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8576157Z ^[[1m^[[92m  Downloaded^[[0m futures-executor v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8590333Z ^[[1m^[[92m  Downloaded^[[0m http-body-util v0.1.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8609214Z ^[[1m^[[92m  Downloaded^[[0m async-channel v1.9.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8620762Z ^[[1m^[[92m  Downloaded^[[0m async-channel v2.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8634221Z ^[[1m^[[92m  Downloaded^[[0m async-signal v0.2.13
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8649832Z ^[[1m^[[92m  Downloaded^[[0m async-trait v0.1.89
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8689106Z ^[[1m^[[92m  Downloaded^[[0m chromiumoxide_pdl v0.7.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8706040Z ^[[1m^[[92m  Downloaded^[[0m ctr v0.9.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8728220Z ^[[1m^[[92m  Downloaded^[[0m deranged v0.5.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8747482Z ^[[1m^[[92m  Downloaded^[[0m either v1.15.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8763289Z ^[[1m^[[92m  Downloaded^[[0m fallible-iterator v0.3.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8776471Z ^[[1m^[[92m  Downloaded^[[0m futures-channel v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8795449Z ^[[1m^[[92m  Downloaded^[[0m futures-lite v2.6.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8813446Z ^[[1m^[[92m  Downloaded^[[0m hashlink v0.9.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8832118Z ^[[1m^[[92m  Downloaded^[[0m potential_utf v0.1.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8842807Z ^[[1m^[[92m  Downloaded^[[0m tower-layer v0.3.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8853145Z ^[[1m^[[92m  Downloaded^[[0m universal-hash v0.5.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8862363Z ^[[1m^[[92m  Downloaded^[[0m async-io v2.6.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8892303Z ^[[1m^[[92m  Downloaded^[[0m async-task v4.7.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8922360Z ^[[1m^[[92m  Downloaded^[[0m event-listener v5.4.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8944290Z ^[[1m^[[92m  Downloaded^[[0m utf-8 v0.7.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8957079Z ^[[1m^[[92m  Downloaded^[[0m native-tls v0.2.14
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8977573Z ^[[1m^[[92m  Downloaded^[[0m pkg-config v0.3.32
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.8993999Z ^[[1m^[[92m  Downloaded^[[0m polyval v0.6.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9011065Z ^[[1m^[[92m  Downloaded^[[0m cookie v0.16.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9034378Z ^[[1m^[[92m  Downloaded^[[0m data-encoding v2.9.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9044833Z ^[[1m^[[92m  Downloaded^[[0m getrandom v0.2.16
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9075126Z ^[[1m^[[92m  Downloaded^[[0m lock_api v0.4.14
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9088129Z ^[[1m^[[92m  Downloaded^[[0m ppv-lite86 v0.2.21
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9101526Z ^[[1m^[[92m  Downloaded^[[0m shlex v1.3.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9114392Z ^[[1m^[[92m  Downloaded^[[0m synstructure v0.13.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9124716Z ^[[1m^[[92m  Downloaded^[[0m tinystr v0.8.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9144960Z ^[[1m^[[92m  Downloaded^[[0m cookie v0.18.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9169782Z ^[[1m^[[92m  Downloaded^[[0m thiserror v1.0.69
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9228280Z ^[[1m^[[92m  Downloaded^[[0m thread_local v1.1.9
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9244026Z ^[[1m^[[92m  Downloaded^[[0m bitflags v2.10.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9286894Z ^[[1m^[[92m  Downloaded^[[0m crossbeam-utils v0.8.21
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9314307Z ^[[1m^[[92m  Downloaded^[[0m quote v1.0.42
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9342374Z ^[[1m^[[92m  Downloaded^[[0m httparse v1.10.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9368025Z ^[[1m^[[92m  Downloaded^[[0m slab v0.4.11
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9381426Z ^[[1m^[[92m  Downloaded^[[0m thiserror-impl v1.0.69
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9395189Z ^[[1m^[[92m  Downloaded^[[0m tokio-native-tls v0.3.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9413158Z ^[[1m^[[92m  Downloaded^[[0m futures v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9462866Z ^[[1m^[[92m  Downloaded^[[0m icu_locale_core v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9532831Z ^[[1m^[[92m  Downloaded^[[0m icu_properties v2.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9554779Z ^[[1m^[[92m  Downloaded^[[0m icu_provider v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9581245Z ^[[1m^[[92m  Downloaded^[[0m ipnet v2.11.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9598299Z ^[[1m^[[92m  Downloaded^[[0m tracing-log v0.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9612497Z ^[[1m^[[92m  Downloaded^[[0m anyhow v1.0.100
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9654877Z ^[[1m^[[92m  Downloaded^[[0m bytes v1.11.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9698231Z ^[[1m^[[92m  Downloaded^[[0m sha2 v0.10.9
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9724909Z ^[[1m^[[92m  Downloaded^[[0m icu_normalizer v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9761723Z ^[[1m^[[92m  Downloaded^[[0m signal-hook-registry v1.4.8
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9773747Z ^[[1m^[[92m  Downloaded^[[0m nu-ansi-term v0.50.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9798272Z ^[[1m^[[92m  Downloaded^[[0m time-core v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9809567Z ^[[1m^[[92m  Downloaded^[[0m icu_normalizer_data v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9830173Z ^[[1m^[[92m  Downloaded^[[0m time-macros v0.2.24
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9852534Z ^[[1m^[[92m  Downloaded^[[0m tokio-macros v2.6.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9863704Z ^[[1m^[[92m  Downloaded^[[0m fantoccini v0.21.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9904820Z ^[[1m^[[92m  Downloaded^[[0m parking_lot_core v0.9.12
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9926178Z ^[[1m^[[92m  Downloaded^[[0m pbkdf2 v0.12.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9939708Z ^[[1m^[[92m  Downloaded^[[0m tungstenite v0.23.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9972972Z ^[[1m^[[92m  Downloaded^[[0m zerovec-derive v0.11.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:25:59.9987550Z ^[[1m^[[92m  Downloaded^[[0m base64 v0.21.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0026766Z ^[[1m^[[92m  Downloaded^[[0m cc v1.2.51
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0058193Z ^[[1m^[[92m  Downloaded^[[0m http v0.2.12
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0096408Z ^[[1m^[[92m  Downloaded^[[0m http v1.4.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0134187Z ^[[1m^[[92m  Downloaded^[[0m icu_collections v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0197366Z ^[[1m^[[92m  Downloaded^[[0m litemap v0.8.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0220728Z ^[[1m^[[92m  Downloaded^[[0m once_cell v1.21.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0246679Z ^[[1m^[[92m  Downloaded^[[0m parking_lot v0.12.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0272288Z ^[[1m^[[92m  Downloaded^[[0m pin-project-lite v0.2.16
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0332485Z ^[[1m^[[92m  Downloaded^[[0m smallvec v1.15.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0354124Z ^[[1m^[[92m  Downloaded^[[0m tracing-attributes v0.1.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0380963Z ^[[1m^[[92m  Downloaded^[[0m tracing-core v0.1.36
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0408295Z ^[[1m^[[92m  Downloaded^[[0m unicode-ident v1.0.22
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0436595Z ^[[1m^[[92m  Downloaded^[[0m value-bag v1.12.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0464775Z ^[[1m^[[92m  Downloaded^[[0m yoke v0.8.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0482888Z ^[[1m^[[92m  Downloaded^[[0m base64 v0.22.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0522003Z ^[[1m^[[92m  Downloaded^[[0m typenum v1.19.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0550407Z ^[[1m^[[92m  Downloaded^[[0m aes-gcm v0.10.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0580481Z ^[[1m^[[92m  Downloaded^[[0m hyper-util v0.1.19
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0644570Z ^[[1m^[[92m  Downloaded^[[0m chromiumoxide v0.7.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0691924Z ^[[1m^[[92m  Downloaded^[[0m hyper v1.8.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0761132Z ^[[1m^[[92m  Downloaded^[[0m icu_properties_data v2.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0867112Z ^[[1m^[[92m  Downloaded^[[0m polling v3.11.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0898612Z ^[[1m^[[92m  Downloaded^[[0m proc-macro2 v1.0.104
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0929833Z ^[[1m^[[92m  Downloaded^[[0m sharded-slab v0.1.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.0964189Z ^[[1m^[[92m  Downloaded^[[0m aho-corasick v1.1.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.1016803Z ^[[1m^[[92m  Downloaded^[[0m futures-util v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.1158084Z ^[[1m^[[92m  Downloaded^[[0m hashbrown v0.14.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.1206594Z ^[[1m^[[92m  Downloaded^[[0m idna v1.1.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.1241623Z ^[[1m^[[92m  Downloaded^[[0m async-std v1.13.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.1477673Z ^[[1m^[[92m  Downloaded^[[0m tracing-subscriber v0.3.22
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.1562572Z ^[[1m^[[92m  Downloaded^[[0m vcpkg v0.2.15
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2126255Z ^[[1m^[[92m  Downloaded^[[0m chromiumoxide_cdp v0.7.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2221188Z ^[[1m^[[92m  Downloaded^[[0m ryu v1.0.22
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2254718Z ^[[1m^[[92m  Downloaded^[[0m serde_core v1.0.228
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2282543Z ^[[1m^[[92m  Downloaded^[[0m socket2 v0.6.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2300533Z ^[[1m^[[92m  Downloaded^[[0m zmij v1.0.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2318493Z ^[[1m^[[92m  Downloaded^[[0m openssl-sys v0.9.111
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2376405Z ^[[1m^[[92m  Downloaded^[[0m log v0.4.29
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2401620Z ^[[1m^[[92m  Downloaded^[[0m serde_derive v1.0.228
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2433086Z ^[[1m^[[92m  Downloaded^[[0m zerotrie v0.2.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2468909Z ^[[1m^[[92m  Downloaded^[[0m serde v1.0.228
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2504261Z ^[[1m^[[92m  Downloaded^[[0m rand v0.8.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2538992Z ^[[1m^[[92m  Downloaded^[[0m tower v0.5.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2645643Z ^[[1m^[[92m  Downloaded^[[0m url v2.5.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2671787Z ^[[1m^[[92m  Downloaded^[[0m mio v1.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2732772Z ^[[1m^[[92m  Downloaded^[[0m zerocopy v0.8.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.2999437Z ^[[1m^[[92m  Downloaded^[[0m zerovec v0.11.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3054684Z ^[[1m^[[92m  Downloaded^[[0m tokio-util v0.7.17
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3132044Z ^[[1m^[[92m  Downloaded^[[0m unicode-segmentation v1.12.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3161091Z ^[[1m^[[92m  Downloaded^[[0m time v0.3.44
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3245242Z ^[[1m^[[92m  Downloaded^[[0m tower-http v0.6.8
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3331848Z ^[[1m^[[92m  Downloaded^[[0m iri-string v0.7.10
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3410049Z ^[[1m^[[92m  Downloaded^[[0m regex v1.12.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3473649Z ^[[1m^[[92m  Downloaded^[[0m reqwest v0.12.28
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3529185Z ^[[1m^[[92m  Downloaded^[[0m rusqlite v0.32.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3591167Z ^[[1m^[[92m  Downloaded^[[0m serde_json v1.0.148
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3665826Z ^[[1m^[[92m  Downloaded^[[0m syn v1.0.109
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3760792Z ^[[1m^[[92m  Downloaded^[[0m syn v2.0.111
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3866935Z ^[[1m^[[92m  Downloaded^[[0m openssl v0.10.75
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.3962753Z ^[[1m^[[92m  Downloaded^[[0m regex-syntax v0.8.8
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.4030282Z ^[[1m^[[92m  Downloaded^[[0m rustix v0.38.44
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.4302544Z ^[[1m^[[92m  Downloaded^[[0m rustix v1.1.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.4585777Z ^[[1m^[[92m  Downloaded^[[0m tracing v0.1.44
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.4795511Z ^[[1m^[[92m  Downloaded^[[0m regex-automata v0.4.13
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.4949101Z ^[[1m^[[92m  Downloaded^[[0m tokio v1.48.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.5378458Z ^[[1m^[[92m  Downloaded^[[0m libc v0.2.178
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.5758089Z ^[[1m^[[92m  Downloaded^[[0m linux-raw-sys v0.4.15
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.6213026Z ^[[1m^[[92m  Downloaded^[[0m linux-raw-sys v0.11.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.6753297Z ^[[1m^[[92m  Downloaded^[[0m libsqlite3-sys v0.30.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.8244624Z ^[[1m^[[92m   Compiling^[[0m proc-macro2 v1.0.104
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.8245546Z ^[[1m^[[92m   Compiling^[[0m quote v1.0.42
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.8270178Z ^[[1m^[[92m   Compiling^[[0m unicode-ident v1.0.22
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:00.8297192Z ^[[1m^[[92m   Compiling^[[0m libc v0.2.178
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:01.0966561Z ^[[1m^[[92m    Checking^[[0m cfg-if v1.0.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:01.1245720Z ^[[1m^[[92m   Compiling^[[0m version_check v0.9.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:01.3189370Z ^[[1m^[[92m    Checking^[[0m pin-project-lite v0.2.16
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:01.3443184Z ^[[1m^[[92m   Compiling^[[0m serde_core v1.0.228
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:01.3586135Z ^[[1m^[[92m   Compiling^[[0m serde v1.0.228
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:01.5049684Z ^[[1m^[[92m    Checking^[[0m futures-core v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:01.5999178Z ^[[1m^[[92m   Compiling^[[0m typenum v1.19.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:01.8249198Z ^[[1m^[[92m   Compiling^[[0m generic-array v0.14.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:02.1405902Z ^[[1m^[[92m   Compiling^[[0m syn v2.0.111
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:02.2142182Z ^[[1m^[[92m    Checking^[[0m itoa v1.0.17
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:02.3019472Z ^[[1m^[[92m    Checking^[[0m memchr v2.7.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:02.7009176Z ^[[1m^[[92m    Checking^[[0m getrandom v0.2.16
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:02.7919201Z ^[[1m^[[92m    Checking^[[0m once_cell v1.21.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:02.9109203Z ^[[1m^[[92m    Checking^[[0m smallvec v1.15.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.0479167Z ^[[1m^[[92m    Checking^[[0m rand_core v0.6.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.1739542Z ^[[1m^[[92m    Checking^[[0m futures-io v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.2389044Z ^[[1m^[[92m    Checking^[[0m bitflags v2.10.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.2842749Z ^[[1m^[[92m    Checking^[[0m crypto-common v0.1.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.3405456Z ^[[1m^[[92m    Checking^[[0m slab v0.4.11
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.3458998Z ^[[1m^[[92m   Compiling^[[0m crossbeam-utils v0.8.21
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.3969365Z ^[[1m^[[92m    Checking^[[0m stable_deref_trait v1.2.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.4273145Z ^[[1m^[[92m    Checking^[[0m errno v0.3.14
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.4507250Z ^[[1m^[[92m   Compiling^[[0m shlex v1.3.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.4989720Z ^[[1m^[[92m    Checking^[[0m signal-hook-registry v1.4.8
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.5709266Z ^[[1m^[[92m   Compiling^[[0m find-msvc-tools v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.6229226Z ^[[1m^[[92m   Compiling^[[0m parking_lot_core v0.9.12
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.7399367Z ^[[1m^[[92m   Compiling^[[0m cc v1.2.51
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.7632942Z ^[[1m^[[92m    Checking^[[0m value-bag v1.12.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.8839206Z ^[[1m^[[92m    Checking^[[0m concurrent-queue v2.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.9279239Z ^[[1m^[[92m    Checking^[[0m futures-sink v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.9597479Z ^[[1m^[[92m    Checking^[[0m scopeguard v1.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:03.9979543Z ^[[1m^[[92m    Checking^[[0m parking v2.2.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:04.0502059Z ^[[1m^[[92m   Compiling^[[0m pkg-config v0.3.32
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:04.0568825Z ^[[1m^[[92m   Compiling^[[0m vcpkg v0.2.15
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:04.5094421Z ^[[1m^[[92m    Checking^[[0m lock_api v0.4.14
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:04.6733223Z ^[[1m^[[92m    Checking^[[0m log v0.4.29
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:04.8509158Z ^[[1m^[[92m    Checking^[[0m pin-utils v0.1.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:04.8719405Z ^[[1m^[[92m    Checking^[[0m parking_lot v0.12.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:04.8808979Z ^[[1m^[[92m    Checking^[[0m futures-channel v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:04.9982085Z ^[[1m^[[92m    Checking^[[0m socket2 v0.6.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.0144058Z ^[[1m^[[92m    Checking^[[0m mio v1.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.1129345Z ^[[1m^[[92m    Checking^[[0m subtle v2.6.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.1975806Z ^[[1m^[[92m   Compiling^[[0m zerocopy v0.8.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.2409152Z ^[[1m^[[92m    Checking^[[0m litemap v0.8.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.2649313Z ^[[1m^[[92m    Checking^[[0m fastrand v2.3.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.3689266Z ^[[1m^[[92m    Checking^[[0m writeable v0.6.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.3889474Z ^[[1m^[[92m    Checking^[[0m futures-task v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.4725425Z ^[[1m^[[92m    Checking^[[0m atomic-waker v1.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.4869078Z ^[[1m^[[92m   Compiling^[[0m icu_properties_data v2.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.5179478Z ^[[1m^[[92m   Compiling^[[0m synstructure v0.13.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.5979467Z ^[[1m^[[92m   Compiling^[[0m icu_normalizer_data v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.6874125Z ^[[1m^[[92m   Compiling^[[0m rustix v1.1.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:05.9049234Z ^[[1m^[[92m   Compiling^[[0m httparse v1.10.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:06.0279721Z ^[[1m^[[92m    Checking^[[0m percent-encoding v2.3.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:06.1725443Z ^[[1m^[[92m    Checking^[[0m futures-lite v2.6.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:06.2179208Z ^[[1m^[[92m   Compiling^[[0m openssl-sys v0.9.111
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:06.5609232Z ^[[1m^[[92m    Checking^[[0m event-listener v5.4.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:06.7179201Z ^[[1m^[[92m    Checking^[[0m linux-raw-sys v0.11.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:06.8169168Z ^[[1m^[[92m   Compiling^[[0m autocfg v1.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:06.9569241Z ^[[1m^[[92m    Checking^[[0m cpufeatures v0.2.17
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:06.9902389Z ^[[1m^[[92m   Compiling^[[0m zmij v1.0.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:07.1239033Z ^[[1m^[[92m   Compiling^[[0m async-io v2.6.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:07.1609768Z ^[[1m^[[92m    Checking^[[0m event-listener-strategy v0.5.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:07.2588576Z ^[[1m^[[92m   Compiling^[[0m serde_derive v1.0.228
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:07.3129632Z ^[[1m^[[92m   Compiling^[[0m zerofrom-derive v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:07.3259108Z ^[[1m^[[92m   Compiling^[[0m yoke-derive v0.8.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:07.8659429Z ^[[1m^[[92m   Compiling^[[0m zerovec-derive v0.11.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:08.2589104Z ^[[1m^[[92m   Compiling^[[0m displaydoc v0.2.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:08.4884729Z ^[[1m^[[92m    Checking^[[0m zerofrom v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:08.5599431Z ^[[1m^[[92m    Checking^[[0m yoke v0.8.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:08.6929320Z ^[[1m^[[92m   Compiling^[[0m tokio-macros v2.6.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:08.7687366Z ^[[1m^[[92m   Compiling^[[0m futures-macro v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:08.8419645Z ^[[1m^[[92m    Checking^[[0m zerovec v0.11.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:09.2599148Z ^[[1m^[[92m    Checking^[[0m zerotrie v0.2.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:09.2749042Z ^[[1m^[[92m    Checking^[[0m tinystr v0.8.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:09.3769583Z ^[[1m^[[92m    Checking^[[0m icu_locale_core v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:09.4142527Z ^[[1m^[[92m    Checking^[[0m futures-util v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:09.4669038Z ^[[1m^[[92m    Checking^[[0m potential_utf v0.1.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:09.5369287Z ^[[1m^[[92m    Checking^[[0m icu_collections v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:09.9529126Z ^[[1m^[[92m    Checking^[[0m icu_provider v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:10.3749350Z ^[[1m^[[92m    Checking^[[0m block-buffer v0.10.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:10.4352525Z ^[[1m^[[92m    Checking^[[0m tracing-core v0.1.36
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:10.6709320Z ^[[1m^[[92m    Checking^[[0m bytes v1.11.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:10.7229808Z ^[[1m^[[92m   Compiling^[[0m serde_json v1.0.148
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:10.8463721Z ^[[1m^[[92m    Checking^[[0m digest v0.10.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:10.9949500Z ^[[1m^[[92m    Checking^[[0m icu_normalizer v2.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:11.1349213Z ^[[1m^[[92m    Checking^[[0m http v1.4.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:11.2668974Z ^[[1m^[[92m    Checking^[[0m tokio v1.48.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:11.6979290Z ^[[1m^[[92m    Checking^[[0m icu_properties v2.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:11.7515480Z ^[[1m^[[92m    Checking^[[0m http-body v1.0.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:11.8289282Z ^[[1m^[[92m   Compiling^[[0m tracing-attributes v0.1.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:12.6861598Z ^[[1m^[[92m    Checking^[[0m polling v3.11.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:12.7349592Z ^[[1m^[[92m    Checking^[[0m aho-corasick v1.1.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:12.7989343Z ^[[1m^[[92m    Checking^[[0m try-lock v0.2.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:12.8363187Z ^[[1m^[[92m   Compiling^[[0m thiserror v1.0.69
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:12.9769233Z ^[[1m^[[92m    Checking^[[0m tower-service v0.3.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:13.0029225Z ^[[1m^[[92m    Checking^[[0m regex-syntax v0.8.8
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:13.0210165Z ^[[1m^[[92m    Checking^[[0m async-task v4.7.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:13.2032247Z ^[[1m^[[92m    Checking^[[0m tracing v0.1.44
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:13.3409214Z ^[[1m^[[92m    Checking^[[0m want v0.3.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:13.6687113Z ^[[1m^[[92m    Checking^[[0m idna_adapter v1.2.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:13.7209032Z ^[[1m^[[92m   Compiling^[[0m thiserror-impl v1.0.69
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.2148549Z ^[[1m^[[92m    Checking^[[0m async-channel v2.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.3309875Z ^[[1m^[[92m    Checking^[[0m regex-automata v0.4.13
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.3369023Z ^[[1m^[[92m    Checking^[[0m form_urlencoded v1.2.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.4039518Z ^[[1m^[[92m    Checking^[[0m block-padding v0.3.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.4698876Z ^[[1m^[[92m   Compiling^[[0m syn v1.0.109
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.6379766Z ^[[1m^[[92m    Checking^[[0m powerfmt v0.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.7349744Z ^[[1m^[[92m   Compiling^[[0m time-core v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.7679242Z ^[[1m^[[92m    Checking^[[0m foreign-types-shared v0.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.8009209Z ^[[1m^[[92m    Checking^[[0m utf8_iter v1.0.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.8127541Z ^[[1m^[[92m   Compiling^[[0m num-conv v0.1.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.8436334Z ^[[1m^[[92m   Compiling^[[0m openssl v0.10.75
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.8639235Z ^[[1m^[[92m    Checking^[[0m idna v1.1.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.9219185Z ^[[1m^[[92m   Compiling^[[0m time-macros v0.2.24
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:14.9909253Z ^[[1m^[[92m    Checking^[[0m hyper v1.8.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:15.0610249Z ^[[1m^[[92m    Checking^[[0m foreign-types v0.3.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:15.1279491Z ^[[1m^[[92m    Checking^[[0m deranged v0.5.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:15.5559185Z ^[[1m^[[92m    Checking^[[0m inout v0.1.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:15.9899512Z ^[[1m^[[92m   Compiling^[[0m openssl-macros v0.1.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.1829055Z ^[[1m^[[92m    Checking^[[0m async-lock v3.4.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.1949168Z ^[[1m^[[92m    Checking^[[0m ppv-lite86 v0.2.21
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.2491001Z ^[[1m^[[92m    Checking^[[0m piper v0.2.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.3269140Z ^[[1m^[[92m   Compiling^[[0m ahash v0.8.12
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.4303980Z ^[[1m^[[92m   Compiling^[[0m native-tls v0.2.14
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.5129527Z ^[[1m^[[92m    Checking^[[0m base64 v0.22.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.5495747Z ^[[1m^[[92m    Checking^[[0m ipnet v2.11.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.6229401Z ^[[1m^[[92m    Checking^[[0m time v0.3.44
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.7069700Z ^[[1m^[[92m    Checking^[[0m rand_chacha v0.3.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.7379099Z ^[[1m^[[92m    Checking^[[0m hyper-util v0.1.19
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.8586156Z ^[[1m^[[92m    Checking^[[0m blocking v1.6.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:16.9799094Z ^[[1m^[[92m    Checking^[[0m cipher v0.4.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:17.5809221Z ^[[1m^[[92m    Checking^[[0m url v2.5.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:17.8329605Z ^[[1m^[[92m    Checking^[[0m async-signal v0.2.13
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:17.9319254Z ^[[1m^[[92m    Checking^[[0m async-executor v1.13.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:17.9709535Z ^[[1m^[[92m    Checking^[[0m http-body-util v0.1.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.0639144Z ^[[1m^[[92m    Checking^[[0m sync_wrapper v1.0.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.1139055Z ^[[1m^[[92m   Compiling^[[0m cookie v0.16.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.1359033Z ^[[1m^[[92m   Compiling^[[0m rustix v0.38.44
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.2109564Z ^[[1m^[[92m    Checking^[[0m fnv v1.0.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.2579040Z ^[[1m^[[92m    Checking^[[0m either v1.15.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.3629920Z ^[[1m^[[92m    Checking^[[0m tower-layer v0.3.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.4019228Z ^[[1m^[[92m    Checking^[[0m event-listener v2.5.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.4769207Z ^[[1m^[[92m    Checking^[[0m openssl-probe v0.1.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.4858785Z ^[[1m^[[92m    Checking^[[0m tower v0.5.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.5262758Z ^[[1m^[[92m    Checking^[[0m async-channel v1.9.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.6849420Z ^[[1m^[[92m    Checking^[[0m async-global-executor v2.4.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.7839076Z ^[[1m^[[92m    Checking^[[0m async-process v2.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:18.9839214Z ^[[1m^[[92m    Checking^[[0m rand v0.8.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.0799192Z ^[[1m^[[92m    Checking^[[0m regex v1.12.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.3219202Z ^[[1m^[[92m    Checking^[[0m chromiumoxide_types v0.7.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.4841861Z ^[[1m^[[92m    Checking^[[0m sha1 v0.10.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.4918915Z ^[[1m^[[92m    Checking^[[0m universal-hash v0.5.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.5079277Z ^[[1m^[[92m   Compiling^[[0m libsqlite3-sys v0.30.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.5559237Z ^[[1m^[[92m    Checking^[[0m kv-log-macro v1.0.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.5978892Z ^[[1m^[[92m   Compiling^[[0m cookie v0.18.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.6008475Z ^[[1m^[[92m    Checking^[[0m ryu v1.0.22
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.6939644Z ^[[1m^[[92m    Checking^[[0m linux-raw-sys v0.4.15
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.7031425Z ^[[1m^[[92m    Checking^[[0m utf-8 v0.7.6
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.7199137Z ^[[1m^[[92m    Checking^[[0m data-encoding v2.9.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.7729358Z ^[[1m^[[92m    Checking^[[0m heck v0.4.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.8449479Z ^[[1m^[[92m    Checking^[[0m opaque-debug v0.3.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.8753962Z ^[[1m^[[92m    Checking^[[0m byteorder v1.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:19.9517070Z ^[[1m^[[92m    Checking^[[0m iri-string v0.7.10
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:20.0498785Z ^[[1m^[[92m    Checking^[[0m tungstenite v0.23.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:20.4319046Z ^[[1m^[[92m    Checking^[[0m polyval v0.6.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:20.5439620Z ^[[1m^[[92m    Checking^[[0m chromiumoxide_pdl v0.7.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:20.8029170Z ^[[1m^[[92m   Compiling^[[0m async-attributes v1.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.0229660Z ^[[1m^[[92m    Checking^[[0m async-std v1.13.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.1009409Z ^[[1m^[[92m    Checking^[[0m tower-http v0.6.8
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.3123622Z ^[[1m^[[92m    Checking^[[0m serde_urlencoded v0.7.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.3171850Z ^[[1m^[[92m    Checking^[[0m tokio-native-tls v0.3.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.4029636Z ^[[1m^[[92m    Checking^[[0m hashbrown v0.14.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.6159444Z ^[[1m^[[92m    Checking^[[0m http v0.2.12
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.8619252Z ^[[1m^[[92m    Checking^[[0m futures-executor v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.9429096Z ^[[1m^[[92m    Checking^[[0m option-ext v0.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:21.9819715Z ^[[1m^[[92m   Compiling^[[0m anyhow v1.0.100
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:22.1829425Z ^[[1m^[[92m    Checking^[[0m home v0.5.12
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:22.2089098Z ^[[1m^[[92m    Checking^[[0m lazy_static v1.5.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:22.2262817Z ^[[1m^[[92m    Checking^[[0m unicode-segmentation v1.12.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:22.2544334Z ^[[1m^[[92m    Checking^[[0m base64 v0.21.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:22.4948968Z ^[[1m^[[92m    Checking^[[0m sharded-slab v0.1.7
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:22.5649012Z ^[[1m^[[92m    Checking^[[0m webdriver v0.50.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:22.8859102Z ^[[1m^[[92m    Checking^[[0m async-tungstenite v0.27.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.0619039Z ^[[1m^[[92m    Checking^[[0m which v6.0.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.2597518Z ^[[1m^[[92m    Checking^[[0m dirs-sys v0.4.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.3158383Z ^[[1m^[[92m    Checking^[[0m futures v0.3.31
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.3509820Z ^[[1m^[[92m    Checking^[[0m hashlink v0.9.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.3689498Z ^[[1m^[[92m    Checking^[[0m reqwest v0.12.28
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.5799251Z ^[[1m^[[92m    Checking^[[0m hyper-tls v0.6.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.8429585Z ^[[1m^[[92m    Checking^[[0m chromiumoxide_cdp v0.7.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.9699009Z ^[[1m^[[92m    Checking^[[0m ghash v0.5.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:23.9999019Z ^[[1m^[[92m    Checking^[[0m ctr v0.9.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.0239110Z ^[[1m^[[92m    Checking^[[0m aes v0.8.4
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.1059416Z ^[[1m^[[92m    Checking^[[0m matchers v0.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.1679319Z ^[[1m^[[92m    Checking^[[0m hmac v0.12.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.2429358Z ^[[1m^[[92m    Checking^[[0m tracing-log v0.2.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.3271395Z ^[[1m^[[92m    Checking^[[0m aead v0.5.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.3829163Z ^[[1m^[[92m    Checking^[[0m thread_local v1.1.9
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.4090142Z ^[[1m^[[92m    Checking^[[0m fallible-streaming-iterator v0.1.9
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.4879772Z ^[[1m^[[92m    Checking^[[0m mime v0.3.17
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.4904124Z ^[[1m^[[92m    Checking^[[0m dunce v1.0.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.5299142Z ^[[1m^[[92m    Checking^[[0m futures-timer v3.0.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.6102409Z ^[[1m^[[92m    Checking^[[0m fallible-iterator v0.3.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.6479363Z ^[[1m^[[92m    Checking^[[0m nu-ansi-term v0.50.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.8119356Z ^[[1m^[[92m    Checking^[[0m tracing-subscriber v0.3.22
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:24.8629197Z ^[[1m^[[92m    Checking^[[0m fantoccini v0.21.5
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:25.7499105Z ^[[1m^[[92m    Checking^[[0m aes-gcm v0.10.3
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:25.7759241Z ^[[1m^[[92m    Checking^[[0m pbkdf2 v0.12.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:25.8218730Z ^[[1m^[[92m    Checking^[[0m dirs v5.0.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:25.8629897Z ^[[1m^[[92m    Checking^[[0m cbc v0.1.2
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:25.9329186Z ^[[1m^[[92m    Checking^[[0m tokio-util v0.7.17
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:25.9899009Z ^[[1m^[[92m    Checking^[[0m sha2 v0.10.9
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:26.1119288Z ^[[1m^[[92m   Compiling^[[0m async-trait v0.1.89
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:30.0719248Z ^[[1m^[[92m    Checking^[[0m rusqlite v0.32.1
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:48.2841420Z ^[[1m^[[92m    Checking^[[0m chromiumoxide v0.7.0
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:49.2025020Z ^[[1m^[[92m Documenting^[[0m browser-commander v0.9.0 (/home/runner/work/browser-commander/browser-commander/rust)
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:51.8671648Z ^[[1m^[[92m    Finished^[[0m `dev` profile [unoptimized + debuginfo] target(s) in 53.13s
+Build Combined Docs	Generate Rust API docs	2026-08-02T14:26:51.9174919Z ^[[1m^[[92m   Generated^[[0m /home/runner/work/browser-commander/browser-commander/rust/target/doc/browser_commander/index.html
+Build Combined Docs	Assemble Pages artifact	﻿2026-08-02T14:26:51.9374065Z ##[group]Run mkdir -p public/javascript public/rust
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9374508Z ^[[36;1mmkdir -p public/javascript public/rust^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9374843Z ^[[36;1mcp -R js/docs-api/. public/javascript/^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9375179Z ^[[36;1mcp -R rust/target/doc/. public/rust/^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9375468Z ^[[36;1mcat > public/index.html <<'HTML'^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9375730Z ^[[36;1m<!doctype html>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9375948Z ^[[36;1m<html lang="en">^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9376158Z ^[[36;1m  <head>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9376360Z ^[[36;1m    <meta charset="utf-8">^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9376733Z ^[[36;1m    <meta name="viewport" content="width=device-width, initial-scale=1">^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9377180Z ^[[36;1m    <title>Browser Commander Documentation</title>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9377483Z ^[[36;1m    <style>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9378261Z ^[[36;1m      body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5; }^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9378695Z ^[[36;1m      main { max-width: 720px; }^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9379001Z ^[[36;1m      a { color: #075985; }^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9379239Z ^[[36;1m    </style>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9379441Z ^[[36;1m  </head>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9379637Z ^[[36;1m  <body>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9379822Z ^[[36;1m    <main>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9380063Z ^[[36;1m      <h1>Browser Commander Documentation</h1>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9380523Z ^[[36;1m      <p>Generated API documentation for the JavaScript and Rust implementations.</p>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9380933Z ^[[36;1m      <ul>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9381205Z ^[[36;1m        <li><a href="./javascript/">JavaScript API docs</a></li>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9381628Z ^[[36;1m        <li><a href="./rust/browser_commander/">Rust API docs</a></li>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9381961Z ^[[36;1m      </ul>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9382155Z ^[[36;1m    </main>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9382341Z ^[[36;1m  </body>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9382527Z ^[[36;1m</html>^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9382708Z ^[[36;1mHTML^[[0m
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9425520Z shell: /usr/bin/bash -e {0}
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9425764Z env:
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9425950Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9426181Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9426617Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9426851Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9427093Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9427300Z   CARGO_TERM_COLOR: always
+Build Combined Docs	Assemble Pages artifact	2026-08-02T14:26:51.9427508Z ##[endgroup]
+Build Combined Docs	Upload docs artifact	﻿2026-08-02T14:26:51.9830287Z ##[group]Run actions/upload-artifact@v7
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9830594Z with:
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9830793Z   name: browser-commander-docs
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9831031Z   path: public
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9831228Z   if-no-files-found: warn
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9831452Z   compression-level: 6
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9831659Z   overwrite: false
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9831869Z   include-hidden-files: false
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9832102Z   archive: true
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9832283Z env:
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9832454Z   GIT_CONFIG_COUNT: 1
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9832679Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9832936Z   GIT_CONFIG_VALUE_0: main
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9833164Z   CARGO_HOME: /home/runner/.cargo
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9833421Z   CARGO_INCREMENTAL: 0
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9833623Z   CARGO_TERM_COLOR: always
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:51.9833830Z ##[endgroup]
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:52.2559808Z With the provided path, there will be 440 files uploaded
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:52.2566556Z Artifact name is valid!
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:52.2567092Z Root directory input is valid!
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:52.4777305Z Uploading artifact: browser-commander-docs.zip
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:52.4816086Z Beginning upload of artifact content to blob storage
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:53.2886901Z Uploaded bytes 3119730
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:53.3257111Z Finished uploading artifact content to blob storage!
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:53.3258875Z SHA256 digest of uploaded artifact is f95d3b10b2fce6484365ab171e5fb29647d84b0936324f90b2dda8658bc88d16
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:53.3259792Z Finalizing artifact upload
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:53.5894365Z Artifact browser-commander-docs successfully finalized. Artifact ID 8834767375
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:53.5895672Z Artifact browser-commander-docs has been successfully uploaded! Final size is 3119730 bytes. Artifact ID is 8834767375
+Build Combined Docs	Upload docs artifact	2026-08-02T14:26:53.5900215Z Artifact download URL: https://github.com/link-foundation/browser-commander/actions/runs/30752076819/artifacts/8834767375
+Build Combined Docs	Post Setup Node.js	﻿2026-08-02T14:26:53.6106004Z Post job cleanup.
+Build Combined Docs	Post Run actions/checkout@v6	﻿2026-08-02T14:26:53.7437229Z Post job cleanup.
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8300322Z [command]/usr/bin/git version
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8344214Z git version 2.54.0
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8431148Z Temporarily overriding HOME='/home/runner/work/_temp/13487df0-34d4-406c-9245-6ed1d72dff42' before making global git config changes
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8432698Z Adding repository directory to the temporary git global config as a safe directory
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8434111Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8455160Z Removing SSH command configuration
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8463769Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8508284Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8750057Z Removing HTTP extra header
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8756122Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.8793336Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9092470Z Removing includeIf entries pointing to credentials config files
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9093555Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9142193Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9149164Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9151055Z includeif.gitdir:/github/workspace/.git.path
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9152260Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9155299Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9194483Z /home/runner/work/_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9213770Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9275476Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9319094Z /home/runner/work/_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9331735Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9381495Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9420638Z /github/runner_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9431682Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9473968Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9510815Z /github/runner_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9523244Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9568234Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Build Combined Docs	Post Run actions/checkout@v6	2026-08-02T14:26:53.9795429Z Removing credentials config '/home/runner/work/_temp/git-credentials-f846e551-c1c5-41c4-9e6e-00629f0b3a95.config'
+Build Combined Docs	Complete job	﻿2026-08-02T14:26:53.9933658Z Cleaning up orphan processes

@@ -1,0 +1,168 @@
+Check CI Workflow Policy	UNKNOWN STEP	﻿2026-08-02T01:39:51.5232485Z Current runner version: '2.336.0'
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5266688Z ##[group]Runner Image Provisioner
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5268089Z Hosted Compute Agent
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5269017Z Version: 20260707.563
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5270018Z Commit: 02667638d2b423fbc733a8e32a88b44996a3ba6e
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5271301Z Build Date: 2026-07-07T19:33:50Z
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5272437Z Worker ID: {13a59851-3c0d-4bff-a112-919e1f721da1}
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5273671Z Azure Region: westus
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5274427Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5276221Z ##[group]Operating System
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5277259Z Ubuntu
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5278372Z 24.04.4
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5279172Z LTS
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5280111Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5280959Z ##[group]Runner Image
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5282170Z Image: ubuntu-24.04
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5283111Z Version: 20260720.247.2
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5285236Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5287897Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5289584Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5291387Z ##[group]GITHUB_TOKEN Permissions
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5294157Z Contents: read
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5295179Z Metadata: read
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5296062Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5298970Z Secret source: Actions
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.5300659Z Prepare workflow directory
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.6176963Z Prepare all required actions
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.6227663Z Getting action download info
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:51.9490124Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:52.4234264Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:52.9833156Z Complete job name: Check CI Workflow Policy
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0652919Z ##[group]Run actions/checkout@v6
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0654154Z with:
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0654733Z   repository: link-foundation/browser-commander
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0659198Z   token: ***
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0659654Z   ssh-strict: true
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0660117Z   ssh-user: git
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0660592Z   persist-credentials: true
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0661107Z   clean: true
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0661581Z   sparse-checkout-cone-mode: true
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0662410Z   fetch-depth: 1
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0662878Z   fetch-tags: false
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0663343Z   show-progress: true
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0663808Z   lfs: false
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0664255Z   submodules: false
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0664740Z   set-safe-directory: true
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0665276Z   allow-unsafe-pr-checkout: false
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0666107Z env:
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0666554Z   GIT_CONFIG_COUNT: 1
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0667055Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0667689Z   GIT_CONFIG_VALUE_0: main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.0668190Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1725353Z Syncing repository: link-foundation/browser-commander
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1728258Z ##[group]Getting Git version info
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1729545Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1731466Z [command]/usr/bin/git version
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1783089Z git version 2.54.0
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1809907Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1826959Z Temporarily overriding HOME='/home/runner/work/_temp/95dc7f51-209d-4abb-9342-691dca622591' before making global git config changes
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1830517Z Adding repository directory to the temporary git global config as a safe directory
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1835508Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1890683Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1895902Z ##[group]Determining repository object format
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1898952Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1900274Z ##[group]Initializing the repository
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.1904396Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2019475Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2032815Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2080588Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2082442Z ##[group]Disabling automatic garbage collection
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2085129Z [command]/usr/bin/git config --local gc.auto 0
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2125628Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2127718Z ##[group]Setting up auth
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2128672Z Removing SSH command configuration
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2135145Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2180052Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2591677Z Removing HTTP extra header
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2600165Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2650375Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2893176Z Removing includeIf entries pointing to credentials config files
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2899783Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.2940822Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.3192694Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.3240391Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.3280194Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.3322918Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.3361221Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.3419215Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.3421001Z ##[group]Fetching the repository
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.3435182Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +15efceabbc0029af4f5f5112737e8ae0ae9e5a0e:refs/remotes/origin/main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9462835Z From https://github.com/link-foundation/browser-commander
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9465193Z  * [new ref]         15efceabbc0029af4f5f5112737e8ae0ae9e5a0e -> origin/main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9507103Z [command]/usr/bin/git branch --list --remote origin/main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9545052Z   origin/main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9555215Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9584102Z 15efceabbc0029af4f5f5112737e8ae0ae9e5a0e
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9596327Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9597972Z ##[group]Determining the checkout info
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9599142Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9599737Z [command]/usr/bin/git sparse-checkout disable
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9653817Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9687946Z ##[group]Checking out the ref
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:53.9691599Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0031241Z Reset branch 'main'
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0033478Z branch 'main' set up to track 'origin/main'.
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0042960Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0097264Z [command]/usr/bin/git log -1 --format=%H
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0130172Z 15efceabbc0029af4f5f5112737e8ae0ae9e5a0e
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0423465Z ##[group]Run actions/setup-node@v6
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0424074Z with:
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0424484Z   node-version: 24.x
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0424948Z   check-latest: false
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0428808Z   token: ***
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0429251Z   package-manager-cache: true
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0429764Z env:
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0430174Z   GIT_CONFIG_COUNT: 1
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0430668Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0431246Z   GIT_CONFIG_VALUE_0: main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.0431742Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.2018551Z Found in cache @ /opt/hostedtoolcache/node/24.18.0/x64
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.2021008Z ##[group]Environment details
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6088524Z node: v24.18.0
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6089647Z npm: 11.16.0
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6090548Z yarn: 1.22.22
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6092906Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6365120Z ##[group]Run node scripts/check-ci-workflows.mjs
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6366872Z ^[[36;1mnode scripts/check-ci-workflows.mjs^[[0m
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6429121Z shell: /usr/bin/bash -e {0}
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6430372Z env:
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6431347Z   GIT_CONFIG_COUNT: 1
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6432864Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6434284Z   GIT_CONFIG_VALUE_0: main
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6435461Z ##[endgroup]
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.6935340Z CI workflow policy passed for 5 workflow(s).
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.7196122Z Post job cleanup.
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.8787497Z Post job cleanup.
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.9723971Z [command]/usr/bin/git version
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.9771024Z git version 2.54.0
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.9853322Z Temporarily overriding HOME='/home/runner/work/_temp/6c793531-8102-4040-8e31-31b286780481' before making global git config changes
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.9859407Z Adding repository directory to the temporary git global config as a safe directory
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.9864981Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.9906123Z Removing SSH command configuration
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.9911457Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:54.9957226Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0225955Z Removing HTTP extra header
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0229100Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0269672Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0526704Z Removing includeIf entries pointing to credentials config files
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0535171Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0573646Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0578201Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0582669Z includeif.gitdir:/github/workspace/.git.path
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0586714Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0592309Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0616871Z /home/runner/work/_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0634250Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0686529Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0717628Z /home/runner/work/_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0732301Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0774323Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0802160Z /github/runner_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0815884Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0858399Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0884726Z /github/runner_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0896470Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.0947400Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.1210370Z Removing credentials config '/home/runner/work/_temp/git-credentials-4196e86e-6669-42de-b379-ef7016927191.config'
+Check CI Workflow Policy	UNKNOWN STEP	2026-08-02T01:39:55.1387704Z Cleaning up orphan processes

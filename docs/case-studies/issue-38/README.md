@@ -95,7 +95,7 @@ returned by `makeBrowserCommander()` has no `onDialog()` or `page.on('dialog')` 
 **Puppeteer** (`page.on('dialog', handler)`):
 - Handler receives a `Dialog` object with: `accept(text?)`, `dismiss()`, `message()`, `type()`
 - Same interface as Playwright
-- Reference: https://pptr.dev/api/puppeteer.page.on
+- Reference: https://pptr.dev/api/puppeteer.dialog
 
 Both engines share an identical API surface for dialog handling, making a unified wrapper straightforward.
 

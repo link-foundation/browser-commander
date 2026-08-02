@@ -31,6 +31,12 @@ pub struct LaunchOptions {
     pub verbose: bool,
     /// Additional Chrome arguments.
     pub args: Vec<String>,
+    /// Additional Chrome arguments appended after the compatibility `args`.
+    pub extra_args: Vec<String>,
+    /// Browser Commander default arguments to omit.
+    pub ignore_default_args: Vec<String>,
+    /// Omit every Browser Commander and engine default argument.
+    pub ignore_all_default_args: bool,
     /// Installed browser channel for Playwright/Puppeteer (for example, `chrome`).
     pub channel: Option<String>,
     /// Explicit path to a Chrome or Chromium executable.
@@ -61,6 +67,9 @@ impl Default for LaunchOptions {
             slow_mo: 0,
             verbose: false,
             args: Vec::new(),
+            extra_args: Vec::new(),
+            ignore_default_args: Vec::new(),
+            ignore_all_default_args: false,
             channel: None,
             executable_path: None,
             color_scheme: None,
@@ -145,6 +154,24 @@ impl LaunchOptions {
         self
     }
 
+    /// Add Chrome arguments after the compatibility `args` field.
+    pub fn with_extra_args(mut self, args: Vec<String>) -> Self {
+        self.extra_args = args;
+        self
+    }
+
+    /// Omit selected Browser Commander defaults.
+    pub fn ignore_default_args(mut self, args: Vec<String>) -> Self {
+        self.ignore_default_args = args;
+        self
+    }
+
+    /// Omit every Browser Commander and engine default argument.
+    pub fn ignore_all_default_args(mut self) -> Self {
+        self.ignore_all_default_args = true;
+        self
+    }
+
     /// Select an installed browser channel for Playwright or Puppeteer.
     pub fn channel(mut self, channel: impl Into<String>) -> Self {
         self.channel = Some(channel.into());
@@ -189,8 +216,22 @@ impl LaunchOptions {
 
     /// Get all Chrome arguments (default + custom).
     pub fn all_chrome_args(&self) -> Vec<String> {
-        let mut all_args: Vec<String> = CHROME_ARGS.iter().map(|s| s.to_string()).collect();
+        let mut all_args: Vec<String> = if self.ignore_all_default_args {
+            Vec::new()
+        } else {
+            CHROME_ARGS
+                .iter()
+                .filter(|argument| {
+                    !self
+                        .ignore_default_args
+                        .iter()
+                        .any(|item| item == **argument)
+                })
+                .map(|argument| argument.to_string())
+                .collect()
+        };
         all_args.extend(self.args.clone());
+        all_args.extend(self.extra_args.clone());
         all_args
     }
 
@@ -322,6 +363,13 @@ async fn launch_chromiumoxide(
         .headless_mode(headless_mode)
         .args(options.all_chrome_args());
 
+    // Chromiumoxide only exposes an all-or-nothing switch for its own default
+    // layer. Disable that layer whenever the caller requests an omission so an
+    // engine-provided duplicate cannot silently re-add the selected flag.
+    if options.ignore_all_default_args || !options.ignore_default_args.is_empty() {
+        builder = builder.disable_default_args();
+    }
+
     if !options.sandbox {
         builder = builder.no_sandbox();
     }
@@ -410,6 +458,9 @@ mod tests {
         assert_eq!(options.slow_mo, 0);
         assert!(!options.verbose);
         assert!(options.args.is_empty());
+        assert!(options.extra_args.is_empty());
+        assert!(options.ignore_default_args.is_empty());
+        assert!(!options.ignore_all_default_args);
         assert!(options.channel.is_none());
         assert!(options.executable_path.is_none());
         assert!(options.node_executable.is_none());
@@ -473,7 +524,33 @@ mod tests {
         let args = options.all_chrome_args();
 
         assert!(args.contains(&"--disable-infobars".to_string()));
+        assert!(args.contains(&"--password-store=basic".to_string()));
         assert!(args.contains(&"--no-first-run".to_string()));
+    }
+
+    #[test]
+    fn all_chrome_args_appends_extra_args_and_ignores_selected_defaults() {
+        let options = LaunchOptions::default()
+            .with_args(vec!["--legacy-arg".to_string()])
+            .with_extra_args(vec!["--lang=en-US".to_string()])
+            .ignore_default_args(vec!["--no-default-browser-check".to_string()]);
+
+        let args = options.all_chrome_args();
+        assert!(args.contains(&"--password-store=basic".to_string()));
+        assert!(!args.contains(&"--no-default-browser-check".to_string()));
+        assert_eq!(
+            &args[args.len() - 2..],
+            ["--legacy-arg".to_string(), "--lang=en-US".to_string()]
+        );
+    }
+
+    #[test]
+    fn all_chrome_args_can_ignore_every_default() {
+        let options = LaunchOptions::default()
+            .ignore_all_default_args()
+            .with_extra_args(vec!["--lang=en-US".to_string()]);
+
+        assert_eq!(options.all_chrome_args(), ["--lang=en-US".to_string()]);
     }
 
     #[test]

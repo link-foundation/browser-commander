@@ -64,6 +64,17 @@ function chromeArgs(params) {
   return args;
 }
 
+function ignoredDefaultArgs(params, includeEnableAutomation = false) {
+  if (params.ignoreDefaultArgs === true) {
+    return true;
+  }
+  const ignored = [...(params.ignoreDefaultArgs ?? [])];
+  if (includeEnableAutomation && !ignored.includes("--enable-automation")) {
+    ignored.unshift("--enable-automation");
+  }
+  return ignored;
+}
+
 function elementInfo(selector) {
   const el = document.querySelector(selector);
   if (!el) {
@@ -95,7 +106,7 @@ async function launchPlaywright(params) {
     chromiumSandbox: params.sandbox !== false,
     viewport: null,
     args: chromeArgs(params),
-    ignoreDefaultArgs: ["--enable-automation"],
+    ignoreDefaultArgs: ignoredDefaultArgs(params, true),
   };
 
   if (params.colorScheme !== null && params.colorScheme !== undefined) {
@@ -126,6 +137,10 @@ async function launchPuppeteer(params) {
     args: ["--start-maximized", ...chromeArgs(params)],
     userDataDir: params.userDataDir,
   };
+  const ignoredArgs = ignoredDefaultArgs(params);
+  if (ignoredArgs === true || ignoredArgs.length > 0) {
+    launchOptions.ignoreDefaultArgs = ignoredArgs;
+  }
   if (params.channel !== null && params.channel !== undefined) {
     launchOptions.channel = params.channel;
   }

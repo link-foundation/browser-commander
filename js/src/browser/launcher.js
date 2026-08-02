@@ -1,11 +1,11 @@
 import path from 'path';
 import os from 'os';
-import { CHROME_ARGS } from '../core/constants.js';
 import { disableTranslateInPreferences } from '../core/preferences.js';
 import { emulateMedia } from './media.js';
 import {
   buildPlaywrightLaunchOptions,
   buildPuppeteerLaunchOptions,
+  resolveChromeArgs,
 } from './launch-options.js';
 import {
   loadStorageState,
@@ -22,6 +22,8 @@ import {
  * @param {number} options.slowMo - Slow down operations by ms (default: 150 for Playwright, 0 for Puppeteer)
  * @param {boolean} options.verbose - Enable verbose logging (default: false)
  * @param {string[]} options.args - Custom Chrome arguments to append to the default CHROME_ARGS
+ * @param {string[]} [options.extraArgs] - Additional Chrome arguments appended after legacy args
+ * @param {boolean|string[]} [options.ignoreDefaultArgs] - Browser Commander defaults to omit, or true for all
  * @param {string|null} [options.colorScheme] - Emulate color scheme: 'light', 'dark', 'no-preference', or null to reset
  * @param {string} [options.channel] - Installed browser channel, such as 'chrome', 'chrome-beta', or 'msedge'
  * @param {string} [options.executablePath] - Explicit path to a Chrome or Chromium executable
@@ -36,14 +38,20 @@ export async function launchBrowser(options = {}) {
     slowMo = engine === 'playwright' ? 150 : 0,
     verbose = false,
     args = [],
+    extraArgs = [],
+    ignoreDefaultArgs = [],
     colorScheme,
     channel,
     executablePath,
     storageState,
   } = options;
 
-  // Combine default CHROME_ARGS with custom args
-  const chromeArgs = [...CHROME_ARGS, ...args];
+  const resolvedChromeArgs = resolveChromeArgs({
+    args,
+    extraArgs,
+    ignoreDefaultArgs,
+  });
+  const chromeArgs = resolvedChromeArgs.args;
 
   if (!['playwright', 'puppeteer'].includes(engine)) {
     throw new Error(
@@ -77,6 +85,7 @@ export async function launchBrowser(options = {}) {
       colorScheme,
       channel,
       executablePath,
+      ignoreDefaultArgs: resolvedChromeArgs.ignoreDefaultArgs,
     });
     browser = await chromium.launchPersistentContext(
       userDataDir,
@@ -96,6 +105,7 @@ export async function launchBrowser(options = {}) {
         userDataDir,
         channel,
         executablePath,
+        ignoreDefaultArgs: resolvedChromeArgs.ignoreDefaultArgs,
       })
     );
     const pages = await browser.pages();

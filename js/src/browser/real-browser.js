@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { connectBrowser } from './connector.js';
+import { resolveChromeArgs } from './launch-options.js';
 
 const MANAGED_ARGUMENTS = [
   '--remote-debugging-address',
@@ -240,6 +241,8 @@ export function buildRealBrowserArgs({
   remoteDebuggingPort = 0,
   headless = false,
   args = [],
+  extraArgs = [],
+  ignoreDefaultArgs = [],
 }) {
   if (
     !Number.isInteger(remoteDebuggingPort) ||
@@ -250,7 +253,8 @@ export function buildRealBrowserArgs({
       'remoteDebuggingPort must be an integer from 0 to 65535'
     );
   }
-  const conflictingArgument = args.find((argument) =>
+  const customArgs = [...args, ...extraArgs];
+  const conflictingArgument = customArgs.find((argument) =>
     MANAGED_ARGUMENTS.some(
       (managed) => argument === managed || argument.startsWith(`${managed}=`)
     )
@@ -261,14 +265,15 @@ export function buildRealBrowserArgs({
     );
   }
 
+  const defaultArgs = resolveChromeArgs({ ignoreDefaultArgs }).args;
+
   return [
     '--remote-debugging-address=127.0.0.1',
     `--remote-debugging-port=${remoteDebuggingPort}`,
     `--user-data-dir=${userDataDir}`,
-    '--no-first-run',
-    '--no-default-browser-check',
+    ...defaultArgs,
     ...(headless ? ['--headless=new'] : []),
-    ...args,
+    ...customArgs,
   ];
 }
 
@@ -353,6 +358,8 @@ export async function waitForCdpEndpoint({
  * @param {number} [options.remoteDebuggingPort=0] - Loopback CDP port; zero lets Chrome choose
  * @param {boolean} [options.headless=false] - Run the installed browser headlessly
  * @param {string[]} [options.args] - Additional browser arguments
+ * @param {string[]} [options.extraArgs] - Additional browser arguments appended after legacy args
+ * @param {boolean|string[]} [options.ignoreDefaultArgs] - Browser Commander defaults to omit, or true for all
  * @param {number} [options.startupTimeout=30000] - CDP readiness timeout in milliseconds
  * @param {Object[]} [options.seedCookies] - Cookies to seed after connecting
  * @param {boolean} [options.verbose=false] - Show browser and connection logs
@@ -384,6 +391,8 @@ export async function launchAndConnectRealBrowserWithDependencies(
     remoteDebuggingPort = 0,
     headless = false,
     args = [],
+    extraArgs = [],
+    ignoreDefaultArgs = [],
     startupTimeout = 30_000,
     verbose = false,
     cdpEndpoint,
@@ -409,6 +418,8 @@ export async function launchAndConnectRealBrowserWithDependencies(
     remoteDebuggingPort,
     headless,
     args,
+    extraArgs,
+    ignoreDefaultArgs,
   });
   const spawnBrowser = dependencies.spawnBrowser ?? spawn;
   const browserProcess = spawnBrowser(resolvedExecutablePath, browserArgs, {

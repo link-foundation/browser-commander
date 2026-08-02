@@ -4,9 +4,55 @@ import assert from 'node:assert';
 import {
   buildPlaywrightLaunchOptions,
   buildPuppeteerLaunchOptions,
+  resolveChromeArgs,
 } from '../../../src/browser/launch-options.js';
 
 describe('browser launch options', () => {
+  it('applies safe defaults, appends extra arguments, and supports per-flag opt-out', () => {
+    const options = resolveChromeArgs({
+      args: ['--legacy-arg'],
+      extraArgs: ['--lang=en-US'],
+      ignoreDefaultArgs: ['--no-default-browser-check'],
+    });
+
+    assert.ok(options.args.includes('--password-store=basic'));
+    assert.ok(options.args.includes('--no-first-run'));
+    assert.equal(options.args.includes('--no-default-browser-check'), false);
+    assert.deepEqual(options.args.slice(-2), ['--legacy-arg', '--lang=en-US']);
+    assert.deepEqual(options.ignoreDefaultArgs, ['--no-default-browser-check']);
+  });
+
+  it('can ignore every Browser Commander default', () => {
+    const options = resolveChromeArgs({
+      extraArgs: ['--lang=en-US'],
+      ignoreDefaultArgs: true,
+    });
+
+    assert.deepEqual(options.args, ['--lang=en-US']);
+    assert.equal(options.ignoreDefaultArgs, true);
+  });
+
+  it('forwards ignored defaults to both browser engines', () => {
+    const playwright = buildPlaywrightLaunchOptions({
+      headless: false,
+      slowMo: 150,
+      chromeArgs: [],
+      ignoreDefaultArgs: ['--no-first-run'],
+    });
+    const puppeteer = buildPuppeteerLaunchOptions({
+      headless: false,
+      chromeArgs: [],
+      userDataDir: '/tmp/browser-commander-test',
+      ignoreDefaultArgs: ['--no-first-run'],
+    });
+
+    assert.deepEqual(playwright.ignoreDefaultArgs, [
+      '--enable-automation',
+      '--no-first-run',
+    ]);
+    assert.deepEqual(puppeteer.ignoreDefaultArgs, ['--no-first-run']);
+  });
+
   it('forwards channel and executablePath to Playwright', () => {
     const options = buildPlaywrightLaunchOptions({
       headless: true,

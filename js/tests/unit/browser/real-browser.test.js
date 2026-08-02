@@ -44,11 +44,30 @@ describe('launchAndConnectRealBrowser', () => {
       '--remote-debugging-address=127.0.0.1',
       '--remote-debugging-port=9333',
       '--user-data-dir=/tmp/browser-commander-dedicated',
+      '--disable-session-crashed-bubble',
+      '--hide-crash-restore-bubble',
+      '--disable-infobars',
+      '--password-store=basic',
       '--no-first-run',
       '--no-default-browser-check',
+      '--disable-crash-restore',
       '--headless=new',
       '--lang=en-US',
     ]);
+  });
+
+  it('supports additive arguments and per-default opt-out', () => {
+    const args = buildRealBrowserArgs({
+      userDataDir: '/tmp/browser-commander-dedicated',
+      args: ['--legacy-arg'],
+      extraArgs: ['--lang=en-US'],
+      ignoreDefaultArgs: ['--no-first-run'],
+    });
+
+    assert.ok(args.includes('--password-store=basic'));
+    assert.equal(args.includes('--no-first-run'), false);
+    assert.ok(args.includes('--no-default-browser-check'));
+    assert.deepEqual(args.slice(-2), ['--legacy-arg', '--lang=en-US']);
   });
 
   it('rejects custom arguments that could bypass protected CDP settings', () => {

@@ -94,34 +94,39 @@ jobs:
           fetch-depth: 0
 
       - name: Check for changelog fragments
+        # GITHUB_BASE_REF is passed as an environment variable rather than
+        # interpolated into the script body: a branch name is attacker-controlled
+        # data on pull_request events.
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
         run: |
+          set -euo pipefail
+
           # Get list of fragment files (excluding README and template)
           FRAGMENTS=$(find changelog.d -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
 
           # Get changed files in PR
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          CHANGED_FILES=$(git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD")
 
           # Check if any source files changed (excluding docs and config)
-          SOURCE_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^rust/(src/|tests/|Cargo\.toml)" | wc -l)
+          SOURCE_CHANGED=$(printf '%s\n' "$CHANGED_FILES" | grep -cE "^rust/(src/|tests/|Cargo\.toml)" || true)
 
           if [ "$SOURCE_CHANGED" -gt 0 ] && [ "$FRAGMENTS" -eq 0 ]; then
-            echo "::warning::No changelog fragment found. Please add a changelog entry in rust/changelog.d/"
+            echo "::error::No changelog fragment found. Please add a changelog entry in rust/changelog.d/"
             echo ""
             echo "To create a changelog fragment:"
             echo "  Create a new .md file in rust/changelog.d/ with your changes"
             echo ""
             echo "See rust/changelog.d/README.md for more information."
-            # Note: This is a warning, not a failure, to allow flexibility
-            # Change 'exit 0' to 'exit 1' to make it required
-            exit 0
+            exit 1
           fi
 
           echo "Changelog check passed"
 
   # === LINT AND FORMAT CHECK ===
   # Lint runs independently of changelog check - it's a fast check that should always run
-  # Note: always() is required because detect-changes is skipped on workflow_dispatch,
-  # and without always(), this job would also be skipped even though its condition includes workflow_dispatch.
+  # Note: !cancelled() is required because detect-changes is skipped on workflow_dispatch,
+  # and without it, this job would also be skipped even though its condition includes workflow_dispatch.
   # See: https://github.com/actions/runner/issues/491
   lint:
     name: Lint and Format Check
@@ -132,7 +137,7 @@ jobs:
       cancel-in-progress: true
     needs: [detect-changes]
     if: |
-      always() && !cancelled() && (
+      !cancelled() && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.rs-changed == 'true' ||
@@ -186,8 +191,9 @@ jobs:
       cancel-in-progress: true
     needs: [detect-changes, changelog]
     # Run if: push event, OR changelog succeeded, OR changelog was skipped (docs-only PR)
-    # Note: always() is required to evaluate the condition when dependencies are skipped.
-    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+    # Note: !cancelled() is required to evaluate the condition when dependencies are skipped.
+    if: >-
+      !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -225,8 +231,9 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-build
       cancel-in-progress: true
     needs: [lint, test]
-    # Note: always() ensures this job runs even when lint/test jobs use always().
-    if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
+    # Note: !cancelled() ensures this job runs even when lint/test were skipped.
+    if: >-
+      !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
     steps:
       - uses: actions/checkout@v6
 
@@ -260,10 +267,10 @@ jobs:
     concurrency:
       group: main-writer-${{ github.repository }}-main
       cancel-in-progress: false
-    # Note: always() is required to evaluate the condition when dependencies use always().
+    # Note: !cancelled() is required to evaluate the condition when dependencies are skipped.
     # The build job ensures lint and test passed before this job runs.
     if: |
-      always() && !cancelled() &&
+      !cancelled() &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       needs.build.result == 'success'
@@ -373,10 +380,10 @@ jobs:
     concurrency:
       group: main-writer-${{ github.repository }}-main
       cancel-in-progress: false
-    # Note: always() is required to evaluate the condition when dependencies use always().
+    # Note: !cancelled() is required to evaluate the condition when dependencies are skipped.
     # The build job ensures lint and test passed before this job runs.
     if: |
-      always() && !cancelled() &&
+      !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
       needs.build.result == 'success'
     runs-on: ubuntu-latest
@@ -414,10 +421,15 @@ jobs:
 
       - name: Version and commit
         id: version
+        # RELEASE_DESCRIPTION is a free-form workflow_dispatch input, so it is
+        # passed through the environment instead of being interpolated into the
+        # shell command.
+        env:
+          RELEASE_DESCRIPTION: ${{ github.event.inputs.description }}
         run: |
           node scripts/version-and-commit.mjs \
             --bump-type "${{ github.event.inputs.bump_type }}" \
-            --description "${{ github.event.inputs.description }}"
+            --description "$RELEASE_DESCRIPTION"
 
       - name: Build release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'

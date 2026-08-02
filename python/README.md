@@ -63,11 +63,13 @@ async def main():
         # Perform automation tasks
         await ctx["commander"].click_button(selector="button.submit")
 
-    commander.page_trigger({
-        "name": "example-trigger",
-        "condition": make_url_condition("*example.com*"),
-        "action": example_action,
-    })
+    commander.page_trigger(
+        {
+            "name": "example-trigger",
+            "condition": make_url_condition("*example.com*"),
+            "action": example_action,
+        }
+    )
 
     # 4. Navigate - action auto-starts when page is ready
     await commander.goto(url="https://example.com")
@@ -369,8 +371,11 @@ await commander.page.emulate_media(color_scheme="dark")
 await commander.page.keyboard.press("Escape")
 
 # Example: Dialog handling (issue #38)
+
+
 async def handle_dialog(dialog):
     await dialog.dismiss()
+
 
 commander.page.on("dialog", handle_dialog)
 ```

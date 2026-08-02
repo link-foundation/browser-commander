@@ -393,4 +393,35 @@ mod tests {
         fs::remove_dir_all(directory)?;
         Ok(())
     }
+
+    #[test]
+    fn in_process_credential_cache_expires_after_ttl() -> Result<()> {
+        let directory = std::env::temp_dir().join(format!(
+            "browser-commander-memory-ttl-test-{}",
+            std::process::id()
+        ));
+        let cache = NormalizedCookieCache {
+            enabled: false,
+            directory,
+            ttl_seconds: 0.0,
+        };
+        let calls = std::sync::atomic::AtomicUsize::new(0);
+        let create = || {
+            let call = calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+            Ok(vec![call as u8; 16])
+        };
+
+        clear_browser_cookie_memory_cache();
+        assert_eq!(
+            get_cached_credential(&cache, "chrome:linux:ttl-test", false, Map::new(), create)?[0],
+            1
+        );
+        thread::sleep(Duration::from_millis(5));
+        assert_eq!(
+            get_cached_credential(&cache, "chrome:linux:ttl-test", false, Map::new(), create)?[0],
+            2
+        );
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 2);
+        Ok(())
+    }
 }

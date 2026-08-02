@@ -31,6 +31,7 @@ import {
   readBrowserCookies,
   readBrowserCookiesWithDependencies,
 } from '../../../src/browser/browser-cookies.js';
+import { getCachedCredential } from '../../../src/browser/browser-cookie-cache.js';
 import {
   listBrowserProfiles as publicListBrowserProfiles,
   readBrowserCookies as publicReadBrowserCookies,
@@ -429,6 +430,27 @@ describe('installed browser cookie import', () => {
     );
     assert.ok(cached.savedAt < Date.now() / 1000 + 1);
     assert.ok(cached.savedAt > Date.now() / 1000 - 60);
+  });
+
+  it('expires the in-process credential cache after its TTL', async () => {
+    let currentTime = 1_700_000_000_000;
+    let credentialReads = 0;
+    const options = {
+      cache: { enabled: false, ttlSeconds: 60 },
+      identity: 'chrome:linux:ttl-test',
+      refresh: false,
+      metadata: {},
+      now: () => currentTime,
+      create: async () => {
+        credentialReads += 1;
+        return Buffer.alloc(16, credentialReads);
+      },
+    };
+
+    assert.equal((await getCachedCredential(options))[0], 1);
+    currentTime += 61_000;
+    assert.equal((await getCachedCredential(options))[0], 2);
+    assert.equal(credentialReads, 2);
   });
 
   it('decrypts Windows AES-GCM data and rejects app-bound v20 data', () => {

@@ -34,6 +34,10 @@ from browser_commander.browser.browser_cookies import (
     read_browser_cookies,
     read_browser_cookies_with_dependencies,
 )
+from browser_commander.browser.browser_cookie_cache import (
+    NormalizedCookieCache,
+    get_cached_credential,
+)
 
 CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600
 
@@ -334,3 +338,40 @@ def test_windows_gcm_and_app_bound_boundary() -> None:
         assert "outside the browser" in str(error)
     else:
         raise AssertionError("v20 data must fail with an explicit compatibility error")
+
+
+def test_in_process_credential_cache_expires_after_ttl(tmp_path: Path) -> None:
+    current_time = 1_700_000_000.0
+    credential_reads = 0
+
+    def now() -> float:
+        return current_time
+
+    def create() -> bytes:
+        nonlocal credential_reads
+        credential_reads += 1
+        return bytes([credential_reads]) * 16
+
+    cache = NormalizedCookieCache(
+        enabled=False,
+        directory=tmp_path,
+        ttl_seconds=60,
+    )
+    assert get_cached_credential(
+        cache,
+        "chrome:linux:ttl-test",
+        create,
+        refresh=False,
+        metadata={},
+        now=now,
+    )[0] == 1
+    current_time += 61
+    assert get_cached_credential(
+        cache,
+        "chrome:linux:ttl-test",
+        create,
+        refresh=False,
+        metadata={},
+        now=now,
+    )[0] == 2
+    assert credential_reads == 2

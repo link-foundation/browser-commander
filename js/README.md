@@ -138,8 +138,41 @@ const connection = await launchAndConnectRealBrowser({
 await connection.browser.close();
 ```
 
-Cookie seeding copies only cookies you explicitly provide; the helper does not
-read, decrypt, or expose cookies from a browser's default profile.
+Cookie seeding copies only cookies you explicitly provide. To seed a dedicated
+profile from one of your installed browser profiles, use the explicit local
+cookie-import helper:
+
+```javascript
+import {
+  launchAndConnectRealBrowser,
+  listBrowserProfiles,
+  readBrowserCookies,
+} from 'browser-commander';
+
+console.log(await listBrowserProfiles({ browser: 'chrome' }));
+
+const cookies = await readBrowserCookies({
+  browser: 'chrome', // chrome, edge, brave, chromium, or firefox
+  profile: 'Default',
+  domainFilter: 'example.com',
+  cache: { ttlMinutes: 60 },
+});
+
+const connection = await launchAndConnectRealBrowser({
+  engine: 'playwright',
+  channel: 'chrome',
+  userDataDir: '/tmp/my-dedicated-profile',
+  seedCookies: cookies,
+});
+```
+
+The import stays on the local machine and runs only when called. It never sends
+cookie data anywhere. Decrypted result and derived-key cache files are stored
+under `~/.browser-commander/cookie-cache/` with owner-only permissions. The
+default 60-minute TTL and a cross-process lock ensure that concurrent or repeated
+scripts touch Keychain, libsecret/KWallet, or DPAPI at most once per TTL window.
+Set `refresh: true` to force a new read, customize `cache.dir`/`ttlMinutes`, or
+set `cache: false` to opt out of disk caching.
 
 Reuse a saved authenticated session by passing Playwright-compatible storage
 state as a JSON file path or object. Cookies and localStorage are restored for
@@ -369,6 +402,48 @@ a managed directory under `~/.browser-commander/real-browser/`, rejects known
 default browser-profile paths, protects its remote-debugging arguments, and
 returns the spawned `browserProcess`, resolved `cdpEndpoint`, executable path,
 and profile path alongside `{ browser, page }`.
+
+### listBrowserProfiles(options)
+
+Discover cookie-bearing profiles for Chrome, Edge, Brave, Chromium, and Firefox.
+Pass an optional `browser` to narrow discovery. Each result contains
+`{ browser, name, displayName, path, isDefault }`.
+
+### readBrowserCookies(options)
+
+Read cookies from an installed browser profile and return the exact
+`{ name, value, domain, path, expires, httpOnly, secure, sameSite }` shape used by
+Playwright and Puppeteer:
+
+```javascript
+const cookies = await readBrowserCookies({
+  browser: 'firefox',
+  profile: 'default-release', // optional; the default profile is selected first
+  domainFilter: 'example.com', // optional substring match
+  cache: { dir: './private-cookie-cache', ttlMinutes: 30 },
+  refresh: false,
+});
+```
+
+Platform support:
+
+| Browser family                | macOS                                | Linux                                                                       | Windows                                       |
+| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------- |
+| Chrome, Edge, Brave, Chromium | Keychain + AES-128-CBC (`v10`/`v11`) | libsecret/KWallet + AES-128-CBC (`v11`), or the Chromium `v10` fallback key | DPAPI-protected AES-256-GCM key (`v10`/`v11`) |
+| Firefox                       | `cookies.sqlite`                     | `cookies.sqlite`                                                            | `cookies.sqlite`                              |
+
+Firefox cookie values are stored directly in its local cookie database. Chromium
+database version 24 domain hashes and Chrome's 1601-based timestamps are handled
+automatically. Current Windows Chromium can use app-bound `v20` encryption,
+which intentionally requires the browser's privileged elevation service and
+cannot be decrypted by an ordinary external process. The helper reports that
+boundary instead of bypassing it; use a browser-supported export or an existing
+Browser Commander storage-state file for those cookies. Set
+`ignoreDecryptionErrors: true` only when returning the remaining decryptable
+cookies is acceptable.
+
+Treat imported cookies like passwords: keep cache directories private, use a
+short TTL, never commit them, and seed only a dedicated automation profile.
 
 ### saveStorageState(page, filePath)
 

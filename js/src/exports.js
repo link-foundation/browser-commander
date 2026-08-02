@@ -43,6 +43,10 @@ export {
 
 // Re-export browser management
 export { connectBrowser } from './browser/connector.js';
+export {
+  listBrowserProfiles,
+  readBrowserCookies,
+} from './browser/browser-cookies.js';
 export { launchAndConnectRealBrowser } from './browser/real-browser.js';
 export { launchBrowser } from './browser/launcher.js';
 export { saveStorageState } from './browser/storage-state.js';

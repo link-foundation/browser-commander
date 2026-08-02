@@ -38,7 +38,7 @@ export function normalizeCookieCache(cache, homeDir, ttlMinutes) {
     dir: path.resolve(
       cache?.dir ?? path.join(homeDir, '.browser-commander', 'cookie-cache')
     ),
-    ttlMilliseconds: selectedTtl * 60_000,
+    ttlSeconds: selectedTtl * 60,
   };
 }
 
@@ -47,11 +47,11 @@ async function ensureCacheDirectory(cacheDir) {
   await chmod(cacheDir, 0o700).catch(() => {});
 }
 
-async function readFreshJson(filePath, ttlMilliseconds, now) {
+async function readFreshJson(filePath, ttlSeconds, now) {
   try {
     const value = JSON.parse(await readFile(filePath, 'utf8'));
-    const age = now() - value.savedAt;
-    return age >= 0 && age <= ttlMilliseconds ? value : null;
+    const age = now() / 1000 - value.savedAt;
+    return age >= 0 && age <= ttlSeconds ? value : null;
   } catch {
     return null;
   }
@@ -90,7 +90,7 @@ export async function readCookieResultCache({
   }
   const cached = await readFreshJson(
     cachePath(cache.dir, 'cookies', identity),
-    cache.ttlMilliseconds,
+    cache.ttlSeconds,
     now
   );
   return cached?.kind === 'cookies' && Array.isArray(cached.cookies)
@@ -111,7 +111,7 @@ export async function writeCookieResultCache({
   await writeOwnerOnlyJson(cachePath(cache.dir, 'cookies', identity), {
     version: 1,
     kind: 'cookies',
-    savedAt: now(),
+    savedAt: now() / 1000,
     cookies,
   });
 }
@@ -142,7 +142,7 @@ async function acquireCredentialLock(lockPath, cachedPath, options) {
       }
       const cached = await readFreshJson(
         cachedPath,
-        options.ttlMilliseconds,
+        options.ttlSeconds,
         options.now
       );
       if (
@@ -172,7 +172,7 @@ async function loadOrCreateCredential({
   await ensureCacheDirectory(cache.dir);
   const cachedPath = cachePath(cache.dir, 'credential', identity);
   const lockPath = `${cachedPath}.lock`;
-  const initial = await readFreshJson(cachedPath, cache.ttlMilliseconds, now);
+  const initial = await readFreshJson(cachedPath, cache.ttlSeconds, now);
   if (!refresh && initial?.kind === 'derived-key') {
     return Buffer.from(initial.key, 'base64');
   }
@@ -181,18 +181,14 @@ async function loadOrCreateCredential({
     initialSavedAt: initial?.savedAt,
     now,
     refresh,
-    ttlMilliseconds: cache.ttlMilliseconds,
+    ttlSeconds: cache.ttlSeconds,
   });
   if (acquired.cached) {
     return Buffer.from(acquired.cached.key, 'base64');
   }
 
   try {
-    const afterLock = await readFreshJson(
-      cachedPath,
-      cache.ttlMilliseconds,
-      now
-    );
+    const afterLock = await readFreshJson(cachedPath, cache.ttlSeconds, now);
     if (
       afterLock?.kind === 'derived-key' &&
       (!refresh || afterLock.savedAt !== initial?.savedAt)
@@ -203,7 +199,7 @@ async function loadOrCreateCredential({
     await writeOwnerOnlyJson(cachedPath, {
       version: 1,
       kind: 'derived-key',
-      savedAt: now(),
+      savedAt: now() / 1000,
       key: key.toString('base64'),
       ...metadata,
     });

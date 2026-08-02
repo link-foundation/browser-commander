@@ -1,4 +1,5 @@
 import assert from 'node:assert';
+import { execFile as execFileCallback } from 'node:child_process';
 import {
   createCipheriv,
   createHash,
@@ -17,6 +18,8 @@ import {
 } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { afterEach, describe, it } from 'node:test';
 
 import Database from 'better-sqlite3';
@@ -34,6 +37,10 @@ import {
 } from '../../../src/index.js';
 
 const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600;
+const execFile = promisify(execFileCallback);
+const credentialWorker = fileURLToPath(
+  new URL('../../fixtures/browser-cookie-cache-worker.mjs', import.meta.url)
+);
 
 function chromeExpires(unixSeconds) {
   return (unixSeconds + CHROME_EPOCH_OFFSET_SECONDS) * 1_000_000;
@@ -391,6 +398,37 @@ describe('installed browser cookie import', () => {
       pbkdf2Sync(password, 'saltysalt', 1, 16, 'sha1').toString('base64')
     );
     assert.equal(JSON.stringify(cached).includes(password), false);
+  });
+
+  it('coordinates one credential read across separate processes', async () => {
+    temporaryDirectory = await mkdtemp(
+      path.join(os.tmpdir(), 'browser-commander-cookie-process-cache-')
+    );
+    const cacheDir = path.join(temporaryDirectory, 'cache');
+    const credentialReads = path.join(temporaryDirectory, 'credential-reads');
+
+    await Promise.all(
+      Array.from({ length: 3 }, () =>
+        execFile(process.execPath, [
+          credentialWorker,
+          cacheDir,
+          credentialReads,
+        ])
+      )
+    );
+
+    const readers = (await readFile(credentialReads, 'utf8'))
+      .trim()
+      .split(/\r?\n/u);
+    assert.equal(readers.length, 1);
+    const credentialFile = (await readdir(cacheDir)).find((name) =>
+      name.startsWith('credential-')
+    );
+    const cached = JSON.parse(
+      await readFile(path.join(cacheDir, credentialFile), 'utf8')
+    );
+    assert.ok(cached.savedAt < Date.now() / 1000 + 1);
+    assert.ok(cached.savedAt > Date.now() / 1000 - 60);
   });
 
   it('decrypts Windows AES-GCM data and rejects app-bound v20 data', () => {

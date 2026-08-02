@@ -70,4 +70,104 @@ jobs:
       console.error = originalError;
     }
   });
+
+  it('rejects untrusted expressions interpolated into run bodies', () => {
+    const workflow = `name: Test
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        type: choice
+        options:
+          - patch
+      description:
+        type: string
+env:
+  GIT_CONFIG_KEY_0: init.defaultBranch
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: \${{ github.workflow }}-\${{ github.ref }}-release
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - run: echo "\${{ github.base_ref }}"
+      - run: bump "\${{ github.event.inputs.bump_type }}" "\${{ github.event.inputs.description }}"
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          title: 'release \${{ github.event.inputs.description }}'
+`;
+    const originalError = console.error;
+    console.error = () => {};
+
+    try {
+      withWorkflow(workflow, (filePath) => {
+        // One github.base_ref interpolation, one free-form input inside a run
+        // body (bump_type is a choice input, and the create-pull-request title
+        // is an action input rather than a shell body), one outdated action.
+        assert.equal(checkWorkflow(filePath), 3);
+      });
+    } finally {
+      console.error = originalError;
+    }
+  });
+
+  it('rejects a condition that starts with the YAML tag indicator', () => {
+    const workflow = `name: Test
+on: push
+env:
+  GIT_CONFIG_KEY_0: init.defaultBranch
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: \${{ github.workflow }}-\${{ github.ref }}-test
+      cancel-in-progress: true
+    if: !cancelled() && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6
+`;
+    const originalError = console.error;
+    console.error = () => {};
+
+    try {
+      withWorkflow(workflow, (filePath) => {
+        assert.equal(checkWorkflow(filePath), 1);
+      });
+    } finally {
+      console.error = originalError;
+    }
+  });
+
+  it('rejects outdated setup-python and codecov versions', () => {
+    const workflow = `name: Test
+on: push
+env:
+  GIT_CONFIG_KEY_0: init.defaultBranch
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: \${{ github.workflow }}-\${{ github.ref }}-test
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+      - uses: codecov/codecov-action@v6
+`;
+    const originalError = console.error;
+    console.error = () => {};
+
+    try {
+      withWorkflow(workflow, (filePath) => {
+        assert.equal(checkWorkflow(filePath), 2);
+      });
+    } finally {
+      console.error = originalError;
+    }
+  });
 });

@@ -17,7 +17,7 @@ from typing import Any
 from urllib.request import urlopen
 
 from browser_commander.browser.connector import ConnectOptions, connect_browser
-from browser_commander.browser.launcher import LaunchResult
+from browser_commander.browser.launcher import LaunchResult, resolve_chrome_args
 from browser_commander.core.engine_detection import EngineType
 
 _MANAGED_ARGUMENTS = (
@@ -51,6 +51,8 @@ class RealBrowserOptions:
     remote_debugging_port: int = 0
     headless: bool = False
     args: list[str] = field(default_factory=list)
+    extra_args: list[str] = field(default_factory=list)
+    ignore_default_args: bool | list[str] = field(default_factory=list)
     startup_timeout: int = 30_000
     slow_mo: int | None = None
     timeout: int | None = None
@@ -295,6 +297,8 @@ def build_real_browser_args(
     remote_debugging_port: int = 0,
     headless: bool = False,
     args: list[str] | None = None,
+    extra_args: list[str] | None = None,
+    ignore_default_args: bool | list[str] | None = None,
 ) -> list[str]:
     """Build the protected command line for the installed browser process."""
 
@@ -306,8 +310,8 @@ def build_real_browser_args(
         msg = "remote_debugging_port must be an integer from 0 to 65535"
         raise ValueError(msg)
 
-    extra_args = args or []
-    for argument in extra_args:
+    custom_args = [*(args or []), *(extra_args or [])]
+    for argument in custom_args:
         if any(
             argument == managed or argument.startswith(f"{managed}=")
             for managed in _MANAGED_ARGUMENTS
@@ -315,14 +319,15 @@ def build_real_browser_args(
             msg = f"{argument} is managed by launch_real_browser"
             raise ValueError(msg)
 
+    default_args = resolve_chrome_args(ignore_default_args=ignore_default_args)
+
     return [
         "--remote-debugging-address=127.0.0.1",
         f"--remote-debugging-port={remote_debugging_port}",
         f"--user-data-dir={os.fspath(user_data_dir)}",
-        "--no-first-run",
-        "--no-default-browser-check",
+        *default_args,
         *(["--headless=new"] if headless else []),
-        *extra_args,
+        *custom_args,
     ]
 
 
@@ -466,6 +471,8 @@ async def launch_real_browser_with_dependencies(
         remote_debugging_port=options.remote_debugging_port,
         headless=options.headless,
         args=options.args,
+        extra_args=options.extra_args,
+        ignore_default_args=options.ignore_default_args,
     )
     browser_process = await _resolve(
         spawn_browser(executable_path, arguments, verbose=options.verbose)

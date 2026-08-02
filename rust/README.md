@@ -78,10 +78,18 @@ use browser_commander::prelude::*;
 // Launch with chromiumoxide (CDP-based)
 let options = LaunchOptions::chromiumoxide()
     .headless(true)
-    .user_data_dir("~/.browser-data");
+    .user_data_dir("~/.browser-data")
+    .with_extra_args(vec!["--lang=en-US".to_string()])
+    .ignore_default_args(vec!["--disable-infobars".to_string()]);
 
 let result = launch_browser(options).await?;
 ```
+
+Browser Commander applies the documented
+[automation-friendly defaults](../docs/feature-parity.md#automation-friendly-launch-defaults),
+including `--password-store=basic` to avoid an extra OS credential dialog.
+`ignore_all_default_args()` omits every optional Browser Commander and engine
+default; `with_args()` remains a compatible append-only builder.
 
 ### Playwright and Puppeteer
 
@@ -160,6 +168,8 @@ Exactly one endpoint is required. When starting Chrome 136 or newer yourself,
 pass a non-default `--user-data-dir` together with the remote-debugging flag;
 Chrome intentionally disables remote debugging for its default data directory.
 Cookies can be supplied explicitly with `ConnectOptions::seed_cookies()`.
+Because connection is attach-only, it cannot retrofit launch flags. Start the
+external process with the documented defaults or use `launch_real_browser()`.
 
 ### Installed browser cookies
 
@@ -226,6 +236,8 @@ let result = launch_real_browser(
     RealBrowserOptions::playwright()
         .channel("chrome")
         .user_data_dir("/tmp/browser-commander-profile")
+        .with_extra_args(vec!["--lang=en-US".to_string()])
+        .ignore_default_args(vec!["--disable-infobars".to_string()])
         .seed_cookies(vec![json!({
             "name": "session",
             "value": "saved",
@@ -243,6 +255,8 @@ profiles and custom arguments that override the loopback address, debugging
 port, or profile are rejected. `RealBrowserLaunchResult` owns a
 `browser_process` handle and terminates the spawned browser when dropped.
 `launch_and_connect_real_browser()` is an alias.
+The remote-debugging address, port, and profile remain managed; headless mode
+is opt-in and uses `--headless=new`.
 
 ### Navigation
 

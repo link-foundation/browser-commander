@@ -13,6 +13,7 @@ pub const CHROME_ARGS: &[&str] = &[
     "--disable-session-crashed-bubble",
     "--hide-crash-restore-bubble",
     "--disable-infobars",
+    "--password-store=basic",
     "--no-first-run",
     "--no-default-browser-check",
     "--disable-crash-restore",
@@ -69,6 +70,7 @@ mod tests {
     #[test]
     fn chrome_args_contains_expected_arguments() {
         assert!(CHROME_ARGS.contains(&"--disable-infobars"));
+        assert!(CHROME_ARGS.contains(&"--password-store=basic"));
         assert!(CHROME_ARGS.contains(&"--no-first-run"));
         assert!(CHROME_ARGS.contains(&"--no-default-browser-check"));
     }

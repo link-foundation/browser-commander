@@ -5,6 +5,7 @@ export const CHROME_ARGS = [
   '--disable-session-crashed-bubble',
   '--hide-crash-restore-bubble',
   '--disable-infobars',
+  '--password-store=basic',
   '--no-first-run',
   '--no-default-browser-check',
   '--disable-crash-restore',

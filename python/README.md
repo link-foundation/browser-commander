@@ -145,10 +145,17 @@ options = LaunchOptions(
     slow_mo=150,  # Slow down operations (ms)
     verbose=False,  # Enable debug logging
     args=["--no-sandbox"],  # Custom Chrome args
+    extra_args=["--lang=en-US"],  # Appended after legacy args
+    ignore_default_args=["--disable-infobars"],  # Per-default opt-out
 )
 result = await launch_browser(options)
 browser, page = result.browser, result.page
 ```
+
+Both launch APIs apply the documented
+[automation-friendly defaults](../docs/feature-parity.md#automation-friendly-launch-defaults),
+including `--password-store=basic` to avoid an extra OS credential dialog.
+Set `ignore_default_args=True` to omit every optional default.
 
 ### connect_browser(options)
 
@@ -174,8 +181,11 @@ The returned page is the raw engine page/driver and can be passed directly to
 `make_browser_commander()`. For Chrome 136 and newer, start the browser with a
 non-default `--user-data-dir`; remote debugging is intentionally disabled for
 the default Chrome profile. Cookie seeding uses only values supplied by the
-caller. The installed-browser import below provides an explicit local way to
-obtain those values.
+caller and does not read the default profile. Because connection is attach-only,
+it cannot retrofit launch flags. Start the external process with the documented
+defaults and a dedicated debugging profile, or use `launch_real_browser()`.
+The installed-browser import below provides an explicit local way to obtain
+those values.
 
 ### Installed browser cookies
 
@@ -211,10 +221,10 @@ to at most one read across concurrent and repeated processes. Set `refresh=True`
 to force a new credential read, customize `dir`/`ttl_minutes`, or set
 `cache=False` to opt out.
 
-| Browser family | macOS | Linux | Windows |
-| --- | --- | --- | --- |
+| Browser family                | macOS                                | Linux                                                                       | Windows                                       |
+| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------- |
 | Chrome, Edge, Brave, Chromium | Keychain + AES-128-CBC (`v10`/`v11`) | libsecret/KWallet + AES-128-CBC (`v11`), or the Chromium `v10` fallback key | DPAPI-protected AES-256-GCM key (`v10`/`v11`) |
-| Firefox | `cookies.sqlite` | `cookies.sqlite` | `cookies.sqlite` |
+| Firefox                       | `cookies.sqlite`                     | `cookies.sqlite`                                                            | `cookies.sqlite`                              |
 
 Chromium database-version-24 domain hashes and its 1601-based timestamps are
 handled automatically. Current Windows Chromium may use app-bound `v20`
@@ -239,6 +249,8 @@ result = await launch_real_browser(
         engine="playwright",  # or "selenium"
         channel="chrome",  # chrome, msedge, brave, or chromium
         user_data_dir="/tmp/browser-commander-profile",
+        extra_args=["--lang=en-US"],
+        ignore_default_args=["--disable-infobars"],
         seed_cookies=[
             {"name": "session", "value": "saved", "url": "https://example.com"}
         ],
@@ -254,6 +266,9 @@ The helper also supports beta/dev/canary channels and an explicit
 custom arguments from overriding its loopback address, debugging port, or
 profile. The returned `browser_process` can be terminated explicitly after
 closing the browser. `launch_and_connect_real_browser()` is an alias.
+The remote-debugging address, port, and profile remain managed; headless mode
+is opt-in and uses `--headless=new`. The older `args` field remains an
+append-only compatibility alias.
 
 The `color_scheme` option emulates `prefers-color-scheme` at launch time:
 

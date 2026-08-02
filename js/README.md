@@ -103,8 +103,16 @@ const { browser, page } = await launchBrowser({
   channel: 'chrome',
   // Or: executablePath: '/usr/bin/google-chrome',
   headless: true,
+  extraArgs: ['--lang=en-US'],
+  // Per-flag escape hatch; `args` remains a compatible append-only alias.
+  ignoreDefaultArgs: ['--disable-infobars'],
 });
 ```
+
+Browser Commander applies the documented
+[automation-friendly launch defaults](../docs/feature-parity.md#automation-friendly-launch-defaults),
+including `--password-store=basic` to avoid an additional OS credential
+dialog. `ignoreDefaultArgs: true` omits every Browser Commander default.
 
 Attach to a Chrome-family browser that is already listening for CDP connections:
 
@@ -117,6 +125,10 @@ const { browser, page } = await connectBrowser({
 });
 const commander = makeBrowserCommander({ page });
 ```
+
+Attachment cannot change the existing process's launch arguments. Start it
+with a loopback remote-debugging port, a dedicated `--user-data-dir`, and the
+automation-friendly defaults above, or use `launchRealBrowser()`.
 
 `launchRealBrowser()` can find and start a genuine installed Chrome,
 Edge, Brave, or Chromium with a loopback CDP endpoint and then attach to it. It
@@ -131,6 +143,8 @@ const connection = await launchRealBrowser({
   engine: 'puppeteer',
   channel: 'chrome',
   userDataDir: '/tmp/my-automation-profile',
+  extraArgs: ['--lang=en-US'],
+  ignoreDefaultArgs: ['--disable-infobars'],
   seedCookies: [
     { name: 'session', value: 'saved', url: 'https://example.com' },
   ],
@@ -174,6 +188,8 @@ scripts touch Keychain, libsecret/KWallet, or DPAPI at most once per TTL window.
 Set `refresh: true` to force a new read, customize `cache.dir`/`ttlMinutes`, or
 set `cache: false` to opt out of disk caching.
 `launchAndConnectRealBrowser()` remains available as a descriptive alias.
+Remote-debugging, loopback, and profile arguments remain managed even when all
+optional defaults are ignored; `headless: true` adds `--headless=new`.
 
 Reuse a saved authenticated session by passing Playwright-compatible storage
 state as a JSON file path or object. Cookies and localStorage are restored for
@@ -404,6 +420,9 @@ default browser-profile paths, protects its remote-debugging arguments, and
 returns the spawned `browserProcess`, resolved `cdpEndpoint`, executable path,
 and profile path alongside `{ browser, page }`.
 `launchAndConnectRealBrowser()` is an alias with identical behavior.
+`extraArgs` appends custom switches, while `ignoreDefaultArgs` accepts a list
+of defaults to omit (or `true` to omit all optional defaults). The older
+`args` append option remains supported.
 
 ### listBrowserProfiles(options)
 

@@ -55,6 +55,41 @@ This matrix tracks the shared API surface across the maintained language impleme
 | Seed cookies after connection           | Supported             | Supported                            | Supported               |
 | Return browser and page handles         | Raw engine handles    | Shared `EngineAdapter`               | Raw engine handles      |
 
+## Automation-Friendly Launch Defaults
+
+`launchBrowser()`/`launch_browser()` and the real-browser launch helpers add
+the following Chromium-family arguments unless the caller opts out. The
+defaults are the same on Linux, macOS, and Windows and apply when launching
+Chrome, Edge, Brave, or Chromium:
+
+| Default argument                   | Why it is applied                                                                                                    |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `--password-store=basic`           | Uses the isolated profile's built-in password backend instead of opening an OS Keychain/libsecret credential dialog. |
+| `--no-first-run`                   | Skips the first-run setup flow that can cover or redirect the first page.                                            |
+| `--no-default-browser-check`       | Prevents a default-browser prompt from interrupting automation.                                                      |
+| `--disable-infobars`               | Suppresses browser information bars that can obstruct page UI.                                                       |
+| `--disable-session-crashed-bubble` | Prevents a killed automation session from offering to restore tabs.                                                  |
+| `--hide-crash-restore-bubble`      | Hides the crash-restore surface on browser variants that honor this switch.                                          |
+| `--disable-crash-restore`          | Prevents stale tabs from being restored into the isolated profile.                                                   |
+
+The real-browser helpers additionally manage
+`--remote-debugging-address=127.0.0.1`, `--remote-debugging-port=<port>`, and
+`--user-data-dir=<dedicated profile>`. These three arguments cannot be
+overridden or ignored: CDP stays on loopback, and Chrome 136+ refuses remote
+debugging on its default profile. Headless mode is opt-in and emits
+`--headless=new`.
+
+Use `extraArgs` and `ignoreDefaultArgs` in JavaScript, `extra_args` and
+`ignore_default_args` in Python, or the corresponding Rust builder methods to
+append arguments or omit individual Browser Commander defaults. Existing
+`args`/`with_args()` calls remain supported. Opting out of
+`--password-store=basic` can restore operating-system credential prompts.
+
+`connectBrowser()`/`connect_browser()` only attaches to an existing process;
+it cannot change that process's command line. Start an externally managed
+browser with the defaults above and a dedicated remote-debugging profile, or
+use the real-browser launch helper to have Browser Commander apply them.
+
 ## Compatibility Notes
 
 - Existing Rust aliases remain compatible: `chromiumoxide` and `cdp` parse as `EngineType::Chromiumoxide`; `fantoccini` and `webdriver` parse as `EngineType::Fantoccini`.

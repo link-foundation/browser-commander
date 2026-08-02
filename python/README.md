@@ -179,7 +179,7 @@ obtain those values.
 
 ### Installed browser cookies
 
-Discover profiles and read cookies in the exact Playwright/Selenium cookie
+Discover profiles and read cookies in the exact Playwright/Puppeteer cookie
 shape:
 
 ```python

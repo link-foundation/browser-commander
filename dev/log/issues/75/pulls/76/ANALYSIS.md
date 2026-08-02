@@ -183,6 +183,10 @@ and each is a self-contained change better reviewed on its own:
 - `scripts/check-file-line-limits.sh` passes.
 - secretlint passes with `.secretlintrc.json`.
 - `npm run lint`, `npm run format:check` pass.
+- `pytest tests -W error::ResourceWarning`: no `unclosed database` remains.
+- Post-fix CI at `72a637d`: all six workflows succeed, and `##[warning]` and
+  `ResourceWarning` both appear zero times across all six logs
+  (`ci-logs-after/run-3075068*.log`).
 - `npm test`: 512 pass, 6 fail — all six are `browser-cookies.test.js` cases that
   need `node:sqlite`, which the local Node 20.20.2 does not provide. CI runs
   Node 24, where the same tests pass; the failures are an artefact of the local

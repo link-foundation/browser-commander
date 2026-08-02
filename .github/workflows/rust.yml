@@ -244,6 +244,73 @@ jobs:
       - name: Run doc tests
         run: cargo test --doc --verbose
 
+  # === CODE COVERAGE ===
+  # The Python pipeline already reports coverage; without this job the Rust
+  # implementation was the only one whose coverage could regress unobserved.
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-coverage
+      cancel-in-progress: true
+    needs: [detect-changes, test]
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    # !cancelled() is required because detect-changes is skipped on
+    # workflow_dispatch; without it a skipped dependency would skip this job.
+    # See: https://github.com/actions/runner/issues/491
+    if: |
+      !cancelled() && needs.test.result == 'success' && (
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        needs.detect-changes.outputs.rs-changed == 'true' ||
+        needs.detect-changes.outputs.toml-changed == 'true'
+      )
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-coverage-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-coverage-
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate code coverage
+        run: cargo llvm-cov --all-features --lcov --output-path lcov.info
+
+      # Gate on the token rather than uploading unconditionally: without it the
+      # action fails on forks, which have no secrets. With the token present an
+      # upload error is a real failure, so fail_ci_if_error is true -- a silent
+      # upload failure is exactly the kind of false negative this pipeline is
+      # being audited for.
+      - name: Upload coverage to Codecov
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: rust/lcov.info
+          disable_search: true
+          fail_ci_if_error: true
+          flags: rust
+
+      - name: Report skipped Codecov upload
+        if: env.CODECOV_TOKEN == ''
+        run: echo "::notice::Skipping Codecov upload because CODECOV_TOKEN is not configured"
+
   # === BUILD ===
   # Build package - only runs if lint and test pass
   build:

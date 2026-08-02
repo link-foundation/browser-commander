@@ -16,9 +16,14 @@ A universal browser automation library with a unified API across multiple browse
 | --------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | JavaScript/TypeScript | Playwright, Puppeteer                | Uses the official Node.js packages directly.                                                                                                                                                                                   |
 | Rust                  | Chromiumoxide, Playwright, Puppeteer | Chromiumoxide is native Rust/CDP. Playwright and Puppeteer run through a Node.js bridge to the official packages. Fantoccini remains available as an engine type for compatibility, but managed launch is not implemented yet. |
-| Python                | Playwright, Selenium                 | Python support is maintained separately from the JS/Rust parity work.                                                                                                                                                          |
+| Python                | Playwright, Selenium                 | Uses the official Python integrations and supports attaching to an existing Chrome-family browser over CDP.                                                                                                                    |
 
 See [docs/feature-parity.md](docs/feature-parity.md) for the cross-language feature matrix and [docs/case-studies/issue-51/README.md](docs/case-studies/issue-51/README.md) for the implementation notes.
+
+All three implementations can attach to a running Chrome-family browser over
+CDP. The JavaScript package also provides `launchAndConnectRealBrowser()` to
+find and start an installed Chrome, Edge, Brave, or Chromium with a safe,
+dedicated automation profile before attaching.
 
 ## Core Concept: Page State Machine
 

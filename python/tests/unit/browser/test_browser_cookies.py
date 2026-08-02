@@ -12,6 +12,7 @@ from typing import Any
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import pytest
 
 from browser_commander import (
     BrowserCookieCacheOptions,
@@ -473,3 +474,39 @@ def test_refresh_reads_credential_once_for_multi_cookie_import(tmp_path: Path) -
         ("second", "second"),
     ]
     assert credential_reads == 1
+
+
+def test_partial_result_cache_is_not_reused_for_strict_import(tmp_path: Path) -> None:
+    _create_chromium_profile(
+        tmp_path,
+        [
+            {
+                "host": ".strict.example",
+                "name": "broken",
+                "encrypted_value": b"v10invalid-cbc",
+            }
+        ],
+    )
+    cache = BrowserCookieCacheOptions(dir=tmp_path / "cache", ttl_minutes=60)
+    dependencies = {
+        "platform": "linux",
+        "home_dir": tmp_path,
+        "environment": {},
+    }
+
+    assert (
+        read_browser_cookies_with_dependencies(
+            BrowserCookieReadOptions(
+                browser="chrome",
+                cache=cache,
+                ignore_decryption_errors=True,
+            ),
+            **dependencies,
+        )
+        == []
+    )
+    with pytest.raises(RuntimeError, match="Could not decrypt cookie broken"):
+        read_browser_cookies_with_dependencies(
+            BrowserCookieReadOptions(browser="chrome", cache=cache),
+            **dependencies,
+        )

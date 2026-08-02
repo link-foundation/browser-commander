@@ -67,6 +67,40 @@ fn discovers_and_reads_installed_browser_cookie_profiles() -> anyhow::Result<()>
     Ok(())
 }
 
+#[test]
+fn partial_result_cache_is_not_reused_for_strict_import() -> anyhow::Result<()> {
+    let temporary_directory = TempDir::new("browser-cookie-strict-cache")?;
+    let profile = create_chromium_profile(temporary_directory.path(), ".strict.example")?;
+    let database = Connection::open(profile.join("Network/Cookies"))?;
+    database.execute(
+        "UPDATE cookies SET encrypted_value = ?1",
+        params![b"v10invalid-cbc".as_slice()],
+    )?;
+    drop(database);
+    let cache_dir = temporary_directory.path().join("cache");
+
+    let partial = read_browser_cookies(
+        BrowserCookieReadOptions::new("chrome")
+            .home_dir(temporary_directory.path())
+            .platform("linux")
+            .cache_dir(&cache_dir)
+            .ignore_decryption_errors(true),
+    )?;
+    assert!(partial.is_empty());
+
+    let strict = read_browser_cookies(
+        BrowserCookieReadOptions::new("chrome")
+            .home_dir(temporary_directory.path())
+            .platform("linux")
+            .cache_dir(cache_dir),
+    );
+    assert!(strict
+        .unwrap_err()
+        .to_string()
+        .contains("Could not decrypt cookie SID"));
+    Ok(())
+}
+
 fn create_chromium_profile(home: &Path, host: &str) -> anyhow::Result<PathBuf> {
     let root = home.join(".config/google-chrome");
     let profile = root.join("Default");

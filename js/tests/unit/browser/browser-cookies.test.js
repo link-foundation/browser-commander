@@ -573,4 +573,48 @@ describe('installed browser cookie import', () => {
     );
     assert.equal(credentialReads, 1);
   });
+
+  it('does not reuse a partial result cache for a strict import', async () => {
+    temporaryDirectory = await mkdtemp(
+      path.join(os.tmpdir(), 'browser-commander-cookie-strict-cache-')
+    );
+    await createChromiumProfile({
+      homeDir: temporaryDirectory,
+      rows: [
+        {
+          host: '.strict.example',
+          name: 'broken',
+          encryptedValue: Buffer.from('v10invalid-cbc'),
+        },
+      ],
+    });
+    const cache = {
+      dir: path.join(temporaryDirectory, 'cache'),
+      ttlMinutes: 60,
+    };
+    const dependencies = {
+      platform: 'linux',
+      homeDir: temporaryDirectory,
+      environment: {},
+    };
+
+    assert.deepEqual(
+      await readBrowserCookiesWithDependencies(
+        {
+          browser: 'chrome',
+          cache,
+          ignoreDecryptionErrors: true,
+        },
+        dependencies
+      ),
+      []
+    );
+    await assert.rejects(
+      readBrowserCookiesWithDependencies(
+        { browser: 'chrome', cache },
+        dependencies
+      ),
+      /Could not decrypt cookie broken/
+    );
+  });
 });

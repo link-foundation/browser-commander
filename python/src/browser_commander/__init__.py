@@ -20,6 +20,7 @@ from browser_commander.exports import (
     ActionStoppedError,
     ClickResult,
     ClickVerificationResult,
+    ConnectOptions,
     # Engine adapter
     EngineAdapter,
     EngineType,
@@ -52,6 +53,7 @@ from browser_commander.exports import (
     click_button,
     # Click interactions
     click_element,
+    connect_browser,
     count,
     create_engine_adapter,
     create_logger,
@@ -130,6 +132,7 @@ __all__ = [
     "BrowserCommander",
     "ClickResult",
     "ClickVerificationResult",
+    "ConnectOptions",
     # Engine adapter
     "EngineAdapter",
     "EngineType",
@@ -162,6 +165,7 @@ __all__ = [
     "click_button",
     # Click interactions
     "click_element",
+    "connect_browser",
     "count",
     "create_engine_adapter",
     "create_logger",

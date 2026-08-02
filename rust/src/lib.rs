@@ -50,8 +50,8 @@ pub mod utilities;
 
 // Re-export commonly used items at crate root
 pub use browser::{
-    emulate_media, launch_browser, Browser, ChromiumoxidePage, ColorScheme, EmulateMediaOptions,
-    LaunchOptions, LaunchResult, NodeBridgePage,
+    connect_browser, emulate_media, launch_browser, Browser, ChromiumoxidePage, ColorScheme,
+    ConnectOptions, EmulateMediaOptions, LaunchOptions, LaunchResult, NodeBridgePage,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
@@ -66,9 +66,10 @@ pub use core::{
 /// ```
 pub mod prelude {
     pub use crate::browser::{
-        emulate_media, goto, launch_browser, verify_navigation, wait_for_navigation,
-        wait_for_url_stabilization, Browser, ColorScheme, EmulateMediaOptions, LaunchOptions,
-        LaunchResult, NavigationOptions, NavigationResult, WaitUntil,
+        connect_browser, emulate_media, goto, launch_browser, verify_navigation,
+        wait_for_navigation, wait_for_url_stabilization, Browser, ColorScheme, ConnectOptions,
+        EmulateMediaOptions, LaunchOptions, LaunchResult, NavigationOptions, NavigationResult,
+        WaitUntil,
     };
     pub use crate::core::{
         is_navigation_error, is_timeout_error, DialogEvent, DialogManager, DialogType,

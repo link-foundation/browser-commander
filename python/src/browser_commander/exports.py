@@ -7,6 +7,7 @@ from __future__ import annotations
 
 # Re-export core utilities
 # Re-export browser management
+from browser_commander.browser.connector import ConnectOptions, connect_browser
 from browser_commander.browser.launcher import (
     LaunchOptions,
     LaunchResult,
@@ -151,6 +152,7 @@ __all__ = [
     "ActionStoppedError",
     "ClickResult",
     "ClickVerificationResult",
+    "ConnectOptions",
     "DialogManager",
     # Engine adapter
     "EngineAdapter",
@@ -184,6 +186,7 @@ __all__ = [
     "click_button",
     # Click interactions
     "click_element",
+    "connect_browser",
     "count",
     "create_engine_adapter",
     "create_logger",

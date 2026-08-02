@@ -133,6 +133,34 @@ let options = LaunchOptions::playwright()
 
 `LaunchOptions::fantoccini()` is still accepted for source compatibility, but `launch_browser()` does not yet start a managed WebDriver process.
 
+### Connect to a Running Browser over CDP
+
+`connect_browser()` attaches to an externally managed Chrome-family browser
+and returns the same `LaunchResult` page adapter as `launch_browser()`. Use
+Chromiumoxide natively, or the Playwright/Puppeteer Node.js bridges:
+
+```rust
+use browser_commander::prelude::*;
+
+let native = connect_browser(
+    ConnectOptions::chromiumoxide()
+        .cdp_endpoint("http://127.0.0.1:9222"),
+).await?;
+
+let playwright = connect_browser(
+    ConnectOptions::playwright()
+        .ws_endpoint("ws://127.0.0.1:9222/devtools/browser/<id>")
+        .node_working_dir("./js"),
+).await?;
+
+native.page.goto("https://example.com").await?;
+```
+
+Exactly one endpoint is required. When starting Chrome 136 or newer yourself,
+pass a non-default `--user-data-dir` together with the remote-debugging flag;
+Chrome intentionally disables remote debugging for its default data directory.
+Cookies can be supplied explicitly with `ConnectOptions::seed_cookies()`.
+
 ### Navigation
 
 ```rust

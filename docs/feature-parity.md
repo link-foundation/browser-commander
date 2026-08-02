@@ -17,6 +17,7 @@ This matrix tracks the shared API surface across the maintained language impleme
 | Capability                              | JavaScript Playwright | JavaScript Puppeteer | Rust Chromiumoxide | Rust Playwright bridge | Rust Puppeteer bridge |
 | --------------------------------------- | --------------------- | -------------------- | ------------------ | ---------------------- | --------------------- |
 | Launch browser                          | Supported             | Supported            | Supported          | Supported              | Supported             |
+| Connect to running browser over CDP     | Supported             | Supported            | Supported          | Bridge                 | Bridge                |
 | Persistent user data directory          | Supported             | Supported            | Supported          | Supported              | Supported             |
 | Portable cookie/localStorage state      | Supported             | Supported            | Not implemented    | Not implemented        | Not implemented       |
 | Custom Chrome args                      | Supported             | Supported            | Supported          | Supported              | Supported             |
@@ -48,3 +49,5 @@ This matrix tracks the shared API surface across the maintained language impleme
 - Existing Rust aliases remain compatible: `chromiumoxide` and `cdp` parse as `EngineType::Chromiumoxide`; `fantoccini` and `webdriver` parse as `EngineType::Fantoccini`.
 - `playwright` and `puppeteer` now parse as distinct Rust engine types instead of silently mapping to a different backend.
 - Rust Playwright/Puppeteer support requires Node.js plus the matching package in `node_working_dir` or normal Node module resolution.
+- Python exposes the same CDP attach operation as `connect_browser()` for its Playwright and Selenium engines.
+- Chrome 136 and newer require a non-default user data directory before honoring remote-debugging switches.

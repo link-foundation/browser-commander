@@ -106,6 +106,41 @@ const { browser, page } = await launchBrowser({
 });
 ```
 
+Attach to a Chrome-family browser that is already listening for CDP connections:
+
+```javascript
+import { connectBrowser, makeBrowserCommander } from 'browser-commander';
+
+const { browser, page } = await connectBrowser({
+  engine: 'playwright', // or 'puppeteer'
+  cdpEndpoint: 'http://127.0.0.1:9222',
+});
+const commander = makeBrowserCommander({ page });
+```
+
+`launchAndConnectRealBrowser()` can find and start a genuine installed Chrome,
+Edge, Brave, or Chromium with a loopback CDP endpoint and then attach to it. It
+always uses a dedicated profile; Chrome 136 and newer do not honor remote
+debugging switches for the default profile. See the
+[Chrome remote-debugging security change](https://developer.chrome.com/blog/remote-debugging-port).
+
+```javascript
+import { launchAndConnectRealBrowser } from 'browser-commander';
+
+const connection = await launchAndConnectRealBrowser({
+  engine: 'puppeteer',
+  channel: 'chrome',
+  userDataDir: '/tmp/my-automation-profile',
+  seedCookies: [
+    { name: 'session', value: 'saved', url: 'https://example.com' },
+  ],
+});
+await connection.browser.close();
+```
+
+Cookie seeding copies only cookies you explicitly provide; the helper does not
+read, decrypt, or expose cookies from a browser's default profile.
+
 Reuse a saved authenticated session by passing Playwright-compatible storage
 state as a JSON file path or object. Cookies and localStorage are restored for
 both engines:
@@ -302,6 +337,38 @@ The `args` option allows passing custom Chrome arguments, which is useful for he
 The `storageState` option accepts a Playwright-compatible JSON path or object.
 Each engine restores its cookies and origin-specific localStorage before
 navigation, including when Playwright uses a persistent context.
+
+### connectBrowser(options)
+
+Connect to an existing Chrome-family browser over an HTTP or WebSocket CDP
+endpoint. Exactly one of `cdpEndpoint` and `wsEndpoint` is required. The raw
+`browser` and `page` work with both the underlying engine API and
+`makeBrowserCommander({ page })`.
+
+```javascript
+const { browser, page } = await connectBrowser({
+  engine: 'playwright',
+  wsEndpoint: 'ws://127.0.0.1:9222/devtools/browser/<id>',
+  timeout: 30_000,
+  seedCookies: [
+    { name: 'session', value: 'saved', url: 'https://example.com' },
+  ],
+});
+```
+
+Playwright accepts `timeout` and Puppeteer accepts `protocolTimeout`.
+`storageState` can also seed Playwright-compatible cookies and localStorage.
+
+### launchAndConnectRealBrowser(options)
+
+Start an installed browser and connect through `connectBrowser()`. Use
+`channel` (`chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`,
+`msedge-beta`, `msedge-dev`, `msedge-canary`, `brave`, or `chromium`) or an
+explicit `executablePath`. The helper defaults to
+a managed directory under `~/.browser-commander/real-browser/`, rejects known
+default browser-profile paths, protects its remote-debugging arguments, and
+returns the spawned `browserProcess`, resolved `cdpEndpoint`, executable path,
+and profile path alongside `{ browser, page }`.
 
 ### saveStorageState(page, filePath)
 

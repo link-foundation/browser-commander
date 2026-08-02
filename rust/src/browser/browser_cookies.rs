@@ -463,6 +463,7 @@ pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec
         "browser": options.browser,
         "profile": profile.path,
         "domainFilter": options.domain_filter,
+        "ignoreDecryptionErrors": options.ignore_decryption_errors,
     }))?;
     if let Some(values) = read_cookie_result_cache(&cache, &identity, options.refresh) {
         return values

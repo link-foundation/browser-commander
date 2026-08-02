@@ -280,6 +280,7 @@ export async function readBrowserCookiesWithDependencies(
     browser,
     profile: profile.path,
     domainFilter: options.domainFilter ?? null,
+    ignoreDecryptionErrors: options.ignoreDecryptionErrors === true,
   });
   const now = dependencies.now ?? Date.now;
   const cachedCookies = await readCookieResultCache({

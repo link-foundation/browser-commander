@@ -327,6 +327,7 @@ def read_browser_cookies_with_dependencies(
             "browser": browser,
             "profile": str(profile.path),
             "domain_filter": options.domain_filter,
+            "ignore_decryption_errors": options.ignore_decryption_errors,
         },
         sort_keys=True,
     )

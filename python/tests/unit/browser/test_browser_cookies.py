@@ -9,10 +9,10 @@ import stat
 from pathlib import Path
 from typing import Any
 
+import pytest
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import pytest
 
 from browser_commander import (
     BrowserCookieCacheOptions,

@@ -158,6 +158,11 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
+        # The job default working-directory is the language subdirectory, and
+        # the shared script lives at the repository root. shell: bash is
+        # explicit because the Windows runners default to pwsh.
+        working-directory: .
+        shell: bash
         run: bash scripts/simulate-fresh-merge.sh
 
       - name: Setup Rust
@@ -222,6 +227,11 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
+        # The job default working-directory is the language subdirectory, and
+        # the shared script lives at the repository root. shell: bash is
+        # explicit because the Windows runners default to pwsh.
+        working-directory: .
+        shell: bash
         run: bash scripts/simulate-fresh-merge.sh
 
       - name: Setup Rust

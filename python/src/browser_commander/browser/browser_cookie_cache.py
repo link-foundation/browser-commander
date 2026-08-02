@@ -6,6 +6,7 @@ import base64
 import hashlib
 import json
 import os
+import subprocess
 import threading
 import time
 import uuid
@@ -19,6 +20,7 @@ LOCK_STALE_SECONDS = 30.0
 LOCK_WAIT_SECONDS = 30.0
 _credential_memory_cache: dict[str, tuple[bytes, float]] = {}
 _memory_lock = threading.Lock()
+_windows_principal: str | None = None
 
 
 @dataclass(frozen=True)
@@ -74,10 +76,39 @@ def _cache_path(cache: NormalizedCookieCache, kind: str, identity: str) -> Path:
     return cache.directory / f"{kind}-{_hash(identity)}.json"
 
 
+def _current_windows_principal() -> str:
+    global _windows_principal
+    if _windows_principal is None:
+        result = subprocess.run(["whoami"], check=True, capture_output=True, text=True)
+        _windows_principal = result.stdout.strip()
+    if not _windows_principal:
+        raise OSError("Could not identify the current Windows user")
+    return _windows_principal
+
+
+def _restrict_owner_only(path: Path, *, directory: bool) -> None:
+    if os.name == "nt":
+        permission = "(OI)(CI)F" if directory else "F"
+        subprocess.run(
+            [
+                "icacls",
+                str(path),
+                "/inheritance:r",
+                "/grant:r",
+                f"{_current_windows_principal()}:{permission}",
+                "/q",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return
+    path.chmod(0o700 if directory else 0o600)
+
+
 def _ensure_cache_directory(directory: Path) -> None:
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with suppress(OSError):
-        directory.chmod(0o700)
+    _restrict_owner_only(directory, directory=True)
 
 
 def _read_fresh_json(
@@ -101,8 +132,7 @@ def _write_owner_only_json(path: Path, value: dict) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         temporary_path.replace(path)
-        with suppress(OSError):
-            path.chmod(0o600)
+        _restrict_owner_only(path, directory=False)
     finally:
         with suppress(FileNotFoundError):
             temporary_path.unlink()

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sqlite3
 import stat
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -307,7 +309,20 @@ def test_reuses_owner_only_credential_cache(tmp_path: Path) -> None:
 
     assert credential_reads == 1
     credential_file = next(cache_dir.glob("credential-*.json"))
-    assert stat.S_IMODE(credential_file.stat().st_mode) == 0o600
+    if os.name == "nt":
+        acl = subprocess.run(
+            ["icacls", str(credential_file)],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        principal = subprocess.run(
+            ["whoami"], check=True, capture_output=True, text=True
+        ).stdout.strip()
+        assert principal.casefold() in acl.casefold()
+        assert "(I)" not in acl
+    else:
+        assert stat.S_IMODE(credential_file.stat().st_mode) == 0o600
     cached = json.loads(credential_file.read_text(encoding="utf-8"))
     assert cached["kind"] == "derived-key"
     assert cached["key"] != password

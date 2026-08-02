@@ -102,9 +102,45 @@ fn restrict_owner_only(path: &Path, directory: bool) -> Result<()> {
         .with_context(|| format!("Could not protect cookie cache {}", path.display()))
 }
 
-#[cfg(not(unix))]
-fn restrict_owner_only(_path: &Path, _directory: bool) -> Result<()> {
+#[cfg(windows)]
+fn restrict_owner_only(path: &Path, directory: bool) -> Result<()> {
+    use std::process::Command;
+
+    let whoami = Command::new("whoami")
+        .output()
+        .context("Could not identify the current Windows user")?;
+    if !whoami.status.success() {
+        return Err(anyhow!("Could not identify the current Windows user"));
+    }
+    let principal = String::from_utf8(whoami.stdout)
+        .context("Windows user identity was not valid UTF-8")?
+        .trim()
+        .to_owned();
+    if principal.is_empty() {
+        return Err(anyhow!("Could not identify the current Windows user"));
+    }
+    let permission = if directory { "(OI)(CI)F" } else { "F" };
+    let status = Command::new("icacls")
+        .arg(path)
+        .args(["/inheritance:r", "/grant:r"])
+        .arg(format!("{principal}:{permission}"))
+        .arg("/q")
+        .status()
+        .with_context(|| format!("Could not protect cookie cache {}", path.display()))?;
+    if !status.success() {
+        return Err(anyhow!(
+            "Could not protect cookie cache {} with a Windows ACL",
+            path.display()
+        ));
+    }
     Ok(())
+}
+
+#[cfg(all(not(unix), not(windows)))]
+fn restrict_owner_only(_path: &Path, _directory: bool) -> Result<()> {
+    Err(anyhow!(
+        "owner-only cookie caching is unsupported on this platform"
+    ))
 }
 
 fn read_fresh_json(path: &Path, ttl_seconds: f64) -> Option<Value> {
@@ -367,9 +403,9 @@ where
 mod tests {
     use super::*;
 
-    #[cfg(unix)]
     #[test]
     fn credential_cache_is_owner_only_and_reused_after_memory_reset() -> Result<()> {
+        #[cfg(unix)]
         use std::os::unix::fs::PermissionsExt;
 
         let directory = std::env::temp_dir().join(format!(
@@ -407,7 +443,19 @@ mod tests {
                     .starts_with("credential-")
             })
             .unwrap();
+        #[cfg(unix)]
         assert_eq!(cached.metadata()?.permissions().mode() & 0o777, 0o600);
+        #[cfg(windows)]
+        {
+            use std::process::Command;
+
+            let acl = Command::new("icacls").arg(cached.path()).output()?;
+            let principal = Command::new("whoami").output()?;
+            let acl = String::from_utf8(acl.stdout)?.to_lowercase();
+            let principal = String::from_utf8(principal.stdout)?.trim().to_lowercase();
+            assert!(acl.contains(&principal));
+            assert!(!acl.contains("(i)"));
+        }
         fs::remove_dir_all(directory)?;
         Ok(())
     }

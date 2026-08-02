@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { execFile as execFileCallback } from 'node:child_process';
 import {
   chmod,
   mkdir,
@@ -9,11 +10,14 @@ import {
   stat,
 } from 'node:fs/promises';
 import path from 'node:path';
+import { promisify } from 'node:util';
 
 const DEFAULT_TTL_MINUTES = 60;
 const LOCK_STALE_MILLISECONDS = 30_000;
 const LOCK_WAIT_MILLISECONDS = 30_000;
 const credentialPromises = new Map();
+const execFile = promisify(execFileCallback);
+let windowsPrincipalPromise;
 
 function hash(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -42,9 +46,39 @@ export function normalizeCookieCache(cache, homeDir, ttlMinutes) {
   };
 }
 
+function windowsPrincipal() {
+  windowsPrincipalPromise ??= execFile('whoami', [], {
+    windowsHide: true,
+  }).then(({ stdout }) => stdout.trim());
+  return windowsPrincipalPromise;
+}
+
+async function restrictOwnerOnly(targetPath, directory) {
+  if (process.platform === 'win32') {
+    const principal = await windowsPrincipal();
+    if (!principal) {
+      throw new Error('Could not identify the current Windows user');
+    }
+    const permission = directory ? '(OI)(CI)F' : 'F';
+    await execFile(
+      'icacls',
+      [
+        targetPath,
+        '/inheritance:r',
+        '/grant:r',
+        `${principal}:${permission}`,
+        '/q',
+      ],
+      { windowsHide: true }
+    );
+    return;
+  }
+  await chmod(targetPath, directory ? 0o700 : 0o600);
+}
+
 async function ensureCacheDirectory(cacheDir) {
   await mkdir(cacheDir, { recursive: true, mode: 0o700 });
-  await chmod(cacheDir, 0o700).catch(() => {});
+  await restrictOwnerOnly(cacheDir, true);
 }
 
 async function readFreshJson(filePath, ttlSeconds, now) {
@@ -72,7 +106,7 @@ async function writeOwnerOnlyJson(filePath, value) {
     await rm(temporaryPath, { force: true });
     throw error;
   }
-  await chmod(filePath, 0o600).catch(() => {});
+  await restrictOwnerOnly(filePath, false);
 }
 
 function cachePath(cacheDir, kind, identity) {

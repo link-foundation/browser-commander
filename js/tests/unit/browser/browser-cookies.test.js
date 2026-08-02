@@ -392,7 +392,16 @@ describe('installed browser cookie import', () => {
     );
     assert.ok(credentialFile);
     const credentialPath = path.join(cacheDir, credentialFile);
-    assert.equal((await stat(credentialPath)).mode & 0o777, 0o600);
+    if (process.platform === 'win32') {
+      const [{ stdout: acl }, { stdout: principal }] = await Promise.all([
+        execFile('icacls', [credentialPath]),
+        execFile('whoami'),
+      ]);
+      assert.ok(acl.toLowerCase().includes(principal.trim().toLowerCase()));
+      assert.equal(acl.includes('(I)'), false);
+    } else {
+      assert.equal((await stat(credentialPath)).mode & 0o777, 0o600);
+    }
     const cached = JSON.parse(await readFile(credentialPath, 'utf8'));
     assert.equal(cached.kind, 'derived-key');
     assert.equal(

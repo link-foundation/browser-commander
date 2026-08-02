@@ -75,7 +75,9 @@ service and are intentionally reported as unsupported for ordinary external
 processes. All three APIs can skip those individual values when partial import
 is acceptable. The shared derived-key cache uses one schema and lock identity,
 so JavaScript, Rust, and Python processes do not independently prompt within a
-TTL window.
+TTL window. Cache directories/files use `0700`/`0600` modes on POSIX; on
+Windows they remove inherited ACL entries and grant access only to the current
+user.
 
 ## Automation-Friendly Launch Defaults
 

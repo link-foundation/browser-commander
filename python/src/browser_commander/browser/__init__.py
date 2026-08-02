@@ -22,6 +22,12 @@ from browser_commander.browser.navigation import (
     wait_for_url_stabilization,
 )
 from browser_commander.browser.pdf import pdf
+from browser_commander.browser.real_browser import (
+    RealBrowserOptions,
+    RealBrowserResult,
+    launch_and_connect_real_browser,
+    launch_real_browser,
+)
 
 __all__ = [
     "ConnectOptions",
@@ -29,12 +35,16 @@ __all__ = [
     "LaunchOptions",
     "LaunchResult",
     "NavigationVerificationResult",
+    "RealBrowserOptions",
+    "RealBrowserResult",
     "WaitAfterActionResult",
     "connect_browser",
     "default_navigation_verification",
     "emulate_media",
     "goto",
+    "launch_and_connect_real_browser",
     "launch_browser",
+    "launch_real_browser",
     # PDF generation
     "pdf",
     "verify_navigation",

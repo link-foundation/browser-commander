@@ -161,6 +161,38 @@ pass a non-default `--user-data-dir` together with the remote-debugging flag;
 Chrome intentionally disables remote debugging for its default data directory.
 Cookies can be supplied explicitly with `ConnectOptions::seed_cookies()`.
 
+### Launch and Connect to an Installed Browser
+
+`launch_real_browser()` discovers and starts genuine installed Chrome, Edge,
+Brave, or Chromium with a dedicated profile, waits for its loopback CDP
+endpoint, and attaches with Chromiumoxide or the Playwright/Puppeteer bridges:
+
+```rust
+use browser_commander::prelude::*;
+use serde_json::json;
+
+let result = launch_real_browser(
+    RealBrowserOptions::playwright()
+        .channel("chrome")
+        .user_data_dir("/tmp/browser-commander-profile")
+        .seed_cookies(vec![json!({
+            "name": "session",
+            "value": "saved",
+            "url": "https://example.com"
+        })])
+        .node_working_dir("./js"),
+).await?;
+
+result.page.goto("https://example.com").await?;
+println!("CDP endpoint: {}", result.cdp_endpoint);
+```
+
+An explicit `executable_path` can replace channel discovery. Known default
+profiles and custom arguments that override the loopback address, debugging
+port, or profile are rejected. `RealBrowserLaunchResult` owns a
+`browser_process` handle and terminates the spawned browser when dropped.
+`launch_and_connect_real_browser()` is an alias.
+
 ### Navigation
 
 ```rust

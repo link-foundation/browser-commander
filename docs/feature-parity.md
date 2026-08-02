@@ -44,6 +44,17 @@ This matrix tracks the shared API surface across the maintained language impleme
 | Rust API docs           | `cd rust && cargo doc --no-deps --all-features` | Built by `.github/workflows/docs.yml`    |
 | Combined Pages artifact | Generated from both outputs                     | Uploaded on PRs and deployed from `main` |
 
+## Real-Browser Lifecycle Parity
+
+| Capability                              | JavaScript            | Rust                                 | Python                  |
+| --------------------------------------- | --------------------- | ------------------------------------ | ----------------------- |
+| Attach to an existing CDP endpoint      | Playwright, Puppeteer | Chromiumoxide, Playwright, Puppeteer | Playwright, Selenium    |
+| Discover an installed Chrome-family app | Linux, macOS, Windows | Linux, macOS, Windows                | Linux, macOS, Windows   |
+| Launch with a dedicated profile         | `launchRealBrowser()` | `launch_real_browser()`              | `launch_real_browser()` |
+| Loopback-only CDP readiness probe       | Supported             | Supported                            | Supported               |
+| Seed cookies after connection           | Supported             | Supported                            | Supported               |
+| Return browser and page handles         | Raw engine handles    | Shared `EngineAdapter`               | Raw engine handles      |
+
 ## Compatibility Notes
 
 - Existing Rust aliases remain compatible: `chromiumoxide` and `cdp` parse as `EngineType::Chromiumoxide`; `fantoccini` and `webdriver` parse as `EngineType::Fantoccini`.

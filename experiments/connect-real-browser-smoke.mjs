@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  launchAndConnectRealBrowser,
+  launchRealBrowser,
   makeBrowserCommander,
 } from "../js/src/index.js";
 
@@ -37,7 +37,7 @@ async function waitForExit(browserProcess) {
 
 try {
   for (const engine of ["playwright", "puppeteer"]) {
-    const connection = await launchAndConnectRealBrowser({
+    const connection = await launchRealBrowser({
       engine,
       executablePath: browserExecutable,
       userDataDir: path.join(temporaryDirectory, engine),

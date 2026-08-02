@@ -4,8 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use aes::Aes128;
 use browser_commander::{
-    list_browser_profiles, read_browser_cookies, BrowserCookieReadOptions,
-    BrowserProfileOptions,
+    list_browser_profiles, read_browser_cookies, BrowserCookieReadOptions, BrowserProfileOptions,
 };
 use cbc::cipher::{block_padding::Pkcs7, BlockEncryptMut, KeyIvInit};
 use pbkdf2::pbkdf2_hmac;

@@ -43,10 +43,11 @@ def test_builds_protected_loopback_command() -> None:
 
 
 def test_rejects_default_profiles_and_managed_arguments(tmp_path: Any) -> None:
-    fake_home = tmp_path / "home"
+    # Keep the simulated Linux paths independent of the host running the test.
+    fake_home = "/home/tester"
     with pytest.raises(ValueError, match="dedicated user_data_dir"):
         assert_dedicated_user_data_dir(
-            fake_home / ".config" / "google-chrome",
+            "/home/tester/.config/google-chrome",
             platform="linux",
             home_dir=fake_home,
             environment={},

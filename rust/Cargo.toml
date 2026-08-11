@@ -9,13 +9,22 @@ repository = "https://github.com/link-foundation/browser-commander"
 keywords = ["browser", "automation", "testing", "e2e", "web"]
 categories = ["development-tools::testing", "web-programming"]
 
+[features]
+default = []
+# Opt-in escape hatch for consumers that need the system TLS stack. Enabling it
+# brings openssl-sys back into the tree -- that is the caller's explicit choice.
+native-tls = ["fantoccini/native-tls"]
+
 [dependencies]
 # Async runtime
 tokio = { version = "1.0", features = ["full"] }
 
 # Browser automation
 chromiumoxide = { version = "0.7", features = ["tokio-runtime"] }
-fantoccini = "0.21"
+# default-features = false drops fantoccini's `native-tls` default, which pulls
+# openssl-sys into every consumer's tree and breaks builds on images without
+# pkg-config/OpenSSL headers. rustls-tls is a pure-Rust replacement.
+fantoccini = { version = "0.21", default-features = false, features = ["rustls-tls"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

@@ -254,6 +254,51 @@ jobs:
       - name: Run doc tests
         run: cargo test --doc --verbose
 
+  # === OPENSSL-FREE BUILD ===
+  # Regression guard for issue #77: taking `fantoccini` with its default
+  # features pulled `openssl-sys` into every consumer's tree, so the crate
+  # stopped building on any image that has a Rust toolchain but no pkg-config
+  # and no OpenSSL headers. This job reproduces exactly that environment -- a
+  # stock rust:slim-bookworm with no `apt-get install` step -- and additionally
+  # asserts that `openssl-sys` is absent from the default-feature graph.
+  no-openssl:
+    name: OpenSSL-free Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-no-openssl
+      cancel-in-progress: true
+    needs: [detect-changes]
+    if: |
+      !cancelled() && (
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        needs.detect-changes.outputs.rs-changed == 'true' ||
+        needs.detect-changes.outputs.toml-changed == 'true' ||
+        needs.detect-changes.outputs.workflow-changed == 'true'
+      )
+    container:
+      image: rust:slim-bookworm
+    steps:
+      - uses: actions/checkout@v6
+
+      # `cargo tree -i` exits non-zero with "did not match any packages" when
+      # nothing depends on the spec, which is precisely the state we want. Any
+      # other outcome -- a successful lookup, i.e. openssl-sys present -- fails.
+      - name: Assert openssl-sys is absent from the default-feature graph
+        run: |
+          set -euo pipefail
+          if cargo tree --locked -i openssl-sys > openssl-tree.txt 2>&1; then
+            echo "::error::openssl-sys is back in the dependency tree:"
+            cat openssl-tree.txt
+            exit 1
+          fi
+          grep -q "did not match any packages" openssl-tree.txt
+          echo "openssl-sys is not in the default-feature dependency tree"
+
+      - name: Build with default features and no system TLS libraries
+        run: cargo build --locked --verbose
+
   # === CODE COVERAGE ===
   # The Python pipeline already reports coverage; without this job the Rust
   # implementation was the only one whose coverage could regress unobserved.

@@ -12,6 +12,17 @@ browser-commander = "0.9"
 tokio = { version = "1.0", features = ["full"] }
 ```
 
+### TLS backend
+
+WebDriver connections use `rustls` by default, so a default build pulls no
+OpenSSL and needs neither `pkg-config` nor system TLS headers. If you need the
+platform's native TLS stack instead, opt in explicitly:
+
+```toml
+[dependencies]
+browser-commander = { version = "0.9", features = ["native-tls"] }
+```
+
 ## Core Concept: Page State Machine
 
 Browser Commander manages the browser as a state machine with two states:

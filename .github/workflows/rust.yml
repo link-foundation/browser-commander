@@ -286,8 +286,10 @@ jobs:
       # nothing depends on the spec, which is precisely the state we want. Any
       # other outcome -- a successful lookup, i.e. openssl-sys present -- fails.
       - name: Assert openssl-sys is absent from the default-feature graph
+        # `set -eu` rather than `set -euo pipefail`: bash is not on PATH in this
+        # container, so GitHub falls back to `sh -e`, which has no `pipefail`.
         run: |
-          set -euo pipefail
+          set -eu
           if cargo tree --locked -i openssl-sys > openssl-tree.txt 2>&1; then
             echo "::error::openssl-sys is back in the dependency tree:"
             cat openssl-tree.txt

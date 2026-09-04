@@ -85,9 +85,17 @@ report those as failures of the library, which they are not.
   switches can still break parity; `detectAutomationControlledTriggers` is
   exported so that such a caller can be told which switch did it.
 - *CI.* The suite is opt-in (`RUN_E2E=true`) because it needs a real Chrome and
-  a display. Plan: a scheduled workflow that runs it under Xvfb, so a Chrome
-  update that reopens a gap is noticed without waiting for someone to re-run an
-  experiment by hand.
+  a display, so it cannot be part of the ordinary unit-test job.
+  `.github/workflows/parity.yml` runs it weekly under
+  `xvfb-run -a --server-args="-screen 0 1920x1080x24"`, and on any pull request
+  that touches the fingerprint, browser or parity-harness sources. Weekly
+  rather than only on push, because the thing that reopens a gap is usually not
+  a commit here: [finding 6](./README.md) was a Playwright release, and
+  Chrome's stable channel ships every few weeks regardless of this repository.
+  The job asserts that Chrome and `xvfb-run` are present before running, and
+  fails on a `# SKIP` line afterwards, because a suite that skips itself still
+  exits zero -- without those two gates a green run could mean nothing was
+  asserted.
 
 ---
 

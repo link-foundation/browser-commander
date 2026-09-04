@@ -226,4 +226,7 @@ that actually diverged.
 The finding matters beyond the one switch. This is a difference the library
 *acquired by upgrading a dependency*, invisible on a GPU-equipped laptop and
 fatal on a GPU-less runner. It is the argument for asserting parity against a
-real browser in CI rather than auditing engine switch lists by hand.
+real browser in CI rather than auditing engine switch lists by hand, and it is
+why [`.github/workflows/parity.yml`](../../../.github/workflows/parity.yml)
+runs the suite weekly on a GPU-less runner rather than only when someone
+remembers to.

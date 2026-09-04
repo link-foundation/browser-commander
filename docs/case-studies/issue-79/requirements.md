@@ -93,9 +93,11 @@ report those as failures of the library, which they are not.
   a commit here: [finding 6](./README.md) was a Playwright release, and
   Chrome's stable channel ships every few weeks regardless of this repository.
   The job asserts that Chrome and `xvfb-run` are present before running, and
-  fails on a `# SKIP` line afterwards, because a suite that skips itself still
-  exits zero -- without those two gates a green run could mean nothing was
-  asserted.
+  afterwards rejects a `# SKIP` line and a zero pass count, because a suite that
+  skips itself still exits zero -- without those gates a green run could mean
+  nothing was asserted. The reporter is pinned to TAP for the same reason: the
+  spec reporter writes the skip reason without the word `SKIP`, so the grep
+  would have missed the one case it exists to catch.
 
 ---
 

@@ -82,20 +82,31 @@ jobs:
       - name: Run parity suite under Xvfb
         # A display is only needed by the headful half, but running both halves
         # under the same server keeps the two references comparable.
+        #
+        # The reporter is pinned to TAP because the next step reads the output.
+        # Node's spec reporter marks a skipped suite with a small-minus glyph
+        # and prints the reason with no "SKIP" in it, so a grep written against
+        # TAP would pass over exactly the case it exists to catch.
         run: |
           set -o pipefail
           RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" \
-            npm run test:e2e:parity 2>&1 | tee parity.log
+            npm run test:e2e:parity -- --reporter tap 2>&1 | tee parity.log
 
-      - name: Fail on a silently skipped suite
-        # Belt and braces for the check above: a future skip condition would
-        # otherwise pass unnoticed.
+      - name: Fail on a suite that asserted nothing
+        # Belt and braces for the check above: a skip condition added later
+        # would otherwise pass unnoticed, because a skipped suite exits zero.
         run: |
           if grep -q '# SKIP' parity.log; then
             echo "::error::the parity suite skipped a case instead of asserting it"
             grep '# SKIP' parity.log
             exit 1
           fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' parity.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the parity suite reported no passing tests"
+            exit 1
+          fi
+          echo "parity suite passed $passed tests against a real Chrome"
 
       - name: Upload parity log
         # ${{ }} wrapping is required: a plain YAML scalar cannot begin with the

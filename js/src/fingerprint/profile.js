@@ -392,11 +392,18 @@ export function resolveFingerprintProfile(input = {}) {
 /**
  * How each profile field reaches the page.
  *
- * `browser` means Chrome itself produces the value, so it is consistent
- * everywhere including workers and HTTP headers. `script` means the value is a
- * JavaScript property patch installed before page scripts run, which is
- * weaker: it is consistent for the main world but is not what the network
- * stack or a fresh renderer would say.
+ * `browser` means Chrome itself produces the value, so it holds for the
+ * document, for HTTP headers and for any code that reads it, and a page cannot
+ * detect the override by comparing two ways of asking. `script` means the value
+ * is a JavaScript property patch installed before page scripts run, which is
+ * weaker: it holds for the main world but is not what the network stack or a
+ * fresh renderer would say.
+ *
+ * Neither kind reaches a worker in full. Measured in a dedicated worker,
+ * `userAgent`, `timezoneId` and `locale` follow the profile while `platform`,
+ * `languages` and `hardwareConcurrency` revert to the host values; see the
+ * `init-script-does-not-reach-workers` entry in `limitations.js` and
+ * `docs/case-studies/issue-79/analysis-artifacts/worker-visibility.json`.
  */
 export const FINGERPRINT_FIELD_MECHANISMS = Object.freeze({
   userAgent: 'browser',

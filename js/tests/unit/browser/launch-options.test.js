@@ -59,7 +59,12 @@ describe('browser launch options', () => {
       '--enable-automation',
       '--no-first-run',
     ]);
-    assert.deepEqual(puppeteer.ignoreDefaultArgs, ['--no-first-run']);
+    // Puppeteer passes --enable-automation by default, so automation parity
+    // has to suppress it there too.
+    assert.deepEqual(puppeteer.ignoreDefaultArgs, [
+      '--enable-automation',
+      '--no-first-run',
+    ]);
   });
 
   it('forwards channel and executablePath to Playwright', () => {

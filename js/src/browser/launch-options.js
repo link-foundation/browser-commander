@@ -1,4 +1,8 @@
 import { CHROME_ARGS } from '../core/constants.js';
+import {
+  applyAutomationParityArgs,
+  parityIgnoredDefaultArgs,
+} from '../fingerprint/automation-parity.js';
 
 function stringArray(value, name) {
   if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
@@ -60,19 +64,28 @@ export function buildPlaywrightLaunchOptions({
   channel,
   executablePath,
   ignoreDefaultArgs = [],
+  automationParity = true,
 }) {
   const normalizedIgnoreDefaultArgs =
     ignoreDefaultArgs === false ? [] : ignoreDefaultArgs;
   const engineIgnoreDefaultArgs =
     normalizedIgnoreDefaultArgs === true
       ? true
-      : [...new Set(['--enable-automation', ...normalizedIgnoreDefaultArgs])];
+      : [
+          ...new Set([
+            '--enable-automation',
+            ...(automationParity
+              ? parityIgnoredDefaultArgs('playwright', { headless })
+              : []),
+            ...normalizedIgnoreDefaultArgs,
+          ]),
+        ];
   const options = {
     headless,
     slowMo,
     chromiumSandbox: true,
     viewport: null,
-    args: chromeArgs,
+    args: automationParity ? applyAutomationParityArgs(chromeArgs) : chromeArgs,
     ignoreDefaultArgs: engineIgnoreDefaultArgs,
   };
 
@@ -90,20 +103,30 @@ export function buildPuppeteerLaunchOptions({
   channel,
   executablePath,
   ignoreDefaultArgs = [],
+  automationParity = true,
 }) {
   const normalizedIgnoreDefaultArgs =
     ignoreDefaultArgs === false ? [] : ignoreDefaultArgs;
+  const baseArgs = ['--start-maximized', ...chromeArgs];
+  const engineIgnoreDefaultArgs =
+    normalizedIgnoreDefaultArgs === true
+      ? true
+      : [
+          ...new Set([
+            ...(automationParity
+              ? parityIgnoredDefaultArgs('puppeteer', { headless })
+              : []),
+            ...normalizedIgnoreDefaultArgs,
+          ]),
+        ];
   const options = {
     headless,
     defaultViewport: null,
-    args: ['--start-maximized', ...chromeArgs],
+    args: automationParity ? applyAutomationParityArgs(baseArgs) : baseArgs,
     userDataDir,
   };
-  if (
-    normalizedIgnoreDefaultArgs === true ||
-    normalizedIgnoreDefaultArgs.length > 0
-  ) {
-    options.ignoreDefaultArgs = normalizedIgnoreDefaultArgs;
+  if (engineIgnoreDefaultArgs === true || engineIgnoreDefaultArgs.length > 0) {
+    options.ignoreDefaultArgs = engineIgnoreDefaultArgs;
   }
   return setBrowserSelectionOptions(options, { channel, executablePath });
 }

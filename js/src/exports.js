@@ -139,3 +139,36 @@ export {
   checkAndClearFlag,
   findToggleButton,
 } from './high-level/universal-logic.js';
+
+// Re-export the fingerprint subsystem: parity with a hand-started browser, and
+// full control over what a page reads about the environment.
+export {
+  AUTOMATION_CONTROLLED_OFF_ARG,
+  AUTOMATION_CONTROLLED_TRIGGERS,
+  ENGINE_PARITY_IGNORED_DEFAULT_ARGS,
+  PLAYWRIGHT_HEADLESS_POINTER_ARG,
+  applyAutomationParityArgs,
+  detectAutomationControlledTriggers,
+  disablesAutomationControlled,
+  parityIgnoredDefaultArgs,
+} from './fingerprint/automation-parity.js';
+export {
+  FINGERPRINT_FIELD_MECHANISMS,
+  resolveFingerprintProfile,
+} from './fingerprint/profile.js';
+export { deriveUserAgentData } from './fingerprint/derive.js';
+export { buildCdpEmulationCommands } from './fingerprint/cdp-overrides.js';
+export {
+  buildFingerprintInitScript,
+  buildInitScriptConfig,
+} from './fingerprint/init-script.js';
+export { applyFingerprint, createCdpSession } from './fingerprint/apply.js';
+export {
+  FINGERPRINT_PRESET_NAMES,
+  createFingerprintPreset,
+} from './fingerprint/presets.js';
+export {
+  FINGERPRINT_LIMITATIONS,
+  findFingerprintLimitation,
+  relevantFingerprintLimitations,
+} from './fingerprint/limitations.js';

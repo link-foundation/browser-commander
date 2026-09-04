@@ -168,10 +168,14 @@ larger than the screen, and unknown fields.
 > "It should be heavily unit tested. You are encouraged to make experiments
 > locally with real browsers."
 
-**Status: done for JavaScript.**
+**Status: done for all three languages.**
 
-The suite went from 526 to 641 tests. The fingerprint subsystem has eight unit
-files (1,719 lines of tests against 1,796 lines of source) plus the e2e suite.
+The JavaScript suite went from 526 to 644 tests, 118 of them the fingerprint
+subsystem's eight unit files plus the e2e suite. The ports carry the same
+coverage rather than a summary of it: 130 fingerprint tests in Python and 105 in
+Rust, translated one for one from the JavaScript files, so a behaviour that
+diverges in one language fails a test there instead of surfacing as a
+fingerprint difference months later.
 
 Two choices are worth recording because they change what the tests are worth:
 
@@ -193,12 +197,15 @@ constraint that matters -- every `Emulation.*` command before `Page.enable`,
 because an override applied after the first document has already lost -- and
 that both engines' four different session-opening paths are handled.
 
+*Every shared asset is asserted from all three sides.* The init payload and the
+limitations catalogue are copied into the Python and Rust packages, so each
+language has a test that reads `js/src/fingerprint/` and compares, on top of the
+`scripts/check-shared-fingerprint-assets.sh` job. A copy that silently stops
+matching its original is exactly how the prior art rotted.
+
 Eleven experiment scripts under `experiments/fingerprint-parity/` drive real
 Chrome; their output is the `analysis-artifacts/` directory, and every claim in
 [`measurements.md`](./measurements.md) cites one.
-
-**What is left.** Unit tests for the Python and Rust ports, once those exist
-(R5).
 
 ---
 
@@ -230,13 +237,15 @@ The Playwright pointer switch was found the same way, in
 it is appended *after* the caller's arguments is why it needs
 `ignoreDefaultArgs` rather than an argument.
 
-`js/src/fingerprint/limitations.js` is the deliverable: eleven entries, each
+`js/src/fingerprint/limitations.json` is the deliverable: eleven entries, each
 with a stable id, the observable surface, a severity, whether the evidence is
 `measured` in this repository or `documented` upstream, what happens, what a
 caller can do about it, and a reference to the artifact or source file. Seven
 are marked `measured`. `relevantFingerprintLimitations(profile, options)`
 filters to the ones that apply to a given profile, because a list nobody reads
-protects nobody.
+protects nobody. It is a JSON asset rather than a JavaScript module because
+Python and Rust publish the same eleven entries and answer the same question
+about a profile (R5).
 
 Severity is about privacy, as the issue asks: `high` means the entry on its own
 identifies the automation or the physical machine; `medium` means it is a

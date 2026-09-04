@@ -102,6 +102,29 @@ async function capturePuppeteer({ server, token, extraOptions = {} }) {
   });
 }
 
+/** The shipped launcher, exactly as a caller of the library would get it. */
+async function captureLibrary({ server, token, engine, extraOptions = {} }) {
+  const { launchBrowser } = await import(
+    new URL(
+      `file://${path.resolve(process.env.BC_JS_ROOT || 'js', 'src/index.js')}`
+    ).href
+  );
+  return withTempDir(`bc-parity-lib-${engine}-`, async (userDataDir) => {
+    const { browser, page } = await launchBrowser({
+      engine,
+      headless: HEADLESS,
+      slowMo: 0,
+      executablePath: CHROME,
+      userDataDir,
+      ...extraOptions,
+    });
+    await page.goto(server.url(token), { waitUntil: 'load' });
+    const report = await server.waitForReport(token);
+    await browser.close();
+    return report;
+  });
+}
+
 /** launchRealBrowser style: plain Chrome plus a debugging port, attached over CDP. */
 async function captureCdpAttach({ server, token }) {
   const { spawn } = await import('node:child_process');
@@ -212,6 +235,21 @@ async function main() {
               ignoreDefaultArgs: ['--enable-automation'],
             },
           }),
+      ],
+      // The two above pass parity switches through `args`, which is all a
+      // caller can do by hand. That is not enough headless: Playwright appends
+      // its pointer switch after the caller's arguments, so it has to be
+      // suppressed through `ignoreDefaultArgs`, which is what the shipped
+      // launcher does. These last two scenarios measure the library itself.
+      [
+        'libraryPlaywright',
+        () =>
+          captureLibrary({ server, token: 'library-pw', engine: 'playwright' }),
+      ],
+      [
+        'libraryPuppeteer',
+        () =>
+          captureLibrary({ server, token: 'library-pp', engine: 'puppeteer' }),
       ],
     ];
 

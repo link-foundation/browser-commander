@@ -4,7 +4,7 @@ use aes::Aes128;
 use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::{anyhow, Context, Result};
-use cbc::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
+use cbc::cipher::{block_padding::Pkcs7, BlockModeDecrypt, KeyIvInit};
 use pbkdf2::pbkdf2_hmac;
 use sha1::Sha1;
 use sha2::{Digest, Sha256};
@@ -41,7 +41,7 @@ fn remove_domain_hash<'a>(plaintext: &'a [u8], host: &str, version: i64) -> Resu
 fn decrypt_cbc(encrypted: &[u8], key: &[u8]) -> Result<Vec<u8>> {
     Aes128CbcDecryptor::new_from_slices(key, &[0x20; 16])
         .context("invalid Chromium AES-CBC key")?
-        .decrypt_padded_vec_mut::<Pkcs7>(&encrypted[3..])
+        .decrypt_padded_vec::<Pkcs7>(&encrypted[3..])
         .map_err(|_| anyhow!("Chromium AES-CBC cookie padding is invalid"))
 }
 
@@ -51,8 +51,12 @@ fn decrypt_gcm(encrypted: &[u8], key: &[u8]) -> Result<Vec<u8>> {
         return Err(anyhow!("encrypted AES-GCM cookie is truncated"));
     }
     let cipher = Aes256Gcm::new_from_slice(key).context("invalid Chromium AES-GCM key")?;
+    // The length check above guarantees twelve bytes, so the conversion cannot
+    // fail; aes-gcm 0.11 deprecated the panicking `Nonce::from_slice`.
+    let nonce =
+        Nonce::try_from(&payload[..12]).map_err(|_| anyhow!("AES-GCM nonce is not 12 bytes"))?;
     cipher
-        .decrypt(Nonce::from_slice(&payload[..12]), &payload[12..])
+        .decrypt(&nonce, &payload[12..])
         .map_err(|_| anyhow!("Chromium AES-GCM cookie authentication failed"))
 }
 
@@ -119,7 +123,7 @@ mod tests {
         let nonce = [3_u8; 12];
         let ciphertext = Aes256Gcm::new_from_slice(&key)
             .unwrap()
-            .encrypt(Nonce::from_slice(&nonce), plaintext.as_slice())
+            .encrypt(&Nonce::from(nonce), plaintext.as_slice())
             .unwrap();
         let encrypted = [b"v10".as_slice(), &nonce, ciphertext.as_slice()].concat();
         assert_eq!(

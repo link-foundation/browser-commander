@@ -101,6 +101,43 @@ from browser_commander.elements.selectors import (
     with_text_selector_support,
 )
 from browser_commander.elements.visibility import count, is_enabled, is_visible
+from browser_commander.fingerprint.apply import (
+    AppliedFingerprint,
+    apply_fingerprint,
+    create_cdp_session,
+)
+from browser_commander.fingerprint.automation_parity import (
+    AUTOMATION_CONTROLLED_OFF_ARG,
+    AUTOMATION_CONTROLLED_TRIGGERS,
+    PLAYWRIGHT_HEADLESS_POINTER_ARG,
+    PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
+    apply_automation_parity_args,
+    detect_automation_controlled_triggers,
+    disables_automation_controlled,
+    parity_ignored_default_args,
+)
+from browser_commander.fingerprint.cdp_overrides import (
+    CdpCommand,
+    build_cdp_emulation_commands,
+)
+from browser_commander.fingerprint.derive import derive_user_agent_data
+from browser_commander.fingerprint.init_script import (
+    build_fingerprint_init_script,
+    build_init_script_config,
+)
+from browser_commander.fingerprint.limitations import (
+    FINGERPRINT_LIMITATIONS,
+    find_fingerprint_limitation,
+    relevant_fingerprint_limitations,
+)
+from browser_commander.fingerprint.presets import (
+    FINGERPRINT_PRESET_NAMES,
+    create_fingerprint_preset,
+)
+from browser_commander.fingerprint.profile import (
+    FINGERPRINT_FIELD_MECHANISMS,
+    resolve_fingerprint_profile,
+)
 
 # Re-export high-level universal logic
 from browser_commander.high_level.universal_logic import (
@@ -163,6 +200,29 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "BrowserCookieReadOptions",
     "BrowserProfile",
     # Core utilities
+    "AUTOMATION_CONTROLLED_OFF_ARG",
+    "AUTOMATION_CONTROLLED_TRIGGERS",
+    "PLAYWRIGHT_HEADLESS_POINTER_ARG",
+    "PLAYWRIGHT_SOFTWARE_WEBGL_ARG",
+    "apply_automation_parity_args",
+    "detect_automation_controlled_triggers",
+    "disables_automation_controlled",
+    "parity_ignored_default_args",
+    "resolve_fingerprint_profile",
+    "create_fingerprint_preset",
+    "derive_user_agent_data",
+    "CdpCommand",
+    "build_cdp_emulation_commands",
+    "build_fingerprint_init_script",
+    "build_init_script_config",
+    "AppliedFingerprint",
+    "apply_fingerprint",
+    "create_cdp_session",
+    "find_fingerprint_limitation",
+    "relevant_fingerprint_limitations",
+    "FINGERPRINT_FIELD_MECHANISMS",
+    "FINGERPRINT_LIMITATIONS",
+    "FINGERPRINT_PRESET_NAMES",
     "CHROME_ARGS",
     "TIMING",
     "ActionStoppedError",

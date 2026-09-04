@@ -6,7 +6,7 @@ use aes::Aes128;
 use browser_commander::{
     list_browser_profiles, read_browser_cookies, BrowserCookieReadOptions, BrowserProfileOptions,
 };
-use cbc::cipher::{block_padding::Pkcs7, BlockEncryptMut, KeyIvInit};
+use cbc::cipher::{block_padding::Pkcs7, BlockModeEncrypt, KeyIvInit};
 use pbkdf2::pbkdf2_hmac;
 use rusqlite::{params, Connection};
 use sha1::Sha1;
@@ -137,7 +137,7 @@ fn encrypt_linux_cookie(host: &str, value: &str) -> Vec<u8> {
     let mut plaintext = Sha256::digest(host.as_bytes()).to_vec();
     plaintext.extend_from_slice(value.as_bytes());
     let encrypted = Aes128CbcEncryptor::new(&key.into(), &[0x20; 16].into())
-        .encrypt_padded_vec_mut::<Pkcs7>(&plaintext);
+        .encrypt_padded_vec::<Pkcs7>(&plaintext);
     [b"v10".as_slice(), encrypted.as_slice()].concat()
 }
 

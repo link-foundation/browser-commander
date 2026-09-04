@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use chromiumoxide::browser::{Browser as CdpBrowser, BrowserConfig, HeadlessMode};
+use chromiumoxide::browser::{Browser as CdpBrowser, BrowserConfig};
 use futures::StreamExt;
 
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
@@ -15,6 +15,11 @@ use crate::browser::media::ColorScheme;
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::core::constants::CHROME_ARGS;
 use crate::core::engine::{EngineAdapter, EngineType};
+use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
+use crate::fingerprint::automation_parity::{
+    apply_automation_parity_args, parity_ignored_default_args,
+};
+use crate::fingerprint::profile::FingerprintProfile;
 
 /// Options for launching a browser.
 #[derive(Debug, Clone)]
@@ -56,6 +61,20 @@ pub struct LaunchOptions {
     pub node_executable: Option<PathBuf>,
     /// Working directory used to resolve Playwright/Puppeteer Node packages.
     pub node_working_dir: Option<PathBuf>,
+    /// Keep `navigator.webdriver` false and the command line free of switches a
+    /// hand-started Chrome does not carry.
+    ///
+    /// Defaults to `true`. Set to `false` to launch with the engine's own
+    /// defaults, which is what the parity tests use as a negative control.
+    pub automation_parity: bool,
+    /// The environment pages should see: user agent, time zone, locale, core
+    /// count, screen and the rest.
+    ///
+    /// Applied over CDP once the browser is up, so it only works for the
+    /// chromiumoxide engine; see
+    /// [`fingerprint::profile`](crate::fingerprint::profile) for the field list
+    /// and [`presets`](crate::fingerprint::presets) for ready-made machines.
+    pub fingerprint: Option<FingerprintProfile>,
 }
 
 impl Default for LaunchOptions {
@@ -77,6 +96,8 @@ impl Default for LaunchOptions {
             sandbox: true,
             node_executable: None,
             node_working_dir: None,
+            automation_parity: true,
+            fingerprint: None,
         }
     }
 }
@@ -214,6 +235,18 @@ impl LaunchOptions {
         self
     }
 
+    /// Turn fingerprint parity with a hand-started Chrome on or off.
+    pub fn automation_parity(mut self, automation_parity: bool) -> Self {
+        self.automation_parity = automation_parity;
+        self
+    }
+
+    /// Set the environment pages should see.
+    pub fn fingerprint(mut self, fingerprint: FingerprintProfile) -> Self {
+        self.fingerprint = Some(fingerprint);
+        self
+    }
+
     /// Get all Chrome arguments (default + custom).
     pub fn all_chrome_args(&self) -> Vec<String> {
         let mut all_args: Vec<String> = if self.ignore_all_default_args {
@@ -232,7 +265,30 @@ impl LaunchOptions {
         };
         all_args.extend(self.args.clone());
         all_args.extend(self.extra_args.clone());
+        if self.automation_parity {
+            all_args = apply_automation_parity_args(&all_args);
+        }
         all_args
+    }
+
+    /// Engine default switches to suppress so the command line matches a
+    /// hand-started Chrome.
+    ///
+    /// Merged with the caller's `ignore_default_args`, because a switch the
+    /// engine appends after the caller's arguments cannot be countered by
+    /// passing a different value for it.
+    pub fn all_ignored_default_args(&self) -> Vec<String> {
+        let mut ignored = if self.automation_parity {
+            parity_ignored_default_args(self.engine, self.headless)
+        } else {
+            Vec::new()
+        };
+        for argument in &self.ignore_default_args {
+            if !ignored.contains(argument) {
+                ignored.push(argument.clone());
+            }
+        }
+        ignored
     }
 
     /// Get the user data directory, using a default if not specified.
@@ -336,6 +392,16 @@ async fn launch_node_bridge(
 ) -> Result<LaunchResult, anyhow::Error> {
     let engine = options.engine;
     let headless = options.headless;
+    if options.fingerprint.is_some() {
+        // Failing here is the honest answer: the node bridge speaks its own
+        // command protocol rather than CDP, so a profile handed to it would be
+        // silently dropped and the page would report the real machine.
+        return Err(anyhow::anyhow!(
+            "the {engine} engine cannot apply a fingerprint profile yet; \
+             use EngineType::Chromiumoxide, or apply the profile from the \
+             JavaScript package, which drives Playwright and Puppeteer directly"
+        ));
+    }
     let adapter = NodeBridgePage::launch(options, user_data_dir.clone()).await?;
 
     Ok(LaunchResult {
@@ -352,21 +418,22 @@ async fn launch_chromiumoxide(
     options: LaunchOptions,
     user_data_dir: PathBuf,
 ) -> Result<LaunchResult, anyhow::Error> {
-    let headless_mode = if options.headless {
-        HeadlessMode::New
+    // chromiumoxide 0.9 stopped re-exporting `HeadlessMode`, so the mode is
+    // selected through the builder's own methods instead of the enum.
+    let builder = BrowserConfig::builder();
+    let builder = if options.headless {
+        builder.new_headless_mode()
     } else {
-        HeadlessMode::False
+        builder.with_head()
     };
-
-    let mut builder = BrowserConfig::builder()
+    let mut builder = builder
         .user_data_dir(&user_data_dir)
-        .headless_mode(headless_mode)
         .args(options.all_chrome_args());
 
     // Chromiumoxide only exposes an all-or-nothing switch for its own default
     // layer. Disable that layer whenever the caller requests an omission so an
     // engine-provided duplicate cannot silently re-add the selected flag.
-    if options.ignore_all_default_args || !options.ignore_default_args.is_empty() {
+    if options.ignore_all_default_args || !options.all_ignored_default_args().is_empty() {
         builder = builder.disable_default_args();
     }
 
@@ -413,6 +480,17 @@ async fn launch_chromiumoxide(
 
     let adapter = ChromiumoxidePage::new(page, browser, handler_task, user_data_dir.clone());
 
+    // The fingerprint goes on before the caller can navigate, so the first
+    // document a page loads already sees the configured environment. A failure
+    // here is fatal rather than best-effort: a half-applied profile describes a
+    // machine that does not exist, which is louder than no profile at all.
+    if let Some(ref profile) = options.fingerprint {
+        apply_fingerprint(&adapter, profile, ApplyOptions::default()).await?;
+        if options.verbose {
+            tracing::info!("Fingerprint profile applied");
+        }
+    }
+
     // Apply color scheme emulation (best-effort).
     if let Some(ref cs) = color_scheme {
         if let Err(err) = adapter.set_color_scheme(Some(cs)).await {
@@ -449,6 +527,11 @@ async fn launch_chromiumoxide(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fingerprint::automation_parity::{
+        AUTOMATION_CONTROLLED_OFF_ARG, PLAYWRIGHT_HEADLESS_POINTER_ARG,
+        PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
+    };
+    use crate::fingerprint::presets::create_default_fingerprint_preset;
 
     #[test]
     fn launch_options_default() {
@@ -461,10 +544,14 @@ mod tests {
         assert!(options.extra_args.is_empty());
         assert!(options.ignore_default_args.is_empty());
         assert!(!options.ignore_all_default_args);
+        assert!(options.automation_parity);
         assert!(options.channel.is_none());
         assert!(options.executable_path.is_none());
         assert!(options.node_executable.is_none());
         assert!(options.node_working_dir.is_none());
+        // A launch without a profile has to leave the machine as it is, so the
+        // browser reports the real hardware rather than a half-set one.
+        assert!(options.fingerprint.is_none());
     }
 
     #[test]
@@ -539,8 +626,12 @@ mod tests {
         assert!(args.contains(&"--password-store=basic".to_string()));
         assert!(!args.contains(&"--no-default-browser-check".to_string()));
         assert_eq!(
-            &args[args.len() - 2..],
-            ["--legacy-arg".to_string(), "--lang=en-US".to_string()]
+            &args[args.len() - 3..],
+            [
+                "--legacy-arg".to_string(),
+                "--lang=en-US".to_string(),
+                AUTOMATION_CONTROLLED_OFF_ARG.to_string()
+            ]
         );
     }
 
@@ -550,7 +641,13 @@ mod tests {
             .ignore_all_default_args()
             .with_extra_args(vec!["--lang=en-US".to_string()]);
 
-        assert_eq!(options.all_chrome_args(), ["--lang=en-US".to_string()]);
+        assert_eq!(
+            options.all_chrome_args(),
+            [
+                "--lang=en-US".to_string(),
+                AUTOMATION_CONTROLLED_OFF_ARG.to_string()
+            ]
+        );
     }
 
     #[test]
@@ -572,6 +669,76 @@ mod tests {
     }
 
     #[test]
+    fn all_chrome_args_disables_the_automation_controlled_feature() {
+        let args = LaunchOptions::default().all_chrome_args();
+        assert_eq!(
+            args.last().map(String::as_str),
+            Some(AUTOMATION_CONTROLLED_OFF_ARG)
+        );
+    }
+
+    #[test]
+    fn all_chrome_args_leaves_the_command_line_alone_when_parity_is_off() {
+        let args = LaunchOptions::default()
+            .automation_parity(false)
+            .all_chrome_args();
+        assert!(!args
+            .iter()
+            .any(|argument| argument == AUTOMATION_CONTROLLED_OFF_ARG));
+    }
+
+    #[test]
+    fn all_ignored_default_args_merges_parity_with_the_caller_list() {
+        let options = LaunchOptions::playwright()
+            .headless(true)
+            .ignore_default_args(vec!["--no-first-run".to_string()]);
+
+        assert_eq!(
+            options.all_ignored_default_args(),
+            [
+                "--enable-automation".to_string(),
+                PLAYWRIGHT_SOFTWARE_WEBGL_ARG.to_string(),
+                PLAYWRIGHT_HEADLESS_POINTER_ARG.to_string(),
+                "--no-first-run".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn all_ignored_default_args_does_not_repeat_a_switch_the_caller_already_listed() {
+        let options = LaunchOptions::playwright()
+            .ignore_default_args(vec!["--enable-automation".to_string()]);
+
+        assert_eq!(
+            options.all_ignored_default_args(),
+            [
+                "--enable-automation".to_string(),
+                PLAYWRIGHT_SOFTWARE_WEBGL_ARG.to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn all_ignored_default_args_keeps_only_the_caller_list_when_parity_is_off() {
+        let options = LaunchOptions::playwright()
+            .headless(true)
+            .automation_parity(false)
+            .ignore_default_args(vec!["--no-first-run".to_string()]);
+
+        assert_eq!(
+            options.all_ignored_default_args(),
+            ["--no-first-run".to_string()]
+        );
+    }
+
+    #[test]
+    fn chromiumoxide_excludes_nothing_by_default() {
+        assert!(LaunchOptions::chromiumoxide()
+            .all_ignored_default_args()
+            .is_empty());
+    }
+
+    #[test]
     fn get_user_data_dir_uses_custom() {
         let options = LaunchOptions::default().user_data_dir("/custom/path");
         assert_eq!(options.get_user_data_dir(), PathBuf::from("/custom/path"));
@@ -590,6 +757,29 @@ mod tests {
         let options = LaunchOptions::fantoccini();
         let err = launch_browser(options).await.unwrap_err();
         assert!(err.to_string().contains("fantoccini"));
+    }
+
+    #[test]
+    fn launch_options_carry_a_fingerprint_profile() {
+        let profile = create_default_fingerprint_preset("windows-chrome").expect("preset");
+        let options = LaunchOptions::default().fingerprint(profile.clone());
+
+        assert_eq!(options.fingerprint, Some(profile));
+    }
+
+    #[tokio::test]
+    async fn launch_playwright_refuses_a_fingerprint_it_cannot_apply() {
+        // Dropping the profile silently would leave the page reporting the real
+        // machine while the caller believes it is hidden.
+        let options = LaunchOptions::playwright()
+            .headless(true)
+            .fingerprint(create_default_fingerprint_preset("windows-chrome").expect("preset"));
+
+        let err = launch_browser(options).await.unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("cannot apply a fingerprint profile"));
     }
 
     #[tokio::test]

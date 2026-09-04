@@ -7,6 +7,7 @@ import {
   buildPuppeteerLaunchOptions,
   resolveChromeArgs,
 } from './launch-options.js';
+import { applyFingerprint } from '../fingerprint/apply.js';
 import {
   loadStorageState,
   restorePlaywrightStorageState,
@@ -28,6 +29,8 @@ import {
  * @param {string} [options.channel] - Installed browser channel, such as 'chrome', 'chrome-beta', or 'msedge'
  * @param {string} [options.executablePath] - Explicit path to a Chrome or Chromium executable
  * @param {string|Object} [options.storageState] - Playwright-compatible storage state path or object
+ * @param {Object} [options.fingerprint] - Environment fields to present to pages, such as userAgent, timezone, locale, hardwareConcurrency or screen. Applied over CDP after launch; see src/fingerprint/profile.js for the full field list and presets.js for ready-made profiles.
+ * @param {boolean} [options.automationParity=true] - Keep the command line indistinguishable from a hand-started Chrome. Turning this off restores the pre-parity switches and makes navigator.webdriver true.
  * @returns {Promise<Object>} - Object with browser and page
  */
 export async function launchBrowser(options = {}) {
@@ -44,6 +47,8 @@ export async function launchBrowser(options = {}) {
     channel,
     executablePath,
     storageState,
+    fingerprint,
+    automationParity = true,
   } = options;
 
   const resolvedChromeArgs = resolveChromeArgs({
@@ -86,6 +91,7 @@ export async function launchBrowser(options = {}) {
       channel,
       executablePath,
       ignoreDefaultArgs: resolvedChromeArgs.ignoreDefaultArgs,
+      automationParity,
     });
     browser = await chromium.launchPersistentContext(
       userDataDir,
@@ -106,6 +112,7 @@ export async function launchBrowser(options = {}) {
         channel,
         executablePath,
         ignoreDefaultArgs: resolvedChromeArgs.ignoreDefaultArgs,
+        automationParity,
       })
     );
     const pages = await browser.pages();
@@ -131,6 +138,15 @@ export async function launchBrowser(options = {}) {
       if (verbose) {
         console.log(`⚠️  Could not set color scheme: ${error.message}`);
       }
+    }
+  }
+
+  // The fingerprint is applied before the caller can navigate, so the first
+  // document a page loads already sees the configured environment.
+  if (fingerprint !== undefined) {
+    await applyFingerprint({ browser, page, engine, profile: fingerprint });
+    if (verbose) {
+      console.log('✅ Fingerprint profile applied');
     }
   }
 

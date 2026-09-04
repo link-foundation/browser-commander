@@ -15,6 +15,7 @@ pub mod launcher;
 pub mod media;
 pub mod navigation_ops;
 pub mod node_bridge;
+pub mod raw_cdp;
 pub mod real_browser;
 
 pub use browser_cookie_cache::clear_browser_cookie_memory_cache;
@@ -31,6 +32,7 @@ pub use navigation_ops::{
     NavigationResult, NavigationVerificationResult, WaitUntil,
 };
 pub use node_bridge::NodeBridgePage;
+pub use raw_cdp::RawCdpCommand;
 pub use real_browser::{
     assert_dedicated_user_data_dir, build_real_browser_args, default_real_browser_user_data_dir,
     launch_and_connect_real_browser, launch_real_browser, resolve_system_browser_executable,

@@ -223,7 +223,8 @@ export function loadTimingData(options = {}) {
       return createEmptyTimingData();
     }
     throw new Error(
-      `Could not read browser test timing data: ${error.message}`
+      `Could not read browser test timing data: ${error.message}`,
+      { cause: error }
     );
   }
 }

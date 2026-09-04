@@ -88,3 +88,21 @@ jobs:
 
       - name: Check file line limits
         run: bash scripts/check-file-line-limits.sh
+
+  # === SHARED FINGERPRINT ASSETS ===
+  # The page init payload and the limitations catalogue are single assets that
+  # JavaScript reads, Python ships as package data and Rust embeds with
+  # include_str!. The copies have to stay byte-identical, or the three
+  # implementations would send different scripts and document different limits.
+  shared-fingerprint-assets:
+    name: Check Shared Fingerprint Assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-shared-fingerprint-assets
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check the shared asset copies
+        run: bash scripts/check-shared-fingerprint-assets.sh

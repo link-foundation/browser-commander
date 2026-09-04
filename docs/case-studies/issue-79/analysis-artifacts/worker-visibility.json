@@ -1,0 +1,98 @@
+{
+  "pageOnly": {
+    "documentSide": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) WorkerProbe/1.0",
+      "platform": "MacIntel",
+      "languages": [
+        "fr-FR",
+        "fr",
+        "en"
+      ],
+      "hardwareConcurrency": 12,
+      "deviceMemory": null
+    },
+    "workerSide": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) WorkerProbe/1.0",
+      "platform": "Linux x86_64",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 6,
+      "deviceMemory": null
+    },
+    "attachments": [],
+    "documentWorkerMismatches": [
+      "platform",
+      "languages",
+      "hardwareConcurrency"
+    ]
+  },
+  "workerCdp": {
+    "documentSide": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) WorkerProbe/1.0",
+      "platform": "MacIntel",
+      "languages": [
+        "fr-FR",
+        "fr",
+        "en"
+      ],
+      "hardwareConcurrency": 12,
+      "deviceMemory": null
+    },
+    "workerSide": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) WorkerProbe/1.0",
+      "platform": "Linux x86_64",
+      "languages": [
+        "fr-FR",
+        "fr",
+        "en"
+      ],
+      "hardwareConcurrency": 12,
+      "deviceMemory": null
+    },
+    "attachments": [
+      {
+        "type": "worker",
+        "waitingForDebugger": true
+      }
+    ],
+    "documentWorkerMismatches": [
+      "platform"
+    ]
+  },
+  "workerCdpWithScript": {
+    "documentSide": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) WorkerProbe/1.0",
+      "platform": "MacIntel",
+      "languages": [
+        "fr-FR",
+        "fr",
+        "en"
+      ],
+      "hardwareConcurrency": 12,
+      "deviceMemory": null
+    },
+    "workerSide": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) WorkerProbe/1.0",
+      "platform": "MacIntel",
+      "languages": [
+        "fr-FR",
+        "fr",
+        "en"
+      ],
+      "hardwareConcurrency": 12,
+      "deviceMemory": null
+    },
+    "attachments": [
+      {
+        "type": "worker",
+        "waitingForDebugger": true
+      },
+      {
+        "evaluate": "Internal error"
+      }
+    ],
+    "documentWorkerMismatches": []
+  }
+}

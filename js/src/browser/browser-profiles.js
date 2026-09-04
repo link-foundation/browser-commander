@@ -181,7 +181,7 @@ async function listFirefoxProfiles(root, platform) {
     return [];
   }
   const pathApi = platformPath(platform);
-  let sections = [];
+  let sections;
   try {
     sections = parseIni(
       await readFile(pathApi.join(root, 'profiles.ini'), 'utf8')

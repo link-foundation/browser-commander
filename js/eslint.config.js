@@ -105,6 +105,15 @@ export default [
     },
   },
   {
+    // The shared init payload is source text, not a module: it is read verbatim
+    // and sent to the page, so the declaration it exports to the page has no
+    // caller inside this package. See scripts/check-shared-fingerprint-assets.sh.
+    files: ['src/fingerprint/init-payload.js'],
+    rules: {
+      'no-unused-vars': 'off',
+    },
+  },
+  {
     // Test files have different requirements
     files: ['tests/**/*.js', '**/*.test.js'],
     rules: {

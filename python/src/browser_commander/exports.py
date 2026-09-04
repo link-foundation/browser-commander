@@ -101,6 +101,15 @@ from browser_commander.elements.selectors import (
     with_text_selector_support,
 )
 from browser_commander.elements.visibility import count, is_enabled, is_visible
+from browser_commander.fingerprint.automation_parity import (
+    AUTOMATION_CONTROLLED_OFF_ARG,
+    AUTOMATION_CONTROLLED_TRIGGERS,
+    PLAYWRIGHT_HEADLESS_POINTER_ARG,
+    apply_automation_parity_args,
+    detect_automation_controlled_triggers,
+    disables_automation_controlled,
+    parity_ignored_default_args,
+)
 
 # Re-export high-level universal logic
 from browser_commander.high_level.universal_logic import (
@@ -163,6 +172,13 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "BrowserCookieReadOptions",
     "BrowserProfile",
     # Core utilities
+    "AUTOMATION_CONTROLLED_OFF_ARG",
+    "AUTOMATION_CONTROLLED_TRIGGERS",
+    "PLAYWRIGHT_HEADLESS_POINTER_ARG",
+    "apply_automation_parity_args",
+    "detect_automation_controlled_triggers",
+    "disables_automation_controlled",
+    "parity_ignored_default_args",
     "CHROME_ARGS",
     "TIMING",
     "ActionStoppedError",

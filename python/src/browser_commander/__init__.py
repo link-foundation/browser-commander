@@ -15,7 +15,10 @@ from __future__ import annotations
 
 from browser_commander.exports import (
     # Core utilities
+    AUTOMATION_CONTROLLED_OFF_ARG,
+    AUTOMATION_CONTROLLED_TRIGGERS,
     CHROME_ARGS,
+    PLAYWRIGHT_HEADLESS_POINTER_ARG,
     TIMING,
     ActionStoppedError,
     BrowserCookieCacheOptions,
@@ -51,6 +54,7 @@ from browser_commander.exports import (
     WaitResult,
     all_conditions,
     any_condition,
+    apply_automation_parity_args,
     capture_pre_click_state,
     check_and_clear_flag,
     # Fill interactions
@@ -68,7 +72,9 @@ from browser_commander.exports import (
     default_fill_verification,
     default_navigation_verification,
     default_scroll_verification,
+    detect_automation_controlled_triggers,
     detect_engine,
+    disables_automation_controlled,
     emulate_media,
     evaluate,
     fill_text_area,
@@ -98,6 +104,7 @@ from browser_commander.exports import (
     needs_scrolling,
     normalize_selector,
     not_condition,
+    parity_ignored_default_args,
     perform_fill,
     # Element selectors
     query_selector,
@@ -134,7 +141,10 @@ from browser_commander.factory import BrowserCommander, make_browser_commander
 __version__ = "0.1.0"
 __all__ = [
     # Core utilities
+    "AUTOMATION_CONTROLLED_OFF_ARG",
+    "AUTOMATION_CONTROLLED_TRIGGERS",
     "CHROME_ARGS",
+    "PLAYWRIGHT_HEADLESS_POINTER_ARG",
     "TIMING",
     "ActionStoppedError",
     # Factory
@@ -172,6 +182,7 @@ __all__ = [
     "WaitResult",
     "all_conditions",
     "any_condition",
+    "apply_automation_parity_args",
     "capture_pre_click_state",
     "check_and_clear_flag",
     # Fill interactions
@@ -189,7 +200,9 @@ __all__ = [
     "default_fill_verification",
     "default_navigation_verification",
     "default_scroll_verification",
+    "detect_automation_controlled_triggers",
     "detect_engine",
+    "disables_automation_controlled",
     "emulate_media",
     "evaluate",
     "fill_text_area",
@@ -220,6 +233,7 @@ __all__ = [
     "needs_scrolling",
     "normalize_selector",
     "not_condition",
+    "parity_ignored_default_args",
     "perform_fill",
     # Element selectors
     "query_selector",

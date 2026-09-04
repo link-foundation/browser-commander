@@ -38,12 +38,14 @@
 //! - [`elements`] - Element operations (selectors, visibility, content)
 //! - [`interactions`] - User interactions (click, scroll, fill)
 //! - [`browser`] - Browser management (launcher, navigation)
+//! - [`fingerprint`] - Fingerprint parity with a hand-started browser
 //! - [`utilities`] - General utilities (URL handling, wait operations)
 //! - [`high_level`] - High-level DRY utilities
 
 pub mod browser;
 pub mod core;
 pub mod elements;
+pub mod fingerprint;
 pub mod high_level;
 pub mod interactions;
 pub mod utilities;
@@ -60,6 +62,12 @@ pub use browser::{
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
     LoggerOptions, PdfOptions, Timing, CHROME_ARGS, TIMING,
+};
+pub use fingerprint::{
+    apply_automation_parity_args, detect_automation_controlled_triggers,
+    disables_automation_controlled, parity_ignored_default_args, AutomationTrigger,
+    DetectedTrigger, AUTOMATION_CONTROLLED_OFF_ARG, AUTOMATION_CONTROLLED_TRIGGERS,
+    PLAYWRIGHT_HEADLESS_POINTER_ARG,
 };
 
 /// Prelude module for convenient imports.
@@ -86,6 +94,12 @@ pub mod prelude {
     pub use crate::elements::{
         count, get_attribute, input_value, is_enabled, is_visible, normalize_selector,
         text_content, ParsedSelector,
+    };
+    pub use crate::fingerprint::{
+        apply_automation_parity_args, detect_automation_controlled_triggers,
+        disables_automation_controlled, parity_ignored_default_args, AutomationTrigger,
+        DetectedTrigger, AUTOMATION_CONTROLLED_OFF_ARG, AUTOMATION_CONTROLLED_TRIGGERS,
+        PLAYWRIGHT_HEADLESS_POINTER_ARG,
     };
     pub use crate::high_level::{
         check_and_clear_flag, find_toggle_button, install_click_listener, wait_for_url_condition,

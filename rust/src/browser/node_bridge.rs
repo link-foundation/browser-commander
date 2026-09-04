@@ -245,7 +245,7 @@ fn launch_params(options: &LaunchOptions, user_data_dir: &Path) -> Value {
         "ignoreDefaultArgs": if options.ignore_all_default_args {
             Value::Bool(true)
         } else {
-            json!(options.ignore_default_args)
+            json!(options.all_ignored_default_args())
         },
         "colorScheme": options.color_scheme.as_ref().map(|cs| cs.as_str()),
         "sandbox": options.sandbox,
@@ -552,11 +552,36 @@ mod tests {
 
         let params = launch_params(&options, Path::new("/tmp/browser-data"));
 
-        assert_eq!(params["ignoreDefaultArgs"][0], "--no-first-run");
+        // Parity exclusions come first, the caller's follow.
+        assert_eq!(params["ignoreDefaultArgs"][0], "--enable-automation");
+        assert_eq!(params["ignoreDefaultArgs"][1], "--no-first-run");
         assert!(!params["args"]
             .as_array()
             .unwrap()
             .contains(&json!("--no-first-run")));
+    }
+
+    #[test]
+    fn launch_params_forward_only_the_caller_exclusions_when_parity_is_off() {
+        let options = LaunchOptions::playwright()
+            .automation_parity(false)
+            .ignore_default_args(vec!["--no-first-run".to_string()]);
+
+        let params = launch_params(&options, Path::new("/tmp/browser-data"));
+
+        assert_eq!(params["ignoreDefaultArgs"], json!(["--no-first-run"]));
+    }
+
+    #[test]
+    fn launch_params_disable_the_automation_controlled_feature() {
+        let options = LaunchOptions::playwright();
+
+        let params = launch_params(&options, Path::new("/tmp/browser-data"));
+
+        assert!(params["args"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("--disable-blink-features=AutomationControlled")));
     }
 
     #[test]

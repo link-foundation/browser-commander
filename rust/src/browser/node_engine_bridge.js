@@ -64,15 +64,15 @@ function chromeArgs(params) {
   return args;
 }
 
-function ignoredDefaultArgs(params, includeEnableAutomation = false) {
+// The Rust side already merged the caller's exclusions with the ones
+// fingerprint parity needs, so this bridge forwards the list verbatim. Adding
+// "--enable-automation" here would override a caller who deliberately turned
+// parity off.
+function ignoredDefaultArgs(params) {
   if (params.ignoreDefaultArgs === true) {
     return true;
   }
-  const ignored = [...(params.ignoreDefaultArgs ?? [])];
-  if (includeEnableAutomation && !ignored.includes("--enable-automation")) {
-    ignored.unshift("--enable-automation");
-  }
-  return ignored;
+  return [...(params.ignoreDefaultArgs ?? [])];
 }
 
 function elementInfo(selector) {
@@ -106,7 +106,7 @@ async function launchPlaywright(params) {
     chromiumSandbox: params.sandbox !== false,
     viewport: null,
     args: chromeArgs(params),
-    ignoreDefaultArgs: ignoredDefaultArgs(params, true),
+    ignoreDefaultArgs: ignoredDefaultArgs(params),
   };
 
   if (params.colorScheme !== null && params.colorScheme !== undefined) {

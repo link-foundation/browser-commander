@@ -15,6 +15,9 @@ use crate::browser::media::ColorScheme;
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::core::constants::CHROME_ARGS;
 use crate::core::engine::{EngineAdapter, EngineType};
+use crate::fingerprint::automation_parity::{
+    apply_automation_parity_args, parity_ignored_default_args,
+};
 
 /// Options for launching a browser.
 #[derive(Debug, Clone)]
@@ -56,6 +59,12 @@ pub struct LaunchOptions {
     pub node_executable: Option<PathBuf>,
     /// Working directory used to resolve Playwright/Puppeteer Node packages.
     pub node_working_dir: Option<PathBuf>,
+    /// Keep `navigator.webdriver` false and the command line free of switches a
+    /// hand-started Chrome does not carry.
+    ///
+    /// Defaults to `true`. Set to `false` to launch with the engine's own
+    /// defaults, which is what the parity tests use as a negative control.
+    pub automation_parity: bool,
 }
 
 impl Default for LaunchOptions {
@@ -77,6 +86,7 @@ impl Default for LaunchOptions {
             sandbox: true,
             node_executable: None,
             node_working_dir: None,
+            automation_parity: true,
         }
     }
 }
@@ -214,6 +224,12 @@ impl LaunchOptions {
         self
     }
 
+    /// Turn fingerprint parity with a hand-started Chrome on or off.
+    pub fn automation_parity(mut self, automation_parity: bool) -> Self {
+        self.automation_parity = automation_parity;
+        self
+    }
+
     /// Get all Chrome arguments (default + custom).
     pub fn all_chrome_args(&self) -> Vec<String> {
         let mut all_args: Vec<String> = if self.ignore_all_default_args {
@@ -232,7 +248,30 @@ impl LaunchOptions {
         };
         all_args.extend(self.args.clone());
         all_args.extend(self.extra_args.clone());
+        if self.automation_parity {
+            all_args = apply_automation_parity_args(&all_args);
+        }
         all_args
+    }
+
+    /// Engine default switches to suppress so the command line matches a
+    /// hand-started Chrome.
+    ///
+    /// Merged with the caller's `ignore_default_args`, because a switch the
+    /// engine appends after the caller's arguments cannot be countered by
+    /// passing a different value for it.
+    pub fn all_ignored_default_args(&self) -> Vec<String> {
+        let mut ignored = if self.automation_parity {
+            parity_ignored_default_args(self.engine, self.headless)
+        } else {
+            Vec::new()
+        };
+        for argument in &self.ignore_default_args {
+            if !ignored.contains(argument) {
+                ignored.push(argument.clone());
+            }
+        }
+        ignored
     }
 
     /// Get the user data directory, using a default if not specified.
@@ -366,7 +405,7 @@ async fn launch_chromiumoxide(
     // Chromiumoxide only exposes an all-or-nothing switch for its own default
     // layer. Disable that layer whenever the caller requests an omission so an
     // engine-provided duplicate cannot silently re-add the selected flag.
-    if options.ignore_all_default_args || !options.ignore_default_args.is_empty() {
+    if options.ignore_all_default_args || !options.all_ignored_default_args().is_empty() {
         builder = builder.disable_default_args();
     }
 
@@ -449,6 +488,9 @@ async fn launch_chromiumoxide(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fingerprint::automation_parity::{
+        AUTOMATION_CONTROLLED_OFF_ARG, PLAYWRIGHT_HEADLESS_POINTER_ARG,
+    };
 
     #[test]
     fn launch_options_default() {
@@ -461,6 +503,7 @@ mod tests {
         assert!(options.extra_args.is_empty());
         assert!(options.ignore_default_args.is_empty());
         assert!(!options.ignore_all_default_args);
+        assert!(options.automation_parity);
         assert!(options.channel.is_none());
         assert!(options.executable_path.is_none());
         assert!(options.node_executable.is_none());
@@ -539,8 +582,12 @@ mod tests {
         assert!(args.contains(&"--password-store=basic".to_string()));
         assert!(!args.contains(&"--no-default-browser-check".to_string()));
         assert_eq!(
-            &args[args.len() - 2..],
-            ["--legacy-arg".to_string(), "--lang=en-US".to_string()]
+            &args[args.len() - 3..],
+            [
+                "--legacy-arg".to_string(),
+                "--lang=en-US".to_string(),
+                AUTOMATION_CONTROLLED_OFF_ARG.to_string()
+            ]
         );
     }
 
@@ -550,7 +597,13 @@ mod tests {
             .ignore_all_default_args()
             .with_extra_args(vec!["--lang=en-US".to_string()]);
 
-        assert_eq!(options.all_chrome_args(), ["--lang=en-US".to_string()]);
+        assert_eq!(
+            options.all_chrome_args(),
+            [
+                "--lang=en-US".to_string(),
+                AUTOMATION_CONTROLLED_OFF_ARG.to_string()
+            ]
+        );
     }
 
     #[test]
@@ -569,6 +622,72 @@ mod tests {
         let args = options.all_chrome_args();
 
         assert!(args.contains(&"--custom".to_string()));
+    }
+
+    #[test]
+    fn all_chrome_args_disables_the_automation_controlled_feature() {
+        let args = LaunchOptions::default().all_chrome_args();
+        assert_eq!(
+            args.last().map(String::as_str),
+            Some(AUTOMATION_CONTROLLED_OFF_ARG)
+        );
+    }
+
+    #[test]
+    fn all_chrome_args_leaves_the_command_line_alone_when_parity_is_off() {
+        let args = LaunchOptions::default()
+            .automation_parity(false)
+            .all_chrome_args();
+        assert!(!args
+            .iter()
+            .any(|argument| argument == AUTOMATION_CONTROLLED_OFF_ARG));
+    }
+
+    #[test]
+    fn all_ignored_default_args_merges_parity_with_the_caller_list() {
+        let options = LaunchOptions::playwright()
+            .headless(true)
+            .ignore_default_args(vec!["--no-first-run".to_string()]);
+
+        assert_eq!(
+            options.all_ignored_default_args(),
+            [
+                "--enable-automation".to_string(),
+                PLAYWRIGHT_HEADLESS_POINTER_ARG.to_string(),
+                "--no-first-run".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn all_ignored_default_args_does_not_repeat_a_switch_the_caller_already_listed() {
+        let options = LaunchOptions::playwright()
+            .ignore_default_args(vec!["--enable-automation".to_string()]);
+
+        assert_eq!(
+            options.all_ignored_default_args(),
+            ["--enable-automation".to_string()]
+        );
+    }
+
+    #[test]
+    fn all_ignored_default_args_keeps_only_the_caller_list_when_parity_is_off() {
+        let options = LaunchOptions::playwright()
+            .headless(true)
+            .automation_parity(false)
+            .ignore_default_args(vec!["--no-first-run".to_string()]);
+
+        assert_eq!(
+            options.all_ignored_default_args(),
+            ["--no-first-run".to_string()]
+        );
+    }
+
+    #[test]
+    fn chromiumoxide_excludes_nothing_by_default() {
+        assert!(LaunchOptions::chromiumoxide()
+            .all_ignored_default_args()
+            .is_empty());
     }
 
     #[test]

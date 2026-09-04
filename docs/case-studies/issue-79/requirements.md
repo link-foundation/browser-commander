@@ -248,28 +248,75 @@ strong signal in combination; `low` means it narrows the field.
 
 > "This should affect all supported programming languages."
 
-**Status: partial -- JavaScript done, Python and Rust planned.**
+**Status: partial -- automation parity and the whole profile vocabulary now
+exist in all three languages; the CDP commands, the init script and `apply` are
+still JavaScript only.**
 
 The subsystem is deliberately shaped for porting: pure data and pure functions,
 with I/O confined to `apply.js`. `buildCdpEmulationCommands(profile)` returns
 an array of `{method, params}` and touches nothing; `buildFingerprintInitScript`
 returns a string. Neither needs a browser to test.
 
-Plan, in dependency order:
+**Solution, step 1 -- done.** Automation parity now exists in all three
+languages, because it is the part that closes the measured gap and it needs no
+CDP at all:
 
-1. **Automation parity first, in both languages.** It is the part that closes
-   the measured gap, it is a handful of string operations, and it needs no CDP.
-   `python/src/browser_commander/fingerprint/automation_parity.py` and
-   `rust/src/fingerprint/automation_parity.rs`, wired into the existing launch
-   option builders, with the unit tests ported one for one.
-2. **Profile, derive and presets.** Pure data; the JavaScript tests translate
-   directly.
+- `js/src/fingerprint/automation-parity.js`
+- `python/src/browser_commander/fingerprint/automation_parity.py`
+- `rust/src/fingerprint/automation_parity.rs`
+
+Each carries the same `runtime_features.cc` trigger table, the same
+`--disable-blink-features` merge rule -- Chrome keeps only the last occurrence
+of that switch, so the feature is appended to an existing list rather than
+added as a second one -- and the same engine exclusion table. The JavaScript
+unit tests were translated one for one, so a divergence in behaviour fails a
+test rather than surfacing as a fingerprint difference months later.
+
+Each language wires it into its own launcher, on by default and switchable off
+for the negative controls: `automationParity` on `launchBrowser`,
+`LaunchOptions.automation_parity` in Python, `LaunchOptions::automation_parity`
+in Rust. Python additionally translates the exclusion list into ChromeDriver's
+`excludeSwitches` form, which matches bare switch names, and the Rust Node
+bridge now forwards the merged list verbatim instead of adding
+`--enable-automation` itself, so turning parity off really turns it off.
+
+**Solution, step 2 -- done.** The profile vocabulary is now the same in all
+three languages:
+
+- `python/src/browser_commander/fingerprint/{profile,derive,presets}.py`
+- `rust/src/fingerprint/{profile,derive,presets}.rs`
+
+`resolve_fingerprint_profile` validates and normalizes the same 19 fields,
+rejects the same impossible values -- an available screen area larger than the
+screen, a `q`-value inside `acceptLanguage`, a zero core count -- and derives
+the same `acceptLanguage` and `uaFullVersion`. The four presets describe the
+same four machines, and `FINGERPRINT_FIELD_MECHANISMS` records the same
+`browser`/`script` split, asserted field by field in each language so the three
+tables cannot drift apart silently.
+
+Each language expresses the profile in its own idiom while keeping the
+protocol's camelCase names, so a resolved profile goes to CDP without a second
+vocabulary: JavaScript returns a frozen object, Python a plain `dict` (not a
+`MappingProxyType`, which `json.dumps` cannot serialize), and Rust a serde
+struct with `deny_unknown_fields`, which moves the unknown-field rejection from
+a hand-written key set into the deserializer. Where Rust's types already
+enforce what JavaScript checks at run time -- a non-integer core count cannot be
+constructed -- the translated test asserts the type-level rejection instead of
+being dropped.
+
+Plan for the rest, in dependency order:
+
 3. **CDP commands and the init script.** The init script is one asset. To keep
    the three implementations from drifting it should be a single file that
    Python reads and Rust embeds with `include_str!`, with a CI check that the
    copies are byte-identical.
 4. **Apply.** The only part that differs per language, because each
    implementation opens a CDP session its own way.
+
+The reason for insisting on shared assets rather than translations is in
+[`prior-art.md`](./prior-art.md): `selenium-stealth` and `playwright_stealth`
+are hand-made copies of the puppeteer-extra evasion list, and both rotted
+because a copy has no way to notice that its original moved.
 
 ---
 

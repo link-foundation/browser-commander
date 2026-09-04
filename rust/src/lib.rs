@@ -38,7 +38,8 @@
 //! - [`elements`] - Element operations (selectors, visibility, content)
 //! - [`interactions`] - User interactions (click, scroll, fill)
 //! - [`browser`] - Browser management (launcher, navigation)
-//! - [`fingerprint`] - Fingerprint parity with a hand-started browser
+//! - [`fingerprint`] - Fingerprint parity with a hand-started browser (profiles,
+//!   presets, automation parity)
 //! - [`utilities`] - General utilities (URL handling, wait operations)
 //! - [`high_level`] - High-level DRY utilities
 
@@ -63,11 +64,18 @@ pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
     LoggerOptions, PdfOptions, Timing, CHROME_ARGS, TIMING,
 };
+// `fingerprint::ColorScheme` is the CSS preference a page reads, while
+// `browser::ColorScheme` is the one `emulate_media` writes, so the fingerprint
+// one is re-exported under a qualified name instead of shadowing it.
 pub use fingerprint::{
-    apply_automation_parity_args, detect_automation_controlled_triggers,
-    disables_automation_controlled, parity_ignored_default_args, AutomationTrigger,
-    DetectedTrigger, AUTOMATION_CONTROLLED_OFF_ARG, AUTOMATION_CONTROLLED_TRIGGERS,
-    PLAYWRIGHT_HEADLESS_POINTER_ARG,
+    apply_automation_parity_args, create_default_fingerprint_preset, create_fingerprint_preset,
+    derive_user_agent_data, detect_automation_controlled_triggers, disables_automation_controlled,
+    fingerprint_field_mechanism, parity_ignored_default_args, resolve_fingerprint_profile,
+    AutomationTrigger, BrandVersion, ColorScheme as FingerprintColorScheme, DetectedTrigger,
+    FieldMechanism, FingerprintProfile, ForcedColors, GeolocationProfile, ReducedMotion,
+    ScreenProfile, UserAgentData, ViewportProfile, WebglProfile, AUTOMATION_CONTROLLED_OFF_ARG,
+    AUTOMATION_CONTROLLED_TRIGGERS, DEFAULT_CHROME_VERSION, FINGERPRINT_FIELD_MECHANISMS,
+    FINGERPRINT_PRESET_NAMES, PLAYWRIGHT_HEADLESS_POINTER_ARG,
 };
 
 /// Prelude module for convenient imports.
@@ -96,10 +104,15 @@ pub mod prelude {
         text_content, ParsedSelector,
     };
     pub use crate::fingerprint::{
-        apply_automation_parity_args, detect_automation_controlled_triggers,
-        disables_automation_controlled, parity_ignored_default_args, AutomationTrigger,
-        DetectedTrigger, AUTOMATION_CONTROLLED_OFF_ARG, AUTOMATION_CONTROLLED_TRIGGERS,
-        PLAYWRIGHT_HEADLESS_POINTER_ARG,
+        apply_automation_parity_args, create_default_fingerprint_preset, create_fingerprint_preset,
+        derive_user_agent_data, detect_automation_controlled_triggers,
+        disables_automation_controlled, fingerprint_field_mechanism, parity_ignored_default_args,
+        resolve_fingerprint_profile, AutomationTrigger, BrandVersion,
+        ColorScheme as FingerprintColorScheme, DetectedTrigger, FieldMechanism, FingerprintProfile,
+        ForcedColors, GeolocationProfile, ReducedMotion, ScreenProfile, UserAgentData,
+        ViewportProfile, WebglProfile, AUTOMATION_CONTROLLED_OFF_ARG,
+        AUTOMATION_CONTROLLED_TRIGGERS, DEFAULT_CHROME_VERSION, FINGERPRINT_FIELD_MECHANISMS,
+        FINGERPRINT_PRESET_NAMES, PLAYWRIGHT_HEADLESS_POINTER_ARG,
     };
     pub use crate::high_level::{
         check_and_clear_flag, find_toggle_button, install_click_listener, wait_for_url_condition,

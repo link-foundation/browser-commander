@@ -110,6 +110,15 @@ from browser_commander.fingerprint.automation_parity import (
     disables_automation_controlled,
     parity_ignored_default_args,
 )
+from browser_commander.fingerprint.derive import derive_user_agent_data
+from browser_commander.fingerprint.presets import (
+    FINGERPRINT_PRESET_NAMES,
+    create_fingerprint_preset,
+)
+from browser_commander.fingerprint.profile import (
+    FINGERPRINT_FIELD_MECHANISMS,
+    resolve_fingerprint_profile,
+)
 
 # Re-export high-level universal logic
 from browser_commander.high_level.universal_logic import (
@@ -179,6 +188,11 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "detect_automation_controlled_triggers",
     "disables_automation_controlled",
     "parity_ignored_default_args",
+    "resolve_fingerprint_profile",
+    "create_fingerprint_preset",
+    "derive_user_agent_data",
+    "FINGERPRINT_FIELD_MECHANISMS",
+    "FINGERPRINT_PRESET_NAMES",
     "CHROME_ARGS",
     "TIMING",
     "ActionStoppedError",

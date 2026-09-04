@@ -9,6 +9,7 @@ from browser_commander.fingerprint.automation_parity import (
     AUTOMATION_CONTROLLED_TRIGGERS,
     ENGINE_PARITY_IGNORED_DEFAULT_ARGS,
     PLAYWRIGHT_HEADLESS_POINTER_ARG,
+    PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
     apply_automation_parity_args,
     detect_automation_controlled_triggers,
     disables_automation_controlled,
@@ -185,15 +186,29 @@ class TestParityIgnoredDefaultArgs:
     """Switches the engine adds that have to be excluded at launch."""
 
     def test_playwright_headful_excludes_the_automation_switch(self):
-        assert parity_ignored_default_args("playwright") == ["--enable-automation"]
+        assert parity_ignored_default_args("playwright") == [
+            "--enable-automation",
+            PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
+        ]
 
     def test_playwright_headless_also_excludes_the_pointer_switch(self):
         # Playwright appends the pointer switch after the caller's arguments, so
         # exclusion is the only mechanism that can remove it.
         assert parity_ignored_default_args("playwright", headless=True) == [
             "--enable-automation",
+            PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
             PLAYWRIGHT_HEADLESS_POINTER_ARG,
         ]
+
+    def test_playwright_excludes_the_software_webgl_switch_in_both_modes(self):
+        # Playwright 1.62 pushes --enable-unsafe-swiftshader on every platform,
+        # so a machine with no usable GPU gets a SwiftShader WebGL context where
+        # a hand-started Chrome gets none. Headless Chrome turns SwiftShader on
+        # by itself, so the switch has to be excluded in both modes.
+        for headless in (False, True):
+            assert PLAYWRIGHT_SOFTWARE_WEBGL_ARG in parity_ignored_default_args(
+                "playwright", headless=headless
+            )
 
     def test_selenium_has_no_headless_pointer_switch(self):
         assert parity_ignored_default_args("selenium", headless=True) == [

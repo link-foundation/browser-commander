@@ -97,6 +97,30 @@ pub const AUTOMATION_CONTROLLED_TRIGGERS: &[AutomationTrigger] = &[
 pub const PLAYWRIGHT_HEADLESS_POINTER_ARG: &str =
     "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4";
 
+/// A default switch Playwright adds to every launch, headless or headful:
+///
+/// ```text
+/// const chromeArguments = [...chromiumSwitches()];
+/// chromeArguments.push("--enable-unsafe-swiftshader");
+/// ```
+///
+/// -- `packages/playwright-core/src/server/chromium/chromium.ts`. Until 1.62
+/// the push was guarded by `os.platform() === "darwin"`; it is now
+/// unconditional.
+///
+/// The switch tells Chrome to fall back to the SwiftShader software renderer
+/// when no usable GPU is present, which a hand-started Chrome refuses to do.
+/// On a machine without a GPU -- a container, a VM, a CI runner -- the
+/// difference is total: `canvas.getContext("webgl")` answers `null` in a real
+/// browser and a full context under Playwright, complete with the
+/// ANGLE/SwiftShader vendor and renderer strings. Measured in
+/// `docs/case-studies/issue-79/analysis-artifacts/parity-webgl-swiftshader.json`.
+///
+/// It has to be suppressed in headless too. Headless Chrome enables SwiftShader
+/// on its own, so removing the switch changes nothing there -- but listing it
+/// under `headless` only would mean a headful launch kept it.
+pub const PLAYWRIGHT_SOFTWARE_WEBGL_ARG: &str = "--enable-unsafe-swiftshader";
+
 /// Return the switch part of `--name=value`, or the argument itself.
 fn switch_name(argument: &str) -> &str {
     match argument.find('=') {
@@ -193,6 +217,7 @@ pub fn parity_ignored_default_args(engine: EngineType, headless: bool) -> Vec<St
     match engine {
         EngineType::Playwright => {
             ignored.push("--enable-automation".to_string());
+            ignored.push(PLAYWRIGHT_SOFTWARE_WEBGL_ARG.to_string());
             if headless {
                 ignored.push(PLAYWRIGHT_HEADLESS_POINTER_ARG.to_string());
             }
@@ -395,7 +420,7 @@ mod tests {
     fn playwright_headful_excludes_the_automation_switch() {
         assert_eq!(
             parity_ignored_default_args(EngineType::Playwright, false),
-            args(&["--enable-automation"])
+            args(&["--enable-automation", PLAYWRIGHT_SOFTWARE_WEBGL_ARG])
         );
     }
 
@@ -405,8 +430,25 @@ mod tests {
         // exclusion is the only mechanism that can remove it.
         assert_eq!(
             parity_ignored_default_args(EngineType::Playwright, true),
-            args(&["--enable-automation", PLAYWRIGHT_HEADLESS_POINTER_ARG])
+            args(&[
+                "--enable-automation",
+                PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
+                PLAYWRIGHT_HEADLESS_POINTER_ARG
+            ])
         );
+    }
+
+    #[test]
+    fn playwright_excludes_the_software_webgl_switch_in_both_modes() {
+        // The switch is pushed unconditionally, so a headful launch needs the
+        // exclusion just as much as a headless one.
+        for headless in [false, true] {
+            assert!(
+                parity_ignored_default_args(EngineType::Playwright, headless)
+                    .iter()
+                    .any(|argument| argument == PLAYWRIGHT_SOFTWARE_WEBGL_ARG)
+            );
+        }
     }
 
     #[test]

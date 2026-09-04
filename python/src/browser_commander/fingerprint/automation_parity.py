@@ -203,6 +203,27 @@ PLAYWRIGHT_HEADLESS_POINTER_ARG = (
     "primaryPointerType=4,availablePointerTypes=4"
 )
 
+#: Playwright turns on software WebGL for every launch:
+#:
+#:     const chromeArguments = [...chromiumSwitches()];
+#:     chromeArguments.push('--enable-unsafe-swiftshader');
+#:
+#: -- packages/playwright-core/src/server/chromium/chromium.ts. Until 1.62 the
+#: push was guarded by ``os.platform() === 'darwin'``; it is now unconditional.
+#:
+#: The switch tells Chrome to fall back to the SwiftShader software renderer
+#: when no usable GPU is present, which a hand-started Chrome refuses to do. On
+#: a machine without a GPU -- a container, a VM, a CI runner -- the difference
+#: is total: ``canvas.getContext('webgl')`` answers ``None`` in a real browser
+#: and a full context under Playwright, complete with the ANGLE/SwiftShader
+#: vendor and renderer strings. Measured in
+#: docs/case-studies/issue-79/analysis-artifacts/parity-webgl-swiftshader.json.
+#:
+#: It has to be suppressed in headless too. Headless Chrome enables SwiftShader
+#: on its own, so removing the switch changes nothing there -- but leaving it in
+#: the headless list only would mean a headful launch kept it.
+PLAYWRIGHT_SOFTWARE_WEBGL_ARG = "--enable-unsafe-swiftshader"
+
 #: Default switches an engine adds that a hand-started Chrome does not have.
 #:
 #: These cannot be countered after launch: they have to be kept out of the
@@ -210,7 +231,7 @@ PLAYWRIGHT_HEADLESS_POINTER_ARG = (
 #: for Playwright, ``excludeSwitches`` for Selenium's ChromeDriver.
 ENGINE_PARITY_IGNORED_DEFAULT_ARGS: dict[str, dict[str, tuple[str, ...]]] = {
     "playwright": {
-        "always": ("--enable-automation",),
+        "always": ("--enable-automation", PLAYWRIGHT_SOFTWARE_WEBGL_ARG),
         "headless": (PLAYWRIGHT_HEADLESS_POINTER_ARG,),
     },
     "selenium": {

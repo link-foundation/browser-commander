@@ -21,7 +21,7 @@ pub use automation_parity::{
     apply_automation_parity_args, detect_automation_controlled_triggers,
     disables_automation_controlled, parity_ignored_default_args, AutomationTrigger,
     DetectedTrigger, AUTOMATION_CONTROLLED_OFF_ARG, AUTOMATION_CONTROLLED_TRIGGERS,
-    PLAYWRIGHT_HEADLESS_POINTER_ARG,
+    PLAYWRIGHT_HEADLESS_POINTER_ARG, PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
 };
 pub use cdp_overrides::{build_cdp_emulation_commands, CdpCommand};
 pub use derive::derive_user_agent_data;

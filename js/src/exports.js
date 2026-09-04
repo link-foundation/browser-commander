@@ -147,6 +147,7 @@ export {
   AUTOMATION_CONTROLLED_TRIGGERS,
   ENGINE_PARITY_IGNORED_DEFAULT_ARGS,
   PLAYWRIGHT_HEADLESS_POINTER_ARG,
+  PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
   applyAutomationParityArgs,
   detectAutomationControlledTriggers,
   disablesAutomationControlled,

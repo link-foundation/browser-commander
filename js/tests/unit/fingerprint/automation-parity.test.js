@@ -10,6 +10,7 @@ import {
   ENGINE_PARITY_IGNORED_DEFAULT_ARGS,
   parityIgnoredDefaultArgs,
   PLAYWRIGHT_HEADLESS_POINTER_ARG,
+  PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
 } from '../../../src/fingerprint/automation-parity.js';
 
 describe('AutomationControlled triggers', () => {
@@ -166,6 +167,22 @@ describe('engine default switches to suppress', () => {
     );
   });
 
+  it('suppresses the Playwright software-WebGL switch in both modes', () => {
+    // Playwright 1.62 pushes --enable-unsafe-swiftshader on every platform, so
+    // a machine with no usable GPU answers getContext('webgl') with a
+    // SwiftShader context where a hand-started Chrome answers null. Measured in
+    // analysis-artifacts/parity-webgl-swiftshader.json; the switch has to go in
+    // both modes, because headless Chrome turns SwiftShader on by itself.
+    for (const headless of [false, true]) {
+      assert.ok(
+        parityIgnoredDefaultArgs('playwright', { headless }).includes(
+          PLAYWRIGHT_SOFTWARE_WEBGL_ARG
+        ),
+        `playwright must suppress ${PLAYWRIGHT_SOFTWARE_WEBGL_ARG} when headless=${headless}`
+      );
+    }
+  });
+
   it('has nothing extra to suppress for headless Puppeteer', () => {
     assert.deepEqual(
       parityIgnoredDefaultArgs('puppeteer', { headless: true }),
@@ -189,6 +206,7 @@ describe('engine default switches to suppress', () => {
     result.push('--mutated');
     assert.deepEqual(parityIgnoredDefaultArgs('playwright'), [
       '--enable-automation',
+      PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
     ]);
   });
 });

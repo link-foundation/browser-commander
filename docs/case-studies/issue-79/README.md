@@ -196,3 +196,34 @@ in Puppeteer, before or after `page.evaluate`.
 Fix: no code change, because there is nothing to fix on this build. The script
 is kept so the question can be re-answered on a future Chrome instead of
 re-argued.
+
+### 6. Playwright Forces Software WebGL on Every Launch
+
+Upgrading Playwright from 1.56 to 1.62 broke headful parity with no change to
+this library's own code. The parity suite reported a single failing path,
+`webgl.webgl1`, and a whole missing subtree means one side answered `null`.
+
+`packages/playwright-core/src/server/chromium/chromium.ts` pushes
+`--enable-unsafe-swiftshader` into every launch. In 1.56 the push was guarded
+by `os.platform() === 'darwin'`; in 1.62 it is unconditional. The switch lets
+Chrome fall back to the SwiftShader software renderer when no usable GPU is
+present, which a hand-started Chrome refuses to do. On a machine without a GPU
+-- a container, a VM, a CI runner -- the difference is total:
+`canvas.getContext('webgl')` answers `null` in a real browser and a full
+context under Playwright, complete with the ANGLE/SwiftShader vendor and
+renderer strings. Measured in
+[`analysis-artifacts/parity-webgl-swiftshader.json`](./analysis-artifacts/parity-webgl-swiftshader.json)
+and reproduced by
+[`experiments/fingerprint-parity/run-webgl-availability.mjs`](../../../experiments/fingerprint-parity/run-webgl-availability.mjs).
+
+Fix: `PLAYWRIGHT_SOFTWARE_WEBGL_ARG` is added to the `always` exclusion list,
+next to `--enable-automation`, in all three languages. It is listed under
+`always` rather than `headless` deliberately: headless Chrome enables
+SwiftShader on its own, so the exclusion is a no-op there, but restricting it
+to the headless list would leave the headful launch broken -- which is the mode
+that actually diverged.
+
+The finding matters beyond the one switch. This is a difference the library
+*acquired by upgrading a dependency*, invisible on a GPU-equipped laptop and
+fatal on a GPU-less runner. It is the argument for asserting parity against a
+real browser in CI rather than auditing engine switch lists by hand.

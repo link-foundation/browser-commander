@@ -12,6 +12,7 @@ from browser_commander.core.constants import CHROME_ARGS
 from browser_commander.fingerprint.automation_parity import (
     AUTOMATION_CONTROLLED_OFF_ARG,
     PLAYWRIGHT_HEADLESS_POINTER_ARG,
+    PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
     apply_automation_parity_args,
 )
 
@@ -125,11 +126,15 @@ class TestResolveIgnoredDefaultArgs:
     """Parity exclusions merge with the caller's own."""
 
     def test_playwright_excludes_the_automation_switch(self):
-        assert resolve_ignored_default_args("playwright") == ["--enable-automation"]
+        assert resolve_ignored_default_args("playwright") == [
+            "--enable-automation",
+            PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
+        ]
 
     def test_playwright_headless_also_excludes_the_pointer_switch(self):
         assert resolve_ignored_default_args("playwright", headless=True) == [
             "--enable-automation",
+            PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
             PLAYWRIGHT_HEADLESS_POINTER_ARG,
         ]
 
@@ -137,7 +142,11 @@ class TestResolveIgnoredDefaultArgs:
         assert resolve_ignored_default_args(
             "playwright",
             ignore_default_args=["--enable-automation", "--no-first-run"],
-        ) == ["--enable-automation", "--no-first-run"]
+        ) == [
+            "--enable-automation",
+            PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
+            "--no-first-run",
+        ]
 
     def test_true_is_forwarded_unchanged(self):
         assert (

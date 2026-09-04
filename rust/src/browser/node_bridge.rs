@@ -554,7 +554,11 @@ mod tests {
 
         // Parity exclusions come first, the caller's follow.
         assert_eq!(params["ignoreDefaultArgs"][0], "--enable-automation");
-        assert_eq!(params["ignoreDefaultArgs"][1], "--no-first-run");
+        assert_eq!(
+            params["ignoreDefaultArgs"][1],
+            "--enable-unsafe-swiftshader"
+        );
+        assert_eq!(params["ignoreDefaultArgs"][2], "--no-first-run");
         assert!(!params["args"]
             .as_array()
             .unwrap()

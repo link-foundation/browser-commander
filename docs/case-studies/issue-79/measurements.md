@@ -232,3 +232,48 @@ itself. A real `navigator.deviceMemory` is an accessor on `Navigator.prototype`
 with `enumerable: true`, `configurable: true`, no setter, and a getter named
 `get deviceMemory`. A patch that defines a plain data property on the instance
 matches the value and fails every one of those.
+
+## 9. Playwright turns software WebGL on, and a real browser does not
+
+`run-webgl-availability.mjs` ->
+`analysis-artifacts/parity-webgl-swiftshader.json`.
+
+Found by re-running the parity e2e suite after the dependency update, on a host
+with no GPU. Playwright 1.62 pushes `--enable-unsafe-swiftshader` for every
+launch; up to 1.56 the same line was guarded by `os.platform() === 'darwin'`
+(`_innerDefaultArgs` in
+`packages/playwright-core/src/server/chromium/chromium.ts`). The switch tells
+Chrome to fall back to the SwiftShader software renderer when no usable GPU is
+present, which a hand-started Chrome refuses to do.
+
+WebGL context available, three launches each:
+
+| Scenario | headful | headless |
+| --- | --- | --- |
+| hand-started Chrome (reference) | no | yes |
+| `launchBrowser` playwright | no | yes |
+| `launchBrowser` puppeteer | no | yes |
+| playwright, `automationParity: false` | **yes** | yes |
+| puppeteer, `automationParity: false` | no | yes |
+
+Headful, the difference is total rather than a changed string:
+`canvas.getContext('webgl')` returns `null` in the real browser and a full
+context under Playwright, carrying `ANGLE (Google, Vulkan 1.3.0 (SwiftShader
+Device (Subzero) (0x0000C0DE)), SwiftShader driver)` as the unmasked renderer.
+A page that reads WebGL at all can tell the two apart on the first try.
+
+The switch is suppressed in both modes, not only headful. Headless Chrome
+enables SwiftShader by itself, so removing it changes nothing there -- the whole
+headless column is identical with and without parity -- but listing it as
+headless-only would have left the headful launch broken, which is exactly the
+case that failed.
+
+Two things about this are worth keeping. First, it is a difference the library
+acquired by *upgrading*: the parity suite passed on Playwright 1.56 and failed
+on 1.62 with no change to our own code, which is the argument for running the
+parity assertion in CI rather than auditing switch lists by hand. Second, it
+only appears on a machine without a usable GPU -- a container, a VM, a CI
+runner. On a developer laptop with working hardware acceleration both browsers
+have WebGL and the renderer strings agree, so the bug is invisible exactly where
+most people would look for it, and visible exactly where the software is most
+likely to run.

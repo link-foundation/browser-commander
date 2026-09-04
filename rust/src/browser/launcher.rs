@@ -529,6 +529,7 @@ mod tests {
     use super::*;
     use crate::fingerprint::automation_parity::{
         AUTOMATION_CONTROLLED_OFF_ARG, PLAYWRIGHT_HEADLESS_POINTER_ARG,
+        PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
     };
     use crate::fingerprint::presets::create_default_fingerprint_preset;
 
@@ -696,6 +697,7 @@ mod tests {
             options.all_ignored_default_args(),
             [
                 "--enable-automation".to_string(),
+                PLAYWRIGHT_SOFTWARE_WEBGL_ARG.to_string(),
                 PLAYWRIGHT_HEADLESS_POINTER_ARG.to_string(),
                 "--no-first-run".to_string()
             ]
@@ -709,7 +711,10 @@ mod tests {
 
         assert_eq!(
             options.all_ignored_default_args(),
-            ["--enable-automation".to_string()]
+            [
+                "--enable-automation".to_string(),
+                PLAYWRIGHT_SOFTWARE_WEBGL_ARG.to_string()
+            ]
         );
     }
 

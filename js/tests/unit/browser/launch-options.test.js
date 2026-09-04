@@ -57,6 +57,9 @@ describe('browser launch options', () => {
 
     assert.deepEqual(playwright.ignoreDefaultArgs, [
       '--enable-automation',
+      // Playwright also forces software WebGL on, which a hand-started Chrome
+      // without a usable GPU refuses to do.
+      '--enable-unsafe-swiftshader',
       '--no-first-run',
     ]);
     // Puppeteer passes --enable-automation by default, so automation parity

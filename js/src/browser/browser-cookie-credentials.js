@@ -134,7 +134,9 @@ export async function readWindowsEncryptionKey({
   try {
     state = JSON.parse(await readFile(localStatePath, 'utf8'));
   } catch (error) {
-    throw new Error(`Could not read Chromium Local State: ${error.message}`);
+    throw new Error(`Could not read Chromium Local State: ${error.message}`, {
+      cause: error,
+    });
   }
   const encoded = state.os_crypt?.encrypted_key;
   if (!encoded) {

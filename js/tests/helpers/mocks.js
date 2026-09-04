@@ -530,7 +530,8 @@ export const assert = {
     } catch (error) {
       if (expectedError && !error.message.includes(expectedError)) {
         throw new Error(
-          `${message}: Expected error message to include "${expectedError}", got "${error.message}"`
+          `${message}: Expected error message to include "${expectedError}", got "${error.message}"`,
+          { cause: error }
         );
       }
     }
@@ -540,7 +541,8 @@ export const assert = {
       await fn();
     } catch (error) {
       throw new Error(
-        `${message}: Expected function not to throw, but got: ${error.message}`
+        `${message}: Expected function not to throw, but got: ${error.message}`,
+        { cause: error }
       );
     }
   },

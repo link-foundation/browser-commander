@@ -231,7 +231,8 @@ async function mapChromiumRows(rows, databaseVersion, context) {
     } catch (error) {
       if (!context.ignoreDecryptionErrors) {
         throw new Error(
-          `Could not decrypt cookie ${row.name} for ${row.host_key}: ${error.message}`
+          `Could not decrypt cookie ${row.name} for ${row.host_key}: ${error.message}`,
+          { cause: error }
         );
       }
     }
@@ -246,7 +247,10 @@ async function openCookieDatabase(cookiePath) {
       readOnly: true,
     });
   } catch (error) {
-    throw new Error(`Could not open browser cookie database: ${error.message}`);
+    throw new Error(
+      `Could not open browser cookie database: ${error.message}`,
+      { cause: error }
+    );
   }
 }
 

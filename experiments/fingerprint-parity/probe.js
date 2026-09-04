@@ -139,6 +139,51 @@ async function collectBrowserCommanderEnvironmentReport() {
     onPrototype: descriptorShape(Navigator.prototype, 'webdriver'),
   }));
 
+  /**
+   * Every property the fingerprint init script is allowed to touch, described
+   * the way a detector would look at it. A patched accessor that differs from
+   * the real one in configurability, enumerability, getter name or
+   * `[native code]` shape is itself the tell.
+   */
+  record('patchedDescriptors', () => {
+    const groups = [
+      [
+        'Navigator.prototype',
+        Navigator.prototype,
+        [
+          'webdriver',
+          'deviceMemory',
+          'vendor',
+          'doNotTrack',
+          'language',
+          'languages',
+          'hardwareConcurrency',
+          'maxTouchPoints',
+          'platform',
+          'userAgent',
+        ],
+      ],
+      [
+        'Screen.prototype',
+        Screen.prototype,
+        ['width', 'height', 'availWidth', 'availHeight', 'colorDepth', 'pixelDepth'],
+      ],
+      ['WebGLRenderingContext.prototype', WebGLRenderingContext.prototype, ['getParameter']],
+    ];
+    const result = {};
+    for (const [label, target, keys] of groups) {
+      for (const key of keys) {
+        const shape = descriptorShape(target, key);
+        const descriptor = Object.getOwnPropertyDescriptor(target, key);
+        const accessor = descriptor && (descriptor.get || descriptor.value);
+        result[`${label}.${key}`] = shape
+          ? { ...shape, name: accessor ? accessor.name : null }
+          : null;
+      }
+    }
+    return result;
+  });
+
   record('plugins', () => ({
     length: navigator.plugins.length,
     items: Array.from(navigator.plugins).map((plugin) => ({
@@ -639,6 +684,54 @@ async function collectBrowserCommanderEnvironmentReport() {
     indexedDbAvailable: typeof indexedDB !== 'undefined',
     hasStorageEstimate: Boolean(navigator.storage && navigator.storage.estimate),
   }));
+
+  /**
+   * A dedicated worker gets a fresh JavaScript realm that no page init script
+   * ever touches. Anything Chrome itself overrides is consistent here; anything
+   * that is only a property patch in the document is not, and the mismatch
+   * between the two is a stronger signal than either value alone.
+   */
+  await recordAsync('worker', async () => {
+    const source = `self.onmessage = () => {
+      const navigatorValues = {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        languages: Array.from(navigator.languages),
+        hardwareConcurrency: navigator.hardwareConcurrency,
+        deviceMemory: navigator.deviceMemory === undefined ? null : navigator.deviceMemory,
+        vendor: navigator.vendor,
+        webdriver: navigator.webdriver === undefined ? null : navigator.webdriver,
+      };
+      const resolved = Intl.DateTimeFormat().resolvedOptions();
+      self.postMessage({
+        navigator: navigatorValues,
+        timeZone: resolved.timeZone,
+        locale: resolved.locale,
+      });
+    };`;
+    const blob = new Blob([source], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    try {
+      const worker = new Worker(url);
+      const result = await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('worker timeout')), 5000);
+        worker.onmessage = (event) => {
+          clearTimeout(timer);
+          resolve(event.data);
+        };
+        worker.onerror = (event) => {
+          clearTimeout(timer);
+          reject(new Error(String(event.message || 'worker error')));
+        };
+        worker.postMessage('go');
+      });
+      worker.terminate();
+      return result;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  });
 
   record('cdpSignals', () => {
     // When a CDP client has called Runtime.enable for this execution context,

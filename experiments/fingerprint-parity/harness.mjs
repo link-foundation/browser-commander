@@ -28,6 +28,9 @@ export function probeExpression(source) {
 export async function startProbeServer(probeSource) {
   const reports = new Map();
   const waiters = new Map();
+  // The Accept-Language and Sec-CH-UA-* headers are part of the fingerprint and
+  // are only observable from the server side, so record them per token.
+  const requestHeaders = new Map();
 
   const page = (token) => `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>probe</title></head>
@@ -50,8 +53,10 @@ ${probeExpression(probeSource)}
   const server = createServer((request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
     if (request.method === 'GET' && url.pathname.startsWith('/probe/')) {
+      const token = url.pathname.slice('/probe/'.length);
+      requestHeaders.set(token, { ...request.headers });
       response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-      response.end(page(url.pathname.slice('/probe/'.length)));
+      response.end(page(token));
       return;
     }
     if (request.method === 'POST' && url.pathname.startsWith('/report/')) {
@@ -81,6 +86,7 @@ ${probeExpression(probeSource)}
   return {
     port,
     url: (token) => `http://127.0.0.1:${port}/probe/${token}`,
+    headersFor: (token) => requestHeaders.get(token) || null,
     waitForReport(token, timeoutMs = 60000) {
       if (reports.has(token)) {
         return Promise.resolve(reports.get(token));

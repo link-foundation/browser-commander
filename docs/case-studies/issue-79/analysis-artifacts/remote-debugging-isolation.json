@@ -1,0 +1,20 @@
+{
+  "control-no-debugging": {
+    "webdriver": false
+  },
+  "port-zero": {
+    "webdriver": true
+  },
+  "port-fixed": {
+    "webdriver": false
+  },
+  "port-fixed-address": {
+    "webdriver": false
+  },
+  "port-zero-twice": {
+    "webdriver": true
+  },
+  "pipe": {
+    "webdriver": true
+  }
+}

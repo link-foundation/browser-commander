@@ -1,0 +1,229 @@
+{
+  "commands": [
+    {
+      "method": "Emulation.setUserAgentOverride",
+      "params": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+        "acceptLanguage": "de-DE,de;q=0.9,en;q=0.8",
+        "platform": "Win32",
+        "userAgentMetadata": {
+          "platform": "Windows",
+          "platformVersion": "15.0.0",
+          "architecture": "x86",
+          "model": "",
+          "mobile": false,
+          "brands": [
+            {
+              "brand": "Chromium",
+              "version": "140"
+            },
+            {
+              "brand": "Google Chrome",
+              "version": "140"
+            },
+            {
+              "brand": "Not=A?Brand",
+              "version": "24"
+            }
+          ],
+          "fullVersionList": [
+            {
+              "brand": "Chromium",
+              "version": "140.0.0.0"
+            },
+            {
+              "brand": "Google Chrome",
+              "version": "140.0.0.0"
+            },
+            {
+              "brand": "Not=A?Brand",
+              "version": "24.0.0.0"
+            }
+          ],
+          "bitness": "64",
+          "wow64": false
+        }
+      }
+    },
+    {
+      "method": "Emulation.setTimezoneOverride",
+      "params": {
+        "timezoneId": "Europe/Berlin"
+      }
+    },
+    {
+      "method": "Emulation.setLocaleOverride",
+      "params": {
+        "locale": "de-DE"
+      }
+    },
+    {
+      "method": "Emulation.setHardwareConcurrencyOverride",
+      "params": {
+        "hardwareConcurrency": 7
+      }
+    },
+    {
+      "method": "Emulation.setDeviceMetricsOverride",
+      "params": {
+        "width": 0,
+        "height": 0,
+        "deviceScaleFactor": 0,
+        "mobile": false,
+        "screenWidth": 1920,
+        "screenHeight": 1080
+      }
+    },
+    {
+      "method": "Emulation.setTouchEmulationEnabled",
+      "params": {
+        "enabled": true,
+        "maxTouchPoints": 5
+      }
+    },
+    {
+      "method": "Emulation.setEmulatedMedia",
+      "params": {
+        "features": [
+          {
+            "name": "prefers-reduced-motion",
+            "value": "reduce"
+          },
+          {
+            "name": "forced-colors",
+            "value": "active"
+          },
+          {
+            "name": "prefers-color-scheme",
+            "value": "dark"
+          }
+        ]
+      }
+    },
+    {
+      "method": "Emulation.setGeolocationOverride",
+      "params": {
+        "latitude": 52.52,
+        "longitude": 13.405,
+        "accuracy": 12
+      }
+    }
+  ],
+  "applied": {
+    "Emulation.setUserAgentOverride": "ok",
+    "Emulation.setTimezoneOverride": "ok",
+    "Emulation.setLocaleOverride": "ok",
+    "Emulation.setHardwareConcurrencyOverride": "ok",
+    "Emulation.setDeviceMetricsOverride": "ok",
+    "Emulation.setTouchEmulationEnabled": "ok",
+    "Emulation.setEmulatedMedia": "ok",
+    "Emulation.setGeolocationOverride": "ok"
+  },
+  "observed": {
+    "navigator.userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "navigator.platform": "Win32",
+    "navigator.vendor": "Google Inc.",
+    "navigator.language": "de-DE",
+    "navigator.languages": [
+      "de-DE",
+      "de;q=0.9",
+      "en;q=0.8"
+    ],
+    "navigator.hardwareConcurrency": 7,
+    "navigator.deviceMemory": 8,
+    "navigator.maxTouchPoints": 5,
+    "navigator.doNotTrack": null,
+    "navigator.webdriver": false,
+    "userAgentData.platform": "Windows",
+    "userAgentData.brands": [
+      {
+        "brand": "Chromium",
+        "version": "140"
+      },
+      {
+        "brand": "Google Chrome",
+        "version": "140"
+      },
+      {
+        "brand": "Not=A?Brand",
+        "version": "24"
+      }
+    ],
+    "userAgentData.highEntropy": {
+      "architecture": "x86",
+      "bitness": "64",
+      "brands": [
+        {
+          "brand": "Chromium",
+          "version": "140"
+        },
+        {
+          "brand": "Google Chrome",
+          "version": "140"
+        },
+        {
+          "brand": "Not=A?Brand",
+          "version": "24"
+        }
+      ],
+      "formFactors": [
+        "Desktop"
+      ],
+      "fullVersionList": [
+        {
+          "brand": "Chromium",
+          "version": "140.0.0.0"
+        },
+        {
+          "brand": "Google Chrome",
+          "version": "140.0.0.0"
+        },
+        {
+          "brand": "Not=A?Brand",
+          "version": "24.0.0.0"
+        }
+      ],
+      "mobile": false,
+      "model": "",
+      "platform": "Windows",
+      "platformVersion": "15.0.0",
+      "uaFullVersion": "149.0.7827.155",
+      "wow64": false
+    },
+    "intl.dateTimeTimeZone": "Europe/Berlin",
+    "intl.dateTimeLocale": "de-DE",
+    "intl.collatorLocale": "de-DE",
+    "intl.timezoneOffsetJanuary": -60,
+    "screen": {
+      "availHeight": 1080,
+      "availLeft": 0,
+      "availTop": 0,
+      "availWidth": 1920,
+      "colorDepth": 24,
+      "height": 1080,
+      "isExtended": false,
+      "orientationAngle": 0,
+      "orientationType": "landscape-primary",
+      "pixelDepth": 24,
+      "width": 1920
+    },
+    "media.prefers-color-scheme: dark": true,
+    "media.prefers-reduced-motion: reduce": true,
+    "media.forced-colors: active": true,
+    "media.pointer: coarse": true,
+    "media.hover: hover": false,
+    "nativeFunctions": {
+      "navigator.permissions.query": true,
+      "navigator.plugins.item": true,
+      "navigator.mediaDevices.enumerateDevices": true,
+      "HTMLCanvasElement.toDataURL": true,
+      "CanvasRenderingContext2D.getImageData": true,
+      "WebGLRenderingContext.getParameter": true,
+      "Function.prototype.toString": true,
+      "Object.getOwnPropertyDescriptor": true,
+      "Reflect.get": true,
+      "Date.prototype.getTimezoneOffset": true,
+      "Intl.DateTimeFormat": true
+    }
+  }
+}

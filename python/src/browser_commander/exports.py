@@ -110,7 +110,15 @@ from browser_commander.fingerprint.automation_parity import (
     disables_automation_controlled,
     parity_ignored_default_args,
 )
+from browser_commander.fingerprint.cdp_overrides import (
+    CdpCommand,
+    build_cdp_emulation_commands,
+)
 from browser_commander.fingerprint.derive import derive_user_agent_data
+from browser_commander.fingerprint.init_script import (
+    build_fingerprint_init_script,
+    build_init_script_config,
+)
 from browser_commander.fingerprint.presets import (
     FINGERPRINT_PRESET_NAMES,
     create_fingerprint_preset,
@@ -191,6 +199,10 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "resolve_fingerprint_profile",
     "create_fingerprint_preset",
     "derive_user_agent_data",
+    "CdpCommand",
+    "build_cdp_emulation_commands",
+    "build_fingerprint_init_script",
+    "build_init_script_config",
     "FINGERPRINT_FIELD_MECHANISMS",
     "FINGERPRINT_PRESET_NAMES",
     "CHROME_ARGS",

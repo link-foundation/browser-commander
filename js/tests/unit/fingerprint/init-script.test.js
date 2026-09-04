@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import {
   buildFingerprintInitScript,
   buildInitScriptConfig,
+  FINGERPRINT_PAYLOAD_SOURCE,
 } from '../../../src/fingerprint/init-script.js';
 import { resolveFingerprintProfile } from '../../../src/fingerprint/profile.js';
 
@@ -318,6 +319,27 @@ describe('init script behaviour in a page-like realm', () => {
     assert.equal(
       vm.runInContext('gl.getParameter(0x1234)', context),
       'real-4660'
+    );
+  });
+
+  it('carries the shared payload asset and nothing else', () => {
+    // The payload is one file that Python and Rust send byte for byte, so the
+    // script has to be that file rather than a copy generated from a function
+    // in this package. scripts/check-shared-init-payload.sh guards the copies.
+    assert.ok(script.includes(FINGERPRINT_PAYLOAD_SOURCE));
+    assert.match(
+      FINGERPRINT_PAYLOAD_SOURCE,
+      /^function fingerprintPayload\(/mu
+    );
+    assert.doesNotMatch(FINGERPRINT_PAYLOAD_SOURCE, /^(import|export)\s/mu);
+  });
+
+  it('leaves no helper of its own on the page global', () => {
+    const context = runInFakeRealm(script);
+
+    assert.equal(
+      vm.runInContext('typeof fingerprintPayload', context),
+      'undefined'
     );
   });
 

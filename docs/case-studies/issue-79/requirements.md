@@ -248,9 +248,9 @@ strong signal in combination; `low` means it narrows the field.
 
 > "This should affect all supported programming languages."
 
-**Status: partial -- automation parity and the whole profile vocabulary now
-exist in all three languages; the CDP commands, the init script and `apply` are
-still JavaScript only.**
+**Status: partial -- automation parity, the profile vocabulary, the CDP
+commands and the init script now exist in all three languages; `apply` is still
+JavaScript only.**
 
 The subsystem is deliberately shaped for porting: pure data and pure functions,
 with I/O confined to `apply.js`. `buildCdpEmulationCommands(profile)` returns
@@ -304,12 +304,37 @@ enforce what JavaScript checks at run time -- a non-integer core count cannot be
 constructed -- the translated test asserts the type-level rejection instead of
 being dropped.
 
-Plan for the rest, in dependency order:
+**Solution, step 3 -- done.** The overrides themselves are now the same in
+all three languages:
 
-3. **CDP commands and the init script.** The init script is one asset. To keep
-   the three implementations from drifting it should be a single file that
-   Python reads and Rust embeds with `include_str!`, with a CI check that the
-   copies are byte-identical.
+- `python/src/browser_commander/fingerprint/{cdp_overrides,init_script}.py`
+- `rust/src/fingerprint/{cdp_overrides,init_script}.rs`
+
+`build_cdp_emulation_commands` produces the same eight `Emulation` commands in
+the same order, with the same protocol quirks encoded: the required empty
+`userAgent` when only `acceptLanguage` changes, the deprecated `fullVersion`
+metadata field that is the only way to reach the `uaFullVersion` hint,
+`maxTouchPoints` staying at least `1` so "no touch" travels as
+`enabled: false`, and the zeroes that mean "no override" in
+`setDeviceMetricsOverride`. Every JavaScript test was translated, including the
+one that pins the whole command list for a preset.
+
+The init script is a shared asset rather than a translation, which the plan
+called for and which turned out to matter more than expected: the payload masks
+its own `Function.prototype.toString`, preserves descriptor shapes and hides its
+idempotence marker, and three hand-written copies of that would drift within a
+release. `js/src/fingerprint/init-payload.js` is the original; Python ships it
+as package data and reads it with `Path.read_text`, Rust embeds it with
+`include_str!`, and `scripts/check-shared-init-payload.sh` -- a job in
+`quality.yml` -- fails the build if the copies differ by a byte. (Copies are
+unavoidable: npm, PyPI and crates.io each package a single directory.) The
+payload is wrapped in an IIFE before it is sent, so the page never gains a
+`fingerprintPayload` global, which would be a louder signal than anything the
+payload hides. The Python test suite proves the point end to end by running the
+script *Python* generates through Node and reading back the patched values.
+
+Plan for the rest:
+
 4. **Apply.** The only part that differs per language, because each
    implementation opens a CDP session its own way.
 

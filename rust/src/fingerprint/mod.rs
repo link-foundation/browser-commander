@@ -8,7 +8,9 @@
 //! measurements these modules are built on.
 
 pub mod automation_parity;
+pub mod cdp_overrides;
 pub mod derive;
+pub mod init_script;
 pub mod presets;
 pub mod profile;
 
@@ -18,7 +20,12 @@ pub use automation_parity::{
     DetectedTrigger, AUTOMATION_CONTROLLED_OFF_ARG, AUTOMATION_CONTROLLED_TRIGGERS,
     PLAYWRIGHT_HEADLESS_POINTER_ARG,
 };
+pub use cdp_overrides::{build_cdp_emulation_commands, CdpCommand};
 pub use derive::derive_user_agent_data;
+pub use init_script::{
+    build_fingerprint_init_script, build_init_script_config, InitScriptOptions,
+    FINGERPRINT_PAYLOAD_SOURCE,
+};
 pub use presets::{
     create_default_fingerprint_preset, create_fingerprint_preset, DEFAULT_CHROME_VERSION,
     FINGERPRINT_PRESET_NAMES,

@@ -68,14 +68,16 @@ pub use core::{
 // `browser::ColorScheme` is the one `emulate_media` writes, so the fingerprint
 // one is re-exported under a qualified name instead of shadowing it.
 pub use fingerprint::{
-    apply_automation_parity_args, create_default_fingerprint_preset, create_fingerprint_preset,
+    apply_automation_parity_args, build_cdp_emulation_commands, build_fingerprint_init_script,
+    build_init_script_config, create_default_fingerprint_preset, create_fingerprint_preset,
     derive_user_agent_data, detect_automation_controlled_triggers, disables_automation_controlled,
     fingerprint_field_mechanism, parity_ignored_default_args, resolve_fingerprint_profile,
-    AutomationTrigger, BrandVersion, ColorScheme as FingerprintColorScheme, DetectedTrigger,
-    FieldMechanism, FingerprintProfile, ForcedColors, GeolocationProfile, ReducedMotion,
-    ScreenProfile, UserAgentData, ViewportProfile, WebglProfile, AUTOMATION_CONTROLLED_OFF_ARG,
-    AUTOMATION_CONTROLLED_TRIGGERS, DEFAULT_CHROME_VERSION, FINGERPRINT_FIELD_MECHANISMS,
-    FINGERPRINT_PRESET_NAMES, PLAYWRIGHT_HEADLESS_POINTER_ARG,
+    AutomationTrigger, BrandVersion, CdpCommand, ColorScheme as FingerprintColorScheme,
+    DetectedTrigger, FieldMechanism, FingerprintProfile, ForcedColors, GeolocationProfile,
+    InitScriptOptions, ReducedMotion, ScreenProfile, UserAgentData, ViewportProfile, WebglProfile,
+    AUTOMATION_CONTROLLED_OFF_ARG, AUTOMATION_CONTROLLED_TRIGGERS, DEFAULT_CHROME_VERSION,
+    FINGERPRINT_FIELD_MECHANISMS, FINGERPRINT_PAYLOAD_SOURCE, FINGERPRINT_PRESET_NAMES,
+    PLAYWRIGHT_HEADLESS_POINTER_ARG,
 };
 
 /// Prelude module for convenient imports.
@@ -104,15 +106,16 @@ pub mod prelude {
         text_content, ParsedSelector,
     };
     pub use crate::fingerprint::{
-        apply_automation_parity_args, create_default_fingerprint_preset, create_fingerprint_preset,
+        apply_automation_parity_args, build_cdp_emulation_commands, build_fingerprint_init_script,
+        build_init_script_config, create_default_fingerprint_preset, create_fingerprint_preset,
         derive_user_agent_data, detect_automation_controlled_triggers,
         disables_automation_controlled, fingerprint_field_mechanism, parity_ignored_default_args,
-        resolve_fingerprint_profile, AutomationTrigger, BrandVersion,
+        resolve_fingerprint_profile, AutomationTrigger, BrandVersion, CdpCommand,
         ColorScheme as FingerprintColorScheme, DetectedTrigger, FieldMechanism, FingerprintProfile,
-        ForcedColors, GeolocationProfile, ReducedMotion, ScreenProfile, UserAgentData,
-        ViewportProfile, WebglProfile, AUTOMATION_CONTROLLED_OFF_ARG,
+        ForcedColors, GeolocationProfile, InitScriptOptions, ReducedMotion, ScreenProfile,
+        UserAgentData, ViewportProfile, WebglProfile, AUTOMATION_CONTROLLED_OFF_ARG,
         AUTOMATION_CONTROLLED_TRIGGERS, DEFAULT_CHROME_VERSION, FINGERPRINT_FIELD_MECHANISMS,
-        FINGERPRINT_PRESET_NAMES, PLAYWRIGHT_HEADLESS_POINTER_ARG,
+        FINGERPRINT_PAYLOAD_SOURCE, FINGERPRINT_PRESET_NAMES, PLAYWRIGHT_HEADLESS_POINTER_ARG,
     };
     pub use crate::high_level::{
         check_and_clear_flag, find_toggle_button, install_click_listener, wait_for_url_condition,

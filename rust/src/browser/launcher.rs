@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use chromiumoxide::browser::{Browser as CdpBrowser, BrowserConfig, HeadlessMode};
+use chromiumoxide::browser::{Browser as CdpBrowser, BrowserConfig};
 use futures::StreamExt;
 
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
@@ -418,15 +418,16 @@ async fn launch_chromiumoxide(
     options: LaunchOptions,
     user_data_dir: PathBuf,
 ) -> Result<LaunchResult, anyhow::Error> {
-    let headless_mode = if options.headless {
-        HeadlessMode::New
+    // chromiumoxide 0.9 stopped re-exporting `HeadlessMode`, so the mode is
+    // selected through the builder's own methods instead of the enum.
+    let builder = BrowserConfig::builder();
+    let builder = if options.headless {
+        builder.new_headless_mode()
     } else {
-        HeadlessMode::False
+        builder.with_head()
     };
-
-    let mut builder = BrowserConfig::builder()
+    let mut builder = builder
         .user_data_dir(&user_data_dir)
-        .headless_mode(headless_mode)
         .args(options.all_chrome_args());
 
     // Chromiumoxide only exposes an all-or-nothing switch for its own default

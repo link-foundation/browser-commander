@@ -42,7 +42,7 @@ All artifacts are regenerable: each is written by a named script in
 - `analysis-artifacts/remote-debugging-isolation.json`: `navigator.webdriver`
   under each launch switch in isolation, which is what identifies the debugging
   transport rather than `--enable-automation` as the cause. Written by
-  `run-remote-debugging.mjs`.
+  `run-remote-debugging-isolation.mjs`.
 - `analysis-artifacts/cdp-override-coverage.json`: which fingerprint fields the
   CDP `Emulation` domain can set and which have no command at all. Written by
   `run-override-coverage.mjs`.
@@ -77,7 +77,7 @@ headful runs under `Xvfb` at 1920x1080x24.
   flag on either engine changes no field.
 - 2026-09-04: `content/child/runtime_features.cc` read; the property is a Blink
   runtime feature, and the debugging transport enables it.
-  `run-remote-debugging.mjs` confirms switch by switch.
+  `run-remote-debugging-isolation.mjs` confirms switch by switch.
 - 2026-09-04: parity arguments landed. Headful reaches 0 for both engines.
   Playwright headless stays at 4, because its pointer switch is appended after
   caller arguments and only `ignoreDefaultArgs` can remove it.

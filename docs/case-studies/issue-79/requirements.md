@@ -178,12 +178,13 @@ larger than the screen, and unknown fields.
 
 **Status: done for all three languages.**
 
-The JavaScript suite went from 526 to 644 tests, 118 of them the fingerprint
-subsystem's eight unit files plus the e2e suite. The ports carry the same
-coverage rather than a summary of it: 130 fingerprint tests in Python and 105 in
-Rust, translated one for one from the JavaScript files, so a behaviour that
-diverges in one language fails a test there instead of surfacing as a
-fingerprint difference months later.
+The JavaScript suite went from 526 to 645 tests, 119 of them the fingerprint
+subsystem's eight unit files, plus the 12-test e2e parity suite. The ports carry
+the same coverage rather than a summary of it: 131 fingerprint tests in Python
+and 106 in Rust, translated one for one from the JavaScript files, so a
+behaviour that diverges in one language fails a test there instead of surfacing
+as a fingerprint difference months later. Totals on this branch: 645 JavaScript,
+428 Python and 298 Rust unit tests.
 
 Two choices are worth recording because they change what the tests are worth:
 
@@ -211,8 +212,9 @@ language has a test that reads `js/src/fingerprint/` and compares, on top of the
 `scripts/check-shared-fingerprint-assets.sh` job. A copy that silently stops
 matching its original is exactly how the prior art rotted.
 
-Eleven experiment scripts under `experiments/fingerprint-parity/` drive real
-Chrome; their output is the `analysis-artifacts/` directory, and every claim in
+Ten experiment scripts under `experiments/fingerprint-parity/` drive real
+Chrome through a shared `harness.mjs` and `probe.js`; their output is the
+`analysis-artifacts/` directory, and every claim in
 [`measurements.md`](./measurements.md) cites one.
 
 ---
@@ -425,6 +427,18 @@ The reason for insisting on shared assets rather than translations is in
 [`prior-art.md`](./prior-art.md): `selenium-stealth` and `playwright_stealth`
 are hand-made copies of the puppeteer-extra evasion list, and both rotted
 because a copy has no way to notice that its original moved.
+
+**What is not covered, and the plan.** The end-to-end suite that diffs against a
+hand-started Chrome is JavaScript-only. Its harness is a Node HTTP server that
+serves `probe.js` and receives the report, so porting it means porting a test
+server rather than a feature; Python and Rust are covered instead by unit tests
+asserting the same launch arguments, the same CDP command list and the same
+profile resolution as the JavaScript implementation they were translated from.
+That is weaker in one specific way: it proves the three languages agree with
+each other, not that all three agree with a real browser. Plan: keep the one
+Node harness and drive the Python and Rust launchers against it as external
+processes, so a single reference capture serves all three, rather than
+reimplementing the probe three times and comparing three probes.
 
 ---
 

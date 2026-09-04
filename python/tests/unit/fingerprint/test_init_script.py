@@ -191,9 +191,23 @@ for (const name of ['WebGLRenderingContext', 'WebGL2RenderingContext']) {
     return 'real-' + p;
   };
 }
-globalThis.navigator = new Navigator();
-globalThis.screen = new Screen();
-globalThis.gl = new WebGLRenderingContext();
+// Node 21 and newer define `navigator` on globalThis as a getter-only
+// accessor, so a plain assignment fails silently in sloppy mode and the realm
+// keeps Node's own navigator. defineProperty installs the fake in every Node
+// version; the check turns a future regression into an error rather than a
+// confusing value mismatch.
+for (const [name, value] of [['navigator', new Navigator()],
+                             ['screen', new Screen()],
+                             ['gl', new WebGLRenderingContext()]]) {
+  Object.defineProperty(globalThis, name, {
+    value,
+    writable: true,
+    configurable: true,
+  });
+}
+if (!(globalThis.navigator instanceof Navigator)) {
+  throw new Error('the fake realm did not replace globalThis.navigator');
+}
 """
 
 _REPORT = """

@@ -11,6 +11,7 @@ pub mod apply;
 pub mod automation_parity;
 pub mod cdp_overrides;
 pub mod derive;
+pub mod field_mechanisms;
 pub mod init_script;
 pub mod limitations;
 pub mod presets;
@@ -25,6 +26,9 @@ pub use automation_parity::{
 };
 pub use cdp_overrides::{build_cdp_emulation_commands, CdpCommand};
 pub use derive::derive_user_agent_data;
+pub use field_mechanisms::{
+    fingerprint_field_mechanism, FieldMechanism, FINGERPRINT_FIELD_MECHANISMS,
+};
 pub use init_script::{
     build_fingerprint_init_script, build_init_script_config, InitScriptOptions,
     FINGERPRINT_PAYLOAD_SOURCE,
@@ -39,7 +43,6 @@ pub use presets::{
     FINGERPRINT_PRESET_NAMES,
 };
 pub use profile::{
-    fingerprint_field_mechanism, resolve_fingerprint_profile, BrandVersion, ColorScheme,
-    FieldMechanism, FingerprintProfile, ForcedColors, GeolocationProfile, ReducedMotion,
-    ScreenProfile, UserAgentData, ViewportProfile, WebglProfile, FINGERPRINT_FIELD_MECHANISMS,
+    resolve_fingerprint_profile, BrandVersion, ColorScheme, FingerprintProfile, ForcedColors,
+    GeolocationProfile, ReducedMotion, ScreenProfile, UserAgentData, ViewportProfile, WebglProfile,
 };

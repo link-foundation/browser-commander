@@ -640,6 +640,64 @@ async function collectBrowserCommanderEnvironmentReport() {
     hasStorageEstimate: Boolean(navigator.storage && navigator.storage.estimate),
   }));
 
+  record('cdpSignals', () => {
+    // When a CDP client has called Runtime.enable for this execution context,
+    // the console API forwards its arguments to the inspector, which serialises
+    // them and therefore reads Error.prototype.stack. A real browser with no
+    // debugger attached never touches the getter.
+    let consoleDebugReadStack = false;
+    try {
+      const probeError = new Error('bc-probe');
+      Object.defineProperty(probeError, 'stack', {
+        configurable: true,
+        get() {
+          consoleDebugReadStack = true;
+          return '';
+        },
+      });
+      console.debug(probeError);
+    } catch (error) {
+      consoleDebugReadStack = String((error && error.message) || error);
+    }
+
+    // Same idea, but on an object preview rather than an error description:
+    // the inspector reads own properties to build the preview it sends with
+    // Runtime.consoleAPICalled.
+    const previewProbe = (emit) => {
+      let read = false;
+      try {
+        const element = document.createElement('div');
+        Object.defineProperty(element, 'id', {
+          configurable: true,
+          get() {
+            read = true;
+            return '';
+          },
+        });
+        emit(element);
+      } catch (error) {
+        return String((error && error.message) || error);
+      }
+      return read;
+    };
+
+    let stackTraceLimitIsDefault = null;
+    try {
+      stackTraceLimitIsDefault = Error.stackTraceLimit === 10;
+    } catch {
+      stackTraceLimitIsDefault = null;
+    }
+
+    return {
+      consoleDebugReadStack,
+      consoleDebugReadElementId: previewProbe((value) => console.debug(value)),
+      consoleLogReadElementId: previewProbe((value) => console.log(value)),
+      consoleTableReadElementId: previewProbe((value) => console.table(value)),
+      consoleDirReadElementId: previewProbe((value) => console.dir(value)),
+      stackTraceLimitIsDefault,
+    };
+  });
+
   report.probeErrors = errors;
   return report;
 }

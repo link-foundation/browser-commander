@@ -156,12 +156,14 @@ export const FINGERPRINT_LIMITATIONS = Object.freeze([
     severity: 'high',
     evidence: 'measured',
     detail:
-      'A real headless Chrome differs from a real headful Chrome in twelve ' +
+      'A real headless Chrome differs from a real headful Chrome in thirteen ' +
       'probe fields with no automation involved at all: the user agent and ' +
-      'appVersion contain "HeadlessChrome", the screen is 800x600, the four ' +
-      'hover and pointer media queries report no hover and no fine pointer, ' +
-      'and WebGL falls back to SwiftShader. Parity is therefore defined ' +
-      'against a headful browser.',
+      'appVersion contain "HeadlessChrome" -- in the document, in an iframe ' +
+      'and in a worker -- the screen is 800x600 and availWidth and ' +
+      'availHeight follow it, the four hover and pointer media queries report ' +
+      'no hover and no fine pointer, and WebGL falls back to SwiftShader. ' +
+      'A headless browser is therefore compared against a headless reference, ' +
+      'never against a headful one.',
     workaround: 'Run headful, under a virtual display such as Xvfb if needed.',
     reference: 'analysis-artifacts/parity-headless.json',
   }),

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
 from browser_commander.core.constants import CHROME_ARGS
 from browser_commander.core.engine_detection import EngineType
+from browser_commander.fingerprint.apply import apply_fingerprint
 from browser_commander.fingerprint.automation_parity import (
     apply_automation_parity_args,
     parity_ignored_default_args,
@@ -32,6 +34,11 @@ class LaunchOptions:
     ignore_default_args: bool | list[str] = field(default_factory=list)
     color_scheme: ColorScheme | None = None
     automation_parity: bool = True
+    fingerprint: Mapping[str, Any] | None = None
+    """Environment fields to present to pages: user agent, timezone, locale,
+    core count, screen and the rest. Applied over CDP after launch; see
+    ``browser_commander.fingerprint.profile`` for the field list and ``presets``
+    for ready-made profiles."""
 
 
 @dataclass
@@ -214,6 +221,15 @@ async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
         except Exception as e:
             if verbose:
                 print(f"Could not set color scheme: {e}")
+
+    # The fingerprint is applied before the caller can navigate, so the first
+    # document a page loads already sees the configured environment.
+    if options.fingerprint is not None:
+        await apply_fingerprint(
+            page=page, browser=browser, engine=engine, profile=options.fingerprint
+        )
+        if verbose:
+            print("Fingerprint profile applied")
 
     # Unfocus address bar automatically after browser launch
     try:

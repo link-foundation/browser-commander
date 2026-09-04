@@ -15,9 +15,11 @@ use crate::browser::media::ColorScheme;
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::core::constants::CHROME_ARGS;
 use crate::core::engine::{EngineAdapter, EngineType};
+use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
 use crate::fingerprint::automation_parity::{
     apply_automation_parity_args, parity_ignored_default_args,
 };
+use crate::fingerprint::profile::FingerprintProfile;
 
 /// Options for launching a browser.
 #[derive(Debug, Clone)]
@@ -65,6 +67,14 @@ pub struct LaunchOptions {
     /// Defaults to `true`. Set to `false` to launch with the engine's own
     /// defaults, which is what the parity tests use as a negative control.
     pub automation_parity: bool,
+    /// The environment pages should see: user agent, time zone, locale, core
+    /// count, screen and the rest.
+    ///
+    /// Applied over CDP once the browser is up, so it only works for the
+    /// chromiumoxide engine; see
+    /// [`fingerprint::profile`](crate::fingerprint::profile) for the field list
+    /// and [`presets`](crate::fingerprint::presets) for ready-made machines.
+    pub fingerprint: Option<FingerprintProfile>,
 }
 
 impl Default for LaunchOptions {
@@ -87,6 +97,7 @@ impl Default for LaunchOptions {
             node_executable: None,
             node_working_dir: None,
             automation_parity: true,
+            fingerprint: None,
         }
     }
 }
@@ -227,6 +238,12 @@ impl LaunchOptions {
     /// Turn fingerprint parity with a hand-started Chrome on or off.
     pub fn automation_parity(mut self, automation_parity: bool) -> Self {
         self.automation_parity = automation_parity;
+        self
+    }
+
+    /// Set the environment pages should see.
+    pub fn fingerprint(mut self, fingerprint: FingerprintProfile) -> Self {
+        self.fingerprint = Some(fingerprint);
         self
     }
 
@@ -375,6 +392,16 @@ async fn launch_node_bridge(
 ) -> Result<LaunchResult, anyhow::Error> {
     let engine = options.engine;
     let headless = options.headless;
+    if options.fingerprint.is_some() {
+        // Failing here is the honest answer: the node bridge speaks its own
+        // command protocol rather than CDP, so a profile handed to it would be
+        // silently dropped and the page would report the real machine.
+        return Err(anyhow::anyhow!(
+            "the {engine} engine cannot apply a fingerprint profile yet; \
+             use EngineType::Chromiumoxide, or apply the profile from the \
+             JavaScript package, which drives Playwright and Puppeteer directly"
+        ));
+    }
     let adapter = NodeBridgePage::launch(options, user_data_dir.clone()).await?;
 
     Ok(LaunchResult {
@@ -452,6 +479,17 @@ async fn launch_chromiumoxide(
 
     let adapter = ChromiumoxidePage::new(page, browser, handler_task, user_data_dir.clone());
 
+    // The fingerprint goes on before the caller can navigate, so the first
+    // document a page loads already sees the configured environment. A failure
+    // here is fatal rather than best-effort: a half-applied profile describes a
+    // machine that does not exist, which is louder than no profile at all.
+    if let Some(ref profile) = options.fingerprint {
+        apply_fingerprint(&adapter, profile, ApplyOptions::default()).await?;
+        if options.verbose {
+            tracing::info!("Fingerprint profile applied");
+        }
+    }
+
     // Apply color scheme emulation (best-effort).
     if let Some(ref cs) = color_scheme {
         if let Err(err) = adapter.set_color_scheme(Some(cs)).await {
@@ -491,6 +529,7 @@ mod tests {
     use crate::fingerprint::automation_parity::{
         AUTOMATION_CONTROLLED_OFF_ARG, PLAYWRIGHT_HEADLESS_POINTER_ARG,
     };
+    use crate::fingerprint::presets::create_default_fingerprint_preset;
 
     #[test]
     fn launch_options_default() {
@@ -508,6 +547,9 @@ mod tests {
         assert!(options.executable_path.is_none());
         assert!(options.node_executable.is_none());
         assert!(options.node_working_dir.is_none());
+        // A launch without a profile has to leave the machine as it is, so the
+        // browser reports the real hardware rather than a half-set one.
+        assert!(options.fingerprint.is_none());
     }
 
     #[test]
@@ -709,6 +751,29 @@ mod tests {
         let options = LaunchOptions::fantoccini();
         let err = launch_browser(options).await.unwrap_err();
         assert!(err.to_string().contains("fantoccini"));
+    }
+
+    #[test]
+    fn launch_options_carry_a_fingerprint_profile() {
+        let profile = create_default_fingerprint_preset("windows-chrome").expect("preset");
+        let options = LaunchOptions::default().fingerprint(profile.clone());
+
+        assert_eq!(options.fingerprint, Some(profile));
+    }
+
+    #[tokio::test]
+    async fn launch_playwright_refuses_a_fingerprint_it_cannot_apply() {
+        // Dropping the profile silently would leave the page reporting the real
+        // machine while the caller believes it is hidden.
+        let options = LaunchOptions::playwright()
+            .headless(true)
+            .fingerprint(create_default_fingerprint_preset("windows-chrome").expect("preset"));
+
+        let err = launch_browser(options).await.unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("cannot apply a fingerprint profile"));
     }
 
     #[tokio::test]

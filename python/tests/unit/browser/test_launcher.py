@@ -111,6 +111,15 @@ class TestAutomationParity:
         options = LaunchOptions(automation_parity=False)
         assert options.automation_parity is False
 
+    def test_no_fingerprint_is_applied_unless_one_is_given(self):
+        # A launch without a profile has to leave the machine as it is, so the
+        # browser reports the real hardware rather than a half-set one.
+        assert LaunchOptions().fingerprint is None
+
+    def test_carries_the_fingerprint_profile_to_apply_after_launch(self):
+        options = LaunchOptions(fingerprint={"timezoneId": "Europe/Berlin"})
+        assert options.fingerprint == {"timezoneId": "Europe/Berlin"}
+
 
 class TestResolveIgnoredDefaultArgs:
     """Parity exclusions merge with the caller's own."""

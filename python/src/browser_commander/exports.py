@@ -101,6 +101,11 @@ from browser_commander.elements.selectors import (
     with_text_selector_support,
 )
 from browser_commander.elements.visibility import count, is_enabled, is_visible
+from browser_commander.fingerprint.apply import (
+    AppliedFingerprint,
+    apply_fingerprint,
+    create_cdp_session,
+)
 from browser_commander.fingerprint.automation_parity import (
     AUTOMATION_CONTROLLED_OFF_ARG,
     AUTOMATION_CONTROLLED_TRIGGERS,
@@ -203,6 +208,9 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "build_cdp_emulation_commands",
     "build_fingerprint_init_script",
     "build_init_script_config",
+    "AppliedFingerprint",
+    "apply_fingerprint",
+    "create_cdp_session",
     "FINGERPRINT_FIELD_MECHANISMS",
     "FINGERPRINT_PRESET_NAMES",
     "CHROME_ARGS",

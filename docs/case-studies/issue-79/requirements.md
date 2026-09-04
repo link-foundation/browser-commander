@@ -249,8 +249,8 @@ strong signal in combination; `low` means it narrows the field.
 > "This should affect all supported programming languages."
 
 **Status: partial -- automation parity, the profile vocabulary, the CDP
-commands and the init script now exist in all three languages; `apply` is still
-JavaScript only.**
+commands, the init script and applying a profile to a live page now exist in
+all three languages; the limitations catalogue is still JavaScript only.**
 
 The subsystem is deliberately shaped for porting: pure data and pure functions,
 with I/O confined to `apply.js`. `buildCdpEmulationCommands(profile)` returns
@@ -333,10 +333,58 @@ payload is wrapped in an IIFE before it is sent, so the page never gains a
 payload hides. The Python test suite proves the point end to end by running the
 script *Python* generates through Node and reading back the patched values.
 
+**Solution, step 4 -- done.** Applying a profile to a live page is the only
+part that genuinely differs per language, because each implementation reaches
+CDP its own way:
+
+- `js/src/fingerprint/apply.js` -- Playwright's `context.newCDPSession(page)`
+  and Puppeteer's `target.createCDPSession()`.
+- `python/src/browser_commander/fingerprint/apply.py` -- the same Playwright
+  session, plus a `SeleniumCdpSession` wrapper that gives Selenium's blocking
+  `driver.execute_cdp_cmd` the same `send(method, params)` shape, so one code
+  path serves both engines.
+- `rust/src/fingerprint/apply.rs` -- a `CdpTransport` trait, kept free of any
+  engine so the unit tests drive it with a recording double.
+
+The command sequence is identical everywhere and is asserted in all three:
+every `Emulation` command first, then `Page.enable`, then
+`Page.addScriptToEvaluateOnNewDocument`, then `Runtime.evaluate` with the same
+source. `Page.enable` is not decoration -- measured, Chrome otherwise accepts
+`addScriptToEvaluateOnNewDocument`, returns an identifier and never runs the
+script -- and the `Runtime.evaluate` pass exists because a page that has already
+navigated will not replay an init script. Running the script twice is safe: the
+payload's marker makes the second run a no-op.
+
+chromiumoxide generates one Rust type per protocol method from the PDL, which
+has no room for a method chosen at run time. `rust/src/browser/raw_cdp.rs`
+closes that with a `RawCdpCommand` whose `Method::identifier` supplies the
+method name and whose `Serialize` supplies the params object -- the two halves a
+`MethodCall` needs -- and implements `CdpTransport` for `ChromiumoxidePage` on
+top of it. That is what lets the Rust command list stay `(method, params)`
+pairs comparable with the other two languages instead of a `match` over
+generated types.
+
+Two limits are language-specific rather than protocol-specific, and both fail
+loudly instead of silently:
+
+- Applying a profile to pages opened *later* is JavaScript- and
+  Playwright-only. Puppeteer's `targetcreated` and Playwright's `page` event
+  give JavaScript a hook; Python's Selenium binding has no page-opened event,
+  and chromiumoxide exposes no page-created stream, so both apply per page.
+  `Target.setAutoAttach` is the route to closing this, because it delivers a
+  session for each new target before it runs any script.
+- The Rust launcher applies a profile for the chromiumoxide engine only. Its
+  Playwright and Puppeteer engines are a Node bridge speaking a private command
+  protocol rather than CDP, so `launch_browser` returns an error for a profile
+  it cannot apply rather than dropping it -- a dropped profile would leave the
+  page reporting the real machine while the caller believes it is hidden.
+
 Plan for the rest:
 
-4. **Apply.** The only part that differs per language, because each
-   implementation opens a CDP session its own way.
+5. **The limitations catalogue.** `limitations.js` is the R4 deliverable, and a
+   Python or Rust caller currently has no way to ask which entries apply to
+   their profile. It is pure data, so it ports the same way the profile
+   vocabulary did.
 
 The reason for insisting on shared assets rather than translations is in
 [`prior-art.md`](./prior-art.md): `selenium-stealth` and `playwright_stealth`

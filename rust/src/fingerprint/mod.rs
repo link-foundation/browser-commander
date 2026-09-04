@@ -7,6 +7,7 @@
 //! unit tested without one. See `docs/case-studies/issue-79` for the
 //! measurements these modules are built on.
 
+pub mod apply;
 pub mod automation_parity;
 pub mod cdp_overrides;
 pub mod derive;
@@ -14,6 +15,7 @@ pub mod init_script;
 pub mod presets;
 pub mod profile;
 
+pub use apply::{apply_fingerprint, AppliedFingerprint, ApplyOptions, CdpTransport};
 pub use automation_parity::{
     apply_automation_parity_args, detect_automation_controlled_triggers,
     disables_automation_controlled, parity_ignored_default_args, AutomationTrigger,

@@ -1,5 +1,11 @@
 """Fingerprint parity between a real Chrome and a controlled one."""
 
+from browser_commander.fingerprint.apply import (
+    AppliedFingerprint,
+    SeleniumCdpSession,
+    apply_fingerprint,
+    create_cdp_session,
+)
 from browser_commander.fingerprint.automation_parity import (
     AUTOMATION_CONTROLLED_OFF_ARG,
     AUTOMATION_CONTROLLED_TRIGGERS,
@@ -43,13 +49,17 @@ __all__ = [
     "FINGERPRINT_PRESET_NAMES",
     "KNOWN_FINGERPRINT_PROFILE_FIELDS",
     "PLAYWRIGHT_HEADLESS_POINTER_ARG",
+    "AppliedFingerprint",
     "AutomationTrigger",
     "CdpCommand",
     "DetectedTrigger",
+    "SeleniumCdpSession",
     "apply_automation_parity_args",
+    "apply_fingerprint",
     "build_cdp_emulation_commands",
     "build_fingerprint_init_script",
     "build_init_script_config",
+    "create_cdp_session",
     "create_fingerprint_preset",
     "derive_user_agent_data",
     "detect_automation_controlled_triggers",

@@ -124,6 +124,11 @@ from browser_commander.fingerprint.init_script import (
     build_fingerprint_init_script,
     build_init_script_config,
 )
+from browser_commander.fingerprint.limitations import (
+    FINGERPRINT_LIMITATIONS,
+    find_fingerprint_limitation,
+    relevant_fingerprint_limitations,
+)
 from browser_commander.fingerprint.presets import (
     FINGERPRINT_PRESET_NAMES,
     create_fingerprint_preset,
@@ -211,7 +216,10 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "AppliedFingerprint",
     "apply_fingerprint",
     "create_cdp_session",
+    "find_fingerprint_limitation",
+    "relevant_fingerprint_limitations",
     "FINGERPRINT_FIELD_MECHANISMS",
+    "FINGERPRINT_LIMITATIONS",
     "FINGERPRINT_PRESET_NAMES",
     "CHROME_ARGS",
     "TIMING",

@@ -325,7 +325,7 @@ describe('init script behaviour in a page-like realm', () => {
   it('carries the shared payload asset and nothing else', () => {
     // The payload is one file that Python and Rust send byte for byte, so the
     // script has to be that file rather than a copy generated from a function
-    // in this package. scripts/check-shared-init-payload.sh guards the copies.
+    // in this package. scripts/check-shared-fingerprint-assets.sh guards the copies.
     assert.ok(script.includes(FINGERPRINT_PAYLOAD_SOURCE));
     assert.match(
       FINGERPRINT_PAYLOAD_SOURCE,

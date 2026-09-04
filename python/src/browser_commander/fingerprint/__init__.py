@@ -28,6 +28,11 @@ from browser_commander.fingerprint.init_script import (
     build_fingerprint_init_script,
     build_init_script_config,
 )
+from browser_commander.fingerprint.limitations import (
+    FINGERPRINT_LIMITATIONS,
+    find_fingerprint_limitation,
+    relevant_fingerprint_limitations,
+)
 from browser_commander.fingerprint.presets import (
     DEFAULT_CHROME_VERSION,
     FINGERPRINT_PRESET_NAMES,
@@ -45,6 +50,7 @@ __all__ = [
     "DEFAULT_CHROME_VERSION",
     "ENGINE_PARITY_IGNORED_DEFAULT_ARGS",
     "FINGERPRINT_FIELD_MECHANISMS",
+    "FINGERPRINT_LIMITATIONS",
     "FINGERPRINT_PAYLOAD_SOURCE",
     "FINGERPRINT_PRESET_NAMES",
     "KNOWN_FINGERPRINT_PROFILE_FIELDS",
@@ -64,6 +70,8 @@ __all__ = [
     "derive_user_agent_data",
     "detect_automation_controlled_triggers",
     "disables_automation_controlled",
+    "find_fingerprint_limitation",
     "parity_ignored_default_args",
+    "relevant_fingerprint_limitations",
     "resolve_fingerprint_profile",
 ]

@@ -9,7 +9,7 @@
 //!
 //! The payload itself is not written here. `init_payload.js` next to this
 //! module is a byte-for-byte copy of `js/src/fingerprint/init-payload.js`, kept
-//! in step by `scripts/check-shared-init-payload.sh`, so all three
+//! in step by `scripts/check-shared-fingerprint-assets.sh`, so all three
 //! implementations send Chrome the same script rather than three hand-written
 //! translations of it.
 

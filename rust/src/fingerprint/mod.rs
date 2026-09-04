@@ -12,6 +12,7 @@ pub mod automation_parity;
 pub mod cdp_overrides;
 pub mod derive;
 pub mod init_script;
+pub mod limitations;
 pub mod presets;
 pub mod profile;
 
@@ -27,6 +28,11 @@ pub use derive::derive_user_agent_data;
 pub use init_script::{
     build_fingerprint_init_script, build_init_script_config, InitScriptOptions,
     FINGERPRINT_PAYLOAD_SOURCE,
+};
+pub use limitations::{
+    find_fingerprint_limitation, relevant_fingerprint_limitations, FingerprintLimitation,
+    LimitationContext, LimitationEvidence, LimitationSeverity, FINGERPRINT_LIMITATIONS,
+    FINGERPRINT_LIMITATIONS_SOURCE,
 };
 pub use presets::{
     create_default_fingerprint_preset, create_fingerprint_preset, DEFAULT_CHROME_VERSION,

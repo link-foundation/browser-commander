@@ -248,9 +248,9 @@ strong signal in combination; `low` means it narrows the field.
 
 > "This should affect all supported programming languages."
 
-**Status: partial -- automation parity, the profile vocabulary, the CDP
-commands, the init script and applying a profile to a live page now exist in
-all three languages; the limitations catalogue is still JavaScript only.**
+**Status: done -- automation parity, the profile vocabulary, the CDP commands,
+the init script, applying a profile to a live page and the limitations
+catalogue all exist in all three languages.**
 
 The subsystem is deliberately shaped for porting: pure data and pure functions,
 with I/O confined to `apply.js`. `buildCdpEmulationCommands(profile)` returns
@@ -325,7 +325,7 @@ its own `Function.prototype.toString`, preserves descriptor shapes and hides its
 idempotence marker, and three hand-written copies of that would drift within a
 release. `js/src/fingerprint/init-payload.js` is the original; Python ships it
 as package data and reads it with `Path.read_text`, Rust embeds it with
-`include_str!`, and `scripts/check-shared-init-payload.sh` -- a job in
+`include_str!`, and `scripts/check-shared-fingerprint-assets.sh` -- a job in
 `quality.yml` -- fails the build if the copies differ by a byte. (Copies are
 unavoidable: npm, PyPI and crates.io each package a single directory.) The
 payload is wrapped in an IIFE before it is sent, so the page never gains a
@@ -379,12 +379,30 @@ loudly instead of silently:
   it cannot apply rather than dropping it -- a dropped profile would leave the
   page reporting the real machine while the caller believes it is hidden.
 
-Plan for the rest:
+**Solution, step 5 -- done.** The limitations catalogue is the R4 deliverable,
+and a Python or Rust caller had no way to ask which entries apply to their
+profile. It is prose, not behaviour, so it moved into a shared asset for the
+same reason the init payload did -- eleven paragraphs of hand-copied text drift
+as easily as a hand-copied patch, and a stale paragraph about privacy is worse
+than none:
 
-5. **The limitations catalogue.** `limitations.js` is the R4 deliverable, and a
-   Python or Rust caller currently has no way to ask which entries apply to
-   their profile. It is pure data, so it ports the same way the profile
-   vocabulary did.
+- `js/src/fingerprint/limitations.json` -- the original, read by
+  `limitations.js`.
+- `python/src/browser_commander/fingerprint/limitations.py` -- the copy as
+  package data, exposed as read-only `MappingProxyType` entries.
+- `rust/src/fingerprint/limitations.rs` -- the copy embedded with
+  `include_str!` and deserialized into `FingerprintLimitation` structs, with
+  `severity` and `evidence` as enums so an unknown value fails at parse time.
+
+`scripts/check-shared-fingerprint-assets.sh` grew from one asset to a list and
+now checks both, and each language additionally asserts in its own unit tests
+that the copy it ships equals the JavaScript original.
+`relevant_fingerprint_limitations(profile, ...)` selects the same entries under
+the same conditions in all three, so a caller in any language is told the same
+things about their own profile: the two nothing can be done about always, the
+launch-only switch only when attached to somebody else's browser, headless only
+when headless, and the worker entry whenever the profile sets a field a worker
+reads differently.
 
 The reason for insisting on shared assets rather than translations is in
 [`prior-art.md`](./prior-art.md): `selenium-stealth` and `playwright_stealth`

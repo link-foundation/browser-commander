@@ -12,7 +12,7 @@
  * - python/src/browser_commander/fingerprint/init_payload.js
  * - rust/src/fingerprint/init_payload.js
  *
- * `scripts/check-shared-init-payload.sh` fails the build when they differ.
+ * `scripts/check-shared-fingerprint-assets.sh` fails the build when they differ.
  * Editing one and forgetting the others is the failure mode that rotted
  * selenium-stealth and playwright_stealth -- see
  * docs/case-studies/issue-79/prior-art.md -- so the check exists to make a

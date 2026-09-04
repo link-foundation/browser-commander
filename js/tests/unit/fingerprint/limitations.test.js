@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { readFileSync } from 'node:fs';
 
 import {
   FINGERPRINT_LIMITATIONS,
@@ -39,6 +40,19 @@ describe('the documented limitations', () => {
   it('cannot be edited by a caller', () => {
     assert.ok(Object.isFrozen(FINGERPRINT_LIMITATIONS));
     assert.ok(FINGERPRINT_LIMITATIONS.every((entry) => Object.isFrozen(entry)));
+  });
+
+  it('is the shared JSON asset Python and Rust also publish', () => {
+    // The catalogue is data, not code, so the three packages ship one file
+    // rather than three translations of the same eleven paragraphs.
+    const asset = JSON.parse(
+      readFileSync(
+        new URL('../../../src/fingerprint/limitations.json', import.meta.url),
+        'utf8'
+      )
+    );
+
+    assert.deepEqual(asset, FINGERPRINT_LIMITATIONS);
   });
 
   it('looks an entry up by id', () => {

@@ -144,7 +144,7 @@ def test_copies_the_values_it_takes_from_the_profile() -> None:
 def test_carries_the_shared_payload_asset_and_nothing_else() -> None:
     # The payload is one file that JavaScript and Rust send byte for byte, so
     # this package must ship the file rather than a translation of it.
-    # scripts/check-shared-init-payload.sh guards the copies.
+    # scripts/check-shared-fingerprint-assets.sh guards the copies.
     script = build_fingerprint_init_script(
         resolve_fingerprint_profile({"vendor": "Google Inc."})
     )

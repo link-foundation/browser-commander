@@ -424,16 +424,70 @@ because a copy has no way to notice that its original moved.
 
 > "All dependencies should be updated to latest versions."
 
-**Status: planned.**
+**Status: done, with two documented holds.**
 
-The parity work must land first: an engine upgrade can change the default
-switches this fix depends on, and until the parity suite exists there is no way
-to tell whether an upgrade broke anything. With the suite in place the upgrade
-is checkable rather than hopeful.
+The parity work landed first on purpose: an engine upgrade can change the
+default switches this fix depends on, and until the parity suite existed there
+was no way to tell whether an upgrade broke anything. With the suite in place
+the upgrade was checkable rather than hopeful -- and it immediately caught
+something, which is finding 6 in the [`README`](./README.md): Playwright 1.62
+made `--enable-unsafe-swiftshader` unconditional, and the headful parity
+assertion failed on the new version with no change to this library's own code.
+That switch is now excluded in all three languages.
 
-Plan: update `js/package.json`, `python/pyproject.toml` and `rust/Cargo.toml`
-to current versions, run the full suite plus the parity e2e run on the new
-engines, and record any behaviour change in `analysis-artifacts/`.
+**JavaScript.** The toolchain moved to ESLint 10, Changesets 3, jscpd 5,
+lint-staged 17, Prettier 3.9, Playwright 1.62 and Puppeteer 25. ESLint 10 no
+longer re-exports `@eslint/js` through `eslint`, so the flat config's
+dependency on it became explicit; its recommended set also gained
+`preserve-caught-error` and `no-useless-assignment`, which found seven real
+places where a rethrow dropped the original error. Each now passes
+`{ cause: error }`, so the stack that actually failed survives -- a small
+illustration of why the sweep is worth doing rather than deferring. The peer
+ranges (`playwright >=1.40.0`, `puppeteer >=21.0.0`) are floors that already
+accept the new majors, so nothing published changes.
+
+*Hold:* `better-sqlite3` stays on `^12.11.1`. Version 13 declares
+`"engines": {"node": ">=22"}`, and this package installs it only as the
+fallback for Node versions with no built-in `node:sqlite` -- that is, exactly
+the Node versions 13 refuses. Taking it would leave the fallback uninstallable
+on the only runtimes that need it.
+
+**Python.** The install specifications are floors, so a fresh environment
+already resolves to current releases: `cryptography` 50.0.1, `playwright`
+1.62.0, `selenium` 4.48.0, `ruff` 0.16.6, `pytest` 9.1.1, `pytest-asyncio`
+1.4.0, `pytest-cov` 7.1.0, `scriv` 1.8.0.
+
+*Hold:* `mypy>=1.13.0,<2.0`, the cap introduced for issue #65. Removing it was
+tested rather than assumed -- `mypy 2.3.1` against this tree answers:
+
+```text
+pyproject.toml: [mypy]: python_version: Python 3.9 is not supported
+(must be 3.10 or higher)
+```
+
+`requires-python` is `>=3.9` and the classifiers list 3.9, so lifting the cap
+means either dropping a supported interpreter from type checking or dropping it
+from the package. Both are outside this issue.
+
+**Rust.** Every direct dependency is on its latest major: `chromiumoxide` 0.7
+to 0.9, `fantoccini` 0.21 to 0.22, `thiserror` 1 to 2, `rusqlite` 0.32 to 0.40,
+`dirs` 5 to 6, `base64` 0.22 to 0.23 and the RustCrypto set (`aes` 0.9,
+`aes-gcm` 0.11, `cbc` 0.2, `pbkdf2` 0.13, `sha1`/`sha2` 0.11), with
+`Cargo.lock` refreshed for the transitive tree. Three API changes came with
+them and are in the diff: `chromiumoxide` 0.9 is tokio-only and no longer takes
+a runtime feature, and it stopped re-exporting `HeadlessMode`, so the mode is
+selected through `BrowserConfig::builder().new_headless_mode()` /
+`.with_head()`; `cipher` 0.5 renamed `BlockDecryptMut`/`BlockEncryptMut` to
+`BlockModeDecrypt`/`BlockModeEncrypt` and dropped the `_mut` suffix from
+`decrypt_padded_vec`/`encrypt_padded_vec`; and `aes-gcm` 0.11 deprecated the
+panicking `Nonce::from_slice`, which under `-D warnings` is a build failure, so
+the nonce is now built with `Nonce::try_from`.
+
+The property established for issue #77 survives the upgrade and is still
+asserted: `cargo tree -i openssl-sys` matches nothing in the default tree and
+resolves only under `--all-features`, where the `native-tls` opt-in lives.
+`chromiumoxide` 0.9 does carry TLS features, but they reach only its optional
+browser fetcher, which this crate does not enable.
 
 ---
 

@@ -1,0 +1,24 @@
+{
+  "chrome": "Google Chrome 149.0.7827.155",
+  "reference": {
+    "samples": 7,
+    "leakedBeforeEvaluate": false,
+    "leakedAfterEvaluate": null
+  },
+  "playwright": {
+    "samples": 17,
+    "leakedBeforeEvaluate": false,
+    "leakedAfterEvaluate": false
+  },
+  "puppeteer": {
+    "samples": 17,
+    "leakedBeforeEvaluate": false,
+    "leakedAfterEvaluate": false
+  },
+  "runtimeEnableControl": {
+    "samples": 17,
+    "consoleApiEvents": 34,
+    "leakedBeforeEvaluate": false,
+    "leakedAfterEvaluate": false
+  }
+}

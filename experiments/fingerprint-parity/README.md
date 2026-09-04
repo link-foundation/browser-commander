@@ -24,6 +24,7 @@ difference in how the probe was invoked.
 | `run-ua-hints-detail.mjs` | How does Chrome turn a language list and client-hint metadata into headers? |
 | `run-profile-application.mjs` | Does an applied profile survive descriptor and native-function inspection? |
 | `run-worker-visibility.mjs` | Which overrides reach a dedicated worker, and what would it take to reach the rest? |
+| `run-runtime-enable.mjs` | Does the page become observable as debugged when the caller uses `page.evaluate`? |
 
 ## Running
 

@@ -23,6 +23,21 @@ import jsPackageRules from './js/eslint.config.js';
 export default [
   ...jsPackageRules,
   {
+    // The probe is source text, not a module: the harness reads the file and
+    // wraps it as `(<file contents>)()` for `page.evaluate`, `Runtime.evaluate`
+    // and a plain `<script>` tag, so its single declaration has no caller in
+    // this repository by construction, and its length is the surface of the
+    // browser API it measures rather than a function that grew. Same reasoning
+    // as `js/src/fingerprint/init-payload.js`, which the package config exempts
+    // from `no-unused-vars` for exactly this reason. Every other rule still
+    // applies; remove these two lines if the file ever stops being a payload.
+    files: ['experiments/fingerprint-parity/probe.js'],
+    rules: {
+      'no-unused-vars': 'off',
+      'max-lines-per-function': 'off',
+    },
+  },
+  {
     ignores: [
       '**/node_modules/**',
       // Linted by `npm run lint` inside the package, with the same rules.

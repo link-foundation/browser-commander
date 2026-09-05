@@ -31,7 +31,7 @@ try {
       platform: 'linux',
       source: 'safe-storage',
     },
-    create: async () => expectedKey,
+    create: () => Promise.resolve(expectedKey),
   });
 
   const pythonSource = `

@@ -21,6 +21,7 @@ import {
   captureReferenceReport,
   diffReports,
   readProbeSource,
+  readReportPath,
   startProbeServer,
 } from './harness.mjs';
 
@@ -64,43 +65,87 @@ const PROFILE = {
   colorScheme: 'dark',
 };
 
-/** What the page must report, given the profile above. */
-const EXPECTATIONS = (report) => ({
-  'navigator.userAgent': [report?.navigator?.userAgent, PROFILE.userAgent],
-  'navigator.platform': [report?.navigator?.platform, PROFILE.platform],
-  'navigator.vendor': [report?.navigator?.vendor, PROFILE.vendor],
-  'navigator.language': [report?.navigator?.language, 'fr-FR'],
-  'navigator.languages': [report?.navigator?.languages, PROFILE.languages],
-  'navigator.hardwareConcurrency': [
-    report?.navigator?.hardwareConcurrency,
-    PROFILE.hardwareConcurrency,
-  ],
-  'navigator.deviceMemory': [
-    report?.navigator?.deviceMemory,
-    PROFILE.deviceMemory,
-  ],
-  'navigator.doNotTrack': [report?.navigator?.doNotTrack, PROFILE.doNotTrack],
-  'navigator.webdriver': [report?.navigator?.webdriver, false],
-  'userAgentData.platform': [report?.userAgentData?.platform, 'macOS'],
-  'userAgentData.uaFullVersion': [
-    report?.userAgentData?.highEntropy?.uaFullVersion,
-    '141.0.0.0',
-  ],
-  'intl.dateTimeTimeZone': [report?.intl?.dateTimeTimeZone, PROFILE.timezoneId],
-  'intl.dateTimeLocale': [report?.intl?.dateTimeLocale, PROFILE.locale],
-  'screen.width': [report?.screen?.width, PROFILE.screen.width],
-  'screen.height': [report?.screen?.height, PROFILE.screen.height],
-  'screen.availHeight': [
-    report?.screen?.availHeight,
-    PROFILE.screen.availHeight,
-  ],
-  'screen.colorDepth': [report?.screen?.colorDepth, PROFILE.screen.colorDepth],
-  'screen.pixelDepth': [report?.screen?.pixelDepth, PROFILE.screen.pixelDepth],
-  'media.prefers-color-scheme: dark': [
-    report?.mediaQueries?.['(prefers-color-scheme: dark)'],
-    true,
-  ],
-});
+/**
+ * What the page must report, given the profile above: where the probe reports
+ * each value, and what the profile says it should be.
+ */
+const CHECKS = {
+  'navigator.userAgent': {
+    path: ['navigator', 'userAgent'],
+    expected: PROFILE.userAgent,
+  },
+  'navigator.platform': {
+    path: ['navigator', 'platform'],
+    expected: PROFILE.platform,
+  },
+  'navigator.vendor': {
+    path: ['navigator', 'vendor'],
+    expected: PROFILE.vendor,
+  },
+  'navigator.language': { path: ['navigator', 'language'], expected: 'fr-FR' },
+  'navigator.languages': {
+    path: ['navigator', 'languages'],
+    expected: PROFILE.languages,
+  },
+  'navigator.hardwareConcurrency': {
+    path: ['navigator', 'hardwareConcurrency'],
+    expected: PROFILE.hardwareConcurrency,
+  },
+  'navigator.deviceMemory': {
+    path: ['navigator', 'deviceMemory'],
+    expected: PROFILE.deviceMemory,
+  },
+  'navigator.doNotTrack': {
+    path: ['navigator', 'doNotTrack'],
+    expected: PROFILE.doNotTrack,
+  },
+  'navigator.webdriver': { path: ['navigator', 'webdriver'], expected: false },
+  'userAgentData.platform': {
+    path: ['userAgentData', 'platform'],
+    expected: 'macOS',
+  },
+  'userAgentData.uaFullVersion': {
+    path: ['userAgentData', 'highEntropy', 'uaFullVersion'],
+    expected: '141.0.0.0',
+  },
+  'intl.dateTimeTimeZone': {
+    path: ['intl', 'dateTimeTimeZone'],
+    expected: PROFILE.timezoneId,
+  },
+  'intl.dateTimeLocale': {
+    path: ['intl', 'dateTimeLocale'],
+    expected: PROFILE.locale,
+  },
+  'screen.width': { path: ['screen', 'width'], expected: PROFILE.screen.width },
+  'screen.height': {
+    path: ['screen', 'height'],
+    expected: PROFILE.screen.height,
+  },
+  'screen.availHeight': {
+    path: ['screen', 'availHeight'],
+    expected: PROFILE.screen.availHeight,
+  },
+  'screen.colorDepth': {
+    path: ['screen', 'colorDepth'],
+    expected: PROFILE.screen.colorDepth,
+  },
+  'screen.pixelDepth': {
+    path: ['screen', 'pixelDepth'],
+    expected: PROFILE.screen.pixelDepth,
+  },
+  'media.prefers-color-scheme: dark': {
+    path: ['mediaQueries', '(prefers-color-scheme: dark)'],
+    expected: true,
+  },
+};
+
+const EXPECTATIONS = (report) =>
+  Object.fromEntries(
+    Object.entries(CHECKS).map(([name, { path: keyPath, expected }]) => [
+      name,
+      [readReportPath(report, keyPath), expected],
+    ])
+  );
 
 async function main() {
   const { applyFingerprint } = await import(

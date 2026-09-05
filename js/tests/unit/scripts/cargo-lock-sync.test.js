@@ -24,13 +24,21 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 
 /**
  * Read the version of a named package out of a Cargo.lock.
+ *
+ * The line separator is `\r?\n` because a Windows runner checks the file out
+ * with CRLF: `git config core.autocrlf` is `true` on GitHub's windows-latest
+ * image, so a pattern anchored on a bare `\n` matches nothing there and the
+ * lookup silently returns `undefined` -- a guard that passes on two operating
+ * systems and fails on the third for a reason that has nothing to do with what
+ * it guards.
+ *
  * @param {string} lock
  * @param {string} name
  * @returns {string | undefined}
  */
 function lockedVersion(lock, name) {
   const pattern = new RegExp(
-    `\\[\\[package\\]\\]\\nname = "${name}"\\nversion = "([^"]+)"`
+    `\\[\\[package\\]\\]\\r?\\nname = "${name}"\\r?\\nversion = "([^"]+)"`
   );
   return pattern.exec(lock)?.[1];
 }
@@ -52,6 +60,15 @@ describe('Cargo.lock stays in step with the release bump', () => {
       lockedVersion(cargoLock, 'browser-commander'),
       manifestVersion,
       'a build with --locked would refuse this tree'
+    );
+  });
+
+  it('reads a lockfile that was checked out with CRLF line endings', () => {
+    const crlf = cargoLock.replace(/\r?\n/g, '\r\n');
+    assert.equal(
+      lockedVersion(crlf, 'browser-commander'),
+      lockedVersion(cargoLock, 'browser-commander'),
+      'the same lockfile must read the same on a Windows checkout'
     );
   });
 

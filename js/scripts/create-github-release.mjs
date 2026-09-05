@@ -14,7 +14,9 @@
 
 import { readFileSync } from 'fs';
 
+import { releaseTag } from '../../scripts/release-tags.mjs';
 import {
+  commandErrorText,
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
@@ -49,7 +51,9 @@ if (!version || !repository) {
   process.exit(1);
 }
 
-const tag = `v${version}`;
+// `v<version>` is this package's namespace only; the crate uses `rust-v` and
+// the wheel `python-v`. See scripts/release-tags.mjs.
+const tag = releaseTag('js', version);
 
 console.log(`Creating GitHub release for ${tag}...`);
 
@@ -68,7 +72,14 @@ try {
     releaseNotes = match[0].replace(`## ${version}`, '').trim();
   }
 
+  // Falling back to a bare "Release <version>" body is a silent downgrade:
+  // the release still goes out and the job still passes, so this annotation is
+  // what makes an empty release body visible in the run summary.
   if (!releaseNotes) {
+    console.warn(
+      `::warning::Version ${version} has no "## ${version}" section in ` +
+        'CHANGELOG.md, releasing without notes'
+    );
     releaseNotes = `Release ${version}`;
   }
 
@@ -81,11 +92,21 @@ try {
     body: releaseNotes,
   });
 
-  await $`gh api repos/${repository}/releases -X POST --input -`.run({
-    stdin: payload,
-  });
-
-  console.log(`\u2705 Created GitHub release: ${tag}`);
+  try {
+    await $`gh api repos/${repository}/releases -X POST --input -`.run({
+      stdin: payload,
+    });
+    console.log(`\u2705 Created GitHub release: ${tag}`);
+  } catch (error) {
+    // Re-running a release over a tag that already has one is not a failure.
+    // The rust script has always tolerated it; the JS one did not need to
+    // while a failed `gh` call resolved instead of rejecting.
+    if (commandErrorText(error).includes('already exists')) {
+      console.log(`Release ${tag} already exists, skipping`);
+    } else {
+      throw error;
+    }
+  }
 } catch (error) {
   console.error('Error creating release:', error.message);
   process.exit(1);

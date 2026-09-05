@@ -35,6 +35,7 @@ import {
 
 import { readManifestField } from '../../scripts/read-manifest.mjs';
 import {
+  commandErrorText,
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
@@ -151,7 +152,10 @@ async function main() {
         process.chdir(originalCwd);
       }
 
-      const errorMessage = error.message || '';
+      // Not `error.message`: with errexit on, command-stream's rejection
+      // message is only "Command failed with exit code N" and cargo's reason
+      // is in stderr. See scripts/use-module.mjs.
+      const errorMessage = commandErrorText(error);
 
       if (
         errorMessage.includes('already uploaded') ||

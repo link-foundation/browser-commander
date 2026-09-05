@@ -260,3 +260,106 @@ jobs:
     });
   });
 });
+
+/**
+ * Build a two-job workflow whose `test` job varies only in how it relates to
+ * `lint`, so the fast-fail rule is the only thing a failure count can mean.
+ *
+ * @param {{needs: string, condition?: string}} parts
+ * @returns {string}
+ */
+function lintAndTest({ needs, condition = '' }) {
+  return [
+    'name: Test',
+    'on: push',
+    'permissions:',
+    '  contents: read',
+    'env:',
+    '  GIT_CONFIG_KEY_0: init.defaultBranch',
+    'jobs:',
+    '  lint:',
+    '    runs-on: ubuntu-latest',
+    '    timeout-minutes: 5',
+    '    concurrency:',
+    '      group: ${{ github.workflow }}-${{ github.ref }}-lint',
+    '      cancel-in-progress: true',
+    '    steps:',
+    '      - uses: actions/checkout@v6',
+    '  test:',
+    '    runs-on: ubuntu-latest',
+    '    timeout-minutes: 5',
+    '    concurrency:',
+    '      group: ${{ github.workflow }}-${{ github.ref }}-test',
+    '      cancel-in-progress: true',
+    `    needs: [${needs}]`,
+    condition,
+    '    steps:',
+    '      - uses: actions/checkout@v6',
+    '  pipeline-status:',
+    '    runs-on: ubuntu-latest',
+    '    timeout-minutes: 5',
+    '    concurrency:',
+    '      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status',
+    '      cancel-in-progress: true',
+    '    needs: [lint, test]',
+    '    steps:',
+    '      - run: bash scripts/check-pipeline-status.sh',
+    '',
+  ]
+    .filter((section) => section !== '')
+    .join('\n');
+}
+
+describe('fast-fail job ordering', () => {
+  it('rejects a test matrix that does not wait for lint', () => {
+    assert.equal(countFailures(lintAndTest({ needs: 'detect-changes' })), 1);
+  });
+
+  it('rejects a lint gate neutralised by !cancelled()', () => {
+    // `!cancelled()` overrides the implicit "all needs succeeded" rule, so
+    // `needs: [lint]` alone lets the matrix run after lint has already failed.
+    // The dependency is then decorative, which is worse than not having it:
+    // the graph claims a gate the run does not have.
+    assert.equal(
+      countFailures(
+        lintAndTest({
+          needs: 'lint',
+          condition: "    if: >-\n      !cancelled() && github.ref != 'x'",
+        })
+      ),
+      1
+    );
+  });
+
+  it('accepts a lint gate that restates the failure guard', () => {
+    assert.equal(
+      countFailures(
+        lintAndTest({
+          needs: 'lint',
+          condition:
+            "    if: >-\n      !cancelled() && !contains(needs.*.result, 'failure')",
+        })
+      ),
+      0
+    );
+  });
+
+  it('accepts a lint gate stated as an explicit result comparison', () => {
+    assert.equal(
+      countFailures(
+        lintAndTest({
+          needs: 'lint',
+          condition:
+            "    if: >-\n      !cancelled() && needs.lint.result == 'success'",
+        })
+      ),
+      0
+    );
+  });
+
+  it('accepts a plain dependency with no status function at all', () => {
+    // Without `always()` or `!cancelled()`, GitHub's own default already
+    // refuses to start the job when lint fails; nothing has to be restated.
+    assert.equal(countFailures(lintAndTest({ needs: 'lint' })), 0);
+  });
+});

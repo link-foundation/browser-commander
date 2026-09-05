@@ -211,11 +211,15 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changelog]
+    needs: [detect-changes, changelog, lint]
     # Run if: push event, OR changelog succeeded, OR changelog was skipped (docs-only PR)
     # Note: !cancelled() is required to evaluate the condition when dependencies are skipped.
+    #
+    # `lint` gates the matrix rather than feeding it; see the same comment in
+    # js.yml. A cargo build on three operating systems is the most expensive
+    # thing this workflow does, and `cargo fmt --check` is the cheapest.
     if: >-
-      !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+      !cancelled() && !contains(needs.*.result, 'failure') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -518,17 +522,22 @@ jobs:
           node scripts/version-and-commit.mjs \
             --bump-type "${{ steps.bump_type.outputs.bump_type }}"
 
+      # Everything below must not run unless the version bump was actually
+      # committed (or was deliberately skipped because the current version is
+      # simply not on crates.io yet). Publishing a version that was never
+      # committed is how the crate reached 0.10.11 with an unchanged
+      # Cargo.toml. See dev/log/issues/83/pulls/84/analysis/root-causes.md.
       - name: Get current version
         id: current_version
-        if: steps.check.outputs.should_release == 'true'
+        if: steps.check.outputs.should_release == 'true' && (steps.version.outputs.version_committed == 'true' || steps.check.outputs.skip_bump == 'true')
         run: node ../scripts/read-manifest.mjs Cargo.toml --output version
 
       - name: Build release
-        if: steps.check.outputs.should_release == 'true'
+        if: steps.check.outputs.should_release == 'true' && (steps.version.outputs.version_committed == 'true' || steps.check.outputs.skip_bump == 'true')
         run: cargo build --release
 
       - name: Publish to Crates.io
-        if: steps.check.outputs.should_release == 'true'
+        if: steps.check.outputs.should_release == 'true' && (steps.version.outputs.version_committed == 'true' || steps.check.outputs.skip_bump == 'true')
         id: publish-crate
         env:
           # Note: Organization secret is named CARGO_TOKEN, we map it to CARGO_REGISTRY_TOKEN
@@ -538,13 +547,14 @@ jobs:
         run: node rust/scripts/publish-crate.mjs
 
       - name: Create GitHub Release
-        if: steps.check.outputs.should_release == 'true'
+        if: steps.check.outputs.should_release == 'true' && (steps.version.outputs.version_committed == 'true' || steps.check.outputs.skip_bump == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           node scripts/create-github-release.mjs \
             --release-version "${{ steps.current_version.outputs.version }}" \
-            --repository "${{ github.repository }}"
+            --repository "${{ github.repository }}" \
+            --tag-prefix "rust-v"
 
   # === MANUAL RELEASE ===
   # Manual release via workflow_dispatch - only after CI passes
@@ -585,17 +595,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Collect changelog fragments
-        run: |
-          # Check if there are any fragments to collect
-          FRAGMENTS=$(find changelog.d -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
-          if [ "$FRAGMENTS" -gt 0 ]; then
-            echo "Found $FRAGMENTS changelog fragment(s), collecting..."
-            node scripts/collect-changelog.mjs
-          else
-            echo "No changelog fragments found, skipping collection"
-          fi
-
+      # Changelog fragments are collected inside version-and-commit.mjs, after
+      # the bump has computed the version. Collecting here instead filed the
+      # notes under the version that was already released and left the new one
+      # empty, because collect-changelog.mjs reads the version out of
+      # Cargo.toml and this step ran before the bump wrote it.
       - name: Version and commit
         id: version
         # Both inputs are passed through the environment rather than
@@ -631,7 +635,8 @@ jobs:
         run: |
           node scripts/create-github-release.mjs \
             --release-version "${{ steps.version.outputs.new_version }}" \
-            --repository "${{ github.repository }}"
+            --repository "${{ github.repository }}" \
+            --tag-prefix "rust-v"
 
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran

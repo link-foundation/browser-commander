@@ -1,0 +1,180 @@
+name: Repository Quality Gates
+
+# Language-agnostic gates that apply to the whole repository rather than to a
+# single implementation. Keeping them here avoids duplicating the same job in
+# js.yml, python.yml and rust.yml, where they would drift apart over time.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  # === SECRETS SCAN ===
+  # Credential scan (best practice #11). Run through npx so no extra dependency
+  # is committed to any of the three language packages.
+  secrets-scan:
+    name: Secrets Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-secrets-scan
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Run secretlint
+        run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
+
+  # === VERSION MODIFICATION CHECK ===
+  # Versions are set by the release jobs (changesets for js, auto-release for
+  # python and rust). A version edited by hand in a pull request either collides
+  # with the number the pipeline is about to pick or skips one, leaving the tag,
+  # the changelog and the registry disagreeing. One job covers all three
+  # manifests so the rule cannot drift apart per language.
+  version-check:
+    name: Version Modification Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-version-check
+      cancel-in-progress: true
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history: the check diffs the head against the base branch.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Check for manual version changes
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+        run: node scripts/check-version-modification.mjs
+
+  # === FILE LINE LIMITS ===
+  # Enforces the 1500-line limit (best practice #2) across every tracked source,
+  # documentation and workflow file, in all three implementations.
+  file-line-limits:
+    name: Check File Line Limits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-file-line-limits
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check file line limits
+        run: bash scripts/check-file-line-limits.sh
+
+  # === SHARED FINGERPRINT ASSETS ===
+  # The page init payload and the limitations catalogue are single assets that
+  # JavaScript reads, Python ships as package data and Rust embeds with
+  # include_str!. The copies have to stay byte-identical, or the three
+  # implementations would send different scripts and document different limits.
+  shared-fingerprint-assets:
+    name: Check Shared Fingerprint Assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-shared-fingerprint-assets
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check the shared asset copies
+        run: bash scripts/check-shared-fingerprint-assets.sh
+
+  # === REPOSITORY SCRIPT LINT ===
+  # `npm run lint` inside js/ cannot see these files. ESLint takes its base path
+  # from the directory of the config file it loads, so with eslint.config.js in
+  # js/ every path above it is "outside of the base path" and is skipped without
+  # failing: `npx eslint ../scripts` exits 2 having checked nothing. That left
+  # scripts/, experiments/ and rust/scripts/ - the helpers the workflows shell
+  # out to - with no linter at all. The repository-root eslint.config.js reuses
+  # the js package's rules and toolchain, so this job needs no second lockfile.
+  repo-scripts-lint:
+    name: Lint Repository Scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-repo-scripts-lint
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Install the js toolchain
+        working-directory: js
+        run: npm ci --ignore-scripts
+
+      - name: Lint the scripts outside the js package
+        run: node js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - secrets-scan
+      - version-check
+      - file-line-limits
+      - shared-fingerprint-assets
+      - repo-scripts-lint
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

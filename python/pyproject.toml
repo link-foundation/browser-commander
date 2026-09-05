@@ -153,6 +153,10 @@ show_missing = true
 
 [tool.scriv]
 format = "md"
+# scriv defaults to level 1. The JS and Rust changelogs head each
+# release with `## <version>`, and scripts/create_github_release.py
+# looks for that level when it extracts release notes.
+md_header_level = "2"
 fragment_directory = "changelog.d"
 insert_marker = "<!-- scriv-insert-here -->"
 main_branches = ["main"]

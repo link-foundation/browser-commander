@@ -107,6 +107,25 @@ jobs:
       - name: Check the shared asset copies
         run: bash scripts/check-shared-fingerprint-assets.sh
 
+  # === DOCUMENTATION VALIDATION ===
+  # Best practice #12. The line limit above already covers every tracked .md
+  # file and links.yml already resolves every link in them, so this job checks
+  # the two things neither of those can see: a promised document that stopped
+  # existing, and one language README losing a section the other two still
+  # document.
+  validate-docs:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-validate-docs
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check required documents and shared sections
+        run: bash scripts/check-required-docs.sh
+
   # === REPOSITORY SCRIPT LINT ===
   # `npm run lint` inside js/ cannot see these files. ESLint takes its base path
   # from the directory of the config file it loads, so with eslint.config.js in
@@ -155,6 +174,7 @@ jobs:
       - version-check
       - file-line-limits
       - shared-fingerprint-assets
+      - validate-docs
       - repo-scripts-lint
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs

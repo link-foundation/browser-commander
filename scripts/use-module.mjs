@@ -35,7 +35,7 @@
  *   const { $ } = await loadCommandStream();
  */
 
-import { debug } from './debug-print.mjs';
+import { debug, isDebugEnabled } from './debug-print.mjs';
 
 /** Unpinned CDN entry point for use-m, kept in one place. */
 export const USE_M_URL = 'https://unpkg.com/use-m/use.js';
@@ -155,13 +155,88 @@ export async function useModule(moduleName, exportName, use) {
 }
 
 /**
- * Load `command-stream` with `$` guaranteed to be callable.
+ * All the text a `command-stream` rejection carries, as one string.
+ *
+ * With `errexit` on, a failed command rejects with
+ *
+ *   message : "Command failed with exit code 101"
+ *   code    : 101
+ *   stdout  : ""
+ *   stderr  : "error: crate version 0.10.11 is already uploaded"
+ *
+ * The reason a caller needs to branch on — "already exists", "already
+ * uploaded" — is in `stderr` or `stdout`, never in `message`. Call sites that
+ * test `error.message.includes(...)` therefore stop matching as soon as the
+ * promise genuinely rejects, which would turn a harmless re-run over an
+ * already-published version into a failed release. Use this instead.
+ *
+ * @param {unknown} error value caught from an awaited `$` call
+ * @returns {string} message, stdout and stderr joined; empty for nullish input
+ */
+export function commandErrorText(error) {
+  if (error === null || error === undefined) {
+    return '';
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  const parts = [error.message, error.stdout, error.stderr]
+    .map((part) => (part === null || part === undefined ? '' : String(part)))
+    .filter(Boolean);
+  return parts.join('\n');
+}
+
+/**
+ * Load `command-stream` with `$` guaranteed to be callable **and to fail on a
+ * non-zero exit code**.
+ *
+ * `command-stream` resolves its promise on a non-zero exit rather than
+ * rejecting, which is the opposite of what `zx` and `execa` do and the opposite
+ * of what every consumer in this repository assumes. Each of them is written
+ * as
+ *
+ *   try { await $`some-command`; } catch { process.exit(1); }
+ *
+ * and under the library default that `catch` is unreachable. The consequences
+ * were not theoretical: a crashed `changeset version` was reported as a
+ * successful JS release, and a Rust release that never committed its version
+ * bump published to crates.io anyway. See
+ * dev/log/issues/83/pulls/84/analysis/root-causes.md, RC-B and RC-C.
+ *
+ * Enabling `errexit` here — the one place every consumer obtains `$` from —
+ * restores the assumption those scripts are written against. A caller that
+ * genuinely wants to inspect a failing exit code should read it from the
+ * rejection (`error.code`) rather than expect the promise to resolve.
+ *
+ * `CI_SCRIPTS_DEBUG=1` additionally turns on the shell's own `verbose` and
+ * `xtrace`, so a failing release job logs the commands it ran. Default off.
  *
  * @param {(name: string) => Promise<unknown>} [use] pre-loaded use-m function
  * @returns {Promise<Record<string, unknown>>} command-stream exports
  */
-export function loadCommandStream(use) {
-  return useModule('command-stream', '$', use);
+export async function loadCommandStream(use) {
+  const commandStream = await useModule('command-stream', '$', use);
+
+  // `shell` is absent from no released version we support, but a missing or
+  // renamed control surface must not turn into `undefined is not a function`
+  // inside a release job.
+  const shell = commandStream.shell;
+  if (shell && typeof shell.errexit === 'function') {
+    shell.errexit(true);
+    if (isDebugEnabled()) {
+      shell.verbose?.(true);
+      shell.xtrace?.(true);
+    }
+    debug('configured command-stream shell', {
+      settings: shell.settings?.(),
+    });
+  } else {
+    debug('command-stream exposes no shell.errexit; failures may not reject', {
+      received: describeModule(shell),
+    });
+  }
+
+  return commandStream;
 }
 
 /**

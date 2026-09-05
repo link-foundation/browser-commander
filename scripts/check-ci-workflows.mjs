@@ -16,6 +16,10 @@ const WORKFLOW_DIR = '.github/workflows';
 // The job that reads every other job's result; see docs/CI-TIMEOUT-BUDGETS.md.
 const PIPELINE_STATUS_JOB = 'pipeline-status';
 
+// The cheap check every expensive job waits on, and the jobs that must wait.
+const FAST_CHECK_JOB = 'lint';
+const SLOW_JOB_PATTERN = /^(test|coverage)(-|$)/;
+
 const DISALLOWED_PATTERNS = [
   {
     pattern: /\bactions\/checkout@v[1-5]\b/,
@@ -258,6 +262,141 @@ function readJobNeeds(block) {
   }
 
   return needs;
+}
+
+/**
+ * Read a job's `if:`, in either the folded or the single-line spelling.
+ *
+ * @param {string[]} block
+ * @returns {string}
+ */
+function readJobCondition(block) {
+  const conditionIndex = block.findIndex((line) => /^ {4}if:/.test(line));
+
+  if (conditionIndex === -1) {
+    return '';
+  }
+
+  const parts = [block[conditionIndex].replace(/^ {4}if:/, '')];
+
+  for (const line of block.slice(conditionIndex + 1)) {
+    if (!/^ {6}\S/.test(line)) {
+      break;
+    }
+
+    parts.push(line);
+  }
+
+  return parts.join(' ');
+}
+
+/**
+ * Fast checks gate slow ones (CI-CD-BEST-PRACTICES, principle 5).
+ *
+ * `lint` is one runner for well under a minute; the `test` matrix is three
+ * operating systems that each install dependencies first. Letting them race
+ * means a missing semicolon still buys the whole matrix, on every push, and
+ * the contributor waits for the slowest job to learn about the fastest one.
+ *
+ * The dependency may be transitive - `coverage` waiting on `test` waiting on
+ * `lint` is the ordering this rule is after.
+ *
+ * The second half of the rule is the part that is easy to get wrong. An `if:`
+ * containing `always()` or `!cancelled()` overrides GitHub's implicit "all
+ * needs succeeded" requirement, so `needs: [lint]` under a bare `!cancelled()`
+ * is a dependency the run does not actually enforce - the job graph claims a
+ * gate that is not there. Such a condition has to restate the requirement,
+ * either as a blanket `!contains(needs.*.result, 'failure')` or as an explicit
+ * comparison on the result of the job it waits for.
+ *
+ * @param {string} filePath
+ * @param {string[]} lines
+ * @param {number[]} jobStarts
+ * @returns {number}
+ */
+function checkFastFailOrdering(filePath, lines, jobStarts) {
+  const jobNames = jobStarts.map((start) => lines[start].trim().slice(0, -1));
+
+  if (!jobNames.includes(FAST_CHECK_JOB)) {
+    return 0;
+  }
+
+  const blocks = jobStarts.map((start, jobIndex) =>
+    lines.slice(start, jobStarts[jobIndex + 1] ?? lines.length)
+  );
+  const needsByJob = new Map(
+    jobNames.map((jobName, jobIndex) => [
+      jobName,
+      readJobNeeds(blocks[jobIndex]),
+    ])
+  );
+
+  /**
+   * Does `jobName` wait for the fast check, directly or through another job?
+   *
+   * @param {string} jobName
+   * @param {Set<string>} seen
+   * @returns {boolean}
+   */
+  const waitsForFastCheck = (jobName, seen = new Set()) => {
+    if (seen.has(jobName)) {
+      return false;
+    }
+
+    seen.add(jobName);
+
+    return (needsByJob.get(jobName) ?? []).some(
+      (dependency) =>
+        dependency === FAST_CHECK_JOB || waitsForFastCheck(dependency, seen)
+    );
+  };
+
+  let failures = 0;
+
+  for (const [jobIndex, start] of jobStarts.entries()) {
+    const jobName = jobNames[jobIndex];
+
+    if (!SLOW_JOB_PATTERN.test(jobName)) {
+      continue;
+    }
+
+    if (!waitsForFastCheck(jobName)) {
+      report(
+        filePath,
+        start + 1,
+        `Job ${jobName} must need ${FAST_CHECK_JOB}; a slow matrix should not start until the fast check that would have failed the run has passed.`
+      );
+      failures++;
+      continue;
+    }
+
+    const condition = readJobCondition(blocks[jobIndex]);
+
+    if (!/always\(\)|!\s*cancelled\(\)/.test(condition)) {
+      continue;
+    }
+
+    const gating = (needsByJob.get(jobName) ?? []).filter(
+      (dependency) =>
+        dependency === FAST_CHECK_JOB || waitsForFastCheck(dependency)
+    );
+    const restated =
+      /!\s*contains\(needs\.\*\.result,\s*'failure'\)/.test(condition) ||
+      gating.some((dependency) =>
+        new RegExp(`needs\\.${dependency}\\.result\\s*==`).test(condition)
+      );
+
+    if (!restated) {
+      report(
+        filePath,
+        start + 1,
+        `Job ${jobName} waits for ${gating.join(', ')} but its condition uses always()/!cancelled(), which overrides that dependency. Restate it with !contains(needs.*.result, 'failure') or an explicit needs.<job>.result comparison.`
+      );
+      failures++;
+    }
+  }
+
+  return failures;
 }
 
 /**
@@ -640,6 +779,7 @@ export function checkWorkflow(filePath) {
     checkManifestScraping(filePath, lines),
     checkCodecovInputs(filePath, lines, content),
     checkJobPolicies(filePath, lines, jobStarts),
+    checkFastFailOrdering(filePath, lines, jobStarts),
     jobsLineIndex === -1
       ? 0
       : checkPipelineStatusGate(filePath, lines, jobStarts, jobsLineIndex),

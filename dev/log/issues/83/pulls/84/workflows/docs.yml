@@ -1,0 +1,184 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "js/**"
+      - "rust/**"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "js/**"
+      - "rust/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  # `pages: write` and `id-token: write` belong to deploy-docs alone, which
+  # declares them itself; granting them workflow-wide would hand the same
+  # deployment rights to every step that only builds the site.
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  build-docs:
+    name: Build Combined Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-build-docs
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with:
+          toolchain: stable
+
+      - name: Install JavaScript dependencies
+        working-directory: js
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+        run: npm ci --ignore-scripts
+
+      - name: Generate JavaScript API docs
+        working-directory: js
+        run: npm run docs:api
+
+      - name: Generate Rust API docs
+        working-directory: rust
+        shell: bash
+        # The budget, not `timeout-minutes`, owns this step's deadline: a job
+        # killed by `timeout-minutes` is reported as cancelled rather than
+        # failed. See docs/CI-TIMEOUT-BUDGETS.md.
+        run: >-
+          bash ../scripts/run-with-budget-warning.sh 480 "Rust API docs"
+          cargo doc --no-deps --all-features
+
+      - name: Assemble Pages artifact
+        run: |
+          mkdir -p public/javascript public/rust
+          cp -R js/docs-api/. public/javascript/
+          cp -R rust/target/doc/. public/rust/
+          cat > public/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>Browser Commander Documentation</title>
+              <style>
+                body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5; }
+                main { max-width: 720px; }
+                a { color: #075985; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <h1>Browser Commander Documentation</h1>
+                <p>Generated API documentation for the JavaScript and Rust implementations.</p>
+                <ul>
+                  <li><a href="./javascript/">JavaScript API docs</a></li>
+                  <li><a href="./rust/browser_commander/">Rust API docs</a></li>
+                </ul>
+              </main>
+            </body>
+          </html>
+          HTML
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-commander-docs
+          path: public
+
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+
+      - name: Skip Pages deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES != 'true'
+        run: echo "GitHub Pages deployment is disabled. Set repository variable DEPLOY_GITHUB_PAGES=true after Pages is configured."
+
+  deploy-docs:
+    name: Deploy GitHub Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: main-writer-${{ github.repository }}-main
+      cancel-in-progress: false
+    needs: [build-docs]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES == 'true'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - build-docs
+      - deploy-docs
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

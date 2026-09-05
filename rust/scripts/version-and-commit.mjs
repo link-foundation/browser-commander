@@ -12,23 +12,23 @@
  * - lino-arguments: Unified configuration from CLI args, env vars, and .lenv files
  */
 
-import {
-  readFileSync,
-  writeFileSync,
-  appendFileSync,
-  readdirSync,
-  existsSync,
-} from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync, appendFileSync } from 'fs';
 
 import {
   readManifestField,
   replaceTomlField,
 } from '../../scripts/read-manifest.mjs';
+import { releaseTag } from '../../scripts/release-tags.mjs';
 import {
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
+
+import {
+  collectFragments,
+  removeFragments,
+  updateChangelog,
+} from './changelog.mjs';
 
 const { $ } = await loadCommandStream();
 const { makeConfig } = await loadLinoArguments();
@@ -179,8 +179,14 @@ async function findNextAvailableVersion(crateName, current, bumpType) {
         `Could not find an available version after ${MAX_ATTEMPTS} attempts (last tried: ${version})`
       );
     }
-    console.log(
-      `Version ${version} already published on crates.io, trying next...`
+    // Reaching here means Cargo.toml is behind what is actually published,
+    // i.e. a previous release bumped and published without committing. The
+    // walk keeps the release moving, but it is a symptom, not normal
+    // operation, so say so where CI log readers will see it.
+    console.warn(
+      `::warning::Version ${version} is already published on crates.io but ` +
+        `Cargo.toml does not reflect it; the working tree is behind the registry. ` +
+        `Trying the next patch version...`
     );
     const parts = version.split('.').map(Number);
     const next = { major: parts[0], minor: parts[1], patch: parts[2] };
@@ -188,83 +194,6 @@ async function findNextAvailableVersion(crateName, current, bumpType) {
   }
 
   return version;
-}
-
-/**
- * Strip frontmatter from markdown content
- * @param {string} content - Markdown content potentially with frontmatter
- * @returns {string} - Content without frontmatter
- */
-function stripFrontmatter(content) {
-  const frontmatterMatch = content.match(
-    /^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/
-  );
-  if (frontmatterMatch) {
-    return frontmatterMatch[1].trim();
-  }
-  return content.trim();
-}
-
-/**
- * Collect changelog fragments and update CHANGELOG.md
- * @param {string} version
- */
-function collectChangelog(version) {
-  const changelogDir = 'changelog.d';
-  const changelogFile = 'CHANGELOG.md';
-
-  if (!existsSync(changelogDir)) {
-    return;
-  }
-
-  const files = readdirSync(changelogDir).filter(
-    (f) => f.endsWith('.md') && f !== 'README.md'
-  );
-
-  if (files.length === 0) {
-    return;
-  }
-
-  const fragments = files
-    .sort()
-    .map((f) => {
-      const rawContent = readFileSync(join(changelogDir, f), 'utf-8');
-      // Strip frontmatter (which contains bump type metadata)
-      return stripFrontmatter(rawContent);
-    })
-    .filter(Boolean)
-    .join('\n\n');
-
-  if (!fragments) {
-    return;
-  }
-
-  const dateStr = new Date().toISOString().split('T')[0];
-  const newEntry = `\n## [${version}] - ${dateStr}\n\n${fragments}\n`;
-
-  if (existsSync(changelogFile)) {
-    let content = readFileSync(changelogFile, 'utf-8');
-    const lines = content.split('\n');
-    let insertIndex = -1;
-
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith('## [')) {
-        insertIndex = i;
-        break;
-      }
-    }
-
-    if (insertIndex >= 0) {
-      lines.splice(insertIndex, 0, newEntry);
-      content = lines.join('\n');
-    } else {
-      content += newEntry;
-    }
-
-    writeFileSync(changelogFile, content, 'utf-8');
-  }
-
-  console.log(`Collected ${files.length} changelog fragment(s)`);
 }
 
 async function main() {
@@ -301,23 +230,43 @@ async function main() {
     // Update version in Cargo.toml
     updateCargoToml(newVersion);
 
-    // Collect changelog fragments
-    collectChangelog(newVersion);
+    // Cargo.lock records the workspace member's own version, so a bump that
+    // touches only Cargo.toml leaves the two disagreeing. Every job that runs
+    // `cargo build --locked` on the release commit then fails with "the lock
+    // file needs to be updated but --locked was passed". `--workspace`
+    // rewrites only the member entry and leaves the dependency graph alone.
+    await $`cargo update --workspace`;
+    console.log(`Updated Cargo.lock to version ${newVersion}`);
 
-    // Stage Cargo.toml and CHANGELOG.md
-    await $`git add Cargo.toml CHANGELOG.md`;
+    // Collect changelog fragments and consume them. Without the removal the
+    // next release re-collects the same fragments and ships duplicate notes.
+    const fragments = collectFragments();
+    if (fragments) {
+      updateChangelog('.', newVersion, fragments);
+      removeFragments();
+    } else {
+      console.log('No changelog fragments found');
+    }
 
-    // Check if there are changes to commit
-    try {
-      await $`git diff --cached --quiet`.run({ capture: true });
-      // No changes to commit
+    // Stage the version bump, the lockfile, the changelog and the fragment
+    // deletions.
+    await $`git add -A Cargo.toml Cargo.lock CHANGELOG.md changelog.d`;
+
+    // Check whether anything was actually staged. Branching on the list of
+    // staged files rather than on the exit code of `git diff --cached
+    // --quiet` keeps this correct no matter how the shell wrapper reports
+    // non-zero exits. `--cached` is what makes it a question about the commit
+    // that is about to be made: `git status --porcelain`, which the JS script
+    // uses, would also answer "yes" for an untracked file nobody staged.
+    const staged = await $`git diff --cached --name-only`;
+    const stagedFiles = String(staged.stdout ?? '').trim();
+    if (!stagedFiles) {
       console.log('No changes to commit');
       setOutput('version_committed', 'false');
       setOutput('new_version', newVersion);
       return;
-    } catch {
-      // There are changes to commit (git diff exits with 1 when there are differences)
     }
+    console.log(`Staged for release commit:\n${stagedFiles}`);
 
     // Commit changes
     const commitMsg = description
@@ -326,12 +275,15 @@ async function main() {
     await $`git commit -m ${commitMsg}`;
     console.log(`Committed version ${newVersion}`);
 
-    // Create tag
+    // Create tag. The crate has its own namespace: tagging `v<version>` put
+    // it in the JS package's namespace, where `git tag` refused to recreate a
+    // name JS had already taken and the release went out untagged.
+    const tag = releaseTag('rust', newVersion);
     const tagMsg = description
-      ? `Release v${newVersion}\n\n${description}`
-      : `Release v${newVersion}`;
-    await $`git tag -a v${newVersion} -m ${tagMsg}`;
-    console.log(`Created tag v${newVersion}`);
+      ? `Release ${tag}\n\n${description}`
+      : `Release ${tag}`;
+    await $`git tag -a ${tag} -m ${tagMsg}`;
+    console.log(`Created tag ${tag}`);
 
     // Push changes and tag
     await $`git push`;

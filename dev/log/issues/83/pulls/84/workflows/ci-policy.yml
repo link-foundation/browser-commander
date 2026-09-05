@@ -1,0 +1,144 @@
+name: CI Workflow Policy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**'
+      - '.github/zizmor.yml'
+      - 'scripts/check-ci-workflows.mjs'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/**'
+      - '.github/zizmor.yml'
+      - 'scripts/check-ci-workflows.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  check:
+    name: Check CI Workflow Policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-check
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Check workflows
+        run: node scripts/check-ci-workflows.mjs
+
+  # The repository's own policy checker above encodes house rules; these two
+  # jobs cover what a general-purpose linter and a security auditor find. Both
+  # were absent, which is why 9 unquoted `>> $GITHUB_OUTPUT` redirects (SC2086)
+  # and 39 zizmor findings accumulated unnoticed.
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-actionlint
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # The Docker image bundles shellcheck and pyflakes, so this also lints
+      # every `run:` block. A native actionlint binary without shellcheck on
+      # PATH silently skips the shell checks and exits 0 - worth knowing when
+      # reproducing a failure locally:
+      #   docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
+      - uses: docker://rhysd/actionlint:1.7.7
+        with:
+          args: -color
+
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-zizmor
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # Annotations rather than SARIF: code scanning is not enabled on every
+      # fork of this repository, and the job should fail loudly either way.
+      #
+      # `inputs` is scoped to this repository's own workflows. The action
+      # defaults to `.`, which also collects
+      # `docs/case-studies/issue-55/template-snapshots/*/.github/workflows/*` -
+      # frozen upstream copies kept as evidence for a case study. They never
+      # run, and rewriting a snapshot to satisfy an audit destroys the thing it
+      # records, so auditing them produced 53 errors and 31 warnings that no
+      # change to this repository could clear. Their findings belong upstream,
+      # and are reported there; see
+      # `dev/log/issues/81/pulls/82/analysis/root-causes.md` (RC-10).
+      #
+      # Reproduce this job locally with:
+      #   zizmor --config .github/zizmor.yml --min-confidence medium .github/workflows
+      - uses: zizmorcore/zizmor-action@v0.6.2
+        with:
+          advanced-security: false
+          annotations: true
+          config: .github/zizmor.yml
+          inputs: .github/workflows
+          min-confidence: medium
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - check
+      - actionlint
+      - zizmor
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

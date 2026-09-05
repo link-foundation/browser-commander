@@ -12,7 +12,9 @@
 
 import { readFileSync, existsSync } from 'fs';
 
+import { TAG_PREFIXES } from '../../scripts/release-tags.mjs';
 import {
+  commandErrorText,
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
@@ -34,10 +36,15 @@ const config = makeConfig({
         type: 'string',
         default: getenv('REPOSITORY', ''),
         describe: 'GitHub repository (e.g., owner/repo)',
+      })
+      .option('tag-prefix', {
+        type: 'string',
+        default: getenv('TAG_PREFIX', TAG_PREFIXES.rust),
+        describe: 'Tag prefix (e.g., rust-v)',
       }),
 });
 
-const { releaseVersion: version, repository } = config;
+const { releaseVersion: version, repository, tagPrefix } = config;
 
 if (!version || !repository) {
   console.error('Error: Missing required arguments');
@@ -47,7 +54,7 @@ if (!version || !repository) {
   process.exit(1);
 }
 
-const tag = `v${version}`;
+const tag = `${tagPrefix}${version}`;
 
 console.log(`Creating GitHub release for ${tag}...`);
 
@@ -59,7 +66,13 @@ console.log(`Creating GitHub release for ${tag}...`);
 function getChangelogForVersion(version) {
   const changelogPath = 'CHANGELOG.md';
 
+  // Falling back to a bare "Release v<version>" body is a silent downgrade:
+  // the release still goes out and the job still passes, so these annotations
+  // are what makes an empty release body visible in the run summary.
   if (!existsSync(changelogPath)) {
+    console.warn(
+      `::warning::${changelogPath} not found, releasing v${version} without notes`
+    );
     return `Release v${version}`;
   }
 
@@ -76,6 +89,10 @@ function getChangelogForVersion(version) {
     return match[1].trim();
   }
 
+  console.warn(
+    `::warning::Version ${version} has no "## [${version}]" section in ` +
+      `${changelogPath}, releasing without notes`
+  );
   return `Release v${version}`;
 }
 
@@ -86,7 +103,7 @@ try {
   // This avoids shell escaping issues
   const payload = JSON.stringify({
     tag_name: tag,
-    name: `v${version}`,
+    name: tag,
     body: releaseNotes,
   });
 
@@ -96,8 +113,9 @@ try {
     });
     console.log(`Created GitHub release: ${tag}`);
   } catch (error) {
-    // Check if release already exists
-    if (error.message && error.message.includes('already exists')) {
+    // Check if release already exists. `gh` reports this on stderr, which
+    // command-stream does not fold into the rejection message.
+    if (commandErrorText(error).includes('already exists')) {
       console.log(`Release ${tag} already exists, skipping`);
     } else {
       throw error;

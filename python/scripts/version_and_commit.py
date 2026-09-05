@@ -24,6 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from collect_changelog import collect as collect_changelog
 from read_manifest import read_field, replace_field
 
 
@@ -225,6 +226,12 @@ def main() -> int:
         # Update version in file
         update_version_in_file(pyproject_path, new_version)
         set_github_output("new_version", new_version)
+
+        # Collect changelog fragments under the version being released. This
+        # has to happen after the bump: `scriv collect --version` names the new
+        # section, and the workflow used to run it beforehand with the bump
+        # type, which titled the section "patch".
+        collect_changelog(new_version, project_root)
 
         # Check for changes
         status = run_command(

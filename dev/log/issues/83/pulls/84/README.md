@@ -23,19 +23,29 @@ The issue lists eight runs at commit `4f7af54`. All eight are archived here as
 `ci-logs/run-<id>.log` (job logs, ANSI escapes stripped) and
 `ci-logs/run-<id>.json` (run and job metadata).
 
-| Run | Workflow | Conclusion reported by GitHub |
-| --- | --- | --- |
-| 33974450000 | Python CI/CD Pipeline | failure |
-| 33974450013 | Documentation | success |
-| 33974450016 | JavaScript CI/CD Pipeline | success |
-| 33974450017 | Link Checker | success |
-| 33974450018 | CI Policy | success |
-| 33974450021 | Security | success |
-| 33974450025 | Quality | success |
-| 33974450069 | Rust CI/CD Pipeline | success |
+| Run | Workflow | Conclusion reported by GitHub | Truthful? |
+| --- | --- | --- | --- |
+| 33974450000 | Python CI/CD Pipeline | failure | yes — RC-A |
+| 33974450013 | Documentation | success | yes |
+| 33974450016 | JS CI/CD Pipeline | success | **no** — RC-G |
+| 33974450017 | Repository Quality Gates | success | yes |
+| 33974450018 | Broken Link Checker | success | yes |
+| 33974450021 | Security | success | yes — `dependency-review` skipped is correct on a push |
+| 33974450025 | CI Workflow Policy | success | yes |
+| 33974450069 | Rust CI/CD Pipeline | success | **no** — RC-C |
 
-`analysis/root-causes.md` explains why several of the "success" rows are false
-negatives.
+Workflow names are as reported by the API in `ci-logs/run-list-main.json`; all
+eight runs were queued at `2026-09-05T15:19:32Z` for the same push.
+
+## Analysis
+
+| File | Contents |
+| --- | --- |
+| `analysis/timeline.md` | What happened, in order, inside the push and across the longer arc |
+| `analysis/requirements.md` | Every requirement from the issue and the task, with status and the implementation plan |
+| `analysis/root-causes.md` | One section per defect, classified as error / false negative / false positive / warning, with quoted log evidence and a fix |
+| `analysis/existing-solutions.md` | Survey of libraries that solve each root cause, and why each was or was not adopted |
+| `analysis/changesets-format-detect-evidence.md` | Source-level evidence for RC-G, read out of a freshly installed `@changesets/format` |
 
 ## Reproductions
 

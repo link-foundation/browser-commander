@@ -1,0 +1,149 @@
+name: Broken Link Checker
+
+# Documentation rots quietly: a link that 404s breaks nobody's build, so nothing
+# reports it until a reader hits it. Best practice #12 -- check links in CI.
+#
+# A naive link check is itself a source of false positives, which is the very
+# thing this pipeline is meant to avoid: an unrelated pull request should not go
+# red because a third-party host had an outage or rate-limited the runner. So
+# lychee runs with fail: false and a broken link only fails the job when the
+# Wayback Machine has no archived copy either -- at which point the link really
+# is unrecoverable and the documentation needs editing.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.md'
+      - '**.html'
+      - '.lycheeignore'
+      - '.github/workflows/links.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**.md'
+      - '**.html'
+      - '.lycheeignore'
+      - '.github/workflows/links.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  link-checker:
+    name: Check Links
+    runs-on: ubuntu-latest
+    # Typical run: <1min with the lychee cache. 10min stops a slow external host
+    # or a Wayback Machine probe from hanging the workflow.
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-link-checker
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Check links with lychee
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # dev/log holds downloaded CI logs and analysis notes that cite run
+          # URLs and issues from other repositories; they are evidence of what
+          # was investigated, not documentation to keep reachable.
+          args: >-
+            --verbose
+            --no-progress
+            --cache
+            --max-cache-age 1d
+            --max-retries 3
+            --timeout 30
+            --exclude-path dev/log
+            './**/*.md'
+            './**/*.html'
+          # Do not fail here: the Wayback Machine check below decides.
+          fail: false
+          output: lychee/out.md
+          jobSummary: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check broken links against Web Archive
+        if: steps.lychee.outputs.exit_code != 0
+        id: webarchive
+        run: node scripts/check-web-archive.mjs
+        env:
+          LYCHEE_OUTPUT: lychee/out.md
+
+      - name: Fail if broken links found and no web archive fallback
+        if: >-
+          steps.lychee.outputs.exit_code != 0 &&
+          steps.webarchive.outputs.all_archived != 'true'
+        run: |
+          echo "::error::Broken links were detected with no Web Archive fallback available."
+          echo ""
+          echo "What happened:"
+          echo "  lychee found one or more broken links in the *.md and *.html files of this repository."
+          echo "  The Web Archive (Wayback Machine) check found no archived version for some of them."
+          echo ""
+          echo "How to fix:"
+          echo "  1. Review the 'Check links with lychee' step above for the full list of broken links."
+          echo "  2. For links marked with a '::notice::' annotation, an archived version exists:"
+          echo "     replace the broken link with the suggested archive.org URL."
+          echo "  3. For links with no archived version, either:"
+          echo "     a. Point the link at the current location of the same content."
+          echo "     b. Remove the link if the content is no longer relevant."
+          echo "     c. Add the URL to .lycheeignore if it is a known false positive."
+          echo ""
+          echo "Report location: lychee/out.md"
+          exit 1
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - link-checker
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

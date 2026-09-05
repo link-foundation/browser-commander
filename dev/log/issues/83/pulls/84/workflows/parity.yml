@@ -1,0 +1,160 @@
+name: Browser Parity
+
+# Proves against a real Chrome that a browser this library drives reports the
+# same environment as one a person started by hand. Every other workflow tests
+# the library against its own expectations; this one tests it against the
+# browser, so it is the only check that notices when a Chrome or engine update
+# reopens a gap -- the way Playwright 1.62 did by starting to push
+# `--enable-unsafe-swiftshader` on every platform.
+#
+# It is scheduled rather than push-triggered because the thing that breaks it
+# usually is not a commit: Chrome ships every few weeks whether or not this
+# repository changed. Pull requests run it too, but only when they touch the
+# parity code itself, since the suite needs a display and several browser
+# launches.
+
+on:
+  schedule:
+    # Weekly, on Monday morning UTC. Chrome's stable channel moves roughly
+    # every four weeks, so a week is short enough to attribute a regression to
+    # one browser release.
+    - cron: '17 5 * * 1'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'js/src/fingerprint/**'
+      - 'js/src/browser/**'
+      - 'js/tests/e2e/**'
+      - 'experiments/fingerprint-parity/**'
+      - '.github/workflows/parity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+  # Both the reference capture and the automated captures drive this binary, so
+  # a difference in the report is a difference in how the browser was started.
+  CHROME_PATH: /usr/bin/google-chrome
+
+jobs:
+  parity:
+    name: Fingerprint Parity (real Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-parity
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Install dependencies
+        # --ignore-scripts skips Puppeteer's browser download on purpose: the
+        # suite launches the runner's own Chrome through executablePath.
+        run: npm ci --ignore-scripts
+
+      - name: Verify the suite can actually run
+        # The suite skips itself when Chrome or a display is missing, and a
+        # skipped suite still exits zero. Without this step a green run could
+        # mean nothing was asserted.
+        run: |
+          test -x "$CHROME_PATH" || {
+            echo "::error::no Chrome binary at $CHROME_PATH"
+            exit 1
+          }
+          "$CHROME_PATH" --version
+          command -v xvfb-run >/dev/null || {
+            echo "::error::xvfb-run is missing; the headful half needs a display"
+            exit 1
+          }
+
+      - name: Run parity suite under Xvfb
+        # A display is only needed by the headful half, but running both halves
+        # under the same server keeps the two references comparable.
+        #
+        # The reporter is pinned to TAP because the next step reads the output.
+        # Node's spec reporter marks a skipped suite with a small-minus glyph
+        # and prints the reason with no "SKIP" in it, so a grep written against
+        # TAP would pass over exactly the case it exists to catch.
+        shell: bash
+        # The budget, not `timeout-minutes`, owns this step's deadline: a job
+        # killed by `timeout-minutes` is reported as cancelled rather than
+        # failed. See docs/CI-TIMEOUT-BUDGETS.md.
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 1200 "Fingerprint parity suite" \
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" npm run test:e2e:parity -- --reporter tap 2>&1 | tee parity.log'
+
+      - name: Fail on a suite that asserted nothing
+        # Belt and braces for the check above: a skip condition added later
+        # would otherwise pass unnoticed, because a skipped suite exits zero.
+        run: |
+          if grep -q '# SKIP' parity.log; then
+            echo "::error::the parity suite skipped a case instead of asserting it"
+            grep '# SKIP' parity.log
+            exit 1
+          fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' parity.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the parity suite reported no passing tests"
+            exit 1
+          fi
+          echo "parity suite passed $passed tests against a real Chrome"
+
+      - name: Upload parity log
+        # ${{ }} wrapping is required: a plain YAML scalar cannot begin with the
+        # tag indicator "!".
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: parity-log
+          path: js/parity.log
+          retention-days: 14
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - parity
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

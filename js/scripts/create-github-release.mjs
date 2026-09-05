@@ -15,6 +15,7 @@
 import { readFileSync } from 'fs';
 
 import {
+  commandErrorText,
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
@@ -81,11 +82,21 @@ try {
     body: releaseNotes,
   });
 
-  await $`gh api repos/${repository}/releases -X POST --input -`.run({
-    stdin: payload,
-  });
-
-  console.log(`\u2705 Created GitHub release: ${tag}`);
+  try {
+    await $`gh api repos/${repository}/releases -X POST --input -`.run({
+      stdin: payload,
+    });
+    console.log(`\u2705 Created GitHub release: ${tag}`);
+  } catch (error) {
+    // Re-running a release over a tag that already has one is not a failure.
+    // The rust script has always tolerated it; the JS one did not need to
+    // while a failed `gh` call resolved instead of rejecting.
+    if (commandErrorText(error).includes('already exists')) {
+      console.log(`Release ${tag} already exists, skipping`);
+    } else {
+      throw error;
+    }
+  }
 } catch (error) {
   console.error('Error creating release:', error.message);
   process.exit(1);

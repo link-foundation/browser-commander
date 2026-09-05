@@ -13,6 +13,7 @@
 import { readFileSync, existsSync } from 'fs';
 
 import {
+  commandErrorText,
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
@@ -96,8 +97,9 @@ try {
     });
     console.log(`Created GitHub release: ${tag}`);
   } catch (error) {
-    // Check if release already exists
-    if (error.message && error.message.includes('already exists')) {
+    // Check if release already exists. `gh` reports this on stderr, which
+    // command-stream does not fold into the rejection message.
+    if (commandErrorText(error).includes('already exists')) {
       console.log(`Release ${tag} already exists, skipping`);
     } else {
       throw error;

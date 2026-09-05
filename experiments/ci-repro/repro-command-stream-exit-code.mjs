@@ -42,22 +42,32 @@ await $`git commit -q -m initial`;
 writeFileSync('Cargo.toml', '[package]\nversion = "0.10.0"\n');
 await $`git add Cargo.toml`;
 
-const rawExit = (await $`git diff --cached --quiet`.run({ capture: true }).catch(
-  () => 'REJECTED'
-));
+const rawExit = await $`git diff --cached --quiet`
+  .run({ capture: true })
+  .catch(() => 'REJECTED');
 
 console.log('node                :', process.version);
 console.log('index has changes   : yes (Cargo.toml 0.9.0 -> 0.10.0)');
 if (rawExit === 'REJECTED') {
-  console.log('await $`git diff --cached --quiet` : REJECTED (catch branch runs -> commit happens)');
+  console.log(
+    'await $`git diff --cached --quiet` : REJECTED (catch branch runs -> commit happens)'
+  );
 } else {
   console.log('await $`git diff --cached --quiet` : RESOLVED');
   console.log('  result.code       :', rawExit?.code);
-  console.log('  => the try branch runs, script prints "No changes to commit" and returns');
+  console.log(
+    '  => the try branch runs, script prints "No changes to commit" and returns'
+  );
 }
 // Control: what a plain shell reports for the very same command. `spawnSync` is
 // used instead of another `$` call so that no template engine can expand `$?`
 // before the inner shell sees it.
 console.log('\nplain-shell control :');
-const control = spawnSync('git', ['diff', '--cached', '--quiet'], { cwd: repo });
-console.log('  git diff --cached --quiet exits with', control.status, '(non-zero = there ARE staged changes)');
+const control = spawnSync('git', ['diff', '--cached', '--quiet'], {
+  cwd: repo,
+});
+console.log(
+  '  git diff --cached --quiet exits with',
+  control.status,
+  '(non-zero = there ARE staged changes)'
+);

@@ -52,7 +52,7 @@ The classes are not independent: RC-16 is the reason a *false negative* and an
 | --- | --- | --- |
 | R-9 | Compare the full file tree against `js-`, `python-` and `rust-ai-driven-development-pipeline-template` | done — [`../templates/file-tree-diff.md`](../templates/file-tree-diff.md) |
 | R-10 | Adopt the practices this repository was missing | done — `simulate-fresh-merge.sh`, `detect-code-changes`, file-line limits, secretlint, version-check, `audit_dependencies.py`, `run-with-budget-warning.sh`, `check-pipeline-status.sh` |
-| R-11 | Report upstream the defects that the templates share | done — seven issues filed (python#67, python#68, python#69, rust#155, rust#156, js#166, js#167); two drafts withdrawn after testing, see §F |
+| R-11 | Report upstream the defects that the templates share | done — seven issues filed (python#67, python#68, python#69, rust#155, rust#156, js#166, js#167), plus a comment on the existing `use-m#72` correcting its version boundary; two drafts withdrawn after testing, see §F |
 | R-12 | Keep the comparison from going stale | standing — `scripts/check-ci-workflows.mjs` encodes the adopted rules as a policy check that runs on every workflow change |
 
 Note the direction of travel is not one-way. Five defects were found *in the
@@ -186,6 +186,25 @@ report costs a maintainer the same attention as a wrong one.
 | `audit_dependencies.py` builds the audited venv **with** pip and audits it, and `run()` captures stdout under `check=True` so the advisory table is lost on the one run that finds something | [python#68](https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/68) | An empty project fails its own audit on `PYSEC-2026-3721` against pip; the swallowed-stdout behaviour reproduced in four lines of Python (RC-9) |
 | `check-pipeline-status.sh` is wired into `release.yml` only — so a timeout in `links.yml`, `security.yml`, `workflows.yml` (and `example-app.yml` / `docs.yml` / `desktop-release.yml`) is reported `cancelled` and nothing turns it red — and it has no branch-head lookup, so copying it into those workflows (where `cancel-in-progress: true` is unconditional) turns every rapid second push to `main` into a false error | [js#167](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/167), [python#69](https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/69), [rust#156](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/156) | `grep -rl` over each template's workflows; the `cancel-in-progress` lines quoted per file; our run 24045269874, a push to `main` cancelled by a supersede (RC-16) |
 | husky exits 0 for every failure it has — `.git can't be found`, `git command not found`, a failed `git config` — so `"prepare": "husky || true"` reports an install that set no `core.hooksPath` and installed no hook; the `js/` layout this template supports is exactly that case | [js#166](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/166) | Reproduced end to end (husky 9.1.7 prints `.git can't be found`, exits 0, `core.hooksPath` unset); the proposed verifier was run in both the broken and the working layout (RC-14) |
+
+One further report was **not** a template defect. RC-2 belongs to `use-m`, and
+[use-m#72](https://github.com/link-foundation/use-m/issues/72) was already open
+with the exact code location and the one-line fix, filed by two other downstream
+projects. Restating it would have added nothing; what it got wrong was the
+version boundary, so the
+[comment we added](https://github.com/link-foundation/use-m/issues/72#issuecomment-5552037466)
+carries only the new fact. Its suggested regression test says "Node 20 *and*
+Node ≥ 22.12"; measured against the published `use-m`, v22.23.2 still returns
+32 keys and a callable `$`, and it is v23.11.1 that returns
+`["default","module.exports"]`. A test pinned at 22.12 would pass and still miss
+this — which is also why the bug reached three projects before anyone noticed,
+since Node 22 is the LTS most consumers run and Node 24 is what release jobs
+pin. The boundary was confirmed without `use-m` or `command-stream` in the
+picture, in
+`experiments/ci-repro/node-module-exports-namespace-boundary.mjs`: a `.cjs` file
+that re-exports another one defeats `cjs-module-lexer`, so Node ≥ 23 falls back
+to the synthetic `'module.exports'` key that `use-m`'s unwrap does not
+recognise.
 
 Two drafts were **not** filed, and the reason is the same in both cases: the
 claim did not survive being checked.

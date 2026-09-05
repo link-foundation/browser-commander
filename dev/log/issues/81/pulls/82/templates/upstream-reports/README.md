@@ -20,6 +20,25 @@ used were `js` at `338fafa`, `python` at `81c9786` and `rust` at `4d444d9`.
 | `python-pipeline-status-gate.md` | [python#69](https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/69) | the same two gaps, with that repo's workflow list and line numbers |
 | `rust-pipeline-status-gate.md` | [rust#156](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/156) | the same two gaps, plus a missing success echo |
 
+## Reported outside the templates
+
+RC-2 is not a template defect — it is a `use-m` one, and it was already open as
+[link-foundation/use-m#72](https://github.com/link-foundation/use-m/issues/72)
+with the exact code location and the one-line fix. Rather than restate that, we
+[added the fact the existing report got wrong](https://github.com/link-foundation/use-m/issues/72#issuecomment-5552037466):
+the boundary is Node **23**, not "Node ≥ 22.12", so a regression test pinned at
+22.12 would pass and still miss this. Measured on the published `use-m`
+(v20.20.2 and v22.23.2 fine, v23.11.1 and v24.20.0 broken) and, independently of
+`use-m` and `command-stream`, on Node itself:
+
+```
+$ npx --yes node@22 probe.mjs   →  v22.23.2 ["default"]
+$ npx --yes node@23 probe.mjs   →  v23.11.1 ["default","module.exports"]
+```
+
+`experiments/ci-repro/node-module-exports-namespace-boundary.mjs` is that
+probe.
+
 ## Withdrawn before filing
 
 Two further drafts were dropped. Filing them would have added the false

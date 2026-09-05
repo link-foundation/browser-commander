@@ -16,7 +16,7 @@ The blind spot is visible in this repository's own history. Run
 [24045269874](https://github.com/link-foundation/browser-commander/actions/runs/24045269874)
 is a push to `main` whose `Auto Release`, `Build Package` and both `Test` jobs
 are `cancelled`, and whose run conclusion is `cancelled`. That one was benign —
-a second push arrived 37 seconds later and superseded it — but a job killed by
+a second push arrived 38 seconds later and superseded it — but a job killed by
 its own `timeout-minutes` would have looked exactly the same, and nothing would
 have said so. That is a false negative: CI is green (or at least not red) while
 a check did not finish.

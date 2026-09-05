@@ -15,6 +15,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -26,6 +27,23 @@ export const REPO_ROOT = path.resolve(
 /** Absolute path to a file, named the way the repository names it. */
 export function repoPath(...segments) {
   return path.join(REPO_ROOT, ...segments);
+}
+
+/**
+ * Newlines as the assertions expect them.
+ *
+ * A Windows runner checks the repository out with CRLF endings, so text read
+ * straight off disk there does not contain the `\n` a matcher written on Linux
+ * looks for. Normalizing at the read is the difference between a test that
+ * checks the repository and a test that checks the operating system.
+ */
+export function normalizeNewlines(text) {
+  return text.replaceAll('\r\n', '\n');
+}
+
+/** Read a repository file as text, with newlines normalized. */
+export function readRepoText(...segments) {
+  return normalizeNewlines(readFileSync(repoPath(...segments), 'utf8'));
 }
 
 /**

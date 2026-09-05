@@ -18,9 +18,11 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
-import { repoPath } from '../../helpers/repo.js';
-
-const CONFIG_PATH = repoPath('.pre-commit-config.yaml');
+import {
+  normalizeNewlines,
+  readRepoText,
+  repoPath,
+} from '../../helpers/repo.js';
 
 /**
  * Every local hook, mapped to the workflow step it has to mirror.
@@ -115,11 +117,9 @@ function entryOf(lines) {
   return entry ? entry.replace(/^\s*entry:\s+/, '').trim() : '';
 }
 
-const config = readFileSync(CONFIG_PATH, 'utf-8');
-const localHooks = readLocalHooks(config);
+const localHooks = readLocalHooks(readRepoText('.pre-commit-config.yaml'));
 
-const workflow = (name) =>
-  readFileSync(repoPath('.github', 'workflows', name), 'utf-8');
+const workflow = (name) => readRepoText('.github', 'workflows', name);
 
 describe('local hooks run the commands CI runs', () => {
   for (const { id, workflow: file, command } of MIRRORED_COMMANDS) {
@@ -136,6 +136,19 @@ describe('local hooks run the commands CI runs', () => {
       );
     });
   }
+
+  it('reads a workflow checked out with Windows line endings', () => {
+    // The twelve assertions above match `run: <command>\n`. On windows-latest
+    // git checks the repository out with CRLF endings, so every one of them
+    // failed there while passing on Linux - run 33963736349, twelve failures,
+    // none of them a real drift. Reading through readRepoText() is what makes
+    // the assertion about this repository rather than about the runner.
+    const crlfWorkflow = normalizeNewlines(
+      workflow('js.yml').replaceAll('\n', '\r\n')
+    );
+
+    assert.ok(crlfWorkflow.includes('run: npm run lint\n'));
+  });
 
   it('leaves no local hook unpinned', () => {
     const pinned = new Set(MIRRORED_COMMANDS.map((m) => m.id));

@@ -22,6 +22,8 @@ defect, and a **warning** is noise that hides the other three.
 | RC-13 | false positive | The link checker read URLs out of lychee's *redirects* section, and failed on a `502` | `60c2940` |
 | RC-14 | false negative | The pre-commit hooks were never installed: husky failed and `\|\| true` hid it | `d2c4819` |
 | RC-15 | false negative | `scripts/`, `experiments/` and `rust/scripts/` had no linter at all | `d2c4819` |
+| RC-16 | false negative | A job killed by `timeout-minutes` is reported *cancelled*, and nothing failed the run | `d0ff981` |
+| RC-17 | false positive | A test matched `run: <command>\n` against a repository checked out with CRLF | `pending` |
 
 ---
 
@@ -402,3 +404,199 @@ the page scripts under `experiments/fingerprint-parity/` use (`navigator`,
 `screen`, `Notification`, `HTMLCanvasElement`, …) were added to the shared
 config's globals list, next to the `document` and `window` entries that were
 already there for the same reason.
+
+---
+
+## RC-16 — the timeout that was not a failure
+
+`timeout-minutes` is the only deadline any job in this repository had, and it
+does not fail anything. GitHub reports a job it kills as **cancelled**, not as
+failed — the behaviour is documented by omission and discussed at length in
+[community discussion 38004](https://github.com/orgs/community/discussions/38004),
+"timing out github action without 'failure' status". A run whose only casualty
+is a cancelled job carries the conclusion `cancelled` too, and a `cancelled` run
+is not a failing run: no red check, no notification, and `gh run list` shows it
+next to the genuine supersedes.
+
+The repository already contains one run of that shape. Run 24045269874 (Rust
+CI/CD Pipeline, push to `main`) has `Auto Release`, `Build Package` and two
+`Test` jobs all `cancelled` and a run conclusion of `cancelled`:
+
+```
+$ gh run view 24045269874 --repo link-foundation/browser-commander \
+    --json conclusion,jobs --jq '.conclusion, (.jobs[] | "\(.conclusion)\t\(.name)")'
+cancelled
+success         Detect Changes
+success         Lint and Format Check
+skipped         Changelog Fragment Check
+cancelled       Test (windows-latest)
+cancelled       Test (ubuntu-latest)
+success         Test (macos-latest)
+cancelled       Build Package
+cancelled       Auto Release
+cancelled       Manual Release
+```
+
+That one was a legitimate supersede — a second push arrived 38 seconds later —
+but nothing in the repository could have told the two apart, and a genuine
+overrun would have read exactly the same.
+
+**Reproduction.** A job whose step outlives its backstop:
+
+```yaml
+jobs:
+  overrun:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - run: sleep 120
+```
+
+The step is killed at 60s; the job's conclusion is `cancelled`; the run's
+conclusion is `cancelled`; the pull request shows no failing check.
+
+**Fix, part one: the step owns its deadline.** `scripts/run-with-budget-warning.sh`
+runs a command with an explicit budget, warns at 70% of it, and on an overrun
+sends `SIGTERM` to the whole process group, then `SIGKILL` after a grace period,
+and exits **124** — the same status `timeout(1)` uses. 124 is a failure, so the
+step turns the check red and the annotation names the budget that was blown:
+
+```
+::error title=Rust test suite exceeded its execution budget::Rust test suite did
+not finish within its 480s budget and was terminated.
+```
+
+Two details in the script are load-bearing and were both found by mutating it
+and watching a test fail. `set -m` puts the command in its own process group,
+because `npm test` and `cargo test` spawn workers and signalling only the direct
+child leaves orphans holding the runner's stdout — that is also why `timeout(1)`
+alone is not enough here. And completion is detected through a status file
+rather than `kill -0`, because a finished child stays visible as a zombie until
+it is reaped, so process liveness never reports it as done.
+
+Budgets are set from measured durations, with room for the checkout, toolchain
+and dependency installs that share the job clock:
+
+| Workflow | Step | Budget | Measured |
+| --- | --- | --- | --- |
+| `js.yml` | Node.js test suite | 300s | 1–5s |
+| `python.yml` | pytest suite | 300s | 5–10s |
+| `rust.yml` | Rust test suite | 480s | 23–86s |
+| `rust.yml` | Rust doc tests | 180s | 6–11s |
+| `rust.yml` | Rust code coverage | 480s | 10s |
+| `docs.yml` | Rust API docs | 480s | 58s |
+| `parity.yml` | Fingerprint parity suite | 1200s | 26s |
+
+`rust.yml`'s `no-openssl` job is the one long step left unwrapped: it runs in a
+`rust:slim-bookworm` container that has no bash to wrap it with.
+
+**Fix, part two: something has to read the results.** A budget only covers steps
+somebody thought to budget. Every workflow therefore ends in a `pipeline-status`
+job that `needs:` every other job, reads `toJSON(needs)`, and fails when any of
+them failed or was cancelled. It is guarded by `if: !cancelled()` rather than
+the implicit "all dependencies succeeded", or it would be skipped in exactly the
+runs it exists to report — and `!` is the YAML tag indicator, so the condition
+has to be written as a block scalar:
+
+```yaml
+    if: >-
+      !cancelled()
+```
+
+**The false positive this could have introduced.** The templates' version of the
+gate fails any run with a cancelled job on the default branch. This repository's
+check jobs cancel *each other* through `${{ github.workflow }}-${{ github.ref }}-*`
+concurrency groups — that is how run 24045269874 came to be cancelled — so
+adopting the gate unchanged would have reddened every superseded push to `main`:
+a new false positive in exchange for the old false negative. Before failing,
+`check-pipeline-status.sh` therefore asks whether the commit it is testing is
+still the head of the branch:
+
+```bash
+head="$(git ls-remote "${GIT_REMOTE:-origin}" "refs/heads/${branch}" | awk 'NR == 1 { print $1 }')"
+[ "$head" != "$RUN_SHA" ]
+```
+
+An unresolvable head is treated as *not* superseded: a missed supersede costs
+one noisy warning, a missed overrun costs a silent failure on `main`.
+
+**Keeping it true.** Three test files, all runnable locally:
+
+* `js/tests/unit/scripts/run-with-budget-warning.test.js` — exit-status
+  pass-through, 124 and the annotation on overrun, and the process-group kill
+  (asserted by watching a worker stop appending to a file; `kill -0` cannot see
+  the difference, because the killed worker is a zombie).
+* `js/tests/unit/scripts/check-pipeline-status.test.js` — the four readings
+  (failure, cancellation off `main`, cancellation at the branch head, supersede)
+  and the refusal to run without `NEEDS_JSON`.
+* `js/tests/unit/scripts/ci-timeout-budgets.test.js` — no budget, individually
+  or summed per job, exceeds 70% of its job's backstop; every wrapped step
+  declares `shell: bash`; every workflow has the gate and the gate needs every
+  other job.
+
+`scripts/check-ci-workflows.mjs` enforces the last of those at workflow-policy
+level too, so a job added later cannot escape the gate:
+
+```
+Job pipeline-status does not need coverage; a job the gate does not watch can
+be cancelled without failing the run.
+```
+
+**Verification.** Both scripts are clean under
+`docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh`.
+Adding a workflow job that lints standalone `.sh` files is a reasonable
+follow-up — neither this repository nor the three templates do it today — but it
+is outside this issue.
+
+**Upstream.** The gate and the wrapper come from the link-foundation pipeline
+templates, where the gate has no supersede lookup; that gap is reported back to
+them (see `templates/`).
+
+---
+
+## RC-17 — twelve failures that were about the runner, not the repository
+
+The `Test (Node.js on windows-latest)` job of run
+[33963736349](https://github.com/link-foundation/browser-commander/actions/runs/33963736349)
+reported twelve failures, all of this shape:
+
+```
+✖ js-eslint runs `npm run lint`, the same as js.yml
+  AssertionError [ERR_ASSERTION]: js.yml no longer has a step running
+  `npm run lint`; the hook and the workflow have drifted apart
+```
+
+Nothing had drifted. `js/tests/unit/scripts/pre-commit-config.test.js` — added
+by this pull request for RC-14 — asserts that each pre-commit hook runs the same
+command as the workflow step it mirrors, and it looks for the command with:
+
+```js
+workflow(file).includes(`run: ${command}\n`)
+```
+
+A Windows runner checks the repository out with CRLF line endings, so the file
+contains `run: npm run lint\r\n` and the match fails on every one of the twelve
+commands, on Windows only. The same class as RC-12: a test that was really
+testing the operating system it was written on.
+
+**Fix.** Reads go through `readRepoText()` in `js/tests/helpers/repo.js`, which
+normalizes `\r\n` to `\n` at the read, so an assertion written with `\n` is an
+assertion about this repository. The regression test reproduces the Windows
+checkout rather than waiting for a Windows runner to find it again:
+
+```js
+const crlfWorkflow = normalizeNewlines(
+  workflow('js.yml').replaceAll('\n', '\r\n')
+);
+
+assert.ok(crlfWorkflow.includes('run: npm run lint\n'));
+```
+
+Turning `normalizeNewlines` into the identity function fails that test and the
+twelve it protects, which is the check that it is load-bearing.
+
+**Why the gate caught it and the previous run did not report it as such.** Run
+33963736349 failed and so did its successor, 33965488498 — the second one is the
+first run with the RC-16 `pipeline-status` gate, and it shows the gate doing its
+job: `Test (Node.js on windows-latest)` failed and `Pipeline Status` failed with
+it, naming the job.

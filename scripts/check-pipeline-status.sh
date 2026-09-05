@@ -11,7 +11,7 @@
 # The history shows the shape of the blind spot. Run 24045269874 is a push to
 # `main` (Rust CI/CD Pipeline) whose `Auto Release`, `Build Package` and two
 # `Test` jobs are all `cancelled`; the run's conclusion is `cancelled`, not
-# `failure`. That one was a legitimate supersede - a second push arrived 37
+# `failure`. That one was a legitimate supersede - a second push arrived 38
 # seconds later - and the release writers have since been moved to a
 # non-cancellable `main-writer` concurrency group. What has not changed is that
 # a check killed by its own `timeout-minutes` would look exactly the same, and

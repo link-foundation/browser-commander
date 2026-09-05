@@ -20,8 +20,8 @@ defect, and a **warning** is noise that hides the other three.
 | RC-11 | error | Dependency Review ran against a repository with the dependency graph off | `eec0f3b` |
 | RC-12 | false positive | A Windows-only `ENOENT` from the duplication test's `node_modules/.bin` shim | `eec0f3b` |
 | RC-13 | false positive | The link checker read URLs out of lychee's *redirects* section, and failed on a `502` | `60c2940` |
-| RC-14 | false negative | The pre-commit hooks were never installed: husky failed and `\|\| true` hid it | pending |
-| RC-15 | false negative | `scripts/`, `experiments/` and `rust/scripts/` had no linter at all | pending |
+| RC-14 | false negative | The pre-commit hooks were never installed: husky failed and `\|\| true` hid it | `d2c4819` |
+| RC-15 | false negative | `scripts/`, `experiments/` and `rust/scripts/` had no linter at all | `d2c4819` |
 
 ---
 

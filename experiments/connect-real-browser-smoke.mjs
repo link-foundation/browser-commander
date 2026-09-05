@@ -1,51 +1,52 @@
-import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
-import { createServer } from "node:http";
-import os from "node:os";
-import path from "node:path";
+import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import os from 'node:os';
+import path from 'node:path';
 
-import {
-  launchRealBrowser,
-  makeBrowserCommander,
-} from "../js/src/index.js";
+import { launchRealBrowser, makeBrowserCommander } from '../js/src/index.js';
 
 const browserExecutable = process.argv[2];
 if (!browserExecutable) {
   throw new Error(
-    "Usage: node experiments/connect-real-browser-smoke.mjs <browser-executable>",
+    'Usage: node experiments/connect-real-browser-smoke.mjs <browser-executable>'
   );
 }
 
 const server = createServer((request, response) => {
-  response.setHeader("content-type", "text/html");
+  response.setHeader('content-type', 'text/html');
   response.end('<main id="connected">CDP connection works</main>');
 });
-await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const { port } = server.address();
 const origin = `http://127.0.0.1:${port}`;
 const temporaryDirectory = await mkdtemp(
-  path.join(os.tmpdir(), "browser-commander-cdp-connect-"),
+  path.join(os.tmpdir(), 'browser-commander-cdp-connect-')
 );
 
 async function waitForExit(browserProcess) {
-  if (browserProcess.exitCode !== null) return;
+  if (browserProcess.exitCode !== null) {
+    return;
+  }
   await new Promise((resolve) => {
-    browserProcess.once("exit", resolve);
-    if (browserProcess.exitCode !== null) resolve();
+    browserProcess.once('exit', resolve);
+    if (browserProcess.exitCode !== null) {
+      resolve();
+    }
   });
 }
 
 try {
-  for (const engine of ["playwright", "puppeteer"]) {
+  for (const engine of ['playwright', 'puppeteer']) {
     const connection = await launchRealBrowser({
       engine,
       executablePath: browserExecutable,
       userDataDir: path.join(temporaryDirectory, engine),
       headless: true,
-      args: ["--no-sandbox", "--disable-dev-shm-usage"],
+      args: ['--no-sandbox', '--disable-dev-shm-usage'],
       seedCookies: [
         {
-          name: "attached",
+          name: 'attached',
           value: engine,
           url: origin,
         },
@@ -60,11 +61,11 @@ try {
         enableNavigationManager: false,
         enableDialogManager: false,
       });
-      assert.equal(await commander.count({ selector: "#connected" }), 1);
+      assert.equal(await commander.count({ selector: '#connected' }), 1);
       await commander.destroy();
       assert.match(
         await connection.page.evaluate(() => document.cookie),
-        new RegExp(`attached=${engine}`),
+        new RegExp(`attached=${engine}`)
       );
       console.log(`${engine} real-browser CDP smoke test passed`);
     } finally {

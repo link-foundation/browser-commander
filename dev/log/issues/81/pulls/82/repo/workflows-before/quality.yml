@@ -1,0 +1,108 @@
+name: Repository Quality Gates
+
+# Language-agnostic gates that apply to the whole repository rather than to a
+# single implementation. Keeping them here avoids duplicating the same job in
+# js.yml, python.yml and rust.yml, where they would drift apart over time.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  # === SECRETS SCAN ===
+  # Credential scan (best practice #11). Run through npx so no extra dependency
+  # is committed to any of the three language packages.
+  secrets-scan:
+    name: Secrets Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-secrets-scan
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Run secretlint
+        run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
+
+  # === VERSION MODIFICATION CHECK ===
+  # Versions are set by the release jobs (changesets for js, auto-release for
+  # python and rust). A version edited by hand in a pull request either collides
+  # with the number the pipeline is about to pick or skips one, leaving the tag,
+  # the changelog and the registry disagreeing. One job covers all three
+  # manifests so the rule cannot drift apart per language.
+  version-check:
+    name: Version Modification Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-version-check
+      cancel-in-progress: true
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history: the check diffs the head against the base branch.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Check for manual version changes
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+        run: node scripts/check-version-modification.mjs
+
+  # === FILE LINE LIMITS ===
+  # Enforces the 1500-line limit (best practice #2) across every tracked source,
+  # documentation and workflow file, in all three implementations.
+  file-line-limits:
+    name: Check File Line Limits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-file-line-limits
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check file line limits
+        run: bash scripts/check-file-line-limits.sh
+
+  # === SHARED FINGERPRINT ASSETS ===
+  # The page init payload and the limitations catalogue are single assets that
+  # JavaScript reads, Python ships as package data and Rust embeds with
+  # include_str!. The copies have to stay byte-identical, or the three
+  # implementations would send different scripts and document different limits.
+  shared-fingerprint-assets:
+    name: Check Shared Fingerprint Assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-shared-fingerprint-assets
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check the shared asset copies
+        run: bash scripts/check-shared-fingerprint-assets.sh

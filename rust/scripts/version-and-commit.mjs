@@ -12,17 +12,26 @@
  * - lino-arguments: Unified configuration from CLI args, env vars, and .lenv files
  */
 
-import { readFileSync, writeFileSync, appendFileSync, readdirSync, existsSync } from 'fs';
+import {
+  readFileSync,
+  writeFileSync,
+  appendFileSync,
+  readdirSync,
+  existsSync,
+} from 'fs';
 import { join } from 'path';
 
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+import {
+  readManifestField,
+  replaceTomlField,
+} from '../../scripts/read-manifest.mjs';
+import {
+  loadCommandStream,
+  loadLinoArguments,
+} from '../../scripts/use-module.mjs';
 
-// Import link-foundation libraries
-const { $ } = await use('command-stream');
-const { makeConfig } = await use('lino-arguments');
+const { $ } = await loadCommandStream();
+const { makeConfig } = await loadLinoArguments();
 
 // Parse CLI arguments
 const config = makeConfig({
@@ -68,11 +77,17 @@ function setOutput(key, value) {
  * @returns {{major: number, minor: number, patch: number}}
  */
 function getCurrentVersion() {
-  const cargoToml = readFileSync('Cargo.toml', 'utf-8');
-  const match = cargoToml.match(/^version\s*=\s*"(\d+)\.(\d+)\.(\d+)"/m);
+  let version;
+  try {
+    version = readManifestField('Cargo.toml');
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
 
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
   if (!match) {
-    console.error('Error: Could not parse version from Cargo.toml');
+    console.error(`Error: [package] version "${version}" is not semver`);
     process.exit(1);
   }
 
@@ -109,12 +124,12 @@ function calculateNewVersion(current, bumpType) {
  * @param {string} newVersion
  */
 function updateCargoToml(newVersion) {
-  let cargoToml = readFileSync('Cargo.toml', 'utf-8');
-  cargoToml = cargoToml.replace(
-    /^(version\s*=\s*")[^"]+(")/m,
-    `$1${newVersion}$2`
+  const cargoToml = readFileSync('Cargo.toml', 'utf-8');
+  writeFileSync(
+    'Cargo.toml',
+    replaceTomlField(cargoToml, 'package', 'version', newVersion),
+    'utf-8'
   );
-  writeFileSync('Cargo.toml', cargoToml, 'utf-8');
   console.log(`Updated Cargo.toml to version ${newVersion}`);
 }
 
@@ -130,7 +145,8 @@ async function checkVersionOnCratesIo(crateName, version) {
       `https://crates.io/api/v1/crates/${crateName}/${version}`,
       {
         headers: {
-          'User-Agent': 'browser-commander-ci (github.com/link-foundation/browser-commander)',
+          'User-Agent':
+            'browser-commander-ci (github.com/link-foundation/browser-commander)',
         },
       }
     );
@@ -163,7 +179,9 @@ async function findNextAvailableVersion(crateName, current, bumpType) {
         `Could not find an available version after ${MAX_ATTEMPTS} attempts (last tried: ${version})`
       );
     }
-    console.log(`Version ${version} already published on crates.io, trying next...`);
+    console.log(
+      `Version ${version} already published on crates.io, trying next...`
+    );
     const parts = version.split('.').map(Number);
     const next = { major: parts[0], minor: parts[1], patch: parts[2] };
     version = calculateNewVersion(next, 'patch');
@@ -178,7 +196,9 @@ async function findNextAvailableVersion(crateName, current, bumpType) {
  * @returns {string} - Content without frontmatter
  */
 function stripFrontmatter(content) {
-  const frontmatterMatch = content.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/);
+  const frontmatterMatch = content.match(
+    /^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/
+  );
   if (frontmatterMatch) {
     return frontmatterMatch[1].trim();
   }
@@ -256,20 +276,26 @@ async function main() {
     const current = getCurrentVersion();
     const currentVersionStr = `${current.major}.${current.minor}.${current.patch}`;
 
-    // Get crate name from Cargo.toml
-    const cargoToml = readFileSync('Cargo.toml', 'utf-8');
-    const nameMatch = cargoToml.match(/^name\s*=\s*"([^"]+)"/m);
-    const crateName = nameMatch ? nameMatch[1] : 'unknown';
+    // Read [package].name: Cargo.toml repeats `name` under [[bin]] and [lib].
+    const crateName = readManifestField('Cargo.toml', { field: 'name' });
 
     // Check if the current version is already published on crates.io
     if (await checkVersionOnCratesIo(crateName, currentVersionStr)) {
-      console.log(`Current version ${currentVersionStr} is already published on crates.io`);
+      console.log(
+        `Current version ${currentVersionStr} is already published on crates.io`
+      );
     } else {
-      console.log(`Current version ${currentVersionStr} is NOT published on crates.io`);
+      console.log(
+        `Current version ${currentVersionStr} is NOT published on crates.io`
+      );
     }
 
     // Find the next version that is not yet published on crates.io
-    const newVersion = await findNextAvailableVersion(crateName, current, bumpType);
+    const newVersion = await findNextAvailableVersion(
+      crateName,
+      current,
+      bumpType
+    );
     console.log(`Next available version: ${newVersion}`);
 
     // Update version in Cargo.toml

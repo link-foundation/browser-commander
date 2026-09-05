@@ -39,7 +39,8 @@ const OVERRIDES = [
   [
     'Emulation.setUserAgentOverride',
     {
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) WorkerProbe/1.0',
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) WorkerProbe/1.0',
       acceptLanguage: 'fr-FR,fr,en',
       platform: 'MacIntel',
     },
@@ -93,7 +94,12 @@ async function connect(webSocketDebuggerUrl) {
         const id = (nextId += 1);
         pending.set(id, { resolve, reject });
         socket.send(
-          JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) })
+          JSON.stringify({
+            id,
+            method,
+            params,
+            ...(sessionId ? { sessionId } : {}),
+          })
         );
       });
     },
@@ -137,10 +143,13 @@ async function measure({ applyToWorkerSession, evaluateInWorker }) {
     const client = await connect(version.webSocketDebuggerUrl);
     const { targetInfos } = await client.send('Target.getTargets');
     const pageTarget = targetInfos.find((target) => target.type === 'page');
-    const { sessionId: pageSession } = await client.send('Target.attachToTarget', {
-      targetId: pageTarget.targetId,
-      flatten: true,
-    });
+    const { sessionId: pageSession } = await client.send(
+      'Target.attachToTarget',
+      {
+        targetId: pageTarget.targetId,
+        flatten: true,
+      }
+    );
 
     await client.send('Page.enable', {}, pageSession);
     for (const [method, params] of OVERRIDES) {
@@ -158,7 +167,9 @@ async function measure({ applyToWorkerSession, evaluateInWorker }) {
         for (const [method, params] of OVERRIDES) {
           await client
             .send(method, params, sessionId)
-            .catch((error) => attachments.push({ method, error: error.message }));
+            .catch((error) =>
+              attachments.push({ method, error: error.message })
+            );
         }
         if (evaluateInWorker) {
           // waitForDebuggerOnStart holds the worker before it runs any of its
@@ -219,7 +230,10 @@ async function measure({ applyToWorkerSession, evaluateInWorker }) {
 const ARRANGEMENTS = [
   ['pageOnly', { applyToWorkerSession: false, evaluateInWorker: false }],
   ['workerCdp', { applyToWorkerSession: true, evaluateInWorker: false }],
-  ['workerCdpWithScript', { applyToWorkerSession: true, evaluateInWorker: true }],
+  [
+    'workerCdpWithScript',
+    { applyToWorkerSession: true, evaluateInWorker: true },
+  ],
 ];
 
 async function main() {
@@ -228,10 +242,13 @@ async function main() {
     results[name] = await measure(options);
     const { documentSide, workerSide } = results[name];
     const mismatches = Object.keys(documentSide).filter(
-      (key) => JSON.stringify(documentSide[key]) !== JSON.stringify(workerSide?.[key])
+      (key) =>
+        JSON.stringify(documentSide[key]) !== JSON.stringify(workerSide?.[key])
     );
     results[name].documentWorkerMismatches = mismatches;
-    console.log(`${name}: worker differs from document on [${mismatches.join(', ')}]`);
+    console.log(
+      `${name}: worker differs from document on [${mismatches.join(', ')}]`
+    );
     console.log(`  worker: ${JSON.stringify(workerSide)}`);
   }
 

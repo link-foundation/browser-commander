@@ -8,7 +8,12 @@
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { captureReferenceReport, readProbeSource, startProbeServer } from './harness.mjs';
+import {
+  captureReferenceReport,
+  projectReport,
+  readProbeSource,
+  startProbeServer,
+} from './harness.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
 const HEADLESS = process.env.PARITY_HEADLESS === 'true';
@@ -30,24 +35,29 @@ const CASES = [
   ['window-size', ['--window-size=1280,720']],
 ];
 
-const INTERESTING = (report) => ({
-  webdriver: report?.navigator?.webdriver ?? null,
-  iframeWebdriver: report?.iframe?.webdriver ?? null,
-  userAgent: report?.navigator?.userAgent ?? null,
-  language: report?.navigator?.language ?? null,
-  languages: report?.navigator?.languages ?? null,
-  intlLocale: report?.intl?.dateTimeLocale ?? null,
-  chromeKeys: report?.window?.chromeKeys ?? null,
-  pluginsLength: report?.plugins?.length ?? null,
-  notificationPermission: report?.permissions?.notificationPermission ?? null,
-  notificationsState: report?.permissions?.states?.notifications ?? null,
-  webglVendor: report?.webgl?.webgl1?.unmaskedVendor ?? null,
-  screen: report?.screen ?? null,
-  outerWidth: report?.window?.outerWidth ?? null,
-  innerWidth: report?.window?.innerWidth ?? null,
-  stackLines: report?.errors?.stackLines ?? null,
-  suspiciousGlobals: report?.window?.suspiciousGlobals ?? null,
-});
+// The fields a flag can plausibly move, and where each one lives in the probe
+// report. Kept as paths rather than as a chain of `report?.a?.b ?? null` so
+// the projection stays a table instead of a fifty-branch function.
+const INTERESTING_PATHS = {
+  webdriver: ['navigator', 'webdriver'],
+  iframeWebdriver: ['iframe', 'webdriver'],
+  userAgent: ['navigator', 'userAgent'],
+  language: ['navigator', 'language'],
+  languages: ['navigator', 'languages'],
+  intlLocale: ['intl', 'dateTimeLocale'],
+  chromeKeys: ['window', 'chromeKeys'],
+  pluginsLength: ['plugins', 'length'],
+  notificationPermission: ['permissions', 'notificationPermission'],
+  notificationsState: ['permissions', 'states', 'notifications'],
+  webglVendor: ['webgl', 'webgl1', 'unmaskedVendor'],
+  screen: ['screen'],
+  outerWidth: ['window', 'outerWidth'],
+  innerWidth: ['window', 'innerWidth'],
+  stackLines: ['errors', 'stackLines'],
+  suspiciousGlobals: ['window', 'suspiciousGlobals'],
+};
+
+const INTERESTING = (report) => projectReport(report, INTERESTING_PATHS, null);
 
 async function main() {
   const probeSource = await readProbeSource();
@@ -72,7 +82,8 @@ async function main() {
   } finally {
     await server.close();
   }
-  const outputPath = process.argv[2] || path.join(process.cwd(), 'flag-matrix.json');
+  const outputPath =
+    process.argv[2] || path.join(process.cwd(), 'flag-matrix.json');
   await writeFile(outputPath, `${JSON.stringify(rows, null, 2)}\n`, 'utf8');
   console.log(`wrote ${outputPath}`);
 }

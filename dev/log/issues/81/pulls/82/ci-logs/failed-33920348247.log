@@ -1,0 +1,374 @@
+Auto Release	UNKNOWN STEP	﻿2026-09-04T21:18:26.1537015Z Current runner version: '2.337.0'
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1605909Z ##[group]Runner Image Provisioner
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1607305Z Hosted Compute Agent
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1608188Z Version: 20260828.587
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1609286Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1610408Z Build Date: 2026-08-28T16:44:25Z
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1611480Z Worker ID: {82d68dc8-5f1e-48e9-8a0b-92119c6eb127}
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1612655Z Azure Region: eastus2
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1613534Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1615871Z ##[group]Operating System
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1616817Z Ubuntu
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1617569Z 24.04.4
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1618502Z LTS
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1619311Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1620268Z ##[group]Runner Image
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1621191Z Image: ubuntu-24.04
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1622098Z Version: 20260831.293.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1624172Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1626887Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1628430Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1630260Z ##[group]GITHUB_TOKEN Permissions
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1633284Z Contents: write
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1634251Z Metadata: read
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1635315Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1638525Z Secret source: Actions
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.1640625Z Prepare workflow directory
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.2212794Z Prepare all required actions
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.2282432Z Getting action download info
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.4538326Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.6411020Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.7632173Z Download action repository 'actions/download-artifact@v7' (SHA:37930b1c2abaa49bbe596cd826c3c89aef350131)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:26.9700979Z Download action repository 'pypa/gh-action-pypi-publish@release/v1' (SHA:dc37677b2e1c63e2034f94d8a5b11f265b73ba33)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.2058390Z Getting action download info
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.2814579Z Download action repository 'actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405' (SHA:a309ff8b426b58ec0e2a45f0f869d46889d02405)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.4347758Z Complete job name: Auto Release
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5478352Z ##[group]Run actions/checkout@v6
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5479850Z with:
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5480729Z   fetch-depth: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5481763Z   repository: link-foundation/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5490784Z   token: ***
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5491657Z   ssh-strict: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5492550Z   ssh-user: git
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5493466Z   persist-credentials: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5494460Z   clean: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5495486Z   sparse-checkout-cone-mode: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5496551Z   fetch-tags: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5497483Z   show-progress: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5498426Z   lfs: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5499326Z   submodules: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5500248Z   set-safe-directory: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5501281Z   allow-unsafe-pr-checkout: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5503100Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5503938Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5504917Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5506253Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.5507212Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6626991Z Syncing repository: link-foundation/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6630194Z ##[group]Getting Git version info
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6631743Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6634156Z [command]/usr/bin/git version
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6671346Z git version 2.55.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6696421Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6714491Z Temporarily overriding HOME='/home/runner/work/_temp/e2f21b86-34e6-43ce-a2c6-e73cf9312639' before making global git config changes
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6718758Z Adding repository directory to the temporary git global config as a safe directory
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6722992Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6775461Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6779788Z ##[group]Determining repository object format
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6782707Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6784861Z ##[group]Initializing the repository
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6788403Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6865430Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6884003Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6930521Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6932826Z ##[group]Disabling automatic garbage collection
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6934942Z [command]/usr/bin/git config --local gc.auto 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6983402Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6985900Z ##[group]Setting up auth
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6987547Z Removing SSH command configuration
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.6989849Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.7060262Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.7426724Z Removing HTTP extra header
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.7437397Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.7486674Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.7752210Z Removing includeIf entries pointing to credentials config files
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.7759800Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.7803422Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.8069496Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.8128658Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.8174694Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.8231734Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.8270420Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.8303821Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.8305509Z ##[group]Fetching the repository
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:27.8313187Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5164522Z From https://github.com/link-foundation/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5167613Z  * [new branch]      issue-1-315bb6a09057  -> origin/issue-1-315bb6a09057
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5170566Z  * [new branch]      issue-11-f0db41c23d6b -> origin/issue-11-f0db41c23d6b
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5173365Z  * [new branch]      issue-13-d9daf7ca6ef8 -> origin/issue-13-d9daf7ca6ef8
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5176901Z  * [new branch]      issue-15-85e23cad40a2 -> origin/issue-15-85e23cad40a2
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5179678Z  * [new branch]      issue-17-4fb92dabeabb -> origin/issue-17-4fb92dabeabb
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5181821Z  * [new branch]      issue-19-bef12b396c1f -> origin/issue-19-bef12b396c1f
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5183760Z  * [new branch]      issue-21-dee364614118 -> origin/issue-21-dee364614118
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5185882Z  * [new branch]      issue-23-4ea2027e76ed -> origin/issue-23-4ea2027e76ed
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5188237Z  * [new branch]      issue-25-1aef64a7e9ec -> origin/issue-25-1aef64a7e9ec
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5190328Z  * [new branch]      issue-27-4fd8f05681d7 -> origin/issue-27-4fd8f05681d7
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5192445Z  * [new branch]      issue-29-ce573bdf1462 -> origin/issue-29-ce573bdf1462
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5194611Z  * [new branch]      issue-3-8cd3d07cda8b  -> origin/issue-3-8cd3d07cda8b
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5196889Z  * [new branch]      issue-31-182c0e5f23ed -> origin/issue-31-182c0e5f23ed
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5199031Z  * [new branch]      issue-33-c92d3b8449d2 -> origin/issue-33-c92d3b8449d2
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5201093Z  * [new branch]      issue-35-f4eb7dd30787 -> origin/issue-35-f4eb7dd30787
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5203119Z  * [new branch]      issue-36-968302a2e3f5 -> origin/issue-36-968302a2e3f5
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5205348Z  * [new branch]      issue-37-ba59f40c5a7a -> origin/issue-37-ba59f40c5a7a
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5207405Z  * [new branch]      issue-38-286678a334ba -> origin/issue-38-286678a334ba
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5209438Z  * [new branch]      issue-39-3e80e8af995c -> origin/issue-39-3e80e8af995c
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5211481Z  * [new branch]      issue-45-3c5a6e3a096b -> origin/issue-45-3c5a6e3a096b
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5213513Z  * [new branch]      issue-47-e0d425c48e8d -> origin/issue-47-e0d425c48e8d
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5215701Z  * [new branch]      issue-49-2ea16458d451 -> origin/issue-49-2ea16458d451
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5217812Z  * [new branch]      issue-5-6ad76e6429cf  -> origin/issue-5-6ad76e6429cf
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5220043Z  * [new branch]      issue-51-f2a446afa3b9 -> origin/issue-51-f2a446afa3b9
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5222105Z  * [new branch]      issue-53-a5b1fc1e8376 -> origin/issue-53-a5b1fc1e8376
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5224285Z  * [new branch]      issue-55-7cb0893ca811 -> origin/issue-55-7cb0893ca811
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5226906Z  * [new branch]      issue-57-e85104965f87 -> origin/issue-57-e85104965f87
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5228587Z  * [new branch]      issue-58-e6673ea5b18c -> origin/issue-58-e6673ea5b18c
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5230427Z  * [new branch]      issue-59-c78546ebf3ab -> origin/issue-59-c78546ebf3ab
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5232276Z  * [new branch]      issue-60-e8d5faf5f51d -> origin/issue-60-e8d5faf5f51d
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5234153Z  * [new branch]      issue-65-5d65627189fb -> origin/issue-65-5d65627189fb
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5236328Z  * [new branch]      issue-66-5981186aa8ce -> origin/issue-66-5981186aa8ce
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5238566Z  * [new branch]      issue-68-710e9903a1a4 -> origin/issue-68-710e9903a1a4
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5240829Z  * [new branch]      issue-69-d8df3ab30de1 -> origin/issue-69-d8df3ab30de1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5242911Z  * [new branch]      issue-7-895bb7f9c584  -> origin/issue-7-895bb7f9c584
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5245004Z  * [new branch]      issue-70-2777eb370ebe -> origin/issue-70-2777eb370ebe
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5247218Z  * [new branch]      issue-75-bea1ba5d2c9e -> origin/issue-75-bea1ba5d2c9e
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5249303Z  * [new branch]      issue-77-5a236e48ec8f -> origin/issue-77-5a236e48ec8f
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5251371Z  * [new branch]      issue-79-694d5f8686e2 -> origin/issue-79-694d5f8686e2
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5253447Z  * [new branch]      issue-9-337c4cdf1be2  -> origin/issue-9-337c4cdf1be2
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5255443Z  * [new branch]      main                  -> origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5257227Z  * [new tag]         v0.1.1                -> v0.1.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5258945Z  * [new tag]         v0.10.0               -> v0.10.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5260850Z  * [new tag]         v0.10.1               -> v0.10.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5262559Z  * [new tag]         v0.10.10              -> v0.10.10
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5264250Z  * [new tag]         v0.10.2               -> v0.10.2
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5266156Z  * [new tag]         v0.10.3               -> v0.10.3
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5267978Z  * [new tag]         v0.10.4               -> v0.10.4
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5269305Z  * [new tag]         v0.10.5               -> v0.10.5
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5270449Z  * [new tag]         v0.10.6               -> v0.10.6
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5271573Z  * [new tag]         v0.10.7               -> v0.10.7
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5272706Z  * [new tag]         v0.10.8               -> v0.10.8
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5273841Z  * [new tag]         v0.10.9               -> v0.10.9
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5274966Z  * [new tag]         v0.11.0               -> v0.11.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5276231Z  * [new tag]         v0.12.0               -> v0.12.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5277419Z  * [new tag]         v0.13.0               -> v0.13.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5278551Z  * [new tag]         v0.14.0               -> v0.14.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5279711Z  * [new tag]         v0.15.0               -> v0.15.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5281004Z  * [new tag]         v0.16.0               -> v0.16.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5282142Z  * [new tag]         v0.16.1               -> v0.16.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5283276Z  * [new tag]         v0.2.0                -> v0.2.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5284414Z  * [new tag]         v0.2.1                -> v0.2.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5285762Z  * [new tag]         v0.3.0                -> v0.3.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5286907Z  * [new tag]         v0.4.0                -> v0.4.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5288087Z  * [new tag]         v0.5.0                -> v0.5.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5289218Z  * [new tag]         v0.5.1                -> v0.5.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5290369Z  * [new tag]         v0.5.2                -> v0.5.2
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5291507Z  * [new tag]         v0.5.3                -> v0.5.3
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5292939Z  * [new tag]         v0.5.4                -> v0.5.4
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5294432Z  * [new tag]         v0.6.0                -> v0.6.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5296069Z  * [new tag]         v0.7.0                -> v0.7.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5297211Z  * [new tag]         v0.8.0                -> v0.8.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5298620Z  * [new tag]         v0.8.1                -> v0.8.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5299771Z  * [new tag]         v0.9.0                -> v0.9.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5300904Z  * [new tag]         v0.9.1                -> v0.9.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5303889Z [command]/usr/bin/git branch --list --remote origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5305025Z   origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5307430Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5308698Z 97b98961d94389cb611ba9e91b818012d85686be
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5311375Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5312800Z ##[group]Determining the checkout info
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5314361Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5315770Z [command]/usr/bin/git sparse-checkout disable
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5328315Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5364835Z ##[group]Checking out the ref
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.5368779Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6090653Z Reset branch 'main'
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6093304Z branch 'main' set up to track 'origin/main'.
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6110274Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6165945Z [command]/usr/bin/git log -1 --format=%H
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6204619Z 97b98961d94389cb611ba9e91b818012d85686be
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6609379Z ##[group]Run actions/setup-python@v6
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6610412Z with:
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6611222Z   python-version: 3.13
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6612106Z   check-latest: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6619463Z   token: ***
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6620307Z   update-environment: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6621239Z   allow-prereleases: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6622407Z   freethreaded: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6623257Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6624029Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6624938Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6626131Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.6627020Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8011277Z ##[group]Installed versions
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8510601Z Successfully set up CPython (3.13.15)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8513144Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8693339Z ##[group]Run python -m pip install --upgrade pip
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8694786Z ^[[36;1mpython -m pip install --upgrade pip^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8696202Z ^[[36;1mpip install build twine^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8848797Z shell: /usr/bin/bash -e {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8849839Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8850646Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8851574Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8852595Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8853706Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8855449Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8856901Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8858226Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8859538Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8860922Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:28.8862071Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.0683551Z Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/site-packages (26.2.1)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.7872943Z Collecting build
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.8522337Z   Downloading build-1.6.0-py3-none-any.whl.metadata (5.6 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.8785650Z Collecting twine
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.8877656Z   Downloading twine-7.0.0-py3-none-any.whl.metadata (3.5 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.9072796Z Collecting packaging>=24.0 (from build)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.9157099Z   Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.9303164Z Collecting pyproject_hooks (from build)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.9383050Z   Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.9551322Z Collecting readme-renderer>=35.0 (from twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.9625025Z   Downloading readme_renderer-46.0-py3-none-any.whl.metadata (3.0 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.9884987Z Collecting requests>=2.20 (from twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:31.9963866Z   Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.0138170Z Collecting requests-toolbelt!=0.9.0,>=0.8.0 (from twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.0210926Z   Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl.metadata (14 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.0506584Z Collecting urllib3>=1.26.0 (from twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.0589469Z   Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.0891495Z Collecting keyring>=21.2.0 (from twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.0970053Z   Downloading keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.1170184Z Collecting rfc3986>=1.4.0 (from twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.1264713Z   Downloading rfc3986-2.0.0-py2.py3-none-any.whl.metadata (6.6 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.1609283Z Collecting rich>=14.3.3 (from twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.1688757Z   Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.1872022Z Collecting id (from twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.1950519Z   Downloading id-1.6.1-py3-none-any.whl.metadata (5.1 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.2124269Z Collecting SecretStorage>=3.2 (from keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.2199252Z   Downloading secretstorage-3.5.0-py3-none-any.whl.metadata (4.0 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.2355015Z Collecting jeepney>=0.4.2 (from keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.2428235Z   Downloading jeepney-0.9.0-py3-none-any.whl.metadata (1.2 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.2597134Z Collecting jaraco.classes (from keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.2673925Z   Downloading jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.2877654Z Collecting jaraco.functools (from keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.2954706Z   Downloading jaraco_functools-4.6.0-py3-none-any.whl.metadata (2.9 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.3123271Z Collecting jaraco.context (from keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.3198189Z   Downloading jaraco_context-6.1.2-py3-none-any.whl.metadata (4.2 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.3610997Z Collecting nh3>=0.2.14 (from readme-renderer>=35.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.3693995Z   Downloading nh3-0.3.7-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.0 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.3875839Z Collecting docutils>=0.21.2 (from readme-renderer>=35.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.3957030Z   Downloading docutils-0.23-py3-none-any.whl.metadata (15 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.4186675Z Collecting Pygments>=2.5.1 (from readme-renderer>=35.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.4260591Z   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.5429477Z Collecting charset_normalizer<4,>=2 (from requests>=2.20->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.5504904Z   Downloading charset_normalizer-3.5.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (45 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.5714759Z Collecting idna<4,>=2.5 (from requests>=2.20->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.5789378Z   Downloading idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.6174725Z Collecting certifi>=2023.5.7 (from requests>=2.20->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.6256673Z   Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.6482666Z Collecting markdown-it-py>=2.2.0 (from rich>=14.3.3->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.6555964Z   Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.6752181Z Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=14.3.3->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.6824532Z   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.8506480Z Collecting cryptography>=2.0 (from SecretStorage>=3.2->keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.8580781Z   Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.3 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.9541263Z Collecting cffi>=2.0.0 (from cryptography>=2.0->SecretStorage>=3.2->keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.9617578Z   Downloading cffi-2.1.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.9775931Z Collecting pycparser (from cffi>=2.0.0->cryptography>=2.0->SecretStorage>=3.2->keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:32.9849465Z   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0067865Z Collecting more-itertools (from jaraco.classes->keyring>=21.2.0->twine)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0168549Z   Downloading more_itertools-11.1.0-py3-none-any.whl.metadata (41 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0314166Z Downloading build-1.6.0-py3-none-any.whl (31 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0416659Z Downloading twine-7.0.0-py3-none-any.whl (43 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0516471Z Downloading keyring-25.7.0-py3-none-any.whl (39 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0608093Z Downloading jeepney-0.9.0-py3-none-any.whl (49 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0702179Z Downloading packaging-26.3-py3-none-any.whl (129 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0855939Z Downloading readme_renderer-46.0-py3-none-any.whl (14 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.0970479Z Downloading docutils-0.23-py3-none-any.whl (634 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.1147092Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 634.7/634.7 kB 49.7 MB/s  0:00:00
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.1224388Z Downloading nh3-0.3.7-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (832 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.1390669Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 832.2/832.2 kB 55.2 MB/s  0:00:00
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.1470303Z Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.1618093Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 85.3 MB/s  0:00:00
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.1709728Z Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.1818992Z Downloading charset_normalizer-3.5.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (250 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.1929165Z Downloading idna-3.19-py3-none-any.whl (68 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2025645Z Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2126018Z Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2229897Z Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2330669Z Downloading rfc3986-2.0.0-py2.py3-none-any.whl (31 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2427003Z Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2531130Z Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2632333Z Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2733455Z Downloading secretstorage-3.5.0-py3-none-any.whl (15 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.2829162Z Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl (4.7 MB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3072565Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 205.9 MB/s  0:00:00
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3146014Z Downloading cffi-2.1.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3269745Z Downloading id-1.6.1-py3-none-any.whl (14 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3364769Z Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3454854Z Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3544988Z Downloading jaraco_functools-4.6.0-py3-none-any.whl (11 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3646315Z Downloading more_itertools-11.1.0-py3-none-any.whl (72 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3741852Z Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.3837630Z Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:33.5270134Z Installing collected packages: urllib3, rfc3986, pyproject_hooks, Pygments, pycparser, packaging, nh3, more-itertools, mdurl, jeepney, jaraco.context, idna, docutils, charset_normalizer, certifi, requests, readme-renderer, markdown-it-py, jaraco.functools, jaraco.classes, id, cffi, build, rich, requests-toolbelt, cryptography, SecretStorage, keyring, twine
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.8660576Z 
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.8693347Z Successfully installed Pygments-2.21.0 SecretStorage-3.5.0 build-1.6.0 certifi-2026.7.22 cffi-2.1.1 charset_normalizer-3.5.1 cryptography-50.0.1 docutils-0.23 id-1.6.1 idna-3.19 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.6.0 jeepney-0.9.0 keyring-25.7.0 markdown-it-py-4.2.0 mdurl-0.1.2 more-itertools-11.1.0 nh3-0.3.7 packaging-26.3 pycparser-3.0 pyproject_hooks-1.2.0 readme-renderer-46.0 requests-2.34.2 requests-toolbelt-1.0.0 rfc3986-2.0.0 rich-15.0.0 twine-7.0.0 urllib3-2.7.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9804671Z ##[group]Run # Get current version from pyproject.toml
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9805348Z ^[[36;1m# Get current version from pyproject.toml^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9805793Z ^[[36;1mCURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' pyproject.toml)^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9806293Z ^[[36;1mecho "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9806645Z ^[[36;1m^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9806965Z ^[[36;1m# Check if tag exists (with python prefix to differentiate from JS/Rust)^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9807453Z ^[[36;1mif git rev-parse "python-v$CURRENT_VERSION" >/dev/null 2>&1; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9807926Z ^[[36;1m  echo "Tag python-v$CURRENT_VERSION already exists, skipping release"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9808342Z ^[[36;1m  echo "should_release=false" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9808643Z ^[[36;1melse^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9808886Z ^[[36;1m  echo "New version detected: $CURRENT_VERSION"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9809261Z ^[[36;1m  echo "should_release=true" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9809547Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9850539Z shell: /usr/bin/bash -e {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9850832Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9851041Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9851290Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9851775Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9852081Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9852522Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9852951Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9853335Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9853717Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9854093Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9854421Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9959343Z New version detected: 0.5.3
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9959752Z literal: pyproject.toml: project.version
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:35.9993205Z ##[error]Unable to process file command 'output' successfully.
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.0002550Z ##[error]Invalid format 'literal: pyproject.toml: project.version'
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.0235761Z Post job cleanup.
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1107504Z [command]/usr/bin/git version
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1152308Z git version 2.55.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1193299Z Temporarily overriding HOME='/home/runner/work/_temp/1057d328-ea08-49ee-ab98-9d14c168f2b9' before making global git config changes
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1194871Z Adding repository directory to the temporary git global config as a safe directory
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1199554Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1239365Z Removing SSH command configuration
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1247565Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1288868Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1569695Z Removing HTTP extra header
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1576223Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1618606Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1903823Z Removing includeIf entries pointing to credentials config files
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1914165Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1954687Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1956180Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1957059Z includeif.gitdir:/github/workspace/.git.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1957604Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.1968960Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2003195Z /home/runner/work/_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2016608Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2067500Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2100785Z /home/runner/work/_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2112501Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2157816Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2188331Z /github/runner_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2197613Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2238604Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2272001Z /github/runner_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2280598Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2321095Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2576010Z Removing credentials config '/home/runner/work/_temp/git-credentials-7de9714f-3521-49b9-871b-65380f48818e.config'
+Auto Release	UNKNOWN STEP	2026-09-04T21:18:36.2746400Z Cleaning up orphan processes

@@ -21,9 +21,10 @@ on:
   workflow_dispatch:
 
 permissions:
+  # `pages: write` and `id-token: write` belong to deploy-docs alone, which
+  # declares them itself; granting them workflow-wide would hand the same
+  # deployment rights to every step that only builds the site.
   contents: read
-  pages: write
-  id-token: write
 
 env:
   GIT_CONFIG_COUNT: '1'
@@ -47,7 +48,9 @@ jobs:
           node-version: "24.x"
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with:
+          toolchain: stable
 
       - name: Install JavaScript dependencies
         working-directory: js
@@ -62,7 +65,13 @@ jobs:
 
       - name: Generate Rust API docs
         working-directory: rust
-        run: cargo doc --no-deps --all-features
+        shell: bash
+        # The budget, not `timeout-minutes`, owns this step's deadline: a job
+        # killed by `timeout-minutes` is reported as cancelled rather than
+        # failed. See docs/CI-TIMEOUT-BUDGETS.md.
+        run: >-
+          bash ../scripts/run-with-budget-warning.sh 480 "Rust API docs"
+          cargo doc --no-deps --all-features
 
       - name: Assemble Pages artifact
         run: |
@@ -134,3 +143,42 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - build-docs
+      - deploy-docs
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

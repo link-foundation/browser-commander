@@ -40,6 +40,11 @@ on:
         required: false
         type: string
 
+permissions:
+  # Read-only by default; the release jobs opt into `contents: write` and the
+  # rest of the token scopes they need in their own `permissions:` blocks.
+  contents: read
+
 defaults:
   run:
     working-directory: js
@@ -230,7 +235,11 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Run tests
-        run: npm test
+        shell: bash
+        # The budget, not `timeout-minutes`, owns this step's deadline: a job
+        # killed by `timeout-minutes` is reported as cancelled rather than
+        # failed. See docs/CI-TIMEOUT-BUDGETS.md.
+        run: bash ../scripts/run-with-budget-warning.sh 300 "Node.js test suite" npm test
 
   # Release - only runs on main after tests pass (for push events)
   release:
@@ -276,8 +285,8 @@ jobs:
           # Count changeset files (excluding README.md and config.json)
           CHANGESET_COUNT=$(find .changeset -name "*.md" ! -name "README.md" | wc -l)
           echo "Found $CHANGESET_COUNT changeset file(s)"
-          echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "changeset_count=$CHANGESET_COUNT" >> $GITHUB_OUTPUT
+          echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+          echo "changeset_count=$CHANGESET_COUNT" >> "$GITHUB_OUTPUT"
 
       - name: Merge multiple changesets
         if: steps.check_changesets.outputs.has_changesets == 'true' && steps.check_changesets.outputs.changeset_count > 1
@@ -354,12 +363,14 @@ jobs:
 
       - name: Version packages and commit to main
         id: version
-        # RELEASE_DESCRIPTION is a free-form workflow_dispatch input, so it is
-        # passed through the environment instead of being interpolated into the
-        # shell command.
+        # Both inputs are passed through the environment rather than
+        # interpolated into the shell command: a `${{ ... }}` expansion is
+        # substituted before the shell sees the line, so its contents are read
+        # as script rather than as an argument.
         env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
           RELEASE_DESCRIPTION: ${{ github.event.inputs.description }}
-        run: node scripts/version-and-commit.mjs --mode instant --bump-type "${{ github.event.inputs.bump_type }}" --description "$RELEASE_DESCRIPTION"
+        run: node scripts/version-and-commit.mjs --mode instant --bump-type "$BUMP_TYPE" --description "$RELEASE_DESCRIPTION"
 
       - name: Publish to npm
         # Run if version was committed OR if a previous attempt already committed (for re-runs)
@@ -411,22 +422,23 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Create changeset file
-        # RELEASE_DESCRIPTION is a free-form workflow_dispatch input, so it is
-        # passed through the environment instead of being interpolated into the
-        # shell command.
+        # Both inputs are passed through the environment rather than
+        # interpolated into the shell command: a `${{ ... }}` expansion is
+        # substituted before the shell sees the line, so its contents are read
+        # as script rather than as an argument.
         env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
           RELEASE_DESCRIPTION: ${{ github.event.inputs.description }}
-        run: node scripts/create-manual-changeset.mjs --bump-type "${{ github.event.inputs.bump_type }}" --description "$RELEASE_DESCRIPTION"
+        run: node scripts/create-manual-changeset.mjs --bump-type "$BUMP_TYPE" --description "$RELEASE_DESCRIPTION"
 
       - name: Format changeset with Prettier
-        run: |
-          # Run Prettier on the changeset file to ensure it matches project style
-          npx prettier --write ".changeset/*.md" || true
-
-          echo "Formatted changeset files"
+        # No `|| true`: a prettier failure here means the changeset this job is
+        # about to open a PR for is malformed, and the mask only deferred the
+        # failure to the format check on that PR.
+        run: npx prettier --write ".changeset/*.md"
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore(js): add changeset for manual ${{ github.event.inputs.bump_type }} release'
@@ -448,3 +460,48 @@ jobs:
             2. Merge this PR to main
             3. The automated release workflow will create a version PR
             4. Merge the version PR to publish to npm and create a GitHub release
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - detect-changes
+      - changeset-check
+      - lint
+      - test
+      - release
+      - instant-release
+      - changeset-pr
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

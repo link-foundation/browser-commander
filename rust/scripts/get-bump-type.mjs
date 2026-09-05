@@ -24,24 +24,19 @@
 import { readFileSync, readdirSync, existsSync, appendFileSync } from 'fs';
 import { join } from 'path';
 
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+import { loadLinoArguments } from '../../scripts/use-module.mjs';
 
-// Import lino-arguments for CLI argument parsing
-const { makeConfig } = await use('lino-arguments');
+const { makeConfig } = await loadLinoArguments();
 
 // Parse CLI arguments
 const config = makeConfig({
   yargs: ({ yargs, getenv }) =>
-    yargs
-      .option('default', {
-        type: 'string',
-        default: getenv('DEFAULT_BUMP', 'patch'),
-        describe: 'Default bump type if no fragments specify one',
-        choices: ['major', 'minor', 'patch'],
-      }),
+    yargs.option('default', {
+      type: 'string',
+      default: getenv('DEFAULT_BUMP', 'patch'),
+      describe: 'Default bump type if no fragments specify one',
+      choices: ['major', 'minor', 'patch'],
+    }),
 });
 
 const { default: defaultBump } = config;
@@ -61,7 +56,9 @@ const BUMP_PRIORITY = {
  * @returns {{bump?: string, content: string}}
  */
 function parseFrontmatter(content) {
-  const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
+  const frontmatterMatch = content.match(
+    /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/
+  );
 
   if (!frontmatterMatch) {
     return { content };
@@ -140,12 +137,13 @@ function setOutput(key, value) {
 try {
   const { bumpType, fragmentCount } = determineBumpType();
 
-  console.log(`\nDetermined bump type: ${bumpType} (from ${fragmentCount} fragment(s))`);
+  console.log(
+    `\nDetermined bump type: ${bumpType} (from ${fragmentCount} fragment(s))`
+  );
 
   setOutput('bump_type', bumpType);
   setOutput('fragment_count', String(fragmentCount));
   setOutput('has_fragments', fragmentCount > 0 ? 'true' : 'false');
-
 } catch (error) {
   console.error('Error:', error.message);
   process.exit(1);

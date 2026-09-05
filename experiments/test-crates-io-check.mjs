@@ -11,7 +11,8 @@ async function checkVersionOnCratesIo(crateName, version) {
       `https://crates.io/api/v1/crates/${crateName}/${version}`,
       {
         headers: {
-          'User-Agent': 'browser-commander-test (github.com/link-foundation/browser-commander)',
+          'User-Agent':
+            'browser-commander-test (github.com/link-foundation/browser-commander)',
         },
       }
     );
@@ -48,15 +49,20 @@ async function main() {
     const result = await checkVersionOnCratesIo(test.crate, test.version);
     const status = result === test.expected ? 'PASS' : 'FAIL';
 
-    if (status === 'PASS') passed++;
-    else failed++;
+    if (status === 'PASS') {
+      passed++;
+    } else {
+      failed++;
+    }
 
     console.log(
       `${status}: ${test.crate}@${test.version} - expected=${test.expected}, got=${result}`
     );
   }
 
-  console.log(`\n${passed} passed, ${failed} failed out of ${tests.length} tests`);
+  console.log(
+    `\n${passed} passed, ${failed} failed out of ${tests.length} tests`
+  );
 
   if (failed > 0) {
     process.exit(1);

@@ -12,7 +12,11 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { readProbeSource, startProbeServer } from './harness.mjs';
+import {
+  projectReport,
+  readProbeSource,
+  startProbeServer,
+} from './harness.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
 const HEADLESS = process.env.PARITY_HEADLESS === 'true';
@@ -66,44 +70,56 @@ const TARGET = {
     colorDepth: 30,
     pixelDepth: 30,
   },
-  webgl: { unmaskedVendor: 'Intel Inc.', unmaskedRenderer: 'Intel Iris OpenGL' },
+  webgl: {
+    unmaskedVendor: 'Intel Inc.',
+    unmaskedRenderer: 'Intel Iris OpenGL',
+  },
   colorScheme: 'dark',
   reducedMotion: 'reduce',
   forcedColors: 'active',
   geolocation: { latitude: 52.52, longitude: 13.405, accuracy: 12 },
 };
 
-const OBSERVED = (report) => ({
-  'navigator.userAgent': report?.navigator?.userAgent,
-  'navigator.platform': report?.navigator?.platform,
-  'navigator.vendor': report?.navigator?.vendor,
-  'navigator.language': report?.navigator?.language,
-  'navigator.languages': report?.navigator?.languages,
-  'navigator.hardwareConcurrency': report?.navigator?.hardwareConcurrency,
-  'navigator.deviceMemory': report?.navigator?.deviceMemory,
-  'navigator.maxTouchPoints': report?.navigator?.maxTouchPoints,
-  'navigator.doNotTrack': report?.navigator?.doNotTrack,
-  'navigator.webdriver': report?.navigator?.webdriver,
-  'userAgentData.platform': report?.userAgentData?.platform,
-  'userAgentData.brands': report?.userAgentData?.brands,
-  'userAgentData.highEntropy': report?.userAgentData?.highEntropy,
-  'intl.dateTimeTimeZone': report?.intl?.dateTimeTimeZone,
-  'intl.dateTimeLocale': report?.intl?.dateTimeLocale,
-  'intl.collatorLocale': report?.intl?.collatorLocale,
-  'intl.timezoneOffsetJanuary': report?.intl?.timezoneOffsetJanuary,
-  screen: report?.screen,
-  'webgl.unmaskedVendor': report?.webgl?.webgl1?.unmaskedVendor,
-  'webgl.unmaskedRenderer': report?.webgl?.webgl1?.unmaskedRenderer,
-  'media.prefers-color-scheme: dark':
-    report?.mediaQueries?.['(prefers-color-scheme: dark)'],
-  'media.prefers-reduced-motion: reduce':
-    report?.mediaQueries?.['(prefers-reduced-motion: reduce)'],
-  'media.forced-colors: active':
-    report?.mediaQueries?.['(forced-colors: active)'],
-  'media.pointer: coarse': report?.mediaQueries?.['(pointer: coarse)'],
-  'media.hover: hover': report?.mediaQueries?.['(hover: hover)'],
-  nativeFunctions: report?.nativeFunctions,
-});
+// Every value an override is supposed to move, and where the probe reports it.
+// Paths rather than optional-chaining keeps this a table: the runner compares
+// twenty-six fields, and as a literal that read as one function with a
+// cyclomatic complexity of fifty-three.
+const OBSERVED_PATHS = {
+  'navigator.userAgent': ['navigator', 'userAgent'],
+  'navigator.platform': ['navigator', 'platform'],
+  'navigator.vendor': ['navigator', 'vendor'],
+  'navigator.language': ['navigator', 'language'],
+  'navigator.languages': ['navigator', 'languages'],
+  'navigator.hardwareConcurrency': ['navigator', 'hardwareConcurrency'],
+  'navigator.deviceMemory': ['navigator', 'deviceMemory'],
+  'navigator.maxTouchPoints': ['navigator', 'maxTouchPoints'],
+  'navigator.doNotTrack': ['navigator', 'doNotTrack'],
+  'navigator.webdriver': ['navigator', 'webdriver'],
+  'userAgentData.platform': ['userAgentData', 'platform'],
+  'userAgentData.brands': ['userAgentData', 'brands'],
+  'userAgentData.highEntropy': ['userAgentData', 'highEntropy'],
+  'intl.dateTimeTimeZone': ['intl', 'dateTimeTimeZone'],
+  'intl.dateTimeLocale': ['intl', 'dateTimeLocale'],
+  'intl.collatorLocale': ['intl', 'collatorLocale'],
+  'intl.timezoneOffsetJanuary': ['intl', 'timezoneOffsetJanuary'],
+  screen: ['screen'],
+  'webgl.unmaskedVendor': ['webgl', 'webgl1', 'unmaskedVendor'],
+  'webgl.unmaskedRenderer': ['webgl', 'webgl1', 'unmaskedRenderer'],
+  'media.prefers-color-scheme: dark': [
+    'mediaQueries',
+    '(prefers-color-scheme: dark)',
+  ],
+  'media.prefers-reduced-motion: reduce': [
+    'mediaQueries',
+    '(prefers-reduced-motion: reduce)',
+  ],
+  'media.forced-colors: active': ['mediaQueries', '(forced-colors: active)'],
+  'media.pointer: coarse': ['mediaQueries', '(pointer: coarse)'],
+  'media.hover: hover': ['mediaQueries', '(hover: hover)'],
+  nativeFunctions: ['nativeFunctions'],
+};
+
+const OBSERVED = (report) => projectReport(report, OBSERVED_PATHS);
 
 async function main() {
   const { buildCdpEmulationCommands } = await import(

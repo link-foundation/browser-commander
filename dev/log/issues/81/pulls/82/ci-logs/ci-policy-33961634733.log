@@ -1,0 +1,213 @@
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	﻿2026-09-05T10:48:33.6187235Z ##[group]Run zizmorcore/zizmor-action@v0.6.2
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6187777Z with:
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6188079Z   advanced-security: false
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6188415Z   annotations: true
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6188726Z   config: .github/zizmor.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6189063Z   min-confidence: medium
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6189377Z   inputs: .
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6189646Z   collect: default
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6189941Z   online-audits: true
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6190239Z   persona: regular
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6190521Z   version: latest
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6193501Z   token: ***
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6193792Z   color: true
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6194086Z   fail-on-no-inputs: true
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6194401Z env:
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6194669Z   GIT_CONFIG_COUNT: 1
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6194985Z   GIT_CONFIG_KEY_0: init.defaultBranch
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6195356Z   GIT_CONFIG_VALUE_0: main
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6195671Z ##[endgroup]
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6255865Z ##[start-action display=Run zizmor;id=__zizmorcore_zizmor-action.run-zizmor]
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6299089Z ##[group]Run "${GITHUB_ACTION_PATH}/action.sh"
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6299652Z ^[[36;1m"${GITHUB_ACTION_PATH}/action.sh"^[[0m
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6341555Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6342073Z env:
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6342387Z   GIT_CONFIG_COUNT: 1
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6342761Z   GIT_CONFIG_KEY_0: init.defaultBranch
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6343171Z   GIT_CONFIG_VALUE_0: main
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6343525Z   GHA_ZIZMOR_INPUTS: .
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6343873Z   GHA_ZIZMOR_COLLECT: default
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6344254Z   GHA_ZIZMOR_ONLINE_AUDITS: true
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6344636Z   GHA_ZIZMOR_PERSONA: regular
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6345009Z   GHA_ZIZMOR_MIN_SEVERITY: 
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6345384Z   GHA_ZIZMOR_MIN_CONFIDENCE: medium
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6345782Z   GHA_ZIZMOR_VERSION: latest
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6349358Z   GHA_ZIZMOR_TOKEN: ***
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6349782Z   GHA_ZIZMOR_ADVANCED_SECURITY: false
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6350186Z   GHA_ZIZMOR_COLOR: true
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6350554Z   GHA_ZIZMOR_ANNOTATIONS: true
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6350948Z   GHA_ZIZMOR_CONFIG: .github/zizmor.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6351366Z   GHA_ZIZMOR_FAIL_ON_NO_INPUTS: true
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6351744Z ##[endgroup]
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:33.6462696Z ##[group]Pulling zizmor image
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.1253144Z ghcr.io/zizmorcore/zizmor@sha256:863026d54f91271b10b60b67ad8054cb37120167e162482597db102b3026a284: Pulling from zizmorcore/zizmor
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2832656Z a66283bef834: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2833397Z f1dc41da0ac6: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2835097Z 2e3139e176fe: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2835910Z c920184a3208: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2836592Z 9201e51fe8c1: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2837755Z 69cbafd2417b: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2838332Z 7fc117d2446a: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2838765Z 8d99fd8fea9c: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2839488Z 5f460b97a17e: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2839910Z cdea145aa115: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2840290Z b92857818105: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2840681Z c621f68b4dc2: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2841076Z 4f4fb700ef54: Pulling fs layer
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2841452Z 69cbafd2417b: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2841791Z 7fc117d2446a: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2842150Z 8d99fd8fea9c: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2842481Z 5f460b97a17e: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2842810Z 4f4fb700ef54: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2843152Z cdea145aa115: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2843492Z b92857818105: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2843827Z c621f68b4dc2: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2844159Z 9201e51fe8c1: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.2844482Z c920184a3208: Waiting
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.4175807Z 2e3139e176fe: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.4259285Z a66283bef834: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.4261909Z a66283bef834: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.4293765Z f1dc41da0ac6: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.4295219Z f1dc41da0ac6: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.4688321Z a66283bef834: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.5553449Z c920184a3208: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.5554859Z c920184a3208: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.5584518Z f1dc41da0ac6: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.5606155Z 9201e51fe8c1: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.5607727Z 9201e51fe8c1: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.5684301Z 69cbafd2417b: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.5686052Z 69cbafd2417b: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.5886335Z 2e3139e176fe: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.6115429Z c920184a3208: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.6315721Z 9201e51fe8c1: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.6478197Z 69cbafd2417b: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.6875384Z 7fc117d2446a: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.6878050Z 7fc117d2446a: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.6894124Z 8d99fd8fea9c: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.6899000Z 8d99fd8fea9c: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.7057236Z 7fc117d2446a: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.7074934Z 5f460b97a17e: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.7080250Z 5f460b97a17e: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.7225704Z 8d99fd8fea9c: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.7588679Z 5f460b97a17e: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.8280407Z b92857818105: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.8281816Z b92857818105: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.8298766Z cdea145aa115: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.8300262Z cdea145aa115: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.8507606Z cdea145aa115: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.8812789Z c621f68b4dc2: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.8813589Z c621f68b4dc2: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.9348423Z b92857818105: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.9691634Z 4f4fb700ef54: Verifying Checksum
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:34.9692940Z 4f4fb700ef54: Download complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:35.0930364Z c621f68b4dc2: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:35.1026287Z 4f4fb700ef54: Pull complete
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:35.1074595Z Digest: sha256:863026d54f91271b10b60b67ad8054cb37120167e162482597db102b3026a284
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:35.1082050Z Status: Downloaded newer image for ghcr.io/zizmorcore/zizmor@sha256:863026d54f91271b10b60b67ad8054cb37120167e162482597db102b3026a284
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:35.1091681Z ghcr.io/zizmorcore/zizmor:latest@sha256:863026d54f91271b10b60b67ad8054cb37120167e162482597db102b3026a284
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:35.1106668Z ##[endgroup]
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:35.2982493Z ^[[32m INFO^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 zizmor v1.29.0
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:36.0469614Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/ci-policy.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:36.7889803Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/docs.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:37.0823940Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/js.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:37.3856098Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/links.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:37.3874832Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/parity.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:38.0729797Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/python.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:38.0754920Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/quality.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:38.4875711Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/rust.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:38.9411471Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./.github/workflows/security.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:39.2350762Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/docs.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:39.7487974Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:40.2353181Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:40.3600260Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./docs/case-studies/issue-55/template-snapshots/python/.github/workflows/docs.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:40.3779296Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2499324Z ^[[32m INFO^[[0m ^[[1maudit^[[0m^[[2m:^[[0m ^[[2mzizmor^[[0m^[[2m:^[[0m 🌈 completed ./docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2523334Z ##[error]docs.yml:30: overly broad permissions: pages: write is overly broad at the workflow level
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2526238Z ##[error]docs.yml:31: overly broad permissions: id-token: write is overly broad at the workflow level
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2529574Z ##[warning]release.yml:1: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2531876Z ##[warning]release.yml:43: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2535737Z ##[warning]release.yml:97: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2538377Z ##[warning]release.yml:151: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2540755Z ##[warning]release.yml:225: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2543083Z ##[warning]release.yml:291: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2545448Z ##[notice]release.yml:505: prefer trusted publishing for authentication: this command
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2547605Z ##[notice]release.yml:674: prefer trusted publishing for authentication: this command
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2549892Z ##[error]release.yml:140: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2552153Z ##[error]release.yml:140: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2554424Z ##[error]release.yml:621: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2556791Z ##[error]release.yml:622: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2559539Z ##[error]release.yml:772: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2561938Z ##[error]release.yml:775: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2564406Z ##[error]release.yml:82: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2568992Z ##[error]release.yml:128: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2570924Z ##[error]release.yml:200: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2572695Z ##[error]release.yml:285: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2574564Z ##[error]release.yml:383: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2575919Z ##[error]release.yml:612: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2577497Z ##[error]release.yml:759: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2578829Z ##[error]release.yml:781: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2580124Z ##[warning]release.yml:1: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2581659Z ##[warning]release.yml:46: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2582937Z ##[warning]release.yml:73: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2584202Z ##[warning]release.yml:90: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2585528Z ##[warning]release.yml:121: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2586864Z ##[warning]release.yml:140: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2588699Z ##[warning]release.yml:183: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2589957Z ##[warning]release.yml:233: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2591209Z ##[warning]release.yml:326: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2592455Z ##[error]release.yml:168: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2593693Z ##[error]release.yml:502: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2594918Z ##[error]release.yml:502: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2596176Z ##[warning]release.yml:562: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2597740Z ##[error]release.yml:599: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2599022Z ##[error]release.yml:599: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2600324Z ##[error]release.yml:300: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2601634Z ##[error]release.yml:316: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2602917Z ##[error]release.yml:609: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2604141Z ##[error]docs.yml:31: overly broad permissions: pages: write is overly broad at the workflow level
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2605327Z ##[error]docs.yml:32: overly broad permissions: id-token: write is overly broad at the workflow level
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2606569Z ##[warning]release.yml:1: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2608548Z ##[warning]release.yml:30: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2610531Z ##[warning]release.yml:91: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2613311Z ##[warning]release.yml:170: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2615705Z ##[warning]release.yml:239: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2618508Z ##[warning]release.yml:310: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2620703Z ##[error]release.yml:369: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2623009Z ##[error]release.yml:567: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2625066Z ##[error]release.yml:577: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2630370Z ##[error]release.yml:578: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2632962Z ##[error]release.yml:232: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2635774Z ##[error]release.yml:477: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2639107Z ##[error]release.yml:594: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2642252Z ##[warning]release.yml:1: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2646336Z ##[warning]release.yml:51: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2648831Z ##[warning]release.yml:81: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2652524Z ##[warning]release.yml:105: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2655068Z ##[warning]release.yml:132: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2657894Z ##[warning]release.yml:162: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2659630Z ##[warning]release.yml:214: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2661288Z ##[warning]release.yml:262: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2663174Z ##[warning]release.yml:309: overly broad permissions: default permissions used due to no permissions: block
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2665232Z ##[error]release.yml:568: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2666741Z ##[error]release.yml:568: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2669386Z ##[error]release.yml:709: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2671142Z ##[error]release.yml:709: code injection via template expansion: may expand into attacker-controllable code
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2672795Z ##[error]release.yml:68: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2674350Z ##[error]release.yml:93: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2675976Z ##[error]release.yml:116: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2677736Z ##[error]release.yml:151: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2679238Z ##[error]release.yml:185: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2680907Z ##[error]release.yml:241: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2682680Z ##[error]release.yml:280: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2684161Z ##[error]release.yml:296: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2685901Z ##[error]release.yml:302: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2687924Z ##[error]release.yml:319: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2694267Z ##[error]release.yml:370: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2698003Z ##[error]release.yml:552: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2699382Z ##[error]release.yml:700: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2700686Z ##[error]release.yml:712: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.2702183Z ##[error]release.yml:769: unpinned action reference: action is not pinned to a hash (required by blanket policy)
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.3351088Z ##[error]Process completed with exit code 14.
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.3367937Z ##[end-action id=__zizmorcore_zizmor-action.run-zizmor;outcome=failure;conclusion=failure;duration_ms=7711]
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.3373735Z ##[start-action display=Upload SARIF file to GitHub Advanced Security;id=__zizmorcore_zizmor-action.__github_codeql-action]
+zizmor	Run zizmorcore/zizmor-action@v0.6.2	2026-09-05T10:48:41.3412631Z ##[end-action id=__zizmorcore_zizmor-action.__github_codeql-action;outcome=skipped;conclusion=skipped;duration_ms=0]

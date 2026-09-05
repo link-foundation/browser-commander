@@ -18,10 +18,13 @@ Environment variables:
 
 import argparse
 import os
-import re
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from read_manifest import read_field, replace_field
 
 
 def run_command(
@@ -67,12 +70,15 @@ def set_github_output(key: str, value: str) -> None:
 
 
 def get_current_version(pyproject_path: Path) -> str:
-    """Get version from pyproject.toml."""
-    content = pyproject_path.read_text()
-    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
-    if not match:
-        raise ValueError("Could not find version in pyproject.toml")
-    return match.group(1)
+    """Get the [project] version from pyproject.toml.
+
+    Scoped to the [project] table: [tool.scriv] also declares a `version` key,
+    and a whole-file regex would read whichever one comes first.
+    """
+    version = read_field(pyproject_path.read_text(), "project", "version")
+    if not version:
+        raise ValueError("Could not find [project] version in pyproject.toml")
+    return version
 
 
 def bump_version(current: str, bump_type: str) -> str:
@@ -92,15 +98,14 @@ def bump_version(current: str, bump_type: str) -> str:
 
 
 def update_version_in_file(pyproject_path: Path, new_version: str) -> None:
-    """Update the version in pyproject.toml."""
+    """Update the [project] version in pyproject.toml.
+
+    Only that table is rewritten. An unscoped substitution also overwrites
+    `[tool.scriv] version = "literal: pyproject.toml: project.version"`, which
+    replaces the scriv directive with a frozen number.
+    """
     content = pyproject_path.read_text()
-    new_content = re.sub(
-        r'^(version\s*=\s*["\'])([^"\']+)(["\'])',
-        rf"\g<1>{new_version}\g<3>",
-        content,
-        flags=re.MULTILINE,
-    )
-    pyproject_path.write_text(new_content)
+    pyproject_path.write_text(replace_field(content, "project", "version", new_version))
 
 
 def configure_git() -> None:
@@ -150,13 +155,8 @@ def check_remote_changes(pyproject_path: Path) -> tuple[bool, str]:
                 capture=True,
             ).stdout
 
-        remote_match = re.search(
-            r'^version\s*=\s*["\']([^"\']+)["\']',
-            remote_content,
-            re.MULTILINE,
-        )
-        if remote_match:
-            remote_version = remote_match.group(1)
+        remote_version = read_field(remote_content, "project", "version")
+        if remote_version:
             print(f"Remote version: {remote_version}")
 
             # Check if versions differ (indicating work was done)

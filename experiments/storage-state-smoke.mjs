@@ -1,23 +1,23 @@
-import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
+import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
-import { launchBrowser, saveStorageState } from "../js/src/index.js";
+import { launchBrowser, saveStorageState } from '../js/src/index.js';
 
 const [engine, browserExecutable] = process.argv.slice(2);
-if (!["playwright", "puppeteer"].includes(engine) || !browserExecutable) {
+if (!['playwright', 'puppeteer'].includes(engine) || !browserExecutable) {
   throw new Error(
-    "Usage: node experiments/storage-state-smoke.mjs <playwright|puppeteer> <browser-executable>",
+    'Usage: node experiments/storage-state-smoke.mjs <playwright|puppeteer> <browser-executable>'
   );
 }
 
 const temporaryDirectory = await mkdtemp(
-  path.join(os.tmpdir(), `browser-commander-${engine}-storage-state-`),
+  path.join(os.tmpdir(), `browser-commander-${engine}-storage-state-`)
 );
-const firstProfile = path.join(temporaryDirectory, "first-profile");
-const secondProfile = path.join(temporaryDirectory, "second-profile");
-const storageStatePath = path.join(temporaryDirectory, "storage-state.json");
+const firstProfile = path.join(temporaryDirectory, 'first-profile');
+const secondProfile = path.join(temporaryDirectory, 'second-profile');
+const storageStatePath = path.join(temporaryDirectory, 'storage-state.json');
 let firstBrowser;
 let secondBrowser;
 
@@ -29,21 +29,21 @@ try {
     headless: true,
   });
   firstBrowser = first.browser;
-  await first.page.goto("https://example.com");
+  await first.page.goto('https://example.com');
   await first.page.evaluate(() =>
-    globalThis.localStorage.setItem("theme", "dark"),
+    globalThis.localStorage.setItem('theme', 'dark')
   );
-  if (engine === "playwright") {
+  if (engine === 'playwright') {
     await first.page
       .context()
       .addCookies([
-        { name: "session", value: "saved", url: "https://example.com" },
+        { name: 'session', value: 'saved', url: 'https://example.com' },
       ]);
   } else {
     await first.page.setCookie({
-      name: "session",
-      value: "saved",
-      url: "https://example.com",
+      name: 'session',
+      value: 'saved',
+      url: 'https://example.com',
     });
   }
   await saveStorageState(first.page, storageStatePath);
@@ -58,15 +58,15 @@ try {
     storageState: storageStatePath,
   });
   secondBrowser = second.browser;
-  await second.page.goto("https://example.com");
+  await second.page.goto('https://example.com');
 
   assert.equal(
-    await second.page.evaluate(() => globalThis.localStorage.getItem("theme")),
-    "dark",
+    await second.page.evaluate(() => globalThis.localStorage.getItem('theme')),
+    'dark'
   );
   assert.match(
     await second.page.evaluate(() => document.cookie),
-    /session=saved/,
+    /session=saved/
   );
   console.log(`${engine} storage-state smoke test passed`);
 } finally {

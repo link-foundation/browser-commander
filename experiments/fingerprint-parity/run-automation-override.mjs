@@ -34,6 +34,9 @@ try {
 console.log('same document:', await page.evaluate(() => navigator.webdriver));
 
 await page.goto('about:blank');
-console.log('after navigation:', await page.evaluate(() => navigator.webdriver));
+console.log(
+  'after navigation:',
+  await page.evaluate(() => navigator.webdriver)
+);
 
 await browser.close();

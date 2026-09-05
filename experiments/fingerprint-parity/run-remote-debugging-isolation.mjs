@@ -10,18 +10,29 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { killProcessTree, readProbeSource, startProbeServer } from './harness.mjs';
+import {
+  killProcessTree,
+  readProbeSource,
+  startProbeServer,
+} from './harness.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
 const HEADLESS = process.env.PARITY_HEADLESS === 'true';
 
-const BASE_ARGS = ['--no-first-run', '--no-default-browser-check', '--disable-features=Translate'];
+const BASE_ARGS = [
+  '--no-first-run',
+  '--no-default-browser-check',
+  '--disable-features=Translate',
+];
 
 const CASES = [
   ['control-no-debugging', []],
   ['port-zero', ['--remote-debugging-port=0']],
   ['port-fixed', ['--remote-debugging-port=9333']],
-  ['port-fixed-address', ['--remote-debugging-port=9334', '--remote-debugging-address=127.0.0.1']],
+  [
+    'port-fixed-address',
+    ['--remote-debugging-port=9334', '--remote-debugging-address=127.0.0.1'],
+  ],
   ['port-zero-twice', ['--remote-debugging-port=0']],
   ['pipe', ['--remote-debugging-pipe']],
 ];
@@ -32,13 +43,17 @@ async function capture(name, extraArgs) {
   const userDataDir = await mkdtemp(path.join(tmpdir(), 'bc-iso-'));
   // --remote-debugging-pipe reads CDP from fd 3 and writes to fd 4; without
   // those descriptors Chrome refuses to start, so always provide them.
-  const child = spawn(CHROME, [
-    `--user-data-dir=${userDataDir}`,
-    ...BASE_ARGS,
-    ...(HEADLESS ? ['--headless=new'] : []),
-    ...extraArgs,
-    server.url(token),
-  ], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'], detached: true });
+  const child = spawn(
+    CHROME,
+    [
+      `--user-data-dir=${userDataDir}`,
+      ...BASE_ARGS,
+      ...(HEADLESS ? ['--headless=new'] : []),
+      ...extraArgs,
+      server.url(token),
+    ],
+    { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'], detached: true }
+  );
   try {
     const report = await server.waitForReport(token, 45000);
     return { webdriver: report?.navigator?.webdriver ?? null };
@@ -62,7 +77,9 @@ async function main() {
   } finally {
     await server.close();
   }
-  const outputPath = process.argv[2] || path.join(process.cwd(), 'remote-debugging-isolation.json');
+  const outputPath =
+    process.argv[2] ||
+    path.join(process.cwd(), 'remote-debugging-isolation.json');
   await writeFile(outputPath, `${JSON.stringify(rows, null, 2)}\n`, 'utf8');
   console.log(`wrote ${outputPath}`);
 }

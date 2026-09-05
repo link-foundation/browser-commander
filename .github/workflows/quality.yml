@@ -106,3 +106,75 @@ jobs:
 
       - name: Check the shared asset copies
         run: bash scripts/check-shared-fingerprint-assets.sh
+
+  # === REPOSITORY SCRIPT LINT ===
+  # `npm run lint` inside js/ cannot see these files. ESLint takes its base path
+  # from the directory of the config file it loads, so with eslint.config.js in
+  # js/ every path above it is "outside of the base path" and is skipped without
+  # failing: `npx eslint ../scripts` exits 2 having checked nothing. That left
+  # scripts/, experiments/ and rust/scripts/ - the helpers the workflows shell
+  # out to - with no linter at all. The repository-root eslint.config.js reuses
+  # the js package's rules and toolchain, so this job needs no second lockfile.
+  repo-scripts-lint:
+    name: Lint Repository Scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-repo-scripts-lint
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Install the js toolchain
+        working-directory: js
+        run: npm ci --ignore-scripts
+
+      - name: Lint the scripts outside the js package
+        run: node js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - secrets-scan
+      - version-check
+      - file-line-limits
+      - shared-fingerprint-assets
+      - repo-scripts-lint
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

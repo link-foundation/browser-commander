@@ -1,0 +1,573 @@
+Auto Release	UNKNOWN STEP	﻿2026-09-04T21:25:30.5278037Z Current runner version: '2.337.0'
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5299878Z ##[group]Runner Image Provisioner
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5301227Z Hosted Compute Agent
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5302054Z Version: 20260828.587
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5302874Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5303800Z Build Date: 2026-08-28T16:44:25Z
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5304712Z Worker ID: {c6823804-b4e9-4eff-a7da-6329f3235d52}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5305691Z Azure Region: centralus
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5306384Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5307975Z ##[group]Operating System
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5308876Z Ubuntu
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5309531Z 24.04.4
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5310205Z LTS
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5310820Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5311860Z ##[group]Runner Image
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5312655Z Image: ubuntu-24.04
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5313313Z Version: 20260831.293.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5314897Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5316787Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5317995Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5319076Z ##[group]GITHUB_TOKEN Permissions
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5321400Z Contents: write
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5321931Z Metadata: read
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5322467Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5324294Z Secret source: Actions
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5325502Z Prepare workflow directory
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5686769Z Prepare all required actions
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.5746475Z Getting action download info
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:30.8112407Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.0767026Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:6bed0761d98439e5a578e2877258200ad565ba87)
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.2845033Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.7693008Z Complete job name: Auto Release
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8419271Z ##[group]Run actions/checkout@v6
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8420572Z with:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8421534Z   fetch-depth: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8427974Z   token: ***
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8429160Z   repository: link-foundation/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8430293Z   ssh-strict: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8431253Z   ssh-user: git
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8432130Z   persist-credentials: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8433044Z   clean: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8433923Z   sparse-checkout-cone-mode: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8434897Z   fetch-tags: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8435820Z   show-progress: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8436678Z   lfs: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8437452Z   submodules: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8438340Z   set-safe-directory: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8439297Z   allow-unsafe-pr-checkout: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8440444Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8441482Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8442420Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8443324Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8444376Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8445409Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.8446295Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.9376871Z Syncing repository: link-foundation/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.9379339Z ##[group]Getting Git version info
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.9380734Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:31.9383183Z [command]/usr/bin/git version
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0741325Z git version 2.55.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0762584Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0777076Z Temporarily overriding HOME='/home/runner/work/_temp/01f37702-9f7f-414f-b7c0-ecfdf5126d80' before making global git config changes
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0779544Z Adding repository directory to the temporary git global config as a safe directory
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0781985Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0828893Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0832215Z ##[group]Determining repository object format
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0834061Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0835407Z ##[group]Initializing the repository
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0837714Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0915688Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0922981Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0959849Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0961716Z ##[group]Disabling automatic garbage collection
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0962919Z [command]/usr/bin/git config --local gc.auto 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0987229Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0988551Z ##[group]Setting up auth
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0989513Z Removing SSH command configuration
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.0992105Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1019013Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1279532Z Removing HTTP extra header
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1285977Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1314568Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1465048Z Removing includeIf entries pointing to credentials config files
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1470837Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1497931Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1663084Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1692296Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1716060Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.1741594Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.2980671Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.3006834Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.3008362Z ##[group]Fetching the repository
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:32.3013759Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8411879Z From https://github.com/link-foundation/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8412983Z  * [new branch]      issue-1-315bb6a09057  -> origin/issue-1-315bb6a09057
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8413808Z  * [new branch]      issue-11-f0db41c23d6b -> origin/issue-11-f0db41c23d6b
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8414609Z  * [new branch]      issue-13-d9daf7ca6ef8 -> origin/issue-13-d9daf7ca6ef8
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8415458Z  * [new branch]      issue-15-85e23cad40a2 -> origin/issue-15-85e23cad40a2
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8416203Z  * [new branch]      issue-17-4fb92dabeabb -> origin/issue-17-4fb92dabeabb
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8417017Z  * [new branch]      issue-19-bef12b396c1f -> origin/issue-19-bef12b396c1f
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8418007Z  * [new branch]      issue-21-dee364614118 -> origin/issue-21-dee364614118
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8418559Z  * [new branch]      issue-23-4ea2027e76ed -> origin/issue-23-4ea2027e76ed
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8419078Z  * [new branch]      issue-25-1aef64a7e9ec -> origin/issue-25-1aef64a7e9ec
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8419649Z  * [new branch]      issue-27-4fd8f05681d7 -> origin/issue-27-4fd8f05681d7
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8420177Z  * [new branch]      issue-29-ce573bdf1462 -> origin/issue-29-ce573bdf1462
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8420920Z  * [new branch]      issue-3-8cd3d07cda8b  -> origin/issue-3-8cd3d07cda8b
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8421891Z  * [new branch]      issue-31-182c0e5f23ed -> origin/issue-31-182c0e5f23ed
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8422699Z  * [new branch]      issue-33-c92d3b8449d2 -> origin/issue-33-c92d3b8449d2
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8423202Z  * [new branch]      issue-35-f4eb7dd30787 -> origin/issue-35-f4eb7dd30787
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8423738Z  * [new branch]      issue-36-968302a2e3f5 -> origin/issue-36-968302a2e3f5
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8424216Z  * [new branch]      issue-37-ba59f40c5a7a -> origin/issue-37-ba59f40c5a7a
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8424743Z  * [new branch]      issue-38-286678a334ba -> origin/issue-38-286678a334ba
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8425238Z  * [new branch]      issue-39-3e80e8af995c -> origin/issue-39-3e80e8af995c
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8425936Z  * [new branch]      issue-45-3c5a6e3a096b -> origin/issue-45-3c5a6e3a096b
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8426594Z  * [new branch]      issue-47-e0d425c48e8d -> origin/issue-47-e0d425c48e8d
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8427110Z  * [new branch]      issue-49-2ea16458d451 -> origin/issue-49-2ea16458d451
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8427640Z  * [new branch]      issue-5-6ad76e6429cf  -> origin/issue-5-6ad76e6429cf
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8428143Z  * [new branch]      issue-51-f2a446afa3b9 -> origin/issue-51-f2a446afa3b9
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8428606Z  * [new branch]      issue-53-a5b1fc1e8376 -> origin/issue-53-a5b1fc1e8376
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8429234Z  * [new branch]      issue-55-7cb0893ca811 -> origin/issue-55-7cb0893ca811
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8429717Z  * [new branch]      issue-57-e85104965f87 -> origin/issue-57-e85104965f87
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8430261Z  * [new branch]      issue-58-e6673ea5b18c -> origin/issue-58-e6673ea5b18c
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8430842Z  * [new branch]      issue-59-c78546ebf3ab -> origin/issue-59-c78546ebf3ab
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8431896Z  * [new branch]      issue-60-e8d5faf5f51d -> origin/issue-60-e8d5faf5f51d
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8432405Z  * [new branch]      issue-65-5d65627189fb -> origin/issue-65-5d65627189fb
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8432917Z  * [new branch]      issue-66-5981186aa8ce -> origin/issue-66-5981186aa8ce
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8433450Z  * [new branch]      issue-68-710e9903a1a4 -> origin/issue-68-710e9903a1a4
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8433966Z  * [new branch]      issue-69-d8df3ab30de1 -> origin/issue-69-d8df3ab30de1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8434442Z  * [new branch]      issue-7-895bb7f9c584  -> origin/issue-7-895bb7f9c584
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8434982Z  * [new branch]      issue-70-2777eb370ebe -> origin/issue-70-2777eb370ebe
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8435456Z  * [new branch]      issue-75-bea1ba5d2c9e -> origin/issue-75-bea1ba5d2c9e
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8435968Z  * [new branch]      issue-77-5a236e48ec8f -> origin/issue-77-5a236e48ec8f
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8436441Z  * [new branch]      issue-79-694d5f8686e2 -> origin/issue-79-694d5f8686e2
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8436898Z  * [new branch]      issue-9-337c4cdf1be2  -> origin/issue-9-337c4cdf1be2
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8437411Z  * [new branch]      main                  -> origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8437823Z  * [new tag]         v0.1.1                -> v0.1.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8438262Z  * [new tag]         v0.10.0               -> v0.10.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8438653Z  * [new tag]         v0.10.1               -> v0.10.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8439033Z  * [new tag]         v0.10.10              -> v0.10.10
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8439482Z  * [new tag]         v0.10.2               -> v0.10.2
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8440016Z  * [new tag]         v0.10.3               -> v0.10.3
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8440415Z  * [new tag]         v0.10.4               -> v0.10.4
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8440794Z  * [new tag]         v0.10.5               -> v0.10.5
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8441415Z  * [new tag]         v0.10.6               -> v0.10.6
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8441834Z  * [new tag]         v0.10.7               -> v0.10.7
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8442263Z  * [new tag]         v0.10.8               -> v0.10.8
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8442664Z  * [new tag]         v0.10.9               -> v0.10.9
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8443039Z  * [new tag]         v0.11.0               -> v0.11.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8443402Z  * [new tag]         v0.12.0               -> v0.12.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8443803Z  * [new tag]         v0.13.0               -> v0.13.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8444236Z  * [new tag]         v0.14.0               -> v0.14.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8444625Z  * [new tag]         v0.15.0               -> v0.15.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8445019Z  * [new tag]         v0.16.0               -> v0.16.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8445386Z  * [new tag]         v0.16.1               -> v0.16.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8445804Z  * [new tag]         v0.2.0                -> v0.2.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8446207Z  * [new tag]         v0.2.1                -> v0.2.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8446649Z  * [new tag]         v0.3.0                -> v0.3.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8447039Z  * [new tag]         v0.4.0                -> v0.4.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8447417Z  * [new tag]         v0.5.0                -> v0.5.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8447829Z  * [new tag]         v0.5.1                -> v0.5.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8448237Z  * [new tag]         v0.5.2                -> v0.5.2
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8448675Z  * [new tag]         v0.5.3                -> v0.5.3
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8449054Z  * [new tag]         v0.5.4                -> v0.5.4
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8449427Z  * [new tag]         v0.6.0                -> v0.6.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8449934Z  * [new tag]         v0.7.0                -> v0.7.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8450330Z  * [new tag]         v0.8.0                -> v0.8.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8450718Z  * [new tag]         v0.8.1                -> v0.8.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8451337Z  * [new tag]         v0.9.0                -> v0.9.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8451816Z  * [new tag]         v0.9.1                -> v0.9.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8453669Z [command]/usr/bin/git branch --list --remote origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8454100Z   origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8460717Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8478882Z 97b98961d94389cb611ba9e91b818012d85686be
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8480907Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8481839Z ##[group]Determining the checkout info
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8482727Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8486822Z [command]/usr/bin/git sparse-checkout disable
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8524018Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8544747Z ##[group]Checking out the ref
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.8548172Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9098224Z Reset branch 'main'
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9101141Z branch 'main' set up to track 'origin/main'.
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9109751Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9142646Z [command]/usr/bin/git log -1 --format=%H
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9161889Z 97b98961d94389cb611ba9e91b818012d85686be
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9442162Z ##[group]Run dtolnay/rust-toolchain@stable
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9442600Z with:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9442912Z   toolchain: stable
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9443233Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9443534Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9443924Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9444233Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9444558Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9444924Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9445241Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9508526Z ##[start-action display=Parse toolchain version;id=__dtolnay_rust-toolchain.parse]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9566729Z ##[group]Run if [[ -z $toolchain ]]; then
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9567261Z ^[[36;1mif [[ -z $toolchain ]]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9567866Z ^[[36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9568439Z ^[[36;1m  echo "'toolchain' is a required input" >&2^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9568930Z ^[[36;1m  exit 1^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9569346Z ^[[36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9569790Z ^[[36;1m  if [[ Linux == macOS ]]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9570309Z ^[[36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9570899Z ^[[36;1m  else^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9571543Z ^[[36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9572051Z ^[[36;1m  fi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9572422Z ^[[36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9572947Z ^[[36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9573516Z ^[[36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9574057Z ^[[36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9574570Z ^[[36;1melse^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9574904Z ^[[36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9575293Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9600278Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9600773Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9601260Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9601630Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9601952Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9602288Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9602677Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9603007Z   toolchain: stable
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9603301Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9690396Z ##[end-action id=__dtolnay_rust-toolchain.parse;outcome=success;conclusion=success;duration_ms=18]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9702222Z ##[start-action display=Construct rustup command line;id=__dtolnay_rust-toolchain.flags]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9736587Z ##[group]Run echo "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9737254Z ^[[36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9737892Z ^[[36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9738426Z ^[[36;1mecho "downgrade=" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9757624Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9758094Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9758391Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9758711Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9759049Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9759376Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9759780Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9760083Z   targets: 
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9760355Z   components: 
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9760830Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9810348Z ##[end-action id=__dtolnay_rust-toolchain.flags;outcome=success;conclusion=success;duration_ms=10]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9813207Z ##[start-action display=Set $CARGO_HOME;id=__dtolnay_rust-toolchain.__run]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9839499Z ##[group]Run echo CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9840056Z ^[[36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9856904Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9857343Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9857649Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9858104Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9858457Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9858803Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9859154Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9859491Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9902280Z ##[end-action id=__dtolnay_rust-toolchain.__run;outcome=success;conclusion=success;duration_ms=8]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9904897Z ##[start-action display=Install rustup if needed;id=__dtolnay_rust-toolchain.__run_2]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9983644Z ##[group]Run if ! command -v rustup &>/dev/null; then
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9984130Z ^[[36;1mif ! command -v rustup &>/dev/null; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9984859Z ^[[36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9985574Z ^[[36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:33.9985943Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0002839Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0003282Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0003600Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0003926Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0004221Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0004595Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0004950Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0005376Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0005704Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0047050Z ##[end-action id=__dtolnay_rust-toolchain.__run_2;outcome=success;conclusion=success;duration_ms=14]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0049739Z ##[start-action display=Install rustup if needed on windows;id=__dtolnay_rust-toolchain.__run_3]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0057851Z ##[end-action id=__dtolnay_rust-toolchain.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0067932Z ##[start-action display=rustup toolchain install stable;id=__dtolnay_rust-toolchain.__run_4]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0094495Z ##[group]Run rustup toolchain install stable --profile minimal --no-self-update
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0095101Z ^[[36;1mrustup toolchain install stable --profile minimal --no-self-update^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0111662Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0112062Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0112410Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0112785Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0113103Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0113471Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0113800Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0114154Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0114515Z   RUSTUP_PERMIT_COPY_RENAME: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.0114835Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.2816359Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.5122573Z info: latest update on 2026-09-03 for version 1.98.1 (48a229cea 2026-09-01)
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.5269802Z info: removing previous version of component clippy
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.5295602Z info: removing previous version of component rustfmt
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.5302547Z info: removing previous version of component cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.5331645Z info: removing previous version of component rust-std
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.5352147Z info: removing previous version of component rustc
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:34.5386184Z info: downloading 5 components
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7448182Z 
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7519946Z   stable-x86_64-unknown-linux-gnu updated - rustc 1.98.1 (48a229cea 2026-09-01) (from rustc 1.98.0 (88d9e12ae 2026-08-18))
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7520606Z 
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7552876Z ##[end-action id=__dtolnay_rust-toolchain.__run_4;outcome=success;conclusion=success;duration_ms=8748]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7559262Z ##[start-action display=rustup default stable;id=__dtolnay_rust-toolchain.__run_5]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7579728Z ##[group]Run rustup default stable
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7580071Z ^[[36;1mrustup default stable^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7601514Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7601967Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7602229Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7602506Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7602827Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7603103Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7603420Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7603762Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7604028Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7687735Z info: using existing install for stable-x86_64-unknown-linux-gnu
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7697295Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7697559Z 
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7760802Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.98.1 (48a229cea 2026-09-01)
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7761319Z 
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7772172Z ##[end-action id=__dtolnay_rust-toolchain.__run_5;outcome=success;conclusion=success;duration_ms=21]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7774518Z ##[start-action display=Create cachekey;id=__dtolnay_rust-toolchain.rustc-version]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7794201Z ##[group]Run DATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7795266Z ^[[36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7796086Z ^[[36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7796544Z ^[[36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7813584Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7813953Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7814272Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7814584Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7814876Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7815158Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7815463Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7815783Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.7816065Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8082741Z ##[end-action id=__dtolnay_rust-toolchain.rustc-version;outcome=success;conclusion=success;duration_ms=30]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8085053Z ##[start-action display=Disable incremental compilation;id=__dtolnay_rust-toolchain.__run_6]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8102998Z ##[group]Run if [ -z "${CARGO_INCREMENTAL+set}" ]; then
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8103423Z ^[[36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8103770Z ^[[36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8104099Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8120225Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8120628Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8120871Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8121499Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8121806Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8122086Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8122412Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8122734Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8123040Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8159697Z ##[end-action id=__dtolnay_rust-toolchain.__run_6;outcome=success;conclusion=success;duration_ms=7]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8162045Z ##[start-action display=Enable colors in Cargo output;id=__dtolnay_rust-toolchain.__run_7]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8179055Z ##[group]Run if [ -z "${CARGO_TERM_COLOR+set}" ]; then
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8179425Z ^[[36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8179805Z ^[[36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8180144Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8195109Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8195450Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8195810Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8196101Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8196410Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8196694Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8197088Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8197424Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8197752Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8198030Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8234044Z ##[end-action id=__dtolnay_rust-toolchain.__run_7;outcome=success;conclusion=success;duration_ms=7]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8236463Z ##[start-action display=Enable Cargo sparse registry;id=__dtolnay_rust-toolchain.__run_8]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8255112Z ##[group]Run # implemented in 1.66, stabilized in 1.68, made default in 1.70
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8255606Z ^[[36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8256249Z ^[[36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8256880Z ^[[36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8257435Z ^[[36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8257956Z ^[[36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8258408Z ^[[36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8258953Z ^[[36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8259457Z ^[[36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8259929Z ^[[36;1m  fi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8260194Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8275248Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8275600Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8275888Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8276191Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8276495Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8276779Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8277120Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8277440Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8277725Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8277975Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8509001Z ##[end-action id=__dtolnay_rust-toolchain.__run_8;outcome=success;conclusion=success;duration_ms=27]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8511534Z ##[start-action display=Work around spurious network errors in curl 8.0;id=__dtolnay_rust-toolchain.__run_9]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8529347Z ##[group]Run # https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8529994Z ^[[36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8530545Z ^[[36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8531187Z ^[[36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8531558Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8546416Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8546800Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8547042Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8547357Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8547628Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8547952Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8548272Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8548544Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8548956Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8549222Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8684170Z ##[end-action id=__dtolnay_rust-toolchain.__run_9;outcome=success;conclusion=success;duration_ms=17]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8687497Z ##[start-action display=rustc +stable --version --verbose;id=__dtolnay_rust-toolchain.__run_10]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8704326Z ##[group]Run rustc +stable --version --verbose
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8704653Z ^[[36;1mrustc +stable --version --verbose^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8719316Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8719884Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8720127Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8720430Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8720713Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8721098Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8721417Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8721687Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8721949Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8722269Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8837390Z rustc 1.98.1 (48a229cea 2026-09-01)
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8838218Z binary: rustc
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8838990Z commit-hash: 48a229ceaefd4985c50990b14116b6d856af0985
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8839738Z commit-date: 2026-09-01
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8840446Z host: x86_64-unknown-linux-gnu
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8841193Z release: 1.98.1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8841923Z LLVM version: 22.1.8
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8851250Z ##[end-action id=__dtolnay_rust-toolchain.__run_10;outcome=success;conclusion=success;duration_ms=16]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8935619Z ##[group]Run actions/setup-node@v6
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8935991Z with:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8936263Z   node-version: 24.x
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8936534Z   check-latest: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8938359Z   token: ***
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8938638Z   package-manager-cache: true
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8938940Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8939203Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8939480Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8939742Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8940073Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8940403Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8940698Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8941174Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:42.8941435Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:43.0055512Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:43.0057802Z ##[group]Environment details
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8482346Z node: v24.20.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8482776Z npm: 11.19.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8483347Z yarn: 1.22.22
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8484034Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8567447Z ##[group]Run git config user.name "github-actions[bot]"
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8567877Z ^[[36;1mgit config user.name "github-actions[bot]"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8568290Z ^[[36;1mgit config user.email "github-actions[bot]@users.noreply.github.com"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8643541Z shell: /usr/bin/bash -e {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8643964Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8644228Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8644536Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8644844Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8645129Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8645433Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8645760Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8646051Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8646335Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8738469Z ##[group]Run node scripts/get-bump-type.mjs
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8738888Z ^[[36;1mnode scripts/get-bump-type.mjs^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8755150Z shell: /usr/bin/bash -e {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8755466Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8755729Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8756025Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8756295Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8756647Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8756951Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8757243Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8757544Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:48.8757807Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1624053Z Fragment 38.added.md: no bump specified, using default
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1624658Z Fragment 49.added.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1625109Z Fragment 51.node-bridge-engines.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1625569Z Fragment 57.system-browser-selection.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1626105Z Fragment 66.cdp-browser-connection.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1626512Z Fragment 68.real-browser-launch.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1626957Z Fragment 69.installed-browser-cookies.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1627645Z Fragment 70.safe-browser-launch-defaults.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1628051Z Fragment 77.fantoccini-rustls.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1628436Z Fragment 79.automation-parity.md: bump=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1628826Z Fragment 79.dependencies.md: bump=patch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1629043Z 
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1629244Z Determined bump type: minor (from 11 fragment(s))
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1629614Z Output: bump_type=minor
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1629908Z Output: fragment_count=11
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1630202Z Output: has_fragments=true
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1754498Z ##[group]Run CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' Cargo.toml | head -1)
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1755129Z ^[[36;1mCURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' Cargo.toml | head -1)^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1755588Z ^[[36;1mCRATE_NAME=$(grep -Po '(?<=^name = ")[^"]*' Cargo.toml | head -1)^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1755942Z ^[[36;1m^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1756354Z ^[[36;1m# Check if version is published on crates.io (the source of truth for Rust packages)^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1756907Z ^[[36;1m# Note: We check crates.io, not git tags, because git tags can exist without^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1757402Z ^[[36;1m# the package being published (e.g., failed publish, GitHub-only releases)^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1758182Z ^[[36;1mCRATES_IO_RESPONSE=$(curl -s -H "User-Agent: browser-commander CI (github.com/link-foundation/browser-commander)" "https://crates.io/api/v1/crates/${CRATE_NAME}/${CURRENT_VERSION}")^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1758833Z ^[[36;1mVERSION_ON_CRATES_IO=false^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1759309Z ^[[36;1mif echo "$CRATES_IO_RESPONSE" | grep -q '"num"'; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1759698Z ^[[36;1m  VERSION_ON_CRATES_IO=true^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1759989Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1760231Z ^[[36;1m^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1760659Z ^[[36;1mecho "Crate: $CRATE_NAME, Version: $CURRENT_VERSION, Published on crates.io: $VERSION_ON_CRATES_IO"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1761233Z ^[[36;1m^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1761833Z ^[[36;1m# Check if there are changelog fragments^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1762185Z ^[[36;1mif [ "true" != "true" ]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1762568Z ^[[36;1m  # No fragments - check if current version is published on crates.io^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1763009Z ^[[36;1m  if [ "$VERSION_ON_CRATES_IO" = "true" ]; then^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1763449Z ^[[36;1m    echo "No changelog fragments and v$CURRENT_VERSION already published on crates.io"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1763932Z ^[[36;1m    echo "should_release=false" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1764265Z ^[[36;1m  else^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1764650Z ^[[36;1m    echo "No changelog fragments but v$CURRENT_VERSION not yet published to crates.io"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1765098Z ^[[36;1m    echo "should_release=true" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1765439Z ^[[36;1m    echo "skip_bump=true" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1765782Z ^[[36;1m  fi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1766031Z ^[[36;1melse^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1766364Z ^[[36;1m  echo "Found changelog fragments, proceeding with release"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1766773Z ^[[36;1m  echo "should_release=true" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1767120Z ^[[36;1m  echo "skip_bump=false" >> $GITHUB_OUTPUT^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1767410Z ^[[36;1mfi^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1788690Z shell: /usr/bin/bash -e {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1789081Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1789348Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1789636Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1789923Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1790243Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1790598Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1790880Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1791282Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.1791564Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4714777Z Crate: browser-commander, Version: 0.9.0, Published on crates.io: false
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4715964Z Found changelog fragments, proceeding with release
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4750203Z ##[group]Run node scripts/version-and-commit.mjs \
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4750729Z ^[[36;1mnode scripts/version-and-commit.mjs \^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4751319Z ^[[36;1m  --bump-type "minor"^[[0m
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4771413Z shell: /usr/bin/bash -e {0}
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4771724Z env:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4772041Z   CARGO_TERM_COLOR: always
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4772355Z   RUSTFLAGS: -Dwarnings
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4772646Z   GIT_CONFIG_COUNT: 1
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4772945Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4773257Z   GIT_CONFIG_VALUE_0: main
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4773559Z   CARGO_HOME: /home/runner/.cargo
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4773904Z   CARGO_INCREMENTAL: 0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:53.4774172Z ##[endgroup]
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.6748423Z Error: $ is not a function
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.6796160Z ##[error]Process completed with exit code 1.
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.6895696Z Post job cleanup.
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7589902Z [command]/usr/bin/git version
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7622183Z git version 2.55.0
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7652171Z Temporarily overriding HOME='/home/runner/work/_temp/c1f6391f-d747-4c44-90b8-09eb0333f519' before making global git config changes
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7653312Z Adding repository directory to the temporary git global config as a safe directory
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7657564Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7682908Z Removing SSH command configuration
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7688558Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7716177Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7910287Z Removing HTTP extra header
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7914638Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.7939015Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8112049Z Removing includeIf entries pointing to credentials config files
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8129153Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8846225Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8847169Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8847860Z includeif.gitdir:/github/workspace/.git.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8848418Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8857104Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8878634Z /home/runner/work/_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8887896Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8919722Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8938527Z /home/runner/work/_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8946214Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8972265Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8989829Z /github/runner_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.8995389Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.9020201Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.9037318Z /github/runner_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.9043679Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.9069357Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.9233074Z Removing credentials config '/home/runner/work/_temp/git-credentials-ecfd2131-1a48-4ab9-be81-a60c0afde0f9.config'
+Auto Release	UNKNOWN STEP	2026-09-04T21:25:55.9349261Z Cleaning up orphan processes

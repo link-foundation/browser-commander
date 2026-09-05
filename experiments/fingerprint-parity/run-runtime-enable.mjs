@@ -122,7 +122,7 @@ async function withTempDir(prefix, run) {
 
 /** Plain Chrome, nothing attached: the value every scenario is measured against. */
 async function captureReference({ server, token }) {
-  return withTempDir('bc-runtime-ref-', async (userDataDir) => {
+  return await withTempDir('bc-runtime-ref-', async (userDataDir) => {
     const child = spawn(
       CHROME,
       [`--user-data-dir=${userDataDir}`, '--no-first-run', server.url(token)],

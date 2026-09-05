@@ -15,14 +15,13 @@ import { randomBytes } from 'crypto';
 
 const PACKAGE_NAME = 'browser-commander';
 
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+import {
+  loadCommandStream,
+  loadLinoArguments,
+} from '../../scripts/use-module.mjs';
 
-// Import link-foundation libraries
-const { $ } = await use('command-stream');
-const { makeConfig } = await use('lino-arguments');
+const { $ } = await loadCommandStream();
+const { makeConfig } = await loadLinoArguments();
 
 // Parse CLI arguments using lino-arguments
 const config = makeConfig({

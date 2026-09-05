@@ -1,0 +1,1130 @@
+error[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/docs.yml:30:3
+   |
+30 |   pages: write
+   |   ^^^^^^^^^^^^ pages: write is overly broad at the workflow level
+   |
+   = note: audit confidence → High
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+error[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/docs.yml:31:3
+   |
+31 |   id-token: write
+   |   ^^^^^^^^^^^^^^^ id-token: write is overly broad at the workflow level
+   |
+   = note: audit confidence → High
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:1:1
+    |
+  1 | / name: CI/CD Pipeline
+  2 | |
+  3 | | on:
+  4 | |   push:
+...   |
+800 | |             2. Merge this PR to main
+801 | |             3. The automated release workflow will version, publish, and create a GitHub release
+    | |_________________________________________________________________________________________________^ default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:43:3
+   |
+43 | /   detect-changes:
+44 | |     name: Detect Changes
+45 | |     runs-on: ubuntu-latest
+46 | |     timeout-minutes: 5
+...  |
+95 | |   # === CHANGESET CHECK - only runs on PRs with code changes ===
+96 | |   # Docs-only PRs (./docs folder, markdown files) don't require changesets
+   | |                                                                          ^
+   | |                                                                          |
+   | |__________________________________________________________________________this job
+   |                                                                            default permissions used due to no permissions: block
+   |
+   = note: audit confidence → Medium
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:97:3
+    |
+ 97 | /   changeset-check:
+ 98 | |     name: Changeset Validation
+ 99 | |     runs-on: ubuntu-latest
+100 | |     timeout-minutes: 10
+...   |
+149 | |   # Lint runs independently of changeset-check - it's a fast check that should always run
+150 | |   # See: https://github.com/link-foundation/js-ai-driven-development-pipeline-template/pull/18 for why this dependency was removed
+    | |                                                                                                                                  ^
+    | |                                                                                                                                  |
+    | |__________________________________________________________________________________________________________________________________this job
+    |                                                                                                                                    default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:151:3
+    |
+151 | /   lint:
+152 | |     name: Lint and Format Check
+153 | |     runs-on: ubuntu-latest
+154 | |     timeout-minutes: 20
+...   |
+224 | |   # === TEST ON MULTIPLE OS ===
+    | |                               ^
+    | |                               |
+    | |_______________________________this job
+    |                                 default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:225:3
+    |
+225 | /   test:
+226 | |     name: Test (${{ matrix.os }})
+227 | |     runs-on: ${{ matrix.os }}
+228 | |     timeout-minutes: 30
+...   |
+289 | |   # === BUILD PACKAGE ===
+290 | |   # Only runs if lint and test pass
+    | |                                   ^
+    | |                                   |
+    | |___________________________________this job
+    |                                     default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:291:3
+    |
+291 | /   build:
+292 | |     name: Build Package
+293 | |     runs-on: ubuntu-latest
+294 | |     timeout-minutes: 20
+...   |
+342 | |   # === AUTOMATIC RELEASE ===
+343 | |   # Runs on push to main using changesets
+    | |                                         ^
+    | |                                         |
+    | |_________________________________________this job
+    |                                           default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+info[use-trusted-publishing]: prefer trusted publishing for authentication
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:505:13
+    |
+503 | ...   run: |
+    |       --- this step
+504 | ...     if [ -n "$NUGET_API_KEY" ]; then
+505 | ...       dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this command
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#use-trusted-publishing
+
+info[use-trusted-publishing]: prefer trusted publishing for authentication
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:674:13
+    |
+672 | ...   run: |
+    |       --- this step
+673 | ...     if [ -n "$NUGET_API_KEY" ]; then
+674 | ...       dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this command
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#use-trusted-publishing
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:140:22
+    |
+138 | ...   run: |
+    |       --- this run block
+139 | ...     # Skip changeset check for automated release PRs
+140 | ...     if [[ "${{ github.head_ref }}" == "changeset-release/"* ]] || [[ "${{ github.head_ref }}" == "changeset-manual-release-"* ]...
+    |                    ^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:140:81
+    |
+138 |         run: |
+    |         --- this run block
+139 |           # Skip changeset check for automated release PRs
+140 |           if [[ "${{ github.head_ref }}" == "changeset-release/"* ]] || [[ "${{ github.head_ref }}" == "changeset-manual-release-"*...
+    |                                                                                 ^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:621:30
+    |
+618 |         run: |
+    |         --- this run block
+...
+621 |             --bump-type "${{ github.event.inputs.bump_type }}" \
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:622:32
+    |
+618 |         run: |
+    |         --- this run block
+...
+622 |             --description "${{ github.event.inputs.description }}" \
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:772:28
+    |
+764 |         run: |
+    |         --- this run block
+...
+772 |           'MyPackage': ${{ github.event.inputs.bump_type }}
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:775:15
+    |
+764 |         run: |
+    |         --- this run block
+...
+775 |           ${{ github.event.inputs.description || 'Manual release' }}
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[unpinned-uses]: unpinned action reference
+  --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:82:15
+   |
+82 |         uses: oven-sh/setup-bun@v2
+   |               ^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+   |
+   = note: audit confidence → High
+   = note: this finding has an auto-fix
+   = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:128:15
+    |
+128 |         uses: oven-sh/setup-bun@v2
+    |               ^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:200:15
+    |
+200 |         uses: oven-sh/setup-bun@v2
+    |               ^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:285:15
+    |
+285 |         uses: codecov/codecov-action@v4
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:383:15
+    |
+383 |         uses: oven-sh/setup-bun@v2
+    |               ^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:612:15
+    |
+612 |         uses: oven-sh/setup-bun@v2
+    |               ^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:759:15
+    |
+759 |         uses: oven-sh/setup-bun@v2
+    |               ^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/csharp/.github/workflows/release.yml:781:15
+    |
+781 |         uses: peter-evans/create-pull-request@v8
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:1:1
+    |
+  1 | / name: Checks and release
+  2 | |
+  3 | | on:
+  4 | |   push:
+...   |
+629 | |             3. The automated release workflow will create a version PR
+630 | |             4. Merge the version PR to publish to npm and create a GitHub release
+    | |__________________________________________________________________________________^ default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:46:3
+   |
+46 | /   detect-changes:
+47 | |     name: Detect Changes
+48 | |     runs-on: ubuntu-latest
+49 | |     # Typical run: ~6s. Cap at 5min so a hung detection step
+...  |
+72 | |   # Syntax check all .mjs files with node --check (~7s)
+   | |                                                       ^
+   | |                                                       |
+   | |_______________________________________________________this job
+   |                                                         default permissions used due to no permissions: block
+   |
+   = note: audit confidence → Medium
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:73:3
+   |
+73 | /   test-compilation:
+74 | |     name: Test Compilation
+75 | |     runs-on: ubuntu-latest
+76 | |     # Typical run: <10s. Tight cap fails fast on syntax-check hangs.
+...  |
+89 | |   # Enforce 1500-line limit on .mjs files and release.yml
+   | |                                                         ^
+   | |                                                         |
+   | |_________________________________________________________this job
+   |                                                           default permissions used due to no permissions: block
+   |
+   = note: audit confidence → Medium
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:90:3
+    |
+ 90 | /   check-file-line-limits:
+ 91 | |     name: Check File Line Limits
+ 92 | |     runs-on: ubuntu-latest
+ 93 | |     # Typical run: <10s. This job only walks tracked files and counts lines.
+...   |
+119 | |   # === VERSION CHANGE CHECK ===
+120 | |   # Prohibit manual version changes in package.json - versions should only be changed by CI/CD
+    | |                                                                                              ^
+    | |                                                                                              |
+    | |______________________________________________________________________________________________this job
+    |                                                                                                default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:121:3
+    |
+121 | /   version-check:
+122 | |     name: Check for Manual Version Changes
+123 | |     runs-on: ubuntu-latest
+124 | |     # Typical run: ~6s. Read-only package.json diff inspection.
+...   |
+138 | |   # === CHANGESET CHECK - only runs on PRs with code changes ===
+139 | |   # Docs-only PRs (./docs folder, markdown files) don't require changesets
+    | |                                                                          ^
+    | |                                                                          |
+    | |__________________________________________________________________________this job
+    |                                                                            default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:140:3
+    |
+140 | /   changeset-check:
+141 | |     name: Check for Changesets
+142 | |     runs-on: ubuntu-latest
+143 | |     # Typical run: <30s including npm install. 10min covers cold runners.
+...   |
+181 | |   # IMPORTANT: ESLint includes max-lines rule (1500 lines) to ensure files stay maintainable
+182 | |   # See docs/case-studies/issue-23 for why fresh merge simulation is critical
+    | |                                                                             ^
+    | |                                                                             |
+    | |_____________________________________________________________________________this job
+    |                                                                               default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:183:3
+    |
+183 | /   lint:
+184 | |     name: Lint and Format Check
+185 | |     runs-on: ubuntu-latest
+186 | |     # Typical run: <1min including install, ESLint, Prettier, jscpd,
+...   |
+231 | |   # See docs/case-studies/issue-23 for why this is critical.
+232 | |   # Fast-fail: slow test matrix only runs after fast checks pass (hive-mind principle #5)
+    | |                                                                                         ^
+    | |                                                                                         |
+    | |_________________________________________________________________________________________this job
+    |                                                                                           default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:233:3
+    |
+233 | /   test:
+234 | |     name: Test (${{ matrix.runtime }} on ${{ matrix.os }})
+235 | |     runs-on: ${{ matrix.os }}
+236 | |     # Typical run: <1min per runtime/OS on warm runners, with Windows
+...   |
+324 | |   # === DOCUMENTATION VALIDATION ===
+325 | |   # Validate documentation files when docs change (hive-mind principle #12)
+    | |                                                                           ^
+    | |                                                                           |
+    | |___________________________________________________________________________this job
+    |                                                                             default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:326:3
+    |
+326 | /   validate-docs:
+327 | |     name: Validate Documentation
+328 | |     runs-on: ubuntu-latest
+329 | |     # Typical run: <10s. Pure shell checks over documentation files.
+...   |
+369 | |   # Release - only runs on main after tests pass (for push events)
+    | |                                                                  ^
+    | |                                                                  |
+    | |__________________________________________________________________this job
+    |                                                                    default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:168:22
+    |
+166 |         run: |
+    |         --- this run block
+167 |           # Skip changeset check for automated version PRs
+168 |           if [[ "${{ github.head_ref }}" == "changeset-release/"* ]]; then
+    |                      ^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:502:82
+    |
+502 |         run: node scripts/version-and-commit.mjs --mode instant --bump-type "${{ github.event.inputs.bump_type }}" --description "$...
+    |         --- this run block                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:502:135
+    |
+502 | ...   run: node scripts/version-and-commit.mjs --mode instant --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
+    |       --- this run block                                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+help[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:562:67
+    |
+562 |         run: node scripts/wait-for-npm.mjs --release-version "${{ env.RELEASE_VERSION }}"
+    |         --- this run block                                        ^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:599:72
+    |
+599 |         run: node scripts/create-manual-changeset.mjs --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github....
+    |         --- this run block                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:599:125
+    |
+599 | ...   run: node scripts/create-manual-changeset.mjs --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
+    |       --- this run block                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:300:15
+    |
+300 |         uses: oven-sh/setup-bun@v2
+    |               ^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:316:15
+    |
+316 |         uses: denoland/setup-deno@v2
+    |               ^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:609:15
+    |
+609 |         uses: peter-evans/create-pull-request@v8
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+help[self-repository]: use GitHub's dedicated self-repository syntax
+   --> docs/case-studies/issue-55/template-snapshots/js/.github/workflows/release.yml:566:15
+    |
+564 |       - name: Publish Docker image to Docker Hub
+    |         ---------------------------------------- this step
+565 |         if: steps.docker_config.outputs.enabled == 'true'
+566 |         uses: ./.github/actions/publish-dockerhub
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ use '$/...' instead of './...'
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#self-repository
+
+error[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/docs.yml:31:3
+   |
+31 |   pages: write
+   |   ^^^^^^^^^^^^ pages: write is overly broad at the workflow level
+   |
+   = note: audit confidence → High
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+error[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/docs.yml:32:3
+   |
+32 |   id-token: write
+   |   ^^^^^^^^^^^^^^^ id-token: write is overly broad at the workflow level
+   |
+   = note: audit confidence → High
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:1:1
+    |
+  1 | / name: CI/CD Pipeline
+  2 | |
+  3 | | on:
+  4 | |   push:
+...   |
+611 | |             --repository "${{ github.repository }}" \
+612 | |             --repository-root "."
+    | |__________________________________^ default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:30:3
+   |
+30 | /   detect-changes:
+31 | |     name: Detect Changes
+32 | |     runs-on: ubuntu-latest
+33 | |     timeout-minutes: 5
+...  |
+89 | |   # Lint runs independently of changelog check - it's a fast check that should always run
+90 | |   # See: https://github.com/link-assistant/hive-mind/pull/1024 for why this dependency was removed
+   | |                                                                                                  ^
+   | |                                                                                                  |
+   | |__________________________________________________________________________________________________this job
+   |                                                                                                    default permissions used due to no permissions: block
+   |
+   = note: audit confidence → Medium
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:91:3
+    |
+ 91 | /   lint:
+ 92 | |     name: Lint and Format Check
+ 93 | |     runs-on: ubuntu-latest
+ 94 | |     timeout-minutes: 20
+...   |
+168 | |   # === TEST ===
+169 | |   # Test on latest Python version only
+    | |                                      ^
+    | |                                      |
+    | |______________________________________this job
+    |                                        default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:170:3
+    |
+170 | /   test:
+171 | |     name: Test (Python 3.13)
+172 | |     runs-on: ubuntu-latest
+173 | |     timeout-minutes: 30
+...   |
+237 | |   # === BUILD PACKAGE ===
+238 | |   # Build package - runs if lint and test pass, or were skipped (docs-only PR)
+    | |                                                                              ^
+    | |                                                                              |
+    | |______________________________________________________________________________this job
+    |                                                                                default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:239:3
+    |
+239 | /   build:
+240 | |     name: Build Package
+241 | |     runs-on: ubuntu-latest
+242 | |     timeout-minutes: 20
+...   |
+308 | |   # === CHANGELOG CHECK - only runs on PRs with code changes ===
+309 | |   # Docs-only PRs (./docs folder, markdown files) don't require changelog fragments
+    | |                                                                                   ^
+    | |                                                                                   |
+    | |___________________________________________________________________________________this job
+    |                                                                                     default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:310:3
+    |
+310 | /   changelog:
+311 | |     name: Changelog Fragment Check
+312 | |     runs-on: ubuntu-latest
+313 | |     timeout-minutes: 10
+...   |
+392 | |   # Automatic release on push to main (if version changed)
+    | |                                                          ^
+    | |                                                          |
+    | |__________________________________________________________this job
+    |                                                            default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:369:59
+    |
+355 |         run: |
+    |         --- this run block
+...
+369 |           CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+    |                                                           ^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:567:42
+    |
+561 |         run: |
+    |         --- this run block
+...
+567 |             scriv collect --version "${{ github.event.inputs.bump_type }}"
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:577:30
+    |
+574 |         run: |
+    |         --- this run block
+...
+577 |             --bump-type "${{ github.event.inputs.bump_type }}" \
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:578:32
+    |
+574 |         run: |
+    |         --- this run block
+...
+578 |             --description "${{ github.event.inputs.description }}"
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:232:15
+    |
+232 |         uses: codecov/codecov-action@v4
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:477:15
+    |
+477 |         uses: pypa/gh-action-pypi-publish@release/v1
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/python/.github/workflows/release.yml:594:15
+    |
+594 |         uses: pypa/gh-action-pypi-publish@release/v1
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:1:1
+    |
+  1 | / name: CI/CD Pipeline
+  2 | |
+  3 | | on:
+  4 | |   push:
+...   |
+798 | |         id: deployment
+799 | |         uses: actions/deploy-pages@v5
+    | |______________________________________^ default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+  --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:51:3
+   |
+51 | /   detect-changes:
+52 | |     name: Detect Changes
+53 | |     runs-on: ubuntu-latest
+54 | |     timeout-minutes: 5
+...  |
+79 | |   # === CHANGELOG CHECK - only runs on PRs with code changes ===
+80 | |   # Docs-only PRs (./docs folder, markdown files) don't require changelog fragments
+   | |                                                                                   ^
+   | |                                                                                   |
+   | |___________________________________________________________________________________this job
+   |                                                                                     default permissions used due to no permissions: block
+   |
+   = note: audit confidence → Medium
+   = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:81:3
+    |
+ 81 | /   changelog:
+ 82 | |     name: Changelog Fragment Check
+ 83 | |     runs-on: ubuntu-latest
+ 84 | |     timeout-minutes: 10
+...   |
+103 | |   # === VERSION CHECK - prevents manual version modification in PRs ===
+104 | |   # This ensures versions are only modified by the automated release pipeline
+    | |                                                                             ^
+    | |                                                                             |
+    | |_____________________________________________________________________________this job
+    |                                                                               default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:105:3
+    |
+105 | /   version-check:
+106 | |     name: Version Modification Check
+107 | |     runs-on: ubuntu-latest
+108 | |     timeout-minutes: 5
+...   |
+130 | |   # dependency graph every run. This also prevents cache keys based on
+131 | |   # hashFiles('**/Cargo.lock') from silently degrading to the empty hash.
+    | |                                                                         ^
+    | |                                                                         |
+    | |_________________________________________________________________________this job
+    |                                                                           default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:132:3
+    |
+132 | /   cargo-lock:
+133 | |     name: Cargo.lock Guard
+134 | |     runs-on: ubuntu-latest
+135 | |     timeout-minutes: 5
+...   |
+160 | |   # Lint runs independently of changelog check - it's a fast check that should always run
+161 | |   # See: https://github.com/link-assistant/hive-mind/pull/1024 for why this dependency was removed
+    | |                                                                                                  ^
+    | |                                                                                                  |
+    | |__________________________________________________________________________________________________this job
+    |                                                                                                    default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:162:3
+    |
+162 | /   lint:
+163 | |     name: Lint and Format Check
+164 | |     runs-on: ubuntu-latest
+165 | |     timeout-minutes: 10
+...   |
+212 | |   # === TEST ===
+213 | |   # Test runs independently of changelog check and only for code-affecting changes
+    | |                                                                                  ^
+    | |                                                                                  |
+    | |__________________________________________________________________________________this job
+    |                                                                                    default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:214:3
+    |
+214 | /   test:
+215 | |     name: Test (${{ matrix.os }})
+216 | |     runs-on: ${{ matrix.os }}
+217 | |     timeout-minutes: 10
+...   |
+260 | |   # === CODE COVERAGE ===
+261 | |   # Generate and upload code coverage using cargo-llvm-cov
+    | |                                                          ^
+    | |                                                          |
+    | |__________________________________________________________this job
+    |                                                            default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:262:3
+    |
+262 | /   coverage:
+263 | |     name: Code Coverage
+264 | |     runs-on: ubuntu-latest
+265 | |     timeout-minutes: 15
+...   |
+307 | |   # === BUILD ===
+308 | |   # Build package - only runs if lint and test pass
+    | |                                                   ^
+    | |                                                   |
+    | |___________________________________________________this job
+    |                                                     default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+warning[excessive-permissions]: overly broad permissions
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:309:3
+    |
+309 | /   build:
+310 | |     name: Build Package
+311 | |     runs-on: ubuntu-latest
+312 | |     timeout-minutes: 10
+...   |
+345 | |   # Automatic release on push to main using changelog fragments
+346 | |   # This job automatically bumps version based on fragments in changelog.d/
+    | |                                                                           ^
+    | |                                                                           |
+    | |___________________________________________________________________________this job
+    |                                                                             default permissions used due to no permissions: block
+    |
+    = note: audit confidence → Medium
+    = help: audit documentation → https://docs.zizmor.sh/audits/#excessive-permissions
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:568:73
+    |
+568 |         run: rust-script scripts/version-and-commit.rs --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github...
+    |         --- this run block                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:568:126
+    |
+568 | ...   run: rust-script scripts/version-and-commit.rs --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
+    |       --- this run block                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:709:80
+    |
+709 |         run: rust-script scripts/create-changelog-fragment.rs --bump-type "${{ github.event.inputs.bump_type }}" --description "${{...
+    |         --- this run block                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[template-injection]: code injection via template expansion
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:709:133
+    |
+709 | ...   run: rust-script scripts/create-changelog-fragment.rs --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
+    |       --- this run block                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ may expand into attacker-controllable code
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#template-injection
+
+error[unpinned-uses]: unpinned action reference
+  --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:68:15
+   |
+68 |         uses: dtolnay/rust-toolchain@stable
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+   |
+   = note: audit confidence → High
+   = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+  --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:93:15
+   |
+93 |         uses: dtolnay/rust-toolchain@stable
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+   |
+   = note: audit confidence → High
+   = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:116:15
+    |
+116 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:151:15
+    |
+151 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:185:15
+    |
+185 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:241:15
+    |
+241 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:280:15
+    |
+280 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:296:15
+    |
+296 |         uses: taiki-e/install-action@cargo-llvm-cov
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:302:15
+    |
+302 |         uses: codecov/codecov-action@v5
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:319:15
+    |
+319 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:370:15
+    |
+370 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:552:15
+    |
+552 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:700:15
+    |
+700 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:712:15
+    |
+712 |         uses: peter-evans/create-pull-request@v8
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+error[unpinned-uses]: unpinned action reference
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:769:15
+    |
+769 |         uses: dtolnay/rust-toolchain@stable
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ action is not pinned to a hash (required by blanket policy)
+    |
+    = note: audit confidence → High
+    = help: audit documentation → https://docs.zizmor.sh/audits/#unpinned-uses
+
+help[self-repository]: use GitHub's dedicated self-repository syntax
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:478:15
+    |
+476 |       - name: Set up Docker Buildx
+    |         -------------------------- this step
+477 |         if: steps.dockerhub.outputs.enabled == 'true'
+478 |         uses: ./.github/actions/setup-buildx-resilient
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ use '$/...' instead of './...'
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#self-repository
+
+help[self-repository]: use GitHub's dedicated self-repository syntax
+   --> docs/case-studies/issue-55/template-snapshots/rust/.github/workflows/release.yml:644:15
+    |
+642 |       - name: Set up Docker Buildx
+    |         -------------------------- this step
+643 |         if: steps.dockerhub.outputs.enabled == 'true'
+644 |         uses: ./.github/actions/setup-buildx-resilient
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ use '$/...' instead of './...'
+    |
+    = note: audit confidence → High
+    = note: this finding has an auto-fix
+    = help: audit documentation → https://docs.zizmor.sh/audits/#self-repository
+
+257 findings (111 ignored, 58 suppressed, 3 safe fixes, 33 unsafe fixes): 2 informational, 4 low, 30 medium, 52 high

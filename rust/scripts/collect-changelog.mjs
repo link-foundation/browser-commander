@@ -18,6 +18,8 @@ import {
 } from 'fs';
 import { join } from 'path';
 
+import { readManifestField } from '../../scripts/read-manifest.mjs';
+
 const CHANGELOG_DIR = 'changelog.d';
 const CHANGELOG_FILE = 'CHANGELOG.md';
 const INSERT_MARKER = '<!-- changelog-insert-here -->';
@@ -27,15 +29,12 @@ const INSERT_MARKER = '<!-- changelog-insert-here -->';
  * @returns {string}
  */
 function getVersionFromCargo() {
-  const cargoToml = readFileSync('Cargo.toml', 'utf-8');
-  const match = cargoToml.match(/^version\s*=\s*"([^"]+)"/m);
-
-  if (!match) {
-    console.error('Error: Could not find version in Cargo.toml');
+  try {
+    return readManifestField('Cargo.toml');
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
     process.exit(1);
   }
-
-  return match[1];
 }
 
 /**
@@ -44,7 +43,9 @@ function getVersionFromCargo() {
  * @returns {string} - Content without frontmatter
  */
 function stripFrontmatter(content) {
-  const frontmatterMatch = content.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/);
+  const frontmatterMatch = content.match(
+    /^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/
+  );
   if (frontmatterMatch) {
     return frontmatterMatch[1].trim();
   }

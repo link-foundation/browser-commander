@@ -1,0 +1,233 @@
+name: Security
+
+# Nothing in this repository looked at a dependency tree or at the source from a
+# security angle: `npm audit` ran only as an advisory line inside the JS release
+# job, `cargo audit` and a Python audit ran nowhere, and no static analysis was
+# configured at all. Three npm advisories therefore sat in the committed lock
+# file until this pull request. Best practice #7 -- audit dependencies on a
+# schedule, not only when somebody remembers.
+#
+# The audits run per language directory because this is a monorepo: js/,
+# python/ and rust/ each carry their own manifest and lock file.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    # Monday 06:00 UTC. A new advisory against an unchanged lock file is the
+    # normal case, so waiting for the next push would hide it indefinitely.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  # Read-only by default; the jobs that upload findings or comment on a pull
+  # request opt into the extra scopes they need in their own blocks.
+  contents: read
+
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-codeql-${{ matrix.language }}
+      cancel-in-progress: true
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # `actions` covers the workflows themselves, which is where this
+        # repository's CI/CD defects actually lived.
+        language: [javascript-typescript, python, rust, actions]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-dependency-review
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # `actions/dependency-review-action` fails outright - "Dependency review
+      # is not supported on this repository" - when the dependency graph is off,
+      # which it is here: the same token reads
+      # `/repos/link-foundation/js-ai-driven-development-pipeline-template/dependency-graph/sbom`
+      # but gets 404 for this repository. A job that can only ever be red is the
+      # false positive this pull request exists to remove, and deleting the job
+      # would trade it for a silent gap, so the availability is probed first and
+      # the miss is reported as a warning a maintainer can act on. Enabling
+      # Settings -> Code security -> Dependency graph turns the review on with
+      # no further change here.
+      - name: Check whether the dependency graph is enabled
+        id: probe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # `gh api --silent` exits 0 only on a 2xx, so the exit status is the
+          # whole test; the response body is of no interest here.
+          if gh api "repos/${REPOSITORY}/dependency-graph/compare/${BASE_SHA}...${HEAD_SHA}" --silent; then
+            echo 'dependency graph: available'
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo 'dependency graph: unavailable'
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Dependency review skipped::The dependency graph is disabled for ${REPOSITORY}, so actions/dependency-review-action cannot run. Enable Settings -> Code security -> Dependency graph. The npm, cargo and pip-audit jobs in this workflow still cover published advisories."
+          fi
+
+      - name: Review dependency changes
+        if: steps.probe.outputs.available == 'true'
+        uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+
+  npm-audit:
+    name: Audit npm lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: js
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-npm-audit
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      # `--package-lock-only` audits what is committed, with no install and no
+      # install scripts, so the gate cannot be influenced by the packages it is
+      # auditing.
+      - name: Audit current lock
+        run: npm audit --package-lock-only --audit-level=high
+
+  cargo-audit:
+    name: Cargo audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: rust
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-cargo-audit
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: taiki-e/install-action@5bf6ce016fd2e72eefc647cbca1e4213f65955b8 # v2.87.5
+        with:
+          tool: cargo-audit@0.22.2
+
+      - name: Audit committed Cargo.lock
+        run: cargo audit --file Cargo.lock
+
+  python-audit:
+    name: Audit Python dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: python
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-python-audit
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      # The package pins no lock file, so the audit resolves every declared
+      # extra into a throwaway environment and audits that.
+      - name: Audit pyproject.toml
+        run: python scripts/audit_dependencies.py
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - codeql
+      - dependency-review
+      - npm-audit
+      - cargo-audit
+      - python-audit
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

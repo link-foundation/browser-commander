@@ -28,7 +28,11 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 
-import { captureReferenceReport, readProbeSource, startProbeServer } from './harness.mjs';
+import {
+  captureReferenceReport,
+  readProbeSource,
+  startProbeServer,
+} from './harness.mjs';
 import { launchBrowser } from '../../js/src/index.js';
 
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
@@ -38,9 +42,9 @@ const ARTIFACT = process.env.ARTIFACT;
 
 // playwright is a devDependency of the js package, not of the repository root,
 // so resolution has to start there.
-const playwrightVersion = createRequire(new URL('../../js/package.json', import.meta.url))(
-  'playwright/package.json'
-).version;
+const playwrightVersion = createRequire(
+  new URL('../../js/package.json', import.meta.url)
+)('playwright/package.json').version;
 
 /** `null` when the page could not get a WebGL context, else the renderer. */
 const summarize = (report) => {
@@ -48,19 +52,32 @@ const summarize = (report) => {
   if (!webgl) {
     return null;
   }
-  return { unmaskedVendor: webgl.unmaskedVendor, unmaskedRenderer: webgl.unmaskedRenderer };
+  return {
+    unmaskedVendor: webgl.unmaskedVendor,
+    unmaskedRenderer: webgl.unmaskedRenderer,
+  };
 };
 
 const METHODS = [
   { name: 'reference', reference: true },
   { name: 'playwright', engine: 'playwright', automationParity: true },
   { name: 'puppeteer', engine: 'puppeteer', automationParity: true },
-  { name: 'playwright-parity-off', engine: 'playwright', automationParity: false },
-  { name: 'puppeteer-parity-off', engine: 'puppeteer', automationParity: false },
+  {
+    name: 'playwright-parity-off',
+    engine: 'playwright',
+    automationParity: false,
+  },
+  {
+    name: 'puppeteer-parity-off',
+    engine: 'puppeteer',
+    automationParity: false,
+  },
 ];
 
 const server = await startProbeServer(await readProbeSource());
-const observations = Object.fromEntries(METHODS.map((method) => [method.name, []]));
+const observations = Object.fromEntries(
+  METHODS.map((method) => [method.name, []])
+);
 const directories = [];
 
 try {
@@ -92,7 +109,9 @@ try {
       });
       try {
         await page.goto(server.url(token), { waitUntil: 'load' });
-        observations[method.name].push(summarize(await server.waitForReport(token)));
+        observations[method.name].push(
+          summarize(await server.waitForReport(token))
+        );
       } finally {
         await browser.close();
       }
@@ -102,7 +121,9 @@ try {
 } finally {
   await server.close();
   await Promise.all(
-    directories.map((directory) => rm(directory, { recursive: true, force: true, maxRetries: 10 }))
+    directories.map((directory) =>
+      rm(directory, { recursive: true, force: true, maxRetries: 10 })
+    )
   );
 }
 
@@ -119,8 +140,11 @@ console.log(`\nmode: ${HEADLESS ? 'headless' : 'headful'}, rounds: ${ROUNDS}`);
 for (const [method, seen] of Object.entries(observations)) {
   const missing = seen.filter((entry) => entry === null).length;
   console.log(
-    `  ${method.padEnd(21)} webgl missing ${missing}/${seen.length}` +
-      (missing === seen.length ? '' : `  (${seen.find(Boolean).unmaskedRenderer})`)
+    `  ${method.padEnd(21)} webgl missing ${missing}/${seen.length}${
+      missing === seen.length
+        ? ''
+        : `  (${seen.find(Boolean).unmaskedRenderer})`
+    }`
   );
 }
 

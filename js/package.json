@@ -22,13 +22,13 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "docs:api": "jsdoc -c jsdoc.json",
-    "check:duplication": "jscpd .",
+    "check:duplication": "jscpd . --baseline .jscpd-baseline.json --fail-on-new-clones",
     "check": "npm run lint && npm run format:check && npm run check:duplication",
-    "prepare": "husky || true",
     "changeset": "changeset",
     "changeset:version": "node scripts/changeset-version.mjs",
     "changeset:publish": "changeset publish",
-    "changeset:status": "changeset status --since=origin/main"
+    "changeset:status": "changeset status --since=origin/main",
+    "check:duplication:update": "jscpd . --baseline .jscpd-baseline.json --update-baseline"
   },
   "repository": {
     "type": "git",
@@ -74,23 +74,10 @@
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
-    "husky": "^9.1.7",
     "jscpd": "^5.1.2",
     "jsdoc": "^4.0.4",
-    "lint-staged": "^17.4.1",
     "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "puppeteer": "^25.10.0"
-  },
-  "lint-staged": {
-    "*.{js,mjs,cjs}": [
-      "eslint --fix",
-      "prettier --write",
-      "prettier --check"
-    ],
-    "*.md": [
-      "prettier --write",
-      "prettier --check"
-    ]
   }
 }

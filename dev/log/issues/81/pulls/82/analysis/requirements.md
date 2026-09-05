@@ -183,8 +183,24 @@ Five reports, each with a reproduction, a workaround and the code change:
    correct. Reproduction: two pushes to `main` within a minute (RC-16).
 4. **all three templates** — 82 zizmor findings across the frozen snapshots in
    `templates/zizmor-template-snapshot-findings.txt` (RC-6, RC-10).
-5. **jscpd** — `--fail-on-new-clones` reports a *count* of new clones and never
-   names them, so the only way to find them is to diff the JSON report.
+**Withdrawn.** A fifth report against **jscpd** was drafted on the reading that
+`--fail-on-new-clones` reports a *count* of new clones and never names them.
+That is wrong, and testing it before filing is why it was not filed:
+`experiments/ci-repro/check-jscpd-new-clone-reporting.mjs` builds a baseline,
+adds one new clone and shows jscpd 5.1.2 marking it `[NEW]` with both
+locations, above the count. The same marking is in this repository's own
+failing run, at
+`dev/log/issues/81/pulls/82/ci-logs/js-33962524078-failed.log:746`:
+
+```
+Clone found (javascript) [NEW]
+ - tests/unit/scripts/check-web-archive.test.js [157:62 - 163:21] (7 lines, 51 tokens)
+   tests/unit/scripts/check-web-archive.test.js [174:49 - 180:21]
+```
+
+The count on the last line is a summary of a listing, not a replacement for
+one. The listing does depend on the `console` reporter staying in
+`js/.jscpd.json`, which is what the experiment is kept for.
 
 ### R-19 — existing components
 

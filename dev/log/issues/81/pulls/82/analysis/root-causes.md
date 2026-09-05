@@ -405,6 +405,22 @@ the page scripts under `experiments/fingerprint-parity/` use (`navigator`,
 config's globals list, next to the `document` and `window` entries that were
 already there for the same reason.
 
+The 12 warnings the first pass left behind were finished separately, because a
+warning nobody clears is a warning nobody reads — the exact failure mode the
+issue title names. Two of them (`checkWorkflow` at 71 statements and complexity
+33) came from a function that grew one `if` per policy rule, and were fixed by
+giving each rule group its own checker. Eight were in the parity harness; three
+of those were the same defect three times, a per-runner chain of optional
+chaining deep into the probe report, replaced by one `readReportPath` /
+`projectReport` pair in `harness.mjs` driven by a table of key paths. Only
+`experiments/fingerprint-parity/probe.js` keeps a disable, and only a
+file-scoped, commented one: the harness reads that file as *text* and wraps it
+as `(<contents>)()` for `page.evaluate`, `Runtime.evaluate` and a `<script>`
+tag, so `no-unused-vars` and `max-lines-per-function` are measuring a payload,
+not a function — `js/src/fingerprint/init-payload.js` already carried the same
+override for the same reason. `npx eslint . ../scripts ../experiments` now
+reports 0 errors and 0 warnings.
+
 ---
 
 ## RC-16 — the timeout that was not a failure

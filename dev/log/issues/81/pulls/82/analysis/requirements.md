@@ -31,7 +31,7 @@ passing.
 | R-5 | errors | every job that fails for a real defect is fixed | done — RC-1, RC-2, RC-3, RC-5, RC-11 |
 | R-6 | false negatives | every check that passes without checking anything is made to check | done — RC-4, RC-6, RC-7, RC-8, RC-14, RC-15, RC-16 |
 | R-7 | false positives | no check fails for something that is not a defect | done — RC-9, RC-10, RC-12, RC-13, RC-17 |
-| R-8 | warnings | no warning is left to hide the other three | **open** — 10 ESLint warnings remain (8 in `experiments/`, 2 in `scripts/check-ci-workflows.mjs`); plan in §F |
+| R-8 | warnings | no warning is left to hide the other three | done — the 10 ESLint warnings are cleared (`b63142b`, `90709f9`), and the only annotation the nine green runs still emit is the documented RC-11 one; §F records what each was |
 
 The classes are not independent: RC-16 is the reason a *false negative* and an
 *error* can be the same event. A job killed by `timeout-minutes` is reported
@@ -107,34 +107,63 @@ From the issue and from the instruction that opened this pull request.
 
 ## F. Plans for what is still open
 
-### R-8 — the ten remaining ESLint warnings
+### R-8 — the ten ESLint warnings (done)
 
-`npx eslint . ../scripts ../experiments` from `js/` reports 0 errors and 10
-warnings:
+`npx eslint . ../scripts ../experiments` from `js/` reported 0 errors and 10
+warnings when this branch started; it now reports 0 and 0. What each was, and
+what was done about it:
 
-* 2 in `scripts/check-ci-workflows.mjs` — `checkWorkflow` has 71 statements
-  (max 60) and a complexity of 33 (max 30). These predate this branch; the
-  function grew one `if` per policy rule. Plan: extract each rule group into a
-  named checker function so adding a rule stops growing one function.
+* 2 in `scripts/check-ci-workflows.mjs` — `checkWorkflow` had 71 statements
+  (max 60) and a complexity of 33 (max 30). The function grew one `if` per
+  policy rule. `b63142b` gives each rule group its own named checker and has
+  `checkWorkflow` sum their results, so adding a rule no longer grows one
+  function.
 * 8 in `experiments/`, all in the fingerprint-parity harness:
 
-  | File | Warning |
-  | --- | --- |
-  | `experiments/cookie-cache-parity.mjs:34` | `require-await` — async method `create` has no `await` |
-  | `experiments/fingerprint-parity/harness.mjs:19` | `require-await` — `readProbeSource` has no `await` |
-  | `experiments/fingerprint-parity/probe.js:15` | `max-lines-per-function` — 764 lines (max 300) |
-  | `experiments/fingerprint-parity/probe.js:15` | `no-unused-vars` — `collectBrowserCommanderEnvironmentReport` |
-  | `experiments/fingerprint-parity/run-flag-matrix.mjs:37` | `complexity` 50 (max 30) |
-  | `experiments/fingerprint-parity/run-override-coverage.mjs:79` | `complexity` 53 (max 30) |
-  | `experiments/fingerprint-parity/run-profile-application.mjs:68` | `complexity` 40 (max 30) |
-  | `experiments/fingerprint-parity/run-runtime-enable.mjs:124` | `require-await` — `captureReference` has no `await` |
+  | File | Warning | Fix |
+  | --- | --- | --- |
+  | `experiments/cookie-cache-parity.mjs:34` | `require-await` — async method `create` has no `await` | returns `Promise.resolve(...)` |
+  | `experiments/fingerprint-parity/harness.mjs:19` | `require-await` — `readProbeSource` has no `await` | returns the `readFile` promise |
+  | `experiments/fingerprint-parity/probe.js:15` | `max-lines-per-function` — 764 lines (max 300) | scoped, documented disable |
+  | `experiments/fingerprint-parity/probe.js:15` | `no-unused-vars` — `collectBrowserCommanderEnvironmentReport` | scoped, documented disable |
+  | `experiments/fingerprint-parity/run-flag-matrix.mjs:37` | `complexity` 50 (max 30) | `INTERESTING_PATHS` table + `projectReport` |
+  | `experiments/fingerprint-parity/run-override-coverage.mjs:79` | `complexity` 53 (max 30) | `OBSERVED_PATHS` table + `projectReport` |
+  | `experiments/fingerprint-parity/run-profile-application.mjs:68` | `complexity` 40 (max 30) | `CHECKS` table + `readReportPath` |
+  | `experiments/fingerprint-parity/run-runtime-enable.mjs:124` | `require-await` — `captureReference` has no `await` | `return await withTempDir(...)` |
 
-  Plan: fix each in place rather than excluding `experiments/` from the linter,
-  which would re-open RC-15. Two of them need judgement rather than a
-  refactor: `probe.js` is serialized whole and evaluated inside the browser, so
-  its single entry point is unused *in this file by construction* and its
-  length is the surface of the fingerprint API it probes; the honest fix there
-  is a scoped, documented disable rather than pretending the code is dead.
+  Each was fixed in place rather than by excluding `experiments/` from the
+  linter, which would have re-opened RC-15. The three complexity warnings came
+  from one long chain of optional-chaining reads per runner; `readReportPath`
+  and `projectReport` in `harness.mjs` replace them with a data table, and
+  `js/tests/unit/experiments/fingerprint-parity-harness.test.js` pins the two
+  helpers (absent levels, falsy leaves, non-identifier keys such as
+  `(pointer: coarse)`). The tables were checked against the literals they
+  replaced by parsing both out of `git show HEAD:<file>`: 16/16, 26/26 and
+  19/19 identical.
+
+  `probe.js` is the one place a disable is honest rather than lazy: the file is
+  read as text and wrapped as `(<contents>)()` for `page.evaluate`,
+  `Runtime.evaluate` and a `<script>` tag, so its single declaration has no
+  caller in this repository *by construction*, and its length is the surface of
+  the browser API it measures. `js/src/fingerprint/init-payload.js` already
+  carries the same override for the same reason.
+
+The CI side of R-8 was checked separately, through the annotations API rather
+than by grepping logs, since a job can emit `::warning` without the word
+appearing in a readable line:
+
+```
+for job in $(gh api .../actions/runs/$id/jobs --jq '.jobs[].id'); do
+  gh api repos/link-foundation/browser-commander/check-runs/$job/annotations
+done
+```
+
+Across all nine workflow runs, the annotations were: the 10 ESLint warnings
+above, two `notice`s (Codecov upload skipped because `CODECOV_TOKEN` is not
+configured, and a link-checker summary link), and one `warning` — "the
+dependency graph is disabled … so actions/dependency-review-action cannot run",
+which is the deliberate RC-11 annotation that replaced a silently-skipped job.
+No other warning is emitted by any job.
 
 A warning that nobody clears is indistinguishable from a warning nobody reads,
 which is exactly the failure mode the issue title names.

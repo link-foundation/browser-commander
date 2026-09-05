@@ -1,0 +1,861 @@
+Secrets Scan	Set up job	﻿2026-09-05T15:19:36.1089045Z Current runner version: '2.337.0'
+Secrets Scan	Set up job	2026-09-05T15:19:36.1115576Z ##[group]Runner Image Provisioner
+Secrets Scan	Set up job	2026-09-05T15:19:36.1116627Z Hosted Compute Agent
+Secrets Scan	Set up job	2026-09-05T15:19:36.1117272Z Version: 20260828.587
+Secrets Scan	Set up job	2026-09-05T15:19:36.1117951Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Secrets Scan	Set up job	2026-09-05T15:19:36.1118973Z Build Date: 2026-08-28T16:44:25Z
+Secrets Scan	Set up job	2026-09-05T15:19:36.1119698Z Worker ID: {a40b0454-cc4a-4da0-acea-1587acf09677}
+Secrets Scan	Set up job	2026-09-05T15:19:36.1120497Z Azure Region: northcentralus
+Secrets Scan	Set up job	2026-09-05T15:19:36.1121219Z ##[endgroup]
+Secrets Scan	Set up job	2026-09-05T15:19:36.1122555Z ##[group]Operating System
+Secrets Scan	Set up job	2026-09-05T15:19:36.1123568Z Ubuntu
+Secrets Scan	Set up job	2026-09-05T15:19:36.1124162Z 24.04.4
+Secrets Scan	Set up job	2026-09-05T15:19:36.1124774Z LTS
+Secrets Scan	Set up job	2026-09-05T15:19:36.1125387Z ##[endgroup]
+Secrets Scan	Set up job	2026-09-05T15:19:36.1125974Z ##[group]Runner Image
+Secrets Scan	Set up job	2026-09-05T15:19:36.1126641Z Image: ubuntu-24.04
+Secrets Scan	Set up job	2026-09-05T15:19:36.1127257Z Version: 20260831.293.1
+Secrets Scan	Set up job	2026-09-05T15:19:36.1128388Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Secrets Scan	Set up job	2026-09-05T15:19:36.1130239Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Secrets Scan	Set up job	2026-09-05T15:19:36.1131319Z ##[endgroup]
+Secrets Scan	Set up job	2026-09-05T15:19:36.1132553Z ##[group]GITHUB_TOKEN Permissions
+Secrets Scan	Set up job	2026-09-05T15:19:36.1134713Z Contents: read
+Secrets Scan	Set up job	2026-09-05T15:19:36.1135385Z Metadata: read
+Secrets Scan	Set up job	2026-09-05T15:19:36.1135989Z ##[endgroup]
+Secrets Scan	Set up job	2026-09-05T15:19:36.1138068Z Secret source: Actions
+Secrets Scan	Set up job	2026-09-05T15:19:36.1139314Z Prepare workflow directory
+Secrets Scan	Set up job	2026-09-05T15:19:36.1536980Z Prepare all required actions
+Secrets Scan	Set up job	2026-09-05T15:19:36.1585109Z Getting action download info
+Secrets Scan	Set up job	2026-09-05T15:19:36.4009451Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Secrets Scan	Set up job	2026-09-05T15:19:36.5145092Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Secrets Scan	Set up job	2026-09-05T15:19:36.6977515Z Complete job name: Secrets Scan
+Secrets Scan	Run actions/checkout@v6	﻿2026-09-05T15:19:36.7751964Z ##[group]Run actions/checkout@v6
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7752808Z with:
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7753489Z   repository: link-foundation/browser-commander
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7757263Z   token: ***
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7757711Z   ssh-strict: true
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7758163Z   ssh-user: git
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7758621Z   persist-credentials: true
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7759113Z   clean: true
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7759572Z   sparse-checkout-cone-mode: true
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7760103Z   fetch-depth: 1
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7760539Z   fetch-tags: false
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7760986Z   show-progress: true
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7761435Z   lfs: false
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7761851Z   submodules: false
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7762303Z   set-safe-directory: true
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7762809Z   allow-unsafe-pr-checkout: false
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7763724Z env:
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7764141Z   GIT_CONFIG_COUNT: 1
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7764626Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7765183Z   GIT_CONFIG_VALUE_0: main
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.7765690Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8812557Z Syncing repository: link-foundation/browser-commander
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8815406Z ##[group]Getting Git version info
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8816648Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8818173Z [command]/usr/bin/git version
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8824036Z git version 2.55.0
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8847429Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8861921Z Temporarily overriding HOME='/home/runner/work/_temp/b31b6da9-c764-4243-9950-fc81b6a617c4' before making global git config changes
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8863761Z Adding repository directory to the temporary git global config as a safe directory
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8869073Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8924277Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8925885Z ##[group]Determining repository object format
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8926795Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8927522Z ##[group]Initializing the repository
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.8930323Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9013369Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9025873Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9069838Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9071061Z ##[group]Disabling automatic garbage collection
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9075045Z [command]/usr/bin/git config --local gc.auto 0
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9106077Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9107313Z ##[group]Setting up auth
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9108207Z Removing SSH command configuration
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9112656Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9149355Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9494599Z Removing HTTP extra header
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9496399Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9531822Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9781359Z Removing includeIf entries pointing to credentials config files
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9788049Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:36.9826329Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.0068401Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.0110645Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.0147214Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.0184694Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.0255566Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.0286966Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.0287892Z ##[group]Fetching the repository
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.0294854Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f7af544a15eb89d00d214294dc2a3ad08882a4e:refs/remotes/origin/main
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7064902Z From https://github.com/link-foundation/browser-commander
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7066972Z  * [new ref]         4f7af544a15eb89d00d214294dc2a3ad08882a4e -> origin/main
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7075952Z [command]/usr/bin/git branch --list --remote origin/main
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7109977Z   origin/main
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7120129Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7147438Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7155930Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7157662Z ##[group]Determining the checkout info
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7159281Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7160158Z [command]/usr/bin/git sparse-checkout disable
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7210412Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7244983Z ##[group]Checking out the ref
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7248581Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7994460Z Reset branch 'main'
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.7996944Z branch 'main' set up to track 'origin/main'.
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.8009051Z ##[endgroup]
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.8058114Z [command]/usr/bin/git log -1 --format=%H
+Secrets Scan	Run actions/checkout@v6	2026-09-05T15:19:37.8087883Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Secrets Scan	Setup Node.js	﻿2026-09-05T15:19:37.8460059Z ##[group]Run actions/setup-node@v6
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8461280Z with:
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8462223Z   node-version: 24.x
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8463391Z   check-latest: false
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8471118Z   token: ***
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8472130Z   package-manager-cache: true
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8473333Z env:
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8474257Z   GIT_CONFIG_COUNT: 1
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8475340Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8476499Z   GIT_CONFIG_VALUE_0: main
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.8477499Z ##[endgroup]
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.9966385Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Secrets Scan	Setup Node.js	2026-09-05T15:19:37.9969651Z ##[group]Environment details
+Secrets Scan	Setup Node.js	2026-09-05T15:19:38.3385262Z node: v24.20.0
+Secrets Scan	Setup Node.js	2026-09-05T15:19:38.3385729Z npm: 11.19.0
+Secrets Scan	Setup Node.js	2026-09-05T15:19:38.3386056Z yarn: 1.22.22
+Secrets Scan	Setup Node.js	2026-09-05T15:19:38.3387236Z ##[endgroup]
+Secrets Scan	Run secretlint	﻿2026-09-05T15:19:38.3537958Z ##[group]Run npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
+Secrets Scan	Run secretlint	2026-09-05T15:19:38.3539038Z ^[[36;1mnpx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"^[[0m
+Secrets Scan	Run secretlint	2026-09-05T15:19:38.3593361Z shell: /usr/bin/bash -e {0}
+Secrets Scan	Run secretlint	2026-09-05T15:19:38.3593678Z env:
+Secrets Scan	Run secretlint	2026-09-05T15:19:38.3593897Z   GIT_CONFIG_COUNT: 1
+Secrets Scan	Run secretlint	2026-09-05T15:19:38.3594152Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Secrets Scan	Run secretlint	2026-09-05T15:19:38.3594447Z   GIT_CONFIG_VALUE_0: main
+Secrets Scan	Run secretlint	2026-09-05T15:19:38.3594688Z ##[endgroup]
+Secrets Scan	Post Setup Node.js	﻿2026-09-05T15:19:42.0420682Z Post job cleanup.
+Secrets Scan	Post Run actions/checkout@v6	﻿2026-09-05T15:19:42.1870236Z Post job cleanup.
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.2742385Z [command]/usr/bin/git version
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.2780607Z git version 2.55.0
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.2824341Z Temporarily overriding HOME='/home/runner/work/_temp/c3d4d640-5a2d-43f4-b2c2-071f38a44cc4' before making global git config changes
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.2825761Z Adding repository directory to the temporary git global config as a safe directory
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.2830275Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.2863540Z Removing SSH command configuration
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.2870885Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.2909412Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3173399Z Removing HTTP extra header
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3178908Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3221707Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3500711Z Removing includeIf entries pointing to credentials config files
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3501807Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3534206Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3535637Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3536892Z includeif.gitdir:/github/workspace/.git.path
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3537843Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3547085Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3573857Z /home/runner/work/_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3589910Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3634992Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3664612Z /home/runner/work/_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3684049Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3726371Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3756927Z /github/runner_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3766364Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3808559Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3836056Z /github/runner_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3847213Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.3896969Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Secrets Scan	Post Run actions/checkout@v6	2026-09-05T15:19:42.4129336Z Removing credentials config '/home/runner/work/_temp/git-credentials-6f011780-abc7-411e-8490-4b27e38d4924.config'
+Secrets Scan	Complete job	﻿2026-09-05T15:19:42.4281111Z Cleaning up orphan processes
+Lint Repository Scripts	Set up job	﻿2026-09-05T15:19:35.7899859Z Current runner version: '2.337.0'
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7938752Z ##[group]Runner Image Provisioner
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7940160Z Hosted Compute Agent
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7941097Z Version: 20260828.587
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7942149Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7943345Z Build Date: 2026-08-28T16:44:25Z
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7944454Z Worker ID: {9d687e48-4381-46c0-b355-3f0c7449c12e}
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7945685Z Azure Region: eastus2
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7946777Z ##[endgroup]
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7949259Z ##[group]Operating System
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7950323Z Ubuntu
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7951144Z 24.04.4
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7952009Z LTS
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7952784Z ##[endgroup]
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7953630Z ##[group]Runner Image
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7954784Z Image: ubuntu-24.04
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7955774Z Version: 20260831.293.1
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7957827Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7960563Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7962401Z ##[endgroup]
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7964115Z ##[group]GITHUB_TOKEN Permissions
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7967613Z Contents: read
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7968551Z Metadata: read
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7969593Z ##[endgroup]
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7972174Z Secret source: Actions
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.7974348Z Prepare workflow directory
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.8508769Z Prepare all required actions
+Lint Repository Scripts	Set up job	2026-09-05T15:19:35.8576063Z Getting action download info
+Lint Repository Scripts	Set up job	2026-09-05T15:19:36.0436402Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Lint Repository Scripts	Set up job	2026-09-05T15:19:36.1733301Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Lint Repository Scripts	Set up job	2026-09-05T15:19:36.4086524Z Complete job name: Lint Repository Scripts
+Lint Repository Scripts	Run actions/checkout@v6	﻿2026-09-05T15:19:36.4880717Z ##[group]Run actions/checkout@v6
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4881571Z with:
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4882076Z   repository: link-foundation/browser-commander
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4885911Z   token: ***
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4886538Z   ssh-strict: true
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4886994Z   ssh-user: git
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4887449Z   persist-credentials: true
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4887941Z   clean: true
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4888396Z   sparse-checkout-cone-mode: true
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4888922Z   fetch-depth: 1
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4889364Z   fetch-tags: false
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4889810Z   show-progress: true
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4890265Z   lfs: false
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4890692Z   submodules: false
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4891146Z   set-safe-directory: true
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4891662Z   allow-unsafe-pr-checkout: false
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4892386Z env:
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4892802Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4893284Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4893825Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.4894333Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.5957870Z Syncing repository: link-foundation/browser-commander
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.5959988Z ##[group]Getting Git version info
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.5960794Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.5962237Z [command]/usr/bin/git version
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6002136Z git version 2.55.0
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6026100Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6046083Z Temporarily overriding HOME='/home/runner/work/_temp/2221043a-ad6e-41b4-80b2-51a699acafb3' before making global git config changes
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6048638Z Adding repository directory to the temporary git global config as a safe directory
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6051620Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6100803Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6106670Z ##[group]Determining repository object format
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6108764Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6110164Z ##[group]Initializing the repository
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6113464Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6194041Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6211206Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6250029Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6251380Z ##[group]Disabling automatic garbage collection
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6253928Z [command]/usr/bin/git config --local gc.auto 0
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6287211Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6288432Z ##[group]Setting up auth
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6289363Z Removing SSH command configuration
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6295153Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6329686Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6689804Z Removing HTTP extra header
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6698097Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6739483Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.6995749Z Removing includeIf entries pointing to credentials config files
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7003030Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7043374Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7289902Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7333925Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7371149Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7409266Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7481074Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7513980Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7515306Z ##[group]Fetching the repository
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:36.7521961Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f7af544a15eb89d00d214294dc2a3ad08882a4e:refs/remotes/origin/main
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2757327Z From https://github.com/link-foundation/browser-commander
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2759485Z  * [new ref]         4f7af544a15eb89d00d214294dc2a3ad08882a4e -> origin/main
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2769826Z [command]/usr/bin/git branch --list --remote origin/main
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2803241Z   origin/main
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2815508Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2843065Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2849500Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2850726Z ##[group]Determining the checkout info
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2852063Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2854130Z [command]/usr/bin/git sparse-checkout disable
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2907589Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2943134Z ##[group]Checking out the ref
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.2945953Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.3699483Z Reset branch 'main'
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.3702071Z branch 'main' set up to track 'origin/main'.
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.3714654Z ##[endgroup]
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.3763719Z [command]/usr/bin/git log -1 --format=%H
+Lint Repository Scripts	Run actions/checkout@v6	2026-09-05T15:19:37.3795920Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Lint Repository Scripts	Setup Node.js	﻿2026-09-05T15:19:37.4165085Z ##[group]Run actions/setup-node@v6
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4166475Z with:
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4167412Z   node-version: 24.x
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4168449Z   check-latest: false
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4176334Z   token: ***
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4177352Z   package-manager-cache: true
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4178452Z env:
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4179369Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4180443Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4181640Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.4182664Z ##[endgroup]
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.5664968Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.5668478Z ##[group]Environment details
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.9470000Z node: v24.20.0
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.9470354Z npm: 11.19.0
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.9470591Z yarn: 1.22.22
+Lint Repository Scripts	Setup Node.js	2026-09-05T15:19:37.9471432Z ##[endgroup]
+Lint Repository Scripts	Install the js toolchain	﻿2026-09-05T15:19:37.9634727Z ##[group]Run npm ci --ignore-scripts
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:37.9635740Z ^[[36;1mnpm ci --ignore-scripts^[[0m
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:37.9725128Z shell: /usr/bin/bash -e {0}
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:37.9725460Z env:
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:37.9725897Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:37.9726892Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:37.9727334Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:37.9727790Z ##[endgroup]
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:40.3244876Z npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:42.2007776Z 
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:42.2009183Z added 225 packages, and audited 226 packages in 4s
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:42.2010486Z 
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:42.2011114Z 51 packages are looking for funding
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:42.2011890Z   run `npm fund` for details
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:42.2021656Z 
+Lint Repository Scripts	Install the js toolchain	2026-09-05T15:19:42.2022252Z found 0 vulnerabilities
+Lint Repository Scripts	Lint the scripts outside the js package	﻿2026-09-05T15:19:42.2682133Z ##[group]Run node js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts
+Lint Repository Scripts	Lint the scripts outside the js package	2026-09-05T15:19:42.2682817Z ^[[36;1mnode js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts^[[0m
+Lint Repository Scripts	Lint the scripts outside the js package	2026-09-05T15:19:42.2727715Z shell: /usr/bin/bash -e {0}
+Lint Repository Scripts	Lint the scripts outside the js package	2026-09-05T15:19:42.2728008Z env:
+Lint Repository Scripts	Lint the scripts outside the js package	2026-09-05T15:19:42.2728221Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	Lint the scripts outside the js package	2026-09-05T15:19:42.2728494Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	Lint the scripts outside the js package	2026-09-05T15:19:42.2728784Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	Lint the scripts outside the js package	2026-09-05T15:19:42.2729028Z ##[endgroup]
+Lint Repository Scripts	Post Setup Node.js	﻿2026-09-05T15:19:43.9244606Z Post job cleanup.
+Lint Repository Scripts	Post Run actions/checkout@v6	﻿2026-09-05T15:19:44.0765137Z Post job cleanup.
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.1726575Z [command]/usr/bin/git version
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.1780807Z git version 2.55.0
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.1824803Z Temporarily overriding HOME='/home/runner/work/_temp/ca8446a0-0d83-4c12-b8cb-3e9b091c18a5' before making global git config changes
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.1828382Z Adding repository directory to the temporary git global config as a safe directory
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.1831808Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.1874122Z Removing SSH command configuration
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.1883193Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.1929857Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2239864Z Removing HTTP extra header
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2246762Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2299020Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2615780Z Removing includeIf entries pointing to credentials config files
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2623479Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2658317Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2661129Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2662512Z includeif.gitdir:/github/workspace/.git.path
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2663465Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2673024Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2703151Z /home/runner/work/_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2716096Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2770638Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2800246Z /home/runner/work/_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2814921Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2857056Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2887800Z /github/runner_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2897323Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2939435Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2969073Z /github/runner_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.2981932Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.3029028Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Lint Repository Scripts	Post Run actions/checkout@v6	2026-09-05T15:19:44.3337182Z Removing credentials config '/home/runner/work/_temp/git-credentials-f4c97846-020d-4765-aa28-d1c5adb1da66.config'
+Lint Repository Scripts	Complete job	﻿2026-09-05T15:19:44.3497876Z Cleaning up orphan processes
+Check File Line Limits	Set up job	﻿2026-09-05T15:19:36.7249635Z Current runner version: '2.337.0'
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7273139Z ##[group]Runner Image Provisioner
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7274027Z Hosted Compute Agent
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7274789Z Version: 20260828.587
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7275503Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7276207Z Build Date: 2026-08-28T16:44:25Z
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7276868Z Worker ID: {c379b07c-87ad-4b91-b02a-bd575d8745e6}
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7277597Z Azure Region: westus3
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7278140Z ##[endgroup]
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7279420Z ##[group]Operating System
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7280008Z Ubuntu
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7280516Z 24.04.4
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7281048Z LTS
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7281614Z ##[endgroup]
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7282149Z ##[group]Runner Image
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7282725Z Image: ubuntu-24.04
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7283254Z Version: 20260831.293.1
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7284320Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7286198Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7287122Z ##[endgroup]
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7288301Z ##[group]GITHUB_TOKEN Permissions
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7290192Z Contents: read
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7290736Z Metadata: read
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7291355Z ##[endgroup]
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7293200Z Secret source: Actions
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7294213Z Prepare workflow directory
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7659708Z Prepare all required actions
+Check File Line Limits	Set up job	2026-09-05T15:19:36.7707697Z Getting action download info
+Check File Line Limits	Set up job	2026-09-05T15:19:37.0669438Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Check File Line Limits	Set up job	2026-09-05T15:19:37.2845758Z Complete job name: Check File Line Limits
+Check File Line Limits	Run actions/checkout@v6	﻿2026-09-05T15:19:37.3589458Z ##[group]Run actions/checkout@v6
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3590314Z with:
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3590851Z   repository: link-foundation/browser-commander
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3595027Z   token: ***
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3595553Z   ssh-strict: true
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3596070Z   ssh-user: git
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3596569Z   persist-credentials: true
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3597107Z   clean: true
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3597620Z   sparse-checkout-cone-mode: true
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3598255Z   fetch-depth: 1
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3598775Z   fetch-tags: false
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3599285Z   show-progress: true
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3599782Z   lfs: false
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3600262Z   submodules: false
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3600787Z   set-safe-directory: true
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3601326Z   allow-unsafe-pr-checkout: false
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3602065Z env:
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3602569Z   GIT_CONFIG_COUNT: 1
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3603118Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3603735Z   GIT_CONFIG_VALUE_0: main
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.3604373Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4607387Z Syncing repository: link-foundation/browser-commander
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4610033Z ##[group]Getting Git version info
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4611446Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4613284Z [command]/usr/bin/git version
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4677220Z git version 2.55.0
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4696889Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4712849Z Temporarily overriding HOME='/home/runner/work/_temp/a6f6aa38-b85c-429d-aa01-f262138e21f2' before making global git config changes
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4715305Z Adding repository directory to the temporary git global config as a safe directory
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4718752Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4807954Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4811469Z ##[group]Determining repository object format
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4813983Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4815613Z ##[group]Initializing the repository
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.4820208Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8601817Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8611962Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8678730Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8679863Z ##[group]Disabling automatic garbage collection
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8683424Z [command]/usr/bin/git config --local gc.auto 0
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8711472Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8712842Z ##[group]Setting up auth
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8714172Z Removing SSH command configuration
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8719551Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.8750767Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9132934Z Removing HTTP extra header
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9139949Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9169298Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9342282Z Removing includeIf entries pointing to credentials config files
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9348649Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9378804Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9565236Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9604333Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9638169Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9668603Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9729142Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9751930Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9753101Z ##[group]Fetching the repository
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:37.9758916Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f7af544a15eb89d00d214294dc2a3ad08882a4e:refs/remotes/origin/main
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.5713509Z From https://github.com/link-foundation/browser-commander
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.5716556Z  * [new ref]         4f7af544a15eb89d00d214294dc2a3ad08882a4e -> origin/main
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.5722954Z [command]/usr/bin/git branch --list --remote origin/main
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.7878123Z   origin/main
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.7890071Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.7913041Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.7916903Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.7917959Z ##[group]Determining the checkout info
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.7918954Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.7923360Z [command]/usr/bin/git sparse-checkout disable
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.8049049Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.8072909Z ##[group]Checking out the ref
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.8076570Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.8768596Z Reset branch 'main'
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.8773618Z branch 'main' set up to track 'origin/main'.
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.8781105Z ##[endgroup]
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.8821510Z [command]/usr/bin/git log -1 --format=%H
+Check File Line Limits	Run actions/checkout@v6	2026-09-05T15:19:39.8845409Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Check File Line Limits	Check file line limits	﻿2026-09-05T15:19:39.9049081Z ##[group]Run bash scripts/check-file-line-limits.sh
+Check File Line Limits	Check file line limits	2026-09-05T15:19:39.9049797Z ^[[36;1mbash scripts/check-file-line-limits.sh^[[0m
+Check File Line Limits	Check file line limits	2026-09-05T15:19:39.9078895Z shell: /usr/bin/bash -e {0}
+Check File Line Limits	Check file line limits	2026-09-05T15:19:39.9079355Z env:
+Check File Line Limits	Check file line limits	2026-09-05T15:19:39.9079689Z   GIT_CONFIG_COUNT: 1
+Check File Line Limits	Check file line limits	2026-09-05T15:19:39.9080118Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check File Line Limits	Check file line limits	2026-09-05T15:19:39.9080560Z   GIT_CONFIG_VALUE_0: main
+Check File Line Limits	Check file line limits	2026-09-05T15:19:39.9080920Z ##[endgroup]
+Check File Line Limits	Check file line limits	2026-09-05T15:19:39.9162561Z Checking tracked source, documentation and workflow files against the 1500 line limit...
+Check File Line Limits	Check file line limits	2026-09-05T15:19:40.6295652Z 
+Check File Line Limits	Check file line limits	2026-09-05T15:19:40.6297256Z All checked files are within the 1500 line limit!
+Check File Line Limits	Post Run actions/checkout@v6	﻿2026-09-05T15:19:40.6437393Z Post job cleanup.
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7273570Z [command]/usr/bin/git version
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7314476Z git version 2.55.0
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7358650Z Temporarily overriding HOME='/home/runner/work/_temp/f01e6456-7fa3-4e67-8876-301bceca3813' before making global git config changes
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7360085Z Adding repository directory to the temporary git global config as a safe directory
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7375993Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7393852Z Removing SSH command configuration
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7400550Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7432237Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7640204Z Removing HTTP extra header
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7645237Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7672851Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7871087Z Removing includeIf entries pointing to credentials config files
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7878234Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7897339Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7898774Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7900026Z includeif.gitdir:/github/workspace/.git.path
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7900948Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7907795Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7926394Z /home/runner/work/_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7946282Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7971583Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7989488Z /home/runner/work/_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.7998511Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.8026835Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.8046818Z /github/runner_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.8055255Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.8081411Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.8100267Z /github/runner_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.8108624Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.8139053Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check File Line Limits	Post Run actions/checkout@v6	2026-09-05T15:19:40.8356017Z Removing credentials config '/home/runner/work/_temp/git-credentials-0153b25a-10cd-4e07-889c-849a5355b1d6.config'
+Check File Line Limits	Complete job	﻿2026-09-05T15:19:40.8489589Z Cleaning up orphan processes
+Check Shared Fingerprint Assets	Set up job	﻿2026-09-05T15:19:36.2220425Z Current runner version: '2.337.0'
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2257081Z ##[group]Runner Image Provisioner
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2258366Z Hosted Compute Agent
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2259265Z Version: 20260828.587
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2260338Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2261561Z Build Date: 2026-08-28T16:44:25Z
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2262661Z Worker ID: {377b08d7-ab20-407b-a9aa-0752e8b3a2cc}
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2264016Z Azure Region: centralus
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2264907Z ##[endgroup]
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2267148Z ##[group]Operating System
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2268202Z Ubuntu
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2268997Z 24.04.4
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2269918Z LTS
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2270747Z ##[endgroup]
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2271667Z ##[group]Runner Image
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2272723Z Image: ubuntu-24.04
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2273667Z Version: 20260831.293.1
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2275857Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2278363Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2279473Z ##[endgroup]
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2280676Z ##[group]GITHUB_TOKEN Permissions
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2282933Z Contents: read
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2283561Z Metadata: read
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2284285Z ##[endgroup]
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2286653Z Secret source: Actions
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2288057Z Prepare workflow directory
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2744547Z Prepare all required actions
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.2809858Z Getting action download info
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.5050843Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Check Shared Fingerprint Assets	Set up job	2026-09-05T15:19:36.6801057Z Complete job name: Check Shared Fingerprint Assets
+Check Shared Fingerprint Assets	Run actions/checkout@v6	﻿2026-09-05T15:19:36.7611809Z ##[group]Run actions/checkout@v6
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7612679Z with:
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7613198Z   repository: link-foundation/browser-commander
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7617711Z   token: ***
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7618195Z   ssh-strict: true
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7618659Z   ssh-user: git
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7619233Z   persist-credentials: true
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7619745Z   clean: true
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7620219Z   sparse-checkout-cone-mode: true
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7620756Z   fetch-depth: 1
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7621200Z   fetch-tags: false
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7621660Z   show-progress: true
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7622122Z   lfs: false
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7622556Z   submodules: false
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7623030Z   set-safe-directory: true
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7623548Z   allow-unsafe-pr-checkout: false
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7624334Z env:
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7624756Z   GIT_CONFIG_COUNT: 1
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7625255Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7626020Z   GIT_CONFIG_VALUE_0: main
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.7626558Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8658188Z Syncing repository: link-foundation/browser-commander
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8660853Z ##[group]Getting Git version info
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8662165Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8664084Z [command]/usr/bin/git version
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8694823Z git version 2.55.0
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8718797Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8735812Z Temporarily overriding HOME='/home/runner/work/_temp/823ab29f-9407-4860-831a-d8a95a3c8f95' before making global git config changes
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8738257Z Adding repository directory to the temporary git global config as a safe directory
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8741493Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8798283Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8804507Z ##[group]Determining repository object format
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8806963Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8808494Z ##[group]Initializing the repository
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8812425Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8893674Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8906111Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8950985Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8952304Z ##[group]Disabling automatic garbage collection
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8955272Z [command]/usr/bin/git config --local gc.auto 0
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8989209Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8990483Z ##[group]Setting up auth
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8991391Z Removing SSH command configuration
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.8997713Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.9036138Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.9422858Z Removing HTTP extra header
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.9431436Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.9473564Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.9720970Z Removing includeIf entries pointing to credentials config files
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.9728284Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:36.9767932Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.0017545Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.0062656Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.0100778Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.0142548Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.0189741Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.0223827Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.0225027Z ##[group]Fetching the repository
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.0234377Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f7af544a15eb89d00d214294dc2a3ad08882a4e:refs/remotes/origin/main
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6362507Z From https://github.com/link-foundation/browser-commander
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6364364Z  * [new ref]         4f7af544a15eb89d00d214294dc2a3ad08882a4e -> origin/main
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6373436Z [command]/usr/bin/git branch --list --remote origin/main
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6405855Z   origin/main
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6413871Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6442215Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6446950Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6448181Z ##[group]Determining the checkout info
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6449263Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6452406Z [command]/usr/bin/git sparse-checkout disable
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6501390Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6534305Z ##[group]Checking out the ref
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.6537427Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.7356467Z Reset branch 'main'
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.7361946Z branch 'main' set up to track 'origin/main'.
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.7374152Z ##[endgroup]
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.7422406Z [command]/usr/bin/git log -1 --format=%H
+Check Shared Fingerprint Assets	Run actions/checkout@v6	2026-09-05T15:19:37.7453396Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Check Shared Fingerprint Assets	Check the shared asset copies	﻿2026-09-05T15:19:37.7725828Z ##[group]Run bash scripts/check-shared-fingerprint-assets.sh
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7727996Z ^[[36;1mbash scripts/check-shared-fingerprint-assets.sh^[[0m
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7773702Z shell: /usr/bin/bash -e {0}
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7774942Z env:
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7776115Z   GIT_CONFIG_COUNT: 1
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7777257Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7778596Z   GIT_CONFIG_VALUE_0: main
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7779725Z ##[endgroup]
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7906952Z Checking the copies of js/src/fingerprint/init-payload.js...
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7923849Z ok: python/src/browser_commander/fingerprint/init_payload.js
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7936897Z ok: rust/src/fingerprint/init_payload.js
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7939704Z Checking the copies of js/src/fingerprint/limitations.json...
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7950358Z ok: python/src/browser_commander/fingerprint/limitations.json
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7962273Z ok: rust/src/fingerprint/limitations.json
+Check Shared Fingerprint Assets	Check the shared asset copies	2026-09-05T15:19:37.7964415Z All shared fingerprint asset copies are identical.
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	﻿2026-09-05T15:19:37.8221075Z Post job cleanup.
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9210360Z [command]/usr/bin/git version
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9254927Z git version 2.55.0
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9298007Z Temporarily overriding HOME='/home/runner/work/_temp/c55d1244-585d-4d40-99cd-bf9355de1823' before making global git config changes
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9302993Z Adding repository directory to the temporary git global config as a safe directory
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9307341Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9340790Z Removing SSH command configuration
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9347804Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9394397Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9687003Z Removing HTTP extra header
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9690595Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9707285Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9970583Z Removing includeIf entries pointing to credentials config files
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:37.9973966Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0004113Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0008653Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0012397Z includeif.gitdir:/github/workspace/.git.path
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0015255Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0022391Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0048420Z /home/runner/work/_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0065826Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0120390Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0171601Z /home/runner/work/_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0184414Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0266422Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0300599Z /github/runner_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0311229Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0350902Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0379750Z /github/runner_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0388470Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0429225Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check Shared Fingerprint Assets	Post Run actions/checkout@v6	2026-09-05T15:19:38.0674758Z Removing credentials config '/home/runner/work/_temp/git-credentials-19a692b5-766a-44a1-bacd-06e47234ea61.config'
+Check Shared Fingerprint Assets	Complete job	﻿2026-09-05T15:19:38.0841346Z Cleaning up orphan processes
+Pipeline Status	Set up job	﻿2026-09-05T15:20:42.3667654Z Current runner version: '2.337.0'
+Pipeline Status	Set up job	2026-09-05T15:20:42.3693944Z ##[group]Runner Image Provisioner
+Pipeline Status	Set up job	2026-09-05T15:20:42.3694897Z Hosted Compute Agent
+Pipeline Status	Set up job	2026-09-05T15:20:42.3695500Z Version: 20260828.587
+Pipeline Status	Set up job	2026-09-05T15:20:42.3696177Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Pipeline Status	Set up job	2026-09-05T15:20:42.3696971Z Build Date: 2026-08-28T16:44:25Z
+Pipeline Status	Set up job	2026-09-05T15:20:42.3697653Z Worker ID: {384d7263-ce72-486a-b54c-85f8d9728e11}
+Pipeline Status	Set up job	2026-09-05T15:20:42.3698884Z Azure Region: eastus
+Pipeline Status	Set up job	2026-09-05T15:20:42.3699480Z ##[endgroup]
+Pipeline Status	Set up job	2026-09-05T15:20:42.3701754Z ##[group]Operating System
+Pipeline Status	Set up job	2026-09-05T15:20:42.3702489Z Ubuntu
+Pipeline Status	Set up job	2026-09-05T15:20:42.3703238Z 24.04.4
+Pipeline Status	Set up job	2026-09-05T15:20:42.3703796Z LTS
+Pipeline Status	Set up job	2026-09-05T15:20:42.3704302Z ##[endgroup]
+Pipeline Status	Set up job	2026-09-05T15:20:42.3704826Z ##[group]Runner Image
+Pipeline Status	Set up job	2026-09-05T15:20:42.3705524Z Image: ubuntu-24.04
+Pipeline Status	Set up job	2026-09-05T15:20:42.3706118Z Version: 20260831.293.1
+Pipeline Status	Set up job	2026-09-05T15:20:42.3707212Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Pipeline Status	Set up job	2026-09-05T15:20:42.3709327Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Pipeline Status	Set up job	2026-09-05T15:20:42.3710480Z ##[endgroup]
+Pipeline Status	Set up job	2026-09-05T15:20:42.3711569Z ##[group]GITHUB_TOKEN Permissions
+Pipeline Status	Set up job	2026-09-05T15:20:42.3713789Z Contents: read
+Pipeline Status	Set up job	2026-09-05T15:20:42.3714426Z Metadata: read
+Pipeline Status	Set up job	2026-09-05T15:20:42.3715105Z ##[endgroup]
+Pipeline Status	Set up job	2026-09-05T15:20:42.3717185Z Secret source: Actions
+Pipeline Status	Set up job	2026-09-05T15:20:42.3719364Z Prepare workflow directory
+Pipeline Status	Set up job	2026-09-05T15:20:42.4106481Z Prepare all required actions
+Pipeline Status	Set up job	2026-09-05T15:20:42.4154029Z Getting action download info
+Pipeline Status	Set up job	2026-09-05T15:20:42.6351565Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Pipeline Status	Set up job	2026-09-05T15:20:42.7758793Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Pipeline Status	Set up job	2026-09-05T15:20:42.9597055Z Complete job name: Pipeline Status
+Pipeline Status	Run actions/checkout@v6	﻿2026-09-05T15:20:43.0399988Z ##[group]Run actions/checkout@v6
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0400872Z with:
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0401331Z   persist-credentials: false
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0401938Z   repository: link-foundation/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0405840Z   token: ***
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0406286Z   ssh-strict: true
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0406719Z   ssh-user: git
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0407134Z   clean: true
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0407580Z   sparse-checkout-cone-mode: true
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0408321Z   fetch-depth: 1
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0408762Z   fetch-tags: false
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0409201Z   show-progress: true
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0409643Z   lfs: false
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0410045Z   submodules: false
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0410492Z   set-safe-directory: true
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0410994Z   allow-unsafe-pr-checkout: false
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0411760Z env:
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0412170Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0412646Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0413193Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.0413698Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1429335Z Syncing repository: link-foundation/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1432195Z ##[group]Getting Git version info
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1433550Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1435396Z [command]/usr/bin/git version
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1507263Z git version 2.55.0
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1531607Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1554103Z Temporarily overriding HOME='/home/runner/work/_temp/48ae0baf-23af-41ef-a6e9-4ab4c4bd0278' before making global git config changes
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1556668Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1566197Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1615783Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1620926Z ##[group]Determining repository object format
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1623602Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1624944Z ##[group]Initializing the repository
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1630225Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1754169Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1768733Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1819583Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1821058Z ##[group]Disabling automatic garbage collection
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1823864Z [command]/usr/bin/git config --local gc.auto 0
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1862020Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1863643Z ##[group]Setting up auth
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1864856Z Removing SSH command configuration
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1872022Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.1919939Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.2412603Z Removing HTTP extra header
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.2424569Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.2472772Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.2721818Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.2729061Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.2765866Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.3005661Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.3051015Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.3086714Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.3124883Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.3193483Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.3223152Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.3224071Z ##[group]Fetching the repository
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.3232397Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f7af544a15eb89d00d214294dc2a3ad08882a4e:refs/remotes/origin/main
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6356831Z From https://github.com/link-foundation/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6358889Z  * [new ref]         4f7af544a15eb89d00d214294dc2a3ad08882a4e -> origin/main
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6369099Z [command]/usr/bin/git branch --list --remote origin/main
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6400502Z   origin/main
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6409143Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6435422Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6440173Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6441704Z ##[group]Determining the checkout info
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6443125Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6445746Z [command]/usr/bin/git sparse-checkout disable
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6500151Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6532449Z ##[group]Checking out the ref
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.6535721Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7253514Z Reset branch 'main'
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7260323Z branch 'main' set up to track 'origin/main'.
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7273774Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7319131Z [command]/usr/bin/git log -1 --format=%H
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7347051Z 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7357402Z ##[group]Removing auth
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7359473Z Removing SSH command configuration
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7362642Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7404929Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7634175Z Removing HTTP extra header
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7639774Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7675404Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7894988Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7898435Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7928159Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7931338Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7933965Z includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7935943Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7941387Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7966087Z /home/runner/work/_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.7981886Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8020423Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8049922Z /home/runner/work/_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8062397Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8105117Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8131406Z /github/runner_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8149060Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8185365Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8210033Z /github/runner_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8219062Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8253514Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8483785Z Removing credentials config '/home/runner/work/_temp/git-credentials-e636d6aa-5023-492d-a2c5-ec3603761588.config'
+Pipeline Status	Run actions/checkout@v6	2026-09-05T15:20:43.8492157Z ##[endgroup]
+Pipeline Status	Setup Node.js	﻿2026-09-05T15:20:43.8930291Z ##[group]Run actions/setup-node@v6
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8931493Z with:
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8932342Z   node-version: 24.x
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8933310Z   check-latest: false
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8943176Z   token: ***
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8944134Z   package-manager-cache: true
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8945213Z env:
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8946054Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8947085Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8948514Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Setup Node.js	2026-09-05T15:20:43.8949550Z ##[endgroup]
+Pipeline Status	Setup Node.js	2026-09-05T15:20:44.0359913Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Pipeline Status	Setup Node.js	2026-09-05T15:20:44.0363150Z ##[group]Environment details
+Pipeline Status	Setup Node.js	2026-09-05T15:20:46.6355197Z node: v24.20.0
+Pipeline Status	Setup Node.js	2026-09-05T15:20:46.6356310Z npm: 11.19.0
+Pipeline Status	Setup Node.js	2026-09-05T15:20:46.6356809Z yarn: 1.22.22
+Pipeline Status	Setup Node.js	2026-09-05T15:20:46.6358704Z ##[endgroup]
+Pipeline Status	Fail the run when a required job was cancelled or failed	﻿2026-09-05T15:20:46.6538851Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6539432Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6633632Z shell: /usr/bin/bash -e {0}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6633974Z env:
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6634234Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6634537Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6634889Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6636163Z   NEEDS_JSON: {
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "secrets-scan": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "version-check": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "file-line-limits": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "shared-fingerprint-assets": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "repo-scripts-lint": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+Pipeline Status	Fail the run when a required job was cancelled or failed	}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6637521Z   IS_MAIN: true
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6637820Z   RUN_SHA: 4f7af544a15eb89d00d214294dc2a3ad08882a4e
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.6638398Z ##[endgroup]
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.7263510Z Failed jobs:    <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.7264074Z Cancelled jobs: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-05T15:20:46.7264578Z All required jobs succeeded or were legitimately skipped.
+Pipeline Status	Post Setup Node.js	﻿2026-09-05T15:20:46.7423840Z Post job cleanup.
+Pipeline Status	Post Run actions/checkout@v6	﻿2026-09-05T15:20:46.8790098Z Post job cleanup.
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:46.9667054Z [command]/usr/bin/git version
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:46.9710009Z git version 2.55.0
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:46.9753610Z Temporarily overriding HOME='/home/runner/work/_temp/880f95bb-cfc9-4a22-b451-2ad780269067' before making global git config changes
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:46.9755847Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:46.9759881Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:46.9791209Z Removing SSH command configuration
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:46.9799666Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:46.9846358Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:47.0081510Z Removing HTTP extra header
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:47.0088862Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:47.0126762Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:47.0380346Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:47.0382281Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	Post Run actions/checkout@v6	2026-09-05T15:20:47.0421263Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	Complete job	﻿2026-09-05T15:20:47.0801528Z Cleaning up orphan processes

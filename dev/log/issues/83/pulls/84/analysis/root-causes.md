@@ -163,9 +163,11 @@ Three separate defects stack up here:
 The job conclusion was `success`. This is the textbook false negative the issue
 is asking about.
 
-**Fix.** Rewrite the commit gate to branch on `git status --porcelain` *output*
-rather than an exit code (the JS script already does it this way — reuse that
-shape). Delete consumed fragments in `collectChangelog()` and stage the
+**Fix.** Rewrite the commit gate to branch on command *output* rather than on
+an exit code, the way the JS script already does. `git diff --cached
+--name-only` is the narrower question here — it names exactly the files the
+commit would contain, where `git status --porcelain` would also report an
+untracked file that was never staged. Delete consumed fragments in `collectChangelog()` and stage the
 deletions. Gate `Publish to Crates.io` on `version_committed == 'true'` so an
 unrecordable release fails loudly instead of shipping.
 

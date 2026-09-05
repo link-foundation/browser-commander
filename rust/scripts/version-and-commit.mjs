@@ -252,10 +252,12 @@ async function main() {
     // deletions.
     await $`git add -A Cargo.toml Cargo.lock CHANGELOG.md changelog.d`;
 
-    // Check whether anything was actually staged. Branching on the output of
-    // `git status --porcelain` rather than on the exit code of
-    // `git diff --cached --quiet` keeps this correct no matter how the shell
-    // wrapper reports non-zero exits.
+    // Check whether anything was actually staged. Branching on the list of
+    // staged files rather than on the exit code of `git diff --cached
+    // --quiet` keeps this correct no matter how the shell wrapper reports
+    // non-zero exits. `--cached` is what makes it a question about the commit
+    // that is about to be made: `git status --porcelain`, which the JS script
+    // uses, would also answer "yes" for an untracked file nobody staged.
     const staged = await $`git diff --cached --name-only`;
     const stagedFiles = String(staged.stdout ?? '').trim();
     if (!stagedFiles) {

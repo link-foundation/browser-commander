@@ -41,9 +41,16 @@ def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProce
 
 
 def extract_changelog_entry(changelog_path: Path, version: str) -> str:
-    """Extract the changelog entry for a specific version."""
+    """Extract the changelog entry for a specific version.
+
+    Falling back to a bare "Release <version>" body is a silent downgrade: the
+    release still goes out and the job still passes, so the annotations below
+    are what makes an empty release body visible in the run summary.
+    """
     if not changelog_path.exists():
-        print(f"Warning: {changelog_path} not found", file=sys.stderr)
+        print(
+            f"::warning::{changelog_path} not found, releasing {version} without notes"
+        )
         return f"Release {version}"
 
     content = changelog_path.read_text()
@@ -54,8 +61,10 @@ def extract_changelog_entry(changelog_path: Path, version: str) -> str:
 
     if not match:
         print(
-            f"Warning: Version {version} not found in {changelog_path}",
-            file=sys.stderr,
+            f"::warning::Version {version} has no '## {version}' section in "
+            f"{changelog_path.name}, releasing without notes. Check that "
+            "[tool.scriv].md_header_level is 2 and that the fragments were "
+            "collected."
         )
         return f"Release {version}"
 

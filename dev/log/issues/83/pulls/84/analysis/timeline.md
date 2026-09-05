@@ -41,7 +41,7 @@ The two silent defects are older than this push.
 
 * **crates.io** holds `0.10.0` … `0.10.11`, twelve releases, while
   `origin/main:rust/Cargo.toml` still says `0.9.0` and `rust/CHANGELOG.md`
-  still contains nothing but its header and `<!-- changelog-insert-here -->`.
+  still ends at the hand-written `## [0.1.0]` entry.
   Every one of those twelve releases went out without a commit. The version
   number only advances because `findNextAvailableVersion()` re-derives it from
   the registry on each run (`rust/scripts/version-and-commit.mjs:170-191`).

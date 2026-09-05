@@ -72,7 +72,14 @@ try {
     releaseNotes = match[0].replace(`## ${version}`, '').trim();
   }
 
+  // Falling back to a bare "Release <version>" body is a silent downgrade:
+  // the release still goes out and the job still passes, so this annotation is
+  // what makes an empty release body visible in the run summary.
   if (!releaseNotes) {
+    console.warn(
+      `::warning::Version ${version} has no "## ${version}" section in ` +
+        'CHANGELOG.md, releasing without notes'
+    );
     releaseNotes = `Release ${version}`;
   }
 

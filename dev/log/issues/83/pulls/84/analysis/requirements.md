@@ -106,7 +106,7 @@ are invisible, and fixing it makes the rest testable.
 | F-4 | Namespace Rust tags as `rust-v<version>` | RC-D | `rust/scripts/{create-github-release,version-and-commit}.mjs` |
 | F-5 | PyPI pre-flight check with an actionable error; add the missing bump + changelog-collection steps to `python.yml`'s `auto-release` | RC-A | `.github/workflows/python.yml` |
 | F-6 | Validate the release commit before pushing (`format:check` on touched files, in the release job) | RC-E | all three release workflows |
-| F-7 | Test suite for the CI/release scripts + a CI job that runs it; consider the `cargo-lock` guard | R-12, and the systemic cause of RC-B/C/G | new `scripts/` tests, `.github/workflows/quality.yml` |
+| F-7 | Extend `js/tests/unit/scripts/` to cover the *release* scripts, which are the untested half; consider the template's `cargo-lock` guard | R-12, and the systemic cause of RC-B/C/G | `js/tests/unit/scripts/`, `.github/workflows/quality.yml` |
 | F-8 | Template file-tree diff and upstream reports | R-9–R-13, R-26 | `../templates/`, upstream repositories |
 | F-9 | Per-principle best-practices audit | R-14–R-17 | `../best-practices/` |
 

@@ -143,7 +143,8 @@ and then published `browser-commander v0.10.11` to crates.io and created GitHub
 release `v0.10.11`. On `origin/main` today:
 
 * `rust/Cargo.toml` still says `0.9.0`
-* `rust/CHANGELOG.md` contains only its header and `<!-- changelog-insert-here -->`
+* `rust/CHANGELOG.md` contains nothing newer than the hand-written
+  `## [0.1.0]` entry — none of the twelve published releases appear in it
 * the same twelve fragments are still sitting in `rust/changelog.d/`
 
 Three separate defects stack up here:
@@ -310,13 +311,23 @@ issue asks for false positives — a fix applied here would have been one.
 
 ## The systemic cause behind RC-B, RC-C and RC-G
 
-None of the release scripts have any tests. `.github/workflows/quality.yml`'s
-`repo-scripts-lint` job runs ESLint over `scripts experiments rust/scripts` —
-lint only. The rust template
+The repository does have a CI-script test suite — `js/tests/unit/scripts/`
+holds sixteen test files, including ones for `use-module.mjs`,
+`read-manifest.mjs` and `check-ci-workflows.mjs`. The coverage is not absent;
+it is split along exactly the wrong line:
+
+| Tested | Untested |
+| --- | --- |
+| `scripts/use-module.mjs`, `read-manifest.mjs`, `debug-print.mjs`, `check-ci-workflows.mjs`, `check-version-modification.mjs`, `check-web-archive.mjs`, `js/scripts/npm-registry.mjs`, `clean-npm-config.mjs`, `run-tests.mjs` | `rust/scripts/version-and-commit.mjs`, `bump-version.mjs`, `collect-changelog.mjs`, `create-github-release.mjs`, `publish-crate.mjs`, `get-bump-type.mjs`, `js/scripts/changeset-version.mjs`, `version-and-commit.mjs`, `create-github-release.mjs`, `publish-to-npm.mjs`, `merge-changesets.mjs`, `validate-changeset.mjs` |
+
+Every shared *helper* is tested. **Every script that actually performs a
+release is not** — and that is precisely the set in which RC-B, RC-C and RC-G
+all live. `.github/workflows/quality.yml`'s `repo-scripts-lint` job runs ESLint
+over `scripts experiments rust/scripts`, which is lint only and cannot see an
+inverted exit-code test. The rust template
 (`link-foundation/rust-ai-driven-development-pipeline-template`) has a
 `script-tests` job running `bash scripts/test-scripts.sh`; this repository does
-not. That gap is why three independent release-path defects shipped and stayed
-green.
+not.
 
 **Fix.** Add a test suite for the CI/release scripts and a CI job that runs it,
 matching the template's `script-tests`. The reproductions in

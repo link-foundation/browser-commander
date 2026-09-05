@@ -66,7 +66,13 @@ console.log(`Creating GitHub release for ${tag}...`);
 function getChangelogForVersion(version) {
   const changelogPath = 'CHANGELOG.md';
 
+  // Falling back to a bare "Release v<version>" body is a silent downgrade:
+  // the release still goes out and the job still passes, so these annotations
+  // are what makes an empty release body visible in the run summary.
   if (!existsSync(changelogPath)) {
+    console.warn(
+      `::warning::${changelogPath} not found, releasing v${version} without notes`
+    );
     return `Release v${version}`;
   }
 
@@ -83,6 +89,10 @@ function getChangelogForVersion(version) {
     return match[1].trim();
   }
 
+  console.warn(
+    `::warning::Version ${version} has no "## [${version}]" section in ` +
+      `${changelogPath}, releasing without notes`
+  );
   return `Release v${version}`;
 }
 

@@ -100,7 +100,7 @@ From the issue and from the instruction that opened this pull request.
 | R-16 | "list each and every requirement from the issue" | done — this file |
 | R-17 | "find the root cause of each problem" | done — [`root-causes.md`](root-causes.md), RC-1…RC-17 |
 | R-18 | "propose possible solutions and solution plans for each requirement" | done — one "solution" section per RC, plus §F for what is still open |
-| R-19 | "check online for known existing components/libraries that solve a similar problem" | **open** — `existing-solutions.md`, plan in §F |
+| R-19 | "check online for known existing components/libraries that solve a similar problem" | done — `existing-solutions.md`: 13 of the 17 root causes have an off-the-shelf component, 12 are wired in, and each rejection (`alls-green`, `workflow-conclusion-action`, `osv-scanner`, `timeout(1)`) names the fact the component cannot know |
 | R-20 | "add debug output and a verbose mode … Keep the default state switched off" | done — `2c1260a` adds the opt-in logger (`CI_DEBUG=1`), and `scripts/run-with-budget-warning.sh` exposes `BUDGET_WARN_PERCENT`, `BUDGET_GRACE_SECONDS`, `BUDGET_POLL_SECONDS`; all default to off or to production values |
 | R-21 | "report issues on GitHub for that project … reproducible examples, workarounds, and suggestions for fixing the issue in code" | **open** — same as R-11 |
 | R-22 | "if an issue exists in multiple places, apply it in all of them" | standing — every fix was applied across `js/`, `python/` and `rust/` and across all nine workflows; the policy check and the budget tests fail when a new workflow omits one |
@@ -202,11 +202,21 @@ The count on the last line is a summary of a listing, not a replacement for
 one. The listing does depend on the `console` reporter staying in
 `js/.jscpd.json`, which is what the experiment is kept for.
 
-### R-19 — existing components
+### R-19 — existing components (done)
 
 `existing-solutions.md` records, for each root cause, what already exists that
-solves it, whether this repository adopted it, and why not when it did not —
-`actionlint`, `zizmor`, `lychee`, `secretlint`, `jscpd`, `cargo-audit`,
-`pip-audit`, `osv-scanner`, `changesets`, `scriv`, `pre-commit`, and the two
-Actions gates (`re-actors/alls-green`, `technote-space/workflow-conclusion-action`)
-that cover part of what `check-pipeline-status.sh` does.
+solves it, whether this repository adopted it, and — when it did not — the
+repository-specific fact the generic component cannot know. Adopted:
+`actionlint` (with the bundled shellcheck and pyflakes), `zizmor`, CodeQL,
+`npm audit` / `cargo-audit` / `pip-audit`, `dependency-review-action`,
+`secretlint`, `lychee`, `jscpd`, `pre-commit`, Changesets, `scriv`, and the
+root ESLint config. Rejected with reasons: `re-actors/alls-green` (votes on
+success, and cannot tell a timeout overrun from a `concurrency` supersede,
+which needs `git ls-remote` evidence from outside the run),
+`technote-space/workflow-conclusion-action` (archived 16 November 2023),
+`osv-scanner` (would replace three working auditors — a separate change), and
+`timeout(1)` (kills the direct child, not the process group, and cannot warn
+before the deadline).
+
+It also records the one drafted claim that testing disproved: the withdrawn
+jscpd report above.

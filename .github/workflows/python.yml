@@ -212,10 +212,14 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.python-version }}-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changelog]
+    needs: [detect-changes, changelog, lint]
     # Run if: push event, OR changelog succeeded, OR changelog was skipped (docs-only PR)
+    #
+    # `lint` gates the matrix rather than feeding it; see the same comment in
+    # js.yml. `!contains(needs.*.result, 'failure')` is required because
+    # `!cancelled()` overrides the implicit "all needs succeeded" rule.
     if: >-
-      !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+      !cancelled() && !contains(needs.*.result, 'failure') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     strategy:

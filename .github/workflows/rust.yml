@@ -211,11 +211,15 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changelog]
+    needs: [detect-changes, changelog, lint]
     # Run if: push event, OR changelog succeeded, OR changelog was skipped (docs-only PR)
     # Note: !cancelled() is required to evaluate the condition when dependencies are skipped.
+    #
+    # `lint` gates the matrix rather than feeding it; see the same comment in
+    # js.yml. A cargo build on three operating systems is the most expensive
+    # thing this workflow does, and `cargo fmt --check` is the cheapest.
     if: >-
-      !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+      !cancelled() && !contains(needs.*.result, 'failure') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:

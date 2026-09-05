@@ -198,10 +198,18 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: true
-    needs: [detect-changes, changeset-check]
+    needs: [detect-changes, changeset-check, lint]
     # Run if: push event, OR changeset-check succeeded, OR changeset-check was skipped (docs-only PR)
+    #
+    # `lint` is a gate, not a dependency for its output: three operating
+    # systems that each install dependencies first should not be bought by a
+    # formatting mistake one runner finds in under a minute. Because
+    # `!cancelled()` overrides GitHub's implicit "all needs succeeded" rule,
+    # the failure has to be restated explicitly, or `needs: [lint]` would be
+    # decorative. See CI-CD-BEST-PRACTICES principle 5 and the fast-fail rule
+    # in scripts/check-ci-workflows.mjs.
     if: >-
-      !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
+      !cancelled() && !contains(needs.*.result, 'failure') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:

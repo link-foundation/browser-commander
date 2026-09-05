@@ -405,7 +405,7 @@ the page scripts under `experiments/fingerprint-parity/` use (`navigator`,
 config's globals list, next to the `document` and `window` entries that were
 already there for the same reason.
 
-The 12 warnings the first pass left behind were finished separately, because a
+The 10 warnings the first pass left behind were finished separately, because a
 warning nobody clears is a warning nobody reads — the exact failure mode the
 issue title names. Two of them (`checkWorkflow` at 71 statements and complexity
 33) came from a function that grew one `if` per policy rule, and were fixed by

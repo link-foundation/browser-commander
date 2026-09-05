@@ -52,14 +52,17 @@ The classes are not independent: RC-16 is the reason a *false negative* and an
 | --- | --- | --- |
 | R-9 | Compare the full file tree against `js-`, `python-` and `rust-ai-driven-development-pipeline-template` | done — [`../templates/file-tree-diff.md`](../templates/file-tree-diff.md) |
 | R-10 | Adopt the practices this repository was missing | done — `simulate-fresh-merge.sh`, `detect-code-changes`, file-line limits, secretlint, version-check, `audit_dependencies.py`, `run-with-budget-warning.sh`, `check-pipeline-status.sh` |
-| R-11 | Report upstream the defects that the templates share | **open** — five reports drafted, plan in §F |
+| R-11 | Report upstream the defects that the templates share | done — seven issues filed (python#67, python#68, python#69, rust#155, rust#156, js#166, js#167); two drafts withdrawn after testing, see §F |
 | R-12 | Keep the comparison from going stale | standing — `scripts/check-ci-workflows.mjs` encodes the adopted rules as a policy check that runs on every workflow change |
 
-Note the direction of travel is not one-way. Four defects were found *in the
+Note the direction of travel is not one-way. Five defects were found *in the
 templates* while comparing: RC-9 (a Python audit that fails on an advisory
 against `pip` itself), RC-16 (a `pipeline-status` gate with no supersede
-lookup, which fails legitimate superseded runs on `main`), the table-blind
-`grep` of RC-1, and the `|| true` of RC-7/RC-14. Those are the subject of R-11.
+lookup, which fails legitimate superseded runs on `main`, and which no workflow
+but `release.yml` runs at all), the table-blind `grep` of RC-1, the same
+table-blindness in the Rust template's `find_manifest_value`, and the `|| true`
+of RC-7/RC-14 over a husky that never fails. All five are now filed upstream;
+see R-11 in §F for the issues and the evidence behind each.
 
 ## D. The best-practices document
 
@@ -102,7 +105,7 @@ From the issue and from the instruction that opened this pull request.
 | R-18 | "propose possible solutions and solution plans for each requirement" | done — one "solution" section per RC, plus §F for what is still open |
 | R-19 | "check online for known existing components/libraries that solve a similar problem" | done — `existing-solutions.md`: 13 of the 17 root causes have an off-the-shelf component, 12 are wired in, and each rejection (`alls-green`, `workflow-conclusion-action`, `osv-scanner`, `timeout(1)`) names the fact the component cannot know |
 | R-20 | "add debug output and a verbose mode … Keep the default state switched off" | done — `2c1260a` adds the opt-in logger (`CI_DEBUG=1`), and `scripts/run-with-budget-warning.sh` exposes `BUDGET_WARN_PERCENT`, `BUDGET_GRACE_SECONDS`, `BUDGET_POLL_SECONDS`; all default to off or to production values |
-| R-21 | "report issues on GitHub for that project … reproducible examples, workarounds, and suggestions for fixing the issue in code" | **open** — same as R-11 |
+| R-21 | "report issues on GitHub for that project … reproducible examples, workarounds, and suggestions for fixing the issue in code" | done — same seven issues; every reproduction was run before filing and every suggested fix was executed at least once |
 | R-22 | "if an issue exists in multiple places, apply it in all of them" | standing — every fix was applied across `js/`, `python/` and `rust/` and across all nine workflows; the policy check and the budget tests fail when a new workflow omits one |
 
 ## F. Plans for what is still open
@@ -168,21 +171,43 @@ No other warning is emitted by any job.
 A warning that nobody clears is indistinguishable from a warning nobody reads,
 which is exactly the failure mode the issue title names.
 
-### R-11 / R-21 — the upstream reports
+### R-11 / R-21 — the upstream reports (done)
 
-Five reports, each with a reproduction, a workaround and the code change:
+Seven issues filed, each with a reproduction that was run before filing, a
+workaround, and the code change. Every draft was checked against the live
+templates first (fresh clones of js `338fafa`, python `81c9786`, rust
+`4d444d9`) and against the templates' existing issue lists, because a duplicate
+report costs a maintainer the same attention as a wrong one.
 
-1. **python template** — `.github/workflows/release.yml:558` reads a version out
-   of `pyproject.toml` with a table-blind `grep`; two defects in
-   `scripts/audit_dependencies.py` (RC-1, RC-3, RC-9).
-2. **js template** — `.jscpd.json` configures a duplication check that analyses
-   0 files; `"prepare": "husky || true"` masks a failed hook install; no
-   `.pre-commit-config.yaml` (RC-4, RC-14).
-3. **all three templates** — the `pipeline-status` gate has no branch-head
-   lookup, so a superseded run on `main` fails for a cancellation that is
-   correct. Reproduction: two pushes to `main` within a minute (RC-16).
-4. **all three templates** — 82 zizmor findings across the frozen snapshots in
-   `templates/zizmor-template-snapshot-findings.txt` (RC-6, RC-10).
+| Report | Where | Verified by |
+| --- | --- | --- |
+| A version read out of a manifest by line shape, not by table: `grep -Po '(?<=^version = ")[^"]*'` matches `version` in every table, and `head -1` only makes the answer depend on table order | [python#67](https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/67) | Our own run 33920348247, plus a two-table `pyproject.toml` reproducing both the multi-line `$GITHUB_OUTPUT` failure and the wrong `head -1` answer (RC-1) |
+| The same defect in Rust: `find_manifest_value` (`scripts/rust-paths.rs:253`) returns the first line-anchored `key = "…"` in the file, so a member crate with `version.workspace = true` publishes **serde's** version requirement as its own | [rust#155](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/155) | Ran against the real `regex` crate: `version -> Some("1.0")`. The suggested table-tracking replacement was run on the same three manifests before it was proposed |
+| `audit_dependencies.py` builds the audited venv **with** pip and audits it, and `run()` captures stdout under `check=True` so the advisory table is lost on the one run that finds something | [python#68](https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/68) | An empty project fails its own audit on `PYSEC-2026-3721` against pip; the swallowed-stdout behaviour reproduced in four lines of Python (RC-9) |
+| `check-pipeline-status.sh` is wired into `release.yml` only — so a timeout in `links.yml`, `security.yml`, `workflows.yml` (and `example-app.yml` / `docs.yml` / `desktop-release.yml`) is reported `cancelled` and nothing turns it red — and it has no branch-head lookup, so copying it into those workflows (where `cancel-in-progress: true` is unconditional) turns every rapid second push to `main` into a false error | [js#167](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/167), [python#69](https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/69), [rust#156](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/156) | `grep -rl` over each template's workflows; the `cancel-in-progress` lines quoted per file; our run 24045269874, a push to `main` cancelled by a supersede (RC-16) |
+| husky exits 0 for every failure it has — `.git can't be found`, `git command not found`, a failed `git config` — so `"prepare": "husky || true"` reports an install that set no `core.hooksPath` and installed no hook; the `js/` layout this template supports is exactly that case | [js#166](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/166) | Reproduced end to end (husky 9.1.7 prints `.git can't be found`, exits 0, `core.hooksPath` unset); the proposed verifier was run in both the broken and the working layout (RC-14) |
+
+Two drafts were **not** filed, and the reason is the same in both cases: the
+claim did not survive being checked.
+
+- **jscpd `--fail-on-new-clones` "never names the new clones"** — false, see the
+  block below.
+- **The zizmor findings against the live templates** (js 58, python 39, rust
+  54, at default confidence). All three templates already run zizmor with
+  `--min-confidence medium`, which is the subject of the existing
+  [js#160](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/160);
+  and the findings that threshold hides are not defects. Python's 23
+  `template-injection` findings are all
+  `steps.python_layout.outputs.root`, whose only possible values are the
+  literals `.` and `python` assigned inside the workflow. Rust's two
+  `artipacked` findings are release-writer checkouts that hold
+  `secrets.GITHUB_TOKEN` **because they push**. Filing those would have added
+  exactly the noise this issue exists to remove. The 82-finding count cited
+  earlier in this file is against the frozen snapshots under
+  `docs/case-studies/issue-55/template-snapshots/` in *this* repository, not
+  against the live templates — the two numbers are not comparable, which is
+  itself worth recording.
+
 **Withdrawn.** A fifth report against **jscpd** was drafted on the reading that
 `--fail-on-new-clones` reports a *count* of new clones and never names them.
 That is wrong, and testing it before filing is why it was not filed:

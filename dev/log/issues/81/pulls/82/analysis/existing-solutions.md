@@ -142,6 +142,31 @@ report was withdrawn. The experiment is kept, because the listing comes from the
 `console` reporter configured in `js/.jscpd.json`: dropping it from `reporters`
 would leave only the count, and the script would say so.
 
+## 3b. A second claim that did not survive triage
+
+Running zizmor 1.30.0 against fresh clones of the three live templates with the
+default confidence threshold returns far more than their own CI reports: **js
+58 findings, python 39, rust 54**. The gap is not a hidden defect. All three
+templates run `zizmorcore/zizmor-action@v0.6.2` with `min-confidence: medium`,
+and everything below that line is what the extra findings are:
+
+- python's 23 `template-injection` findings are all
+  `steps.python_layout.outputs.root`, a step output whose only possible values
+  are the literals `.` and `python`, assigned by the workflow itself
+  (`release.yml:64-75`);
+- rust's 2 `artipacked` findings are the two release-writer checkouts that pass
+  `token: ${{ secrets.GITHUB_TOKEN }}` *because they push*
+  (`release.yml:690`, `:853`);
+- js's 25 `artipacked` findings are already the subject of the template's own
+  [js#160](https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/160).
+
+So no upstream report was filed for these. It is also worth recording that the
+"82 zizmor findings" figure quoted elsewhere in this analysis comes from
+`templates/zizmor-template-snapshot-findings.txt`, which audits the frozen
+snapshots under `docs/case-studies/issue-55/template-snapshots/` in *this*
+repository — workflows that never run, at a different threshold. The two counts
+measure different things and neither is a bug count.
+
 ## 4. Root causes with no off-the-shelf answer
 
 | Root cause | Why no component fits |

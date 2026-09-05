@@ -12,7 +12,13 @@
  * - lino-arguments: Unified configuration from CLI args, env vars, and .lenv files
  */
 
-import { readFileSync, writeFileSync, appendFileSync, readdirSync, existsSync } from 'fs';
+import {
+  readFileSync,
+  writeFileSync,
+  appendFileSync,
+  readdirSync,
+  existsSync,
+} from 'fs';
 import { join } from 'path';
 
 import {
@@ -139,7 +145,8 @@ async function checkVersionOnCratesIo(crateName, version) {
       `https://crates.io/api/v1/crates/${crateName}/${version}`,
       {
         headers: {
-          'User-Agent': 'browser-commander-ci (github.com/link-foundation/browser-commander)',
+          'User-Agent':
+            'browser-commander-ci (github.com/link-foundation/browser-commander)',
         },
       }
     );
@@ -172,7 +179,9 @@ async function findNextAvailableVersion(crateName, current, bumpType) {
         `Could not find an available version after ${MAX_ATTEMPTS} attempts (last tried: ${version})`
       );
     }
-    console.log(`Version ${version} already published on crates.io, trying next...`);
+    console.log(
+      `Version ${version} already published on crates.io, trying next...`
+    );
     const parts = version.split('.').map(Number);
     const next = { major: parts[0], minor: parts[1], patch: parts[2] };
     version = calculateNewVersion(next, 'patch');
@@ -187,7 +196,9 @@ async function findNextAvailableVersion(crateName, current, bumpType) {
  * @returns {string} - Content without frontmatter
  */
 function stripFrontmatter(content) {
-  const frontmatterMatch = content.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/);
+  const frontmatterMatch = content.match(
+    /^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/
+  );
   if (frontmatterMatch) {
     return frontmatterMatch[1].trim();
   }
@@ -270,13 +281,21 @@ async function main() {
 
     // Check if the current version is already published on crates.io
     if (await checkVersionOnCratesIo(crateName, currentVersionStr)) {
-      console.log(`Current version ${currentVersionStr} is already published on crates.io`);
+      console.log(
+        `Current version ${currentVersionStr} is already published on crates.io`
+      );
     } else {
-      console.log(`Current version ${currentVersionStr} is NOT published on crates.io`);
+      console.log(
+        `Current version ${currentVersionStr} is NOT published on crates.io`
+      );
     }
 
     // Find the next version that is not yet published on crates.io
-    const newVersion = await findNextAvailableVersion(crateName, current, bumpType);
+    const newVersion = await findNextAvailableVersion(
+      crateName,
+      current,
+      bumpType
+    );
     console.log(`Next available version: ${newVersion}`);
 
     // Update version in Cargo.toml

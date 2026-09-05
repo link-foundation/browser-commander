@@ -80,7 +80,7 @@
 ## Valid Color Scheme Values
 
 - `"light"` - Light color scheme
-- `"dark"` - Dark color scheme  
+- `"dark"` - Dark color scheme
 - `"no-preference"` - No preference (system default)
 
 ---

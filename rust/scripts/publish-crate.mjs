@@ -49,13 +49,16 @@ const config = makeConfig({
     yargs
       .option('token', {
         type: 'string',
-        default: getenv('CARGO_REGISTRY_TOKEN', '') || getenv('CARGO_TOKEN', ''),
-        describe: 'Crates.io API token (defaults to CARGO_REGISTRY_TOKEN or CARGO_TOKEN env var)',
+        default:
+          getenv('CARGO_REGISTRY_TOKEN', '') || getenv('CARGO_TOKEN', ''),
+        describe:
+          'Crates.io API token (defaults to CARGO_REGISTRY_TOKEN or CARGO_TOKEN env var)',
       })
       .option('rust-root', {
         type: 'string',
         default: getenv('RUST_ROOT', ''),
-        describe: 'Rust package root directory (auto-detected if not specified)',
+        describe:
+          'Rust package root directory (auto-detected if not specified)',
       }),
 });
 
@@ -63,7 +66,10 @@ const { token, rustRoot: rustRootArg } = config;
 
 // Get Rust package root (auto-detect or use explicit config)
 const rustRootConfig = rustRootArg || parseRustRootConfig();
-const rustRoot = getRustRoot({ rustRoot: rustRootConfig || undefined, verbose: true });
+const rustRoot = getRustRoot({
+  rustRoot: rustRootConfig || undefined,
+  verbose: true,
+});
 
 // Get paths based on detected/configured rust root
 const CARGO_TOML = getCargoTomlPath({ rustRoot });

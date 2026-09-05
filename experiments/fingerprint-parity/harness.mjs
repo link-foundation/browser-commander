@@ -126,7 +126,10 @@ export async function captureReferenceReport({
     ...extraArgs,
     server.url(token),
   ];
-  const child = spawn(executablePath, args, { stdio: 'ignore', detached: true });
+  const child = spawn(executablePath, args, {
+    stdio: 'ignore',
+    detached: true,
+  });
   try {
     const report = await server.waitForReport(token);
     return report;
@@ -180,7 +183,12 @@ export function diffReports(reference, candidate, { ignore = [] } = {}) {
     }
     const leftIsObject = left && typeof left === 'object';
     const rightIsObject = right && typeof right === 'object';
-    if (leftIsObject && rightIsObject && !Array.isArray(left) && !Array.isArray(right)) {
+    if (
+      leftIsObject &&
+      rightIsObject &&
+      !Array.isArray(left) &&
+      !Array.isArray(right)
+    ) {
       const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
       for (const key of [...keys].sort()) {
         walk(left[key], right[key], trail ? `${trail}.${key}` : key);

@@ -89,16 +89,22 @@ function findLineNumber(lines, pattern) {
 function collectChoiceInputs(lines) {
   const choiceInputs = new Set();
   const inputsIndex = lines.findIndex((line) => /^(\s+)inputs:\s*$/.test(line));
-  if (inputsIndex === -1) return choiceInputs;
+  if (inputsIndex === -1) {
+    return choiceInputs;
+  }
 
   const inputsIndent = lines[inputsIndex].search(/\S/);
   const nameIndent = inputsIndent + 2;
   let currentInput = null;
 
   for (const line of lines.slice(inputsIndex + 1)) {
-    if (line.trim() === '') continue;
+    if (line.trim() === '') {
+      continue;
+    }
     const indent = line.search(/\S/);
-    if (indent <= inputsIndent) break;
+    if (indent <= inputsIndent) {
+      break;
+    }
 
     const declaration = /^\s*([A-Za-z0-9_-]+):\s*$/.exec(line);
     if (indent === nameIndent && declaration) {
@@ -136,12 +142,16 @@ function checkRunBodyInjection(filePath, lines) {
       }
     }
 
-    if (runIndent === null) continue;
+    if (runIndent === null) {
+      continue;
+    }
 
     for (const match of line.matchAll(
       /\$\{\{\s*github\.event\.inputs\.([A-Za-z0-9_-]+)/g
     )) {
-      if (choiceInputs.has(match[1])) continue;
+      if (choiceInputs.has(match[1])) {
+        continue;
+      }
       report(
         filePath,
         index + 1,
@@ -181,13 +191,23 @@ function checkManifestScraping(filePath, lines) {
       }
     }
 
-    if (runIndent === null) continue;
-    if (line.trimStart().startsWith('#')) continue;
+    if (runIndent === null) {
+      continue;
+    }
+    if (line.trimStart().startsWith('#')) {
+      continue;
+    }
 
     const manifest = /\b(pyproject\.toml|Cargo\.toml)\b/.exec(line);
-    if (!manifest) continue;
-    if (!/\b(grep|sed|awk|cut)\b/.test(line)) continue;
-    if (!/\b(version|name)\b/.test(line)) continue;
+    if (!manifest) {
+      continue;
+    }
+    if (!/\b(grep|sed|awk|cut)\b/.test(line)) {
+      continue;
+    }
+    if (!/\b(version|name)\b/.test(line)) {
+      continue;
+    }
 
     report(
       filePath,
@@ -291,7 +311,7 @@ export function checkWorkflow(filePath) {
     const jobStarts = [];
 
     for (let index = jobsLineIndex + 1; index < lines.length; index += 1) {
-      if (/^  [A-Za-z0-9_-]+:$/.test(lines[index])) {
+      if (/^ {2}[A-Za-z0-9_-]+:$/.test(lines[index])) {
         jobStarts.push(index);
       }
     }
@@ -301,7 +321,7 @@ export function checkWorkflow(filePath) {
       const block = lines.slice(start, end);
       const jobName = lines[start].trim().slice(0, -1);
 
-      if (!block.some((line) => /^    timeout-minutes:/.test(line))) {
+      if (!block.some((line) => /^ {4}timeout-minutes:/.test(line))) {
         report(
           filePath,
           start + 1,
@@ -310,7 +330,7 @@ export function checkWorkflow(filePath) {
         failures++;
       }
 
-      if (!block.some((line) => /^    concurrency:/.test(line))) {
+      if (!block.some((line) => /^ {4}concurrency:/.test(line))) {
         report(
           filePath,
           start + 1,
@@ -319,8 +339,8 @@ export function checkWorkflow(filePath) {
         failures++;
       } else {
         const blockText = block.join('\n');
-        const hasGroup = /^      group:/m.test(blockText);
-        const hasCancellationPolicy = /^      cancel-in-progress:/m.test(
+        const hasGroup = /^ {6}group:/m.test(blockText);
+        const hasCancellationPolicy = /^ {6}cancel-in-progress:/m.test(
           blockText
         );
 

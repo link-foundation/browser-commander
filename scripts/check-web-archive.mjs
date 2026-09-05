@@ -298,9 +298,7 @@ async function main() {
     await new Promise((resolve) => globalThis.setTimeout(resolve, 500));
   }
 
-  for (const { url, status, verdict } of verdicts.filter(
-    (v) => v.verdict === 'alive'
-  )) {
+  for (const { url, status } of verdicts.filter((v) => v.verdict === 'alive')) {
     console.log(
       `::warning title=Link recovered on re-check::${url} was reported as [${status}] ` +
         `by lychee but answered normally on a second request. Nothing to fix here; ` +

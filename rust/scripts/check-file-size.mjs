@@ -8,7 +8,7 @@
  * - use-m: Dynamic package loading without package.json dependencies
  */
 
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { join, relative, extname } from 'path';
 
 const MAX_LINES = 1000;
@@ -44,7 +44,10 @@ function findRustFiles(directory) {
 
       if (entry.isDirectory()) {
         walkDir(fullPath);
-      } else if (entry.isFile() && FILE_EXTENSIONS.includes(extname(entry.name))) {
+      } else if (
+        entry.isFile() &&
+        FILE_EXTENSIONS.includes(extname(entry.name))
+      ) {
         files.push(fullPath);
       }
     }
@@ -91,7 +94,9 @@ try {
         `  ${violation.file}: ${violation.lines} lines (exceeds ${MAX_LINES})`
       );
     }
-    console.log(`\nPlease refactor these files to be under ${MAX_LINES} lines\n`);
+    console.log(
+      `\nPlease refactor these files to be under ${MAX_LINES} lines\n`
+    );
     process.exit(1);
   }
 } catch (error) {

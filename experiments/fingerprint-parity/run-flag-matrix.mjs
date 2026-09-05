@@ -8,7 +8,11 @@
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { captureReferenceReport, readProbeSource, startProbeServer } from './harness.mjs';
+import {
+  captureReferenceReport,
+  readProbeSource,
+  startProbeServer,
+} from './harness.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
 const HEADLESS = process.env.PARITY_HEADLESS === 'true';
@@ -72,7 +76,8 @@ async function main() {
   } finally {
     await server.close();
   }
-  const outputPath = process.argv[2] || path.join(process.cwd(), 'flag-matrix.json');
+  const outputPath =
+    process.argv[2] || path.join(process.cwd(), 'flag-matrix.json');
   await writeFile(outputPath, `${JSON.stringify(rows, null, 2)}\n`, 'utf8');
   console.log(`wrote ${outputPath}`);
 }

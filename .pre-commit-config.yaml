@@ -1,0 +1,136 @@
+# Local quality gates, so that "green on my machine" means the same thing as
+# "green in CI" (CI/CD best practice #8).
+#
+# Every `repo: local` hook below runs the exact command the corresponding
+# workflow step runs, and `js/tests/unit/pre-commit-config.test.js` fails if the
+# two ever drift apart. A hook that runs something *similar* to CI is worse than
+# no hook: it teaches contributors to trust a check that does not match the one
+# that will actually block their pull request.
+#
+# Install once per clone:
+#   pip install pre-commit && pre-commit install
+#
+# Run everything by hand:
+#   pre-commit run --all-files
+#
+# Skip a slow hook for one commit (it still runs in CI):
+#   SKIP=rust-clippy git commit ...
+
+# Frozen evidence: verbatim upstream snapshots and downloaded CI logs are kept
+# byte-for-byte on purpose, so no hook may reformat them.
+exclude: |
+  (?x)^(
+    docs/case-studies/[^/]+/template-snapshots/.*|
+    docs/case-studies/[^/]+/(ci-logs|ci-metadata|analysis-artifacts)/.*|
+    docs/case-studies/[^/]+/.*\.(log|txt)|
+    dev/log/.*|
+    ci-logs/.*|
+    js/package-lock\.json|
+    rust/Cargo\.lock
+  )$
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      # --- JavaScript: mirrors the lint job in .github/workflows/js.yml ---
+      - id: js-eslint
+        name: ESLint (js/)
+        entry: bash -c 'cd js && npm run lint'
+        language: system
+        files: ^js/.*\.(js|mjs|cjs)$
+        pass_filenames: false
+
+      - id: js-prettier
+        name: Prettier (js/)
+        entry: bash -c 'cd js && npm run format:check'
+        language: system
+        files: ^js/
+        pass_filenames: false
+
+      - id: js-duplication
+        name: jscpd duplication baseline (js/)
+        entry: bash -c 'cd js && npm run check:duplication'
+        language: system
+        files: ^js/.*\.(js|mjs|cjs)$
+        pass_filenames: false
+
+      # --- Python: mirrors the lint job in .github/workflows/python.yml ---
+      - id: python-ruff
+        name: Ruff lint (python/)
+        entry: bash -c 'cd python && ruff check .'
+        language: system
+        files: ^python/.*\.py$
+        pass_filenames: false
+
+      - id: python-ruff-format
+        name: Ruff format check (python/)
+        entry: bash -c 'cd python && ruff format --check .'
+        language: system
+        files: ^python/.*\.py$
+        pass_filenames: false
+
+      - id: python-mypy
+        name: mypy (python/)
+        entry: bash -c 'cd python && mypy src'
+        language: system
+        files: ^python/.*\.py$
+        pass_filenames: false
+
+      # --- Rust: mirrors the lint job in .github/workflows/rust.yml ---
+      - id: rust-fmt
+        name: rustfmt (rust/)
+        entry: bash -c 'cd rust && cargo fmt --all -- --check'
+        language: system
+        files: ^rust/.*\.rs$
+        pass_filenames: false
+
+      - id: rust-clippy
+        name: Clippy (rust/)
+        # RUSTFLAGS matches the workflow-level env in rust.yml, which is what
+        # turns a clippy warning into a failure there.
+        entry: bash -c 'cd rust && RUSTFLAGS=-Dwarnings cargo clippy --all-targets --all-features'
+        language: system
+        files: ^rust/(src|tests|benches|examples)/.*\.rs$|^rust/Cargo\.toml$
+        pass_filenames: false
+
+      # --- Repository-wide gates: mirror .github/workflows/quality.yml ---
+      - id: file-line-limits
+        name: File line limits (1500)
+        entry: bash scripts/check-file-line-limits.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: shared-fingerprint-assets
+        name: Shared fingerprint assets are identical
+        entry: bash scripts/check-shared-fingerprint-assets.sh
+        language: system
+        files: ^(js|python|rust)/src/.*(fingerprint|init.payload|limitations).*
+        pass_filenames: false
+
+      - id: repo-scripts-lint
+        name: ESLint (scripts outside js/)
+        entry: node js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts
+        language: system
+        files: ^(scripts|experiments|rust/scripts)/.*\.(js|mjs|cjs)$
+        pass_filenames: false
+
+      # --- Workflow policy: mirrors .github/workflows/ci-policy.yml ---
+      - id: ci-workflow-policy
+        name: CI workflow policy
+        entry: node scripts/check-ci-workflows.mjs
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false

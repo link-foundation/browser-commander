@@ -20,6 +20,8 @@ defect, and a **warning** is noise that hides the other three.
 | RC-11 | error | Dependency Review ran against a repository with the dependency graph off | `eec0f3b` |
 | RC-12 | false positive | A Windows-only `ENOENT` from the duplication test's `node_modules/.bin` shim | `eec0f3b` |
 | RC-13 | false positive | The link checker read URLs out of lychee's *redirects* section, and failed on a `502` | `60c2940` |
+| RC-14 | false negative | The pre-commit hooks were never installed: husky failed and `\|\| true` hid it | pending |
+| RC-15 | false negative | `scripts/`, `experiments/` and `rust/scripts/` had no linter at all | pending |
 
 ---
 
@@ -292,3 +294,111 @@ fails the job. `js/tests/unit/scripts/check-web-archive.test.js` pins all of it
 against the verbatim report from run 33959793880, and
 `experiments/ci-repro/repro-link-checker-false-positive.mjs` prints the old
 parser's two "broken" URLs next to the new parser's one.
+
+
+---
+
+## RC-14 — a hook manager that could never see `.git`
+
+Best practice #8 asks for local quality gates. The repository claimed them:
+`js/package.json` carried `husky` and `lint-staged` as dev dependencies, ran
+
+```json
+"prepare": "husky || true",
+```
+
+and `js/.husky/pre-commit` contained `npx lint-staged`. None of it ever ran.
+
+```
+$ git config --get core.hooksPath
+$ cd js && npx husky
+.git can't be found
+$ cd js && npx husky ../.husky
+.. not allowed
+```
+
+Both refusals are husky's own, from `js/node_modules/husky/index.js` (9.1.7):
+
+```js
+if (d.includes('..')) return '.. not allowed'
+if (!f.existsSync('.git')) return `.git can't be found`
+```
+
+npm runs `prepare` with the working directory set to the package, so husky looks
+for `.git` in `js/` and does not find it; and it refuses any hook directory
+above itself, so there is no argument that would let a package in a subdirectory
+manage the hooks of the repository that contains it. The installer therefore
+exited non-zero on every `npm install`, and `|| true` threw the message away.
+`core.hooksPath` stayed unset, `js/.husky/pre-commit` stayed a file nobody read,
+and the failures the hook existed to catch — including the two duplication
+regressions this pull request hit — went to CI instead.
+
+This is RC-7 again: a real failure turned into a green step by `|| true`.
+
+**Fix.** One hook manager for the whole repository, at the root where `.git` is:
+`.pre-commit-config.yaml`. Its `repo: local` hooks run the exact commands the
+workflows run — `npm run lint`, `ruff check .`, `cargo fmt --all -- --check`,
+`node scripts/check-ci-workflows.mjs` and the rest — each scoped by a `files:`
+pattern so editing Python never waits for Clippy. Upstream
+`pre-commit/pre-commit-hooks` adds the five gates no job had: trailing
+whitespace, missing final newlines, unparseable YAML/JSON/TOML, oversized files
+and committed private keys.
+
+husky and lint-staged are removed rather than repaired: two hook managers cannot
+share `core.hooksPath`, and only one of them can cover Python and Rust.
+
+`js/tests/unit/scripts/pre-commit-config.test.js` is the regression test. It
+fails against the previous wiring on both counts — the masked installer and the
+husky dependencies — and it pins every local hook to the workflow step it
+mirrors, so a lint command that changes in `js.yml` but not in the hook (or the
+other way round) fails the build.
+
+---
+
+## RC-15 — the linter could not see half the JavaScript in the repository
+
+`npm run lint` is `eslint .`, run with the working directory set to `js/`. Every
+`.mjs` file outside that directory — `scripts/` (10 files the workflows shell
+out to), `experiments/` and `rust/scripts/` (8 release helpers) — was checked by
+nothing. Neither Prettier: `prettier --check .` runs from `js/` too.
+
+Pointing the existing configuration at them does not work:
+
+```
+$ cd js && npx eslint ../scripts --config eslint.config.js
+You are linting "../scripts", but all of the files matching the glob pattern
+"../scripts" are ignored.
+  * If the file is ignored because it is located outside of the base path,
+    change the location of your config file to be in a parent directory.
+```
+
+ESLint takes the project's base path from the directory of the config file it
+loads, and silently skips everything above it. The command exits 2 having
+checked nothing — a linter that reports success for files it never opened.
+
+The first run over those directories found **298 problems (286 errors)**, in the
+scripts every release and every policy check depends on.
+
+**Fix.** A repository-root `eslint.config.js` that re-exports
+`js/eslint.config.js`:
+
+```js
+import jsPackageRules from './js/eslint.config.js';
+```
+
+Node resolves that module's own `@eslint/js` and Prettier plugin imports
+relative to `js/`, so the root config needs no dependencies and the repository
+needs no second lockfile — and the rules cannot drift from the package's,
+because they are the same array. `js/.prettierrc` moved to the root for the same
+reason: Prettier searches upward from the file it is formatting, so one file now
+configures both.
+
+Nearest-config-wins means `cd js && npm run lint` is unaffected: it still loads
+`js/eslint.config.js`.
+
+The 286 errors are fixed — 198 by `--fix`, the rest by hand — and the
+`repo-scripts-lint` job in `quality.yml` keeps them fixed. The browser globals
+the page scripts under `experiments/fingerprint-parity/` use (`navigator`,
+`screen`, `Notification`, `HTMLCanvasElement`, …) were added to the shared
+config's globals list, next to the `document` and `window` entries that were
+already there for the same reason.

@@ -45,9 +45,22 @@ export default [
         Bun: 'readonly',
         Deno: 'readonly',
         globalThis: 'readonly',
-        // Browser globals (used in evaluate functions)
+        // Browser globals (used in evaluate functions and in the page
+        // scripts under experiments/fingerprint-parity/, which are shipped to
+        // Chrome verbatim rather than executed by Node).
         document: 'readonly',
         window: 'readonly',
+        navigator: 'readonly',
+        Navigator: 'readonly',
+        screen: 'readonly',
+        Screen: 'readonly',
+        Notification: 'readonly',
+        speechSynthesis: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        CanvasRenderingContext2D: 'readonly',
+        WebGLRenderingContext: 'readonly',
+        Blob: 'readonly',
+        Worker: 'readonly',
       },
     },
     rules: {

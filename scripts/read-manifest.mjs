@@ -55,7 +55,9 @@ function stripComment(line) {
   for (let index = 0; index < line.length; index += 1) {
     const character = line[index];
     if (quote) {
-      if (character === quote) quote = null;
+      if (character === quote) {
+        quote = null;
+      }
     } else if (character === '"' || character === "'") {
       quote = character;
     } else if (character === '#') {
@@ -78,7 +80,9 @@ export function readTomlField(content, table, field) {
 
   for (const rawLine of content.split('\n')) {
     const line = stripComment(rawLine);
-    if (line === '') continue;
+    if (line === '') {
+      continue;
+    }
 
     // `[[bin]]` is an array-of-tables header; both forms change the scope.
     const header = /^\[\[?([^\]]+)\]\]?$/.exec(line);
@@ -87,10 +91,14 @@ export function readTomlField(content, table, field) {
       continue;
     }
 
-    if (currentTable !== table) continue;
+    if (currentTable !== table) {
+      continue;
+    }
 
     const assignment = new RegExp(`^${field}\\s*=\\s*(.*)$`).exec(line);
-    if (!assignment) continue;
+    if (!assignment) {
+      continue;
+    }
 
     const value = assignment[1].trim();
     const quoted = /^(['"])(.*)\1$/.exec(value);
@@ -120,7 +128,9 @@ export function replaceTomlField(content, table, field, newValue) {
 
   for (const [index, rawLine] of lines.entries()) {
     const line = stripComment(rawLine);
-    if (line === '') continue;
+    if (line === '') {
+      continue;
+    }
 
     const header = /^\[\[?([^\]]+)\]\]?$/.exec(line);
     if (header) {
@@ -128,8 +138,12 @@ export function replaceTomlField(content, table, field, newValue) {
       continue;
     }
 
-    if (currentTable !== table) continue;
-    if (!new RegExp(`^${field}\\s*=`).test(line)) continue;
+    if (currentTable !== table) {
+      continue;
+    }
+    if (!new RegExp(`^${field}\\s*=`).test(line)) {
+      continue;
+    }
 
     lines[index] = rawLine.replace(
       new RegExp(`^(\\s*${field}\\s*=\\s*["'])[^"']*(["'])`),
@@ -174,10 +188,10 @@ export function readManifestField(manifestPath, options = {}) {
 
   if (value === undefined || value === '') {
     throw new Error(
-      `${manifestPath} has no non-empty "${field}"` +
-        (manifestPath.endsWith('.json') ? '' : ` in [${table ?? 'package'}]`) +
-        '. Refusing to continue: an empty version would tag and publish the ' +
-        'wrong release.'
+      `${manifestPath} has no non-empty "${field}"${
+        manifestPath.endsWith('.json') ? '' : ` in [${table ?? 'package'}]`
+      }. Refusing to continue: an empty version would tag and publish the ` +
+        `wrong release.`
     );
   }
 

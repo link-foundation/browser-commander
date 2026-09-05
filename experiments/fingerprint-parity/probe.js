@@ -49,7 +49,9 @@ async function collectBrowserCommanderEnvironmentReport() {
 
   const isNativeFunction = (fn) => {
     try {
-      return /\{\s*\[native code\]\s*\}/u.test(Function.prototype.toString.call(fn));
+      return /\{\s*\[native code\]\s*\}/u.test(
+        Function.prototype.toString.call(fn)
+      );
     } catch (error) {
       return `error:${String((error && error.message) || error)}`;
     }
@@ -166,9 +168,20 @@ async function collectBrowserCommanderEnvironmentReport() {
       [
         'Screen.prototype',
         Screen.prototype,
-        ['width', 'height', 'availWidth', 'availHeight', 'colorDepth', 'pixelDepth'],
+        [
+          'width',
+          'height',
+          'availWidth',
+          'availHeight',
+          'colorDepth',
+          'pixelDepth',
+        ],
       ],
-      ['WebGLRenderingContext.prototype', WebGLRenderingContext.prototype, ['getParameter']],
+      [
+        'WebGLRenderingContext.prototype',
+        WebGLRenderingContext.prototype,
+        ['getParameter'],
+      ],
     ];
     const result = {};
     for (const [label, target, keys] of groups) {
@@ -203,9 +216,11 @@ async function collectBrowserCommanderEnvironmentReport() {
       type: mimeType.type,
     })),
     pluginsIsPluginArray:
-      Object.prototype.toString.call(navigator.plugins) === '[object PluginArray]',
+      Object.prototype.toString.call(navigator.plugins) ===
+      '[object PluginArray]',
     mimeTypesIsMimeTypeArray:
-      Object.prototype.toString.call(navigator.mimeTypes) === '[object MimeTypeArray]',
+      Object.prototype.toString.call(navigator.mimeTypes) ===
+      '[object MimeTypeArray]',
   }));
 
   record('screen', () => ({
@@ -280,7 +295,9 @@ async function collectBrowserCommanderEnvironmentReport() {
       timezoneOffsetJanuary: new Date(Date.UTC(2020, 0, 1)).getTimezoneOffset(),
       timezoneOffsetJuly: new Date(Date.UTC(2020, 6, 1)).getTimezoneOffset(),
       fixedDateString: new Date(Date.UTC(2020, 0, 1, 12)).toString(),
-      fixedDateLocaleString: new Date(Date.UTC(2020, 0, 1, 12)).toLocaleString(),
+      fixedDateLocaleString: new Date(
+        Date.UTC(2020, 0, 1, 12)
+      ).toLocaleString(),
       supportedLocalesEnUs: Intl.DateTimeFormat.supportedLocalesOf(['en-US']),
     };
   });
@@ -348,7 +365,8 @@ async function collectBrowserCommanderEnvironmentReport() {
     const widths = {};
     for (const family of families) {
       context.font = `16px "${family}", monospace`;
-      widths[family] = Math.round(context.measureText('mmmmmmmmmmlli').width * 100) / 100;
+      widths[family] =
+        Math.round(context.measureText('mmmmmmmmmmlli').width * 100) / 100;
     }
     return {
       widths,
@@ -386,7 +404,9 @@ async function collectBrowserCommanderEnvironmentReport() {
   record('webgl', () => {
     const canvas = document.createElement('canvas');
     const collect = (contextName) => {
-      const gl = canvas.getContext(contextName, { failIfMajorPerformanceCaveat: false });
+      const gl = canvas.getContext(contextName, {
+        failIfMajorPerformanceCaveat: false,
+      });
       if (!gl) {
         return null;
       }
@@ -416,7 +436,9 @@ async function collectBrowserCommanderEnvironmentReport() {
           continue;
         }
         const value = gl.getParameter(gl[name]);
-        parameters[name] = ArrayBuffer.isView(value) ? Array.from(value) : value;
+        parameters[name] = ArrayBuffer.isView(value)
+          ? Array.from(value)
+          : value;
       }
       return {
         vendor: gl.getParameter(gl.VENDOR),
@@ -438,7 +460,8 @@ async function collectBrowserCommanderEnvironmentReport() {
   });
 
   await recordAsync('audio', async () => {
-    const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const OfflineContext =
+      window.OfflineAudioContext || window.webkitOfflineAudioContext;
     if (!OfflineContext) {
       return null;
     }
@@ -544,7 +567,9 @@ async function collectBrowserCommanderEnvironmentReport() {
 
   record('connection', () => {
     const connection =
-      navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      navigator.connection ||
+      navigator.mozConnection ||
+      navigator.webkitConnection;
     if (!connection) {
       return null;
     }
@@ -577,7 +602,9 @@ async function collectBrowserCommanderEnvironmentReport() {
     const voices = speechSynthesis.getVoices();
     return {
       count: voices.length,
-      names: voices.map((voice) => `${voice.name}|${voice.lang}|${voice.default}`).sort(),
+      names: voices
+        .map((voice) => `${voice.name}|${voice.lang}|${voice.default}`)
+        .sort(),
     };
   });
 
@@ -602,14 +629,16 @@ async function collectBrowserCommanderEnvironmentReport() {
 
   record('nativeFunctions', () => {
     const targets = {
-      'navigator.permissions.query': navigator.permissions && navigator.permissions.query,
+      'navigator.permissions.query':
+        navigator.permissions && navigator.permissions.query,
       'navigator.plugins.item': navigator.plugins.item,
       'navigator.mediaDevices.enumerateDevices':
         navigator.mediaDevices && navigator.mediaDevices.enumerateDevices,
       'HTMLCanvasElement.toDataURL': HTMLCanvasElement.prototype.toDataURL,
       'CanvasRenderingContext2D.getImageData':
         CanvasRenderingContext2D.prototype.getImageData,
-      'WebGLRenderingContext.getParameter': WebGLRenderingContext.prototype.getParameter,
+      'WebGLRenderingContext.getParameter':
+        WebGLRenderingContext.prototype.getParameter,
       'Function.prototype.toString': Function.prototype.toString,
       'Object.getOwnPropertyDescriptor': Object.getOwnPropertyDescriptor,
       'Reflect.get': Reflect.get,
@@ -630,15 +659,21 @@ async function collectBrowserCommanderEnvironmentReport() {
     const contentWindow = frame.contentWindow;
     const measurement = {
       hasContentWindow: Boolean(contentWindow),
-      webdriver: contentWindow ? (contentWindow.navigator.webdriver ?? null) : null,
+      webdriver: contentWindow
+        ? (contentWindow.navigator.webdriver ?? null)
+        : null,
       hardwareConcurrency: contentWindow
         ? contentWindow.navigator.hardwareConcurrency
         : null,
-      languages: contentWindow ? Array.from(contentWindow.navigator.languages || []) : null,
+      languages: contentWindow
+        ? Array.from(contentWindow.navigator.languages || [])
+        : null,
       platform: contentWindow ? contentWindow.navigator.platform : null,
       userAgent: contentWindow ? contentWindow.navigator.userAgent : null,
       hasChrome: contentWindow ? 'chrome' in contentWindow : null,
-      pluginsLength: contentWindow ? contentWindow.navigator.plugins.length : null,
+      pluginsLength: contentWindow
+        ? contentWindow.navigator.plugins.length
+        : null,
     };
     frame.remove();
     return measurement;
@@ -653,7 +688,9 @@ async function collectBrowserCommanderEnvironmentReport() {
     referrer: document.referrer,
     visibilityState: document.visibilityState,
     hasFocus: document.hasFocus(),
-    bodyClientHeightIsPositive: document.body ? document.body.clientHeight > 0 : null,
+    bodyClientHeightIsPositive: document.body
+      ? document.body.clientHeight > 0
+      : null,
   }));
 
   await recordAsync('webgpu', async () => {
@@ -682,7 +719,9 @@ async function collectBrowserCommanderEnvironmentReport() {
       }
     })(),
     indexedDbAvailable: typeof indexedDB !== 'undefined',
-    hasStorageEstimate: Boolean(navigator.storage && navigator.storage.estimate),
+    hasStorageEstimate: Boolean(
+      navigator.storage && navigator.storage.estimate
+    ),
   }));
 
   /**
@@ -715,7 +754,10 @@ async function collectBrowserCommanderEnvironmentReport() {
     try {
       const worker = new Worker(url);
       const result = await new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('worker timeout')), 5000);
+        const timer = setTimeout(
+          () => reject(new Error('worker timeout')),
+          5000
+        );
         worker.onmessage = (event) => {
           clearTimeout(timer);
           resolve(event.data);
@@ -774,7 +816,7 @@ async function collectBrowserCommanderEnvironmentReport() {
       return read;
     };
 
-    let stackTraceLimitIsDefault = null;
+    let stackTraceLimitIsDefault;
     try {
       stackTraceLimitIsDefault = Error.stackTraceLimit === 10;
     } catch {

@@ -86,10 +86,7 @@ const EXPECTATIONS = (report) => ({
     report?.userAgentData?.highEntropy?.uaFullVersion,
     '141.0.0.0',
   ],
-  'intl.dateTimeTimeZone': [
-    report?.intl?.dateTimeTimeZone,
-    PROFILE.timezoneId,
-  ],
+  'intl.dateTimeTimeZone': [report?.intl?.dateTimeTimeZone, PROFILE.timezoneId],
   'intl.dateTimeLocale': [report?.intl?.dateTimeLocale, PROFILE.locale],
   'screen.width': [report?.screen?.width, PROFILE.screen.width],
   'screen.height': [report?.screen?.height, PROFILE.screen.height],

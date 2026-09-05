@@ -12,7 +12,10 @@
 
 import { readFileSync, existsSync } from 'fs';
 
-import { loadCommandStream, loadLinoArguments } from '../../scripts/use-module.mjs';
+import {
+  loadCommandStream,
+  loadLinoArguments,
+} from '../../scripts/use-module.mjs';
 
 const { $ } = await loadCommandStream();
 const { makeConfig } = await loadLinoArguments();

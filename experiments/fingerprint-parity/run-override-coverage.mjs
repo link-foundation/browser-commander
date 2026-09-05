@@ -66,7 +66,10 @@ const TARGET = {
     colorDepth: 30,
     pixelDepth: 30,
   },
-  webgl: { unmaskedVendor: 'Intel Inc.', unmaskedRenderer: 'Intel Iris OpenGL' },
+  webgl: {
+    unmaskedVendor: 'Intel Inc.',
+    unmaskedRenderer: 'Intel Iris OpenGL',
+  },
   colorScheme: 'dark',
   reducedMotion: 'reduce',
   forcedColors: 'active',

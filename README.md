@@ -94,6 +94,31 @@ cd js && npm run docs:api
 cd rust && cargo doc --no-deps --all-features
 ```
 
+## Local Quality Gates
+
+The same checks CI runs are available as git pre-commit hooks, so a commit that
+would fail the pipeline fails on the machine that wrote it instead. Every hook in
+[`.pre-commit-config.yaml`](.pre-commit-config.yaml) runs the exact command its
+workflow runs, and `js/tests/unit/scripts/pre-commit-config.test.js` fails if the
+two ever drift apart.
+
+Install once per clone:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Run everything by hand, without committing:
+
+```bash
+pre-commit run --all-files
+```
+
+A hook only runs when a file it covers is staged: editing `python/` never waits
+for Clippy. A single slow hook can be skipped for one commit with
+`SKIP=rust-clippy git commit ...`, and CI will still run it.
+
 ## License
 
 [UNLICENSE](LICENSE)

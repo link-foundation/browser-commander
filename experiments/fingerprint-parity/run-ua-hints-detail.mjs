@@ -59,11 +59,11 @@ const CASES = [
     'accept-language-with-q-values',
     { userAgent: UA, acceptLanguage: 'de-DE,de;q=0.9,en;q=0.8' },
   ],
-  ['accept-language-plain-list', { userAgent: UA, acceptLanguage: 'de-DE,de,en' }],
   [
-    'accept-language-single-tag',
-    { userAgent: UA, acceptLanguage: 'de-DE' },
+    'accept-language-plain-list',
+    { userAgent: UA, acceptLanguage: 'de-DE,de,en' },
   ],
+  ['accept-language-single-tag', { userAgent: UA, acceptLanguage: 'de-DE' }],
   [
     'metadata-without-full-version',
     { userAgent: UA, userAgentMetadata: METADATA },

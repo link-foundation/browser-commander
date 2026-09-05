@@ -9,7 +9,9 @@
  * This script reports exactly what use-m hands back so the shape can be
  * inspected instead of guessed at.
  */
-const { use } = eval(await (await fetch('https://unpkg.com/use-m/use.js')).text());
+const { use } = eval(
+  await (await fetch('https://unpkg.com/use-m/use.js')).text()
+);
 
 const spec = process.argv[2] || 'command-stream';
 const mod = await use(spec);

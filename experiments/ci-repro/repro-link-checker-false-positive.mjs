@@ -41,21 +41,27 @@ function extractBrokenUrlsBefore(content) {
   let match;
   while ((match = urlPattern.exec(content)) !== null) {
     const url = match[1].trim();
-    if (url && !urls.includes(url)) urls.push(url);
+    if (url && !urls.includes(url)) {
+      urls.push(url);
+    }
   }
   const linePattern = /^\s*(?:\*|-)\s+.*?(https?:\/\/[^\s|)>\]]+)/gm;
   let lineMatch;
   while ((lineMatch = linePattern.exec(content)) !== null) {
     const url = lineMatch[1].trim().replace(/[.,;!?]+$/, '');
-    if (url && !urls.includes(url) && url.startsWith('http')) urls.push(url);
+    if (url && !urls.includes(url) && url.startsWith('http')) {
+      urls.push(url);
+    }
   }
   return urls;
 }
 
 console.log('before this pull request:');
-for (const url of extractBrokenUrlsBefore(REPORT))
+for (const url of extractBrokenUrlsBefore(REPORT)) {
   console.log(`  broken: ${url}`);
+}
 
 console.log('\nafter:');
-for (const { url, status } of extractRejectedLinks(REPORT))
+for (const { url, status } of extractRejectedLinks(REPORT)) {
   console.log(`  rejected [${status}]: ${url}`);
+}

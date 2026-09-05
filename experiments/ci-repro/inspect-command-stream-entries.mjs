@@ -18,13 +18,19 @@ const times = meta.time || {};
 /** Resolve the file `require('<pkg>')` would load, per package.json fields. */
 function requireEntry(manifest) {
   const exports = manifest.exports;
-  if (typeof exports === 'string') return exports;
+  if (typeof exports === 'string') {
+    return exports;
+  }
   if (exports && typeof exports === 'object') {
     const root = exports['.'] ?? exports;
-    if (typeof root === 'string') return root;
+    if (typeof root === 'string') {
+      return root;
+    }
     if (root && typeof root === 'object') {
       const target = root.require ?? root.node ?? root.default;
-      if (typeof target === 'string') return target;
+      if (typeof target === 'string') {
+        return target;
+      }
       if (target && typeof target === 'object') {
         return target.require ?? target.default ?? JSON.stringify(target);
       }

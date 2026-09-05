@@ -70,12 +70,12 @@ The document is archived at `../best-practices/CI-CD-BEST-PRACTICES.md` (469
 lines, 15 principles). A per-principle audit is pending. Principles already
 known to be violated:
 
-| #    | Principle                       | Status                                                                                                                                         |
-| ---- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| R-14 | §6 changeset versioning         | fixed — `49818b9` pins the formatter and removes the consumed changeset, `ec429c2` makes the Rust bump commit or fail                          |
-| R-15 | §7 fresh-merge validation       | fixed — `44192e3` validates the release commit in the job that creates it, which is the only place that ever sees it                           |
-| R-16 | §9 release automation           | fixed — `811d1dc` (RC-A guidance and real release notes), `ec429c2` (never publish an unrecorded version), `65698af` (`rust-v*` tag namespace) |
-| R-17 | The remaining twelve principles | open — audit pending in `../best-practices/`                                                                                                   |
+| #    | Principle                       | Status                                                                                                                                                                                                                                                                                                                                             |
+| ---- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R-14 | §6 changeset versioning         | fixed — `49818b9` pins the formatter and removes the consumed changeset, `ec429c2` makes the Rust bump commit or fail                                                                                                                                                                                                                              |
+| R-15 | §7 fresh-merge validation       | fixed — `44192e3` validates the release commit in the job that creates it, which is the only place that ever sees it                                                                                                                                                                                                                               |
+| R-16 | §9 release automation           | fixed — `811d1dc` (RC-A guidance and real release notes), `ec429c2` (never publish an unrecorded version), `65698af` (`rust-v*` tag namespace)                                                                                                                                                                                                     |
+| R-17 | The remaining twelve principles | done — all fifteen audited one by one in [`../best-practices/audit.md`](../best-practices/audit.md): nine already satisfied, #5 violated and fixed (`7eea70a`), #12 half-met and completed (`96dda92`), #13 not applicable (no Dockerfile anywhere in the repository), #14 satisfied with the pin refreshed to the documented `1.7.12` (`e8ccea5`) |
 
 ## E. The instruction that opened this pull request
 
@@ -108,7 +108,7 @@ are invisible, and fixing it makes the rest testable.
 | F-6 | Validate the release commit before pushing (`format:check` on touched files, in the release job)                                                                                    | RC-E                                     | all three release workflows                                         |
 | F-7 | Extend `js/tests/unit/scripts/` to cover the _release_ scripts, which are the untested half; consider the template's `cargo-lock` guard                                             | R-12, and the systemic cause of RC-B/C/G | `js/tests/unit/scripts/`, `.github/workflows/quality.yml`           |
 | F-8 | Template file-tree diff and upstream reports                                                                                                                                        | R-9–R-13, R-26                           | `../templates/`, upstream repositories                              |
-| F-9 | Per-principle best-practices audit                                                                                                                                                  | R-14–R-17                                | `../best-practices/`                                                |
+| F-9 | Per-principle best-practices audit                                                                                                                                                  | R-14–R-17                                | `../best-practices/audit.md` — done                                 |
 
 Each fix lands with a reproducing test written first. Two already exist and
 fail against the current code: `experiments/ci-repro/repro-command-stream-exit-code.mjs`

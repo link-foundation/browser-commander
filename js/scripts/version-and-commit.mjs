@@ -14,6 +14,8 @@
 
 import { readFileSync, appendFileSync, readdirSync } from 'fs';
 
+import { assertGeneratedFilesAreFormatted } from './check-release-format.mjs';
+
 import {
   loadCommandStream,
   loadLinoArguments,
@@ -204,6 +206,16 @@ async function main() {
     const newVersion = await getVersion();
     console.log(`New version: ${newVersion}`);
     setOutput('new_version', newVersion);
+
+    // Re-run the formatting gate over the files the bump just generated.
+    //
+    // The release commit is pushed with GITHUB_TOKEN, and a GITHUB_TOKEN push
+    // does not start a workflow run, so no job ever inspects what the bump
+    // wrote. `changeset version` once produced a CHANGELOG.md that Prettier
+    // rejects; main's format:check went red and stayed red, because the only
+    // runs that could have caught it were the ones the push never triggered.
+    // Checking here stops a malformed release commit before it lands.
+    await assertGeneratedFilesAreFormatted(() => $`npm run format:check`);
 
     // Check if there are changes to commit
     const statusResult = await $`git status --porcelain`.run({ capture: true });

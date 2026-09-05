@@ -230,6 +230,14 @@ async function main() {
     // Update version in Cargo.toml
     updateCargoToml(newVersion);
 
+    // Cargo.lock records the workspace member's own version, so a bump that
+    // touches only Cargo.toml leaves the two disagreeing. Every job that runs
+    // `cargo build --locked` on the release commit then fails with "the lock
+    // file needs to be updated but --locked was passed". `--workspace`
+    // rewrites only the member entry and leaves the dependency graph alone.
+    await $`cargo update --workspace`;
+    console.log(`Updated Cargo.lock to version ${newVersion}`);
+
     // Collect changelog fragments and consume them. Without the removal the
     // next release re-collects the same fragments and ships duplicate notes.
     const fragments = collectFragments();
@@ -240,8 +248,9 @@ async function main() {
       console.log('No changelog fragments found');
     }
 
-    // Stage the version bump, the changelog and the fragment deletions.
-    await $`git add -A Cargo.toml CHANGELOG.md changelog.d`;
+    // Stage the version bump, the lockfile, the changelog and the fragment
+    // deletions.
+    await $`git add -A Cargo.toml Cargo.lock CHANGELOG.md changelog.d`;
 
     // Check whether anything was actually staged. Branching on the output of
     // `git status --porcelain` rather than on the exit code of

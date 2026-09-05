@@ -1,29 +1,143 @@
 # Template file-tree comparison
 
-Repository: browser-commander @ b06c5ad
-Template link-foundation/js-ai-driven-development-pipeline-template @ 7ae16b0 (2026-09-03 20:04:47 +0000)
-Template link-foundation/python-ai-driven-development-pipeline-template @ 81c9786 (2026-09-04 02:55:52 +0700)
-Template link-foundation/rust-ai-driven-development-pipeline-template @ eb7e6c3 (2026-09-05 16:27:45 +0700)
+Issue #81 asks, verbatim: *"Use all the best practices from CI/CD templates (check full
+file tree to compare for all GitHub workflow and CI/CD scripts file)"* and *"We should
+compare all files, so we don't have more CI/CD errors in the future and reuse all the
+best practices from these templates."* This file is that comparison, with a decision
+recorded for every CI/CD-relevant path the templates have and this repository does not.
 
-## js template: paths present upstream, absent here
+| Tree | Revision | Committed |
+| --- | --- | --- |
+| browser-commander (this repository) | `f482314` | this pull request |
+| link-foundation/js-ai-driven-development-pipeline-template | `338fafa` | 2026-09-05 09:54:55 +0000 |
+| link-foundation/python-ai-driven-development-pipeline-template | `81c9786` | 2026-09-04 02:55:52 +0700 |
+| link-foundation/rust-ai-driven-development-pipeline-template | `4d444d9` | 2026-09-05 09:52:40 +0000 |
+
+The first revision of this file compared `b06c5ad` against js `7ae16b0` and rust
+`eb7e6c3`; both templates have moved since, so the lists below were regenerated against
+their current heads.
+
+## How the comparison is done
+
+The templates are single-language repositories: the package sits at the root, so their
+release helper is `scripts/version-and-commit.mjs`. This repository is a monorepo with
+`js/`, `python/` and `rust/` side by side, so the same helper is
+`js/scripts/version-and-commit.mjs`. A template path `p` therefore counts as **present**
+when this repository has either `p` or `<language>/p`:
+
+```python
+for p in template_paths:
+    if p in ours or f'{lang}/{p}' in ours:
+        continue          # present
+    absent.append(p)
 ```
-.changeset/README.md
-.changeset/config.json
+
+"CI/CD-relevant" narrows the absent list to `.github/`, `scripts/`, `docs/` outside the
+case studies, and root dotfiles - the files the issue asks about. Everything else
+(sources, tests, changelogs, the templates' own README) is in the raw lists at the end.
+
+| Template | Paths upstream | Absent here | Of those, CI/CD-relevant |
+| --- | ---: | ---: | ---: |
+| js | 377 | 334 | 38 |
+| python | 83 | 65 | 18 |
+| rust | 149 | 129 | 36 |
+
+## Gaps closed by this pull request
+
+Measured with the same rule against `b06c5ad` (the branch point) and the template heads
+above, so upstream drift cannot be mistaken for work done here:
+
+| Path | Template(s) | Closed by |
+| --- | --- | --- |
+| `.github/workflows/security.yml` | js, python, rust | dependency audits + CodeQL (best practice #7) |
+| `.github/zizmor.yml` | js, python, rust | workflow security audit (best practice #14) |
+| `.pre-commit-config.yaml` | python, rust | local gates that mirror CI (best practice #8) |
+| `scripts/audit_dependencies.py` | python | `python-audit` job in `security.yml` |
+| `scripts/debug-print.mjs` | js | verbose tracing, off by default |
+| `scripts/use-module.mjs` | js | bounded use-m CDN loader |
+
+One path moved the other way. `.husky/pre-commit` is present in the js template and was
+present here at `b06c5ad`; this pull request deleted it. In the template husky works,
+because the package *is* the repository root and `.git` is right there. In this monorepo
+the package is `js/`, npm runs `prepare` with the package directory as the working
+directory, and husky refuses both ways out of it. Its `bin.js` returns the string
+`.. not allowed` for a path that climbs out of the package directory, and
+`.git can't be found` when the directory it is pointed at has no repository beside it,
+so the hook was never installed and `husky || true` hid the failure. See RC-14 in
+`../analysis/root-causes.md`. The replacement is `.pre-commit-config.yaml`, which the
+python and rust templates already use and which can also gate Python and Rust.
+
+## Decisions for the CI/CD-relevant paths still absent
+
+### Already covered here under a different path (no action)
+
+| Template path(s) | Equivalent in this repository |
+| --- | --- |
+| `.github/workflows/release.yml` (js, python, rust) | `.github/workflows/js.yml`, `python.yml`, `rust.yml` - one per language, each carrying the same detect-changes / lint / test / release jobs |
+| `.github/workflows/workflows.yml` (js, python, rust) | `.github/workflows/ci-policy.yml`, which runs the same `docker://rhysd/actionlint:1.7.7` and `zizmorcore/zizmor-action@v0.6.2` jobs plus this repository's own `check-ci-workflows.mjs` policy |
+| `scripts/check-version.mjs` (js), `scripts/check-version-modification.rs` (rust) | `scripts/check-version-modification.mjs`, wired into `quality.yml` for all three languages at once |
+| `scripts/check-release-needed.mjs` (js), `.rs` (rust), `scripts/detect-code-changes.rs` (rust) | `scripts/detect-code-changes.mjs` + the `detect-changes` job in each language workflow |
+| `scripts/check-file-size.rs` (rust), `scripts/check-crate-size.rs` (rust) | `scripts/check-file-line-limits.sh` (repository-wide), `rust/scripts/check-file-size.mjs`, `python/scripts/check_file_size.py` |
+| `scripts/check-web-archive.test.mjs` + `scripts/fixtures/lychee-report.md` (rust) | `js/tests/unit/scripts/check-web-archive.test.js`, which pins the same behaviour against the report from run 33959793880 |
+| `scripts/check_web_archive.py` (python) | `scripts/check-web-archive.mjs`, used by `links.yml` for the whole repository |
+| `scripts/bump-version.rs`, `get-version.rs`, `get-bump-type.rs`, `version-and-commit.rs`, `collect-changelog.rs`, `create-github-release.rs`, `publish-crate.rs`, `rust-paths.rs`, `git-config.rs` | `rust/scripts/*.mjs` - the same steps, written in Node rather than `rust-script`, so no toolchain install is needed to run them |
+| `scripts/install-rust-script.sh`, `scripts/test-scripts.sh` (rust) | not needed: the rust helpers here are `.mjs`, covered by `repo-scripts-lint` and by the js unit tests |
+| `scripts/bump_version.py`, `format_release_notes.py`, `validate_changeset.py`, `create_manual_changeset.py`, `release_naming.py`, `publish_to_pypi.py` (python) | `python/scripts/version_and_commit.py`, `create_github_release.py`, `read_manifest.py` and the `auto-release` / `manual-release` jobs in `python.yml` |
+| `scripts/check-changesets.mjs`, `format-release-notes-helpers.mjs`, `release-naming.mjs` (and `release-naming.rs` in the rust template), `package-info.mjs`, `js-paths.mjs`, `sanitize-npm-userconfig.mjs`, `publish-retry.mjs`, `publish-failure-classifier.mjs` (js) | `js/scripts/validate-changeset.mjs`, `format-release-notes.mjs`, `format-github-release.mjs`, `read-manifest.mjs`, `clean-npm-config.mjs`, and the retry loop inside `js/scripts/publish-to-npm.mjs` (`MAX_RETRIES`, `RETRY_DELAY`) |
+| `.ruff.toml` (python) | `[tool.ruff]` in `python/pyproject.toml` - same settings, one manifest |
+| `.prettierignore` at the root (js) | `js/.prettierignore`; `.prettierrc` was moved to the root by this pull request so the root files are formatted by the same configuration |
+| `docs/CONTRIBUTING.md`, `docs/BEST-PRACTICES.md` (js) | `README.md` (the new "Local Quality Gates" section) and `dev/log/issues/81/pulls/82/research/CI-CD-BEST-PRACTICES.md` |
+| `docs/api.md`, `docs/index.md`, `docs/conf.py`, `docs/requirements.txt` (python) | `docs.yml` validates the documentation this repository actually publishes; there is no Sphinx site here |
+| `scripts/check-mjs-syntax.sh` (js) | superseded: `repo-scripts-lint` runs ESLint over `scripts/`, `experiments/` and `rust/scripts/`, and parsing every file is a strict superset of `node --check` |
+
+### Not applicable to this repository
+
+| Template path(s) | Why |
+| --- | --- |
+| `.github/actions/publish-dockerhub/action.yml`, `.github/actions/setup-buildx-resilient/action.yml`, `scripts/check-docker-build.mjs`, `scripts/check-docker-publish.mjs` | no Dockerfile and no image is published here, so best practice #13 has nothing to apply to |
+| `.github/workflows/example-app.yml`, `scripts/update-preview-images.mjs`, `docs/screenshots/example-app/*.png` (5 files) | the template ships a demo application; this repository's examples are exercised by `js/examples` and the parity suite |
+| `.github/workflows/desktop-release.yml`, `scripts/package-desktop.sh`, `scripts/desktop-release-resolve.sh`, `docs/download/index.html`, `docs/screenshots/desktop-download-page.png` (rust) | there is no desktop artifact to package |
+| `.github/actionlint.yaml` (rust) | it exists to silence "unknown runner label" reports for `macos-15-intel` and `windows-11-arm`. This repository uses only `ubuntu-latest`, `macos-latest` and `windows-latest`, all of which actionlint 1.7.7 knows, and the actionlint job is green without it. Adding it would suppress nothing and could hide a future typo |
+| `scripts/check-cargo-lock.rs`, `check-changelog-fragment.rs`, `create-changelog-fragment.rs` (rust) | the changelog here is produced by the `changelog` job in `rust.yml` from commit messages, not from fragment files |
+| `scripts/bootstrap-dependencies.mjs`, `scripts/run-command.mjs` (js) | both exist to make the templates' seven use-m-loading release scripts fail loudly; this repository loads use-m in one place, `scripts/use-module.mjs`, which already bounds and reports the load |
+| `docs/ci-cd/troubleshooting.md` (rust) | the same ground is covered here by the case studies under `docs/case-studies/` and by `dev/log/issues/81/pulls/82/analysis/root-causes.md`, which record the failures this repository actually had |
+| `docs/preview-regeneration.md` (python) | documents the preview-image flow that is not applicable here |
+
+### Genuine gaps, adopted by this pull request
+
+| Template path(s) | What it fixes |
+| --- | --- |
+| `scripts/run-with-budget-warning.sh` (js, python, rust) | a step that owns its deadline. A job killed by `timeout-minutes` is reported by GitHub as **cancelled**, not failed, so an overrun does not read as a failure and cannot name the budget it blew |
+| `scripts/check-pipeline-status.sh` (js, python, rust) | turns a cancelled required job into a failure on the default branch, where nothing else would surface it |
+| `docs/CI-TIMEOUT-BUDGETS.md` (js) | records which step owns which budget, so the numbers are reviewable rather than folklore |
+
+Both scripts exist to remove a false negative, which is what issue #81 is about, so they
+are in scope for this pull request. The follow-up commit adopts them; see
+`../analysis/root-causes.md` (RC-16) for the failure mode and the reproduction.
+
+### Genuine gaps, deliberately not adopted here
+
+| Template path(s) | Decision |
+| --- | --- |
+| `scripts/smoke-test-package.mjs`, `scripts/wait-for-npm.mjs` (js), `scripts/smoke_test_published_package.py` (python), `scripts/smoke-test-published-crate.rs`, `scripts/wait-for-crate.rs` (rust) | a post-publish smoke test is a real gate this repository lacks, but it can only be exercised by an actual release to npm, PyPI and crates.io. Adding three jobs that cannot be run before merge would put unverified red jobs into the pipeline this pull request exists to make trustworthy. Recorded as a follow-up rather than guessed at |
+| `scripts/land-via-pull-request.mjs`, `scripts/push-main-with-rebase-retry.mjs`, `scripts/push-failure-classifier.mjs` (js) | the release jobs here push the version commit to `main` after a `git fetch` + `git rebase` (`js/scripts/version-and-commit.mjs:180`, `python/scripts/version_and_commit.py:166`) with no retry, and `rust/scripts/version-and-commit.mjs:337` pushes without rebasing. Losing the race, or a ruleset that rejects direct pushes, fails the job **loudly** - it is a flake, not a false positive or a false negative, so it is outside the scope of this issue |
+| `scripts/lint-changed-lines.mjs`, `scripts/lint.mjs` (js) | annotates warnings only on lines the branch changed. Useful noise control (this repository currently has 10 ESLint warnings in `scripts/`), but it narrows what a run reports, which is the opposite direction from "find every warning" - deliberately left for a separate change |
+
+## Raw lists
+
+Every template path absent here, including the non-CI/CD ones, so the comparison can be
+re-run and diffed later.
+
+### js template: paths present upstream, absent here (334)
+
+```
 .github/actions/publish-dockerhub/action.yml
 .github/actions/setup-buildx-resilient/action.yml
 .github/workflows/example-app.yml
 .github/workflows/release.yml
-.github/workflows/security.yml
 .github/workflows/workflows.yml
-.github/zizmor.yml
 .husky/pre-commit
-.jscpd.json
-.prettierignore
-.prettierrc
-CHANGELOG.md
 bin/example-package-name.js
-bunfig.toml
-deno.json
 deno.lock
 docs/BEST-PRACTICES.md
 docs/CI-TIMEOUT-BUDGETS.md
@@ -256,7 +370,6 @@ docs/screenshots/example-app/example-app-ru-dark.png
 docs/screenshots/example-app/example-app-ru-light.png
 docs/screenshots/example-app/example-app.png
 eslint-rules/no-changelog-comments.js
-eslint.config.js
 examples/basic-usage.js
 examples/universal-app/README.md
 examples/universal-app/capacitor.config.json
@@ -281,9 +394,8 @@ experiments/test-format-minor-changes.mjs
 experiments/test-format-no-hash.mjs
 experiments/test-format-patch-changes.mjs
 experiments/test-issue75-buildx-mirror-fallback.sh
-package-lock.json
-package.json
-scripts/changeset-version.mjs
+experiments/use-m-cdn-unreachable.mjs
+scripts/bootstrap-dependencies.mjs
 scripts/check-changesets.mjs
 scripts/check-docker-build.mjs
 scripts/check-docker-publish.mjs
@@ -291,38 +403,25 @@ scripts/check-mjs-syntax.sh
 scripts/check-pipeline-status.sh
 scripts/check-release-needed.mjs
 scripts/check-version.mjs
-scripts/create-github-release.mjs
-scripts/create-manual-changeset.mjs
-scripts/debug-print.mjs
-scripts/format-github-release.mjs
 scripts/format-release-notes-helpers.mjs
-scripts/format-release-notes.mjs
-scripts/instant-version-bump.mjs
 scripts/js-paths.mjs
 scripts/land-via-pull-request.mjs
 scripts/lint-changed-lines.mjs
 scripts/lint.mjs
-scripts/merge-changesets.mjs
-scripts/npm-registry.mjs
 scripts/package-info.mjs
 scripts/publish-failure-classifier.mjs
 scripts/publish-retry.mjs
-scripts/publish-to-npm.mjs
 scripts/push-failure-classifier.mjs
 scripts/push-main-with-rebase-retry.mjs
 scripts/release-naming.mjs
 scripts/run-command.mjs
 scripts/run-with-budget-warning.sh
 scripts/sanitize-npm-userconfig.mjs
-scripts/setup-npm.mjs
 scripts/smoke-test-package.mjs
 scripts/update-preview-images.mjs
-scripts/use-module.mjs
-scripts/validate-changeset.mjs
-scripts/version-and-commit.mjs
 scripts/wait-for-npm.mjs
 src/index.d.ts
-src/index.js
+tests/bootstrap-dependencies.test.js
 tests/bot-commit-attribution.test.js
 tests/check-changesets.test.js
 tests/check-file-line-limits.test.js
@@ -368,13 +467,11 @@ tests/workflow-reliability.test.js
 tests/workflows-lint.test.js
 ```
 
-## python template: paths present upstream, absent here
+### python template: paths present upstream, absent here (65)
+
 ```
 .github/workflows/release.yml
-.github/workflows/security.yml
 .github/workflows/workflows.yml
-.github/zizmor.yml
-.pre-commit-config.yaml
 .ruff.toml
 CHANGELOG.md
 CONTRIBUTING.md
@@ -415,25 +512,18 @@ docs/index.md
 docs/preview-regeneration.md
 docs/requirements.txt
 examples/basic_usage.py
-pyproject.toml
-scripts/audit_dependencies.py
 scripts/bump_version.py
 scripts/check-pipeline-status.sh
-scripts/check_file_size.py
 scripts/check_web_archive.py
-scripts/create_github_release.py
 scripts/create_manual_changeset.py
-scripts/detect_code_changes.py
 scripts/format_release_notes.py
 scripts/publish_to_pypi.py
 scripts/release_naming.py
 scripts/run-with-budget-warning.sh
 scripts/smoke_test_published_package.py
 scripts/validate_changeset.py
-scripts/version_and_commit.py
 src/my_package/__init__.py
 src/my_package/py.typed
-tests/__init__.py
 tests/test_check_file_size.py
 tests/test_check_web_archive.py
 tests/test_create_github_release.py
@@ -447,22 +537,15 @@ tests/test_smoke_test_published_package.py
 tests/test_workflows.py
 ```
 
-## rust template: paths present upstream, absent here
+### rust template: paths present upstream, absent here (129)
+
 ```
 .github/actionlint.yaml
 .github/actions/setup-buildx-resilient/action.yml
 .github/workflows/desktop-release.yml
 .github/workflows/release.yml
-.github/workflows/security.yml
 .github/workflows/workflows.yml
-.github/zizmor.yml
-.pre-commit-config.yaml
-CHANGELOG.md
 CONTRIBUTING.md
-Cargo.lock
-Cargo.toml
-changelog.d/20260905_093000_scope_crates_io_token_to_publish_steps.md
-changelog.d/README.md
 docs/case-studies/issue-11/README.md
 docs/case-studies/issue-11/analysis-crates-io.md
 docs/case-studies/issue-11/analysis-set-output.md
@@ -560,10 +643,9 @@ scripts/release-naming.rs
 scripts/run-with-budget-warning.sh
 scripts/rust-paths.rs
 scripts/smoke-test-published-crate.rs
+scripts/test-scripts.sh
 scripts/version-and-commit.rs
 scripts/wait-for-crate.rs
-src/lib.rs
-src/main.rs
 src/sum.rs
 tests/integration/mod.rs
 tests/integration/sum.rs
@@ -576,6 +658,7 @@ tests/unit/ci-cd/issue_141.rs
 tests/unit/ci-cd/issue_143.rs
 tests/unit/ci-cd/issue_147.rs
 tests/unit/ci-cd/issue_149.rs
+tests/unit/ci-cd/issue_150.rs
 tests/unit/ci-cd/mod.rs
 tests/unit/ci-cd/release_naming_tests.rs
 tests/unit/ci-cd/version_and_commit_behind_check.rs
@@ -587,4 +670,3 @@ tests/unit/ci-cd/workspace_manifest_resolution.rs
 tests/unit/mod.rs
 tests/unit/sum.rs
 ```
-

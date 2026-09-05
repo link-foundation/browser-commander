@@ -257,10 +257,19 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Run tests
-        run: cargo test --all-features --verbose
+        shell: bash
+        # The budget, not `timeout-minutes`, owns this step's deadline: a job
+        # killed by `timeout-minutes` is reported as cancelled rather than
+        # failed. See docs/CI-TIMEOUT-BUDGETS.md.
+        run: >-
+          bash ../scripts/run-with-budget-warning.sh 480 "Rust test suite"
+          cargo test --all-features --verbose
 
       - name: Run doc tests
-        run: cargo test --doc --verbose
+        shell: bash
+        run: >-
+          bash ../scripts/run-with-budget-warning.sh 180 "Rust doc tests"
+          cargo test --doc --verbose
 
   # === OPENSSL-FREE BUILD ===
   # Regression guard for issue #77: taking `fantoccini` with its default
@@ -356,7 +365,13 @@ jobs:
           tool: cargo-llvm-cov
 
       - name: Generate code coverage
-        run: cargo llvm-cov --all-features --lcov --output-path lcov.info
+        shell: bash
+        # The budget, not `timeout-minutes`, owns this step's deadline: a job
+        # killed by `timeout-minutes` is reported as cancelled rather than
+        # failed. See docs/CI-TIMEOUT-BUDGETS.md.
+        run: >-
+          bash ../scripts/run-with-budget-warning.sh 480 "Rust code coverage"
+          cargo llvm-cov --all-features --lcov --output-path lcov.info
 
       # Gate on the token rather than uploading unconditionally: without it the
       # action fails on forks, which have no secrets. With the token present an
@@ -617,3 +632,50 @@ jobs:
           node scripts/create-github-release.mjs \
             --release-version "${{ steps.version.outputs.new_version }}" \
             --repository "${{ github.repository }}"
+
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so on the default branch the
+  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs:
+      - detect-changes
+      - changelog
+      - lint
+      - test
+      - no-openssl
+      - coverage
+      - build
+      - auto-release
+      - manual-release
+    # A status function is required here, or the gate would inherit the implicit
+    # "every dependency succeeded" condition and be skipped in exactly the runs
+    # it exists to report. `!cancelled()` keeps it out of a superseded run,
+    # where every job is cancelled and there is nothing to report.
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

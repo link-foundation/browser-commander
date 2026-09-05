@@ -44,6 +44,18 @@ function workflow({ on = 'push', preamble = '', job = 'test', steps }) {
     '    steps:',
     '      - uses: actions/checkout@v6',
     steps,
+    // Every workflow has to end in the gate that reads the other jobs'
+    // results, so the scaffolding carries one; the gate's own tests are in
+    // ci-timeout-budgets.test.js.
+    '  pipeline-status:',
+    '    runs-on: ubuntu-latest',
+    '    timeout-minutes: 5',
+    '    concurrency:',
+    '      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status',
+    '      cancel-in-progress: true',
+    `    needs: [${job}]`,
+    '    steps:',
+    '      - run: bash scripts/check-pipeline-status.sh',
     '',
   ]
     .filter((section) => section !== '')
@@ -98,7 +110,10 @@ jobs:
           file: coverage.xml
 `;
 
-    assert.equal(countFailures(content), 7);
+    // The eighth is the missing pipeline-status gate: with no job reading the
+    // other jobs' results, a check killed by timeout-minutes is reported as
+    // cancelled and fails nothing.
+    assert.equal(countFailures(content), 8);
   });
 
   it('rejects untrusted expressions interpolated into run bodies', () => {
@@ -186,6 +201,34 @@ jobs:
     const content = workflow({
       steps: `      - run: grep '^name' Cargo.toml | head -1 | cut -d'"' -f2`,
     });
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects a workflow with no pipeline-status gate', () => {
+    // A job killed by timeout-minutes is reported as cancelled, and a run whose
+    // only casualty is a cancelled job is filed under cancelled too, so without
+    // this gate the overrun fails nothing.
+    const content = workflow({
+      steps: '      - run: npm ci --ignore-scripts',
+    }).replace(/ {2}pipeline-status:[\s\S]*$/, '');
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects a gate that has stopped watching a job', () => {
+    const content = `${workflow({
+      steps: '      - run: npm ci --ignore-scripts',
+    })}
+  drifted:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: \${{ github.workflow }}-\${{ github.ref }}-drifted
+      cancel-in-progress: true
+    steps:
+      - run: echo drifted
+`;
 
     assert.equal(countFailures(content), 1);
   });

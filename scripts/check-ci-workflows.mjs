@@ -13,6 +13,9 @@ import { pathToFileURL } from 'url';
 
 const WORKFLOW_DIR = '.github/workflows';
 
+// The job that reads every other job's result; see docs/CI-TIMEOUT-BUDGETS.md.
+const PIPELINE_STATUS_JOB = 'pipeline-status';
+
 const DISALLOWED_PATTERNS = [
   {
     pattern: /\bactions\/checkout@v[1-5]\b/,
@@ -220,6 +223,92 @@ function checkManifestScraping(filePath, lines) {
   return failures;
 }
 
+/**
+ * Read a job's `needs:`, in either the inline or the list spelling.
+ *
+ * @param {string[]} block
+ * @returns {string[]}
+ */
+function readJobNeeds(block) {
+  const needsIndex = block.findIndex((line) => /^ {4}needs:/.test(line));
+
+  if (needsIndex === -1) {
+    return [];
+  }
+
+  const inline = /^ {4}needs:\s*\[([^\]]*)\]\s*$/.exec(block[needsIndex]);
+
+  if (inline) {
+    return inline[1]
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean);
+  }
+
+  const needs = [];
+
+  for (const line of block.slice(needsIndex + 1)) {
+    const item = /^ {6}- ([A-Za-z0-9_-]+)\s*$/.exec(line);
+
+    if (!item) {
+      break;
+    }
+
+    needs.push(item[1]);
+  }
+
+  return needs;
+}
+
+/**
+ * Require the gate that turns a cancelled job into a visible failure.
+ *
+ * GitHub reports a job killed by its `timeout-minutes` as *cancelled*, not
+ * *failed*, and a run whose only casualty is a cancelled job carries the
+ * conclusion `cancelled` as well - so without a job that reads the results of
+ * all the others, an overrun leaves no red check anywhere. The second half of
+ * the rule is the one that catches drift: a gate that has stopped watching a
+ * job is worth no more than no gate at all.
+ *
+ * @param {string} filePath
+ * @param {string[]} lines
+ * @param {number[]} jobStarts
+ * @param {number} jobsLineIndex
+ * @returns {number}
+ */
+function checkPipelineStatusGate(filePath, lines, jobStarts, jobsLineIndex) {
+  let failures = 0;
+  const jobNames = jobStarts.map((start) => lines[start].trim().slice(0, -1));
+  const gateIndex = jobNames.indexOf(PIPELINE_STATUS_JOB);
+
+  if (gateIndex === -1) {
+    report(
+      filePath,
+      jobsLineIndex + 1,
+      `Add a ${PIPELINE_STATUS_JOB} job that needs every other job; a job killed by timeout-minutes is reported as cancelled rather than failed, so nothing else fails the run.`
+    );
+    return failures + 1;
+  }
+
+  const start = jobStarts[gateIndex];
+  const end = jobStarts[gateIndex + 1] ?? lines.length;
+  const watched = new Set(readJobNeeds(lines.slice(start, end)));
+  const unwatched = jobNames.filter(
+    (jobName) => jobName !== PIPELINE_STATUS_JOB && !watched.has(jobName)
+  );
+
+  if (unwatched.length > 0) {
+    report(
+      filePath,
+      start + 1,
+      `Job ${PIPELINE_STATUS_JOB} does not need ${unwatched.join(', ')}; a job the gate does not watch can be cancelled without failing the run.`
+    );
+    failures++;
+  }
+
+  return failures;
+}
+
 export function checkWorkflow(filePath) {
   const content = readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
@@ -383,6 +472,13 @@ export function checkWorkflow(filePath) {
         failures++;
       }
     }
+
+    failures += checkPipelineStatusGate(
+      filePath,
+      lines,
+      jobStarts,
+      jobsLineIndex
+    );
   }
 
   for (const { pattern, replacement } of DISALLOWED_PATTERNS) {

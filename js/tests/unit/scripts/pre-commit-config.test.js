@@ -16,15 +16,11 @@
 
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = path.resolve(
-  fileURLToPath(new URL('.', import.meta.url)),
-  '../../../..'
-);
-const CONFIG_PATH = path.join(REPO_ROOT, '.pre-commit-config.yaml');
+import { repoPath } from '../../helpers/repo.js';
+
+const CONFIG_PATH = repoPath('.pre-commit-config.yaml');
 
 /**
  * Every local hook, mapped to the workflow step it has to mirror.
@@ -123,7 +119,7 @@ const config = readFileSync(CONFIG_PATH, 'utf-8');
 const localHooks = readLocalHooks(config);
 
 const workflow = (name) =>
-  readFileSync(path.join(REPO_ROOT, '.github', 'workflows', name), 'utf-8');
+  readFileSync(repoPath('.github', 'workflows', name), 'utf-8');
 
 describe('local hooks run the commands CI runs', () => {
   for (const { id, workflow: file, command } of MIRRORED_COMMANDS) {
@@ -172,7 +168,7 @@ describe('local hooks run the commands CI runs', () => {
 
 describe('the previous hook wiring is gone', () => {
   const manifest = JSON.parse(
-    readFileSync(path.join(REPO_ROOT, 'js', 'package.json'), 'utf-8')
+    readFileSync(repoPath('js', 'package.json'), 'utf-8')
   );
 
   it('installs no git hook through a masked command', () => {
@@ -190,6 +186,6 @@ describe('the previous hook wiring is gone', () => {
     assert.equal(manifest.devDependencies.husky, undefined);
     assert.equal(manifest.devDependencies['lint-staged'], undefined);
     assert.equal(manifest['lint-staged'], undefined);
-    assert.ok(!existsSync(path.join(REPO_ROOT, 'js', '.husky')));
+    assert.ok(!existsSync(repoPath('js', '.husky')));
   });
 });

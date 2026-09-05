@@ -154,6 +154,52 @@ function checkRunBodyInjection(filePath, lines) {
   return failures;
 }
 
+/**
+ * Flag manifest fields scraped out of TOML with line-oriented text tools.
+ *
+ * `grep -Po '(?<=^version = ")[^"]*' pyproject.toml` is anchored to the line but
+ * blind to the table it sits in. pyproject.toml declares `version` under both
+ * [project] and [tool.scriv], and Cargo.toml repeats `name` under [[bin]] and
+ * [lib], so the same command emits one line per table. Two lines piped into
+ * $GITHUB_OUTPUT fail the step with "Unable to process file command 'output'
+ * successfully", which is what broke every Python release from 2026-08-02 on.
+ * `head -1` only hides the ambiguity behind table ordering, so the policy asks
+ * for the table-aware readers instead.
+ */
+function checkManifestScraping(filePath, lines) {
+  let failures = 0;
+  let runIndent = null;
+
+  for (const [index, line] of lines.entries()) {
+    const runStart = /^(\s*)(?:- )?run:\s*(.*)$/.exec(line);
+    if (runStart) {
+      runIndent = runStart[1].length;
+    } else if (runIndent !== null) {
+      const indent = line.length - line.trimStart().length;
+      if (line.trim() !== '' && indent <= runIndent) {
+        runIndent = null;
+      }
+    }
+
+    if (runIndent === null) continue;
+    if (line.trimStart().startsWith('#')) continue;
+
+    const manifest = /\b(pyproject\.toml|Cargo\.toml)\b/.exec(line);
+    if (!manifest) continue;
+    if (!/\b(grep|sed|awk|cut)\b/.test(line)) continue;
+    if (!/\b(version|name)\b/.test(line)) continue;
+
+    report(
+      filePath,
+      index + 1,
+      `Read ${manifest[1]} with scripts/read-manifest.mjs or python/scripts/read_manifest.py; a line-oriented grep/sed/awk is blind to the TOML table and matches every duplicate key.`
+    );
+    failures++;
+  }
+
+  return failures;
+}
+
 export function checkWorkflow(filePath) {
   const content = readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
@@ -226,6 +272,7 @@ export function checkWorkflow(filePath) {
   }
 
   failures += checkRunBodyInjection(filePath, lines);
+  failures += checkManifestScraping(filePath, lines);
 
   if (content.includes('codecov/codecov-action@v7')) {
     for (const [index, line] of lines.entries()) {

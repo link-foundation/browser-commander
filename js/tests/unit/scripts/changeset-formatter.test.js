@@ -5,8 +5,9 @@
  * @changesets/cli v3 formats the changelog it writes. With the default
  * `"format": "auto"`, @changesets/format walks `defaultDetectOrder` --
  * dprint, deno, oxfmt, biome, prettier -- and picks the first formatter whose
- * config file it finds. `js/deno.json` exists, so deno wins over the prettier
- * this package actually depends on. deno is the one entry in that table with
+ * config file it finds. `js/deno.json` existed -- orphaned configuration no
+ * workflow ever used -- so deno won over the prettier this package actually
+ * depends on. deno is the one entry in that table with
  * no `packageName`, so it is spawned straight off PATH with no existence
  * check and no npx fallback; GitHub's ubuntu-latest runner has no deno.
  *
@@ -40,8 +41,9 @@ describe('changesets formatter', () => {
     assert.notEqual(
       config.format,
       undefined,
-      'omitting `format` means "auto", which detects deno from js/deno.json ' +
-        'and then fails on a runner that has no deno binary'
+      'omitting `format` means "auto", which detects whichever formatter ' +
+        'config happens to sit beside package.json and then fails on a ' +
+        'runner that has no such binary'
     );
     assert.notEqual(config.format, 'auto', 'same as omitting it');
   });

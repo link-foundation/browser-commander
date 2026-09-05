@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - '.github/workflows/**'
+      - '.github/zizmor.yml'
       - 'scripts/check-ci-workflows.mjs'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - '.github/workflows/**'
+      - '.github/zizmor.yml'
       - 'scripts/check-ci-workflows.mjs'
   workflow_dispatch:
 
@@ -40,3 +42,49 @@ jobs:
 
       - name: Check workflows
         run: node scripts/check-ci-workflows.mjs
+
+  # The repository's own policy checker above encodes house rules; these two
+  # jobs cover what a general-purpose linter and a security auditor find. Both
+  # were absent, which is why 9 unquoted `>> $GITHUB_OUTPUT` redirects (SC2086)
+  # and 39 zizmor findings accumulated unnoticed.
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-actionlint
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # The Docker image bundles shellcheck and pyflakes, so this also lints
+      # every `run:` block. A native actionlint binary without shellcheck on
+      # PATH silently skips the shell checks and exits 0 - worth knowing when
+      # reproducing a failure locally:
+      #   docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
+      - uses: docker://rhysd/actionlint:1.7.7
+        with:
+          args: -color
+
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-zizmor
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # Annotations rather than SARIF: code scanning is not enabled on every
+      # fork of this repository, and the job should fail loudly either way.
+      - uses: zizmorcore/zizmor-action@v0.6.2
+        with:
+          advanced-security: false
+          annotations: true
+          config: .github/zizmor.yml
+          min-confidence: medium

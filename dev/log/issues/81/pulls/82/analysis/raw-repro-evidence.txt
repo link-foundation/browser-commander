@@ -1,0 +1,15 @@
+NODE v20.20.2
+  keys=["default"] typeof$=undefined
+NODE v22.21.1
+  keys=["default"] typeof$=undefined
+NODE v24.20.0
+  keys=["default","module.exports"] typeof$=undefined
+
+require.resolve target per command-stream version (node v20.20.2):
+  0.14.1 -> $.mjs
+  0.17.2 -> $.mjs
+  0.18.2 -> $.mjs
+  0.19.0 -> $.cjs
+  0.20.0 -> $.cjs
+  0.20.1 -> $.cjs
+  0.20.2 -> $.cjs

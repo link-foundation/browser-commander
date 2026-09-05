@@ -128,6 +128,13 @@ repos:
         files: ^(js|python|rust)/src/.*(fingerprint|init.payload|limitations).*
         pass_filenames: false
 
+      - id: required-docs
+        name: Required documents and shared README sections
+        entry: bash scripts/check-required-docs.sh
+        language: system
+        files: \.md$
+        pass_filenames: false
+
       - id: repo-scripts-lint
         name: ESLint (scripts outside js/)
         entry: node js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts

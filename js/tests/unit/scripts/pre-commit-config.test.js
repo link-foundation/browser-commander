@@ -71,6 +71,11 @@ const MIRRORED_COMMANDS = [
     command: 'bash scripts/check-shared-fingerprint-assets.sh',
   },
   {
+    id: 'required-docs',
+    workflow: 'quality.yml',
+    command: 'bash scripts/check-required-docs.sh',
+  },
+  {
     id: 'repo-scripts-lint',
     workflow: 'quality.yml',
     command:

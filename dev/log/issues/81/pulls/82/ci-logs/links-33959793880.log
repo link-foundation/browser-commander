@@ -1,0 +1,43 @@
+Check Links	Check broken links against Web Archive	﻿2026-09-05T10:07:47.1260174Z ##[group]Run node scripts/check-web-archive.mjs
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1260574Z ^[[36;1mnode scripts/check-web-archive.mjs^[[0m
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1299880Z shell: /usr/bin/bash -e {0}
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1300131Z env:
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1300318Z   GIT_CONFIG_COUNT: 1
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1300550Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1300863Z   GIT_CONFIG_VALUE_0: main
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1301099Z   LYCHEE_OUTPUT: lychee/out.md
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1301333Z ##[endgroup]
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1666342Z === Web Archive Fallback Check ===
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1666826Z 
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1668053Z Reading lychee output from: lychee/out.md
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1668472Z 
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1673729Z Found 2 broken URL(s). Checking Web Archive...
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1674247Z 
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.1674769Z Checking: https://github.com/microsoft/playwright/issues/35743
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:47.6430361Z   ✗ Not found in Web Archive
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.1436236Z Checking: https://docs.github.com/actions/security-guides/using-secrets-in-github-actions
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.4016373Z   ✗ Not found in Web Archive
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9019782Z 
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9020504Z === Web Archive Check Summary ===
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9020871Z 
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9021589Z ✗ 2 broken link(s) have NO Web Archive version:
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9022270Z   https://github.com/microsoft/playwright/issues/35743
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9023676Z   https://docs.github.com/actions/security-guides/using-secrets-in-github-actions
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9024374Z 
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9030066Z ##[error]Broken link detected: https://github.com/microsoft/playwright/issues/35743
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9032097Z No archived version was found in the Wayback Machine.
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9032594Z How to fix:
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9033784Z   1. Find an updated URL for the same or equivalent content and replace the link.
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9034619Z   2. Remove the link if the content is no longer relevant.
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9035496Z   3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9037691Z ##[error]Broken link detected: https://docs.github.com/actions/security-guides/using-secrets-in-github-actions
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9039359Z No archived version was found in the Wayback Machine.
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9039844Z How to fix:
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9040453Z   1. Find an updated URL for the same or equivalent content and replace the link.
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9041268Z   2. Remove the link if the content is no longer relevant.
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9042199Z   3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9043207Z all_archived=false
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9043436Z 
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9043848Z Action required: Fix or remove the broken links listed above.
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9044941Z For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+Check Links	Check broken links against Web Archive	2026-09-05T10:07:48.9088586Z ##[error]Process completed with exit code 1.

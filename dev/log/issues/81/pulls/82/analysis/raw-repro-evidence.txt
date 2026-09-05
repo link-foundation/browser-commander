@@ -1,15 +1,66 @@
-NODE v20.20.2
-  keys=["default"] typeof$=undefined
-NODE v22.21.1
-  keys=["default"] typeof$=undefined
-NODE v24.20.0
-  keys=["default","module.exports"] typeof$=undefined
+Evidence for "$ is not a function" (JS run 33920348338, Rust run 33920348349)
+Collected 2026-09-05T10:49:14Z on this branch. Every block names the exact
+command that produced it, so the measurement can be repeated.
 
-require.resolve target per command-stream version (node v20.20.2):
-  0.14.1 -> $.mjs
-  0.17.2 -> $.mjs
-  0.18.2 -> $.mjs
-  0.19.0 -> $.cjs
-  0.20.0 -> $.cjs
-  0.20.1 -> $.cjs
-  0.20.2 -> $.cjs
+==============================================================================
+1. What use-m hands back, per Node version
+   node experiments/ci-repro/repro-command-stream-dollar.mjs
+==============================================================================
+
+--- v20.20.2
+spec              : command-stream
+typeof module     : function
+module keys       : 32
+typeof module.$   : function
+typeof default.$  : function
+repro-ok
+RESULT: OK -> "repro-ok\n"
+
+--- v22.21.1
+spec              : command-stream
+typeof module     : function
+module keys       : 32
+typeof module.$   : function
+typeof default.$  : function
+repro-ok
+RESULT: OK -> "repro-ok\n"
+
+--- v24.20.0
+spec              : command-stream
+typeof module     : object
+module keys       : 2
+typeof module.$   : undefined
+typeof default.$  : function
+RESULT: REPRODUCED - $ is not a function
+
+The workflows request node-version: '24.x'. Node 23+ adds a synthetic
+'module.exports' named export to CommonJS namespaces that cjs-module-lexer
+cannot analyse (https://nodejs.org/api/esm.html#commonjs-namespaces); use-m
+only unwraps a namespace whose keys are all known metadata keys, so the extra
+key makes it hand back the un-unwrapped namespace and `{ $ }` is undefined.
+
+==============================================================================
+2. Which entry point require() picks, per published command-stream version
+   node experiments/ci-repro/inspect-command-stream-entries.mjs
+==============================================================================
+0.13.0     2026-06-11T00:56:24.409Z   ./src/$.mjs (type: module)
+0.14.0     2026-06-11T08:51:38.162Z   ./src/$.mjs (type: module)
+0.14.1     2026-06-21T17:11:05.210Z   ./src/$.mjs (type: module)
+0.15.0     2026-07-24T23:40:31.780Z   ./src/$.mjs (type: module)
+0.16.0     2026-07-25T13:22:54.575Z   ./src/$.mjs (type: module)
+0.17.0     2026-07-25T16:40:08.164Z   ./src/$.mjs (type: module)
+0.17.1     2026-07-26T09:07:27.491Z   ./src/$.mjs (type: module)
+0.17.2     2026-07-26T23:45:46.988Z   ./src/$.mjs (type: module)
+0.18.0     2026-08-07T20:21:27.396Z   ./src/$.mjs (type: module)
+0.18.1     2026-08-11T10:26:44.608Z   ./src/$.mjs (type: module)
+0.18.2     2026-08-11T11:05:38.419Z   ./src/$.mjs (type: module)
+0.19.0     2026-08-11T11:28:40.774Z   ./src/$.cjs (type: module)
+0.20.0     2026-09-04T16:57:38.546Z   ./src/$.cjs (type: module)
+0.20.1     2026-09-04T20:09:53.735Z   ./src/$.cjs (type: module)
+0.20.2     2026-09-05T01:35:05.741Z   ./src/$.cjs (type: module)
+0.20.3     2026-09-05T10:10:24.494Z   ./src/$.cjs (type: module)
+
+0.19.0 moved the require entry from ./src/$.mjs to ./src/$.cjs at
+2026-08-11T11:28:40Z. The last green Rust run (31457494585) started at
+2026-08-11T04:07:37Z, 7h21m earlier; every release job that calls
+use('command-stream') has failed since. Nothing in this repository changed.

@@ -1,0 +1,294 @@
+# Root causes and fixes
+
+One row per defect. "Class" separates the four things the issue asks about: an
+**error** fails a job, a **false negative** is a green check that proved
+nothing, a **false positive** would fail a job for something that is not a
+defect, and a **warning** is noise that hides the other three.
+
+| # | Class | Defect | Commit |
+| --- | --- | --- | --- |
+| RC-1 | error | Version scraped out of `pyproject.toml` with a table-blind `grep` | `a120542` |
+| RC-2 | error | `use('command-stream')` returns a CommonJS namespace; `{ $ }` is `undefined` | `e69dec4` |
+| RC-3 | error | Unscoped `re.sub` in `version_and_commit.py` rewrote the wrong `version` | `a120542` |
+| RC-4 | false negative | The duplication gate analysed 0 files and exited 0 | `aef985b` |
+| RC-5 | warning | 9 unquoted `>> $GITHUB_OUTPUT` redirects (SC2086) | `a120542` |
+| RC-6 | false negative | No workflow-level `permissions:`, 39 zizmor findings, no workflow linting at all | `8fb54a9`, `94fbacc` |
+| RC-7 | false negative | `|| true` masked a Prettier failure in the release job | `846afe5` |
+| RC-8 | false negative | No dependency audit and no static analysis anywhere | `a9a4064` |
+| RC-9 | false positive | The adopted Python audit failed on an advisory against `pip` itself | `a9a4064` |
+| RC-10 | false positive | zizmor audited frozen case-study snapshots of upstream templates | `eec0f3b` |
+| RC-11 | error | Dependency Review ran against a repository with the dependency graph off | `eec0f3b` |
+| RC-12 | false positive | A Windows-only `ENOENT` from the duplication test's `node_modules/.bin` shim | `eec0f3b` |
+| RC-13 | false positive | The link checker read URLs out of lychee's *redirects* section, and failed on a `502` | `60c2940` |
+
+---
+
+## RC-1 — a line-oriented read of a structured file
+
+```
+##[error]Unable to process file command 'output' successfully.
+##[error]Invalid format 'literal: pyproject.toml: project.version'
+```
+— `../ci-logs/failed-33920348247.log:340`
+
+The step ran
+
+```sh
+CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' pyproject.toml | head -1)
+```
+
+`pyproject.toml` declares `version` twice: under `[project]` (the package
+version) and under `[tool.scriv]` (the literal `"literal: pyproject.toml:
+project.version"`). The regex is anchored to the start of a line but knows
+nothing about TOML tables, so it matched both. `$GITHUB_OUTPUT` rejects a
+multi-line value, and the step died before the release could start.
+
+`head -1` does not fix this — it only makes the result depend on which table
+happens to come first in the file. `Cargo.toml` has the same shape: `name`
+appears under `[package]`, `[lib]` and `[[bin]]`.
+
+**Fix.** `scripts/read-manifest.mjs` and `python/scripts/read_manifest.py` parse
+the manifest and address a field by its table path (`project.version`,
+`package.name`), and write to `$GITHUB_OUTPUT` through `--output` so the value
+is written once, quoted. `python/scripts/version_and_commit.py` uses the same
+reader for the write path. Both readers have unit tests that first reproduce the
+duplicate-key manifest and assert the old `grep` returned two matches.
+
+**Prevention.** `scripts/check-ci-workflows.mjs` now fails any workflow whose
+`run:` body mentions `pyproject.toml` or `Cargo.toml` together with
+`grep`/`sed`/`awk`/`cut` and `version`/`name`.
+
+## RC-2 — an unpinned dependency changed its module system
+
+```
+Error updating npm: $ is not a function          (JS, failed-33920348338.log:247)
+Error: $ is not a function                       (Rust, failed-33920348349.log:540)
+```
+
+`js/scripts/setup-npm.mjs` and 13 other release scripts did
+
+```js
+const { $ } = await use('command-stream');
+```
+
+`use-m` resolves a package with `createRequire(...).resolve` and imports the
+resolved file. `command-stream@0.19.0`, published 2026-08-11T11:28:40Z, moved
+its `require` entry from `./src/$.mjs` to `./src/$.cjs`
+(`raw-repro-evidence.txt` §2). From that release on, use-m imports a **CommonJS**
+file, and the namespace of a CommonJS module carries only the names
+`cjs-module-lexer` can infer.
+
+Measured with `experiments/ci-repro/repro-command-stream-dollar.mjs`:
+
+```
+v20.20.2   32 keys                          typeof module.$ : function   OK
+v22.21.1   32 keys                          typeof module.$ : function   OK
+v24.20.0   2 keys [default, module.exports] typeof module.$ : undefined  REPRODUCED
+```
+
+Node 23+ adds a synthetic `'module.exports'` named export to such namespaces
+(<https://nodejs.org/api/esm.html#commonjs-namespaces>). use-m unwraps a
+namespace only when every key is a known metadata key, and `'module.exports'` is
+not in that set, so on Node 24 — which every workflow here requests — it hands
+back the un-unwrapped namespace. The upstream release and the Node version had
+to line up for the failure to appear, which is why it arrived without any change
+to this repository.
+
+**Fix.** `scripts/use-module.mjs` normalises the namespace (`ns`, `ns.default`,
+`ns['module.exports']`, `ns.default.default`), and when nothing callable is
+found raises an error naming the keys it did see instead of the opaque `$ is not
+a function`. All 14 call sites in `js/scripts` and `rust/scripts` use it.
+
+**Coverage.** `use-module.test.js` pins each namespace shape,
+`use-module-adoption.test.js` fails if a script goes back to calling `use()`
+directly, and `use-module-integration.test.js` loads the real package through
+the real use-m on the running Node version, so the next upstream change of this
+kind fails a pull request rather than a release.
+
+**Upstream.** Tracked at <https://github.com/link-foundation/use-m/issues/72>.
+
+## RC-3 — the mirror image, on the write path
+
+`version_and_commit.py` bumped the version with an unscoped
+`re.sub(r'^version = ".*"', ...)`, which rewrites *every* `version` line —
+including the scriv literal. The release that RC-1 stopped would have corrupted
+`pyproject.toml` had it proceeded. Same fix, same tests.
+
+## RC-4 — a gate that never read any code
+
+`.jscpd.json` set `"format": "console"`. In jscpd, `format` selects the *file
+formats to scan*, not the reporter. No file has the extension `console`, so
+`npm run check:duplication` analysed 0 files, found 0 clones and exited 0 on
+every commit. `"skipComments": true` was not a jscpd key either.
+
+**Fix.** `reporters: ["console"]`, `mode: "weak"`, and the formats left to
+jscpd's defaults; `js/.jscpd-baseline.json` ratchets the clones that exist today
+so the gate fails only on *new* duplication.
+`js/tests/unit/scripts/jscpd-config.test.js` asserts the config keys and then
+runs jscpd over a one-file fixture, asserting `statistics.total.sources > 0` —
+reverting the config fails three of its four tests.
+
+## RC-5 — SC2086
+
+Nine `echo "..." >> $GITHUB_OUTPUT` redirects were unquoted. Word-splitting on
+`$GITHUB_OUTPUT` is only latent today, but shellcheck flags it and nothing was
+running shellcheck. Quoted in `a120542`; `actionlint` (which bundles shellcheck)
+now runs in CI, so it cannot come back.
+
+## RC-6 — the workflows themselves were never linted
+
+No workflow declared a top-level `permissions:` block, so every job ran with the
+repository's default token scopes. `zizmor 1.30.0` reported **39** findings
+across the pipeline workflows (`excessive-permissions`, `unpinned-uses`,
+`template-injection`).
+
+**Fix.** `contents: read` at the top of each workflow with the release jobs
+opting into what they need; every third-party action hash-pinned (13 sites, with
+`toolchain:` and `tool:` inputs added where the action's behaviour came from the
+ref name); `${{ github.event.inputs.* }}` moved out of `run:` bodies into `env:`
+at 5 sites. `.github/zizmor.yml` records the pinning policy.
+
+**Prevention.** `ci-policy.yml` gained `actionlint` and `zizmor` jobs, and
+`check-ci-workflows.mjs` gained a rule that rejects free-form workflow inputs
+interpolated into shell bodies.
+
+## RC-7 — a mask on a real failure
+
+The changeset job ran `npx prettier --write ".changeset/*.md" || true`. The
+mask did not prevent the failure, it only moved it: the malformed changeset
+went into a pull request, where the format check failed instead — with the
+cause one job removed from the symptom. The `|| true` is gone.
+
+## RC-8 — nothing audited anything
+
+`npm audit` ran only as an advisory line inside the JS release job; `cargo
+audit` and any Python audit ran nowhere; no static analysis was configured.
+Three npm advisories were sitting in the committed lock file (cleared by `npm
+audit fix --package-lock-only`, which touched only `@humanfs`, `linkify-it` and
+`markdown-it`). `.github/workflows/security.yml` now runs a lock-file audit per
+language directory, CodeQL over `javascript-typescript`, `python`, `rust` and
+`actions`, and a dependency review on pull requests — weekly as well as on push,
+because a new advisory against an unchanged lock file produces no push.
+
+## RC-9 — the audit's own false positive
+
+The Python audit adopted from the template resolved the project into a venv
+built by `python -m venv`, which installs `pip`. `pip-audit` then reported
+**PYSEC-2026-3721 against pip itself** and failed the job for a package this
+repository neither declares nor ships — precisely the false positive the issue
+asks to eliminate. The target environment is now built `--without-pip` and
+filled through `pip --python`, so the audited surface is exactly the declared
+dependency closure. A second defect in the same script hid the evidence:
+`run()` captured stdout, and `subprocess.run(check=True)` raises before captured
+text is printed, so the failing run logged an exit status and no advisory table.
+Output is streamed now. Both are covered by
+`python/tests/unit/scripts/test_audit_dependencies.py`.
+
+## RC-10 — an audit pointed at evidence it was never allowed to change
+
+`ci-policy.yml` ran `zizmorcore/zizmor-action` with its default `inputs: .`,
+which walks the whole checkout. Under
+`docs/case-studies/issue-55/template-snapshots/` this repository keeps frozen
+copies of the four upstream pipeline templates' workflows, committed as evidence
+for a case study. They never run. zizmor audited them anyway:
+
+```
+30 warning[excessive-permissions]
+29 error[unpinned-uses]
+19 error[template-injection]
+ 4 error[excessive-permissions]
+```
+
+— `../templates/zizmor-template-snapshot-findings.txt`, by file:
+
+| snapshot | findings |
+| --- | --- |
+| `rust/.github/workflows/release.yml` | 30 |
+| `csharp/.github/workflows/release.yml` | 22 |
+| `js/.github/workflows/release.yml` | 19 |
+| `python/.github/workflows/release.yml` | 13 |
+| `python/.github/workflows/docs.yml` | 2 |
+| `csharp/.github/workflows/docs.yml` | 2 |
+
+The job was unfixable by construction: editing a snapshot to satisfy the audit
+destroys the thing the snapshot records, and not editing it leaves the job red
+forever. Local runs were clean the whole time, because they were run against
+`.github/workflows` — the divergence between the local command and the CI
+command is what let this ship.
+
+**Fix.** `inputs: .github/workflows`, with the reason and the reproducing
+command written next to it in `ci-policy.yml`. The repository's own workflows
+are still audited at `--min-confidence medium`.
+
+**Where the findings belong.** Upstream. They are real defects in the templates
+the issue asks this repository to adopt from, so the catalogue above is the
+evidence for the template issue reports; see `requirements.md`.
+
+## RC-11 — a check that this repository cannot satisfy
+
+```
+Dependency review is not supported on this repository.
+Please ensure Dependency graph is enabled
+```
+
+`actions/dependency-review-action` needs the repository's Dependency graph
+feature, which is off for `link-foundation/browser-commander`. Measured with the
+same token: the SBOM endpoint answers 404 here and 200 for a sibling public
+repository in the same organisation, and `dependency-graph/compare` answers 403.
+No change inside the repository can turn it on — it is a settings toggle — so
+the job was a permanent red check.
+
+**Fix.** The job probes for the feature first (`gh api --silent` exits 0 only on
+a 2xx) and, when it is unavailable, emits a `::warning::` naming the setting to
+enable and stays green. The npm, cargo and `pip-audit` jobs in the same workflow
+still cover published advisories, so nothing is silently lost: the warning says
+so, and turning the setting on makes the review run with no further edit.
+
+## RC-12 — a test that only worked on the operating system it was written on
+
+`jscpd-config.test.js` (added for RC-4) ran the duplication tool through
+`execFileSync(node_modules/.bin/jscpd)`. npm writes three shims on Windows —
+`jscpd`, `jscpd.cmd` and `jscpd.ps1` — and the extensionless one is a Bourne
+script that `CreateProcess` cannot execute, so the JS matrix failed on
+`windows-latest` with `spawnSync ...\node_modules\.bin\jscpd ENOENT` while
+passing on Linux and macOS. A gate against false negatives that is itself a
+false positive on a third of the matrix.
+
+**Fix.** The test reads `bin.jscpd` out of `node_modules/jscpd/package.json` and
+runs that file with `process.execPath`, which is the same entry point npm links
+to on every platform and survives an upstream rename. It skips with a message
+when jscpd is not installed rather than failing.
+
+## RC-13 — a link checker that could not tell a redirect from a corpse
+
+Run 33959793880 failed with two "Broken link detected" errors. lychee had
+reported exactly one problem:
+
+```
+* [502] <https://github.com/microsoft/playwright/issues/35743> (at 94:99) | Rejected status code: 502 Bad Gateway
+```
+
+The second URL,
+`https://docs.github.com/actions/security-guides/using-secrets-in-github-actions`,
+appears in the report under `## Redirects per input` as a healthy `--[302]-->`.
+Both URLs answer 200 today.
+
+Two defects in `scripts/check-web-archive.mjs`:
+
+1. The report was scraped with a bullet-line regular expression that carried no
+   notion of which `## ` section it was in, so a link lychee had listed as
+   *working* was reported as broken.
+2. `[502]` was handled like `[404]`. A 5xx is the server reporting its own
+   problem, not a statement about the resource.
+
+The Wayback fallback could not mask either mistake: both pages are live and
+neither has ever been archived, so `archived_snapshots` came back `{}` and the
+script concluded "no archived version found" and exited 1.
+
+**Fix.** Parsing is section-aware; every rejected URL is re-checked from the
+script before a verdict; a 429 or 5xx that repeats is a `::warning::`, not a
+failure. Only a link a second request agrees is gone, with no Wayback snapshot,
+fails the job. `js/tests/unit/scripts/check-web-archive.test.js` pins all of it
+against the verbatim report from run 33959793880, and
+`experiments/ci-repro/repro-link-checker-false-positive.mjs` prints the old
+parser's two "broken" URLs next to the new parser's one.

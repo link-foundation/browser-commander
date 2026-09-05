@@ -1,0 +1,11 @@
+Dependency Review	Review dependency changes	﻿2026-09-05T10:48:32.0289040Z ##[group]Run actions/dependency-review-action@v5
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0290436Z with:
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0291290Z   fail-on-severity: high
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0292672Z   comment-summary-in-pr: on-failure
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0300715Z   repo-token: ***
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0301622Z env:
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0302761Z   GIT_CONFIG_COUNT: 1
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0303782Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0304918Z   GIT_CONFIG_VALUE_0: main
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.0305889Z ##[endgroup]
+Dependency Review	Review dependency changes	2026-09-05T10:48:32.3797572Z ##[error]Dependency review is not supported on this repository. Please ensure that Dependency graph is enabled, see https://github.com/link-foundation/browser-commander/settings/security_analysis

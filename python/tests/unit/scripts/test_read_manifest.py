@@ -104,6 +104,22 @@ def test_replace_field_rejects_a_missing_key():
         replace_field('[tool.scriv]\nversion = "x"\n', "project", "version", "1.0.0")
 
 
+def test_replace_field_keeps_spacing_and_a_trailing_comment():
+    content = '[project]\n  version   =   "1.2.3"  # keep "this"\n'
+
+    assert replace_field(content, "project", "version", "9.9.9") == (
+        '[project]\n  version   =   "9.9.9"  # keep "this"\n'
+    )
+
+
+def test_replace_field_refuses_a_version_it_cannot_rewrite():
+    # Returning the file unchanged here would publish the old version. The
+    # JavaScript reader raises on the same input; see
+    # js/tests/unit/scripts/read-manifest.test.js.
+    with pytest.raises(ValueError, match="is not a quoted string"):
+        replace_field("[project]\nversion = 3\n", "project", "version", "9.9.9")
+
+
 def test_cli_prints_the_project_version():
     result = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "read_manifest.py"), str(PYPROJECT)],

@@ -8,6 +8,7 @@ import {
   parseArguments,
   readManifestField,
   readTomlField,
+  replaceTomlField,
 } from '../../../../scripts/read-manifest.mjs';
 
 const repositoryRoot = join(
@@ -121,6 +122,51 @@ describe('read-manifest', () => {
           readFile: () => '[package]\nversion = ""',
         }),
       /no non-empty "version"/
+    );
+  });
+
+  // The field name reaches this module through argv, so building a pattern
+  // from it let `.` match any character and let `(` throw SyntaxError instead
+  // of reporting a missing field. CodeQL flagged the same lines as
+  // js/regex-injection on PR #82.
+  it('compares the field name literally rather than as a pattern', () => {
+    const toml = ['[package]', 'axb = "wrong"', 'name = "right"'].join('\n');
+
+    assert.equal(readTomlField(toml, 'package', 'a.b'), undefined);
+    assert.throws(
+      () => replaceTomlField(toml, 'package', 'a.b', '9.9.9'),
+      /No \[package\] a\.b to update/
+    );
+  });
+
+  it('reports a missing field whose name is not a valid pattern', () => {
+    const toml = ['[package]', 'name = "right"'].join('\n');
+
+    assert.equal(readTomlField(toml, 'package', 'a('), undefined);
+  });
+
+  it('keeps spacing and a trailing comment when it rewrites a version', () => {
+    const toml = ['[package]', '  version   =   "1.2.3"  # keep "this"'].join(
+      '\n'
+    );
+
+    assert.equal(
+      replaceTomlField(toml, 'package', 'version', '9.9.9'),
+      ['[package]', '  version   =   "9.9.9"  # keep "this"'].join('\n')
+    );
+  });
+
+  it('refuses to bump a version it cannot rewrite', () => {
+    // Silently returning the file unchanged would publish the old version.
+    assert.throws(
+      () =>
+        replaceTomlField(
+          '[package]\nversion = 3',
+          'package',
+          'version',
+          '9.9.9'
+        ),
+      /is not a quoted string/
     );
   });
 

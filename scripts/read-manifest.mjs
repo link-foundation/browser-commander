@@ -68,6 +68,32 @@ function stripComment(line) {
 }
 
 /**
+ * Split a stripped TOML line into its key and its value.
+ *
+ * The key is compared as a literal string rather than matched with a regex
+ * built from the caller's field name. Interpolating that name into a pattern
+ * makes `.` match any character -- `a.b` would read `axb` -- and makes a name
+ * containing `(` throw `SyntaxError: Invalid regular expression` instead of
+ * reporting a missing field. CodeQL reports the same construct as
+ * `js/regex-injection`, since the name reaches this script through argv.
+ *
+ * @param {string} line a line with its comment already stripped
+ * @returns {{key: string, value: string} | undefined} undefined when the line
+ *   is not an assignment
+ */
+function splitAssignment(line) {
+  // A bare TOML key cannot contain `=`, so the first one ends the key.
+  const separator = line.indexOf('=');
+  if (separator === -1) {
+    return undefined;
+  }
+  return {
+    key: line.slice(0, separator).trim(),
+    value: line.slice(separator + 1).trim(),
+  };
+}
+
+/**
  * Read `field` from `table` in a TOML document.
  *
  * @param {string} content TOML source
@@ -95,14 +121,13 @@ export function readTomlField(content, table, field) {
       continue;
     }
 
-    const assignment = new RegExp(`^${field}\\s*=\\s*(.*)$`).exec(line);
-    if (!assignment) {
+    const assignment = splitAssignment(line);
+    if (!assignment || assignment.key !== field) {
       continue;
     }
 
-    const value = assignment[1].trim();
-    const quoted = /^(['"])(.*)\1$/.exec(value);
-    return quoted ? quoted[2] : value;
+    const quoted = /^(['"])(.*)\1$/.exec(assignment.value);
+    return quoted ? quoted[2] : assignment.value;
   }
 
   return undefined;
@@ -141,14 +166,33 @@ export function replaceTomlField(content, table, field, newValue) {
     if (currentTable !== table) {
       continue;
     }
-    if (!new RegExp(`^${field}\\s*=`).test(line)) {
+    const assignment = splitAssignment(line);
+    if (!assignment || assignment.key !== field) {
       continue;
     }
 
-    lines[index] = rawLine.replace(
-      new RegExp(`^(\\s*${field}\\s*=\\s*["'])[^"']*(["'])`),
-      `$1${newValue}$2`
-    );
+    const quoted = /^(['"])(.*)\1$/.exec(assignment.value);
+    if (!quoted) {
+      // A version the bump cannot write is a version the release would publish
+      // unchanged, which is the silent failure this module exists to avoid.
+      throw new Error(
+        `[${table}] ${field} is not a quoted string, so it cannot be rewritten: ${line}`
+      );
+    }
+
+    // Splice the new value into the raw line by position, so indentation,
+    // spacing around `=` and any trailing comment survive the bump, and a
+    // quote inside that comment is never mistaken for the value.
+    const separator = rawLine.indexOf('=');
+    const tail = rawLine.slice(separator + 1);
+    const valueAt = tail.indexOf(assignment.value);
+    lines[index] =
+      rawLine.slice(0, separator + 1) +
+      tail.slice(0, valueAt) +
+      quoted[1] +
+      newValue +
+      quoted[1] +
+      tail.slice(valueAt + assignment.value.length);
     return lines.join('\n');
   }
 

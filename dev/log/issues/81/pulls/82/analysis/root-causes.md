@@ -616,3 +616,87 @@ twelve it protects, which is the check that it is load-bearing.
 first run with the RC-16 `pipeline-status` gate, and it shows the gate doing its
 job: `Test (Node.js on windows-latest)` failed and `Pipeline Status` failed with
 it, naming the job.
+
+## RC-18 — a pattern built from an argument, and a bump that could not fail
+
+Two defects in the manifest reader that this pull request itself introduced,
+both found by checks this pull request also introduced. Recording them here
+because "check for all false positives, false negatives, warnings and errors"
+applies to the fix as much as to what it replaced.
+
+**What CodeQL saw.** Code scanning was switched on by this branch, and it
+reported `js/regex-injection` twice against `scripts/read-manifest.mjs:98`
+([alert 1](https://github.com/link-foundation/browser-commander/security/code-scanning/1),
+[alert 2](https://github.com/link-foundation/browser-commander/security/code-scanning/2)):
+
+```js
+const assignment = new RegExp(`^${field}\\s*=\\s*(.*)$`).exec(line);
+```
+
+`field` arrives through `--field` on the command line. Two more lines in
+`replaceTomlField` did the same thing.
+
+**Why it is a real defect and not a false positive.** The label "injection"
+undersells it — the practical failure is a wrong read, not an attack. A field
+name is interpolated into a pattern, so its `.` matches any character and its
+`(` is a group:
+
+```
+read  a.b -> "wrong"     # matched `axb = "wrong"`
+write a.b -> rewrote     `axb`
+read  a(  -> SyntaxError: Invalid regular expression: /^a(\s*=\s*(.*)$/
+```
+
+A missing field is supposed to be reported as missing. Instead one silently
+reads its neighbour and the other crashes with a parser error about a pattern
+the caller never wrote.
+
+**Fix.** `splitAssignment()` cuts the line at its first `=` — a bare TOML key
+cannot contain one — and the key is compared as a string. No pattern is built
+from caller input on either path. `python/scripts/read_manifest.py` already used
+`re.escape`, so it was never exposed to this; it is left as is.
+
+**The second defect, found while fixing the first.** `replaceTomlField` used
+
+```js
+rawLine.replace(new RegExp(`^(\\s*${field}\\s*=\\s*["'])[^"']*(["'])`), ...)
+```
+
+and `String.replace` does not fail when its pattern does not match — it returns
+the string. So a `version = 3` that the bump could not rewrite produced no
+error, no diff, and a release publishing the previous version. That is the same
+false negative as RC-7's `|| true`, arrived at by a different route: a write
+path whose only failure mode was silence. Both readers now raise
+`is not a quoted string, so it cannot be rewritten`, and both splice the new
+value in by position, so indentation, spacing and a trailing comment survive and
+a quote *inside* that comment is never mistaken for the value.
+
+**Reproducing tests.** Four in
+`js/tests/unit/scripts/read-manifest.test.js` (literal field name, an invalid
+pattern as a name, spacing and comment preserved, unquoted value refused) and
+two in `python/tests/unit/scripts/test_read_manifest.py`, since the two readers
+are asked to behave identically.
+
+## RC-19 — mypy could not see the scripts either
+
+RC-15 was ESLint being configured inside `js/`, blind to `scripts/` and
+`experiments/`. `python/` had the same shape and it survived the first pass:
+the workflow runs `mypy src`, so `python/scripts/` — including
+`read_manifest.py` and `audit_dependencies.py`, both added by this pull request
+— was never type-checked.
+
+It cannot simply be folded into the existing step. `pyproject.toml` sets
+`python_version = "3.9"` to match the package's `requires-python = ">=3.9"`,
+and under that target `import tomllib` is correctly an error: the module is
+3.11+. The CI helpers do not run on the package's floor, they run on the job's
+interpreter. So they get their own invocation with their own target:
+
+```yaml
+      - name: Run mypy on the CI scripts
+        run: mypy --python-version 3.13 scripts tests/unit/scripts
+```
+
+mirrored as the `python-mypy-scripts` pre-commit hook.
+`js/tests/unit/scripts/pre-commit-config.test.js` refused the new hook until it
+was listed in `MIRRORED_COMMANDS` — the guard against a local hook drifting
+from CI, working on the first change made after it was written.

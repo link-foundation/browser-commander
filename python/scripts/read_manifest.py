@@ -96,10 +96,31 @@ def replace_field(content: str, table: str, field: str, new_value: str) -> str:
         raise ValueError(f"No [{table}] {field} to update")
 
     lines = content.split("\n")
-    lines[index] = re.sub(
-        r"^(\s*" + re.escape(field) + r"\s*=\s*[\"'])[^\"']*([\"'])",
-        rf"\g<1>{new_value}\g<2>",
-        lines[index],
+    raw_line = lines[index]
+    stripped = strip_comment(raw_line)
+    value = stripped.split("=", 1)[1].strip()
+    quoted = re.match(r"^(['\"])(.*)\1$", value)
+    if quoted is None:
+        # Returning the file unchanged here would publish the old version, which
+        # is the silent failure this module exists to avoid.
+        message = (
+            f"[{table}] {field} is not a quoted string, "
+            f"so it cannot be rewritten: {stripped}"
+        )
+        raise ValueError(message)
+
+    # Splice the new value in by position, so indentation, spacing around the
+    # ``=`` and any trailing comment survive the bump, and a quote inside that
+    # comment is never mistaken for the value.
+    separator = raw_line.index("=")
+    tail = raw_line[separator + 1 :]
+    value_at = tail.index(value)
+    quote = quoted.group(1)
+    lines[index] = (
+        raw_line[: separator + 1]
+        + tail[:value_at]
+        + f"{quote}{new_value}{quote}"
+        + tail[value_at + len(value) :]
     )
     return "\n".join(lines)
 

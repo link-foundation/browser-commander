@@ -28,10 +28,10 @@ passing.
 
 | # | Class | Requirement | Status |
 | --- | --- | --- | --- |
-| R-5 | errors | every job that fails for a real defect is fixed | done — RC-1, RC-2, RC-3, RC-5, RC-11 |
-| R-6 | false negatives | every check that passes without checking anything is made to check | done — RC-4, RC-6, RC-7, RC-8, RC-14, RC-15, RC-16 |
+| R-5 | errors | every job that fails for a real defect is fixed | done — RC-1, RC-2, RC-3, RC-5, RC-11, RC-18 (the CodeQL alert this branch's own fix raised) |
+| R-6 | false negatives | every check that passes without checking anything is made to check | done — RC-4, RC-6, RC-7, RC-8, RC-14, RC-15, RC-16, RC-18 (a bump whose only failure mode was silence), RC-19 (`mypy` blind to `python/scripts/`) |
 | R-7 | false positives | no check fails for something that is not a defect | done — RC-9, RC-10, RC-12, RC-13, RC-17 |
-| R-8 | warnings | no warning is left to hide the other three | done — the 10 ESLint warnings are cleared (`b63142b`, `90709f9`), and the only annotation the nine green runs still emit is the documented RC-11 one; §F records what each was |
+| R-8 | warnings | no warning is left to hide the other three | done — the 10 ESLint warnings are cleared, the two CodeQL alerts are fixed rather than dismissed (RC-18) (`b63142b`, `90709f9`), and the only annotation the nine green runs still emit is the documented RC-11 one; §F records what each was |
 
 The classes are not independent: RC-16 is the reason a *false negative* and an
 *error* can be the same event. A job killed by `timeout-minutes` is reported
@@ -101,7 +101,7 @@ From the issue and from the instruction that opened this pull request.
 | R-14 | "Download all logs and collect data related about the issue … into the ./dev/log/issues/81/pulls/82 folder" | done — `ci-logs/`, `issue/`, `pr/`, `repo/`, `research/`, `templates/` |
 | R-15 | "reconstruct the timeline/sequence of events" | done — [`timeline.md`](timeline.md) |
 | R-16 | "list each and every requirement from the issue" | done — this file |
-| R-17 | "find the root cause of each problem" | done — [`root-causes.md`](root-causes.md), RC-1…RC-17 |
+| R-17 | "find the root cause of each problem" | done — [`root-causes.md`](root-causes.md), RC-1…RC-19 |
 | R-18 | "propose possible solutions and solution plans for each requirement" | done — one "solution" section per RC, plus §F for what is still open |
 | R-19 | "check online for known existing components/libraries that solve a similar problem" | done — `existing-solutions.md`: 13 of the 17 root causes have an off-the-shelf component, 12 are wired in, and each rejection (`alls-green`, `workflow-conclusion-action`, `osv-scanner`, `timeout(1)`) names the fact the component cannot know |
 | R-20 | "add debug output and a verbose mode … Keep the default state switched off" | done — `2c1260a` adds the opt-in logger (`CI_DEBUG=1`), and `scripts/run-with-budget-warning.sh` exposes `BUDGET_WARN_PERCENT`, `BUDGET_GRACE_SECONDS`, `BUDGET_POLL_SECONDS`; all default to off or to production values |

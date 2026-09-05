@@ -82,9 +82,23 @@ jobs:
 
       # Annotations rather than SARIF: code scanning is not enabled on every
       # fork of this repository, and the job should fail loudly either way.
+      #
+      # `inputs` is scoped to this repository's own workflows. The action
+      # defaults to `.`, which also collects
+      # `docs/case-studies/issue-55/template-snapshots/*/.github/workflows/*` -
+      # frozen upstream copies kept as evidence for a case study. They never
+      # run, and rewriting a snapshot to satisfy an audit destroys the thing it
+      # records, so auditing them produced 53 errors and 31 warnings that no
+      # change to this repository could clear. Their findings belong upstream,
+      # and are reported there; see
+      # `dev/log/issues/81/pulls/82/analysis/root-causes.md` (RC-10).
+      #
+      # Reproduce this job locally with:
+      #   zizmor --config .github/zizmor.yml --min-confidence medium .github/workflows
       - uses: zizmorcore/zizmor-action@v0.6.2
         with:
           advanced-security: false
           annotations: true
           config: .github/zizmor.yml
+          inputs: .github/workflows
           min-confidence: medium

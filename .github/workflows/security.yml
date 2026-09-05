@@ -82,7 +82,37 @@ jobs:
         with:
           persist-credentials: false
 
+      # `actions/dependency-review-action` fails outright - "Dependency review
+      # is not supported on this repository" - when the dependency graph is off,
+      # which it is here: the same token reads
+      # `/repos/link-foundation/js-ai-driven-development-pipeline-template/dependency-graph/sbom`
+      # but gets 404 for this repository. A job that can only ever be red is the
+      # false positive this pull request exists to remove, and deleting the job
+      # would trade it for a silent gap, so the availability is probed first and
+      # the miss is reported as a warning a maintainer can act on. Enabling
+      # Settings -> Code security -> Dependency graph turns the review on with
+      # no further change here.
+      - name: Check whether the dependency graph is enabled
+        id: probe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # `gh api --silent` exits 0 only on a 2xx, so the exit status is the
+          # whole test; the response body is of no interest here.
+          if gh api "repos/${REPOSITORY}/dependency-graph/compare/${BASE_SHA}...${HEAD_SHA}" --silent; then
+            echo 'dependency graph: available'
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo 'dependency graph: unavailable'
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Dependency review skipped::The dependency graph is disabled for ${REPOSITORY}, so actions/dependency-review-action cannot run. Enable Settings -> Code security -> Dependency graph. The npm, cargo and pip-audit jobs in this workflow still cover published advisories."
+          fi
+
       - name: Review dependency changes
+        if: steps.probe.outputs.available == 'true'
         uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: high

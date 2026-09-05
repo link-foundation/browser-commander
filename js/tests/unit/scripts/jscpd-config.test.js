@@ -28,7 +28,30 @@ const JS_ROOT = path.resolve(
   '../../..'
 );
 const CONFIG_PATH = path.join(JS_ROOT, '.jscpd.json');
-const JSCPD_BIN = path.join(JS_ROOT, 'node_modules', '.bin', 'jscpd');
+const JSCPD_PACKAGE = path.join(JS_ROOT, 'node_modules', 'jscpd');
+
+/**
+ * Resolve jscpd's CLI entry point, not its `node_modules/.bin` shim.
+ *
+ * On Windows npm writes three shims - `jscpd`, `jscpd.cmd` and `jscpd.ps1` -
+ * and the extensionless one is a Bourne script that `CreateProcess` cannot
+ * execute, so `execFileSync(.bin/jscpd)` fails with ENOENT there while working
+ * on Linux and macOS. Reading `bin.jscpd` out of the package manifest gives the
+ * same file npm links to, on every platform, and survives an upstream rename.
+ */
+function resolveJscpdCli() {
+  const manifest = path.join(JSCPD_PACKAGE, 'package.json');
+  if (!existsSync(manifest)) {
+    return null;
+  }
+  const { bin } = JSON.parse(readFileSync(manifest, 'utf-8'));
+  const entry = typeof bin === 'string' ? bin : bin?.jscpd;
+  if (!entry) {
+    return null;
+  }
+  const cli = path.join(JSCPD_PACKAGE, entry);
+  return existsSync(cli) ? cli : null;
+}
 
 const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf-8'));
 
@@ -61,8 +84,11 @@ describe('.jscpd.json', () => {
 
 describe('the shipped jscpd config scans real files', () => {
   it('reports at least one analysed source for a one-file project', (t) => {
-    if (!existsSync(JSCPD_BIN)) {
-      return t.skip(`${JSCPD_BIN} is missing; run npm ci in js/`);
+    const jscpdCli = resolveJscpdCli();
+    if (!jscpdCli) {
+      return t.skip(
+        `jscpd is not installed under ${JSCPD_PACKAGE}; run npm ci in js/`
+      );
     }
 
     const fixture = mkdtempSync(path.join(tmpdir(), 'jscpd-config-'));
@@ -85,8 +111,16 @@ describe('the shipped jscpd config scans real files', () => {
 
       const output = path.join(fixture, 'report');
       execFileSync(
-        JSCPD_BIN,
-        ['.', '--reporters', 'json', '--output', output, '--no-colors'],
+        process.execPath,
+        [
+          jscpdCli,
+          '.',
+          '--reporters',
+          'json',
+          '--output',
+          output,
+          '--no-colors',
+        ],
         {
           cwd: fixture,
           stdio: 'pipe',

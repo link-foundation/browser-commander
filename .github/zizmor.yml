@@ -1,5 +1,5 @@
 # zizmor configuration for the workflow security audit run by
-# `.github/workflows/workflows.yml`.
+# `.github/workflows/ci-policy.yml`.
 #
 # Blanket policy: third-party actions must be pinned to a commit hash, because
 # a mutable tag or branch of a repository we do not control is arbitrary code

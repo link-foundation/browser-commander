@@ -25,7 +25,7 @@
  * - lino-arguments: Unified configuration from CLI args, env vars, and .lenv files
  */
 
-import { readFileSync, appendFileSync } from 'fs';
+import { appendFileSync } from 'fs';
 import {
   getRustRoot,
   getCargoTomlPath,
@@ -33,14 +33,14 @@ import {
   parseRustRootConfig,
 } from './rust-paths.mjs';
 
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+import { readManifestField } from '../../scripts/read-manifest.mjs';
+import {
+  loadCommandStream,
+  loadLinoArguments,
+} from '../../scripts/use-module.mjs';
 
-// Import link-foundation libraries
-const { $ } = await use('command-stream');
-const { makeConfig } = await use('lino-arguments');
+const { $ } = await loadCommandStream();
+const { makeConfig } = await loadLinoArguments();
 
 // Parse CLI arguments
 // Support both CARGO_REGISTRY_TOKEN (cargo's native env var) and CARGO_TOKEN (backwards compat)
@@ -86,20 +86,20 @@ function setOutput(key, value) {
  * @returns {{name: string, version: string}}
  */
 function getPackageInfo() {
-  const cargoToml = readFileSync(CARGO_TOML, 'utf-8');
-
-  const nameMatch = cargoToml.match(/^name\s*=\s*"([^"]+)"/m);
-  const versionMatch = cargoToml.match(/^version\s*=\s*"([^"]+)"/m);
-
-  if (!nameMatch || !versionMatch) {
-    console.error(`Error: Could not parse package info from ${CARGO_TOML}`);
+  // Scoped to [package]: Cargo.toml repeats `name` under [[bin]] and [lib], so
+  // a first-match regex only happens to be right while [package] comes first.
+  try {
+    return {
+      name: readManifestField(CARGO_TOML, { field: 'name', table: 'package' }),
+      version: readManifestField(CARGO_TOML, {
+        field: 'version',
+        table: 'package',
+      }),
+    };
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
     process.exit(1);
   }
-
-  return {
-    name: nameMatch[1],
-    version: versionMatch[1],
-  };
 }
 
 async function main() {

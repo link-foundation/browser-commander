@@ -24,13 +24,9 @@
 import { readFileSync, readdirSync, existsSync, appendFileSync } from 'fs';
 import { join } from 'path';
 
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+import { loadLinoArguments } from '../../scripts/use-module.mjs';
 
-// Import lino-arguments for CLI argument parsing
-const { makeConfig } = await use('lino-arguments');
+const { makeConfig } = await loadLinoArguments();
 
 // Parse CLI arguments
 const config = makeConfig({

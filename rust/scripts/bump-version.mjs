@@ -11,13 +11,13 @@
 
 import { readFileSync, writeFileSync } from 'fs';
 
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+import {
+  readManifestField,
+  replaceTomlField,
+} from '../../scripts/read-manifest.mjs';
+import { loadLinoArguments } from '../../scripts/use-module.mjs';
 
-// Import lino-arguments for CLI argument parsing
-const { makeConfig } = await use('lino-arguments');
+const { makeConfig } = await loadLinoArguments();
 
 // Parse CLI arguments
 const config = makeConfig({
@@ -50,11 +50,17 @@ if (!bumpType || !['major', 'minor', 'patch'].includes(bumpType)) {
  * @returns {{major: number, minor: number, patch: number}}
  */
 function getCurrentVersion() {
-  const cargoToml = readFileSync('Cargo.toml', 'utf-8');
-  const match = cargoToml.match(/^version\s*=\s*"(\d+)\.(\d+)\.(\d+)"/m);
+  let version;
+  try {
+    version = readManifestField('Cargo.toml');
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
 
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
   if (!match) {
-    console.error('Error: Could not parse version from Cargo.toml');
+    console.error(`Error: [package] version "${version}" is not semver`);
     process.exit(1);
   }
 
@@ -91,12 +97,12 @@ function calculateNewVersion(current, bumpType) {
  * @param {string} newVersion
  */
 function updateCargoToml(newVersion) {
-  let cargoToml = readFileSync('Cargo.toml', 'utf-8');
-  cargoToml = cargoToml.replace(
-    /^(version\s*=\s*")[^"]+(")/m,
-    `$1${newVersion}$2`
+  const cargoToml = readFileSync('Cargo.toml', 'utf-8');
+  writeFileSync(
+    'Cargo.toml',
+    replaceTomlField(cargoToml, 'package', 'version', newVersion),
+    'utf-8'
   );
-  writeFileSync('Cargo.toml', cargoToml, 'utf-8');
 }
 
 try {

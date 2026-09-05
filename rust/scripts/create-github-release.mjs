@@ -12,14 +12,10 @@
 
 import { readFileSync, existsSync } from 'fs';
 
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+import { loadCommandStream, loadLinoArguments } from '../../scripts/use-module.mjs';
 
-// Import link-foundation libraries
-const { $ } = await use('command-stream');
-const { makeConfig } = await use('lino-arguments');
+const { $ } = await loadCommandStream();
+const { makeConfig } = await loadLinoArguments();
 
 // Parse CLI arguments
 // Note: Using --release-version instead of --version to avoid conflict with yargs' built-in --version flag

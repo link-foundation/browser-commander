@@ -12,6 +12,7 @@
 
 import { readFileSync, existsSync } from 'fs';
 
+import { TAG_PREFIXES } from '../../scripts/release-tags.mjs';
 import {
   commandErrorText,
   loadCommandStream,
@@ -35,10 +36,15 @@ const config = makeConfig({
         type: 'string',
         default: getenv('REPOSITORY', ''),
         describe: 'GitHub repository (e.g., owner/repo)',
+      })
+      .option('tag-prefix', {
+        type: 'string',
+        default: getenv('TAG_PREFIX', TAG_PREFIXES.rust),
+        describe: 'Tag prefix (e.g., rust-v)',
       }),
 });
 
-const { releaseVersion: version, repository } = config;
+const { releaseVersion: version, repository, tagPrefix } = config;
 
 if (!version || !repository) {
   console.error('Error: Missing required arguments');
@@ -48,7 +54,7 @@ if (!version || !repository) {
   process.exit(1);
 }
 
-const tag = `v${version}`;
+const tag = `${tagPrefix}${version}`;
 
 console.log(`Creating GitHub release for ${tag}...`);
 
@@ -87,7 +93,7 @@ try {
   // This avoids shell escaping issues
   const payload = JSON.stringify({
     tag_name: tag,
-    name: `v${version}`,
+    name: tag,
     body: releaseNotes,
   });
 

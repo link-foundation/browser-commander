@@ -549,7 +549,8 @@ jobs:
         run: |
           node scripts/create-github-release.mjs \
             --release-version "${{ steps.current_version.outputs.version }}" \
-            --repository "${{ github.repository }}"
+            --repository "${{ github.repository }}" \
+            --tag-prefix "rust-v"
 
   # === MANUAL RELEASE ===
   # Manual release via workflow_dispatch - only after CI passes
@@ -636,7 +637,8 @@ jobs:
         run: |
           node scripts/create-github-release.mjs \
             --release-version "${{ steps.version.outputs.new_version }}" \
-            --repository "${{ github.repository }}"
+            --repository "${{ github.repository }}" \
+            --tag-prefix "rust-v"
 
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran

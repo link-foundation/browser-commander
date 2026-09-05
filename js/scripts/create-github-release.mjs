@@ -14,6 +14,7 @@
 
 import { readFileSync } from 'fs';
 
+import { releaseTag } from '../../scripts/release-tags.mjs';
 import {
   commandErrorText,
   loadCommandStream,
@@ -50,7 +51,9 @@ if (!version || !repository) {
   process.exit(1);
 }
 
-const tag = `v${version}`;
+// `v<version>` is this package's namespace only; the crate uses `rust-v` and
+// the wheel `python-v`. See scripts/release-tags.mjs.
+const tag = releaseTag('js', version);
 
 console.log(`Creating GitHub release for ${tag}...`);
 

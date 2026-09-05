@@ -18,6 +18,7 @@ import {
   readManifestField,
   replaceTomlField,
 } from '../../scripts/read-manifest.mjs';
+import { releaseTag } from '../../scripts/release-tags.mjs';
 import {
   loadCommandStream,
   loadLinoArguments,
@@ -263,12 +264,15 @@ async function main() {
     await $`git commit -m ${commitMsg}`;
     console.log(`Committed version ${newVersion}`);
 
-    // Create tag
+    // Create tag. The crate has its own namespace: tagging `v<version>` put
+    // it in the JS package's namespace, where `git tag` refused to recreate a
+    // name JS had already taken and the release went out untagged.
+    const tag = releaseTag('rust', newVersion);
     const tagMsg = description
-      ? `Release v${newVersion}\n\n${description}`
-      : `Release v${newVersion}`;
-    await $`git tag -a v${newVersion} -m ${tagMsg}`;
-    console.log(`Created tag v${newVersion}`);
+      ? `Release ${tag}\n\n${description}`
+      : `Release ${tag}`;
+    await $`git tag -a ${tag} -m ${tagMsg}`;
+    console.log(`Created tag ${tag}`);
 
     // Push changes and tag
     await $`git push`;

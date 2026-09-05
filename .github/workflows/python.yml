@@ -349,17 +349,20 @@ jobs:
       - name: Check if version changed
         id: version_check
         run: |
-          # Get current version from pyproject.toml
-          CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' pyproject.toml)
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          # Read [project].version only. A line-anchored grep also matches
+          # [tool.scriv].version, which wrote two lines into $GITHUB_OUTPUT and
+          # failed this step with "Invalid format 'literal: pyproject.toml:
+          # project.version'" on every release since that key was added.
+          CURRENT_VERSION=$(python scripts/read_manifest.py pyproject.toml \
+            --output current_version)
 
           # Check if tag exists (with python prefix to differentiate from JS/Rust)
           if git rev-parse "python-v$CURRENT_VERSION" >/dev/null 2>&1; then
             echo "Tag python-v$CURRENT_VERSION already exists, skipping release"
-            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
           else
             echo "New version detected: $CURRENT_VERSION"
-            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Download artifacts

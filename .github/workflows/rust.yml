@@ -448,8 +448,10 @@ jobs:
       - name: Check if version already released or no fragments
         id: check
         run: |
-          CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' Cargo.toml | head -1)
-          CRATE_NAME=$(grep -Po '(?<=^name = ")[^"]*' Cargo.toml | head -1)
+          # Read [package] only: Cargo.toml repeats `name` under [[bin]] and
+          # [lib], and `head -1` would silently depend on table ordering.
+          CURRENT_VERSION=$(node ../scripts/read-manifest.mjs Cargo.toml)
+          CRATE_NAME=$(node ../scripts/read-manifest.mjs Cargo.toml --field name)
 
           # Check if version is published on crates.io (the source of truth for Rust packages)
           # Note: We check crates.io, not git tags, because git tags can exist without
@@ -467,16 +469,16 @@ jobs:
             # No fragments - check if current version is published on crates.io
             if [ "$VERSION_ON_CRATES_IO" = "true" ]; then
               echo "No changelog fragments and v$CURRENT_VERSION already published on crates.io"
-              echo "should_release=false" >> $GITHUB_OUTPUT
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
             else
               echo "No changelog fragments but v$CURRENT_VERSION not yet published to crates.io"
-              echo "should_release=true" >> $GITHUB_OUTPUT
-              echo "skip_bump=true" >> $GITHUB_OUTPUT
+              echo "should_release=true" >> "$GITHUB_OUTPUT"
+              echo "skip_bump=true" >> "$GITHUB_OUTPUT"
             fi
           else
             echo "Found changelog fragments, proceeding with release"
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "skip_bump=false" >> $GITHUB_OUTPUT
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "skip_bump=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Collect changelog and bump version
@@ -489,9 +491,7 @@ jobs:
       - name: Get current version
         id: current_version
         if: steps.check.outputs.should_release == 'true'
-        run: |
-          CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' Cargo.toml)
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        run: node ../scripts/read-manifest.mjs Cargo.toml --output version
 
       - name: Build release
         if: steps.check.outputs.should_release == 'true'

@@ -111,94 +111,80 @@ describe('classifying a lychee status', () => {
   });
 });
 
-function waybackNever() {
-  return async () => {
-    throw new Error('the Wayback Machine must not be consulted here');
-  };
-}
+// Stubs for the two questions `judge` asks. Naming them keeps each case below
+// to the one thing it is about: what the second look said, and whether the
+// Wayback Machine had a copy.
+const answers = (status) => async () => ({ alive: status < 400, status });
+const unreachable = () => async () => ({ alive: false, status: null });
+
+const waybackNever = () => async () => {
+  throw new Error('the Wayback Machine must not be consulted here');
+};
+const waybackNothing = () => async () => ({
+  available: false,
+  archiveUrl: null,
+  timestamp: null,
+});
+const waybackHas = (timestamp, archiveUrl) => async () => ({
+  available: true,
+  archiveUrl,
+  timestamp,
+});
+
+const verdictFor = (link, recheckImpl, waybackImpl) =>
+  judge(link, { recheckImpl, waybackImpl });
 
 describe('judging one rejected link', () => {
+  const playwright = {
+    url: 'https://github.com/microsoft/playwright/issues/35743',
+    status: '502',
+  };
+  const gone = { url: 'https://example.com/gone', status: '404' };
+
   it('clears a link that answers on the second look', async () => {
-    const verdict = await judge(
-      {
-        url: 'https://github.com/microsoft/playwright/issues/35743',
-        status: '502',
-      },
-      {
-        recheckImpl: async () => ({ alive: true, status: 200 }),
-        waybackImpl: waybackNever(),
-      }
-    );
+    const verdict = await verdictFor(playwright, answers(200), waybackNever());
     assert.equal(verdict.verdict, 'alive');
   });
 
   it('does not fail for a host that is down twice', async () => {
-    const verdict = await judge(
-      { url: 'https://example.com/x', status: '502' },
-      {
-        recheckImpl: async () => ({ alive: false, status: 503 }),
-        waybackImpl: waybackNever(),
-      }
-    );
+    const verdict = await verdictFor(playwright, answers(503), waybackNever());
     assert.equal(verdict.verdict, 'transient');
   });
 
   it('does not fail for a host that keeps rate-limiting the runner', async () => {
-    const verdict = await judge(
+    const verdict = await verdictFor(
       { url: 'https://example.com/x', status: '429' },
-      {
-        recheckImpl: async () => ({ alive: false, status: 429 }),
-        waybackImpl: waybackNever(),
-      }
+      answers(429),
+      waybackNever()
     );
     assert.equal(verdict.verdict, 'transient');
   });
 
   it('suggests the snapshot when a confirmed 404 is archived', async () => {
-    const verdict = await judge(
-      { url: 'https://example.com/gone', status: '404' },
-      {
-        recheckImpl: async () => ({ alive: false, status: 404 }),
-        waybackImpl: async () => ({
-          available: true,
-          archiveUrl:
-            'https://web.archive.org/web/20231015143022/https://example.com/gone',
-          timestamp: '20231015143022',
-        }),
-      }
+    const verdict = await verdictFor(
+      gone,
+      answers(404),
+      waybackHas(
+        '20231015143022',
+        'https://web.archive.org/web/20231015143022/https://example.com/gone'
+      )
     );
     assert.equal(verdict.verdict, 'archived');
     assert.equal(verdict.date, '2023-10-15');
   });
 
   it('fails on a confirmed 404 with no snapshot', async () => {
-    const verdict = await judge(
-      { url: 'https://example.com/gone', status: '404' },
-      {
-        recheckImpl: async () => ({ alive: false, status: 404 }),
-        waybackImpl: async () => ({
-          available: false,
-          archiveUrl: null,
-          timestamp: null,
-        }),
-      }
-    );
+    const verdict = await verdictFor(gone, answers(404), waybackNothing());
     assert.equal(verdict.verdict, 'gone');
   });
 
   it('still fails on a domain that no longer resolves', async () => {
     // A dead domain and a runner with no DNS look identical to lychee, so an
     // unreachable host is not waved through the way a 5xx is.
-    const verdict = await judge(
+    const verdict = await verdictFor(
       { url: 'https://example.invalid/x', status: 'ERROR' },
-      {
-        recheckImpl: async () => ({ alive: false, status: null }),
-        waybackImpl: async () => ({
-          available: false,
-          archiveUrl: null,
-          timestamp: null,
-        }),
-      }
+      unreachable(),
+      waybackNothing()
     );
     assert.equal(verdict.verdict, 'gone');
   });

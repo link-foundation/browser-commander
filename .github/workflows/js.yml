@@ -40,6 +40,11 @@ on:
         required: false
         type: string
 
+permissions:
+  # Read-only by default; the release jobs opt into `contents: write` and the
+  # rest of the token scopes they need in their own `permissions:` blocks.
+  contents: read
+
 defaults:
   run:
     working-directory: js
@@ -354,12 +359,14 @@ jobs:
 
       - name: Version packages and commit to main
         id: version
-        # RELEASE_DESCRIPTION is a free-form workflow_dispatch input, so it is
-        # passed through the environment instead of being interpolated into the
-        # shell command.
+        # Both inputs are passed through the environment rather than
+        # interpolated into the shell command: a `${{ ... }}` expansion is
+        # substituted before the shell sees the line, so its contents are read
+        # as script rather than as an argument.
         env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
           RELEASE_DESCRIPTION: ${{ github.event.inputs.description }}
-        run: node scripts/version-and-commit.mjs --mode instant --bump-type "${{ github.event.inputs.bump_type }}" --description "$RELEASE_DESCRIPTION"
+        run: node scripts/version-and-commit.mjs --mode instant --bump-type "$BUMP_TYPE" --description "$RELEASE_DESCRIPTION"
 
       - name: Publish to npm
         # Run if version was committed OR if a previous attempt already committed (for re-runs)
@@ -411,12 +418,14 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Create changeset file
-        # RELEASE_DESCRIPTION is a free-form workflow_dispatch input, so it is
-        # passed through the environment instead of being interpolated into the
-        # shell command.
+        # Both inputs are passed through the environment rather than
+        # interpolated into the shell command: a `${{ ... }}` expansion is
+        # substituted before the shell sees the line, so its contents are read
+        # as script rather than as an argument.
         env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
           RELEASE_DESCRIPTION: ${{ github.event.inputs.description }}
-        run: node scripts/create-manual-changeset.mjs --bump-type "${{ github.event.inputs.bump_type }}" --description "$RELEASE_DESCRIPTION"
+        run: node scripts/create-manual-changeset.mjs --bump-type "$BUMP_TYPE" --description "$RELEASE_DESCRIPTION"
 
       - name: Format changeset with Prettier
         run: |
@@ -426,7 +435,7 @@ jobs:
           echo "Formatted changeset files"
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore(js): add changeset for manual ${{ github.event.inputs.bump_type }} release'

@@ -27,6 +27,11 @@ on:
         required: false
         type: string
 
+permissions:
+  # Read-only by default; the release jobs opt into `contents: write` and the
+  # rest of the token scopes they need in their own `permissions:` blocks.
+  contents: read
+
 defaults:
   run:
     working-directory: python
@@ -253,7 +258,7 @@ jobs:
         if: >-
           matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' &&
           env.CODECOV_TOKEN != ''
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           token: ${{ env.CODECOV_TOKEN }}
           files: ./python/coverage.xml
@@ -374,7 +379,7 @@ jobs:
 
       - name: Publish to PyPI
         if: steps.version_check.outputs.should_release == 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           packages-dir: python/dist/
 
@@ -431,26 +436,30 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Collect changelog fragments
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
         run: |
           # Check if there are any fragments to collect
           FRAGMENTS=$(find changelog.d -name "*.md" ! -name "README.md" ! -name "*.j2" 2>/dev/null | wc -l)
           if [ "$FRAGMENTS" -gt 0 ]; then
             echo "Found $FRAGMENTS changelog fragment(s), collecting..."
-            scriv collect --version "${{ github.event.inputs.bump_type }}"
+            scriv collect --version "$BUMP_TYPE"
           else
             echo "No changelog fragments found, skipping collection"
           fi
 
       - name: Version and commit
         id: version
-        # RELEASE_DESCRIPTION is a free-form workflow_dispatch input, so it is
-        # passed through the environment instead of being interpolated into the
-        # shell command.
+        # Both inputs are passed through the environment rather than
+        # interpolated into the shell command: a `${{ ... }}` expansion is
+        # substituted before the shell sees the line, so its contents are read
+        # as script rather than as an argument.
         env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
           RELEASE_DESCRIPTION: ${{ github.event.inputs.description }}
         run: |
           python scripts/version_and_commit.py \
-            --bump-type "${{ github.event.inputs.bump_type }}" \
+            --bump-type "$BUMP_TYPE" \
             --description "$RELEASE_DESCRIPTION"
 
       - name: Build package
@@ -463,7 +472,7 @@ jobs:
 
       - name: Publish to PyPI
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           packages-dir: python/dist/
 

@@ -21,9 +21,10 @@ on:
   workflow_dispatch:
 
 permissions:
+  # `pages: write` and `id-token: write` belong to deploy-docs alone, which
+  # declares them itself; granting them workflow-wide would hand the same
+  # deployment rights to every step that only builds the site.
   contents: read
-  pages: write
-  id-token: write
 
 env:
   GIT_CONFIG_COUNT: '1'
@@ -47,7 +48,9 @@ jobs:
           node-version: "24.x"
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with:
+          toolchain: stable
 
       - name: Install JavaScript dependencies
         working-directory: js

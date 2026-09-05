@@ -23,7 +23,7 @@ defect, and a **warning** is noise that hides the other three.
 | RC-14 | false negative | The pre-commit hooks were never installed: husky failed and `\|\| true` hid it | `d2c4819` |
 | RC-15 | false negative | `scripts/`, `experiments/` and `rust/scripts/` had no linter at all | `d2c4819` |
 | RC-16 | false negative | A job killed by `timeout-minutes` is reported *cancelled*, and nothing failed the run | `d0ff981` |
-| RC-17 | false positive | A test matched `run: <command>\n` against a repository checked out with CRLF | `pending` |
+| RC-17 | false positive | A test matched `run: <command>\n` against a repository checked out with CRLF | `70b5054` |
 
 ---
 

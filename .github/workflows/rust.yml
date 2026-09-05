@@ -591,17 +591,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Collect changelog fragments
-        run: |
-          # Check if there are any fragments to collect
-          FRAGMENTS=$(find changelog.d -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
-          if [ "$FRAGMENTS" -gt 0 ]; then
-            echo "Found $FRAGMENTS changelog fragment(s), collecting..."
-            node scripts/collect-changelog.mjs
-          else
-            echo "No changelog fragments found, skipping collection"
-          fi
-
+      # Changelog fragments are collected inside version-and-commit.mjs, after
+      # the bump has computed the version. Collecting here instead filed the
+      # notes under the version that was already released and left the new one
+      # empty, because collect-changelog.mjs reads the version out of
+      # Cargo.toml and this step ran before the bump wrote it.
       - name: Version and commit
         id: version
         # Both inputs are passed through the environment rather than

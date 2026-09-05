@@ -1,34 +1,53 @@
 #!/usr/bin/env node
 
 /**
- * Check broken links against the Wayback Machine (web.archive.org)
+ * Decide whether the links lychee rejected are really broken.
  *
- * This script reads the lychee link checker output (markdown format),
- * extracts broken URLs, and checks each one against the Wayback Machine API.
- * It then outputs a report with:
- * - Links that have a web archive version (with suggestion to replace)
- * - Links that have no web archive version (clearly marked as unrecoverable)
+ * `links.yml` runs lychee with `fail: false` and lets this script decide, so
+ * everything that separates "the documentation needs editing" from "a third
+ * party had a bad minute" lives here. Two ways that decision used to go wrong,
+ * both observed on run 33959793880:
+ *
+ *   1. The report was scraped with a bullet-line regular expression that had no
+ *      idea which section it was in, so
+ *      `https://docs.github.com/actions/security-guides/using-secrets-in-github-actions`
+ *      - listed under `## Redirects per input` as a healthy 302 - was reported
+ *      as a broken link with no archived copy, and failed the job.
+ *   2. `[502] https://github.com/microsoft/playwright/issues/35743` was treated
+ *      like a 404. A 5xx is the server saying the problem is on its side; the
+ *      same URL answered 200 on the next run. Failing a pull request for it is
+ *      a false positive, and the Wayback Machine cannot rescue it either -
+ *      a live page that nobody has archived has no snapshot to fall back to.
+ *
+ * So: only the errors section is read, every rejected URL is re-checked from
+ * this script, and a URL is only ever fatal when the second look agrees it is
+ * gone and the Wayback Machine has nothing.
  *
  * Usage:
  *   node scripts/check-web-archive.mjs
  *
  * Environment variables:
- *   - LYCHEE_OUTPUT: Path to lychee markdown output file (default: lychee/out.md)
+ *   - LYCHEE_OUTPUT: path to lychee's markdown output (default: lychee/out.md)
+ *   - CI_SCRIPTS_DEBUG=1: trace parsing and every verdict (default: off)
  *
  * GitHub Actions outputs:
- *   - all_archived: 'true' if all broken links have a web archive version
+ *   - all_archived: 'true' when nothing needs a human
  *
  * Exit codes:
- *   - 0: All broken links have web archive versions (or no broken links)
- *   - 1: Some broken links have no web archive version
+ *   - 0: no link is known to be gone
+ *   - 1: at least one link is gone with no archived copy
  */
 
 import { readFileSync, appendFileSync, existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+
+import { debug } from './debug-print.mjs';
 
 const WAYBACK_API = 'https://archive.org/wayback/available?url=';
+const REQUEST_TIMEOUT_MS = 10000;
 
 /**
- * Write output to GitHub Actions output file
+ * Write output to the GitHub Actions output file.
  * @param {string} name - Output name
  * @param {string} value - Output value
  */
@@ -41,59 +60,129 @@ function setOutput(name, value) {
 }
 
 /**
- * Extract broken URLs from lychee markdown output
- * Lychee markdown format includes lines like:
- *   * [404] https://example.com/broken-link
- *   * [ERROR] https://another-broken.com
- * @param {string} content - The markdown content from lychee
- * @returns {string[]} Array of broken URLs
+ * Extract the rejected links from lychee's markdown report.
+ *
+ * The report is a sequence of `## ` sections; only `## Errors per input` lists
+ * failures. `## Redirects per input` and `## Summary` describe links that are
+ * fine, and reading a URL out of them is how a 302 became a build failure.
+ *
+ * A failure line looks like:
+ *   * [502] <https://example.com/x> (at 94:99) | Rejected status code: 502
+ *
+ * @param {string} content - lychee's markdown output
+ * @returns {{url: string, status: string}[]} one entry per unique URL
  */
-function extractBrokenUrls(content) {
-  const urls = [];
+export function extractRejectedLinks(content) {
+  const links = [];
+  const seen = new Set();
+  let inErrors = false;
 
-  // Match lines with error status codes or ERROR markers followed by URLs
-  // Lychee output format: [STATUS_CODE] URL or bullet points with links
-  const urlPattern =
-    /\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+(https?:\/\/[^\s)]+)/gi;
-  let match;
-
-  while ((match = urlPattern.exec(content)) !== null) {
-    const url = match[1].trim();
-    if (url && !urls.includes(url)) {
-      urls.push(url);
+  for (const line of content.split(/\r?\n/)) {
+    // `### Errors in <file>` stays inside the section; only `## ` ends it.
+    if (/^##(?!#)\s/.test(line)) {
+      inErrors = /^##\s+Errors\b/i.test(line);
+      debug('section', { line: line.trim(), inErrors });
+      continue;
     }
+    if (!inErrors) {
+      continue;
+    }
+
+    const match = line.match(
+      /^\s*[*-]\s+\[([^\]]+)\]\s+<?(https?:\/\/[^\s>)]+)>?/
+    );
+    if (!match) {
+      continue;
+    }
+
+    const status = match[1].trim();
+    const url = match[2].replace(/[.,;!?]+$/, '');
+    if (seen.has(url)) {
+      continue;
+    }
+    seen.add(url);
+    links.push({ url, status });
   }
 
-  // Also match plain URL lines in broken sections
-  // Lychee sometimes outputs: `[ERROR] url | description`
-  const linePattern = /^\s*(?:\*|-)\s+.*?(https?:\/\/[^\s|)>\]]+)/gm;
-  let lineMatch;
-
-  while ((lineMatch = linePattern.exec(content)) !== null) {
-    const url = lineMatch[1].trim().replace(/[.,;!?]+$/, '');
-    if (url && !urls.includes(url) && url.startsWith('http')) {
-      urls.push(url);
-    }
-  }
-
-  return urls;
+  debug('rejected links parsed', links);
+  return links;
 }
 
 /**
- * Check if a URL has an archived version in the Wayback Machine
- * Uses the Wayback Machine Availability API:
+ * Classify a lychee status token.
+ *
+ * `transient` means the check said nothing about the link: the server refused
+ * to answer this time (429, any 5xx). `gone` means it answered that the
+ * resource is not there. `unknown` covers the network-level failures, which
+ * look the same whether a domain died or a runner blinked - those go through
+ * the archive check rather than being waved through.
+ *
+ * @param {string} status - the token inside the brackets, e.g. `502`, `ERROR`
+ * @returns {'gone' | 'transient' | 'unknown'}
+ */
+export function classifyStatus(status) {
+  const code = Number.parseInt(status, 10);
+  if (Number.isNaN(code)) {
+    return 'unknown';
+  }
+  if (code === 429 || code >= 500) {
+    return 'transient';
+  }
+  if (code >= 400) {
+    return 'gone';
+  }
+  return 'transient';
+}
+
+/**
+ * Ask the URL itself, once, before believing the report.
+ *
+ * Redirects are followed: lychee rejects on the final status, and so does this.
+ *
+ * @param {string} url - the URL to re-check
+ * @param {typeof fetch} [fetchImpl] - injection point for tests
+ * @returns {Promise<{alive: boolean, status: number | null}>}
+ */
+export async function recheck(url, fetchImpl = fetch) {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS
+  );
+
+  try {
+    const response = await fetchImpl(url, {
+      redirect: 'follow',
+      signal: controller.signal,
+    });
+    debug('recheck', { url, status: response.status });
+    return { alive: response.status < 400, status: response.status };
+  } catch (error) {
+    debug('recheck failed', { url, error: error.message });
+    return { alive: false, status: null };
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Check whether a URL has an archived version in the Wayback Machine.
  * https://archive.org/help/wayback_api.php
  * @param {string} url - The URL to check
+ * @param {typeof fetch} [fetchImpl] - injection point for tests
  * @returns {Promise<{available: boolean, archiveUrl: string|null, timestamp: string|null}>}
  */
-async function checkWaybackMachine(url) {
+export async function checkWaybackMachine(url, fetchImpl = fetch) {
   const apiUrl = `${WAYBACK_API}${encodeURIComponent(url)}`;
 
   const controller = new AbortController();
-  const timeoutId = globalThis.setTimeout(() => controller.abort(), 10000);
+  const timeoutId = globalThis.setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS
+  );
 
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetchImpl(apiUrl, {
       headers: {
         'User-Agent': 'broken-link-checker/1.0 (GitHub Actions CI)',
       },
@@ -129,27 +218,58 @@ async function checkWaybackMachine(url) {
 }
 
 /**
- * Format a timestamp from Wayback Machine (YYYYMMDDHHmmss) to readable date
+ * Format a Wayback timestamp (YYYYMMDDHHmmss) as a readable date.
  * @param {string} timestamp - e.g. "20231015143022"
  * @returns {string} - e.g. "2023-10-15"
  */
-function formatTimestamp(timestamp) {
+export function formatTimestamp(timestamp) {
   if (!timestamp || timestamp.length < 8) {
     return timestamp;
   }
-  const year = timestamp.slice(0, 4);
-  const month = timestamp.slice(4, 6);
-  const day = timestamp.slice(6, 8);
-  return `${year}-${month}-${day}`;
+  return `${timestamp.slice(0, 4)}-${timestamp.slice(4, 6)}-${timestamp.slice(6, 8)}`;
 }
 
 /**
- * Main function
+ * Decide the fate of one rejected link.
+ *
+ * @param {{url: string, status: string}} link - as parsed from the report
+ * @param {{recheckImpl?: Function, waybackImpl?: Function}} [deps]
+ * @returns {Promise<{url: string, status: string, verdict: 'alive' | 'transient' | 'archived' | 'gone', archiveUrl?: string, date?: string}>}
  */
+export async function judge(link, deps = {}) {
+  const recheckImpl = deps.recheckImpl ?? recheck;
+  const waybackImpl = deps.waybackImpl ?? checkWaybackMachine;
+
+  const second = await recheckImpl(link.url);
+  if (second.alive) {
+    return { ...link, verdict: 'alive' };
+  }
+
+  const kind = classifyStatus(link.status);
+  if (kind === 'transient' && second.status !== null && second.status >= 500) {
+    return { ...link, verdict: 'transient' };
+  }
+  if (kind === 'transient' && second.status === 429) {
+    return { ...link, verdict: 'transient' };
+  }
+
+  const archive = await waybackImpl(link.url);
+  if (archive.available) {
+    return {
+      ...link,
+      verdict: 'archived',
+      archiveUrl: archive.archiveUrl,
+      date: formatTimestamp(archive.timestamp),
+    };
+  }
+  return { ...link, verdict: 'gone' };
+}
+
+/* c8 ignore start -- exercised end to end by the links workflow */
 async function main() {
   const lycheeOutput = process.env.LYCHEE_OUTPUT || 'lychee/out.md';
 
-  console.log('=== Web Archive Fallback Check ===\n');
+  console.log('=== Broken link verdicts ===\n');
   console.log(`Reading lychee output from: ${lycheeOutput}\n`);
 
   if (!existsSync(lycheeOutput)) {
@@ -158,106 +278,88 @@ async function main() {
     process.exit(0);
   }
 
-  const content = readFileSync(lycheeOutput, 'utf-8');
-  const brokenUrls = extractBrokenUrls(content);
+  const rejected = extractRejectedLinks(readFileSync(lycheeOutput, 'utf-8'));
 
-  if (brokenUrls.length === 0) {
-    console.log('No broken URLs found in lychee output.');
+  if (rejected.length === 0) {
+    console.log('No rejected URLs found in lychee output.');
     setOutput('all_archived', 'true');
     process.exit(0);
   }
 
-  console.log(
-    `Found ${brokenUrls.length} broken URL(s). Checking Web Archive...\n`
-  );
+  console.log(`Found ${rejected.length} rejected URL(s). Re-checking...\n`);
 
-  const withArchive = [];
-  const withoutArchive = [];
-
-  for (const url of brokenUrls) {
-    console.log(`Checking: ${url}`);
-    const result = await checkWaybackMachine(url);
-
-    if (result.available) {
-      const date = formatTimestamp(result.timestamp);
-      console.log(`  ✓ Archived on ${date}: ${result.archiveUrl}`);
-      withArchive.push({ url, archiveUrl: result.archiveUrl, date });
-    } else {
-      console.log('  ✗ Not found in Web Archive');
-      withoutArchive.push(url);
-    }
-
-    // Small delay to avoid rate-limiting the Wayback API
+  const verdicts = [];
+  for (const link of rejected) {
+    console.log(`Checking: [${link.status}] ${link.url}`);
+    const verdict = await judge(link);
+    verdicts.push(verdict);
+    console.log(`  -> ${verdict.verdict}`);
+    // Small delay to avoid rate-limiting the Wayback API.
     await new Promise((resolve) => globalThis.setTimeout(resolve, 500));
   }
 
-  console.log('\n=== Web Archive Check Summary ===\n');
-
-  if (withArchive.length > 0) {
+  for (const { url, status, verdict } of verdicts.filter(
+    (v) => v.verdict === 'alive'
+  )) {
     console.log(
-      `✓ ${withArchive.length} broken link(s) have Web Archive versions - consider replacing:`
+      `::warning title=Link recovered on re-check::${url} was reported as [${status}] ` +
+        `by lychee but answered normally on a second request. Nothing to fix here; ` +
+        `the first check hit a transient failure.`
     );
-    for (const { url, archiveUrl, date } of withArchive) {
-      console.log(`  Original: ${url}`);
-      console.log(`  Archive (${date}): ${archiveUrl}`);
-      console.log('');
-    }
-
-    // Print GitHub Actions annotations as suggestions (one per link)
-    for (const { url, archiveUrl, date } of withArchive) {
-      console.log(
-        `::notice title=Broken link - Web Archive available (${date})::` +
-          `Broken link detected: ${url}\n` +
-          `A Web Archive snapshot from ${date} is available.\n` +
-          `Suggested fix: replace the broken link with the archived version:\n` +
-          `  ${archiveUrl}`
-      );
-    }
   }
 
-  if (withoutArchive.length > 0) {
+  for (const { url, status } of verdicts.filter(
+    (v) => v.verdict === 'transient'
+  )) {
     console.log(
-      `✗ ${withoutArchive.length} broken link(s) have NO Web Archive version:`
+      `::warning title=Link host unavailable::${url} answered [${status}] twice. ` +
+        `A 429 or 5xx is the host reporting its own problem, so this run cannot ` +
+        `say whether the link is valid and does not fail because of it.`
     );
-    for (const url of withoutArchive) {
-      console.log(`  ${url}`);
-    }
-    console.log('');
-
-    // Print GitHub Actions annotations as errors (one per link)
-    for (const url of withoutArchive) {
-      console.log(
-        `::error title=Broken link - No Web Archive fallback::` +
-          `Broken link detected: ${url}\n` +
-          `No archived version was found in the Wayback Machine.\n` +
-          `How to fix:\n` +
-          `  1. Find an updated URL for the same or equivalent content and replace the link.\n` +
-          `  2. Remove the link if the content is no longer relevant.\n` +
-          `  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).`
-      );
-    }
   }
 
-  const allArchived = withoutArchive.length === 0;
-  setOutput('all_archived', allArchived ? 'true' : 'false');
+  const archived = verdicts.filter((v) => v.verdict === 'archived');
+  for (const { url, archiveUrl, date } of archived) {
+    console.log(
+      `::notice title=Broken link - Web Archive available (${date})::` +
+        `Broken link detected: ${url}\n` +
+        `A Web Archive snapshot from ${date} is available.\n` +
+        `Suggested fix: replace the broken link with the archived version:\n` +
+        `  ${archiveUrl}`
+    );
+  }
 
-  if (!allArchived) {
+  const gone = verdicts.filter((v) => v.verdict === 'gone');
+  for (const { url, status } of gone) {
     console.log(
-      '\nAction required: Fix or remove the broken links listed above.'
+      `::error title=Broken link - No Web Archive fallback::` +
+        `Broken link detected: ${url} (lychee reported [${status}], confirmed on re-check)\n` +
+        `No archived version was found in the Wayback Machine.\n` +
+        `How to fix:\n` +
+        `  1. Find an updated URL for the same or equivalent content and replace the link.\n` +
+        `  2. Remove the link if the content is no longer relevant.\n` +
+        `  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).`
     );
-    console.log(
-      'For links with Web Archive versions, you can replace them with the suggested archive.org URLs.'
-    );
+  }
+
+  console.log('\n=== Summary ===\n');
+  for (const { url, verdict } of verdicts) {
+    console.log(`  ${verdict.padEnd(9)} ${url}`);
+  }
+
+  setOutput('all_archived', gone.length === 0 ? 'true' : 'false');
+
+  if (gone.length > 0) {
+    console.log('\nAction required: fix or remove the broken links above.');
     process.exit(1);
-  } else {
-    console.log(
-      '\nAll broken links have Web Archive versions. Consider replacing them with the suggested archive.org URLs.'
-    );
-    process.exit(0);
   }
+  process.exit(0);
 }
 
-main().catch((error) => {
-  console.error('Unexpected error:', error);
-  process.exit(1);
-});
+if (process.argv[1] && process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error('Unexpected error:', error);
+    process.exit(1);
+  });
+}
+/* c8 ignore stop */

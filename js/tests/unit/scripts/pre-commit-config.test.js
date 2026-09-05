@@ -46,6 +46,11 @@ const MIRRORED_COMMANDS = [
   },
   { id: 'python-mypy', workflow: 'python.yml', command: 'mypy src' },
   {
+    id: 'python-mypy-scripts',
+    workflow: 'python.yml',
+    command: 'mypy --python-version 3.13 scripts tests/unit/scripts',
+  },
+  {
     id: 'rust-fmt',
     workflow: 'rust.yml',
     command: 'cargo fmt --all -- --check',

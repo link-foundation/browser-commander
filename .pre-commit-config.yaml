@@ -88,6 +88,14 @@ repos:
         files: ^python/.*\.py$
         pass_filenames: false
 
+      # The CI helpers run on the job's Python, not the package's 3.9 floor.
+      - id: python-mypy-scripts
+        name: mypy (python/scripts)
+        entry: bash -c 'cd python && mypy --python-version 3.13 scripts tests/unit/scripts'
+        language: system
+        files: ^python/(scripts|tests/unit/scripts)/.*\.py$
+        pass_filenames: false
+
       # --- Rust: mirrors the lint job in .github/workflows/rust.yml ---
       - id: rust-fmt
         name: rustfmt (rust/)

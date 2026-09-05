@@ -194,6 +194,13 @@ jobs:
       - name: Run mypy
         run: mypy src
 
+      # `mypy src` leaves the CI helpers under python/scripts/ unchecked, the
+      # same blind spot ESLint had outside js/. They run on the job's Python
+      # rather than the package's `requires-python = ">=3.9"` floor, so they use
+      # tomllib and `X | None` and need their own target version.
+      - name: Run mypy on the CI scripts
+        run: mypy --python-version 3.13 scripts tests/unit/scripts
+
       - name: Check file size limit
         run: python scripts/check_file_size.py
 

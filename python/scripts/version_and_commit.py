@@ -25,6 +25,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from collect_changelog import collect as collect_changelog
+from git_push import push_with_rebase_retry
 from read_manifest import read_field, replace_field
 
 
@@ -251,8 +252,14 @@ def main() -> int:
                 commit_msg += f" - {args.description}"
             run_command(["git", "commit", "-m", commit_msg])
 
-            # Push to main
-            run_command(["git", "push", "origin", "main"])
+            # Push to main.
+            #
+            # check_remote_changes() rebases before the bump, so it cannot
+            # cover a writer that lands between the bump and this push.
+            # push_with_rebase_retry closes that window and, just as
+            # importantly, tells a lost race apart from a branch-protection
+            # rejection instead of retrying one as if it were the other.
+            push_with_rebase_retry(branch="main")
 
             print(
                 f"\n Version bump committed and pushed: {old_version} -> {new_version}"

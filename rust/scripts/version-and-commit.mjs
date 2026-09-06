@@ -18,6 +18,12 @@ import {
   readManifestField,
   replaceTomlField,
 } from '../../scripts/read-manifest.mjs';
+import { debug } from '../../scripts/debug-print.mjs';
+import {
+  createGitRunner,
+  pushWithRebaseRetry,
+  resolveCurrentBranch,
+} from '../../scripts/push-with-rebase-retry.mjs';
 import { releaseTag } from '../../scripts/release-tags.mjs';
 import {
   loadCommandStream,
@@ -172,6 +178,13 @@ async function findNextAvailableVersion(crateName, current, bumpType) {
   let version = calculateNewVersion(current, bumpType);
   let attempts = 0;
 
+  // Versions the walk had to step over. Collected rather than warned about
+  // one by one: the drift is a single fact about the repository, and emitting
+  // one `::warning::` per step produced 12 annotations in run 33998729958 —
+  // a count that grows with every failed release and buries the one warning a
+  // reader needs. See dev/log/issues/85/pulls/86/analysis/root-causes.md (RC-2).
+  const skipped = [];
+
   while (await checkVersionOnCratesIo(crateName, version)) {
     attempts++;
     if (attempts >= MAX_ATTEMPTS) {
@@ -179,18 +192,27 @@ async function findNextAvailableVersion(crateName, current, bumpType) {
         `Could not find an available version after ${MAX_ATTEMPTS} attempts (last tried: ${version})`
       );
     }
-    // Reaching here means Cargo.toml is behind what is actually published,
-    // i.e. a previous release bumped and published without committing. The
-    // walk keeps the release moving, but it is a symptom, not normal
-    // operation, so say so where CI log readers will see it.
-    console.warn(
-      `::warning::Version ${version} is already published on crates.io but ` +
-        `Cargo.toml does not reflect it; the working tree is behind the registry. ` +
-        `Trying the next patch version...`
-    );
+    skipped.push(version);
+    debug(`version ${version} already on crates.io; trying the next patch`);
     const parts = version.split('.').map(Number);
     const next = { major: parts[0], minor: parts[1], patch: parts[2] };
     version = calculateNewVersion(next, 'patch');
+  }
+
+  if (skipped.length > 0) {
+    // Reaching here means Cargo.toml is behind what is actually published,
+    // i.e. a previous release published without its commit ever landing on
+    // main. The walk keeps the release moving, but it is a symptom, not normal
+    // operation, so say so once, where CI log readers will see it.
+    const first = skipped[0];
+    const last = skipped[skipped.length - 1];
+    const range = skipped.length === 1 ? first : `${first}-${last}`;
+    console.warn(
+      `::warning::Cargo.toml is behind crates.io: ${skipped.length} version(s) ` +
+        `(${range}) are already published, so the release skipped ahead to ${version}. ` +
+        `This means an earlier release published the crate without its version ` +
+        `commit reaching main. Run with CI_SCRIPTS_DEBUG=1 to list every skipped version.`
+    );
   }
 
   return version;
@@ -275,9 +297,21 @@ async function main() {
     await $`git commit -m ${commitMsg}`;
     console.log(`Committed version ${newVersion}`);
 
-    // Create tag. The crate has its own namespace: tagging `v<version>` put
-    // it in the JS package's namespace, where `git tag` refused to recreate a
-    // name JS had already taken and the release went out untagged.
+    // Push the release commit before tagging it.
+    //
+    // Ordering matters. A push that loses the race with another main writer is
+    // recovered by rebasing, which rewrites the release commit; a tag created
+    // beforehand would keep pointing at the pre-rebase commit and end up
+    // reachable from no branch. Case 2 of
+    // experiments/ci-repro/repro-release-push-race.sh reproduces exactly that
+    // orphaned tag.
+    const git = await createGitRunner();
+    const branch = await resolveCurrentBranch(git);
+    await pushWithRebaseRetry({ git, branch });
+
+    // Create the tag. The crate has its own namespace: tagging `v<version>`
+    // put it in the JS package's namespace, where `git tag` refused to
+    // recreate a name JS had already taken and the release went out untagged.
     const tag = releaseTag('rust', newVersion);
     const tagMsg = description
       ? `Release ${tag}\n\n${description}`
@@ -285,10 +319,10 @@ async function main() {
     await $`git tag -a ${tag} -m ${tagMsg}`;
     console.log(`Created tag ${tag}`);
 
-    // Push changes and tag
-    await $`git push`;
-    await $`git push --tags`;
-    console.log('Pushed changes and tags');
+    // Push this tag by name rather than `--tags`, which would also push every
+    // unrelated local tag the runner happens to have fetched.
+    await $`git push origin ${tag}`;
+    console.log(`Pushed ${branch} and ${tag}`);
 
     setOutput('version_committed', 'true');
     setOutput('new_version', newVersion);

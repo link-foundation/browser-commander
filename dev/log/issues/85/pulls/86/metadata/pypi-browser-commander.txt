@@ -1,0 +1,6 @@
+GET https://pypi.org/pypi/browser-commander/json
+HTTP 404 (checked 2026-09-06)
+
+The project does not exist on PyPI. Every Python release attempt died at the
+"Collect changelog fragments" push, before the "Publish to PyPI" step, so the
+package has never been published. See analysis/root-causes.md (RC-1).

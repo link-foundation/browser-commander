@@ -1,0 +1,4 @@
+notice		Skipping Codecov upload because CODECOV_TOKEN is not configured
+failure		Process completed with exit code 1.
+failure		Process completed with exit code 1.
+failure		Pipeline failed. Failing jobs: auto-release

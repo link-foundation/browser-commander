@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -63,11 +64,16 @@ RULE_SAMPLES = [
 
 @dataclass
 class FakeResult:
-    """The shape ``subprocess.run`` returns, reduced to what is read."""
+    """The shape ``subprocess.run`` returns, reduced to what is read.
+
+    ``stdout``/``stderr`` are ``str | None`` to match the ``CommandResult``
+    protocol exactly: a protocol attribute is mutable and therefore invariant,
+    so a narrower ``str`` here makes FakeGit fail to satisfy ``Runner``.
+    """
 
     returncode: int = 0
-    stdout: str = ""
-    stderr: str = ""
+    stdout: str | None = ""
+    stderr: str | None = ""
 
 
 @dataclass
@@ -80,7 +86,7 @@ class FakeGit:
     calls: list[str] = field(default_factory=list)
     _pushes: int = 0
 
-    def __call__(self, cmd) -> FakeResult:
+    def __call__(self, cmd: Sequence[str]) -> FakeResult:
         self.calls.append(" ".join(cmd))
         if cmd[1] == "push":
             self._pushes += 1

@@ -8,5 +8,10 @@ try {
   const r = await $`git ${args}`;
   console.log('ARRAY-INTERP-OK:', JSON.stringify(String(r.stdout).trim()));
 } catch (e) {
-  console.log('ARRAY-INTERP-FAIL:', e.message, '| stderr:', String(e.stderr || '').trim());
+  console.log(
+    'ARRAY-INTERP-FAIL:',
+    e.message,
+    '| stderr:',
+    String(e.stderr || '').trim()
+  );
 }

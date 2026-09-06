@@ -210,10 +210,24 @@ describe('resolveCurrentBranch', () => {
     assert.deepEqual(git.calls, ['rev-parse --abbrev-ref HEAD']);
   });
 
-  it('falls back to HEAD when git says nothing', async () => {
+  it('falls back to main when git says nothing', async () => {
     assert.equal(
       await resolveCurrentBranch(fakeGit({ stdout: '  \n' })),
-      'HEAD'
+      'main'
+    );
+  });
+
+  it('does not push HEAD:HEAD from a detached checkout', async () => {
+    // `git rev-parse --abbrev-ref HEAD` prints the literal "HEAD" when
+    // detached. Using it as the target branch would aim the push at a remote
+    // branch named HEAD instead of the release branch.
+    assert.equal(
+      await resolveCurrentBranch(fakeGit({ stdout: 'HEAD\n' })),
+      'main'
+    );
+    assert.equal(
+      await resolveCurrentBranch(fakeGit({ stdout: 'HEAD\n' }), 'release'),
+      'release'
     );
   });
 });

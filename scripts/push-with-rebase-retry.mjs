@@ -83,12 +83,21 @@ export async function createGitRunner() {
  * behaviour for a `workflow_dispatch` run started from another branch, so the
  * branch is resolved instead of assumed.
  *
+ * A detached HEAD has no branch name: `git rev-parse --abbrev-ref HEAD` prints
+ * the literal string `HEAD`, and pushing `HEAD:HEAD` would aim at a remote
+ * branch called `HEAD`. `actions/checkout` puts the runner on a real branch
+ * for `push` and `workflow_dispatch` events, so this is unreachable from the
+ * current workflows — but it is one `ref:` away from being reachable, and the
+ * fallback is what the release means in that case anyway.
+ *
  * @param {(args: string[]) => Promise<{stdout?: unknown}>} git git runner
- * @returns {Promise<string>} branch name, or `HEAD` when detached
+ * @param {string} [fallback] branch to use when HEAD is detached or unnamed
+ * @returns {Promise<string>} branch name
  */
-export async function resolveCurrentBranch(git) {
+export async function resolveCurrentBranch(git, fallback = 'main') {
   const result = await git(['rev-parse', '--abbrev-ref', 'HEAD']);
-  return String(result?.stdout ?? '').trim() || 'HEAD';
+  const name = String(result?.stdout ?? '').trim();
+  return name && name !== 'HEAD' ? name : fallback;
 }
 
 /**

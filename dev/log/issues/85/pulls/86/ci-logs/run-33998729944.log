@@ -1,0 +1,508 @@
+Check Links	UNKNOWN STEP	﻿2026-09-05T23:27:51.5033213Z Current runner version: '2.337.0'
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5069860Z ##[group]Runner Image Provisioner
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5071206Z Hosted Compute Agent
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5072417Z Version: 20260828.587
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5073740Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5074978Z Build Date: 2026-08-28T16:44:25Z
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5076193Z Worker ID: {ee8ca6e5-96a0-48b0-af6e-706278adfd0c}
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5077472Z Azure Region: eastus
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5078467Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5081057Z ##[group]Operating System
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5082373Z Ubuntu
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5083467Z 24.04.4
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5084359Z LTS
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5085212Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5086292Z ##[group]Runner Image
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5087316Z Image: ubuntu-24.04
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5088347Z Version: 20260831.293.1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5090417Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5093551Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5095213Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5097203Z ##[group]GITHUB_TOKEN Permissions
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5099745Z Contents: read
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5101123Z Metadata: read
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5102280Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5105440Z Secret source: Actions
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5107179Z Prepare workflow directory
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5675929Z Prepare all required actions
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.5747400Z Getting action download info
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.7763305Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Check Links	UNKNOWN STEP	2026-09-05T23:27:51.9040262Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.0347102Z Download action repository 'lycheeverse/lychee-action@v2' (SHA:e7477775783ea5526144ba13e8db5eec57747ce8)
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.2453017Z Complete job name: Check Links
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3217208Z ##[group]Run actions/checkout@v6
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3218335Z with:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3219191Z   repository: link-foundation/browser-commander
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3223961Z   token: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3224418Z   ssh-strict: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3224860Z   ssh-user: git
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3225302Z   persist-credentials: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3225788Z   clean: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3226227Z   sparse-checkout-cone-mode: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3226734Z   fetch-depth: 1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3227157Z   fetch-tags: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3227599Z   show-progress: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3228043Z   lfs: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3228444Z   submodules: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3228880Z   set-safe-directory: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3229372Z   allow-unsafe-pr-checkout: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3230213Z env:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3230614Z   GIT_CONFIG_COUNT: 1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3231103Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3232140Z   GIT_CONFIG_VALUE_0: main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.3232639Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4248415Z Syncing repository: link-foundation/browser-commander
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4251865Z ##[group]Getting Git version info
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4253212Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4254641Z [command]/usr/bin/git version
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4318825Z git version 2.55.0
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4344821Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4362115Z Temporarily overriding HOME='/home/runner/work/_temp/3137ba66-b4c9-4601-a7ba-183601fb915e' before making global git config changes
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4363960Z Adding repository directory to the temporary git global config as a safe directory
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4368257Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4433407Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4443330Z ##[group]Determining repository object format
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4446335Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4448480Z ##[group]Initializing the repository
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4450191Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4578381Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4591115Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4652097Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4653298Z ##[group]Disabling automatic garbage collection
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4663621Z [command]/usr/bin/git config --local gc.auto 0
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4727822Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4729526Z ##[group]Setting up auth
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4730846Z Removing SSH command configuration
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4738880Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.4778030Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5155241Z Removing HTTP extra header
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5164334Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5210273Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5499043Z Removing includeIf entries pointing to credentials config files
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5510546Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5558543Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5833474Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5875698Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5912168Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.5985673Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.6022608Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.6054928Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.6055696Z ##[group]Fetching the repository
+Check Links	UNKNOWN STEP	2026-09-05T23:27:52.6063412Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +67c003cec1453f40ba0d065f0f1a6d10d24e677c:refs/remotes/origin/main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2363266Z From https://github.com/link-foundation/browser-commander
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2364514Z  * [new ref]         67c003cec1453f40ba0d065f0f1a6d10d24e677c -> origin/main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2393938Z [command]/usr/bin/git branch --list --remote origin/main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2412845Z   origin/main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2425451Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2454674Z 67c003cec1453f40ba0d065f0f1a6d10d24e677c
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2464933Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2466284Z ##[group]Determining the checkout info
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2467670Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2468518Z [command]/usr/bin/git sparse-checkout disable
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2523630Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2557547Z ##[group]Checking out the ref
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.2562100Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3468986Z Reset branch 'main'
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3472958Z branch 'main' set up to track 'origin/main'.
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3487465Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3536005Z [command]/usr/bin/git log -1 --format=%H
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3565530Z 67c003cec1453f40ba0d065f0f1a6d10d24e677c
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3963931Z ##[group]Run actions/setup-node@v6
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3965185Z with:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3966113Z   node-version: 24.x
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3967150Z   check-latest: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3976718Z   token: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3977754Z   package-manager-cache: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3978842Z env:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3979755Z   GIT_CONFIG_COUNT: 1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3980842Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3982213Z   GIT_CONFIG_VALUE_0: main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.3983235Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.5452433Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Check Links	UNKNOWN STEP	2026-09-05T23:27:53.5455935Z ##[group]Environment details
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.8843718Z node: v24.20.0
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.8844825Z npm: 11.19.0
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.8845043Z yarn: 1.22.22
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.8846147Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9147808Z ##[group]Run lycheeverse/lychee-action@v2
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9148151Z with:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9148732Z   args: --verbose --no-progress --cache --max-cache-age 1d --max-retries 3 --timeout 30 --exclude-path dev/log './**/*.md' './**/*.html'
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9149323Z   fail: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9149537Z   output: lychee/out.md
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9149767Z   jobSummary: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9149972Z   debug: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9150181Z   failIfEmpty: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9150393Z   format: markdown
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9150601Z   lycheeVersion: v0.24.2
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9150862Z   checkbox: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9153754Z   token: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9153983Z   workingDirectory: .
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9154202Z env:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9154387Z   GIT_CONFIG_COUNT: 1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9154617Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9154894Z   GIT_CONFIG_VALUE_0: main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9157419Z   GITHUB_TOKEN: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9157669Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9213872Z ##[start-action display=Set up environment;id=lychee.__run]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9259498Z ##[group]Run # Install into $RUNNER_TEMP (not $HOME) so the install path is stable
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9260128Z ^[[36;1m# Install into $RUNNER_TEMP (not $HOME) so the install path is stable^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9260662Z ^[[36;1m# across composite steps. On some runners $HOME is overridden per step^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9261160Z ^[[36;1m# (e.g. actions/checkout temporarily sets it), which made the PATH^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9261850Z ^[[36;1m# entry from one step and the install in another step diverge.^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9262306Z ^[[36;1mecho "$RUNNER_TEMP/lychee/bin" >> "$GITHUB_PATH"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9262705Z ^[[36;1mmkdir -p "$RUNNER_TEMP/lychee/bin"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9353420Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9353788Z env:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9353989Z   GIT_CONFIG_COUNT: 1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9354253Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9354538Z   GIT_CONFIG_VALUE_0: main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9357163Z   GITHUB_TOKEN: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9357387Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9481929Z ##[end-action id=lychee.__run;outcome=success;conclusion=success;duration_ms=26]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9486181Z ##[start-action display=Download and extract lychee in temp directory;id=lychee.lychee-setup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9514697Z ##[group]Run # Create a temporary directory for downloads and extraction
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9515230Z ^[[36;1m# Create a temporary directory for downloads and extraction^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9515806Z ^[[36;1mTEMP_DIR="${RUNNER_TEMP}/lychee-download"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9516168Z ^[[36;1mrm -rf "${TEMP_DIR}" && mkdir -p "${TEMP_DIR}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9516483Z ^[[36;1mcd "${TEMP_DIR}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9516710Z ^[[36;1m^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9516910Z ^[[36;1mARCH=$(uname -m)^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9517238Z ^[[36;1m# Determine filename and download URL based on version^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9517642Z ^[[36;1mif [[ "${LYCHEE_VERSION}" =~ ^v0\.0|^v0\.1[0-5]\. ]]; then^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9518094Z ^[[36;1m  FILENAME="lychee-${LYCHEE_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9518758Z ^[[36;1m  DOWNLOAD_URL="https://github.com/lycheeverse/lychee/releases/download/${LYCHEE_VERSION}/${FILENAME}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9519277Z ^[[36;1melse^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9519559Z ^[[36;1m  FILENAME="lychee-${ARCH}-unknown-linux-gnu.tar.gz"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9519937Z ^[[36;1m  if [[ "${LYCHEE_VERSION}" == 'nightly' ]]; then^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9520451Z ^[[36;1m    DOWNLOAD_URL="https://github.com/lycheeverse/lychee/releases/download/nightly/${FILENAME}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9520995Z ^[[36;1m  elif [[ "${LYCHEE_VERSION}" == 'latest' ]]; then^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9521856Z ^[[36;1m    DOWNLOAD_URL="https://github.com/lycheeverse/lychee/releases/latest/download/${FILENAME}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9522345Z ^[[36;1m  else^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9523015Z ^[[36;1m    DOWNLOAD_URL="https://github.com/lycheeverse/lychee/releases/download/lychee-${LYCHEE_VERSION}/${FILENAME}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9523560Z ^[[36;1m  fi^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9523749Z ^[[36;1mfi^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9523933Z ^[[36;1m^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9524161Z ^[[36;1mecho "Downloading from: ${DOWNLOAD_URL}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9524480Z ^[[36;1mcurl -sfLO "${DOWNLOAD_URL}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9524734Z ^[[36;1m^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9524954Z ^[[36;1mecho "Extracting ${FILENAME}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9525265Z ^[[36;1mtar -xvzf "${FILENAME}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9525521Z ^[[36;1mrm -rv "${FILENAME}"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9525764Z ^[[36;1m^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9526040Z ^[[36;1m# Detect if lychee binary is in a subfolder within the tar.gz^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9526433Z ^[[36;1mif ! [[ -f "${TEMP_DIR}/lychee" ]]; then^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9526837Z ^[[36;1m  TEMP_DIR="$(echo "${TEMP_DIR}"/lychee-*)"  # need `echo` to evaluate glob^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9527222Z ^[[36;1mfi^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9527462Z ^[[36;1mif ! [[ -f "${TEMP_DIR}/lychee" ]]; then^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9527908Z ^[[36;1m  echo "Cannot find lychee binary in $TEMP_DIR. Did the archive structure change?" >&2^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9528333Z ^[[36;1m  exit 1^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9528525Z ^[[36;1mfi^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9528707Z ^[[36;1m^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9528943Z ^[[36;1m# Output temp directory for use in later steps^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9529302Z ^[[36;1mecho "temp_dir=${TEMP_DIR}" >> $GITHUB_OUTPUT^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9566592Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9566960Z env:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9567160Z   GIT_CONFIG_COUNT: 1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9567404Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9567681Z   GIT_CONFIG_VALUE_0: main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9570308Z   GITHUB_TOKEN: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9570544Z   LYCHEE_VERSION: v0.24.2
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9570779Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:55.9670418Z Downloading from: https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-gnu.tar.gz
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1428927Z Extracting lychee-x86_64-unknown-linux-gnu.tar.gz
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1456255Z lychee-x86_64-unknown-linux-gnu/
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1457127Z lychee-x86_64-unknown-linux-gnu/README.md
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1462404Z lychee-x86_64-unknown-linux-gnu/docs/
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1463147Z lychee-x86_64-unknown-linux-gnu/docs/lychee.1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1463835Z lychee-x86_64-unknown-linux-gnu/docs/TROUBLESHOOTING.md
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1464591Z lychee-x86_64-unknown-linux-gnu/docs/PRE_COMMIT.md
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1465551Z lychee-x86_64-unknown-linux-gnu/complete/
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1466283Z lychee-x86_64-unknown-linux-gnu/complete/_lychee.ps1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1467086Z lychee-x86_64-unknown-linux-gnu/complete/lychee.elv
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1467863Z lychee-x86_64-unknown-linux-gnu/complete/lychee.fish
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1468532Z lychee-x86_64-unknown-linux-gnu/complete/lychee.bash
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1469274Z lychee-x86_64-unknown-linux-gnu/complete/_lychee
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.1469889Z lychee-x86_64-unknown-linux-gnu/lychee
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.2878548Z removed 'lychee-x86_64-unknown-linux-gnu.tar.gz'
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.2911771Z ##[end-action id=lychee.lychee-setup;outcome=success;conclusion=success;duration_ms=342]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.2916393Z ##[start-action display=Install lychee;id=lychee.__run_2]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.2964235Z ##[group]Run # Install lychee from the temporary directory
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.2964647Z ^[[36;1m# Install lychee from the temporary directory^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.2965287Z ^[[36;1minstall -t "$RUNNER_TEMP/lychee/bin" -D "/home/runner/work/_temp/lychee-download/lychee-x86_64-unknown-linux-gnu/lychee"^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3002669Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3003007Z env:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3003203Z   GIT_CONFIG_COUNT: 1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3003443Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3003898Z   GIT_CONFIG_VALUE_0: main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3006491Z   GITHUB_TOKEN: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3006710Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3159511Z ##[end-action id=lychee.__run_2;outcome=success;conclusion=success;duration_ms=24]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3168083Z ##[start-action display=Run Lychee;id=lychee.run-lychee]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3196901Z ##[group]Run /home/runner/work/_actions/lycheeverse/lychee-action/v2/entrypoint.sh
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3197491Z ^[[36;1m/home/runner/work/_actions/lycheeverse/lychee-action/v2/entrypoint.sh^[[0m
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3235177Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3235544Z env:
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3259496Z   GIT_CONFIG_COUNT: 1
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3259812Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3260110Z   GIT_CONFIG_VALUE_0: main
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3263133Z   GITHUB_TOKEN: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3265603Z   INPUT_TOKEN: ***
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3266178Z   INPUT_ARGS: --verbose --no-progress --cache --max-cache-age 1d --max-retries 3 --timeout 30 --exclude-path dev/log './**/*.md' './**/*.html'
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3266781Z   INPUT_DEBUG: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3266996Z   INPUT_FAIL: false
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3267208Z   INPUT_FAILIFEMPTY: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3267442Z   INPUT_FORMAT: markdown
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3267668Z   INPUT_JOBSUMMARY: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3267888Z   INPUT_CHECKBOX: true
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3268109Z   INPUT_OUTPUT: lychee/out.md
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3268617Z   SUMMARY_URL: https://github.com/link-foundation/browser-commander/actions/runs/33998729944#summary-101393680267
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.3269145Z ##[endgroup]
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.4834235Z [EXCLUDED] https://www.npmjs.com/package/browser-commander (at 9:27) | This is due to your 'exclude' values
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.4836841Z [EXCLUDED] https://www.npmjs.com/package/browser-commander (at 9:98) | This is due to your 'exclude' values
+Check Links	UNKNOWN STEP	2026-09-05T23:27:56.4878509Z [EXCLUDED] https://www.npmjs.com/package/test-anywhere (at 55:96) | This is due to your 'exclude' values
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3550006Z # Summary
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3550257Z 
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3550513Z | Status         | Count |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3551024Z |----------------|-------|
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3552143Z | 🔍 Total       | 180   |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3572513Z | 🔗 Unique      | 132   |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3580046Z | ✅ Successful  | 177   |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3580612Z | ⏳ Timeouts    | 0     |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3581119Z | 🔀 Redirected  | 1     |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3581885Z | 👻 Excluded    | 3     |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3582384Z | ❓ Unknown     | 0     |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3582871Z | 🚫 Errors      | 0     |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3583640Z | ⛔ Unsupported | 0     |
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3583896Z 
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3584094Z ## Redirects per input
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3584276Z 
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3584497Z ### Redirects in docs/case-studies/issue-33/README.md
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3584735Z 
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3585827Z * https://docs.github.com/actions/security-guides/using-secrets-in-github-actions --[302]--> https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3586587Z 
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3586628Z 
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3604011Z ##[notice]Summary report available at: https://github.com/link-foundation/browser-commander/actions/runs/33998729944#summary-101393680267
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3620488Z ##[end-action id=lychee.run-lychee;outcome=success;conclusion=success;duration_ms=4045]
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.3762013Z Post job cleanup.
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.5122890Z Post job cleanup.
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6060834Z [command]/usr/bin/git version
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6104242Z git version 2.55.0
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6146126Z Temporarily overriding HOME='/home/runner/work/_temp/772a9c55-8e2f-482a-b310-1f92727c4163' before making global git config changes
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6148051Z Adding repository directory to the temporary git global config as a safe directory
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6156077Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6186545Z Removing SSH command configuration
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6193306Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6229621Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6490452Z Removing HTTP extra header
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6496569Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6534885Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6791167Z Removing includeIf entries pointing to credentials config files
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6801020Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6839312Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6841022Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6842738Z includeif.gitdir:/github/workspace/.git.path
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6843833Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6853953Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6883128Z /home/runner/work/_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6898261Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6941137Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6973193Z /home/runner/work/_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.6986845Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7031483Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7061754Z /github/runner_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7073747Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7113810Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7142126Z /github/runner_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7150369Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7197416Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7423147Z Removing credentials config '/home/runner/work/_temp/git-credentials-2c03be7d-3f8a-492e-8e17-ae161ff15e52.config'
+Check Links	UNKNOWN STEP	2026-09-05T23:28:00.7564950Z Cleaning up orphan processes
+Pipeline Status	UNKNOWN STEP	﻿2026-09-05T23:28:27.7113157Z Current runner version: '2.337.0'
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7137125Z ##[group]Runner Image Provisioner
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7137990Z Hosted Compute Agent
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7138579Z Version: 20260828.587
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7139189Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7139890Z Build Date: 2026-08-28T16:44:25Z
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7140527Z Worker ID: {f821ed63-0a97-4129-82fb-04e642241a36}
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7141174Z Azure Region: westus3
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7141752Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7143095Z ##[group]Operating System
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7143704Z Ubuntu
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7144182Z 24.04.4
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7144640Z LTS
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7145167Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7145683Z ##[group]Runner Image
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7146228Z Image: ubuntu-24.04
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7146970Z Version: 20260831.293.1
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7148284Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7149699Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7150589Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7151648Z ##[group]GITHUB_TOKEN Permissions
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7153614Z Contents: read
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7154181Z Metadata: read
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7154717Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7156739Z Secret source: Actions
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7158051Z Prepare workflow directory
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7570085Z Prepare all required actions
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:27.7618285Z Getting action download info
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.0352991Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.1922801Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.3715026Z Complete job name: Pipeline Status
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4558506Z ##[group]Run actions/checkout@v6
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4559998Z with:
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4560686Z   persist-credentials: false
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4561666Z   repository: link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4565687Z   token: ***
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4566081Z   ssh-strict: true
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4566470Z   ssh-user: git
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4567088Z   clean: true
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4567499Z   sparse-checkout-cone-mode: true
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4567965Z   fetch-depth: 1
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4568357Z   fetch-tags: false
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4568761Z   show-progress: true
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4569162Z   lfs: false
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4569542Z   submodules: false
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4569945Z   set-safe-directory: true
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4570403Z   allow-unsafe-pr-checkout: false
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4571275Z env:
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4571646Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4572080Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4572632Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.4573059Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5547896Z Syncing repository: link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5550790Z ##[group]Getting Git version info
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5552170Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5554122Z [command]/usr/bin/git version
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5574701Z git version 2.55.0
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5595302Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5609097Z Temporarily overriding HOME='/home/runner/work/_temp/d409352d-7920-4592-99dd-d53c75d31fd9' before making global git config changes
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5611672Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5614301Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5657508Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5675237Z ##[group]Determining repository object format
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5677248Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5678790Z ##[group]Initializing the repository
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5682467Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5767380Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5776461Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5813536Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5815021Z ##[group]Disabling automatic garbage collection
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5816508Z [command]/usr/bin/git config --local gc.auto 0
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5842573Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5843829Z ##[group]Setting up auth
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5844652Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5850373Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.5878435Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6154422Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6162232Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6202713Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6387016Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6394333Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6423548Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6598737Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6629790Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6656429Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6690790Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6718336Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6740992Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6742210Z ##[group]Fetching the repository
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:28.6750387Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +67c003cec1453f40ba0d065f0f1a6d10d24e677c:refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1279992Z From https://github.com/link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1282877Z  * [new ref]         67c003cec1453f40ba0d065f0f1a6d10d24e677c -> origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1290108Z [command]/usr/bin/git branch --list --remote origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1320186Z   origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1327851Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1345927Z 67c003cec1453f40ba0d065f0f1a6d10d24e677c
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1350075Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1351486Z ##[group]Determining the checkout info
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1354488Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1360078Z [command]/usr/bin/git sparse-checkout disable
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1394327Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1418764Z ##[group]Checking out the ref
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.1421784Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2192513Z Reset branch 'main'
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2196597Z branch 'main' set up to track 'origin/main'.
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2209737Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2250192Z [command]/usr/bin/git log -1 --format=%H
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2273795Z 67c003cec1453f40ba0d065f0f1a6d10d24e677c
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2286077Z ##[group]Removing auth
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2287641Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2291162Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2321017Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2498006Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2501915Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2533662Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2699305Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2703450Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2728198Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2732832Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2736755Z includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2739716Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2746276Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2759858Z /home/runner/work/_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2772515Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2801286Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2828961Z /home/runner/work/_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2840014Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2864623Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2893698Z /github/runner_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2901496Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2921457Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2938628Z /github/runner_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2946278Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.2974584Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3142205Z Removing credentials config '/home/runner/work/_temp/git-credentials-17577a32-4fa2-4ef1-a650-6dc152701abf.config'
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3148679Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3464366Z ##[group]Run actions/setup-node@v6
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3465472Z with:
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3466298Z   node-version: 24.x
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3467335Z   check-latest: false
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3475700Z   token: ***
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3476611Z   package-manager-cache: true
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3477703Z env:
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3478518Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3479501Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3480631Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.3481588Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.4859387Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:30.4863032Z ##[group]Environment details
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3252152Z node: v24.20.0
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3252518Z npm: 11.19.0
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3252787Z yarn: 1.22.22
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3253958Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3419780Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3420388Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3490596Z shell: /usr/bin/bash -e {0}
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3490929Z env:
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3491172Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3491450Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3491782Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3492187Z   NEEDS_JSON: {
+Pipeline Status	UNKNOWN STEP	  "link-checker": {
+Pipeline Status	UNKNOWN STEP	    "result": "success",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  }
+Pipeline Status	UNKNOWN STEP	}
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3492610Z   IS_MAIN: true
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3492885Z   RUN_SHA: 67c003cec1453f40ba0d065f0f1a6d10d24e677c
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.3493231Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.4139615Z Failed jobs:    <none>
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.4140079Z Cancelled jobs: <none>
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.4140593Z All required jobs succeeded or were legitimately skipped.
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.4305145Z Post job cleanup.
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.5612105Z Post job cleanup.
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6476035Z [command]/usr/bin/git version
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6513633Z git version 2.55.0
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6555087Z Temporarily overriding HOME='/home/runner/work/_temp/8451fb29-df77-4aa0-947b-cf03627e2884' before making global git config changes
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6557148Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6561197Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6589217Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6595499Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6626650Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6822374Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6827745Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.6858099Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.7057051Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.7064356Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.7099725Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-09-05T23:28:33.7439468Z Cleaning up orphan processes

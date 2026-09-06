@@ -170,3 +170,29 @@ question does not have to be reopened.
 | Security run reporting 0 vulnerabilities | Verified against the audit output, not inferred from the green tick. |
 | `install-action: %s\n` and `openssl-sys is back in the dependency tree:` appearing in logs | Both are lines of the shell scripts being echoed by the runner, not emitted annotations. Confirmed against `../annotations/`, which lists neither. |
 | Test counts (Python 459 passed × 3 OSes, Rust 283 passed) | Healthy; no silent skips. |
+
+---
+
+## Annotations on this branch after the fix
+
+The same audit, run against the 8 workflows on the branch head rather than on
+`67c003c`, so the claim "no errors, no warnings left" is checked rather than
+asserted. Pulled from the check-runs API, the same way as `../annotations/`.
+
+| Level | Count | What |
+| --- | --- | --- |
+| error | 0 | — |
+| warning | 1 | `Dependency review skipped`: the dependency graph is disabled for this repository |
+| notice | 3 | two Codecov-token skips, one lychee summary link |
+
+The single warning is **not fixable in code and is deliberate**. Issue #83's
+pull request found that `actions/dependency-review-action` fails outright when
+the dependency graph is off, and replaced a job that could only ever be red
+with a probe that warns instead
+(`.github/workflows/security.yml:95-111`). Deleting the job would trade a
+visible gap for a silent one. It clears when a maintainer enables
+**Settings → Code security → Dependency graph**; no code change follows.
+
+Note that it is absent from the 8 archived runs for a structural reason rather
+than a happy one: the job is `if: github.event_name == 'pull_request'`, and all
+8 of those runs are `push` runs on `main`.

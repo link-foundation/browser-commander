@@ -17,6 +17,10 @@ import { readFileSync, appendFileSync, readdirSync } from 'fs';
 import { assertGeneratedFilesAreFormatted } from './check-release-format.mjs';
 
 import {
+  createGitRunner,
+  pushWithRebaseRetry,
+} from '../../scripts/push-with-rebase-retry.mjs';
+import {
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
@@ -232,8 +236,15 @@ async function main() {
       const escapedMessage = commitMessage.replace(/"/g, '\\"');
       await $`git commit -m "${escapedMessage}"`;
 
-      // Push directly to main
-      await $`git push origin main`;
+      // Push directly to main.
+      //
+      // The pre-emptive rebase above runs before the version bump, so it
+      // cannot cover a writer that lands between the bump and this push.
+      // pushWithRebaseRetry closes that window and, just as importantly,
+      // distinguishes a lost race from a branch-protection rejection instead
+      // of retrying one as if it were the other.
+      const git = await createGitRunner();
+      await pushWithRebaseRetry({ git, branch: 'main' });
 
       console.log('\u2705 Version bump committed and pushed to main');
       setOutput('version_committed', 'true');

@@ -408,7 +408,12 @@ jobs:
             echo "No changelog changes to commit"
           else
             git commit -m "python: changelog for $CURRENT_VERSION"
-            git push origin HEAD:main
+            # Not a bare `git push`: this job checks out github.sha, so when
+            # another language's release has already written to main the push
+            # is rejected as non-fast-forward. git_push.py rebases and retries
+            # for that case only, and reports a branch-protection rejection as
+            # itself. See dev/log/issues/85/pulls/86/analysis/root-causes.md.
+            python scripts/git_push.py --branch main
           fi
 
       - name: Download artifacts

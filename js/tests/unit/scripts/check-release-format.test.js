@@ -120,7 +120,10 @@ describe('release commit formatting gate', () => {
     );
     const check = script.indexOf('assertGeneratedFilesAreFormatted(() =>');
     const commit = script.indexOf('git commit');
-    const push = script.indexOf('git push origin main');
+    // The raw `git push origin main` this used to look for is now
+    // pushWithRebaseRetry, which rebases when another release wrote to main
+    // first. See dev/log/issues/85/pulls/86/analysis/root-causes.md (RC-1).
+    const push = script.indexOf('pushWithRebaseRetry({');
 
     assert.ok(check > 0 && commit > 0 && push > 0);
     assert.ok(

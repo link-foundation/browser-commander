@@ -135,8 +135,31 @@ def create_mock_playwright_page(
     page.pdf = AsyncMock(return_value=b"%PDF-1.4 mock playwright")
     page.keyboard.down = AsyncMock()
     page.keyboard.up = AsyncMock()
+    page.mouse = _create_mock_mouse()
 
     return page
+
+
+def _create_mock_mouse() -> MagicMock:
+    """Create a mouse stub that records its clicks.
+
+    The ``scroll="none"`` click path dispatches real pointer input at a
+    measured viewport point, so tests need to see where the pointer landed.
+
+    Returns:
+        Mock mouse exposing a ``clicks`` list
+    """
+    mouse = MagicMock()
+    mouse.clicks = []
+
+    async def click(x: float, y: float, **options: Any) -> None:
+        mouse.clicks.append({"x": x, "y": y, "options": options})
+
+    mouse.click = click
+    mouse.move = AsyncMock()
+    mouse.down = AsyncMock()
+    mouse.up = AsyncMock()
+    return mouse
 
 
 def create_mock_selenium_driver(

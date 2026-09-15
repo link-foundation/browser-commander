@@ -147,8 +147,14 @@ from browser_commander.high_level.universal_logic import (
     wait_for_url_condition,
 )
 from browser_commander.interactions.click import (
+    ClickActionability,
+    ClickActivation,
+    ClickEffect,
     ClickResult,
+    ClickScroll,
+    ClickStatus,
     ClickVerificationResult,
+    ScrollConstraintError,
     capture_pre_click_state,
     click_button,
     click_element,
@@ -227,7 +233,13 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "TIMING",
     "ActionStoppedError",
     "ClickResult",
+    "ClickStatus",
+    "ClickScroll",
+    "ClickEffect",
+    "ClickActivation",
+    "ClickActionability",
     "ClickVerificationResult",
+    "ScrollConstraintError",
     "ConnectOptions",
     "DialogManager",
     # Engine adapter

@@ -11,6 +11,7 @@ import {
   setContent,
   waitForNavigation,
   waitForPageReady,
+  waitForReady,
   waitAfterAction,
 } from './browser/navigation.js';
 import { emulateMedia } from './browser/media.js';
@@ -136,6 +137,15 @@ export function createBoundFunctions(options = {}) {
       networkTracker,
       log,
       wait: waitBound,
+    });
+  const waitForReadyBound = (opts) =>
+    waitForReady({
+      ...opts,
+      page,
+      engine,
+      navigationManager,
+      networkTracker,
+      log,
     });
   const waitAfterActionBound = (opts) =>
     waitAfterAction({
@@ -323,6 +333,7 @@ export function createBoundFunctions(options = {}) {
     getUrl: getUrlBound,
     waitForNavigation: waitForNavigationBound,
     waitForPageReady: waitForPageReadyBound,
+    waitForReady: waitForReadyBound,
     waitAfterAction: waitAfterActionBound,
     getAttribute: getAttributeWrapped,
     isVisible: isVisibleWrapped,

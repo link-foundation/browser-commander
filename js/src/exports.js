@@ -60,6 +60,7 @@ export {
   setContent,
   waitForNavigation,
   waitForPageReady,
+  waitForReady,
   waitAfterAction,
   // Navigation verification
   defaultNavigationVerification,
@@ -115,7 +116,30 @@ export {
   defaultClickVerification,
   capturePreClickState,
   verifyClick,
+  // Truthful click result model
+  CLICK_STATUS,
+  CLICK_EFFECT,
+  // Orthogonal activation options
+  CLICK_ACTIVATION,
+  CLICK_SCROLL,
+  CLICK_ACTIONABILITY,
+  ScrollConstraintError,
 } from './interactions/click.js';
+
+export {
+  READINESS_STATUS,
+  LONG_LIVED_REQUEST_PATTERNS,
+  isLongLivedRequest,
+  createDeadline,
+  runReadinessChecks,
+  // Composable readiness checks
+  urlStableFor,
+  networkIdleFor,
+  domStableFor,
+  visibleImages,
+  predicate,
+  stableCheck,
+} from './core/readiness.js';
 
 export {
   checkIfElementEmpty,

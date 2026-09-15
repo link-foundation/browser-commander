@@ -8,6 +8,13 @@
 import { TIMING } from '../core/constants.js';
 import { isNavigationError } from '../core/navigation-safety.js';
 import { isActionStoppedError } from '../core/page-trigger-manager.js';
+import {
+  READINESS_STATUS,
+  createDeadline,
+  networkIdleFor,
+  runReadinessChecks,
+  urlStableFor,
+} from '../core/readiness.js';
 
 /**
  * Default verification function for navigation operations.
@@ -491,6 +498,62 @@ export async function waitForPageReady(options = {}) {
   await wait({ ms: 1000, reason: 'page settle time' });
   return true;
 }
+
+/**
+ * Wait for the page to be ready and return structured evidence.
+ *
+ * Unlike {@link waitForPageReady}, which answers with a single boolean, this
+ * reports which checks passed, which failed, which were skipped and which never
+ * got to run before the shared deadline expired.
+ *
+ * @param {Object} options - Configuration options
+ * @param {Object} options.page - Browser page object
+ * @param {string} [options.engine] - Engine type
+ * @param {Object} [options.navigationManager] - NavigationManager instance
+ * @param {Object} [options.networkTracker] - NetworkTracker instance
+ * @param {Function} [options.log] - Logger instance
+ * @param {number} [options.timeout=30000] - Total budget in milliseconds
+ * @param {string} [options.reason='page ready'] - Reason for waiting
+ * @param {Array} [options.checks] - Composable readiness checks
+ * @returns {Promise<Object>} Structured readiness result
+ */
+export async function waitForReady(options = {}) {
+  const {
+    page,
+    engine,
+    navigationManager,
+    networkTracker,
+    log = { debug: () => {} },
+    timeout = 30000,
+    reason = 'page ready',
+    checks,
+  } = options;
+
+  if (navigationManager?.waitForReady) {
+    return navigationManager.waitForReady({ timeout, reason, checks });
+  }
+
+  const deadline = createDeadline({ timeout });
+  const result = await runReadinessChecks({
+    checks: checks ?? [urlStableFor(), networkIdleFor()],
+    deadline,
+    context: {
+      page,
+      engine,
+      log,
+      networkTracker,
+      getAdapter: async () => {
+        const { createEngineAdapter } =
+          await import('../core/engine-adapter.js');
+        return createEngineAdapter(page, engine);
+      },
+    },
+  });
+
+  return { ...result, reason, url: page?.url?.() ?? null };
+}
+
+export { READINESS_STATUS };
 
 /**
  * Wait for any ongoing navigation and network requests to complete.

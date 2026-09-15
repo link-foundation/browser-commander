@@ -237,6 +237,17 @@ impl EngineAdapter for ChromiumoxidePage {
         Ok(())
     }
 
+    async fn mouse_click(&self, x: f64, y: f64) -> Result<(), EngineError> {
+        // CDP input is delivered at raw viewport coordinates, so nothing is
+        // scrolled into view - which is exactly what `ClickScroll::None` asks
+        // for. The caller has already hit-tested the point.
+        self.page
+            .click(chromiumoxide::layout::Point::new(x, y))
+            .await
+            .map_err(to_engine_error)?;
+        Ok(())
+    }
+
     async fn fill(&self, selector: &str, text: &str) -> Result<(), EngineError> {
         // Clear the current value, then type the new text.
         let clear_script = js_selector_call(

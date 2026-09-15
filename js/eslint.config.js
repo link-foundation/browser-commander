@@ -22,6 +22,7 @@ export default [
         __filename: 'readonly',
         // Node.js 18+ globals
         fetch: 'readonly',
+        performance: 'readonly',
         // Web/Node.js shared globals
         setTimeout: 'readonly',
         clearTimeout: 'readonly',

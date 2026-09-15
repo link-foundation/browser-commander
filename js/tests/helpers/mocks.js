@@ -3,6 +3,67 @@
  */
 
 /**
+ * Members shared by the Playwright and Puppeteer page mocks.
+ *
+ * Both engines expose the same event, input and frame surface, so the mocks
+ * describe it once. `mouse` records its clicks because the `scroll: 'none'`
+ * click path dispatches real pointer input at a measured point.
+ *
+ * @param {Object} options - Configuration options
+ * @param {string} options.url - URL the mock page reports
+ * @param {Map} options.eventListeners - Listener registry shared with the page
+ * @returns {Object} Shared page members
+ */
+function createSharedPageBehaviors(options) {
+  const { url, eventListeners } = options;
+
+  return {
+    mainFrame: () => ({
+      url: () => url,
+    }),
+    bringToFront: async () => {},
+    on: (event, handler) => {
+      if (!eventListeners.has(event)) {
+        eventListeners.set(event, []);
+      }
+      eventListeners.get(event).push(handler);
+    },
+    off: (event, handler) => {
+      const handlers = eventListeners.get(event);
+      if (handlers) {
+        const idx = handlers.indexOf(handler);
+        if (idx !== -1) {
+          handlers.splice(idx, 1);
+        }
+      }
+    },
+    emit: (event, data) => {
+      const handlers = eventListeners.get(event);
+      if (handlers) {
+        handlers.forEach((h) => h(data));
+      }
+    },
+    click: async (sel, opts = {}) => {},
+    type: async (sel, text, opts = {}) => {},
+    keyboard: {
+      press: async (key) => {},
+      type: async (text) => {},
+      down: async (key) => {},
+      up: async (key) => {},
+    },
+    mouse: {
+      clicks: [],
+      async click(x, y, opts = {}) {
+        this.clicks.push({ x, y, opts });
+      },
+      async move(x, y) {},
+      async down() {},
+      async up() {},
+    },
+  };
+}
+
+/**
  * Create a mock Playwright page object
  */
 export function createMockPlaywrightPage(options = {}) {
@@ -122,40 +183,8 @@ export function createMockPlaywrightPage(options = {}) {
         return fn;
       }
     },
-    mainFrame: () => ({
-      url: () => url,
-    }),
+    ...createSharedPageBehaviors({ url, eventListeners }),
     context: () => ({}),
-    bringToFront: async () => {},
-    on: (event, handler) => {
-      if (!eventListeners.has(event)) {
-        eventListeners.set(event, []);
-      }
-      eventListeners.get(event).push(handler);
-    },
-    off: (event, handler) => {
-      const handlers = eventListeners.get(event);
-      if (handlers) {
-        const idx = handlers.indexOf(handler);
-        if (idx !== -1) {
-          handlers.splice(idx, 1);
-        }
-      }
-    },
-    emit: (event, data) => {
-      const handlers = eventListeners.get(event);
-      if (handlers) {
-        handlers.forEach((h) => h(data));
-      }
-    },
-    click: async (sel, opts = {}) => {},
-    type: async (sel, text, opts = {}) => {},
-    keyboard: {
-      press: async (key) => {},
-      type: async (text) => {},
-      down: async (key) => {},
-      up: async (key) => {},
-    },
     pdf: async (opts = {}) => Buffer.from('%PDF-1.4 mock playwright'),
   };
 }
@@ -289,39 +318,7 @@ export function createMockPuppeteerPage(options = {}) {
       }
     },
     content: async () => '<html><body>Mock page</body></html>',
-    mainFrame: () => ({
-      url: () => url,
-    }),
-    bringToFront: async () => {},
-    on: (event, handler) => {
-      if (!eventListeners.has(event)) {
-        eventListeners.set(event, []);
-      }
-      eventListeners.get(event).push(handler);
-    },
-    off: (event, handler) => {
-      const handlers = eventListeners.get(event);
-      if (handlers) {
-        const idx = handlers.indexOf(handler);
-        if (idx !== -1) {
-          handlers.splice(idx, 1);
-        }
-      }
-    },
-    emit: (event, data) => {
-      const handlers = eventListeners.get(event);
-      if (handlers) {
-        handlers.forEach((h) => h(data));
-      }
-    },
-    click: async (sel, opts = {}) => {},
-    type: async (sel, text, opts = {}) => {},
-    keyboard: {
-      press: async (key) => {},
-      type: async (text) => {},
-      down: async (key) => {},
-      up: async (key) => {},
-    },
+    ...createSharedPageBehaviors({ url, eventListeners }),
     pdf: async (opts = {}) => Buffer.from('%PDF-1.4 mock puppeteer'),
   };
 

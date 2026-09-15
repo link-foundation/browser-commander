@@ -5,22 +5,65 @@ import { waitForLocatorOrElement } from '../elements/locators.js';
 import { scrollIntoViewIfNeeded } from './scroll.js';
 import { logElementInfo } from '../elements/content.js';
 import { createEngineAdapter } from '../core/engine-adapter.js';
+import {
+  CLICK_EFFECT,
+  CLICK_STATUS,
+  evidence,
+  makeClickResult,
+  nextActionId,
+} from './click-result.js';
+import {
+  CLICK_SCROLL,
+  ScrollConstraintError,
+  beginClickAction,
+  dispatchClick,
+} from './click-activation.js';
 
 /**
- * Default verification function for click operations.
- * Verifies that the click had an effect by checking for common patterns:
- * - Element state changes (disabled, aria-pressed, etc.)
- * - Element class changes
- * - Element visibility changes
+ * Whether an error means the page moved out from under the action rather than
+ * the action itself failing.
  *
- * Note: Navigation-triggering clicks are considered "verified" if navigation starts.
+ * @param {Error} error - Error thrown while acting on the page
+ * @returns {boolean} True when the action was interrupted, not broken
+ */
+function isInterrupted(error) {
+  return isNavigationError(error) || isActionStoppedError(error);
+}
+
+const ELEMENT_STATE_PROBE = (el) => ({
+  disabled: el.disabled,
+  ariaPressed: el.getAttribute('aria-pressed'),
+  ariaExpanded: el.getAttribute('aria-expanded'),
+  ariaSelected: el.getAttribute('aria-selected'),
+  checked: el.checked,
+  className: el.className,
+  isConnected: el.isConnected,
+});
+
+const OBSERVED_STATE_KEYS = [
+  ['ariaPressed', 'aria-pressed changed'],
+  ['ariaExpanded', 'aria-expanded changed'],
+  ['ariaSelected', 'aria-selected changed'],
+  ['checked', 'checked state changed'],
+  ['className', 'className changed'],
+  ['disabled', 'disabled state changed'],
+];
+
+/**
+ * Default verification for click operations.
+ *
+ * This reports what it observed and nothing more. In particular, an element
+ * that is still present and unchanged is *not* evidence that the click did
+ * anything - that is precisely the case of a button whose handler is missing
+ * or threw - so it is reported as `not-observed` rather than as success.
  *
  * @param {Object} options - Verification options
  * @param {Object} options.page - Browser page object
  * @param {string} options.engine - Engine type ('playwright' or 'puppeteer')
  * @param {Object} options.locatorOrElement - Element that was clicked
- * @param {Object} options.preClickState - State captured before click (optional)
- * @returns {Promise<{verified: boolean, reason: string}>}
+ * @param {Object} [options.preClickState] - State captured before the click
+ * @param {Object} [options.adapter] - Engine adapter
+ * @returns {Promise<{verified: boolean, effect: string, reason: string, evidence: Array, navigationError?: boolean}>} Verification outcome
  */
 export async function defaultClickVerification(options = {}) {
   const {
@@ -33,59 +76,67 @@ export async function defaultClickVerification(options = {}) {
 
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
+    const postClickState = await adapter.evaluateOnElement(
+      locatorOrElement,
+      ELEMENT_STATE_PROBE
+    );
 
-    // Get current element state
-    const getElementState = async () =>
-      await adapter.evaluateOnElement(locatorOrElement, (el) => ({
-        disabled: el.disabled,
-        ariaPressed: el.getAttribute('aria-pressed'),
-        ariaExpanded: el.getAttribute('aria-expanded'),
-        ariaSelected: el.getAttribute('aria-selected'),
-        checked: el.checked,
-        className: el.className,
-        isConnected: el.isConnected,
-      }));
+    const hasPreState = preClickState && Object.keys(preClickState).length > 0;
 
-    const postClickState = await getElementState();
-
-    // If we have pre-click state, check for changes
-    if (preClickState && Object.keys(preClickState).length > 0) {
-      // Check for state changes that indicate click was processed
-      if (preClickState.ariaPressed !== postClickState.ariaPressed) {
-        return { verified: true, reason: 'aria-pressed changed' };
-      }
-      if (preClickState.ariaExpanded !== postClickState.ariaExpanded) {
-        return { verified: true, reason: 'aria-expanded changed' };
-      }
-      if (preClickState.ariaSelected !== postClickState.ariaSelected) {
-        return { verified: true, reason: 'aria-selected changed' };
-      }
-      if (preClickState.checked !== postClickState.checked) {
-        return { verified: true, reason: 'checked state changed' };
-      }
-      if (preClickState.className !== postClickState.className) {
-        return { verified: true, reason: 'className changed' };
+    if (hasPreState) {
+      for (const [key, reason] of OBSERVED_STATE_KEYS) {
+        if (preClickState[key] !== postClickState[key]) {
+          return {
+            verified: true,
+            effect: CLICK_EFFECT.CONFIRMED,
+            reason,
+            evidence: [
+              evidence('element-state', {
+                key,
+                before: preClickState[key],
+                after: postClickState[key],
+              }),
+            ],
+          };
+        }
       }
     }
 
-    // If element is still connected and not disabled, assume click worked
-    // (many clicks don't change element state - they trigger actions)
-    if (postClickState.isConnected) {
+    if (!postClickState.isConnected) {
+      // Detachment is a real, observable change in the document.
       return {
         verified: true,
-        reason: 'element still connected (assumed success)',
+        effect: CLICK_EFFECT.CONFIRMED,
+        reason: 'element removed from DOM (UI updated)',
+        evidence: [
+          evidence('element-state', { key: 'isConnected', after: false }),
+        ],
       };
     }
 
-    // Element was removed from DOM - likely click triggered UI change
-    return { verified: true, reason: 'element removed from DOM (UI updated)' };
+    return {
+      verified: false,
+      effect: CLICK_EFFECT.NOT_OBSERVED,
+      reason: hasPreState
+        ? 'no observable change to the target element after the click'
+        : 'no pre-click state captured, so no change could be observed',
+      evidence: [evidence('element-state', { unchanged: true, hasPreState })],
+    };
   } catch (error) {
-    if (isNavigationError(error) || isActionStoppedError(error)) {
-      // Navigation/stop during verification - click likely triggered navigation
+    if (isInterrupted(error)) {
+      // The execution context went away. That is consistent with the click
+      // having navigated the page, but it is equally consistent with an
+      // unrelated navigation already in flight. Verification is simply
+      // unavailable; correlation is the caller's job.
       return {
-        verified: true,
-        reason: 'navigation detected (expected for navigation clicks)',
+        verified: false,
+        effect: CLICK_EFFECT.NOT_OBSERVED,
+        reason:
+          'verification unavailable: execution context was destroyed during verification',
         navigationError: true,
+        evidence: [
+          evidence('verification-unavailable', { message: error.message }),
+        ],
       };
     }
     throw error;
@@ -106,17 +157,12 @@ export async function capturePreClickState(options = {}) {
 
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
-    return await adapter.evaluateOnElement(locatorOrElement, (el) => ({
-      disabled: el.disabled,
-      ariaPressed: el.getAttribute('aria-pressed'),
-      ariaExpanded: el.getAttribute('aria-expanded'),
-      ariaSelected: el.getAttribute('aria-selected'),
-      checked: el.checked,
-      className: el.className,
-      isConnected: el.isConnected,
-    }));
+    return await adapter.evaluateOnElement(
+      locatorOrElement,
+      ELEMENT_STATE_PROBE
+    );
   } catch (error) {
-    if (isNavigationError(error) || isActionStoppedError(error)) {
+    if (isInterrupted(error)) {
       return {};
     }
     throw error;
@@ -131,8 +177,9 @@ export async function capturePreClickState(options = {}) {
  * @param {Object} options.locatorOrElement - Element that was clicked
  * @param {Object} options.preClickState - State captured before click
  * @param {Function} options.verifyFn - Custom verification function (optional)
+ * @param {Object} options.adapter - Engine adapter (optional)
  * @param {Function} options.log - Logger instance
- * @returns {Promise<{verified: boolean, reason: string}>}
+ * @returns {Promise<Object>} Verification outcome with `effect` and `evidence`
  */
 export async function verifyClick(options = {}) {
   const {
@@ -141,6 +188,7 @@ export async function verifyClick(options = {}) {
     locatorOrElement,
     preClickState = {},
     verifyFn = defaultClickVerification,
+    adapter,
     log = { debug: () => {} },
   } = options;
 
@@ -149,52 +197,79 @@ export async function verifyClick(options = {}) {
     engine,
     locatorOrElement,
     preClickState,
+    adapter,
   });
 
-  if (result.verified) {
-    log.debug(() => `✅ Click verification passed: ${result.reason}`);
+  // Custom verifiers predate the effect vocabulary, so map their boolean.
+  const normalized = {
+    ...result,
+    effect:
+      result.effect ??
+      (result.verified ? CLICK_EFFECT.CONFIRMED : CLICK_EFFECT.NOT_OBSERVED),
+    evidence: result.evidence ?? [],
+  };
+
+  if (normalized.effect === CLICK_EFFECT.CONFIRMED) {
+    log.debug(() => `✅ Click effect confirmed: ${normalized.reason}`);
   } else {
     log.debug(
-      () => `⚠️  Click verification uncertain: ${result.reason || 'unknown'}`
+      () =>
+        `⚠️  Click effect ${normalized.effect}: ${normalized.reason || 'unknown'}`
     );
   }
 
-  return result;
+  return normalized;
 }
 
 /**
- * Click an element (low-level)
+ * Click an element (low-level).
+ *
  * @param {Object} options - Configuration options
  * @param {Object} options.page - Browser page object (required for verification)
  * @param {string} options.engine - Engine type ('playwright' or 'puppeteer')
  * @param {Function} options.log - Logger instance
  * @param {Object} options.locatorOrElement - Element or locator to click
- * @param {boolean} options.noAutoScroll - Prevent Playwright's automatic scrolling (default: false)
- * @param {boolean} options.verify - Whether to verify the click operation (default: true)
- * @param {Function} options.verifyFn - Custom verification function (optional)
- * @param {Object} options.adapter - Engine adapter (optional, will be created if not provided)
- * @returns {Promise<Object>} Click result.
+ * @param {string} [options.activation='pointer'] - 'pointer' (real input) or 'dom' (untrusted `el.click()`)
+ * @param {string} [options.scroll='auto'] - 'auto', 'preserve' (restore position) or 'none' (never scroll)
+ * @param {string} [options.actionability='normal'] - 'normal' or 'force' (skip engine pre-checks)
+ * @param {boolean} [options.noAutoScroll] - Deprecated alias for `scroll: 'none'`
+ * @param {boolean} [options.verify=true] - Whether to verify the click effect
+ * @param {Function} [options.verifyFn] - Custom verification function
+ * @param {Object} [options.adapter] - Engine adapter
+ * @param {string} [options.actionId] - Correlation ID for this click
+ * @returns {Promise<Object>} Click result from {@link makeClickResult}
  */
 export async function clickElement(options = {}) {
   const {
     page,
     engine,
-    log,
+    log = { debug: () => {} },
     locatorOrElement,
-    noAutoScroll = false,
+    activation,
+    scroll,
+    actionability,
+    noAutoScroll,
     verify = true,
     verifyFn,
     adapter: providedAdapter,
+    actionId = nextActionId(),
   } = options;
 
   if (!locatorOrElement) {
     throw new Error('locatorOrElement is required in options');
   }
 
+  const { elapsed, activationOptions } = beginClickAction({
+    activation,
+    scroll,
+    actionability,
+    noAutoScroll,
+    log,
+  });
+
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
 
-    // Capture pre-click state for verification
     let preClickState = {};
     if (verify && page) {
       preClickState = await capturePreClickState({
@@ -205,75 +280,179 @@ export async function clickElement(options = {}) {
       });
     }
 
-    // Click with appropriate options
-    const clickOptions =
-      engine === 'playwright' && noAutoScroll ? { force: true } : {};
-    if (engine === 'playwright' && noAutoScroll) {
-      log.debug(() => `🔍 [VERBOSE] Clicking with noAutoScroll (force: true)`);
-    }
-    await adapter.click(locatorOrElement, clickOptions);
-
-    // Verify click if requested
-    if (verify && page) {
-      const verificationResult = await verifyClick({
+    let dispatch;
+    try {
+      dispatch = await dispatchClick({
         page,
-        engine,
+        adapter,
         locatorOrElement,
-        preClickState,
-        verifyFn,
+        activationOptions,
         log,
       });
-
-      return {
-        clicked: true,
-        verified: verificationResult.verified,
-        reason: verificationResult.reason,
-      };
+    } catch (error) {
+      if (error instanceof ScrollConstraintError) {
+        // The caller asked for no scrolling and we cannot deliver the click
+        // without it. Say so instead of scrolling behind their back.
+        return makeClickResult({
+          status: CLICK_STATUS.FAILED,
+          dispatched: false,
+          effect: CLICK_EFFECT.NOT_OBSERVED,
+          reason: error.message,
+          evidence: [evidence('scroll-constraint', error.detail)],
+          elapsedMs: elapsed(),
+          actionId,
+        });
+      }
+      throw error;
     }
 
-    return { clicked: true, verified: true };
-  } catch (error) {
-    if (isNavigationError(error) || isActionStoppedError(error)) {
-      console.log(
-        '⚠️  Navigation/stop detected during click, recovering gracefully'
+    const dispatchEvidence = [
+      evidence('dispatch', {
+        mode: dispatch.mode,
+        activation: activationOptions.activation,
+        scroll: activationOptions.scroll,
+        actionability: activationOptions.actionability,
+        scrollBefore: dispatch.scrollBefore,
+        scrollAfter: dispatch.scrollAfter,
+        scrollChanged: scrollChanged(dispatch),
+        point: dispatch.point,
+      }),
+    ];
+
+    if (
+      activationOptions.scroll !== CLICK_SCROLL.AUTO &&
+      scrollChanged(dispatch)
+    ) {
+      // We did not scroll, but the page reacted by scrolling itself. Record it
+      // so callers asserting on viewport stability can see what moved.
+      dispatchEvidence.push(
+        evidence('page-scrolled-itself', {
+          before: dispatch.scrollBefore,
+          after: dispatch.scrollAfter,
+        })
       );
-      // Navigation during click is considered verified (click triggered navigation)
-      return {
-        clicked: false,
-        verified: true,
-        reason: 'navigation during click',
-      };
+    }
+
+    if (!verify || !page) {
+      return makeClickResult({
+        status: CLICK_STATUS.UNVERIFIED,
+        dispatched: true,
+        effect: CLICK_EFFECT.NOT_OBSERVED,
+        reason: 'click dispatched; verification not requested',
+        evidence: dispatchEvidence,
+        elapsedMs: elapsed(),
+        actionId,
+      });
+    }
+
+    const verification = await verifyClick({
+      page,
+      engine,
+      locatorOrElement,
+      preClickState,
+      verifyFn,
+      adapter,
+      log,
+    });
+
+    const confirmed = verification.effect === CLICK_EFFECT.CONFIRMED;
+
+    return makeClickResult({
+      status: confirmed ? CLICK_STATUS.SUCCEEDED : CLICK_STATUS.UNVERIFIED,
+      dispatched: true,
+      effect: verification.effect,
+      reason: verification.reason,
+      evidence: [...dispatchEvidence, ...verification.evidence],
+      elapsedMs: elapsed(),
+      actionId,
+      ...(verification.navigationError ? { navigationError: true } : {}),
+    });
+  } catch (error) {
+    if (isInterrupted(error)) {
+      log.debug(
+        () => '⚠️  Navigation/stop interrupted the click, recovering gracefully'
+      );
+      return makeClickResult({
+        status: CLICK_STATUS.INTERRUPTED,
+        dispatched: false,
+        effect: CLICK_EFFECT.NOT_OBSERVED,
+        reason:
+          'navigation or stop interrupted the click before it could be observed',
+        evidence: [evidence('interrupted', { message: error.message })],
+        elapsedMs: elapsed(),
+        actionId,
+      });
     }
     throw error;
   }
 }
 
+function scrollChanged(dispatch) {
+  const { scrollBefore, scrollAfter } = dispatch;
+  if (!scrollBefore || !scrollAfter) {
+    return null;
+  }
+  return scrollBefore.x !== scrollAfter.x || scrollBefore.y !== scrollAfter.y;
+}
+
 /**
- * Detect if a click caused navigation by checking URL change or navigation state
+ * Detect whether navigation can be attributed to a specific click.
+ *
+ * A navigation that was already in flight before the click is not evidence
+ * about the click, so the navigation session recorded before dispatch is
+ * compared against the current one instead of merely asking "are we navigating".
+ *
  * @param {Object} options - Configuration options
  * @param {Object} options.page - Browser page object
- * @param {Object} options.navigationManager - NavigationManager instance (optional)
- * @param {string} options.startUrl - URL before click
+ * @param {Object} [options.navigationManager] - NavigationManager instance
+ * @param {string} options.startUrl - URL before the click
+ * @param {number} [options.startSessionId] - Navigation session ID before the click
+ * @param {string} [options.actionId] - Correlation ID for the click
  * @param {Function} options.log - Logger instance
- * @returns {Promise<{navigated: boolean, newUrl: string}>}
+ * @returns {{navigated: boolean, correlated: boolean, newUrl: string, evidence: Array}} Detection outcome
  */
 function detectNavigation(options = {}) {
-  const { page, navigationManager, startUrl, log } = options;
+  const { page, navigationManager, startUrl, startSessionId, actionId, log } =
+    options;
 
-  const currentUrl = page.url();
-  const urlChanged = currentUrl !== startUrl;
+  const newUrl = page.url();
+  const urlChanged = newUrl !== startUrl;
+  const sessionId = navigationManager?.getSessionId?.();
+  const sessionAdvanced =
+    startSessionId !== undefined &&
+    sessionId !== undefined &&
+    sessionId > startSessionId;
+  const navigating = Boolean(navigationManager?.isNavigating?.());
 
-  if (navigationManager && navigationManager.isNavigating()) {
-    log.debug(() => '🔄 Navigation detected via NavigationManager');
-    return { navigated: true, newUrl: currentUrl };
+  const correlated = urlChanged || sessionAdvanced;
+  const navigated = correlated || navigating;
+
+  if (navigated) {
+    log.debug(
+      () =>
+        `🔄 Navigation ${correlated ? 'correlated with' : 'in flight but NOT correlated with'} ` +
+        `click ${actionId}: ${startUrl} → ${newUrl}`
+    );
   }
 
-  if (urlChanged) {
-    log.debug(() => `🔄 URL changed: ${startUrl} → ${currentUrl}`);
-    return { navigated: true, newUrl: currentUrl };
-  }
-
-  return { navigated: false, newUrl: currentUrl };
+  return {
+    navigated,
+    correlated,
+    newUrl,
+    evidence: [
+      evidence('navigation', {
+        actionId,
+        startUrl,
+        newUrl,
+        urlChanged,
+        startSessionId,
+        sessionId,
+        sessionAdvanced,
+        navigating,
+        correlated,
+      }),
+    ],
+  };
 }
 
 /**
@@ -289,7 +468,7 @@ function detectNavigation(options = {}) {
  * @param {number} options.waitAfterScroll - Wait time after scroll in ms
  * @param {boolean} options.smoothScroll - Use smooth scroll animation
  * @param {number} options.timeout - Timeout in ms
- * @returns {Promise<{locatorOrElement: Object, scrolled: boolean, navigated: boolean}>}
+ * @returns {Promise<{locatorOrElement: Object, scrolled: boolean, navigated: boolean}>} Preparation outcome
  */
 async function prepareElement(options = {}) {
   const {
@@ -305,7 +484,6 @@ async function prepareElement(options = {}) {
     timeout,
   } = options;
 
-  // Get locator/element and wait for it to be visible (unified for both engines)
   const locatorOrElement = await waitForLocatorOrElement({
     page,
     engine,
@@ -313,103 +491,50 @@ async function prepareElement(options = {}) {
     timeout,
   });
 
-  // Log element info if verbose
   if (verbose) {
     await logElementInfo({ page, engine, log, locatorOrElement });
   }
 
-  // Scroll into view (if requested and needed)
-  if (shouldScroll) {
-    const behavior = smoothScroll ? 'smooth' : 'instant';
-    const scrollResult = await scrollIntoViewIfNeeded({
-      page,
-      engine,
-      wait,
-      log,
-      locatorOrElement,
-      behavior,
-      waitAfterScroll,
-      verify: false, // Don't verify scroll here, we verify the overall click
-    });
-    // Check if scroll was aborted due to navigation/stop
-    if (!scrollResult.skipped && !scrollResult.scrolled) {
-      return { locatorOrElement: null, scrolled: false, navigated: true };
-    }
-    return { locatorOrElement, scrolled: true, navigated: false };
-  } else {
-    log.debug(() => `🔍 [VERBOSE] Skipping scroll (scrollIntoView: false)`);
+  if (!shouldScroll) {
+    log.debug(() => '🔍 [VERBOSE] Skipping scroll (scroll policy forbids it)');
     return { locatorOrElement, scrolled: false, navigated: false };
   }
-}
 
-/**
- * Execute the click operation with verification
- * @param {Object} options - Configuration options
- * @param {Object} options.page - Browser page object
- * @param {string} options.engine - Engine type
- * @param {Function} options.log - Logger instance
- * @param {Object} options.locatorOrElement - Element or locator to click
- * @param {boolean} options.noAutoScroll - Prevent Playwright's automatic scrolling
- * @param {boolean} options.verify - Whether to verify the click operation
- * @param {Function} options.verifyFn - Custom verification function (optional)
- * @returns {Promise<Object>} Click result.
- */
-async function executeClick(options = {}) {
-  const {
+  const behavior = smoothScroll ? 'smooth' : 'instant';
+  const scrollResult = await scrollIntoViewIfNeeded({
     page,
     engine,
+    wait,
     log,
     locatorOrElement,
-    noAutoScroll = false,
-    verify = true,
-    verifyFn,
-  } = options;
-
-  log.debug(() => `🔍 [VERBOSE] About to click element`);
-
-  const clickResult = await clickElement({
-    page,
-    engine,
-    log,
-    locatorOrElement,
-    noAutoScroll,
-    verify,
-    verifyFn,
+    behavior,
+    waitAfterScroll,
+    verify: false, // The overall click result carries the verification.
   });
 
-  if (!clickResult.clicked) {
-    // Navigation/stop occurred during click itself
-    return {
-      clicked: false,
-      verified: true,
-      navigated: true,
-      reason: 'navigation during click',
-    };
+  if (!scrollResult.skipped && !scrollResult.scrolled) {
+    return { locatorOrElement: null, scrolled: false, navigated: true };
   }
-
-  log.debug(() => `🔍 [VERBOSE] Click completed`);
-
-  return {
-    clicked: true,
-    verified: clickResult.verified,
-    navigated: false,
-    reason: clickResult.reason,
-  };
+  return { locatorOrElement, scrolled: true, navigated: false };
 }
 
 /**
- * Handle navigation detection and waiting after a click
+ * Wait for the page to settle after a click and report navigation evidence.
+ *
  * @param {Object} options - Configuration options
  * @param {Object} options.page - Browser page object
  * @param {Function} options.wait - Wait function
  * @param {Function} options.log - Logger instance
- * @param {Object} options.navigationManager - NavigationManager instance (optional)
- * @param {Object} options.networkTracker - NetworkTracker instance (optional)
- * @param {string} options.startUrl - URL before click
- * @param {boolean} options.waitForNavigation - Wait for navigation to complete
- * @param {number} options.navigationCheckDelay - Time to check if navigation started
- * @param {number} options.waitAfterClick - Wait time after click in ms
- * @returns {Promise<{navigated: boolean, verified: boolean, reason: string}>}
+ * @param {Object} [options.navigationManager] - NavigationManager instance
+ * @param {Object} [options.networkTracker] - NetworkTracker instance
+ * @param {string} options.startUrl - URL before the click
+ * @param {number} [options.startSessionId] - Navigation session ID before the click
+ * @param {string} [options.actionId] - Correlation ID for the click
+ * @param {boolean} [options.waitForNavigation=true] - Whether to look for navigation
+ * @param {number} [options.navigationCheckDelay=500] - Grace period for navigation to start
+ * @param {number} [options.waitAfterClick=1000] - Settling time when nothing navigated
+ * @param {number} [options.navigationReadyTimeout] - Budget for the post-navigation readiness wait
+ * @returns {Promise<{navigated: boolean, correlated: boolean, ready: boolean|null, reason: string, evidence: Array}>} Navigation outcome
  */
 async function handleNavigationAfterClick(options = {}) {
   const {
@@ -419,171 +544,176 @@ async function handleNavigationAfterClick(options = {}) {
     navigationManager,
     networkTracker,
     startUrl,
+    startSessionId,
+    actionId,
     waitForNavigation = true,
     navigationCheckDelay = 500,
     waitAfterClick = 1000,
+    navigationReadyTimeout = TIMING.NAVIGATION_TIMEOUT,
   } = options;
 
-  // Check if click caused navigation
+  const detect = () =>
+    detectNavigation({
+      page,
+      navigationManager,
+      startUrl,
+      startSessionId,
+      actionId,
+      log,
+    });
+
+  const settle = async (reason) => {
+    if (navigationManager) {
+      return navigationManager.waitForPageReady({
+        timeout: navigationReadyTimeout,
+        reason,
+      });
+    }
+    if (networkTracker) {
+      return networkTracker.waitForNetworkIdle({
+        timeout: navigationReadyTimeout,
+      });
+    }
+    await wait({ ms: 2000, reason: 'page settle after navigation' });
+    return null;
+  };
+
   if (waitForNavigation) {
-    // Wait briefly for navigation to potentially start
     await wait({
       ms: navigationCheckDelay,
       reason: 'checking for navigation after click',
     });
 
-    // Detect if navigation occurred
-    const { navigated, newUrl } = await detectNavigation({
-      page,
-      navigationManager,
-      startUrl,
-      log,
-    });
-
-    if (navigated) {
-      log.debug(() => `🔄 Click triggered navigation to: ${newUrl}`);
-
-      // Wait for page to be fully ready (network idle + no more redirects)
-      // Note: If navigationManager detected external navigation, it's already waiting
-      // We still call waitForPageReady here to ensure we don't return until page is ready
-      if (navigationManager) {
-        // Use longer timeout (120s) for full page loads after click-triggered navigation
-        await navigationManager.waitForPageReady({
-          timeout: 120000,
-          reason: 'after click navigation',
-        });
-      } else if (networkTracker) {
-        // Without navigation manager, use network tracker directly with 30s idle time
-        await networkTracker.waitForNetworkIdle({
-          timeout: 120000,
-          // idleTime defaults to 30000ms from tracker config
-        });
-      } else {
-        // Fallback: wait a bit for page to settle
-        await wait({ ms: 2000, reason: 'page settle after navigation' });
-      }
-
-      // Navigation is considered successful verification
+    const detection = detect();
+    if (detection.navigated) {
+      const ready = await settle('after click navigation');
       return {
         navigated: true,
-        verified: true,
-        reason: 'click triggered navigation',
+        correlated: detection.correlated,
+        ready,
+        reason: detection.correlated
+          ? 'click triggered navigation'
+          : 'navigation observed but not attributable to this click',
+        evidence: [...detection.evidence, evidence('readiness', { ready })],
       };
     }
   }
 
-  // No navigation - wait after click if specified (useful for modals)
   if (waitAfterClick > 0) {
     const waitResult = await wait({
       ms: waitAfterClick,
       reason: 'post-click settling time for modal scroll capture',
     });
 
-    // Check if wait was aborted due to navigation that happened during the wait
     if (waitResult && waitResult.aborted) {
       log.debug(
         () => '🔄 Navigation detected during post-click wait (wait was aborted)'
       );
-
-      // Re-check for navigation since it happened during the wait
-      const { navigated: lateNavigated, newUrl: lateUrl } =
-        await detectNavigation({
-          page,
-          navigationManager,
-          startUrl,
-          log,
-        });
-
-      if (lateNavigated) {
-        log.debug(() => `🔄 Confirmed late navigation to: ${lateUrl}`);
-
-        // Wait for page to be fully ready
-        if (navigationManager) {
-          await navigationManager.waitForPageReady({
-            timeout: 120000,
-            reason: 'after late-detected click navigation',
-          });
-        }
-
+      const lateDetection = detect();
+      if (lateDetection.navigated) {
+        const ready = await settle('after late-detected click navigation');
         return {
           navigated: true,
-          verified: true,
-          reason: 'late-detected navigation',
+          correlated: lateDetection.correlated,
+          ready,
+          reason: lateDetection.correlated
+            ? 'late-detected navigation'
+            : 'late navigation observed but not attributable to this click',
+          evidence: [
+            ...lateDetection.evidence,
+            evidence('readiness', { ready }),
+          ],
         };
       }
     }
   }
 
-  // Final check: did navigation happen while we were processing?
-  // This catches cases where navigation started but wasn't detected earlier
   if (navigationManager && navigationManager.shouldAbort()) {
-    log.debug(
-      () => '🔄 Navigation detected via abort signal at end of click processing'
-    );
-
-    await navigationManager.waitForPageReady({
-      timeout: 120000,
-      reason: 'after abort-detected click navigation',
-    });
-
+    const abortDetection = detect();
+    const ready = await settle('after abort-detected click navigation');
     return {
       navigated: true,
-      verified: true,
-      reason: 'abort-signal navigation',
+      correlated: abortDetection.correlated,
+      ready,
+      reason: abortDetection.correlated
+        ? 'abort-signal navigation'
+        : 'abort signal raised by a navigation not attributable to this click',
+      evidence: [...abortDetection.evidence, evidence('readiness', { ready })],
     };
   }
 
-  // If we have network tracking, wait for any XHR/fetch to complete
-  // Use shorter idle time for non-navigation clicks (just waiting for XHR, not full page load)
   if (networkTracker) {
-    await networkTracker.waitForNetworkIdle({
-      timeout: 10000, // Maximum wait time
-      idleTime: 2000, // Only 2 seconds of idle needed for XHR completion
-    });
+    await networkTracker.waitForNetworkIdle({ timeout: 10000, idleTime: 2000 });
   }
 
-  return { navigated: false, verified: true, reason: 'no navigation detected' };
+  return {
+    navigated: false,
+    correlated: false,
+    ready: null,
+    reason: 'no navigation detected',
+    evidence: detect().evidence,
+  };
+}
+
+function combineEffects(clickResult, navResult) {
+  if (navResult.correlated) {
+    return CLICK_EFFECT.CONFIRMED;
+  }
+  return clickResult.effect;
+}
+
+function combineStatus(clickResult, navResult) {
+  if (navResult.correlated) {
+    // Navigation attributable to this click also answers "did it do anything".
+    return navResult.ready === false
+      ? CLICK_STATUS.TIMED_OUT
+      : CLICK_STATUS.SUCCEEDED;
+  }
+  return clickResult.status;
 }
 
 /**
- * Click a button or element (high-level with scrolling and waits)
- * Now navigation-aware - automatically waits for page ready after navigation-causing clicks.
+ * Click a button or element (high-level with scrolling, waits and navigation
+ * correlation).
  *
  * @param {Object} options - Configuration options
  * @param {Object} options.page - Browser page object
  * @param {string} options.engine - Engine type ('playwright' or 'puppeteer')
  * @param {Function} options.wait - Wait function
  * @param {Function} options.log - Logger instance
- * @param {boolean} options.verbose - Enable verbose logging
- * @param {Object} options.navigationManager - NavigationManager instance (optional)
- * @param {Object} options.networkTracker - NetworkTracker instance (optional)
+ * @param {boolean} [options.verbose=false] - Enable verbose logging
+ * @param {Object} [options.navigationManager] - NavigationManager instance
+ * @param {Object} [options.networkTracker] - NetworkTracker instance
  * @param {string|Object} options.selector - CSS selector, ElementHandle, or Playwright Locator
- * @param {boolean} options.scrollIntoView - Scroll into view (default: true)
- * @param {number} options.waitAfterScroll - Wait time after scroll in ms (default: TIMING.DEFAULT_WAIT_AFTER_SCROLL)
- * @param {boolean} options.smoothScroll - Use smooth scroll animation (default: true)
- * @param {number} options.waitAfterClick - Wait time after click in ms (default: 1000). Gives modals time to capture scroll position before opening
- * @param {boolean} options.waitForNavigation - Wait for navigation to complete if click causes navigation (default: true)
- * @param {number} options.navigationCheckDelay - Time to check if navigation started (default: 500ms)
- * @param {number} options.timeout - Timeout in ms (default: TIMING.DEFAULT_TIMEOUT)
- * @param {boolean} options.verify - Whether to verify the click operation (default: true)
- * @param {Function} options.verifyFn - Custom verification function (optional)
- * @returns {Promise<Object>} Click result.
- *   - clicked: true if click was performed
- *   - navigated: true if click caused navigation
- *   - verified: true if click was verified (navigation counts as verification)
- * @throws {Error} - If selector is missing, element not found, or click operation fails (except navigation/stop errors)
+ * @param {string} [options.activation='pointer'] - 'pointer' or 'dom'
+ * @param {string} [options.scroll] - 'auto', 'preserve' or 'none'
+ * @param {string} [options.actionability='normal'] - 'normal' or 'force'
+ * @param {boolean} [options.scrollIntoView=true] - Deprecated alias; `false` means `scroll: 'none'`
+ * @param {number} [options.waitAfterScroll] - Wait time after scroll in ms
+ * @param {boolean} [options.smoothScroll=true] - Use smooth scroll animation
+ * @param {number} [options.waitAfterClick=1000] - Wait time after click in ms
+ * @param {boolean} [options.waitForNavigation=true] - Wait for navigation to complete
+ * @param {number} [options.navigationCheckDelay=500] - Time to check if navigation started
+ * @param {number} [options.timeout] - Element lookup timeout in ms
+ * @param {boolean} [options.verify=true] - Whether to verify the click effect
+ * @param {Function} [options.verifyFn] - Custom verification function
+ * @returns {Promise<Object>} Click result from {@link makeClickResult}
+ * @throws {Error} If selector is missing or the click fails for a non-navigation reason
  */
 export async function clickButton(options = {}) {
   const {
     page,
     engine,
     wait,
-    log,
+    log = { debug: () => {} },
     verbose = false,
     navigationManager,
     networkTracker,
     selector,
-    scrollIntoView: shouldScroll = true,
+    activation,
+    scroll,
+    actionability,
+    scrollIntoView,
     waitAfterScroll = TIMING.DEFAULT_WAIT_AFTER_SCROLL,
     smoothScroll = true,
     waitAfterClick = 1000,
@@ -598,11 +728,19 @@ export async function clickButton(options = {}) {
     throw new Error('clickButton: selector is required in options');
   }
 
-  // Record URL before click for navigation detection
+  const actionId = nextActionId();
+  const { elapsed, activationOptions } = beginClickAction({
+    activation,
+    scroll,
+    actionability,
+    noAutoScroll: scrollIntoView === undefined ? undefined : !scrollIntoView,
+    log,
+  });
+
   const startUrl = page.url();
+  const startSessionId = navigationManager?.getSessionId?.();
 
   try {
-    // Step 1: Prepare element (find, validate, scroll into view)
     const prepareResult = await prepareElement({
       page,
       engine,
@@ -610,44 +748,50 @@ export async function clickButton(options = {}) {
       log,
       verbose,
       selector,
-      scrollIntoView: shouldScroll,
+      scrollIntoView: activationOptions.scroll === CLICK_SCROLL.AUTO,
       waitAfterScroll,
       smoothScroll,
       timeout,
     });
 
     if (prepareResult.navigated) {
-      return {
-        clicked: false,
-        navigated: true,
-        verified: true,
-        reason: 'navigation during scroll',
-      };
+      const detection = detectNavigation({
+        page,
+        navigationManager,
+        startUrl,
+        startSessionId,
+        actionId,
+        log,
+      });
+      return makeClickResult({
+        status: CLICK_STATUS.INTERRUPTED,
+        dispatched: false,
+        effect: CLICK_EFFECT.NOT_OBSERVED,
+        navigated: detection.navigated,
+        reason: 'navigation interrupted the scroll before the click',
+        evidence: detection.evidence,
+        elapsedMs: elapsed(),
+        actionId,
+      });
     }
 
-    const { locatorOrElement } = prepareResult;
-
-    // Step 2: Execute click operation
-    const clickResult = await executeClick({
+    const clickResult = await clickElement({
       page,
       engine,
       log,
-      locatorOrElement,
-      noAutoScroll: !shouldScroll,
+      locatorOrElement: prepareResult.locatorOrElement,
+      activation: activationOptions.activation,
+      scroll: activationOptions.scroll,
+      actionability: activationOptions.actionability,
       verify,
       verifyFn,
+      actionId,
     });
 
-    if (clickResult.navigated) {
-      return {
-        clicked: false,
-        navigated: true,
-        verified: true,
-        reason: 'navigation during click',
-      };
+    if (clickResult.status === CLICK_STATUS.FAILED) {
+      return { ...clickResult, elapsedMs: elapsed() };
     }
 
-    // Step 3: Handle navigation detection and waiting
     const navResult = await handleNavigationAfterClick({
       page,
       wait,
@@ -655,30 +799,65 @@ export async function clickButton(options = {}) {
       navigationManager,
       networkTracker,
       startUrl,
+      startSessionId,
+      actionId,
       waitForNavigation,
       navigationCheckDelay,
       waitAfterClick,
     });
 
-    return {
-      clicked: true,
+    return makeClickResult({
+      status: combineStatus(clickResult, navResult),
+      dispatched: clickResult.dispatched,
+      effect: combineEffects(clickResult, navResult),
       navigated: navResult.navigated,
-      verified: clickResult.verified && navResult.verified,
       reason: navResult.navigated ? navResult.reason : clickResult.reason,
-    };
+      evidence: [...clickResult.evidence, ...navResult.evidence],
+      elapsedMs: elapsed(),
+      actionId,
+    });
   } catch (error) {
-    if (isNavigationError(error) || isActionStoppedError(error)) {
-      console.log(
-        '⚠️  Navigation/stop detected during clickButton, recovering gracefully'
+    if (isInterrupted(error)) {
+      log.debug(
+        () =>
+          '⚠️  Navigation/stop detected during clickButton, recovering gracefully'
       );
-      // Navigation/stop during click is considered successful
-      return {
-        clicked: false,
-        navigated: true,
-        verified: true,
-        reason: 'navigation/stop error',
-      };
+      const detection = detectNavigation({
+        page,
+        navigationManager,
+        startUrl,
+        startSessionId,
+        actionId,
+        log,
+      });
+      return makeClickResult({
+        status: detection.correlated
+          ? CLICK_STATUS.SUCCEEDED
+          : CLICK_STATUS.INTERRUPTED,
+        dispatched: detection.correlated,
+        effect: detection.correlated
+          ? CLICK_EFFECT.CONFIRMED
+          : CLICK_EFFECT.NOT_OBSERVED,
+        navigated: detection.navigated,
+        reason: detection.correlated
+          ? 'click triggered navigation (observed while recovering from a navigation error)'
+          : 'navigation or stop error interrupted the click; effect not attributable',
+        evidence: [
+          ...detection.evidence,
+          evidence('interrupted', { message: error.message }),
+        ],
+        elapsedMs: elapsed(),
+        actionId,
+      });
     }
     throw error;
   }
 }
+
+export { CLICK_EFFECT, CLICK_STATUS } from './click-result.js';
+export {
+  CLICK_ACTIONABILITY,
+  CLICK_ACTIVATION,
+  CLICK_SCROLL,
+  ScrollConstraintError,
+} from './click-activation.js';

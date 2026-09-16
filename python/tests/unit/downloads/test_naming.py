@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 import pytest
@@ -43,6 +44,18 @@ class TestSanitizeDownloadName:
 
     def test_strips_trailing_dots_and_spaces(self) -> None:
         assert sanitize_download_name(" report.pdf . ") == "report.pdf"
+
+    def test_does_not_slow_down_on_a_name_padded_with_whitespace(self) -> None:
+        # The padding used to be stripped with ``^\s+|[\s.]+$``, whose second
+        # half retries from every position of a whitespace run that never
+        # reaches the end. A page chooses this string, so the cost is an
+        # attacker's to set: 40k spaces took 10 seconds before the trimming
+        # walked in from both ends instead, which takes a few milliseconds.
+        hostile = "report" + " " * 40_000 + "x"
+
+        started = time.perf_counter()
+        assert sanitize_download_name(hostile) == hostile
+        assert time.perf_counter() - started < 1.0
 
     @pytest.mark.parametrize("reserved", ["CON", "nul.txt", "com1.log", "LPT9"])
     def test_escapes_names_windows_reserves_for_devices(self, reserved: str) -> None:

@@ -8,6 +8,8 @@
  * the evidence behind each answer.
  */
 
+import { randomUUID } from 'node:crypto';
+
 /** How a click operation ended. */
 export const CLICK_STATUS = Object.freeze({
   /** Click dispatched and its effect was confirmed. */
@@ -94,8 +96,13 @@ export function makeClickResult(options = {}) {
 /**
  * Mint a correlation ID so navigation evidence can be tied to one click.
  *
+ * The random half comes from the system CSPRNG rather than `Math.random()`.
+ * The ID is only a correlation key, but it travels into logs and trace
+ * bundles, where a reader cannot tell a correlation key from a token; taking
+ * the characters from `randomUUID` costs nothing and settles the question.
+ *
  * @returns {string} Opaque action ID
  */
 export function nextActionId() {
-  return `click-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  return `click-${Date.now().toString(36)}-${randomUUID().slice(0, 8)}`;
 }

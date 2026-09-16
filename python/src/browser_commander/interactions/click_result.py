@@ -9,7 +9,7 @@ evidence behind each answer.
 
 from __future__ import annotations
 
-import random
+import secrets
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -121,9 +121,14 @@ class ClickResult:
 def next_action_id() -> str:
     """Mint a correlation ID so navigation evidence can be tied to one click.
 
+    The random half comes from the system CSPRNG. The ID is only a correlation
+    key, but it travels into logs and trace bundles, where a reader cannot tell
+    a correlation key from a token; ``secrets`` costs nothing and settles the
+    question.
+
     Returns:
         Opaque action ID
     """
     stamp = f"{int(time.time() * 1000):x}"
-    suffix = f"{random.randrange(16**6):06x}"
+    suffix = secrets.token_hex(3)
     return f"click-{stamp}-{suffix}"

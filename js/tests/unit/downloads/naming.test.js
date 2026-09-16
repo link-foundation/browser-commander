@@ -45,6 +45,19 @@ describe('download naming (issue #88)', () => {
       assert.strictEqual(sanitizeDownloadName(undefined), 'download');
     });
 
+    it('should not slow down on a name padded with whitespace', () => {
+      // The padding used to be stripped with `/^\s+|[\s.]+$/`, whose second
+      // half retries from every position of a whitespace run that never
+      // reaches the end. A page chooses this string, so the cost is an
+      // attacker's to set: 40k spaces took 2.8 seconds before the trimming
+      // walked in from both ends instead, which takes under a millisecond.
+      const hostile = `report${' '.repeat(40_000)}x`;
+
+      const started = performance.now();
+      assert.strictEqual(sanitizeDownloadName(hostile), hostile);
+      assert.ok(performance.now() - started < 500);
+    });
+
     it('should defuse reserved device names', () => {
       // `con.txt` is unopenable on Windows, and a library that produces a file
       // nobody can open has not really downloaded anything.

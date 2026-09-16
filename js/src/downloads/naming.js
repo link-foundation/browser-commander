@@ -67,6 +67,38 @@ const RESERVED_NAMES = new Set([
 /** A name that is only dots carries no information and is not a name. */
 const ONLY_DOTS = /^\.+$/;
 
+/** One whitespace character, tested one position at a time. */
+const WHITESPACE = /\s/;
+
+/**
+ * Trim the padding off a suggested name: leading whitespace, and trailing
+ * whitespace or dots.
+ *
+ * `/^\s+|[\s.]+$/` says the same thing in one line, but it backtracks
+ * quadratically over a long run of whitespace, and this string was chosen by
+ * the page. Walking in from both ends is one pass and cannot be made to cost
+ * more. Leading dots survive on purpose: `.bashrc` is a name, not padding.
+ *
+ * @param {string} value - Name to trim
+ * @returns {string} The name without its padding
+ */
+function trimNameEdges(value) {
+  let start = 0;
+  let end = value.length;
+
+  while (start < end && WHITESPACE.test(value[start])) {
+    start += 1;
+  }
+  while (
+    end > start &&
+    (value[end - 1] === '.' || WHITESPACE.test(value[end - 1]))
+  ) {
+    end -= 1;
+  }
+
+  return value.slice(start, end);
+}
+
 /**
  * Strip a page-supplied name down to something that can only ever be a file
  * inside the download root.
@@ -86,12 +118,12 @@ export function sanitizeDownloadName(suggested) {
   // we are willing to honor.
   const lastSegment = raw.split(/[/\\]/).pop() ?? '';
 
-  const cleaned = lastSegment
-    // eslint-disable-next-line no-control-regex -- control characters in a filename are exactly what we are removing
-    .replace(/[\u0000-\u001f\u007f]/g, '')
-    .replace(/[:*?"<>|]/g, '_')
-    .replace(/^\s+|[\s.]+$/g, '')
-    .trim();
+  const cleaned = trimNameEdges(
+    lastSegment
+      // eslint-disable-next-line no-control-regex -- control characters in a filename are exactly what we are removing
+      .replace(/[\u0000-\u001f\u007f]/g, '')
+      .replace(/[:*?"<>|]/g, '_')
+  );
 
   if (!cleaned || ONLY_DOTS.test(cleaned)) {
     return FALLBACK_NAME;

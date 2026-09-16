@@ -60,9 +60,33 @@ RESERVED_NAMES = frozenset(
 
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x1f\x7f]")
 _ILLEGAL_CHARACTERS = re.compile(r'[:*?"<>|]')
-_LEADING_SPACE = re.compile(r"^\s+")
-_TRAILING_SPACE_OR_DOT = re.compile(r"[\s.]+$")
 _ONLY_DOTS = re.compile(r"^\.+$")
+
+
+def _trim_name_edges(value: str) -> str:
+    r"""Trim leading whitespace, and trailing whitespace or dots.
+
+    ``re.sub(r"^\s+|[\s.]+$", "", value)`` says the same thing in one line, but
+    it backtracks quadratically over a long run of whitespace, and this string
+    was chosen by the page. Walking in from both ends is one pass and cannot be
+    made to cost more. Leading dots survive on purpose: ``.bashrc`` is a name,
+    not padding.
+
+    Args:
+        value: Name to trim
+
+    Returns:
+        The name without its padding
+    """
+    start = 0
+    end = len(value)
+
+    while start < end and value[start].isspace():
+        start += 1
+    while end > start and (value[end - 1] == "." or value[end - 1].isspace()):
+        end -= 1
+
+    return value[start:end]
 
 
 def sanitize_download_name(suggested: object) -> str:
@@ -88,7 +112,7 @@ def sanitize_download_name(suggested: object) -> str:
 
     cleaned = _CONTROL_CHARACTERS.sub("", last_segment)
     cleaned = _ILLEGAL_CHARACTERS.sub("_", cleaned)
-    cleaned = _TRAILING_SPACE_OR_DOT.sub("", _LEADING_SPACE.sub("", cleaned)).strip()
+    cleaned = _trim_name_edges(cleaned)
 
     if not cleaned or _ONLY_DOTS.match(cleaned):
         return FALLBACK_NAME

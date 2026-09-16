@@ -212,7 +212,7 @@ describe('readiness', () => {
 
       assert.strictEqual(outcome.satisfied, true);
       assert.strictEqual(outcome.detail.url, 'https://b.test/');
-      assert.ok(seen.includes('https://a.test/'));
+      assert.strictEqual(seen[0], 'https://a.test/');
     });
   });
 

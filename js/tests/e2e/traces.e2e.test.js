@@ -540,35 +540,49 @@ function describeTraces(engine) {
         await page.click('#step-forward');
       }
 
-      const compared = await page.evaluate((index) => {
-        const embedded = JSON.parse(
-          document.getElementById('trace-data').textContent
-        );
-        // The viewer highlights what it touched and annotates what a static
-        // document cannot show; neither is part of the recorded DOM.
-        const clean = (html) => {
-          const parsed = new DOMParser().parseFromString(html, 'text/html');
-          for (const element of parsed.querySelectorAll('*')) {
-            element.removeAttribute('style');
-            for (const attribute of [...element.attributes]) {
-              if (attribute.name.startsWith('data-bc-')) {
-                element.removeAttribute(attribute.name);
+      // Both documents reach the comparison as strings this test holds: the
+      // replayed one read out of the frame, the recorded one read from the
+      // bundle on disk. Taking text straight back out of the page and parsing
+      // it as HTML in the same breath is what CodeQL reports as
+      // `js/xss-through-dom` (alert 20 on this pull request), and reading the
+      // recorded side from the bundle is the stronger check anyway: it holds
+      // the viewer to the file it was built from rather than to the copy it
+      // embedded in itself.
+      const replayedHtml = await page.evaluate(() =>
+        document.getElementById('stage').getAttribute('srcdoc')
+      );
+      const capturedHtml = await (
+        await readTrace(stopped.path)
+      ).html(settled.index);
+      assert.ok(capturedHtml, 'the bundle kept no HTML for the checkpoint');
+
+      const compared = await page.evaluate(
+        ([replayedSource, capturedSource]) => {
+          // The viewer highlights what it touched and annotates what a static
+          // document cannot show; neither is part of the recorded DOM.
+          const clean = (source) => {
+            const parsed = new DOMParser().parseFromString(source, 'text/html');
+            for (const element of parsed.querySelectorAll('*')) {
+              element.removeAttribute('style');
+              for (const attribute of [...element.attributes]) {
+                if (attribute.name.startsWith('data-bc-')) {
+                  element.removeAttribute(attribute.name);
+                }
               }
             }
-          }
-          return parsed;
-        };
-        const replayed = clean(
-          document.getElementById('stage').getAttribute('srcdoc')
-        );
-        const captured = clean(embedded.html[index]);
-        const sub = (parsed, selector) =>
-          parsed.querySelector(selector)?.innerHTML.trim() ?? null;
-        return {
-          items: [sub(replayed, '#items'), sub(captured, '#items')],
-          subtree: [sub(replayed, '#subtree'), sub(captured, '#subtree')],
-        };
-      }, settled.index);
+            return parsed;
+          };
+          const replayed = clean(replayedSource);
+          const captured = clean(capturedSource);
+          const sub = (parsed, selector) =>
+            parsed.querySelector(selector)?.innerHTML.trim() ?? null;
+          return {
+            items: [sub(replayed, '#items'), sub(captured, '#items')],
+            subtree: [sub(replayed, '#subtree'), sub(captured, '#subtree')],
+          };
+        },
+        [replayedHtml, capturedHtml]
+      );
 
       assert.strictEqual(compared.items[0], compared.items[1]);
       assert.strictEqual(compared.subtree[0], compared.subtree[1]);

@@ -38,6 +38,7 @@
 //! - [`elements`] - Element operations (selectors, visibility, content)
 //! - [`interactions`] - User interactions (click, scroll, fill)
 //! - [`browser`] - Browser management (launcher, navigation)
+//! - [`downloads`] - Managed, persistent downloads (manager, store, sources)
 //! - [`fingerprint`] - Fingerprint parity with a hand-started browser (profiles,
 //!   presets, automation parity)
 //! - [`traces`] - Reading privacy-aware portable trace bundles
@@ -46,6 +47,7 @@
 
 pub mod browser;
 pub mod core;
+pub mod downloads;
 pub mod elements;
 pub mod fingerprint;
 pub mod high_level;
@@ -65,6 +67,12 @@ pub use browser::{
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
     LoggerOptions, PdfOptions, Timing, CHROME_ARGS, TIMING,
+};
+pub use downloads::{
+    attach_downloads, normalize_download_options, supported_engine, CaptureOptions,
+    DownloadArtifact, DownloadConflict, DownloadError, DownloadEvent, DownloadManager,
+    DownloadNamer, DownloadNaming, DownloadOptions, DownloadSetting, DownloadValidator,
+    DEFAULT_CAPTURE_TIMEOUT,
 };
 // `fingerprint::ColorScheme` is the CSS preference a page reads, while
 // `browser::ColorScheme` is the one `emulate_media` writes, so the fingerprint
@@ -113,6 +121,11 @@ pub mod prelude {
         is_navigation_error, is_timeout_error, DialogEvent, DialogManager, DialogType,
         EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, PdfOptions, Timing,
         CHROME_ARGS, TIMING,
+    };
+    pub use crate::downloads::{
+        attach_downloads, normalize_download_options, CaptureOptions, DownloadArtifact,
+        DownloadConflict, DownloadError, DownloadEvent, DownloadManager, DownloadOptions,
+        DownloadSetting,
     };
     pub use crate::elements::{
         count, get_attribute, input_value, is_enabled, is_visible, normalize_selector,

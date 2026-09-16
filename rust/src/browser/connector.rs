@@ -13,6 +13,7 @@ use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::launcher::{Browser, LaunchResult};
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::core::engine::EngineType;
+use crate::downloads::{attach_downloads, DownloadSetting};
 
 /// Options for attaching to a running browser over CDP.
 #[derive(Debug, Clone)]
@@ -37,6 +38,13 @@ pub struct ConnectOptions {
     pub node_executable: Option<PathBuf>,
     /// Directory where Node resolves the Playwright/Puppeteer package.
     pub node_working_dir: Option<PathBuf>,
+    /// Manage the attached browser's downloads.
+    ///
+    /// The same setting and the same manager as
+    /// [`LaunchOptions`](super::launcher::LaunchOptions), because a browser
+    /// somebody else started downloads files the same way — including the ones
+    /// a person clicks by hand. See [`downloads`](crate::downloads).
+    pub downloads: DownloadSetting,
 }
 
 impl Default for ConnectOptions {
@@ -52,6 +60,7 @@ impl Default for ConnectOptions {
             verbose: false,
             node_executable: None,
             node_working_dir: None,
+            downloads: DownloadSetting::Off,
         }
     }
 }
@@ -132,6 +141,17 @@ impl ConnectOptions {
         self
     }
 
+    /// Manage the attached browser's downloads.
+    ///
+    /// # Arguments
+    ///
+    /// * `downloads` - `true` for the defaults, `false` for none, or
+    ///   [`DownloadOptions`](crate::downloads::DownloadOptions)
+    pub fn downloads(mut self, downloads: impl Into<DownloadSetting>) -> Self {
+        self.downloads = downloads.into();
+        self
+    }
+
     pub(crate) fn endpoint(&self) -> Result<&str, anyhow::Error> {
         match (&self.cdp_endpoint, &self.ws_endpoint) {
             (Some(endpoint), None) | (None, Some(endpoint)) if !endpoint.is_empty() => Ok(endpoint),
@@ -159,6 +179,13 @@ pub async fn connect_browser(options: ConnectOptions) -> Result<LaunchResult, an
         EngineType::Playwright | EngineType::Puppeteer => {
             let engine = options.engine;
             let timeout = options.timeout;
+            // Refused before the connection is made, for the same reason the
+            // launcher refuses it: the bridge has no CDP route, so a manager
+            // here would watch a directory the browser never writes into.
+            crate::downloads::normalize_download_options(options.downloads.clone())
+                .map(|_| crate::downloads::supported_engine(engine))
+                .transpose()
+                .map_err(|error| anyhow::anyhow!("{error}"))?;
             let connection = NodeBridgePage::connect(options);
             let page = if let Some(timeout) = timeout {
                 tokio::time::timeout(timeout, connection)
@@ -174,6 +201,7 @@ pub async fn connect_browser(options: ConnectOptions) -> Result<LaunchResult, an
                     headless: false,
                 },
                 page: Arc::new(page),
+                downloads: None,
             })
         }
         EngineType::Fantoccini => Err(anyhow::anyhow!(
@@ -221,6 +249,14 @@ async fn connect_chromiumoxide(
     let engine = options.engine;
     let adapter = ChromiumoxidePage::new(page, browser, handler_task, PathBuf::new());
 
+    // `Browser.setDownloadBehavior` is browser-wide, so an attached browser's
+    // downloads are managed even when a person starts them from the window
+    // rather than from automation. That is the point of managing a *connected*
+    // browser at all.
+    let downloads = attach_downloads(engine, &adapter, options.downloads.clone())
+        .await
+        .map_err(|error| anyhow::anyhow!("{error}"))?;
+
     Ok(LaunchResult {
         browser: Browser {
             engine,
@@ -228,6 +264,7 @@ async fn connect_chromiumoxide(
             headless: false,
         },
         page: Arc::new(adapter),
+        downloads,
     })
 }
 
@@ -235,6 +272,34 @@ async fn connect_chromiumoxide(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn connect_options_carry_a_download_setting() {
+        assert!(matches!(
+            ConnectOptions::default().downloads,
+            DownloadSetting::Off
+        ));
+        assert!(matches!(
+            ConnectOptions::chromiumoxide().downloads(true).downloads,
+            DownloadSetting::On
+        ));
+    }
+
+    #[tokio::test]
+    async fn connect_playwright_refuses_downloads_it_cannot_manage() {
+        let options = ConnectOptions::playwright()
+            .cdp_endpoint("http://127.0.0.1:9222")
+            .downloads(true);
+
+        let error = connect_browser(options).await.unwrap_err();
+
+        assert!(
+            error
+                .to_string()
+                .contains("managed downloads are not supported"),
+            "unexpected message: {error}"
+        );
+    }
 
     #[test]
     fn connect_options_builders_preserve_endpoints_and_cookies() {

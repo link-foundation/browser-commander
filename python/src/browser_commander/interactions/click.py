@@ -456,13 +456,42 @@ async def click_element(
             )
 
         try:
-            detail = await dispatch_click(
-                page=page,
-                adapter=adapter,
-                locator_or_element=locator_or_element,
-                activation_options=activation_options,
-                log=log,
+            # Dispatch is bounded too: locating a click point and reading the
+            # scroll position are engine round-trips, and an unbounded one
+            # spends the budget the caller reserved for the whole click.
+            dispatching = await run_within_deadline(
+                deadline,
+                lambda: dispatch_click(
+                    page=page,
+                    adapter=adapter,
+                    locator_or_element=locator_or_element,
+                    activation_options=activation_options,
+                    log=log,
+                ),
             )
+
+            if dispatching.timed_out:
+                return ClickResult(
+                    status=ClickStatus.TIMED_OUT,
+                    dispatched=False,
+                    effect=ClickEffect.NOT_OBSERVED,
+                    reason=(
+                        "click budget expired before the click could be dispatched"
+                    ),
+                    evidence=[
+                        Evidence(
+                            "dispatch-timeout",
+                            {
+                                "timeoutMs": deadline.timeout_ms,
+                                "elapsedMs": deadline.elapsed_ms(),
+                            },
+                        )
+                    ],
+                    elapsed_ms=elapsed_ms(),
+                    action_id=action_id,
+                )
+
+            detail = dispatching.value
         except ScrollConstraintError as error:
             # The caller asked for no scrolling and we cannot deliver the click
             # without it. Say so instead of scrolling behind their back.

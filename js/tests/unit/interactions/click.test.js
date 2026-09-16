@@ -412,6 +412,35 @@ describe('click', () => {
     /** An element probe that never answers, like a locator on a lost document. */
     const neverAnswers = () => new Promise(() => {});
 
+    /**
+     * A probe that answers once and then hangs.
+     *
+     * This is what a real engine looks like once the document the element
+     * lived in is gone: the first read is served, and any later one waits for
+     * the engine's own far longer timeout.
+     *
+     * @returns {Function} Element probe for a stub adapter
+     */
+    const answersOnceThenHangs = () => {
+      let probes = 0;
+      return async (...args) =>
+        (probes += 1) === 1 ? { ...UNCHANGED_STATE } : neverAnswers(...args);
+    };
+
+    /**
+     * Click a stub adapter with a budget far below any engine's own timeout.
+     *
+     * @param {Object} adapter - Stub engine adapter
+     * @returns {Promise<Object>} Click result
+     */
+    const clickOnABudget = async (adapter) => {
+      const { result } = await clickWith(adapter, {
+        verify: true,
+        timeout: 60,
+      });
+      return result;
+    };
+
     it('should stop probing when the click budget is spent', async () => {
       // Regression test for issue #89: Playwright's locator probe carries a
       // 30-second default, so an unbounded verification outlived every budget
@@ -432,14 +461,11 @@ describe('click', () => {
       assert.ok(Date.now() - started < 2000);
     });
 
-    it('should report timed_out rather than unverified for an unreadable target', async () => {
-      const { result } = await clickWith(
-        {
-          click: async () => {},
-          evaluateOnElement: neverAnswers,
-        },
-        { verify: true, timeout: 60 }
-      );
+    it('should report timed_out rather than unverified for an unreadable effect', async () => {
+      const result = await clickOnABudget({
+        click: async () => {},
+        evaluateOnElement: answersOnceThenHangs(),
+      });
 
       assert.strictEqual(result.status, CLICK_STATUS.TIMED_OUT);
       assert.strictEqual(result.dispatched, true);
@@ -447,6 +473,22 @@ describe('click', () => {
       assert.ok(
         result.evidence.some((item) => item.type === 'verification-timeout')
       );
+    });
+
+    it('should stop waiting on a dispatch that outlives the budget', async () => {
+      // Dispatch is an engine round-trip too, so an unbounded one spends the
+      // budget the caller reserved for the whole click before verification
+      // ever gets a turn.
+      const started = Date.now();
+      const result = await clickOnABudget({
+        click: neverAnswers,
+        evaluateOnElement: async () => ({ ...UNCHANGED_STATE }),
+      });
+
+      assert.ok(Date.now() - started < 2000);
+      assert.strictEqual(result.status, CLICK_STATUS.TIMED_OUT);
+      assert.strictEqual(result.dispatched, false);
+      assert.strictEqual(result.evidence[0].type, 'dispatch-timeout');
     });
 
     it('should measure elapsed time monotonically, not by the wall clock', async () => {
@@ -467,7 +509,6 @@ describe('click', () => {
       page.url = () => url;
       // The pre-click probe answers; only the post-click one is left hanging,
       // which is what a probe against a replaced document looks like.
-      let probes = 0;
       const timer = setTimeout(() => {
         url = 'https://example.com/arrived';
       }, 60);
@@ -482,10 +523,7 @@ describe('click', () => {
         timeout: 5000,
         adapter: {
           click: async () => {},
-          evaluateOnElement: async (...args) =>
-            (probes += 1) === 1
-              ? { ...UNCHANGED_STATE }
-              : neverAnswers(...args),
+          evaluateOnElement: answersOnceThenHangs(),
         },
       });
       clearTimeout(timer);

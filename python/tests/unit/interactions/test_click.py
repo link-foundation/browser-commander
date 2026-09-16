@@ -399,6 +399,18 @@ class SlowProbeAdapter(ProbeAdapter):
         return self.probe
 
 
+class StallingClickAdapter(ProbeAdapter):
+    """Adapter whose engine click never comes back.
+
+    Dispatch is an engine round-trip too, so an unbounded one spends the budget
+    the caller reserved for the whole click before verification gets a turn.
+    """
+
+    async def click(self, _locator: Any, force: bool = False) -> None:
+        """Never answer, the way a stuck engine call does not."""
+        await asyncio.sleep(30)
+
+
 class TestClickDeadlines:
     """Issue #89: one monotonic budget has to cover every check in a click."""
 
@@ -414,6 +426,16 @@ class TestClickDeadlines:
         assert result.effect == ClickEffect.NOT_OBSERVED
         assert result.verified is False
         assert any(item.type == "verification-timeout" for item in result.evidence)
+
+    async def test_stops_waiting_on_a_dispatch_that_outlives_the_budget(self):
+        started = time.monotonic()
+
+        result = await click_with(StallingClickAdapter(), verify=True, timeout=150)
+
+        assert (time.monotonic() - started) < 5, "the budget has to bound dispatch"
+        assert result.status == ClickStatus.TIMED_OUT
+        assert result.dispatched is False
+        assert result.evidence[0].type == "dispatch-timeout"
 
     async def test_gives_up_on_a_target_the_page_navigated_away_from(self):
         page = create_mock_playwright_page()

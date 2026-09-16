@@ -344,28 +344,61 @@ export async function clickElement(options = {}) {
       });
     }
 
+    /**
+     * Describe a click the page never received.
+     *
+     * @param {string} status - Status to report
+     * @param {string} reason - Why the click did not happen
+     * @param {Object} record - Evidence for that reason
+     * @returns {Object} Click result
+     */
+    const neverDispatched = (status, reason, record) =>
+      makeClickResult({
+        status,
+        dispatched: false,
+        effect: CLICK_EFFECT.NOT_OBSERVED,
+        reason,
+        evidence: [record],
+        elapsedMs: elapsed(),
+        actionId,
+      });
+
     let dispatch;
     try {
-      dispatch = await dispatchClick({
-        page,
-        adapter,
-        locatorOrElement,
-        activationOptions,
-        log,
-      });
+      // Dispatch is bounded too: locating a click point and reading the scroll
+      // position are engine round-trips, and an unbounded one spends the budget
+      // the caller reserved for the whole click.
+      const dispatching = await runWithinDeadline(deadline, () =>
+        dispatchClick({
+          page,
+          adapter,
+          locatorOrElement,
+          activationOptions,
+          log,
+        })
+      );
+
+      if (dispatching.timedOut) {
+        return neverDispatched(
+          CLICK_STATUS.TIMED_OUT,
+          'click budget expired before the click could be dispatched',
+          evidence('dispatch-timeout', {
+            timeoutMs: deadline?.timeoutMs,
+            elapsedMs: deadline?.elapsedMs(),
+          })
+        );
+      }
+
+      dispatch = dispatching.value;
     } catch (error) {
       if (error instanceof ScrollConstraintError) {
         // The caller asked for no scrolling and we cannot deliver the click
         // without it. Say so instead of scrolling behind their back.
-        return makeClickResult({
-          status: CLICK_STATUS.FAILED,
-          dispatched: false,
-          effect: CLICK_EFFECT.NOT_OBSERVED,
-          reason: error.message,
-          evidence: [evidence('scroll-constraint', error.detail)],
-          elapsedMs: elapsed(),
-          actionId,
-        });
+        return neverDispatched(
+          CLICK_STATUS.FAILED,
+          error.message,
+          evidence('scroll-constraint', error.detail)
+        );
       }
       throw error;
     }

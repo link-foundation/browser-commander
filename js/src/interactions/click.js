@@ -927,11 +927,14 @@ export async function clickButton(options = {}) {
   }
 
   const actionId = nextActionId();
-  const { elapsed, activationOptions } = beginClickAction({
+  // The same budget covers locating, scrolling, clicking and verifying, so a
+  // button click cannot quietly cost several times the timeout asked for.
+  const { deadline, elapsed, activationOptions } = beginClickAction({
     activation,
     scroll,
     actionability,
     noAutoScroll: scrollIntoView === undefined ? undefined : !scrollIntoView,
+    timeout,
     log,
   });
 
@@ -984,6 +987,7 @@ export async function clickButton(options = {}) {
       verify,
       verifyFn,
       actionId,
+      timeout: deadline.remainingMs(),
     });
 
     if (clickResult.status === CLICK_STATUS.FAILED) {

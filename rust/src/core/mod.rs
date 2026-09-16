@@ -26,4 +26,6 @@ pub use logger::{init_logger, is_verbose_enabled, Logger, LoggerOptions};
 pub use navigation::{
     is_navigation_error, is_timeout_error, safe_operation, NavigationError, SafeResult,
 };
-pub use readiness::{CheckRecord, Deadline, ReadinessOutcome, ReadinessStatus};
+pub use readiness::{
+    run_within_deadline, CheckRecord, Deadline, DeadlineOutcome, ReadinessOutcome, ReadinessStatus,
+};

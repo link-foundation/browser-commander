@@ -8,13 +8,12 @@
 //! the case of a button whose handler is missing or threw - so it is reported
 //! as [`ClickEffect::NotObserved`] rather than as success.
 
-use std::time::Instant;
-
 use serde_json::json;
 
 use crate::core::constants::TIMING;
 use crate::core::engine::{ClickVerificationResult, EngineAdapter, EngineError, PreClickState};
 use crate::core::navigation::is_navigation_error;
+use crate::core::readiness::{run_within_deadline, Deadline, DeadlineOutcome};
 use crate::interactions::click_activation::{
     dispatch_click, ActivationOptions, ClickActivation, ClickDispatchError, ClickScroll,
     DispatchDetail,
@@ -324,18 +323,58 @@ pub async fn click_element(
     selector: &str,
     options: &ClickOptions,
 ) -> Result<ClickResult, EngineError> {
-    let started = Instant::now();
+    // One monotonic budget covers probing, dispatch and verification, so a
+    // click cannot quietly cost several times the timeout the caller asked for.
+    let deadline = Deadline::new(options.timeout);
     let action_id = next_action_id();
-    let elapsed = |started: Instant| started.elapsed().as_millis();
+    let elapsed = || deadline.elapsed_ms();
 
-    // Capture pre-click state for verification
+    // Capture pre-click state for verification. A state that could not be read
+    // in time is no state at all; the click then has nothing to compare
+    // against and says so rather than guessing.
     let pre_click_state = if options.verify {
-        capture_pre_click_state(adapter, selector).await?
+        run_within_deadline(&deadline, capture_pre_click_state(adapter, selector))
+            .await
+            .value()
+            .transpose()?
+            .unwrap_or_default()
     } else {
         PreClickState::default()
     };
 
-    let dispatch = match dispatch_click(adapter, selector, &options.activation).await {
+    // A navigation replaces the document the element lived in, and engines
+    // answer an element probe on the *new* document instead of failing. Reading
+    // the URL first is what lets the result tell those two cases apart.
+    let url_before_dispatch = adapter.url().await.ok();
+
+    // Dispatch is bounded too: locating a click point and reading the scroll
+    // position are engine round-trips, and an unbounded one spends the budget
+    // the caller reserved for the whole click.
+    let dispatched = run_within_deadline(
+        &deadline,
+        dispatch_click(adapter, selector, &options.activation),
+    )
+    .await;
+
+    let DeadlineOutcome::Completed(dispatched) = dispatched else {
+        return Ok(ClickResult::new(
+            ClickStatus::TimedOut,
+            false,
+            ClickEffect::NotObserved,
+            "click budget expired before the click could be dispatched",
+        )
+        .with_evidence(vec![Evidence::new(
+            "dispatch-timeout",
+            json!({
+                "timeoutMs": options.timeout.as_millis(),
+                "elapsedMs": deadline.elapsed_ms(),
+            }),
+        )])
+        .with_elapsed_ms(elapsed())
+        .with_action_id(action_id));
+    };
+
+    let dispatch = match dispatched {
         Ok(detail) => detail,
         Err(ClickDispatchError::ScrollConstraint { message, detail }) => {
             // The caller asked for no scrolling and the click cannot be
@@ -348,7 +387,7 @@ pub async fn click_element(
                 message,
             )
             .with_evidence(vec![Evidence::new("scroll-constraint", detail)])
-            .with_elapsed_ms(elapsed(started))
+            .with_elapsed_ms(elapsed())
             .with_action_id(action_id));
         }
         Err(ClickDispatchError::Engine(e)) if is_navigation_error(&e.to_string()) => {
@@ -356,7 +395,7 @@ pub async fn click_element(
                 "navigation or stop interrupted the click before it could be observed",
             )
             .with_evidence(vec![Evidence::message("interrupted", e.to_string())])
-            .with_elapsed_ms(elapsed(started))
+            .with_elapsed_ms(elapsed())
             .with_action_id(action_id));
         }
         Err(ClickDispatchError::Engine(e)) => return Err(e),
@@ -368,12 +407,71 @@ pub async fn click_element(
         return Ok(
             ClickResult::unverified("click dispatched; verification not requested")
                 .with_evidence(evidence)
-                .with_elapsed_ms(elapsed(started))
+                .with_elapsed_ms(elapsed())
                 .with_action_id(action_id),
         );
     }
 
-    let verification = verify_click(adapter, selector, &pre_click_state).await?;
+    let verification = match verify_until_navigation(
+        adapter,
+        selector,
+        &pre_click_state,
+        url_before_dispatch.as_deref(),
+        &deadline,
+    )
+    .await?
+    {
+        VerificationOutcome::Verified(verification) => verification,
+        VerificationOutcome::Navigated(to) => {
+            // The document the element belonged to is gone, so there is nothing
+            // left to observe. The navigation is recorded as what it is - a
+            // correlated event - and *not* as proof that this click caused it.
+            evidence.push(Evidence::new(
+                "navigation",
+                json!({
+                    "actionId": action_id,
+                    "from": url_before_dispatch,
+                    "to": to,
+                    "correlated": true,
+                    "provesClickEffect": false,
+                }),
+            ));
+
+            return Ok(ClickResult::new(
+                ClickStatus::Unverified,
+                true,
+                ClickEffect::NotObserved,
+                "the page navigated after the click, so the click effect could not be \
+                 observed on the original document",
+            )
+            .with_navigated(true)
+            .with_evidence(evidence)
+            .with_elapsed_ms(elapsed())
+            .with_action_id(action_id));
+        }
+        VerificationOutcome::TimedOut => {
+            evidence.push(Evidence::new(
+                "verification-timeout",
+                json!({
+                    "timeoutMs": options.timeout.as_millis(),
+                    "elapsedMs": deadline.elapsed_ms(),
+                }),
+            ));
+
+            // The click was delivered either way; only the observation ran out
+            // of time, and `timed_out` says that rather than blaming the click.
+            return Ok(ClickResult::new(
+                ClickStatus::TimedOut,
+                true,
+                ClickEffect::NotObserved,
+                "verification budget expired before an effect could be observed",
+            )
+            .with_evidence(evidence)
+            .with_elapsed_ms(elapsed())
+            .with_action_id(action_id));
+        }
+    };
+
     let confirmed = verification.effect == ClickEffect::Confirmed;
     evidence.extend(verification.evidence);
 
@@ -389,8 +487,78 @@ pub async fn click_element(
     )
     .with_navigated(verification.navigation_error)
     .with_evidence(evidence)
-    .with_elapsed_ms(elapsed(started))
+    .with_elapsed_ms(elapsed())
     .with_action_id(action_id))
+}
+
+/// How far verification got before something ended it.
+enum VerificationOutcome {
+    /// Verification produced a verdict.
+    Verified(ClickVerificationResult),
+    /// The page navigated away, carrying the URL it went to.
+    Navigated(String),
+    /// The budget ran out before anything could be observed.
+    TimedOut,
+}
+
+/// How often the navigation watch samples the page URL.
+const NAVIGATION_POLL_INTERVAL: Duration = Duration::from_millis(50);
+
+/// Poll the page URL until it changes, or until the budget runs out.
+async fn watch_for_navigation(
+    adapter: &dyn EngineAdapter,
+    url_before: &str,
+    deadline: &Deadline,
+) -> String {
+    loop {
+        deadline.sleep_at_most(NAVIGATION_POLL_INTERVAL).await;
+        if let Ok(now) = adapter.url().await {
+            if now != url_before {
+                return now;
+            }
+        }
+        if deadline.expired() {
+            // Let the verification side of the race report the timeout, so a
+            // spent budget is described once and in one vocabulary.
+            std::future::pending::<()>().await;
+        }
+    }
+}
+
+/// Verify a click, giving up as soon as the page navigates away.
+///
+/// Without the navigation watch a navigating click spends its whole budget on
+/// a probe the engine happily answers against the *new* document, and the
+/// result then reports a timeout for what was really a navigation.
+async fn verify_until_navigation(
+    adapter: &dyn EngineAdapter,
+    selector: &str,
+    pre_click_state: &PreClickState,
+    url_before: Option<&str>,
+    deadline: &Deadline,
+) -> Result<VerificationOutcome, EngineError> {
+    let verifying = verify_click(adapter, selector, pre_click_state);
+
+    let Some(url_before) = url_before else {
+        return match run_within_deadline(deadline, verifying).await {
+            DeadlineOutcome::Completed(result) => Ok(VerificationOutcome::Verified(result?)),
+            DeadlineOutcome::TimedOut => Ok(VerificationOutcome::TimedOut),
+        };
+    };
+
+    let raced = async {
+        tokio::select! {
+            result = verifying => result.map(VerificationOutcome::Verified),
+            to = watch_for_navigation(adapter, url_before, deadline) => {
+                Ok(VerificationOutcome::Navigated(to))
+            }
+        }
+    };
+
+    match run_within_deadline(deadline, raced).await {
+        DeadlineOutcome::Completed(outcome) => outcome,
+        DeadlineOutcome::TimedOut => Ok(VerificationOutcome::TimedOut),
+    }
 }
 
 /// Click a button or element (high-level with scrolling and waits).
@@ -415,6 +583,11 @@ pub async fn click_button(
     selector: &str,
     options: &ClickOptions,
 ) -> Result<ClickResult, EngineError> {
+    // Scrolling, clicking, verifying and the settle wait all come out of one
+    // budget; before it was shared, each started a timer of its own and a
+    // button click could cost several times the timeout the caller asked for.
+    let deadline = Deadline::new(options.timeout);
+
     // Scroll into view if requested. `ClickScroll::None` means what it says, so
     // it overrides the legacy `scroll_into_view` flag instead of being silently
     // undone by it.
@@ -437,12 +610,16 @@ pub async fn click_button(
         }
     }
 
-    // Perform the click
-    let result = click_element(adapter, selector, options).await?;
+    // Perform the click with whatever is left of the shared budget.
+    let remaining = ClickOptions {
+        timeout: deadline.remaining(),
+        ..options.clone()
+    };
+    let result = click_element(adapter, selector, &remaining).await?;
 
     // Wait after click if specified
     if result.dispatched {
-        tokio::time::sleep(options.wait_after_click).await;
+        deadline.sleep_at_most(options.wait_after_click).await;
     }
 
     Ok(result)
@@ -451,6 +628,12 @@ pub async fn click_button(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::stub_engine::StubEngine;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::time::Instant;
+
+    /// A budget far shorter than any engine's own probe timeout.
+    const MS_150: Duration = Duration::from_millis(150);
 
     #[test]
     fn click_options_default() {
@@ -536,6 +719,139 @@ mod tests {
         assert_eq!(result.effect, ClickEffect::Confirmed);
         assert_eq!(result.evidence[0].detail["before"], json!(false));
         assert_eq!(result.evidence[0].detail["after"], json!(true));
+    }
+
+    /// The element state a probe reports for an untouched, connected button.
+    fn unchanged_state() -> serde_json::Value {
+        json!({
+            "disabled": false,
+            "ariaPressed": "false",
+            "checked": false,
+            "className": "btn",
+            "isConnected": true,
+        })
+    }
+
+    /// Answer the pre-click state probe, then stall every later one.
+    ///
+    /// This is what a real engine does after a navigation: it serves the probe
+    /// against the new document, or waits out its own locator timeout, rather
+    /// than reporting that the element is gone. Only the element-state probe is
+    /// stalled, so dispatch still reaches the page.
+    fn stalls_after_the_first_state_probe() -> impl Fn(usize, &str) -> Duration + Send + Sync {
+        let state_probes = AtomicUsize::new(0);
+
+        move |_call, script| {
+            if !script.contains("isConnected") {
+                return Duration::ZERO;
+            }
+            if state_probes.fetch_add(1, Ordering::SeqCst) == 0 {
+                Duration::ZERO
+            } else {
+                Duration::from_secs(30)
+            }
+        }
+    }
+
+    /// Click options that verify, with a short budget and no settle wait.
+    fn verifying_within(timeout: Duration) -> ClickOptions {
+        ClickOptions {
+            verify: true,
+            timeout,
+            wait_after_click: Duration::ZERO,
+            ..ClickOptions::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn reports_timed_out_when_the_target_cannot_be_read() {
+        // Regression test for issue #89: the probe used to run under the
+        // engine's own timeout, so a click given 150ms could wait 30 seconds
+        // and then blame the click for being slow.
+        let adapter = StubEngine::fixed("https://example.com/start")
+            .evaluating(|_| unchanged_state())
+            .evaluating_slowly(stalls_after_the_first_state_probe());
+
+        let started = Instant::now();
+        let result = click_element(&adapter, "#target", &verifying_within(MS_150))
+            .await
+            .expect("a slow probe is not an engine error");
+
+        assert!(
+            started.elapsed() < Duration::from_secs(5),
+            "the budget, not the probe, has to end the wait"
+        );
+        assert_eq!(result.status, ClickStatus::TimedOut);
+        assert!(result.dispatched);
+        assert_eq!(result.effect, ClickEffect::NotObserved);
+        assert!(!result.verified);
+        assert!(result
+            .evidence
+            .iter()
+            .any(|item| item.kind == "verification-timeout"));
+    }
+
+    #[tokio::test]
+    async fn gives_up_on_a_target_the_page_navigated_away_from() {
+        // The first `url()` call is the one taken before dispatch; every later
+        // one is the navigation watch, which must see the page has moved.
+        let adapter = StubEngine::scripted(|call| {
+            if call == 0 {
+                "https://example.com/start".to_string()
+            } else {
+                "https://example.com/arrived".to_string()
+            }
+        })
+        .evaluating(|_| unchanged_state())
+        .evaluating_slowly(stalls_after_the_first_state_probe());
+
+        let started = Instant::now();
+        let result = click_element(&adapter, "#go", &verifying_within(Duration::from_secs(5)))
+            .await
+            .expect("a navigation is not an engine error");
+
+        assert!(
+            started.elapsed() < Duration::from_secs(2),
+            "the navigation, not the budget, should end the wait"
+        );
+        assert_eq!(result.status, ClickStatus::Unverified);
+        assert_ne!(result.effect, ClickEffect::Confirmed);
+
+        let navigation = result
+            .evidence
+            .iter()
+            .find(|item| item.kind == "navigation")
+            .expect("the navigation has to be recorded");
+        assert_eq!(navigation.detail["provesClickEffect"], json!(false));
+        assert_eq!(
+            navigation.detail["to"],
+            json!("https://example.com/arrived")
+        );
+    }
+
+    #[tokio::test]
+    async fn keeps_a_button_click_inside_one_budget() {
+        // click_button scrolls, clicks, verifies and then waits; before the
+        // budget was shared each of those started a timer of its own.
+        let adapter = StubEngine::fixed("https://example.com/start")
+            .evaluating(|_| unchanged_state())
+            .evaluating_slowly(stalls_after_the_first_state_probe());
+        let options = ClickOptions {
+            wait_after_click: Duration::from_secs(10),
+            ..verifying_within(MS_150)
+        };
+
+        let started = Instant::now();
+        let result = click_button(&adapter, "#target", &options)
+            .await
+            .expect("a slow probe is not an engine error");
+
+        assert!(
+            started.elapsed() < Duration::from_secs(5),
+            "a 150ms budget must not become {:?}",
+            started.elapsed()
+        );
+        assert_eq!(result.status, ClickStatus::TimedOut);
     }
 
     #[test]

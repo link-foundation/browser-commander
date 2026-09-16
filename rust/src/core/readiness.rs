@@ -93,6 +93,59 @@ impl Deadline {
     }
 }
 
+/// What running an operation under a deadline produced.
+///
+/// `TimedOut` carries no value on purpose: nothing was observed, so there is
+/// nothing to report but the fact that the budget, rather than the operation,
+/// ended the wait.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DeadlineOutcome<T> {
+    /// The operation answered inside the budget.
+    Completed(T),
+    /// The budget ran out first.
+    TimedOut,
+}
+
+impl<T> DeadlineOutcome<T> {
+    /// Whether the budget ran out before the operation answered.
+    #[must_use]
+    pub fn timed_out(&self) -> bool {
+        matches!(self, Self::TimedOut)
+    }
+
+    /// The value, if there is one.
+    #[must_use]
+    pub fn value(self) -> Option<T> {
+        match self {
+            Self::Completed(value) => Some(value),
+            Self::TimedOut => None,
+        }
+    }
+}
+
+/// Run an operation under a deadline, reporting expiry instead of waiting.
+///
+/// Engine probes carry timeouts of their own - Playwright's locator default is
+/// 30 seconds - so an operation given a 3 second budget could spend ten times
+/// that waiting for an element a navigation had already taken away. The budget
+/// the caller asked for has to win.
+pub async fn run_within_deadline<F, T>(deadline: &Deadline, operation: F) -> DeadlineOutcome<T>
+where
+    F: std::future::Future<Output = T>,
+{
+    let remaining = deadline.remaining();
+    if remaining.is_zero() {
+        // Starting an operation with no budget left only delays the answer we
+        // already have.
+        return DeadlineOutcome::TimedOut;
+    }
+
+    match tokio::time::timeout(remaining, operation).await {
+        Ok(value) => DeadlineOutcome::Completed(value),
+        Err(_) => DeadlineOutcome::TimedOut,
+    }
+}
+
 /// Evidence for one check that ran.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CheckRecord {
@@ -245,6 +298,51 @@ impl ReadinessOutcome {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn run_within_deadline_returns_a_value_that_arrives_in_time() {
+        let deadline = Deadline::new(Duration::from_secs(1));
+
+        let outcome = run_within_deadline(&deadline, async { "done" }).await;
+
+        assert!(!outcome.timed_out());
+        assert_eq!(outcome.value(), Some("done"));
+    }
+
+    #[tokio::test]
+    async fn run_within_deadline_reports_expiry_instead_of_waiting_the_operation_out() {
+        let deadline = Deadline::new(Duration::from_millis(30));
+        let started = Instant::now();
+
+        let outcome = run_within_deadline(&deadline, async {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            "too late"
+        })
+        .await;
+
+        assert!(outcome.timed_out());
+        assert!(
+            started.elapsed() < Duration::from_secs(2),
+            "the budget, not the operation, has to end the wait"
+        );
+    }
+
+    #[tokio::test]
+    async fn run_within_deadline_does_not_start_an_operation_with_no_budget_left() {
+        let deadline = Deadline::new(Duration::ZERO);
+        let started = std::sync::atomic::AtomicBool::new(false);
+
+        let outcome = run_within_deadline(&deadline, async {
+            started.store(true, std::sync::atomic::Ordering::SeqCst);
+        })
+        .await;
+
+        assert!(outcome.timed_out());
+        assert!(
+            !started.load(std::sync::atomic::Ordering::SeqCst),
+            "an operation with no budget left only delays the answer we have"
+        );
+    }
 
     #[test]
     fn a_deadline_never_hands_out_more_budget_than_it_was_given() {

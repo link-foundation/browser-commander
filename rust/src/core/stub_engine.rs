@@ -10,18 +10,27 @@ use crate::core::engine::{ElementInfo, EngineAdapter, EngineError, EngineType, P
 use async_trait::async_trait;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
+use std::time::Duration;
 
-/// An engine adapter whose `url()` answers come from a script.
+/// How long a scripted `evaluate()` waits before answering, by call index and
+/// script text.
+type EvaluateDelay = Box<dyn Fn(usize, &str) -> Duration + Send + Sync>;
+
+/// An engine adapter whose `url()` and `evaluate()` answers come from a script.
 pub struct StubEngine {
     url_of: Box<dyn Fn(usize) -> String + Send + Sync>,
     url_calls: AtomicUsize,
     goto_calls: Mutex<Vec<String>>,
+    evaluate_of: Box<dyn Fn(usize) -> serde_json::Value + Send + Sync>,
+    evaluate_calls: AtomicUsize,
+    evaluate_delay_of: EvaluateDelay,
 }
 
 impl std::fmt::Debug for StubEngine {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("StubEngine")
             .field("url_calls", &self.url_calls())
+            .field("evaluate_calls", &self.evaluate_calls())
             .field("goto_calls", &self.goto_calls())
             .finish()
     }
@@ -34,6 +43,9 @@ impl StubEngine {
             url_of: Box::new(url_of),
             url_calls: AtomicUsize::new(0),
             goto_calls: Mutex::new(Vec::new()),
+            evaluate_of: Box::new(|_| serde_json::Value::Null),
+            evaluate_calls: AtomicUsize::new(0),
+            evaluate_delay_of: Box::new(|_, _| Duration::ZERO),
         }
     }
 
@@ -46,6 +58,35 @@ impl StubEngine {
     /// Build a stub whose URL never repeats, i.e. a redirect that never ends.
     pub fn never_stable() -> Self {
         Self::scripted(|call| format!("https://example.com/redirect/{call}"))
+    }
+
+    /// Answer `evaluate()` from the call index instead of with null.
+    #[must_use]
+    pub fn evaluating(
+        mut self,
+        evaluate_of: impl Fn(usize) -> serde_json::Value + Send + Sync + 'static,
+    ) -> Self {
+        self.evaluate_of = Box::new(evaluate_of);
+        self
+    }
+
+    /// Delay each `evaluate()` answer by a scripted amount.
+    ///
+    /// A probe that takes far longer than the caller's budget is what a real
+    /// engine does after a navigation: Playwright waits out its own 30 second
+    /// locator timeout rather than failing.
+    #[must_use]
+    pub fn evaluating_slowly(
+        mut self,
+        delay_of: impl Fn(usize, &str) -> Duration + Send + Sync + 'static,
+    ) -> Self {
+        self.evaluate_delay_of = Box::new(delay_of);
+        self
+    }
+
+    /// Number of times `evaluate()` was asked.
+    pub fn evaluate_calls(&self) -> usize {
+        self.evaluate_calls.load(Ordering::SeqCst)
     }
 
     /// Number of times `url()` was asked.
@@ -135,8 +176,13 @@ impl EngineAdapter for StubEngine {
         Ok(())
     }
 
-    async fn evaluate(&self, _script: &str) -> Result<serde_json::Value, EngineError> {
-        Ok(serde_json::Value::Null)
+    async fn evaluate(&self, script: &str) -> Result<serde_json::Value, EngineError> {
+        let call = self.evaluate_calls.fetch_add(1, Ordering::SeqCst);
+        let delay = (self.evaluate_delay_of)(call, script);
+        if !delay.is_zero() {
+            tokio::time::sleep(delay).await;
+        }
+        Ok((self.evaluate_of)(call))
     }
 
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {

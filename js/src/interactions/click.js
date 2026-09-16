@@ -5,6 +5,7 @@ import { waitForLocatorOrElement } from '../elements/locators.js';
 import { scrollIntoViewIfNeeded } from './scroll.js';
 import { logElementInfo } from '../elements/content.js';
 import { createEngineAdapter } from '../core/engine-adapter.js';
+import { runWithinDeadline } from '../core/readiness.js';
 import {
   CLICK_EFFECT,
   CLICK_STATUS,
@@ -28,6 +29,55 @@ import {
  */
 function isInterrupted(error) {
   return isNavigationError(error) || isActionStoppedError(error);
+}
+
+/**
+ * Read the target element's observable state under the click's own budget.
+ *
+ * The engine's locator timeout is far longer than a click's - Playwright waits
+ * 30 seconds for an element a navigation already took away - so the budget the
+ * caller asked for has to bound the probe.
+ *
+ * @param {Object} options - Probe options
+ * @param {Object} options.page - Browser page object
+ * @param {string} options.engine - Engine type
+ * @param {Object} options.locatorOrElement - Element to read
+ * @param {Object} [options.adapter] - Engine adapter
+ * @param {Object} [options.deadline] - Deadline the whole click shares
+ * @returns {Promise<{timedOut: boolean, value: Object}>} Element state, or expiry
+ */
+function probeElementState(options) {
+  const { page, engine, locatorOrElement, adapter, deadline } = options;
+  const resolved = adapter || createEngineAdapter(page, engine);
+
+  return runWithinDeadline(deadline, () =>
+    resolved.evaluateOnElement(locatorOrElement, ELEMENT_STATE_PROBE)
+  );
+}
+
+/**
+ * A verdict for verification that ran out of budget before it saw anything.
+ *
+ * Nothing was observed, so nothing is claimed - only that time, rather than
+ * the click, is what ended the attempt.
+ *
+ * @param {Object} [deadline] - Deadline the click shared
+ * @param {string} what - What the budget expired before, e.g. 'the element could be read'
+ * @returns {Object} Verification verdict
+ */
+function timedOutVerdict(deadline, what) {
+  return {
+    verified: false,
+    timedOut: true,
+    effect: CLICK_EFFECT.NOT_OBSERVED,
+    reason: `verification budget expired before ${what}`,
+    evidence: [
+      evidence('verification-timeout', {
+        timeoutMs: deadline?.timeoutMs,
+        elapsedMs: deadline?.elapsedMs(),
+      }),
+    ],
+  };
 }
 
 const ELEMENT_STATE_PROBE = (el) => ({
@@ -63,23 +113,20 @@ const OBSERVED_STATE_KEYS = [
  * @param {Object} options.locatorOrElement - Element that was clicked
  * @param {Object} [options.preClickState] - State captured before the click
  * @param {Object} [options.adapter] - Engine adapter
- * @returns {Promise<{verified: boolean, effect: string, reason: string, evidence: Array, navigationError?: boolean}>} Verification outcome
+ * @param {Object} [options.deadline] - Deadline the whole click shares
+ * @returns {Promise<{verified: boolean, effect: string, reason: string, evidence: Array, navigationError?: boolean, timedOut?: boolean}>} Verification outcome
  */
 export async function defaultClickVerification(options = {}) {
-  const {
-    page,
-    engine,
-    locatorOrElement,
-    preClickState = {},
-    adapter: providedAdapter,
-  } = options;
+  const { preClickState = {}, deadline } = options;
 
   try {
-    const adapter = providedAdapter || createEngineAdapter(page, engine);
-    const postClickState = await adapter.evaluateOnElement(
-      locatorOrElement,
-      ELEMENT_STATE_PROBE
-    );
+    const probe = await probeElementState(options);
+
+    if (probe.timedOut) {
+      return timedOutVerdict(deadline, 'the element could be read');
+    }
+
+    const postClickState = probe.value;
 
     const hasPreState = preClickState && Object.keys(preClickState).length > 0;
 
@@ -150,17 +197,15 @@ export async function defaultClickVerification(options = {}) {
  * @param {string} options.engine - Engine type
  * @param {Object} options.locatorOrElement - Element to capture state from
  * @param {Object} options.adapter - Engine adapter (optional, will be created if not provided)
- * @returns {Promise<Object>} - Pre-click state object
+ * @param {Object} [options.deadline] - Deadline the whole click shares
+ * @returns {Promise<Object>} - Pre-click state object, empty when it could not be read in time
  */
 export async function capturePreClickState(options = {}) {
-  const { page, engine, locatorOrElement, adapter: providedAdapter } = options;
-
   try {
-    const adapter = providedAdapter || createEngineAdapter(page, engine);
-    return await adapter.evaluateOnElement(
-      locatorOrElement,
-      ELEMENT_STATE_PROBE
-    );
+    const probe = await probeElementState(options);
+    // A state that could not be read in time is no state at all; the click
+    // then has nothing to compare against and says so rather than guessing.
+    return probe.timedOut ? {} : probe.value;
   } catch (error) {
     if (isInterrupted(error)) {
       return {};
@@ -178,6 +223,7 @@ export async function capturePreClickState(options = {}) {
  * @param {Object} options.preClickState - State captured before click
  * @param {Function} options.verifyFn - Custom verification function (optional)
  * @param {Object} options.adapter - Engine adapter (optional)
+ * @param {Object} [options.deadline] - Deadline the whole click shares
  * @param {Function} options.log - Logger instance
  * @returns {Promise<Object>} Verification outcome with `effect` and `evidence`
  */
@@ -189,16 +235,29 @@ export async function verifyClick(options = {}) {
     preClickState = {},
     verifyFn = defaultClickVerification,
     adapter,
+    deadline,
     log = { debug: () => {} },
   } = options;
 
-  const result = await verifyFn({
-    page,
-    engine,
-    locatorOrElement,
-    preClickState,
-    adapter,
-  });
+  // Custom verifiers are free to ignore the deadline, so bound them too -
+  // otherwise one verifier that never returns outlasts the whole budget.
+  const outcome = await runWithinDeadline(deadline, () =>
+    verifyFn({
+      page,
+      engine,
+      locatorOrElement,
+      preClickState,
+      adapter,
+      deadline,
+    })
+  );
+
+  if (outcome.timedOut) {
+    log.debug(() => '⚠️  Click verification ran out of time');
+    return timedOutVerdict(deadline, 'an effect could be observed');
+  }
+
+  const result = outcome.value;
 
   // Custom verifiers predate the effect vocabulary, so map their boolean.
   const normalized = {
@@ -237,6 +296,7 @@ export async function verifyClick(options = {}) {
  * @param {Function} [options.verifyFn] - Custom verification function
  * @param {Object} [options.adapter] - Engine adapter
  * @param {string} [options.actionId] - Correlation ID for this click
+ * @param {number} [options.timeout] - Budget for the whole click, verification included
  * @returns {Promise<Object>} Click result from {@link makeClickResult}
  */
 export async function clickElement(options = {}) {
@@ -253,22 +313,25 @@ export async function clickElement(options = {}) {
     verifyFn,
     adapter: providedAdapter,
     actionId = nextActionId(),
+    timeout,
   } = options;
 
   if (!locatorOrElement) {
     throw new Error('locatorOrElement is required in options');
   }
 
-  const { elapsed, activationOptions } = beginClickAction({
+  const { deadline, elapsed, activationOptions } = beginClickAction({
     activation,
     scroll,
     actionability,
     noAutoScroll,
+    timeout,
     log,
   });
 
   try {
     const adapter = providedAdapter || createEngineAdapter(page, engine);
+    const urlBeforeDispatch = readPageUrl(page);
 
     let preClickState = {};
     if (verify && page) {
@@ -277,6 +340,7 @@ export async function clickElement(options = {}) {
         engine,
         locatorOrElement,
         adapter,
+        deadline,
       });
     }
 
@@ -345,20 +409,68 @@ export async function clickElement(options = {}) {
       });
     }
 
-    const verification = await verifyClick({
+    // A navigation replaces the document the element lived in, and engines
+    // answer an element probe on the *new* document instead of failing - which
+    // is how a navigating click used to spend the whole budget waiting for an
+    // element that no longer exists. Watching the URL ends the wait at once.
+    const watch = watchForNavigation(page, urlBeforeDispatch);
+    const verifying = verifyClick({
       page,
       engine,
       locatorOrElement,
       preClickState,
       verifyFn,
       adapter,
+      deadline,
       log,
     });
+    // Verification that loses the race still settles on its own schedule, so
+    // its failure is absorbed here rather than surfacing later as an unhandled
+    // rejection in a process that has long since moved on.
+    verifying.catch(() => {});
+
+    let verification;
+    try {
+      verification = await Promise.race([verifying, watch.navigated]);
+    } finally {
+      watch.stop();
+    }
 
     const confirmed = verification.effect === CLICK_EFFECT.CONFIRMED;
+    const navigatedAway =
+      verification.navigatedTo ?? pageNavigatedSince(page, urlBeforeDispatch);
+
+    if (navigatedAway && !confirmed) {
+      // The document the element belonged to is gone, so there is nothing left
+      // to observe. The navigation is recorded as what it is - a correlated
+      // event - and *not* as proof that this click caused it.
+      return makeClickResult({
+        status: CLICK_STATUS.UNVERIFIED,
+        dispatched: true,
+        effect: CLICK_EFFECT.NOT_OBSERVED,
+        reason:
+          'the page navigated after the click, so the click effect could not be observed on the original document',
+        evidence: [
+          ...dispatchEvidence,
+          ...verification.evidence,
+          evidence('navigation', {
+            actionId,
+            from: urlBeforeDispatch,
+            to: navigatedAway,
+            correlated: true,
+            provesClickEffect: false,
+          }),
+        ],
+        elapsedMs: elapsed(),
+        actionId,
+        navigationError: true,
+      });
+    }
 
     return makeClickResult({
-      status: confirmed ? CLICK_STATUS.SUCCEEDED : CLICK_STATUS.UNVERIFIED,
+      // The click was delivered either way; only the observation ran out of
+      // time, and `timed_out` says exactly that rather than blaming the click.
+      status: verificationStatus(confirmed, verification.timedOut),
       dispatched: true,
       effect: verification.effect,
       reason: verification.reason,
@@ -385,6 +497,92 @@ export async function clickElement(options = {}) {
     }
     throw error;
   }
+}
+
+/** How often the navigation watch samples the page URL, in milliseconds. */
+const NAVIGATION_POLL_INTERVAL = 50;
+
+/**
+ * Watch for the page leaving the document a click was dispatched into.
+ *
+ * The returned promise settles only on navigation, so it can lose a race
+ * against verification without ever forcing a wait of its own.
+ *
+ * @param {Object} page - Browser page object
+ * @param {string|null} urlBefore - URL read immediately before dispatch
+ * @returns {{navigated: Promise<Object>, stop: Function}} Watch handle
+ */
+function watchForNavigation(page, urlBefore) {
+  let timer;
+  const stop = () => clearInterval(timer);
+
+  const navigated = new Promise((resolve) => {
+    if (!urlBefore) {
+      return;
+    }
+    timer = setInterval(() => {
+      const to = pageNavigatedSince(page, urlBefore);
+      if (to) {
+        stop();
+        resolve({
+          effect: CLICK_EFFECT.NOT_OBSERVED,
+          evidence: [],
+          navigatedTo: to,
+        });
+      }
+    }, NAVIGATION_POLL_INTERVAL);
+    // The watch must never keep the process alive on its own.
+    timer.unref?.();
+  });
+
+  return { navigated, stop };
+}
+
+/**
+ * Read the page's current URL, tolerating pages that cannot answer.
+ *
+ * @param {Object} page - Browser page object, possibly a mock without `url`
+ * @returns {string|null} Current URL, or null when it is unavailable
+ */
+function readPageUrl(page) {
+  if (typeof page?.url !== 'function') {
+    return null;
+  }
+  try {
+    return page.url();
+  } catch {
+    // A closed or crashed page cannot report a URL; that is not a click error.
+    return null;
+  }
+}
+
+/**
+ * Whether the page left the document the click was dispatched into.
+ *
+ * @param {Object} page - Browser page object
+ * @param {string|null} urlBefore - URL read immediately before dispatch
+ * @returns {string|null} The new URL when it changed, otherwise null
+ */
+function pageNavigatedSince(page, urlBefore) {
+  if (!urlBefore) {
+    return null;
+  }
+  const now = readPageUrl(page);
+  return now && now !== urlBefore ? now : null;
+}
+
+/**
+ * Status for a dispatched click, given what verification managed to observe.
+ *
+ * @param {boolean} confirmed - Whether an effect was actually observed
+ * @param {boolean} [timedOut] - Whether verification ran out of budget
+ * @returns {string} One of {@link CLICK_STATUS}
+ */
+function verificationStatus(confirmed, timedOut) {
+  if (confirmed) {
+    return CLICK_STATUS.SUCCEEDED;
+  }
+  return timedOut ? CLICK_STATUS.TIMED_OUT : CLICK_STATUS.UNVERIFIED;
 }
 
 function scrollChanged(dispatch) {

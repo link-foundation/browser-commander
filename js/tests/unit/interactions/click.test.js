@@ -18,6 +18,7 @@ import {
   IN_VIEWPORT_POINT,
   createScrollModel,
 } from '../../helpers/click-fixtures.js';
+import { createDeadline } from '../../../src/core/readiness.js';
 
 /**
  * Run the default verifier against a fixed post-click element state.
@@ -404,6 +405,107 @@ describe('click', () => {
         // May fail due to mock limitations, but we verify the interface works
         assert.ok(e.message);
       }
+    });
+  });
+
+  describe('click deadlines', () => {
+    /** An element probe that never answers, like a locator on a lost document. */
+    const neverAnswers = () => new Promise(() => {});
+
+    it('should stop probing when the click budget is spent', async () => {
+      // Regression test for issue #89: Playwright's locator probe carries a
+      // 30-second default, so an unbounded verification outlived every budget
+      // the caller asked for.
+      const started = Date.now();
+      const result = await defaultClickVerification({
+        page: createMockPlaywrightPage(),
+        engine: 'playwright',
+        locatorOrElement: {},
+        preClickState: { ...UNCHANGED_STATE },
+        adapter: { evaluateOnElement: neverAnswers },
+        deadline: createDeadline({ timeout: 40 }),
+      });
+
+      assert.strictEqual(result.timedOut, true);
+      assert.strictEqual(result.effect, CLICK_EFFECT.NOT_OBSERVED);
+      assert.strictEqual(result.evidence[0].type, 'verification-timeout');
+      assert.ok(Date.now() - started < 2000);
+    });
+
+    it('should report timed_out rather than unverified for an unreadable target', async () => {
+      const { result } = await clickWith(
+        {
+          click: async () => {},
+          evaluateOnElement: neverAnswers,
+        },
+        { verify: true, timeout: 60 }
+      );
+
+      assert.strictEqual(result.status, CLICK_STATUS.TIMED_OUT);
+      assert.strictEqual(result.dispatched, true);
+      assert.strictEqual(result.verified, false);
+      assert.ok(
+        result.evidence.some((item) => item.type === 'verification-timeout')
+      );
+    });
+
+    it('should measure elapsed time monotonically, not by the wall clock', async () => {
+      const { result } = await clickWith({
+        click: async () => {},
+        evaluateOnElement: async () => ({ ...UNCHANGED_STATE }),
+      });
+
+      assert.ok(Number.isFinite(result.elapsedMs));
+      assert.ok(result.elapsedMs >= 0);
+    });
+
+    it('should give up on a target the page navigated away from', async () => {
+      // A navigation replaces the document, and the engine answers the probe on
+      // the new one instead of failing - so the URL is what ends the wait.
+      const page = createMockPlaywrightPage();
+      let url = 'https://example.com/start';
+      page.url = () => url;
+      // The pre-click probe answers; only the post-click one is left hanging,
+      // which is what a probe against a replaced document looks like.
+      let probes = 0;
+      const timer = setTimeout(() => {
+        url = 'https://example.com/arrived';
+      }, 60);
+
+      const started = Date.now();
+      const result = await clickElement({
+        page,
+        engine: 'playwright',
+        log: createMockLogger(),
+        locatorOrElement: {},
+        verify: true,
+        timeout: 5000,
+        adapter: {
+          click: async () => {},
+          evaluateOnElement: async (...args) =>
+            (probes += 1) === 1
+              ? { ...UNCHANGED_STATE }
+              : neverAnswers(...args),
+        },
+      });
+      clearTimeout(timer);
+
+      assert.ok(
+        Date.now() - started < 2000,
+        'the navigation, not the budget, should end the wait'
+      );
+
+      assert.strictEqual(result.status, CLICK_STATUS.UNVERIFIED);
+      assert.strictEqual(result.effect, CLICK_EFFECT.NOT_OBSERVED);
+      assert.strictEqual(result.dispatched, true);
+      const navigation = result.evidence.find(
+        (item) => item.type === 'navigation'
+      );
+      assert.ok(navigation, 'the navigation should be recorded as evidence');
+      // The navigation is correlated with the click, but it is not proof that
+      // the click caused it.
+      assert.strictEqual(navigation.detail.provesClickEffect, false);
+      assert.strictEqual(navigation.detail.to, 'https://example.com/arrived');
     });
   });
 });

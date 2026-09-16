@@ -33,7 +33,9 @@ export const IN_VIEWPORT_POINT = Object.freeze({
 
 /**
  * A mutable window scroll position with the `evaluateOnPage` contract the
- * click code uses: no argument reads the position, an argument writes it.
+ * click code uses: an empty argument list reads the position, a one-element
+ * list writes it. The list is what the real adapter takes - passing a bare
+ * object made Playwright try to spread it.
  *
  * @param {number} [initial] - Initial vertical scroll offset
  * @returns {{current: Function, set: Function, evaluateOnPage: Function}} Scroll model
@@ -46,9 +48,12 @@ export function createScrollModel(initial = 0) {
     set: (next) => {
       scrollY = next;
     },
-    evaluateOnPage: async (fn, arg) => {
-      if (arg) {
-        scrollY = arg.y;
+    evaluateOnPage: async (fn, args = []) => {
+      if (!Array.isArray(args)) {
+        throw new TypeError('evaluateOnPage takes an argument list');
+      }
+      if (args.length > 0) {
+        scrollY = args[0].y;
         return undefined;
       }
       return { x: 0, y: scrollY };

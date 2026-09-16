@@ -13,6 +13,7 @@ import {
   visibleImages,
   predicate,
   runReadinessChecks,
+  runWithinDeadline,
 } from '../../../src/core/readiness.js';
 
 /**
@@ -418,6 +419,81 @@ describe('readiness', () => {
 
       assert.strictEqual(result.timeoutMs, 800);
       assert.strictEqual(typeof result.elapsedMs, 'number');
+    });
+  });
+
+  describe('runWithinDeadline', () => {
+    it('should return the value of an operation that finished in time', async () => {
+      // A missing deadline means no bound at all, and both cases must report
+      // the operation's own answer rather than an expiry.
+      for (const deadline of [createDeadline({ timeout: 1000 }), null]) {
+        const outcome = await runWithinDeadline(deadline, async () => 'done');
+
+        assert.deepStrictEqual(outcome, { timedOut: false, value: 'done' });
+      }
+    });
+
+    it('should report expiry instead of waiting out a longer operation', async () => {
+      // Regression test for issue #89: an engine probe carrying its own
+      // 30-second default must not outlive the budget the caller asked for.
+      const started = Date.now();
+      const outcome = await runWithinDeadline(
+        createDeadline({ timeout: 30 }),
+        () => new Promise((resolve) => setTimeout(() => resolve('late'), 5000))
+      );
+
+      assert.strictEqual(outcome.timedOut, true);
+      assert.strictEqual(outcome.value, undefined);
+      assert.ok(
+        Date.now() - started < 2000,
+        'the deadline, not the operation, must decide when to give up'
+      );
+    });
+
+    it('should not start an operation whose budget is already spent', async () => {
+      let started = false;
+      const clock = createFakeClock();
+      const deadline = createDeadline({ timeout: 100, now: clock.now });
+      clock.advance(150);
+
+      const outcome = await runWithinDeadline(deadline, async () => {
+        started = true;
+      });
+
+      assert.strictEqual(outcome.timedOut, true);
+      assert.strictEqual(started, false);
+    });
+
+    it('should propagate a failure the operation reports in time', async () => {
+      await assert.rejects(
+        runWithinDeadline(createDeadline({ timeout: 1000 }), async () => {
+          throw new Error('probe failed');
+        }),
+        /probe failed/
+      );
+    });
+
+    it('should absorb a rejection that arrives after expiry', async () => {
+      // An abandoned probe still settles; its rejection must not escape as an
+      // unhandled one into a process that already moved on.
+      const unhandled = [];
+      const onUnhandled = (error) => unhandled.push(error);
+      process.on('unhandledRejection', onUnhandled);
+
+      try {
+        const outcome = await runWithinDeadline(
+          createDeadline({ timeout: 20 }),
+          () =>
+            new Promise((_resolve, reject) => {
+              setTimeout(() => reject(new Error('too late')), 60);
+            })
+        );
+        assert.strictEqual(outcome.timedOut, true);
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        assert.deepStrictEqual(unhandled, []);
+      } finally {
+        process.off('unhandledRejection', onUnhandled);
+      }
     });
   });
 });

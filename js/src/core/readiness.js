@@ -90,6 +90,53 @@ export async function sleepWithinDeadline(ms, deadline) {
   await new Promise((resolve) => setTimeout(resolve, capped));
 }
 
+/** Marker resolved by the expiry timer in {@link runWithinDeadline}. */
+const DEADLINE_REACHED = Symbol('deadline-reached');
+
+/**
+ * Run an operation under a deadline, reporting expiry instead of waiting.
+ *
+ * Engine probes carry timeouts of their own - Playwright's locator default is
+ * 30 seconds - so an operation given a 3 second budget could spend ten times
+ * that waiting for an element a navigation had already taken away. The budget
+ * the caller asked for has to win.
+ *
+ * @param {Object} deadline - Deadline from {@link createDeadline}, or null for no bound
+ * @param {Function} run - Zero-argument function returning a promise
+ * @returns {Promise<{timedOut: boolean, value: *}>} Outcome, or expiry
+ */
+export async function runWithinDeadline(deadline, run) {
+  if (!deadline) {
+    return { timedOut: false, value: await run() };
+  }
+
+  const remaining = deadline.remainingMs();
+  if (remaining <= 0) {
+    return { timedOut: true, value: undefined };
+  }
+
+  const operation = run();
+  // An abandoned operation still settles on its own schedule. Handle its
+  // rejection up front so it cannot surface as an unhandled one after the
+  // deadline has already won the race.
+  Promise.resolve(operation).catch(() => {});
+
+  let timer;
+  const expiry = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(DEADLINE_REACHED), remaining);
+  });
+
+  try {
+    const outcome = await Promise.race([operation, expiry]);
+    if (outcome === DEADLINE_REACHED) {
+      return { timedOut: true, value: undefined };
+    }
+    return { timedOut: false, value: outcome };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * Resolve the engine adapter a check needs, building it lazily when the caller
  * only supplied a factory.

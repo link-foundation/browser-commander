@@ -209,7 +209,8 @@ export function createBoundFunctions(options = {}) {
     scrollIntoViewIfNeeded({ ...opts, page, engine, wait: waitBound, log });
 
   // Bound click - now navigation-aware
-  const clickElementBound = (opts) => clickElement({ ...opts, engine, log });
+  const clickElementBound = (opts) =>
+    clickElement({ ...opts, page, engine, log });
   const clickButtonBound = (opts) =>
     clickButton({
       ...opts,

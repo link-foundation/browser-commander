@@ -11,6 +11,9 @@
  * - `actionability`: whether engine pre-checks are skipped ('normal' | 'force')
  */
 
+import { TIMING } from '../core/constants.js';
+import { createDeadline } from '../core/readiness.js';
+
 /** How the click is delivered to the element. */
 export const CLICK_ACTIVATION = Object.freeze({
   /** Real pointer input at the element's click point. */
@@ -102,20 +105,25 @@ export function resolveActivationOptions(options = {}) {
 }
 
 /**
- * Start a click action: stamp the clock and resolve the activation options.
+ * Start a click action: open one deadline and resolve the activation options.
  *
- * Both `clickElement` and `clickButton` need an elapsed-time source and the
- * same option resolution, and both must do it *before* anything can throw so
- * that failures still report how long they took.
+ * Both `clickElement` and `clickButton` need a clock and the same option
+ * resolution, and both must do it *before* anything can throw so that
+ * failures still report how long they took. The clock is the deadline's, so
+ * every later step - dispatch, probe, verification - measures against one
+ * monotonic budget rather than each starting a wall-clock timer of its own.
  *
  * @param {Object} options - Raw caller options, as accepted by {@link resolveActivationOptions}
- * @returns {{elapsed: Function, activationOptions: Object}} Elapsed-ms reader and resolved options
+ * @param {number} [options.timeout] - Total budget for the whole click
+ * @returns {{deadline: Object, elapsed: Function, activationOptions: Object}} Deadline, elapsed-ms reader and resolved options
  */
 export function beginClickAction(options = {}) {
-  const startedAt = Date.now();
+  const { timeout = TIMING.VERIFICATION_TIMEOUT } = options;
+  const deadline = createDeadline({ timeout });
 
   return {
-    elapsed: () => Date.now() - startedAt,
+    deadline,
+    elapsed: () => deadline.elapsedMs(),
     activationOptions: resolveActivationOptions(options),
   };
 }
@@ -201,9 +209,11 @@ export async function restoreScrollPosition(adapter, position) {
   if (!position || typeof adapter?.evaluateOnPage !== 'function') {
     return;
   }
+  // `evaluateOnPage` takes an argument *list*, so the position has to be
+  // wrapped - passing the object directly made Playwright try to spread it.
   await adapter.evaluateOnPage(
     (pos) => window.scrollTo(pos.x, pos.y),
-    position
+    [position]
   );
 }
 

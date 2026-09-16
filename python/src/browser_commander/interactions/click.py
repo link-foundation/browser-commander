@@ -10,7 +10,9 @@ reported as ``not-observed`` rather than as success.
 
 from __future__ import annotations
 
-import time
+import asyncio
+import contextlib
+from collections.abc import Awaitable
 from typing import Any, Callable
 
 from browser_commander.core.constants import TIMING
@@ -19,6 +21,7 @@ from browser_commander.core.engine_detection import EngineType
 from browser_commander.core.logger import Logger
 from browser_commander.core.navigation_safety import is_navigation_error
 from browser_commander.core.page_trigger_manager import is_action_stopped_error
+from browser_commander.core.readiness import Deadline, run_within_deadline
 from browser_commander.elements.content import log_element_info
 from browser_commander.elements.locators import wait_for_locator_or_element
 from browser_commander.interactions.click_activation import (
@@ -94,12 +97,72 @@ def _is_interrupted(error: Exception) -> bool:
     return is_navigation_error(error) or is_action_stopped_error(error)
 
 
+def _timed_out_verdict(deadline: Deadline | None, what: str) -> ClickVerificationResult:
+    """Build a verdict for verification that ran out of budget.
+
+    Nothing was observed, so nothing is claimed - only that time, rather than
+    the click, is what ended the attempt.
+
+    Args:
+        deadline: Deadline the click shared
+        what: What the budget expired before, e.g. 'the element could be read'
+
+    Returns:
+        A ``not-observed`` verdict carrying timeout evidence
+    """
+    return ClickVerificationResult(
+        verified=False,
+        timed_out=True,
+        effect=ClickEffect.NOT_OBSERVED,
+        reason=f"verification budget expired before {what}",
+        evidence=[
+            evidence(
+                "verification-timeout",
+                timeout_ms=deadline.timeout_ms if deadline else None,
+                elapsed_ms=deadline.elapsed_ms() if deadline else None,
+            )
+        ],
+    )
+
+
+async def _probe_element_state(
+    page: Any,
+    engine: EngineType,
+    locator_or_element: Any,
+    adapter: Any | None,
+    deadline: Deadline | None,
+) -> Any:
+    """Read the target element's observable state under the click's own budget.
+
+    The engine's locator timeout is far longer than a click's - Playwright waits
+    30 seconds for an element a navigation already took away - so the budget the
+    caller asked for has to bound the probe.
+
+    Args:
+        page: Browser page object
+        engine: Engine type
+        locator_or_element: Element to read
+        adapter: Engine adapter (optional)
+        deadline: Deadline the whole click shares
+
+    Returns:
+        A ``DeadlineOutcome`` holding the element state, or its expiry
+    """
+    resolved = adapter if adapter is not None else create_engine_adapter(page, engine)
+
+    return await run_within_deadline(
+        deadline,
+        lambda: resolved.evaluate_on_element(locator_or_element, _ELEMENT_STATE_JS),
+    )
+
+
 async def default_click_verification(
     page: Any,
     engine: EngineType,
     locator_or_element: Any,
     pre_click_state: dict | None = None,
     adapter: Any | None = None,
+    deadline: Deadline | None = None,
 ) -> ClickVerificationResult:
     """Default verification function for click operations.
 
@@ -122,14 +185,13 @@ async def default_click_verification(
         ClickVerificationResult
     """
     try:
-        if adapter is None:
-            adapter = create_engine_adapter(page, engine)
-
-        post_click_state = await adapter.evaluate_on_element(
-            locator_or_element,
-            _ELEMENT_STATE_JS,
+        probe = await _probe_element_state(
+            page, engine, locator_or_element, adapter, deadline
         )
+        if probe.timed_out:
+            return _timed_out_verdict(deadline, "the element could be read")
 
+        post_click_state = probe.value
         has_pre_state = bool(pre_click_state)
 
         if has_pre_state:
@@ -190,6 +252,7 @@ async def capture_pre_click_state(
     engine: EngineType,
     locator_or_element: Any,
     adapter: Any | None = None,
+    deadline: Deadline | None = None,
 ) -> dict:
     """Capture element state before click for verification.
 
@@ -198,15 +261,18 @@ async def capture_pre_click_state(
         engine: Engine type
         locator_or_element: Element to capture state from
         adapter: Engine adapter (optional)
+        deadline: Deadline the whole click shares
 
     Returns:
-        Pre-click state dict
+        Pre-click state dict, empty when it could not be read in time
     """
     try:
-        if adapter is None:
-            adapter = create_engine_adapter(page, engine)
-
-        return await adapter.evaluate_on_element(locator_or_element, _ELEMENT_STATE_JS)
+        probe = await _probe_element_state(
+            page, engine, locator_or_element, adapter, deadline
+        )
+        # A state that could not be read in time is no state at all; the click
+        # then has nothing to compare against and says so rather than guessing.
+        return {} if probe.timed_out else probe.value
     except Exception as error:
         if _is_interrupted(error):
             return {}
@@ -220,6 +286,8 @@ async def verify_click(
     pre_click_state: dict | None = None,
     verify_fn: Callable | None = None,
     log: Logger | None = None,
+    adapter: Any | None = None,
+    deadline: Deadline | None = None,
 ) -> ClickVerificationResult:
     """Verify click operation.
 
@@ -230,21 +298,40 @@ async def verify_click(
         pre_click_state: State captured before click
         verify_fn: Custom verification function (optional)
         log: Logger instance
+        adapter: Engine adapter (optional)
+        deadline: Deadline the whole click shares
 
     Returns:
         ClickVerificationResult with ``effect`` resolved
     """
-    if verify_fn is None:
-        verify_fn = default_click_verification
     if pre_click_state is None:
         pre_click_state = {}
 
-    result = await verify_fn(
-        page=page,
-        engine=engine,
-        locator_or_element=locator_or_element,
-        pre_click_state=pre_click_state,
+    # Only the built-in verifier is told about the deadline and the adapter;
+    # a custom verifier keeps the signature it was written against and is
+    # bounded from the outside instead.
+    extra: dict[str, Any] = {}
+    if verify_fn is None:
+        verify_fn = default_click_verification
+        extra = {"adapter": adapter, "deadline": deadline}
+
+    outcome = await run_within_deadline(
+        deadline,
+        lambda: verify_fn(
+            page=page,
+            engine=engine,
+            locator_or_element=locator_or_element,
+            pre_click_state=pre_click_state,
+            **extra,
+        ),
     )
+
+    if outcome.timed_out:
+        if log:
+            log.debug(lambda: "Click verification ran out of time")
+        return _timed_out_verdict(deadline, "an effect could be observed")
+
+    result = outcome.value
 
     # Custom verifiers predate the effect vocabulary, so map their boolean.
     result.effect = result.resolved_effect()
@@ -311,6 +398,7 @@ async def click_element(
     verify_fn: Callable | None = None,
     adapter: Any | None = None,
     action_id: str | None = None,
+    timeout: float | None = None,
 ) -> ClickResult:
     """Click an element (low-level).
 
@@ -327,6 +415,7 @@ async def click_element(
         verify_fn: Custom verification function (optional)
         adapter: Engine adapter (optional)
         action_id: Correlation ID for this click
+        timeout: Budget for the whole click, verification included
 
     Returns:
         ClickResult
@@ -334,11 +423,13 @@ async def click_element(
     if not locator_or_element:
         raise ValueError("locator_or_element is required")
 
-    started_at = time.monotonic()
+    # One monotonic budget covers dispatch, probing and verification, so no
+    # step can quietly extend the click past what the caller asked for.
+    deadline = Deadline(TIMING["VERIFICATION_TIMEOUT"] if timeout is None else timeout)
     action_id = action_id or next_action_id()
 
     def elapsed_ms() -> int:
-        return int((time.monotonic() - started_at) * 1000)
+        return deadline.elapsed_ms()
 
     activation_options = resolve_activation_options(
         activation=activation,
@@ -352,6 +443,8 @@ async def click_element(
         if adapter is None:
             adapter = create_engine_adapter(page, engine)
 
+        url_before_dispatch = _current_url(page) if page else ""
+
         pre_click_state: dict = {}
         if verify and page:
             pre_click_state = await capture_pre_click_state(
@@ -359,6 +452,7 @@ async def click_element(
                 engine=engine,
                 locator_or_element=locator_or_element,
                 adapter=adapter,
+                deadline=deadline,
             )
 
         try:
@@ -395,20 +489,57 @@ async def click_element(
                 action_id=action_id,
             )
 
-        verification = await verify_click(
-            page=page,
-            engine=engine,
-            locator_or_element=locator_or_element,
-            pre_click_state=pre_click_state,
-            verify_fn=verify_fn,
-            log=log,
+        verification, navigated_to = await _verify_until_navigation(
+            url_before_dispatch,
+            page,
+            verify_click(
+                page=page,
+                engine=engine,
+                locator_or_element=locator_or_element,
+                pre_click_state=pre_click_state,
+                verify_fn=verify_fn,
+                log=log,
+                adapter=adapter,
+                deadline=deadline,
+            ),
         )
+
+        if verification is None:
+            # The document the element belonged to is gone, so there is nothing
+            # left to observe. The navigation is recorded as what it is - a
+            # correlated event - and *not* as proof that this click caused it.
+            return ClickResult(
+                status=ClickStatus.UNVERIFIED,
+                dispatched=True,
+                effect=ClickEffect.NOT_OBSERVED,
+                reason=(
+                    "the page navigated after the click, so the click effect "
+                    "could not be observed on the original document"
+                ),
+                evidence=[
+                    *dispatch_records,
+                    evidence(
+                        "navigation",
+                        action_id=action_id,
+                        from_url=url_before_dispatch,
+                        to=navigated_to,
+                        correlated=True,
+                        proves_click_effect=False,
+                    ),
+                ],
+                elapsed_ms=elapsed_ms(),
+                action_id=action_id,
+                navigation_error=True,
+            )
 
         effect = verification.resolved_effect()
         confirmed = effect == ClickEffect.CONFIRMED
 
         return ClickResult(
-            status=ClickStatus.SUCCEEDED if confirmed else ClickStatus.UNVERIFIED,
+            # The click was delivered either way; only the observation ran out
+            # of time, and `timed_out` says exactly that rather than blaming
+            # the click.
+            status=_verification_status(confirmed, verification.timed_out),
             dispatched=True,
             effect=effect,
             reason=verification.reason,
@@ -438,12 +569,90 @@ async def click_element(
         raise
 
 
+def _verification_status(confirmed: bool, timed_out: bool) -> str:
+    """Report how a dispatched click ended, given what verification observed.
+
+    Args:
+        confirmed: Whether an effect was actually observed
+        timed_out: Whether verification ran out of budget
+
+    Returns:
+        One of :class:`ClickStatus`
+    """
+    if confirmed:
+        return ClickStatus.SUCCEEDED
+    return ClickStatus.TIMED_OUT if timed_out else ClickStatus.UNVERIFIED
+
+
 def _current_url(page: Any) -> str:
     if hasattr(page, "url"):
         return page.url() if callable(page.url) else page.url
     if hasattr(page, "current_url"):
         return page.current_url
     return ""
+
+
+#: How often the navigation watch samples the page URL, in seconds.
+_NAVIGATION_POLL_INTERVAL = 0.05
+
+
+async def _watch_for_navigation(page: Any, url_before: str) -> str:
+    """Wait until the page leaves the document a click was dispatched into.
+
+    A navigation replaces the document, and engines answer an element probe on
+    the *new* document instead of failing - which is how a navigating click used
+    to spend its whole budget waiting for an element that no longer exists.
+
+    Args:
+        page: Browser page object
+        url_before: URL read immediately before dispatch
+
+    Returns:
+        The new URL, once it differs from the one before the click
+    """
+    while True:
+        await asyncio.sleep(_NAVIGATION_POLL_INTERVAL)
+        now = _current_url(page)
+        if now and now != url_before:
+            return now
+
+
+async def _verify_until_navigation(
+    url_before: str,
+    page: Any,
+    verification: Awaitable[ClickVerificationResult],
+) -> tuple[ClickVerificationResult | None, str | None]:
+    """Verify a click, giving up as soon as the page navigates away.
+
+    Args:
+        url_before: URL read immediately before dispatch
+        page: Browser page object
+        verification: The verification in progress
+
+    Returns:
+        The verdict and the URL navigated to; exactly one of the two is set
+    """
+    verifying = asyncio.ensure_future(verification)
+    if not url_before:
+        return await verifying, None
+
+    watching = asyncio.ensure_future(_watch_for_navigation(page, url_before))
+    try:
+        done, _pending = await asyncio.wait(
+            {verifying, watching},
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if verifying in done:
+            return verifying.result(), None
+        return None, watching.result()
+    finally:
+        for task in (verifying, watching):
+            if not task.done():
+                task.cancel()
+                # The loser still settles; absorbing it keeps a cancelled probe
+                # from surfacing later as a task nobody awaited.
+                with contextlib.suppress(BaseException):
+                    await task
 
 
 def _detect_navigation(
@@ -581,11 +790,13 @@ async def click_button(
     if not selector:
         raise ValueError("selector is required")
 
-    started_at = time.monotonic()
+    # The same budget covers locating, scrolling, clicking and verifying, so a
+    # button click cannot quietly cost several times the timeout asked for.
+    deadline = Deadline(timeout)
     action_id = next_action_id()
 
     def elapsed_ms() -> int:
-        return int((time.monotonic() - started_at) * 1000)
+        return deadline.elapsed_ms()
 
     start_url = _current_url(page)
     start_session_id = None
@@ -653,6 +864,7 @@ async def click_button(
             verify=verify,
             verify_fn=verify_fn,
             action_id=action_id,
+            timeout=deadline.remaining_ms(),
         )
 
         if not click_result.dispatched:

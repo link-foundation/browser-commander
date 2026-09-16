@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
+import time
 from typing import Any
 
 import pytest
 
+import browser_commander.interactions.click as click_module
 from browser_commander.interactions.click import (
     ClickEffect,
     ClickResult,
@@ -23,7 +26,10 @@ from tests.helpers.click_fixtures import (
     UNCHANGED_STATE,
     ScrollModel,
 )
-from tests.helpers.mocks import create_mock_logger, create_mock_playwright_page
+from tests.helpers.mocks import (
+    create_mock_logger,
+    create_mock_playwright_page,
+)
 
 
 class ProbeAdapter:
@@ -365,3 +371,112 @@ class TestClickButton:
         except Exception as e:
             # May fail due to mock limitations, but interface exists
             assert str(e)
+
+
+# ---------------------------------------------------------------------------
+# deadlines
+# ---------------------------------------------------------------------------
+class SlowProbeAdapter(ProbeAdapter):
+    """Adapter whose element-state probe answers once, then never again.
+
+    This is what a real engine looks like after a navigation: the first probe
+    is served by the original document and any later one hangs until the
+    engine's own (far longer) locator timeout fires.
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.state_probes = 0
+
+    async def evaluate_on_element(self, locator: Any, script: str) -> Any:
+        """Serve the click-point probe, then stall every state probe but the first."""
+        if "getBoundingClientRect" in script:
+            return await super().evaluate_on_element(locator, script)
+        self.state_probes += 1
+        if self.state_probes == 1:
+            return await super().evaluate_on_element(locator, script)
+        await asyncio.sleep(30)
+        return self.probe
+
+
+class TestClickDeadlines:
+    """Issue #89: one monotonic budget has to cover every check in a click."""
+
+    async def test_reports_timed_out_when_the_target_cannot_be_read(self):
+        adapter = SlowProbeAdapter()
+        started = time.monotonic()
+
+        result = await click_with(adapter, verify=True, timeout=150)
+
+        assert (time.monotonic() - started) < 5, "the budget has to bound the probe"
+        assert result.status == ClickStatus.TIMED_OUT
+        assert result.dispatched is True
+        assert result.effect == ClickEffect.NOT_OBSERVED
+        assert result.verified is False
+        assert any(item.type == "verification-timeout" for item in result.evidence)
+
+    async def test_gives_up_on_a_target_the_page_navigated_away_from(self):
+        page = create_mock_playwright_page()
+        page.url.return_value = "https://example.com/start"
+
+        async def navigate_soon() -> None:
+            await asyncio.sleep(0.06)
+            page.url.return_value = "https://example.com/arrived"
+
+        navigating = asyncio.ensure_future(navigate_soon())
+        started = time.monotonic()
+
+        result = await click_with(
+            SlowProbeAdapter(), page=page, verify=True, timeout=5000
+        )
+
+        await navigating
+        assert (time.monotonic() - started) < 2, (
+            "the navigation, not the budget, should end the wait"
+        )
+        assert result.status == ClickStatus.UNVERIFIED
+        navigation = next(item for item in result.evidence if item.type == "navigation")
+        assert navigation.detail["proves_click_effect"] is False
+        assert navigation.detail["to"] == "https://example.com/arrived"
+
+    async def test_hands_a_button_click_only_the_budget_that_is_left(self, monkeypatch):
+        # click_button locates, scrolls, clicks and verifies; before the shared
+        # deadline each of those started a timer of its own, so a 200ms button
+        # click could quietly cost several times that.
+        handed_down: list[int] = []
+
+        async def slow_locate(**_kwargs: Any) -> Any:
+            # Stand in for a locator wait that spends part of the budget.
+            await asyncio.sleep(0.08)
+            return object()
+
+        async def fake_click_element(**kwargs: Any) -> ClickResult:
+            handed_down.append(kwargs["timeout"])
+            return ClickResult(
+                status=ClickStatus.SUCCEEDED,
+                dispatched=True,
+                effect=ClickEffect.CONFIRMED,
+                elapsed_ms=0,
+            )
+
+        async def wait_fn(_ms: float, _reason: str) -> None:
+            return None
+
+        monkeypatch.setattr(click_module, "wait_for_locator_or_element", slow_locate)
+        monkeypatch.setattr(click_module, "click_element", fake_click_element)
+
+        await click_button(
+            page=create_mock_playwright_page(),
+            engine="playwright",
+            wait_fn=wait_fn,
+            log=create_mock_logger(),
+            selector="button",
+            timeout=200,
+            scroll_into_view=False,
+            wait_after_click=0,
+            wait_for_navigation=False,
+            verify=True,
+        )
+
+        assert handed_down, "click_button has to delegate to click_element"
+        assert handed_down[0] < 200, "the time already spent must come off the budget"

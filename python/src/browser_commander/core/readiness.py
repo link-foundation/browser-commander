@@ -10,6 +10,7 @@ a result that distinguishes "ready" from "we ran out of time".
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import math
 import re
 import time
@@ -116,10 +117,15 @@ class Deadline:
     def expired(self) -> bool:
         """Report whether the budget is spent.
 
+        Derived from ``remaining_ms`` rather than measured separately: rounding
+        otherwise lets a caller read a remaining budget of zero while the
+        deadline still calls itself live, and a check that stopped because its
+        budget was gone would then be reported as failed instead of timed out.
+
         Returns:
             Whether the deadline has passed
         """
-        return self._elapsed() >= self.timeout_ms
+        return self.remaining_ms() <= 0
 
 
 async def sleep_within_deadline(ms: float, deadline: Deadline) -> None:
@@ -133,6 +139,55 @@ async def sleep_within_deadline(ms: float, deadline: Deadline) -> None:
     if capped <= 0:
         return
     await asyncio.sleep(capped / 1000)
+
+
+@dataclass
+class DeadlineOutcome:
+    """What an operation run under a deadline produced, or its expiry."""
+
+    timed_out: bool
+    value: Any = None
+
+
+async def run_within_deadline(
+    deadline: Deadline | None,
+    operation: Callable[[], Awaitable[Any]],
+) -> DeadlineOutcome:
+    """Run an operation under a deadline, reporting expiry instead of waiting.
+
+    Engine probes carry timeouts of their own - Playwright's locator default is
+    30 seconds - so an operation given a 3 second budget could spend ten times
+    that waiting for an element a navigation had already taken away. The budget
+    the caller asked for has to win.
+
+    Args:
+        deadline: Deadline to respect, or None for no bound
+        operation: Zero-argument coroutine function to run
+
+    Returns:
+        The operation's value, or an expiry
+    """
+    if deadline is None:
+        return DeadlineOutcome(timed_out=False, value=await operation())
+
+    remaining = deadline.remaining_ms()
+    if remaining <= 0:
+        return DeadlineOutcome(timed_out=True)
+
+    task = asyncio.ensure_future(operation())
+    try:
+        return DeadlineOutcome(
+            timed_out=False,
+            value=await asyncio.wait_for(asyncio.shield(task), remaining / 1000),
+        )
+    except asyncio.TimeoutError:
+        # The abandoned probe still settles on its own schedule; cancelling it
+        # and absorbing the result keeps it from surfacing later as a warning
+        # about a task nobody is waiting for.
+        task.cancel()
+        with contextlib.suppress(BaseException):
+            await task
+        return DeadlineOutcome(timed_out=True)
 
 
 @dataclass
@@ -537,6 +592,7 @@ __all__ = [
     "CheckOutcome",
     "CheckRecord",
     "Deadline",
+    "DeadlineOutcome",
     "ReadinessCheck",
     "ReadinessResult",
     "ReadinessStatus",
@@ -545,6 +601,7 @@ __all__ = [
     "network_idle_for",
     "predicate",
     "run_readiness_checks",
+    "run_within_deadline",
     "sleep_within_deadline",
     "stable_check",
     "url_stable_for",

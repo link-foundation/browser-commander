@@ -72,6 +72,8 @@ class ClickVerificationResult:
     #: derives it from :attr:`verified`.
     effect: str | None = None
     navigation_error: bool = False
+    #: True when the budget ran out before anything could be observed.
+    timed_out: bool = False
     evidence: list[Evidence] = field(default_factory=list)
 
     def resolved_effect(self) -> str:

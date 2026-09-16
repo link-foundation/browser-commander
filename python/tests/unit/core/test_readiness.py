@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+import asyncio
+import time
+from collections.abc import Awaitable
+from typing import Any, Callable
 
 import pytest
 
@@ -17,6 +20,7 @@ from browser_commander.core.readiness import (
     network_idle_for,
     predicate,
     run_readiness_checks,
+    run_within_deadline,
     sleep_within_deadline,
     stable_check,
     url_stable_for,
@@ -122,6 +126,18 @@ class TestDeadline:
         assert deadline.remaining_ms() == 5
 
         clock.advance(100)
+        assert deadline.remaining_ms() == 0
+        assert deadline.expired() is True
+
+    def test_calls_itself_expired_as_soon_as_nothing_is_left(self):
+        # A check stops polling when remaining_ms() reaches zero, so a deadline
+        # that still called itself live at that moment made the result blame the
+        # check ("failed") for what was really the budget running out.
+        clock = FakeClock()
+        deadline = Deadline(timeout=20, now=clock.now)
+
+        clock.advance(19.6)
+
         assert deadline.remaining_ms() == 0
         assert deadline.expired() is True
 
@@ -400,3 +416,89 @@ class TestRunReadinessChecks:
 
         assert result.elapsed_ms <= 300
         assert result.timeout_ms == 300
+
+
+def _answers(value: Any, after_ms: float = 0) -> Callable[[], Awaitable[Any]]:
+    """Build an operation that answers with a value after a delay.
+
+    Args:
+        value: Value the operation resolves with
+        after_ms: Delay before it answers, in milliseconds
+
+    Returns:
+        A zero-argument coroutine function
+    """
+
+    async def operation() -> Any:
+        if after_ms:
+            await asyncio.sleep(after_ms / 1000)
+        return value
+
+    return operation
+
+
+class TestRunWithinDeadline:
+    """The caller's budget has to win over an engine's own timeout."""
+
+    @pytest.mark.parametrize(
+        "make_deadline",
+        [lambda: Deadline(timeout=1000), lambda: None],
+        ids=["with deadline", "without deadline"],
+    )
+    async def test_returns_the_value_when_the_operation_answers_in_time(
+        self,
+        make_deadline: Callable[[], Deadline | None],
+    ):
+        outcome = await run_within_deadline(make_deadline(), _answers("done"))
+
+        assert outcome.timed_out is False
+        assert outcome.value == "done"
+
+    async def test_reports_expiry_instead_of_waiting_the_operation_out(self):
+        started = time.monotonic()
+
+        outcome = await run_within_deadline(
+            Deadline(timeout=30),
+            _answers("too late", after_ms=5000),
+        )
+
+        assert outcome.timed_out is True
+        assert outcome.value is None
+        assert (time.monotonic() - started) < 2, (
+            "the budget, not the probe, ends the wait"
+        )
+
+    async def test_does_not_start_an_operation_whose_budget_is_spent(self):
+        clock = FakeClock()
+        deadline = Deadline(timeout=50, now=clock.now)
+        clock.advance(80)
+        started = False
+
+        async def operation() -> str:
+            nonlocal started
+            started = True
+            return "ran"
+
+        outcome = await run_within_deadline(deadline, operation)
+
+        assert outcome.timed_out is True
+        assert started is False
+
+    async def test_propagates_a_failure_that_happens_in_time(self):
+        async def operation() -> None:
+            raise RuntimeError("probe blew up")
+
+        with pytest.raises(RuntimeError, match="probe blew up"):
+            await run_within_deadline(Deadline(timeout=1000), operation)
+
+    async def test_absorbs_a_rejection_that_arrives_after_expiry(self):
+        async def operation() -> None:
+            await asyncio.sleep(0.2)
+            raise RuntimeError("nobody is listening any more")
+
+        outcome = await run_within_deadline(Deadline(timeout=20), operation)
+        # The abandoned probe settles on its own schedule; if it were left to
+        # surface, this sleep is where the loop would report it.
+        await asyncio.sleep(0.3)
+
+        assert outcome.timed_out is True

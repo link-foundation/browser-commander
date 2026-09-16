@@ -42,6 +42,7 @@ pub mod attach;
 pub mod destination;
 pub mod manager;
 pub mod naming;
+pub mod options;
 pub mod sources;
 pub mod store;
 pub mod watcher;
@@ -53,14 +54,12 @@ pub use destination::{
     prepare_download_directory, resolve_download_directory, DownloadDirectoryPreset,
     ARTIFACT_DIRECTORY_MODE, ARTIFACT_FILE_MODE,
 };
-pub use manager::{
-    CaptureOptions, DownloadArtifact, DownloadEvent, DownloadManager, DownloadOptions,
-    DEFAULT_CAPTURE_TIMEOUT,
-};
+pub use manager::{DownloadManager, DEFAULT_CAPTURE_TIMEOUT};
 pub use naming::{
     extension_from_content, is_inside_root, renamed_candidate, resolve_inside_root,
     sanitize_download_name, with_extension,
 };
+pub use options::{CaptureOptions, DownloadArtifact, DownloadEvent, DownloadOptions};
 pub use sources::{
     classify_failure, prepare_staging_directory, set_download_behavior, DownloadFailure,
     DownloadSink, DownloadStart, SourceHandle, STAGING_DIRECTORY,

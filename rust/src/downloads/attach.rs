@@ -26,7 +26,8 @@
 use std::sync::Arc;
 
 use crate::core::EngineType;
-use crate::downloads::manager::{DownloadManager, DownloadOptions};
+use crate::downloads::manager::DownloadManager;
+use crate::downloads::options::DownloadOptions;
 use crate::downloads::DownloadError;
 use crate::fingerprint::CdpTransport;
 

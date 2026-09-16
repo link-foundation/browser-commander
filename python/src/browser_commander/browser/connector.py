@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlparse
 
 from browser_commander.browser.launcher import LaunchResult
 from browser_commander.core.engine_detection import EngineType
+from browser_commander.downloads.attach import attach_downloads
 
 
 @dataclass
@@ -22,6 +24,9 @@ class ConnectOptions:
     headers: dict[str, str] | None = None
     seed_cookies: list[dict[str, Any]] = field(default_factory=list)
     verbose: bool = False
+    downloads: bool | Mapping[str, Any] | None = None
+    """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
+    ``persist`` and ``conflict``."""
 
 
 def _validate_options(options: ConnectOptions) -> str:
@@ -128,4 +133,13 @@ async def connect_browser_with_dependencies(
 
     if options.verbose:
         print(f"Connected to browser with {options.engine} engine")
+
+    # An attached browser gets the same managed lifecycle as a launched one:
+    # the manager is built from the browser and page, not from how we got them.
+    result.downloads = await attach_downloads(
+        engine=options.engine,
+        browser=result.browser,
+        page=result.page,
+        downloads=options.downloads,
+    )
     return result

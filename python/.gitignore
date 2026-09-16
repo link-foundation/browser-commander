@@ -11,7 +11,8 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-downloads/
+# pip's build artifact directory, not the library's own downloads package.
+/downloads/
 eggs/
 .eggs/
 lib/

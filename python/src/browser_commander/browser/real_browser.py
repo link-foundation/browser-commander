@@ -59,16 +59,23 @@ class RealBrowserOptions:
     headers: dict[str, str] | None = None
     seed_cookies: list[dict[str, Any]] = field(default_factory=list)
     verbose: bool = False
+    downloads: bool | Mapping[str, Any] | None = None
+    """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
+    ``persist`` and ``conflict``."""
 
 
 @dataclass
 class RealBrowserResult(LaunchResult):
-    """Connected browser handles plus spawned-process metadata."""
+    """Connected browser handles plus spawned-process metadata.
 
-    browser_process: Any
-    cdp_endpoint: str
-    executable_path: str
-    user_data_dir: str
+    The fields carry defaults because the base result now ends in an optional
+    ``downloads`` handle; every construction site still passes all of them.
+    """
+
+    browser_process: Any = None
+    cdp_endpoint: str = ""
+    executable_path: str = ""
+    user_data_dir: str = ""
 
 
 def _path_module(platform: str) -> Any:
@@ -497,6 +504,7 @@ async def launch_real_browser_with_dependencies(
                     headers=options.headers,
                     seed_cookies=options.seed_cookies,
                     verbose=options.verbose,
+                    downloads=options.downloads,
                 )
             )
         )
@@ -507,6 +515,7 @@ async def launch_real_browser_with_dependencies(
     return RealBrowserResult(
         browser=connection.browser,
         page=connection.page,
+        downloads=connection.downloads,
         browser_process=browser_process,
         cdp_endpoint=cdp_endpoint,
         executable_path=str(executable_path),

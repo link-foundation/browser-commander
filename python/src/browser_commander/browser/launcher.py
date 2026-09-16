@@ -11,6 +11,7 @@ from typing import Any, Literal
 
 from browser_commander.core.constants import CHROME_ARGS
 from browser_commander.core.engine_detection import EngineType
+from browser_commander.downloads.attach import attach_downloads
 from browser_commander.fingerprint.apply import apply_fingerprint
 from browser_commander.fingerprint.automation_parity import (
     apply_automation_parity_args,
@@ -39,6 +40,10 @@ class LaunchOptions:
     core count, screen and the rest. Applied over CDP after launch; see
     ``browser_commander.fingerprint.profile`` for the field list and ``presets``
     for ready-made profiles."""
+    downloads: bool | Mapping[str, Any] | None = None
+    """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
+    ``persist`` and ``conflict``. The directory may be an absolute path,
+    ``'user-downloads'`` or ``'temporary'``."""
 
 
 @dataclass
@@ -47,6 +52,8 @@ class LaunchResult:
 
     browser: Any
     page: Any
+    #: The managed download lifecycle, when ``downloads`` was requested.
+    downloads: Any = None
 
 
 def resolve_chrome_args(
@@ -242,4 +249,13 @@ async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
         if verbose:
             print(f"Could not unfocus address bar: {e}")
 
-    return LaunchResult(browser=browser, page=page)
+    # Downloads are armed before the caller can navigate: a download triggered
+    # by the first page load still lands in the managed directory.
+    download_manager = await attach_downloads(
+        engine=engine,
+        browser=browser,
+        page=page,
+        downloads=options.downloads,
+    )
+
+    return LaunchResult(browser=browser, page=page, downloads=download_manager)

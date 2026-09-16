@@ -89,6 +89,25 @@ from browser_commander.core.readiness import (
     url_stable_for,
     visible_images,
 )
+
+# Re-export managed downloads
+from browser_commander.downloads import (
+    DEFAULT_CAPTURE_TIMEOUT,
+    DownloadArtifact,
+    DownloadConflict,
+    DownloadDirectoryPreset,
+    DownloadEvent,
+    DownloadFailure,
+    DownloadManager,
+    DownloadSource,
+    SavedDownload,
+    attach_downloads,
+    create_download_manager,
+    normalize_download_options,
+    prepare_download_directory,
+    resolve_download_directory,
+    save_download,
+)
 from browser_commander.elements.content import (
     get_attribute,
     get_input_value,
@@ -381,4 +400,20 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "stable_check",
     "url_stable_for",
     "visible_images",
+    # Managed downloads
+    "DEFAULT_CAPTURE_TIMEOUT",
+    "DownloadArtifact",
+    "DownloadConflict",
+    "DownloadDirectoryPreset",
+    "DownloadEvent",
+    "DownloadFailure",
+    "DownloadManager",
+    "DownloadSource",
+    "SavedDownload",
+    "attach_downloads",
+    "create_download_manager",
+    "normalize_download_options",
+    "prepare_download_directory",
+    "resolve_download_directory",
+    "save_download",
 ]

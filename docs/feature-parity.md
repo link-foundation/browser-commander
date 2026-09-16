@@ -79,6 +79,120 @@ TTL window. Cache directories/files use `0700`/`0600` modes on POSIX; on
 Windows they remove inherited ACL entries and grant access only to the current
 user.
 
+## Truthful Click Results and Readiness
+
+A click reports what was observed, not what was attempted (issue #89). `status`
+is one of `succeeded`, `failed`, `timed_out`, `interrupted` or `unverified`;
+`effect` is `confirmed`, `not-observed` or `contradicted`; and both carry the
+evidence behind them. The legacy `success`/`verified` booleans are still
+returned and are now derived conservatively - `verified` follows
+`effect === 'confirmed'` - so a button that did nothing no longer answers with a
+verified click.
+
+| Capability                                                     | JavaScript                                 | Python                            | Rust                      |
+| -------------------------------------------------------------- | ------------------------------------------ | --------------------------------- | ------------------------- |
+| `status` / `effect` / `evidence` click result                  | Supported                                  | Supported                         | Supported                 |
+| One monotonic budget for probe, dispatch and verification      | Supported                                  | Supported                         | Supported                 |
+| `activation` axis (`pointer`, `dom`)                           | Supported                                  | Supported                         | Supported                 |
+| `scroll` axis (`auto`, `preserve`, `none`)                     | Supported                                  | Supported                         | Supported                 |
+| `actionability` axis (`normal`, `force`)                       | Engine `force` flag                        | Engine `force` flag               | Recorded as evidence only |
+| `noAutoScroll` / `no_auto_scroll` deprecation notice           | Supported                                  | Supported                         | Supported                 |
+| Readiness result with per-check evidence and a shared deadline | Supported                                  | Supported                         | Supported                 |
+| Composable readiness checks                                    | URL, network, DOM, images, custom          | URL, network, DOM, images, custom | URL stability only        |
+| End-to-end browser coverage                                    | `js/tests/e2e/click-readiness.e2e.test.js` | Unit tests only                   | Unit tests only           |
+
+Explicit gaps behind that table:
+
+- `scroll: 'none'` needs viewport-coordinate pointer input. JavaScript uses
+  `page.mouse` (Playwright and Puppeteer both expose it), Python uses
+  `page.mouse` (Playwright only), and Rust uses Chromiumoxide's
+  viewport-coordinate `page.click(Point)`. Selenium, the Rust Node bridge and
+  Fantoccini have no such API, so the request fails with a
+  `ScrollConstraintError` naming the alternatives instead of silently scrolling
+  the page.
+- `actionability: 'force'` maps to the engine's own `force` flag in JavaScript
+  and Python. Rust's Chromiumoxide path dispatches through CDP, which has no
+  actionability pre-checks to skip, so the axis is recorded in the result's
+  evidence and changes nothing. Use `scroll = ClickScroll::None` when the
+  intent is "do not scroll".
+- Rust readiness has the deadline, the result model and URL stability, but no
+  network-idle or DOM-stability checks, because the crate has no
+  `NetworkTracker` or `NavigationManager` to read request state from.
+
+## Managed Downloads
+
+`downloads` is accepted by `launchBrowser()`, `connectBrowser()` and
+`launchRealBrowser()` - and their Python and Rust equivalents - as `true`, or as
+an options object/struct (`directory`, `persist`, `conflict`, `filename`,
+`validate`). Every entry point builds the same manager, so the lifecycle does
+not depend on how the browser was obtained (issue #88). `commander.downloads`
+and `commander.configureDownloads()` expose the same manager in JavaScript and
+Python.
+
+| Capability                                                         | JavaScript | Python         | Rust               |
+| ------------------------------------------------------------------ | ---------- | -------------- | ------------------ |
+| Same `downloads` option on launch, connect and real-browser launch | Supported  | Supported      | Supported          |
+| Files survive the page, context and browser that produced them     | Supported  | Supported      | Supported          |
+| `capture(options, action)` that cannot race a fast download        | Supported  | Supported      | Supported          |
+| Global observation and `capture()` report one download once        | Supported  | Supported      | Supported          |
+| Caller-chosen filename, extension repair, traversal refusal        | Supported  | Supported      | Supported          |
+| Conflict policies (`rename`, `overwrite`, `error`)                 | Supported  | Supported      | Supported          |
+| Content validation before the final name appears                   | Supported  | Supported      | Supported          |
+| Failed and cancelled downloads never reported as success           | Supported  | Supported      | Supported          |
+| Downloads a person started by hand                                 | Supported  | Supported      | Supported          |
+| Test-runner artifact retention                                     | Supported  | No test runner | No test runner     |
+| Attach to a browser the caller already has                         | Supported  | Supported      | Chromiumoxide only |
+
+Where each engine's download events come from, and what that costs:
+
+| Engine                             | Source of truth                                                        | Notes                                                                                                               |
+| ---------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| JavaScript Playwright              | Browser-wide CDP session, falling back to the context `download` event | The fallback sees automated downloads only; a download a person started needs the Browser domain.                   |
+| JavaScript Puppeteer               | Browser-wide CDP session                                               | `Browser.setDownloadBehavior` plus `downloadWillBegin`/`downloadProgress`.                                          |
+| Python Playwright                  | Browser-wide CDP session, falling back to the context `download` event | Same fallback as JavaScript.                                                                                        |
+| Python Selenium                    | Staging-directory watcher                                              | Selenium has no download events at all, so the file arriving is the only evidence; no engine progress reporting.    |
+| Rust Chromiumoxide                 | `Browser.setDownloadBehavior` plus a staging-directory watcher         | The crate's CDP transport is request/response only, so there is no event stream to listen on.                       |
+| Rust Playwright / Puppeteer bridge | Not supported                                                          | The Node bridge speaks its own command protocol rather than CDP; asking for downloads fails with that reason.       |
+| Rust Fantoccini                    | Not supported                                                          | WebDriver has neither download events nor a way to redirect downloads; asking for downloads fails with that reason. |
+
+A watcher-based source claims a file once its size has stopped changing and
+ignores `.crdownload`, `.tmp` and `.partial` files, so a caller never sees a
+half-written download under its final name. What it cannot report is the
+engine's own progress percentage, and it identifies a download by the file the
+browser wrote rather than by the URL it came from.
+
+`rust/examples/managed_download.rs` drives a real Chromium through the whole
+lifecycle - click, capture, close the browser, read the file back - because the
+unit tests stage files by hand.
+
+## Portable Traces
+
+A trace is one versioned directory (`manifest.json`, an ordered NDJSON
+timeline, per-checkpoint DOM snapshots and the mutation batches between them),
+not a private format: whatever recorded it, any of the three languages can read
+it (issue #87). `TRACE_SCHEMA_VERSION` is written into the manifest, and a
+reader refuses a version it does not understand rather than guessing.
+
+| Capability                                                                                    | JavaScript | Python          | Rust            |
+| --------------------------------------------------------------------------------------------- | ---------- | --------------- | --------------- |
+| Record a session (`startTrace`, `commander.startTrace`)                                       | Supported  | Not implemented | Not implemented |
+| Named checkpoints with HTML, control state, frames and screenshots                            | Supported  | Not implemented | Not implemented |
+| Continuous DOM mutation batches across SPA updates and navigations                            | Supported  | Not implemented | Not implemented |
+| One ordered timeline for navigation, clicks, console, dialogs, network failures and downloads | Supported  | Not implemented | Not implemented |
+| Redaction applied before anything is written                                                  | Supported  | Not implemented | Not implemented |
+| Partial trace on truncation, page closure or a size limit                                     | Supported  | Not implemented | Not implemented |
+| Read a bundle (`readTrace`, `read_trace`)                                                     | Supported  | Supported       | Supported       |
+| Manifest schema-version validation                                                            | Supported  | Supported       | Supported       |
+| Checkpoint state and control-state diffing                                                    | Supported  | Supported       | Supported       |
+| Offline viewer with scripts and network disabled                                              | Supported  | Not implemented | Not implemented |
+| `trace: 'retain-on-failure'` in `browser-commander/tests`                                     | Supported  | No test runner  | No test runner  |
+
+Recording is JavaScript-only today; Python and Rust are readers, which is what
+the bundle format exists for. `python/src/browser_commander/traces/` and
+`rust/src/traces/` open the same directory a JavaScript run produced, and
+`experiments/trace-cross-language-read.mjs` reads one bundle from all three to
+prove it.
+
 ## Automation-Friendly Launch Defaults
 
 `launchBrowser()`/`launch_browser()` and the real-browser launch helpers add

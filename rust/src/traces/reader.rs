@@ -741,7 +741,7 @@ mod tests {
 
         assert_eq!(
             error.to_string(),
-            "trace schema version 99 is newer than this reader (1)"
+            format!("trace schema version 99 is newer than this reader ({TRACE_SCHEMA_VERSION})")
         );
     }
 

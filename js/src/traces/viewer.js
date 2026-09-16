@@ -43,6 +43,7 @@ const VIEWER_STYLE = `
   header { grid-column: 1 / -1; padding: 0.5rem 1rem; border-bottom: 1px solid #8884; }
   h1 { font-size: 1rem; margin: 0 0 0.25rem; }
   .meta { font-size: 0.75rem; opacity: 0.75; }
+  .meta.replay { opacity: 0.9; font-style: italic; }
   aside { overflow: auto; border-right: 1px solid #8884; }
   main { display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
   ol { list-style: none; margin: 0; padding: 0; font-size: 0.8rem; }
@@ -87,19 +88,117 @@ function renderHtml(index, html) {
   frame.srcdoc = html == null ? '<p style="font:1rem system-ui">no HTML captured for this checkpoint</p>' : html;
 }
 
+function nodeOf(parsed, described) {
+  if (!described) return null;
+  if (described.type === 'text') {
+    return parsed.createTextNode(described.text == null ? '' : described.text);
+  }
+  if (described.type === 'element' && described.html) {
+    const holder = parsed.createElement('template');
+    holder.innerHTML = described.html;
+    return holder.content.firstChild;
+  }
+  return null;
+}
+
+function looksLike(node, described) {
+  if (!node || !described) return false;
+  if (described.type === 'text') return node.nodeType === 3;
+  if (described.type !== 'element') return false;
+  if (node.nodeType !== 1 || node.localName !== described.tag) return false;
+  return described.id ? node.id === described.id : true;
+}
+
+function childLike(parent, described) {
+  if (!described) return null;
+  // An id is identity; an index is only a hint. A node that moved is reported
+  // at the position it moved *to*, so the index alone would find the wrong one.
+  if (described.id) {
+    for (const child of parent.childNodes) {
+      if (child.nodeType === 1 && child.id === described.id) return child;
+    }
+  }
+  const at = described.index == null ? null : parent.childNodes[described.index];
+  if (looksLike(at, described)) return at;
+  for (const child of parent.childNodes) {
+    if (looksLike(child, described)) return child;
+  }
+  return null;
+}
+
+function insertAt(parent, node, index) {
+  if (!node) return false;
+  const reference = index == null ? null : parent.childNodes[index] || null;
+  parent.insertBefore(node, reference);
+  return true;
+}
+
+function applyLiveState(parsed, target, record) {
+  const value = record.after;
+  const text = value == null ? '' : String(value);
+  if (record.property === 'scroll') {
+    // A static copy of a document cannot be scrolled, so where it was
+    // scrolled to is written onto the element rather than quietly lost.
+    const element = target || parsed.documentElement;
+    const at = value || {};
+    element.setAttribute('data-bc-scroll', at.top + ',' + at.left);
+    return true;
+  }
+  if (!target) return false;
+  if (record.property === 'value') {
+    // Serialized HTML carries attributes, not properties, so what was typed
+    // is written where a re-parse will still find it.
+    if (target.localName === 'textarea' || target.hasAttribute('contenteditable')) {
+      target.textContent = text;
+    } else {
+      target.setAttribute('value', text);
+    }
+    return true;
+  }
+  if (record.property === 'checked') {
+    if (value) target.setAttribute('checked', '');
+    else target.removeAttribute('checked');
+    return true;
+  }
+  if (record.property === 'selected') {
+    const chosen = (Array.isArray(value) ? value : []).map(String);
+    for (const option of target.querySelectorAll('option')) {
+      if (chosen.indexOf(option.value) !== -1) option.setAttribute('selected', '');
+      else option.removeAttribute('selected');
+    }
+    return true;
+  }
+  if (record.property === 'focus') {
+    for (const had of parsed.querySelectorAll('[data-bc-focus]')) {
+      had.removeAttribute('data-bc-focus');
+    }
+    if (value) target.setAttribute('data-bc-focus', '');
+    return true;
+  }
+  return false;
+}
+
 function applyMutations(index, upTo) {
   const html = trace.html[index];
   if (html == null) return null;
   const parsed = new DOMParser().parseFromString(html, 'text/html');
   const batches = trace.mutations[index] || [];
   let applied = 0;
+  let skipped = 0;
   for (const batch of batches.slice(0, upTo)) {
+    // The stage holds one document. A batch from an iframe belongs to a
+    // different one, so it is counted rather than applied to the wrong page.
+    if (batch.mainFrame === false) { skipped += (batch.records || []).length; continue; }
     for (const record of batch.records) {
       const target = record.target && record.target.path
         ? parsed.querySelector(record.target.path)
         : null;
-      if (!target) continue;
-      if (record.kind === 'attributes' && record.attribute) {
+      if (record.kind === 'live-state') {
+        if (applyLiveState(parsed, target, record)) applied++; else skipped++;
+      } else if (!target) {
+        skipped++;
+        continue;
+      } else if (record.kind === 'attributes' && record.attribute) {
         if (record.after == null) target.removeAttribute(record.attribute);
         else target.setAttribute(record.attribute, record.after);
         applied++;
@@ -107,17 +206,32 @@ function applyMutations(index, upTo) {
         target.textContent = record.after == null ? '' : record.after;
         applied++;
       } else if (record.kind === 'childList') {
-        for (const added of record.added || []) {
-          if (added && added.type === 'element' && added.html) {
-            target.insertAdjacentHTML('beforeend', added.html);
-            applied++;
-          }
+        // Where a node went is as much of the change as what it was: appending
+        // every addition to the end replays an insertion before a sibling in
+        // the wrong place, and drops removals entirely (issue #93).
+        for (const removed of record.removed || []) {
+          const node = childLike(target, removed);
+          if (node) { target.removeChild(node); applied++; } else { skipped++; }
         }
+        const added = (record.added || []).filter(Boolean)
+          .slice().sort((a, b) => (a.index == null ? 1e9 : a.index) - (b.index == null ? 1e9 : b.index));
+        for (const entry of added) {
+          if (insertAt(target, nodeOf(parsed, entry), entry.index)) applied++;
+          else skipped++;
+        }
+      } else {
+        skipped++;
       }
-      if (target.style) target.style.outline = '2px solid #f59e0b';
+      if (target && target.style) target.style.outline = '2px solid #f59e0b';
     }
   }
-  return { html: '<!DOCTYPE html>' + parsed.documentElement.outerHTML, applied };
+  return { html: '<!DOCTYPE html>' + parsed.documentElement.outerHTML, applied, skipped };
+}
+
+function stepText(step, total, result) {
+  const base = 'batch ' + step + ' of ' + total;
+  if (!result || !result.skipped) return base;
+  return base + ' · ' + result.skipped + ' not replayable here';
 }
 
 function showCheckpoint(index) {
@@ -171,7 +285,7 @@ document.getElementById('play').addEventListener('click', async () => {
   for (let step = 1; step <= batches.length; step++) {
     const result = applyMutations(selectedCheckpoint, step);
     if (result) frame.srcdoc = result.html;
-    stepLabel.textContent = 'batch ' + step + ' of ' + batches.length;
+    stepLabel.textContent = stepText(step, batches.length, result);
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
 });
@@ -182,7 +296,7 @@ document.getElementById('step-forward').addEventListener('click', () => {
   mutationStep = Math.min(mutationStep + 1, batches.length);
   const result = applyMutations(selectedCheckpoint, mutationStep);
   if (result) frame.srcdoc = result.html;
-  stepLabel.textContent = 'batch ' + mutationStep + ' of ' + batches.length;
+  stepLabel.textContent = stepText(mutationStep, batches.length, result);
 });
 
 document.getElementById('reset').addEventListener('click', () => {
@@ -191,6 +305,37 @@ document.getElementById('reset').addEventListener('click', () => {
 
 if (trace.checkpoints.length) showCheckpoint(trace.checkpoints[0].index);
 `;
+
+/**
+ * What this bundle can be replayed from, in the viewer's own words.
+ *
+ * Issue #93 asked for the viewer to say plainly that it reconstructs a run
+ * rather than replaying a recording of one, and to stop implying it can show
+ * things the bundle does not contain. A checkpoints-only trace has nothing
+ * between its checkpoints; a continuous one has as much as it recorded.
+ *
+ * @param {Object} manifest - The bundle's manifest
+ * @returns {string} A one-line description of what replay covers
+ */
+export function replaySummary(manifest) {
+  const replay = manifest?.replay ?? {};
+  const covered = [];
+  if (replay.mutations) {
+    covered.push('DOM mutations');
+  }
+  if (replay.childListPositions) {
+    covered.push('insertion positions and removals');
+  }
+  if (replay.liveState) {
+    covered.push('live control state');
+  }
+  if (replay.identifiers) {
+    covered.push('page and frame identities');
+  }
+  return covered.length === 0
+    ? 'partial diagnostic replay: checkpoints only, nothing between them'
+    : `partial diagnostic replay: checkpoints, ${covered.join(', ')}`;
+}
 
 /**
  * Collect everything the viewer embeds.
@@ -266,6 +411,7 @@ export async function renderTraceViewer(reader, options = {}) {
     ${manifest.counts?.checkpoints ?? 0} checkpoints · ${manifest.counts?.events ?? 0} events ·
     ${manifest.dropped ?? 0} dropped · started ${manifest.startedAt ?? 'unknown'}
   </div>
+  <div class="meta replay">${replaySummary(manifest)}</div>
 </header>
 <aside><ol id="timeline"></ol></aside>
 <main>

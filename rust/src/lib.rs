@@ -97,8 +97,9 @@ pub use fingerprint::{
 // crate root like any other pure helper.
 pub use traces::{
     diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, ParsedNdjson,
-    Trace, TraceCheckpoint, TraceError, TraceEvent, TraceFiles, TraceManifest, TraceMode,
-    TraceOutcome, TRACE_EVENT_SOURCES, TRACE_FORMAT, TRACE_SCHEMA_VERSION,
+    Trace, TraceCheckpoint, TraceCheckpointReason, TraceError, TraceEvent, TraceFiles,
+    TraceLiveState, TraceManifest, TraceMode, TraceMutationKind, TraceOutcome, TraceReplaySupport,
+    TRACE_EVENT_SOURCES, TRACE_FORMAT, TRACE_SCHEMA_VERSION,
 };
 
 /// Prelude module for convenient imports.
@@ -159,8 +160,9 @@ pub mod prelude {
     };
     pub use crate::traces::{
         diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, Trace,
-        TraceCheckpoint, TraceError, TraceEvent, TraceFiles, TraceManifest, TraceMode,
-        TraceOutcome, TRACE_SCHEMA_VERSION,
+        TraceCheckpoint, TraceCheckpointReason, TraceError, TraceEvent, TraceFiles, TraceLiveState,
+        TraceManifest, TraceMode, TraceMutationKind, TraceOutcome, TraceReplaySupport,
+        TRACE_SCHEMA_VERSION,
     };
     pub use crate::utilities::{
         evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin, unfocus_address_bar,

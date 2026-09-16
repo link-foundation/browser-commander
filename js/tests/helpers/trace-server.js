@@ -25,12 +25,19 @@ export const TRACE_PAGE = `<!doctype html>
     <select id="plan"><option value="free">Free</option><option value="pro">Pro</option></select>
     <label><input id="terms" type="checkbox"> I agree</label>
   </form>
-  <ul id="items"></ul>
+  <ul id="items"><li id="item-a">a</li><li id="item-b">b</li></ul>
+  <div id="subtree"><p id="old-child">old</p></div>
   <p id="status" data-state="idle">idle</p>
+  <textarea id="notes"></textarea>
+  <div id="tall" style="height:3000px"></div>
   <iframe id="inner" name="inner" src="/frame" style="width:80px;height:40px"></iframe>
   <a id="next" href="/next">Go to the next page</a>
   <a id="download" href="/file/report.txt" download>Download the report</a>
   <button id="add" type="button">Add an item</button>
+  <button id="insert-first" type="button">Insert before the first item</button>
+  <button id="move-last" type="button">Move the last item to the front</button>
+  <button id="remove-one" type="button">Remove an item</button>
+  <button id="replace-subtree" type="button">Replace a subtree</button>
   <button id="touch" type="button">Change the status</button>
   <button id="log" type="button">Log something</button>
   <button id="boom" type="button">Throw</button>
@@ -43,6 +50,30 @@ export const TRACE_PAGE = `<!doctype html>
       item.id = 'item-' + ++added;
       item.textContent = 'item ' + added;
       document.getElementById('items').appendChild(item);
+    });
+    // Issue #93's third regression case: a replay that only appends gets
+    // every one of these wrong.
+    const items = () => document.getElementById('items');
+    document.getElementById('insert-first').addEventListener('click', () => {
+      const item = document.createElement('li');
+      item.id = 'inserted';
+      item.textContent = 'inserted first';
+      items().insertBefore(item, items().firstChild);
+    });
+    document.getElementById('move-last').addEventListener('click', () => {
+      items().insertBefore(items().lastElementChild, items().firstChild);
+    });
+    document.getElementById('remove-one').addEventListener('click', () => {
+      const gone = document.getElementById('item-a');
+      if (gone) gone.remove();
+    });
+    document.getElementById('replace-subtree').addEventListener('click', () => {
+      const subtree = document.getElementById('subtree');
+      subtree.replaceChildren();
+      const fresh = document.createElement('p');
+      fresh.id = 'new-child';
+      fresh.textContent = 'new';
+      subtree.appendChild(fresh);
     });
     document.getElementById('touch').addEventListener('click', () => {
       const status = document.getElementById('status');
@@ -65,6 +96,27 @@ export const TRACE_PAGE = `<!doctype html>
       // rather than arriving somewhere and being answered with an error.
       fetch('http://127.0.0.1:1/nope').catch(() => {});
     });
+  </script>
+</body></html>`;
+
+/**
+ * A page that changes its own DOM while it is still loading.
+ *
+ * Issue #93's first regression case: the interval between a navigation and the
+ * next checkpoint used to be unrecorded, because the in-page observer died
+ * with the previous document. Everything this page builds happens before any
+ * automation could install an observer after the fact.
+ */
+export const INIT_PAGE = `<!doctype html>
+<html><head><title>Initializing page</title></head>
+<body style="margin:0">
+  <div id="root"></div>
+  <script>
+    const made = document.createElement('p');
+    made.id = 'made-while-loading';
+    made.textContent = 'built during initialization';
+    document.getElementById('root').appendChild(made);
+    document.getElementById('root').setAttribute('data-initialized', 'yes');
   </script>
 </body></html>`;
 
@@ -94,6 +146,10 @@ export async function startTraceServer() {
   return startFixtureHost((path, req, res) => {
     if (path === '/' || path === '/app') {
       sendHtml(res, TRACE_PAGE);
+      return;
+    }
+    if (path === '/init') {
+      sendHtml(res, INIT_PAGE);
       return;
     }
     if (path === '/next') {

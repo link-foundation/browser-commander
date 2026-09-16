@@ -29,7 +29,7 @@ pub use reader::{
     Trace, TraceCheckpoint, TraceError,
 };
 pub use schema::{
-    assert_readable_manifest, sequence_name, TraceCounts, TraceDropReason, TraceEvent, TraceFiles,
-    TraceManifest, TraceMode, TraceOutcome, TRACE_EVENT_SOURCES, TRACE_FORMAT,
-    TRACE_SCHEMA_VERSION,
+    assert_readable_manifest, sequence_name, TraceCheckpointReason, TraceCounts, TraceDropReason,
+    TraceEvent, TraceFiles, TraceLiveState, TraceManifest, TraceMode, TraceMutationKind,
+    TraceOutcome, TraceReplaySupport, TRACE_EVENT_SOURCES, TRACE_FORMAT, TRACE_SCHEMA_VERSION,
 };

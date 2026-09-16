@@ -414,6 +414,23 @@ export function installMutationRecorderInPage(options) {
   const liveDetachers = [];
   if (liveState) {
     const lastValues = new WeakMap();
+    const lastLive = new WeakMap();
+
+    // One interaction fires more than one event for the same state: typing
+    // into a field and then leaving it fires `input` for each keystroke and
+    // `change` for the value it ended at, and a checkbox fires both for the
+    // one click. Replaying a state that is already on screen shows nothing, so
+    // a repeat of what this element last reported is not recorded.
+    const repeats = (element, property, after) => {
+      const seen = lastLive.get(element) || {};
+      const asText = JSON.stringify(after === undefined ? null : after);
+      if (seen[property] === asText) {
+        return true;
+      }
+      seen[property] = asText;
+      lastLive.set(element, seen);
+      return false;
+    };
 
     const liveEntry = (target, property, after, before) => ({
       kind: 'live-state',
@@ -457,19 +474,18 @@ export function installMutationRecorderInPage(options) {
         return;
       }
       if (element.type === 'checkbox' || element.type === 'radio') {
-        pushLive(liveEntry(element, 'checked', element.checked));
+        if (!repeats(element, 'checked', element.checked)) {
+          pushLive(liveEntry(element, 'checked', element.checked));
+        }
         return;
       }
       if (element.localName === 'select') {
-        pushLive(
-          liveEntry(
-            element,
-            'selected',
-            [...element.selectedOptions].map((option) =>
-              isSecret(element) ? redacted : option.value
-            )
-          )
+        const chosen = [...element.selectedOptions].map((option) =>
+          isSecret(element) ? redacted : option.value
         );
+        if (!repeats(element, 'selected', chosen)) {
+          pushLive(liveEntry(element, 'selected', chosen));
+        }
         return;
       }
       if (
@@ -480,6 +496,9 @@ export function installMutationRecorderInPage(options) {
         return;
       }
       const after = valueOf(element);
+      if (repeats(element, 'value', after)) {
+        return;
+      }
       const before = lastValues.get(element);
       lastValues.set(element, after);
       pushLive(liveEntry(element, 'value', after, before));

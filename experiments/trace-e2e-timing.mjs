@@ -45,7 +45,11 @@ await time('fill (defaults)', () =>
 );
 await time('click (defaults)', () => commander.click({ selector: '#add' }));
 await time('click (no nav wait, no settle)', () =>
-  commander.click({ selector: '#add', waitForNavigation: false, waitAfterClick: 0 })
+  commander.click({
+    selector: '#add',
+    waitForNavigation: false,
+    waitAfterClick: 0,
+  })
 );
 await time('page.click', () => page.click('#add'));
 await time('checkpoint', () => trace.checkpoint('timed'));

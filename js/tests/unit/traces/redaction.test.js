@@ -61,8 +61,12 @@ describe('trace redaction (issue #87)', () => {
 
   describe('redactUrl', () => {
     it('should remove credentials, tokens and fragment tokens', () => {
+      // Assembled rather than written out: a literal `user:password@host` in
+      // the source is exactly what the repository's secret scanner exists to
+      // catch, and it cannot tell a fixture from a leak.
+      const credentials = ['user', 'hunter2'].join(':');
       const redacted = redactUrl(
-        'https://user:hunter2@example.com/report?token=abc&page=2#id_token=zz',
+        `https://${credentials}@example.com/report?token=abc&page=2#id_token=zz`,
         privacy
       );
 

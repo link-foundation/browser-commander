@@ -8,6 +8,9 @@
 
 import path from 'node:path';
 
+/** The type a server sends when it cannot name the format either. */
+const GENERIC_BINARY_TYPE = 'application/octet-stream';
+
 /** Extensions derived from a declared or detected MIME type. */
 const MIME_EXTENSIONS = new Map([
   ['application/pdf', '.pdf'],
@@ -15,7 +18,7 @@ const MIME_EXTENSIONS = new Map([
   ['application/zip', '.zip'],
   ['application/gzip', '.gz'],
   ['application/x-tar', '.tar'],
-  ['application/octet-stream', '.bin'],
+  [GENERIC_BINARY_TYPE, '.bin'],
   ['application/vnd.ms-excel', '.xls'],
   [
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -137,13 +140,18 @@ export function withExtension({ name, mimeType, head }) {
     return name;
   }
 
-  const declared = MIME_EXTENSIONS.get(
-    String(mimeType ?? '')
-      .split(';')[0]
-      .trim()
-      .toLowerCase()
-  );
-  const extension = declared || extensionFromContent(head);
+  const declaredType = String(mimeType ?? '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
+  const declared = MIME_EXTENSIONS.get(declaredType);
+  const sniffed = extensionFromContent(head);
+  // `application/octet-stream` is what a server sends when it does not know
+  // either, so the bytes outrank it; any other declared type is a real claim.
+  const extension =
+    declaredType === GENERIC_BINARY_TYPE
+      ? sniffed || declared
+      : declared || sniffed;
   return extension ? `${name}${extension}` : name;
 }
 

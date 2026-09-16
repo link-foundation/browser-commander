@@ -81,6 +81,31 @@ describe('download naming (issue #88)', () => {
       );
     });
 
+    it('should trust the bytes over a generic binary type', () => {
+      // `application/octet-stream` is what a server sends when it cannot name
+      // the format either, so it must not win over a PDF signature and leave
+      // the caller with a `.bin` file it cannot open.
+      assert.strictEqual(
+        withExtension({
+          name: '3f2b7c1e-0a41-4f2a-9a55-7b1c2d3e4f50',
+          mimeType: 'application/octet-stream',
+          head: Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d]),
+        }),
+        '3f2b7c1e-0a41-4f2a-9a55-7b1c2d3e4f50.pdf'
+      );
+    });
+
+    it('should still name a truly unidentifiable binary download', () => {
+      assert.strictEqual(
+        withExtension({
+          name: 'payload',
+          mimeType: 'application/octet-stream',
+          head: Buffer.from([0x01, 0x02]),
+        }),
+        'payload.bin'
+      );
+    });
+
     it('should leave the name alone when nothing identifies the format', () => {
       assert.strictEqual(
         withExtension({ name: 'mystery', head: Buffer.from([0x01, 0x02]) }),

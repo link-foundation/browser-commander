@@ -147,7 +147,8 @@ export async function resolveFinalPath({ root, name, conflict }) {
  * @param {string} [options.mimeType] - MIME type declared by the server
  * @param {string} [options.conflict] - Conflict policy
  * @param {Function} [options.filename] - Caller naming callback
- * @param {Function} [options.validate] - Validation run before the file is published
+ * @param {Function} [options.validate] - Validation run before the file is
+ *   published; throwing or returning `false` rejects the download
  * @returns {Promise<{path: string, bytes: number, checksum: string}>} What was saved
  */
 export async function saveDownload({
@@ -180,13 +181,21 @@ export async function saveDownload({
     if (validate) {
       // Validation sees the partial file, so a rejected download never exists
       // under the name a caller would pick it up by.
-      await validate({
+      const verdict = await validate({
         path: partialPath,
         bytes: written.bytes,
         checksum: written.checksum,
         mimeType,
         suggestedFilename,
       });
+      // A predicate that returns `false` rejects just as loudly as one that
+      // throws; anything else (including `undefined`) accepts, so a validator
+      // written only for its side effects still works.
+      if (verdict === false) {
+        throw new Error(
+          `"${safeName}" was rejected by the caller's validation`
+        );
+      }
     }
   } catch (error) {
     await fs.rm(partialPath, { force: true });

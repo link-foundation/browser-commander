@@ -128,25 +128,42 @@ describe('download store (issue #88)', () => {
     assert.strictEqual(saved.path, path.join(directory.path, 'passwd'));
   });
 
-  it('should leave no file behind when validation rejects the download', async () => {
-    // Issue #88: "a half-written or invalid artifact must never appear under
-    // the final name".
-    await assert.rejects(
-      saveDownload({
-        root: directory.path,
-        source: bytes('<html>login page</html>'),
-        suggestedFilename: 'invoice.pdf',
-        validate: ({ bytes: size }) => {
-          if (size < 1000) {
-            throw new Error('expected a PDF, got a login page');
-          }
-        },
-      }),
-      /expected a PDF/
-    );
+  // Issue #88: "a half-written or invalid artifact must never appear under
+  // the final name". A validator rejects either by throwing or by answering
+  // `false`, and neither may leave anything behind.
+  const rejections = [
+    {
+      title: 'validation throws',
+      expected: /expected a PDF/,
+      validate: ({ bytes: size }) => {
+        if (size < 1000) {
+          throw new Error('expected a PDF, got a login page');
+        }
+      },
+    },
+    {
+      title: 'validation answers false',
+      expected: /rejected by the caller/,
+      validate: ({ mimeType }) => mimeType === 'application/pdf',
+    },
+  ];
 
-    assert.deepStrictEqual(await listing(), []);
-  });
+  for (const { title, expected, validate } of rejections) {
+    it(`should leave no file behind when ${title}`, async () => {
+      await assert.rejects(
+        saveDownload({
+          root: directory.path,
+          source: bytes('<html>login page</html>'),
+          suggestedFilename: 'invoice.pdf',
+          mimeType: 'text/html',
+          validate,
+        }),
+        expected
+      );
+
+      assert.deepStrictEqual(await listing(), []);
+    });
+  }
 
   it('should hand validation the real bytes before publishing them', async () => {
     const seen = [];

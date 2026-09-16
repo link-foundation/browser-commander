@@ -84,7 +84,7 @@ user.
 A click reports what was observed, not what was attempted (issue #89). `status`
 is one of `succeeded`, `failed`, `timed_out`, `interrupted` or `unverified`;
 `effect` is `confirmed`, `not-observed` or `contradicted`; and both carry the
-evidence behind them. The legacy `success`/`verified` booleans are still
+evidence behind them. The legacy `clicked`/`verified` booleans are still
 returned and are now derived conservatively - `verified` follows
 `effect === 'confirmed'` - so a button that did nothing no longer answers with a
 verified click.

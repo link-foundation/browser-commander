@@ -25,7 +25,7 @@ own artifact mechanism.
 `clickElement()` now reports what was observed: `status` is `succeeded`,
 `failed`, `timed_out`, `interrupted` or `unverified`, `effect` is `confirmed`,
 `not-observed` or `contradicted`, and `evidence` carries the reason for both.
-The `success` and `verified` booleans remain and are derived conservatively, so
+The `clicked` and `verified` booleans remain and are derived conservatively, so
 a click that changed nothing is no longer reported as verified. `waitForReady()`
 composes URL, network, DOM, image and custom checks under one deadline and
 returns the same per-check evidence. `noAutoScroll` is deprecated in favour of

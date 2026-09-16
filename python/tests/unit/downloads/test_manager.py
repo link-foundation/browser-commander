@@ -435,6 +435,114 @@ class TestManualDownloadsOverCdp:
         assert "canceled" in cancelled[0].failure
         await manager.dispose()
 
+    async def test_waits_for_staged_bytes_that_land_after_completion(
+        self, tmp_path: Path
+    ) -> None:
+        # Issue #92: Chromium writes ``<guid>.crdownload`` and renames it, so
+        # the completion event can arrive before ``<guid>`` is openable.
+        # Publishing on the event alone turned a download that succeeded into
+        # ``FileNotFoundError`` on ``.browser-commander-staging/<guid>``.
+        session = FakeCdpSession()
+        manager = await self.cdp_manager(tmp_path, session)
+        completed: list[Any] = []
+        failed: list[Any] = []
+        manager.on(DownloadEvent.COMPLETED, completed.append)
+        manager.on(DownloadEvent.FAILED, failed.append)
+
+        guid = "guid-0010"
+        staged = Path(tmp_path, STAGING_DIRECTORY, guid)
+        session.emit(
+            "Browser.downloadWillBegin",
+            {
+                "guid": guid,
+                "url": "https://example.com/late.pdf",
+                "suggestedFilename": "late.pdf",
+            },
+        )
+        # The event first, the bytes afterwards - the ordering from the report.
+        session.emit("Browser.downloadProgress", {"guid": guid, "state": "completed"})
+        await asyncio.sleep(0)
+        assert completed == [], "published before the bytes exist"
+        staged.write_text("late body", encoding="utf-8")
+
+        await manager.idle()
+
+        assert failed == []
+        assert len(completed) == 1
+        assert Path(completed[0].path).read_text(encoding="utf-8") == "late body"
+        assert list(Path(tmp_path, STAGING_DIRECTORY).iterdir()) == []
+        await manager.dispose()
+
+    async def test_does_not_claim_bytes_while_a_partial_file_remains(
+        self, tmp_path: Path
+    ) -> None:
+        session = FakeCdpSession()
+        manager = await self.cdp_manager(tmp_path, session)
+        completed: list[Any] = []
+        manager.on(DownloadEvent.COMPLETED, completed.append)
+
+        guid = "guid-0011"
+        staged = Path(tmp_path, STAGING_DIRECTORY, guid)
+        session.emit(
+            "Browser.downloadWillBegin",
+            {
+                "guid": guid,
+                "url": "https://example.com/partial.pdf",
+                "suggestedFilename": "partial.pdf",
+            },
+        )
+        # A half-written file under the final name, with Chromium's own
+        # in-progress marker still beside it.
+        staged.write_text("half", encoding="utf-8")
+        partial = Path(f"{staged}.crdownload")
+        partial.write_text("rest", encoding="utf-8")
+        session.emit("Browser.downloadProgress", {"guid": guid, "state": "completed"})
+        await asyncio.sleep(0.1)
+        assert completed == [], "claimed a half-written file"
+
+        partial.unlink()
+        staged.write_text("half and rest", encoding="utf-8")
+        await manager.idle()
+
+        assert len(completed) == 1
+        assert Path(completed[0].path).read_text(encoding="utf-8") == "half and rest"
+        await manager.dispose()
+
+    async def test_reports_a_completion_whose_bytes_never_arrive_as_a_failure(
+        self, tmp_path: Path
+    ) -> None:
+        session = FakeCdpSession()
+        manager = await create_download_manager(
+            engine="playwright",
+            browser=FakeBrowser(session),
+            directory=str(tmp_path),
+            staging_timeout=0.06,
+            staging_poll_interval=0.005,
+        )
+        completed: list[Any] = []
+        failed: list[Any] = []
+        manager.on(DownloadEvent.COMPLETED, completed.append)
+        manager.on(DownloadEvent.FAILED, failed.append)
+
+        session.emit(
+            "Browser.downloadWillBegin",
+            {
+                "guid": "guid-0012",
+                "url": "https://example.com/ghost.pdf",
+                "suggestedFilename": "ghost.pdf",
+            },
+        )
+        session.emit(
+            "Browser.downloadProgress", {"guid": "guid-0012", "state": "completed"}
+        )
+        await manager.idle()
+
+        assert completed == []
+        assert len(failed) == 1
+        assert "was not readable within 0.06s" in failed[0].failure
+        assert "guid-0012" in failed[0].failure
+        await manager.dispose()
+
     async def test_ignores_progress_for_a_download_it_never_saw_start(
         self, tmp_path: Path
     ) -> None:

@@ -20,6 +20,7 @@ import path from 'node:path';
 import { openBrowserCdpSession } from '../../src/downloads/sources.js';
 import { launchE2EBrowser } from '../helpers/e2e-browser.js';
 import {
+  BLOB_PDF_BODY,
   PDF_BODY,
   REPORT_BODY,
   startDownloadServer,
@@ -96,6 +97,52 @@ function describeDownloads(engine) {
 
       assert.strictEqual(path.basename(artifact.path), 'generated.txt');
       assert.strictEqual(await fs.readFile(artifact.path, 'utf8'), REPORT_BODY);
+    });
+
+    it('should not publish a completed download before its bytes are readable', async () => {
+      // Issue #92: Chromium reports `Browser.downloadProgress` with
+      // `state: "completed"` before the GUID-named staging file is readable,
+      // and the manager then failed with
+      // `ENOENT ... .browser-commander-staging/<guid>`. A PDF the page builds
+      // itself is the shape the issue reported.
+      const completed = [];
+      const failures = [];
+      downloads.on('completed', (artifact) => completed.push(artifact));
+      downloads.on('failed', (artifact) => failures.push(artifact));
+
+      const artifact = await captureClickOn('#blob-pdf');
+
+      assert.deepStrictEqual(failures, []);
+      assert.strictEqual(artifact.state, 'completed');
+      assert.strictEqual(path.basename(artifact.path), 'generated.pdf');
+      assert.strictEqual(
+        await fs.readFile(artifact.path, 'utf8'),
+        BLOB_PDF_BODY
+      );
+      assert.strictEqual(artifact.bytes, Buffer.byteLength(BLOB_PDF_BODY));
+
+      const published = completed.filter(
+        (entry) => entry.path === artifact.path
+      );
+      assert.strictEqual(
+        published.length,
+        1,
+        `exactly one completed artifact should be published: ${published.length}`
+      );
+
+      const staged = await fs
+        .readdir(path.join(directory, '.browser-commander-staging'))
+        .catch(() => []);
+      assert.deepStrictEqual(
+        staged,
+        [],
+        `no staged file should survive a saved download: ${staged}`
+      );
+      const entries = await fs.readdir(directory);
+      assert.ok(
+        !entries.some((entry) => entry.endsWith('.partial')),
+        `no partial file should be left behind: ${entries}`
+      );
     });
 
     it('should save a navigation that turned into a download', async () => {

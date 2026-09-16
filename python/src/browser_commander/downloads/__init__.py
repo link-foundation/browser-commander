@@ -33,6 +33,14 @@ from browser_commander.downloads.sources import (
     DownloadFailure,
     classify_failure,
 )
+from browser_commander.downloads.staging import (
+    DEFAULT_STAGING_POLL_INTERVAL,
+    DEFAULT_STAGING_TIMEOUT,
+    STAGING_IN_PROGRESS_SUFFIXES,
+    StagedFile,
+    describe_staging_timeout,
+    wait_for_staged_file,
+)
 from browser_commander.downloads.store import (
     DownloadConflict,
     DownloadSource,
@@ -49,6 +57,9 @@ __all__ = [
     "ARTIFACT_DIRECTORY_MODE",
     "ARTIFACT_FILE_MODE",
     "DEFAULT_CAPTURE_TIMEOUT",
+    "DEFAULT_STAGING_POLL_INTERVAL",
+    "DEFAULT_STAGING_TIMEOUT",
+    "STAGING_IN_PROGRESS_SUFFIXES",
     "DirectoryWatcher",
     "DownloadArtifact",
     "DownloadConflict",
@@ -58,11 +69,13 @@ __all__ = [
     "DownloadManager",
     "DownloadSource",
     "SavedDownload",
+    "StagedFile",
     "attach_downloads",
     "attach_filesystem_watcher",
     "classify_failure",
     "clean_partials",
     "create_download_manager",
+    "describe_staging_timeout",
     "download_context",
     "extension_from_content",
     "is_inside_root",
@@ -73,5 +86,6 @@ __all__ = [
     "resolve_inside_root",
     "sanitize_download_name",
     "save_download",
+    "wait_for_staged_file",
     "with_extension",
 ]

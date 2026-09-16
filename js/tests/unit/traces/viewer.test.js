@@ -41,6 +41,11 @@ describe('offline trace viewer (issue #87)', () => {
       output: path.join(directory.path, name),
       mode: TRACE_MODE.CONTINUOUS,
       screenshots: false,
+      // These are tests about what the viewer does with the checkpoints it is
+      // given, so the checkpoints are exactly the ones each test names. The
+      // base snapshot a continuous trace takes on its own is covered by the
+      // recorder's suite (issue #93).
+      initialCheckpoint: false,
       ...rest,
     });
     return { trace, page };

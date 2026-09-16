@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { setImmediate as yieldToEngine } from 'node:timers/promises';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -7,6 +8,7 @@ import { startTrace } from '../../../src/traces/recorder.js';
 import { readTrace } from '../../../src/traces/reader.js';
 import { REDACTED } from '../../../src/traces/redaction.js';
 import {
+  TRACE_CHECKPOINT_REASON,
   TRACE_DROP_REASON,
   TRACE_EVENT,
   TRACE_MODE,
@@ -232,7 +234,9 @@ describe('trace recorder (issue #87)', () => {
       const installs = page.state.evaluated.filter(
         (call) => call.name === 'installMutationRecorderInPage'
       );
-      assert.strictEqual(installs.length, 2);
+      // Once at the start, and once after each of the two checkpoints - the
+      // base one the recorder takes itself and the one named above.
+      assert.strictEqual(installs.length, 3);
     });
   });
 
@@ -269,6 +273,170 @@ describe('trace recorder (issue #87)', () => {
       const dropped = await firstDrop(stopped);
       assert.strictEqual(dropped.reason, TRACE_DROP_REASON.SIZE_LIMIT);
       assert.match(dropped.detail, /12 records/);
+    });
+  });
+
+  describe('continuity (issue #93)', () => {
+    it('should take a base snapshot a continuous trace can replay from', async () => {
+      const { trace } = await start({ mode: TRACE_MODE.CONTINUOUS });
+      const stopped = await trace.stop();
+
+      const [base] = stopped.checkpoints;
+      assert.strictEqual(base.name, 'initial');
+      assert.strictEqual(base.actor, 'recorder');
+      assert.strictEqual(base.reason, TRACE_CHECKPOINT_REASON.INITIAL);
+    });
+
+    it('should leave a checkpoints-only trace the moments its caller named', async () => {
+      const { trace } = await start({ mode: TRACE_MODE.CHECKPOINTS });
+      await trace.checkpoint('only this one');
+      const stopped = await trace.stop();
+
+      assert.deepStrictEqual(
+        stopped.checkpoints.map((entry) => entry.name),
+        ['only this one']
+      );
+    });
+
+    it('should let the caller name the base snapshot', async () => {
+      const { trace } = await start({
+        mode: TRACE_MODE.CONTINUOUS,
+        initialCheckpoint: 'before anything',
+      });
+      const stopped = await trace.stop();
+
+      assert.strictEqual(stopped.checkpoints[0].name, 'before anything');
+    });
+
+    it('should let the caller refuse the base snapshot', async () => {
+      const { trace } = await start({
+        mode: TRACE_MODE.CONTINUOUS,
+        initialCheckpoint: false,
+      });
+      const stopped = await trace.stop();
+
+      assert.deepStrictEqual(stopped.checkpoints, []);
+      const started = await eventOfKind(stopped, TRACE_EVENT.TRACE_START);
+      assert.strictEqual(started.initialCheckpoint, false);
+    });
+
+    it('should observe a document created after the trace started', async () => {
+      const { trace, page } = await start({ mode: TRACE_MODE.CONTINUOUS });
+      await trace.stop();
+
+      // Registered with the engine rather than evaluated: this is what runs
+      // before a freshly navigated document's own scripts do.
+      assert.deepStrictEqual(
+        page.state.initScripts.map((script) => script.name),
+        ['installMutationRecorderInPage']
+      );
+    });
+
+    it('should ask the page to record live control state', async () => {
+      const { trace, page } = await start({ mode: TRACE_MODE.CONTINUOUS });
+      await trace.stop();
+
+      const [installed] = page.state.evaluated.filter(
+        (call) => call.name === 'installMutationRecorderInPage'
+      );
+      assert.strictEqual(installed.argument.liveState, true);
+    });
+
+    it('should stop the in-page recorder when the trace stops', async () => {
+      const { trace, page } = await start({ mode: TRACE_MODE.CONTINUOUS });
+      await trace.stop();
+
+      const stops = page.state.evaluated.filter(
+        (call) => call.name === 'stopMutationRecorderInPage'
+      );
+      assert.strictEqual(stops.length, 1);
+    });
+
+    it('should name the owner of every timeline record', async () => {
+      const { trace } = await start({ mode: TRACE_MODE.CONTINUOUS });
+      const stopped = await trace.stop();
+
+      const events = (await read(stopped)).events;
+      assert.ok(events.length > 0);
+      for (const event of events) {
+        assert.match(event.traceId, /^trace-\d+$/);
+        assert.match(event.pageId, /^page-\d+$/);
+        assert.match(event.navigationId, /^nav-\d+$/);
+      }
+    });
+
+    it('should name the action a recorded interaction belongs to', async () => {
+      const { trace, commander } = await start();
+      await commander.click('#submit');
+      const stopped = await trace.stop();
+
+      const interaction = await eventOfKind(stopped, TRACE_EVENT.INTERACTION);
+      assert.match(interaction.actionId, /^trace-\d+-action-1$/);
+    });
+
+    it('should separate what happened before a navigation from what happened after', async () => {
+      const { trace, page } = await start({ mode: TRACE_MODE.CONTINUOUS });
+      const before = await trace.checkpoint('before');
+
+      page.emit('framenavigated', {
+        url: () => 'https://example.com/next',
+        parentFrame: () => null,
+      });
+      await yieldToEngine();
+
+      const after = await trace.checkpoint('after');
+      const stopped = await trace.stop();
+
+      const events = (await read(stopped)).events;
+      const owner = (index) =>
+        events.find(
+          (event) =>
+            event.kind === TRACE_EVENT.CHECKPOINT && event.index === index
+        ).navigationId;
+      assert.notStrictEqual(owner(before.index), owner(after.index));
+    });
+
+    it('should drain every frame of a page, not only the main one', async () => {
+      const page = createFakePage({
+        mutations: [{ sequence: 1, at: 1, records: [] }],
+        frames: [{ mutations: [{ sequence: 1, at: 2, records: [] }] }],
+      });
+      const { trace } = await start({ page, mode: TRACE_MODE.CONTINUOUS });
+      const stopped = await trace.stop();
+
+      const batches = await (await read(stopped)).mutations(0);
+      // Each batch says which document it came from, so two frames that both
+      // numbered their batch 1 are still telling two different stories.
+      assert.deepStrictEqual(
+        batches.map((batch) => batch.frameId),
+        ['main', 'child-1']
+      );
+      assert.deepStrictEqual(
+        batches.map((batch) => batch.mainFrame),
+        [true, false]
+      );
+    });
+
+    it('should say in the manifest what the bundle can actually replay', async () => {
+      const { trace } = await start({ mode: TRACE_MODE.CONTINUOUS });
+      const stopped = await trace.stop();
+
+      assert.deepStrictEqual(stopped.manifest.replay, {
+        checkpoints: true,
+        mutations: true,
+        childListPositions: true,
+        liveState: true,
+        identifiers: true,
+      });
+    });
+
+    it('should admit a checkpoints-only bundle cannot replay the gaps', async () => {
+      const { trace } = await start({ mode: TRACE_MODE.CHECKPOINTS });
+      const stopped = await trace.stop();
+
+      assert.strictEqual(stopped.manifest.replay.mutations, false);
+      assert.strictEqual(stopped.manifest.replay.liveState, false);
+      assert.strictEqual(stopped.manifest.replay.checkpoints, true);
     });
   });
 

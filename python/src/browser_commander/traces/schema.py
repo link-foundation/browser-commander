@@ -16,7 +16,14 @@ from typing import Any
 #:
 #: Readers refuse a major version they were not written for rather than
 #: guessing at the meaning of unknown records.
-TRACE_SCHEMA_VERSION = 1
+#:
+#: Version 2 (issue #93) is what makes continuous replay complete: mutation
+#: batches name the frame they came from, child-list records carry the position
+#: a node was inserted at or removed from, and live control state - typing,
+#: checking, selecting, focus and scroll - is recorded as it happens instead of
+#: only at checkpoints. A version 1 reader given a version 2 bundle would
+#: quietly replay a different page, so it refuses instead.
+TRACE_SCHEMA_VERSION = 2
 
 #: Value of ``manifest.json``'s ``format`` field, for every version.
 TRACE_FORMAT = "browser-commander-trace"
@@ -58,6 +65,61 @@ class TraceEvent:
     DOWNLOAD = "download"
     #: Something could not be recorded. The run continues; the gap is visible.
     DROPPED = "dropped"
+
+
+class TraceMutationKind:
+    """Record kinds inside a mutation batch."""
+
+    ATTRIBUTES = "attributes"
+    CHARACTER_DATA = "characterData"
+    CHILD_LIST = "childList"
+    #: A change to what an element holds rather than to the document.
+    #:
+    #: Typing into an input, checking a box, choosing an option, moving focus
+    #: and scrolling all change what the user sees and none of them mutate the
+    #: DOM, so no observer reports them and replay skipped them (issue #93).
+    LIVE_STATE = "live-state"
+
+
+class TraceLiveState:
+    """What a ``live-state`` record changed."""
+
+    VALUE = "value"
+    CHECKED = "checked"
+    SELECTED = "selected"
+    FOCUS = "focus"
+    SCROLL = "scroll"
+
+
+class TraceCheckpointReason:
+    """Why a checkpoint was taken."""
+
+    #: The base snapshot every later record is a change against.
+    INITIAL = "initial"
+    #: A caller named this moment.
+    CHECKPOINT = "checkpoint"
+    #: The run failed here.
+    FAILURE = "failure"
+
+
+#: What a bundle's records let a viewer reproduce.
+#:
+#: Issue #93 asked for the viewer to stop claiming more than it can do. Saying
+#: it in the manifest is better than saying it in the viewer's markup: a bundle
+#: recorded by an older version is honestly described by its own manifest, and
+#: any of the three readers can tell a caller what they are looking at.
+DEFAULT_REPLAY_SUPPORT: dict[str, bool] = {
+    # Checkpoints are snapshots, always replayable.
+    "checkpoints": True,
+    # DOM mutations are recorded between checkpoints.
+    "mutations": False,
+    # Child-list records say where a node went, so removals and moves replay.
+    "childListPositions": False,
+    # Typing, checking, selecting, focus and scroll are recorded as they happen.
+    "liveState": False,
+    # Every record names the context, page, navigation and frame it belongs to.
+    "identifiers": False,
+}
 
 
 #: Event families a caller can subscribe the recorder to.
@@ -125,6 +187,7 @@ def create_manifest(
     dom: Mapping[str, Any] | None = None,
     events: Iterable[str] | None = None,
     dropped: int = 0,
+    replay: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the manifest of a trace.
 
@@ -144,6 +207,7 @@ def create_manifest(
         dom: DOM capture settings the recorder applied
         events: Event families the recorder subscribed to
         dropped: Number of records that could not be written
+        replay: What the bundle's records let a viewer reproduce
 
     Returns:
         The manifest as it is written to disk
@@ -166,6 +230,7 @@ def create_manifest(
         else f"python {platform_module.python_version()}",
         "events": list(events or []),
         "dom": dict(dom or {}),
+        "replay": {**DEFAULT_REPLAY_SUPPORT, **dict(replay or {})},
         "privacy": dict(privacy or {}),
         "limits": dict(limits or {}),
         "counts": {

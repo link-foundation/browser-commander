@@ -237,6 +237,20 @@ export {
 } from './traces/schema.js';
 export { diffControlState, parseNdjson, readTrace } from './traces/reader.js';
 export { renderTraceViewer, writeTraceViewer } from './traces/viewer.js';
+// A Links Notation view of the same bundle, for consumers that keep semantic,
+// actor-aware histories of a run (issue #94).
+export {
+  decodeLinkText,
+  encodeLinkText,
+  formatTraceLinks,
+  traceLinks,
+  TRACE_LINK_IDS,
+  TRACE_LINK_OUTCOME,
+  TRACE_LINKS_FILE,
+  TRACE_LINKS_SECTIONS,
+  TRACE_LINKS_VERSION,
+  writeTraceLinks,
+} from './traces/links.js';
 export {
   DEFAULT_REDACT_ATTRIBUTES,
   DEFAULT_REDACT_SELECTORS,

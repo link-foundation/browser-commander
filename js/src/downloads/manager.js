@@ -85,6 +85,9 @@ function playwrightDownloadContext({ browser, page }) {
  * @param {string} [options.conflict='rename'] - 'rename', 'overwrite' or 'error'
  * @param {Function} [options.filename] - Naming callback for every download
  * @param {Function} [options.validate] - Validation for every download
+ * @param {number} [options.stagingTimeout] - How long a completed download has
+ *   to become readable on disk before it is reported as failed (issue #92)
+ * @param {number} [options.stagingPollInterval] - Milliseconds between readings
  * @param {Object} [options.log] - Logger
  * @returns {Promise<Object>} Download manager
  */
@@ -99,6 +102,8 @@ export async function createDownloadManager(options = {}) {
     conflict = DOWNLOAD_CONFLICT.RENAME,
     filename,
     validate,
+    stagingTimeout,
+    stagingPollInterval,
     log,
   } = options;
 
@@ -194,20 +199,30 @@ export async function createDownloadManager(options = {}) {
     },
 
     /**
-     * Save a download whose bytes the engine has finished writing.
+     * Register work a download is not finished without.
      *
-     * Engine events are fire-and-forget, so the save is registered as in-flight
-     * work: otherwise `dispose()` could return while bytes are still being
-     * written and leave a `.partial` file as the only trace of the download.
+     * Engine events are fire-and-forget, so anything a source starts in one -
+     * saving the bytes, or waiting for them to land on disk at all - has to be
+     * registered here: otherwise `dispose()` could return while a download is
+     * still in flight and leave a `.partial` file as its only trace.
+     *
+     * @param {Promise} work - Work to wait for in `idle()` and `dispose()`
+     * @returns {Promise<void>} The same work, tracked
+     */
+    track(work) {
+      inFlight.add(work);
+      return work.finally(() => inFlight.delete(work));
+    },
+
+    /**
+     * Save a download whose bytes the engine has finished writing.
      *
      * @param {Object} artifact - Artifact record
      * @param {Object} source - `{path}` or `{stream}` to read the bytes from
      * @returns {Promise<void>} Resolves once the artifact has been published
      */
     finished(artifact, source) {
-      const work = save(artifact, source);
-      inFlight.add(work);
-      return work.finally(() => inFlight.delete(work));
+      return sink.track(save(artifact, source));
     },
 
     /**
@@ -293,7 +308,15 @@ export async function createDownloadManager(options = {}) {
   try {
     cdpSession = await openBrowserCdpSession({ engine, browser, page });
     if (cdpSession) {
-      attached.push(await attachCdpSource({ session: cdpSession, root, sink }));
+      attached.push(
+        await attachCdpSource({
+          session: cdpSession,
+          root,
+          sink,
+          stagingTimeout,
+          stagingPollInterval,
+        })
+      );
     }
   } catch (error) {
     cdpSession = undefined;

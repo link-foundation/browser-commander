@@ -190,6 +190,20 @@ function describeTraces(engine) {
      */
     const changesIn = (batches) => batches.flatMap((batch) => batch.records);
 
+    /**
+     * Every mutation record a stopped trace holds, whichever interval it fell in.
+     *
+     * @param {Object} reader - An open trace
+     * @returns {Promise<Object[]>} The records, in order
+     */
+    const allChanges = async (reader) => {
+      const records = [];
+      for (let index = 0; index <= reader.checkpoints.length; index++) {
+        records.push(...changesIn(await reader.mutations(index)));
+      }
+      return records;
+    };
+
     it('should capture the state a user made, not the state the server sent', async () => {
       const trace = await record({ screenshots: 'checkpoints' });
 
@@ -232,7 +246,12 @@ function describeTraces(engine) {
       const stopped = await trace.stop();
 
       const reader = await readTrace(stopped.path);
-      const batches = await reader.mutations(1);
+      // A continuous trace takes its own base snapshot first (issue #93), so
+      // the interval a moment belongs to is looked up by that moment's name
+      // rather than counted from the caller's first checkpoint.
+      const indexOf = (name) =>
+        stopped.checkpoints.find((entry) => entry.name === name).index;
+      const batches = await reader.mutations(indexOf('loaded'));
       const added = changesIn(batches)
         .flatMap((change) => change.added ?? [])
         .filter((node) => node?.id);
@@ -253,14 +272,19 @@ function describeTraces(engine) {
 
       // The navigation threw the in-page recorder away with the document it
       // lived in; a batch after it proves a new one took its place.
-      const afterNavigating = await reader.mutations(3);
+      const afterNavigating = await reader.mutations(
+        indexOf('the next document')
+      );
       assert.ok(
         changesIn(afterNavigating)
           .flatMap((change) => change.added ?? [])
           .some((node) => node?.id === 'grown'),
         `expected the grown item, got ${JSON.stringify(afterNavigating)}`
       );
-      assert.match((await reader.state(3)).url, /\/next$/);
+      assert.match(
+        (await reader.state(indexOf('the next document'))).url,
+        /\/next$/
+      );
     });
 
     it('should put everything that happened on one ordered timeline', async () => {
@@ -404,6 +428,238 @@ function describeTraces(engine) {
       );
     });
 
+    it('should record what a new document did while it was still loading', async () => {
+      const trace = await record({ mode: TRACE_MODE.CONTINUOUS });
+
+      // No checkpoint between the navigation and the change: the recorder has
+      // to already be in the new document when the document's own script runs,
+      // which is the interval issue #93 says used to be lost entirely.
+      await page.goto(`${server.baseUrl}/init`);
+      await trace.checkpoint('the new document initialized itself');
+      const stopped = await trace.stop();
+
+      const reader = await readTrace(stopped.path);
+      const records = await allChanges(reader);
+      const built = records.find((change) =>
+        (change.added ?? []).some(
+          (node) =>
+            node?.id === 'made-while-loading' ||
+            /made-while-loading/.test(node?.html ?? '')
+        )
+      );
+      assert.ok(
+        built,
+        `no initialization mutation among ${records.length} records`
+      );
+      const marked = records.find(
+        (change) =>
+          change.kind === 'attributes' &&
+          change.attribute === 'data-initialized'
+      );
+      assert.strictEqual(marked?.after, 'yes');
+    });
+
+    it('should record live control state as it changes, not only at checkpoints', async () => {
+      const trace = await record({ mode: TRACE_MODE.CONTINUOUS });
+
+      await page.click('#name');
+      await page.type('#name', 'ada');
+      await page.click('#terms');
+      await choose('#plan', 'pro');
+      await commander.evaluate(() => window.scrollTo(0, 400));
+      // A scroll event is dispatched after the scroll, not during it, so the
+      // checkpoint that drains the queue waits for a frame to be painted.
+      await commander.evaluate(
+        () =>
+          new Promise((resolve) => {
+            window.requestAnimationFrame(() =>
+              window.requestAnimationFrame(() => resolve(true))
+            );
+          })
+      );
+      await trace.checkpoint('the form was filled in');
+      const stopped = await trace.stop();
+
+      const reader = await readTrace(stopped.path);
+      const live = (await allChanges(reader)).filter(
+        (change) => change.kind === 'live-state'
+      );
+      const properties = new Set(live.map((change) => change.property));
+      for (const property of [
+        'value',
+        'checked',
+        'selected',
+        'focus',
+        'scroll',
+      ]) {
+        assert.ok(
+          properties.has(property),
+          `no ${property} record among ${[...properties].join(', ')}`
+        );
+      }
+
+      // Each keystroke is its own state: a stepwise replay of typing has to be
+      // able to show "a", then "ad", then "ada".
+      const typed = live.filter(
+        (change) =>
+          change.property === 'value' && change.target?.path === '#name'
+      );
+      assert.deepStrictEqual(
+        typed.map((change) => change.after),
+        ['a', 'ad', 'ada']
+      );
+      const checked = live.find((change) => change.property === 'checked');
+      assert.strictEqual(checked.after, true);
+      const selected = live.find((change) => change.property === 'selected');
+      assert.deepStrictEqual(selected.after, ['pro']);
+      const scrolled = live
+        .filter((change) => change.property === 'scroll')
+        .pop();
+      assert.strictEqual(scrolled.after.top, 400);
+    });
+
+    it('should replay an insertion, a move, a removal and a replacement exactly', async () => {
+      const trace = await record({ mode: TRACE_MODE.CONTINUOUS });
+
+      await page.click('#insert-first');
+      await page.click('#move-last');
+      await page.click('#remove-one');
+      await page.click('#replace-subtree');
+      const settled = await trace.checkpoint('the list settled');
+      const stopped = await trace.stop();
+      const viewer = await writeTraceViewer(stopped.path);
+
+      await page.goto(`file://${viewer}`);
+      const batches = await page.evaluate(
+        () =>
+          JSON.parse(document.getElementById('trace-data').textContent)
+            .mutations[1].length
+      );
+      assert.ok(batches > 0, 'the interval recorded nothing to replay');
+      for (let step = 0; step < batches; step++) {
+        await page.click('#step-forward');
+      }
+
+      // Both documents reach the comparison as strings this test holds: the
+      // replayed one read out of the frame, the recorded one read from the
+      // bundle on disk. Taking text straight back out of the page and parsing
+      // it as HTML in the same breath is what CodeQL reports as
+      // `js/xss-through-dom` (alert 20 on this pull request), and reading the
+      // recorded side from the bundle is the stronger check anyway: it holds
+      // the viewer to the file it was built from rather than to the copy it
+      // embedded in itself.
+      const replayedHtml = await page.evaluate(() =>
+        document.getElementById('stage').getAttribute('srcdoc')
+      );
+      const capturedHtml = await (
+        await readTrace(stopped.path)
+      ).html(settled.index);
+      assert.ok(capturedHtml, 'the bundle kept no HTML for the checkpoint');
+
+      const compared = await page.evaluate(
+        ([replayedSource, capturedSource]) => {
+          // The viewer highlights what it touched and annotates what a static
+          // document cannot show; neither is part of the recorded DOM.
+          const clean = (source) => {
+            const parsed = new DOMParser().parseFromString(source, 'text/html');
+            for (const element of parsed.querySelectorAll('*')) {
+              element.removeAttribute('style');
+              for (const attribute of [...element.attributes]) {
+                if (attribute.name.startsWith('data-bc-')) {
+                  element.removeAttribute(attribute.name);
+                }
+              }
+            }
+            return parsed;
+          };
+          const replayed = clean(replayedSource);
+          const captured = clean(capturedSource);
+          const sub = (parsed, selector) =>
+            parsed.querySelector(selector)?.innerHTML.trim() ?? null;
+          return {
+            items: [sub(replayed, '#items'), sub(captured, '#items')],
+            subtree: [sub(replayed, '#subtree'), sub(captured, '#subtree')],
+          };
+        },
+        [replayedHtml, capturedHtml]
+      );
+
+      assert.strictEqual(compared.items[0], compared.items[1]);
+      assert.strictEqual(compared.subtree[0], compared.subtree[1]);
+      assert.match(compared.items[1], /id="item-b"[\s\S]*id="inserted"/);
+      assert.doesNotMatch(compared.items[1], /id="item-a"/);
+      assert.match(compared.subtree[1], /id="new-child"/);
+    });
+
+    it('should resolve every record to one unambiguous page and frame', async () => {
+      const second = await browser.newPage();
+      await second.goto(`${server.baseUrl}/`);
+      const here = await record({ mode: TRACE_MODE.CONTINUOUS });
+      const there = await startTrace({
+        page: second,
+        output: path.join(artifacts, `owners-${++runs}`),
+        screenshots: false,
+        mode: TRACE_MODE.CONTINUOUS,
+      });
+
+      // Opening a second tab pushes the first into the background, where
+      // requestAnimationFrame stops firing and Puppeteer's click, which waits
+      // for the element to settle, never returns. Whichever page is being
+      // driven is the one in front.
+      await page.bringToFront();
+      await page.click('#add');
+      await second.bringToFront();
+      await second.click('#add');
+      await page.bringToFront();
+      // A change inside the iframe, so this run holds two documents of one page
+      // as well as two pages of one browser.
+      await commander.evaluate(() => {
+        const framed = document.getElementById('inner').contentDocument;
+        framed.body.appendChild(framed.createElement('span'));
+      });
+      await here.checkpoint('both pages moved');
+      await there.checkpoint('both pages moved');
+      const stoppedHere = await here.stop();
+      const stoppedThere = await there.stop();
+      await second.close();
+
+      const readHere = await readTrace(stoppedHere.path);
+      const readThere = await readTrace(stoppedThere.path);
+      const pagesOf = (events) => new Set(events.map((event) => event.pageId));
+      assert.strictEqual(pagesOf(readHere.events).size, 1);
+      assert.strictEqual(pagesOf(readThere.events).size, 1);
+      assert.notStrictEqual(
+        [...pagesOf(readHere.events)][0],
+        [...pagesOf(readThere.events)][0]
+      );
+      for (const event of [...readHere.events, ...readThere.events]) {
+        assert.ok(event.traceId, `an event with no trace: ${event.kind}`);
+        assert.ok(
+          event.navigationId,
+          `an event with no document: ${event.kind}`
+        );
+      }
+
+      const batches = [];
+      for (let index = 0; index <= readHere.checkpoints.length; index++) {
+        batches.push(...(await readHere.mutations(index)));
+      }
+      assert.ok(
+        batches.every(
+          (batch) => batch.frameId && batch.pageId && batch.traceId
+        ),
+        'a batch arrived without an owner'
+      );
+      assert.ok(
+        batches.some((batch) => batch.mainFrame === false),
+        'nothing was recorded inside the iframe'
+      );
+      assert.ok(
+        new Set(batches.map((batch) => batch.frameId)).size >= 2,
+        'the page and its iframe reported the same frame'
+      );
+    });
+
     it('should leave a viewer that opens with no network and replays the run', async () => {
       const trace = await record({ mode: TRACE_MODE.CONTINUOUS });
       await recordAnAppUpdate(trace);
@@ -416,26 +672,55 @@ function describeTraces(engine) {
       page.on('request', onRequest);
       await page.goto(`file://${viewer}`);
 
+      // The viewer opens on the run's base snapshot, and nothing happened
+      // before it by definition (issue #93), so the interval with the app's
+      // changes in it is the one that starts at the checkpoint named here.
+      const selected = await page.evaluate(() => {
+        const entry = [...document.querySelectorAll('#timeline li')].find(
+          (li) => li.querySelector('.what').textContent === 'loaded'
+        );
+        if (!entry) {
+          return false;
+        }
+        entry.click();
+        return true;
+      });
+      assert.ok(selected, 'the timeline has no checkpoint named "loaded"');
+
       const shown = await page.evaluate(() => ({
         events: document.querySelectorAll('#timeline li').length,
         step: document.getElementById('step').textContent,
         details: document.getElementById('details').textContent,
+        replay: document.querySelector('.meta.replay').textContent,
         framed: document.getElementById('stage').getAttribute('srcdoc'),
       }));
       assert.ok(shown.events > 0, 'the timeline is empty');
       assert.match(shown.details, /Traced app/);
       assert.match(shown.step, /[1-9]\d* mutation batches/);
       assert.match(shown.framed, /id="items"/);
+      // The viewer says what it can and cannot reproduce rather than implying
+      // the recording is the whole run (issue #93).
+      assert.match(shown.replay, /partial diagnostic replay/);
+      assert.match(shown.replay, /live control state/);
 
       // Stepping replays the recorded mutations into the captured document.
-      await page.click('#step-forward');
-      await page.click('#step-forward');
-      const replayed = await page.evaluate(() => ({
-        step: document.getElementById('step').textContent,
-        framed: document.getElementById('stage').getAttribute('srcdoc'),
-      }));
-      assert.match(replayed.step, /batch \d+ of \d+/);
-      assert.match(replayed.framed, /id="item-1"|data-state="touched"/);
+      // One step is one batch, and a click reports the focus and the scroll it
+      // caused as well as what it changed in the DOM (issue #93), so the run's
+      // changes are reached by stepping to the end of the interval rather than
+      // by assuming which batch they landed in.
+      const batches = Number(shown.step.match(/^(\d+) mutation batches$/)[1]);
+      assert.ok(batches > 0, `nothing to step through: ${shown.step}`);
+      let replayed = null;
+      for (let step = 0; step < batches; step++) {
+        await page.click('#step-forward');
+        replayed = await page.evaluate(() => ({
+          step: document.getElementById('step').textContent,
+          framed: document.getElementById('stage').getAttribute('srcdoc'),
+        }));
+        assert.match(replayed.step, /batch \d+ of \d+/);
+      }
+      assert.match(replayed.framed, /id="item-1"/);
+      assert.match(replayed.framed, /data-state="touched"/);
       page.off('request', onRequest);
       // Opening a colleague's trace must not call anyone's server.
       assert.deepStrictEqual(

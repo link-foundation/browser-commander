@@ -32,6 +32,10 @@ from browser_commander.downloads.sources import (
     attach_playwright_source,
     open_browser_cdp_session,
 )
+from browser_commander.downloads.staging import (
+    DEFAULT_STAGING_POLL_INTERVAL,
+    DEFAULT_STAGING_TIMEOUT,
+)
 from browser_commander.downloads.store import (
     DownloadConflict,
     DownloadSource,
@@ -119,6 +123,8 @@ class DownloadManager:
         filename: Callable[..., Any] | None = None,
         validate: Callable[..., Any] | None = None,
         log: Any = None,
+        staging_timeout: float = DEFAULT_STAGING_TIMEOUT,
+        staging_poll_interval: float = DEFAULT_STAGING_POLL_INTERVAL,
     ) -> None:
         """Create a manager for an already-prepared directory.
 
@@ -129,6 +135,9 @@ class DownloadManager:
             filename: Naming callback for every download
             validate: Validation for every download
             log: Logger
+            staging_timeout: Seconds a completed download has to become
+                readable on disk before it is reported as failed (issue #92)
+            staging_poll_interval: Seconds between readings of the staged file
         """
         self.directory = directory
         self.persist = persist
@@ -136,6 +145,8 @@ class DownloadManager:
         self._filename = filename
         self._validate = validate
         self._log = log
+        self._staging_timeout = staging_timeout
+        self._staging_poll_interval = staging_poll_interval
 
         self._artifacts: list[DownloadArtifact] = []
         self._listeners: dict[str, list[Callable[..., Any]]] = {}
@@ -569,7 +580,13 @@ class DownloadManager:
                 return
             self._cdp_session = session
             self._sources.append(
-                await attach_cdp_source(session=session, root=self.directory, sink=self)
+                await attach_cdp_source(
+                    session=session,
+                    root=self.directory,
+                    sink=self,
+                    staging_timeout=self._staging_timeout,
+                    staging_poll_interval=self._staging_poll_interval,
+                )
             )
         except Exception as error:  # Reported, never fatal.
             self._cdp_session = None
@@ -624,6 +641,8 @@ async def create_download_manager(
     validate: Callable[..., Any] | None = None,
     log: Any = None,
     poll_interval: float | None = None,
+    staging_timeout: float = DEFAULT_STAGING_TIMEOUT,
+    staging_poll_interval: float = DEFAULT_STAGING_POLL_INTERVAL,
 ) -> DownloadManager:
     """Create the download manager for a browser.
 
@@ -640,6 +659,9 @@ async def create_download_manager(
         log: Logger
         poll_interval: Seconds between directory listings, for engines without
             download events
+        staging_timeout: Seconds a completed download has to become readable on
+            disk before it is reported as failed (issue #92)
+        staging_poll_interval: Seconds between readings of the staged file
 
     Returns:
         A manager already attached to the browser
@@ -655,6 +677,8 @@ async def create_download_manager(
         filename=filename,
         validate=validate,
         log=log,
+        staging_timeout=staging_timeout,
+        staging_poll_interval=staging_poll_interval,
     )
 
     await manager.attach(

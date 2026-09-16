@@ -338,6 +338,137 @@ describe('download manager (issue #88)', () => {
       assert.match(cancelled[0].failure, /canceled/);
     });
 
+    it('should wait for staged bytes that land after the completion event', async () => {
+      // Issue #92: Chromium writes `<guid>.crdownload` and renames it, so the
+      // completion event can arrive before `<guid>` is openable. Publishing on
+      // the event alone turned a download that succeeded into
+      // `ENOENT ... .browser-commander-staging/<guid>`.
+      const session = createFakeCdpSession();
+      manager = await cdpManagerOver(session);
+      const completed = collect(DOWNLOAD_EVENT.COMPLETED);
+      const failed = collect(DOWNLOAD_EVENT.FAILED);
+
+      const guid = 'guid-0010';
+      const stagedPath = path.join(root, STAGING_DIRECTORY, guid);
+      session.emit('Browser.downloadWillBegin', {
+        guid,
+        url: 'https://example.com/late.pdf',
+        suggestedFilename: 'late.pdf',
+      });
+      // The event first, the bytes afterwards - the ordering from the report.
+      session.emit('Browser.downloadProgress', { guid, state: 'completed' });
+      await yieldToEngine();
+      assert.deepStrictEqual(completed, [], 'published before the bytes exist');
+      await fs.writeFile(stagedPath, 'late body');
+
+      await manager.idle();
+
+      assert.deepStrictEqual(failed, []);
+      assert.strictEqual(completed.length, 1);
+      assert.strictEqual(
+        await fs.readFile(completed[0].path, 'utf8'),
+        'late body'
+      );
+      assert.deepStrictEqual(
+        await fs.readdir(path.join(root, STAGING_DIRECTORY)),
+        []
+      );
+    });
+
+    it('should not claim bytes while the partial file is still being written', async () => {
+      const session = createFakeCdpSession();
+      manager = await cdpManagerOver(session);
+      const completed = collect(DOWNLOAD_EVENT.COMPLETED);
+
+      const guid = 'guid-0011';
+      const stagedPath = path.join(root, STAGING_DIRECTORY, guid);
+      session.emit('Browser.downloadWillBegin', {
+        guid,
+        url: 'https://example.com/partial.pdf',
+        suggestedFilename: 'partial.pdf',
+      });
+      // A half-written file under the final name, with Chromium's own
+      // in-progress marker still beside it.
+      await fs.writeFile(stagedPath, 'half');
+      await fs.writeFile(`${stagedPath}.crdownload`, 'rest');
+      session.emit('Browser.downloadProgress', { guid, state: 'completed' });
+      await yieldToEngine();
+      await yieldToEngine();
+      assert.deepStrictEqual(completed, [], 'claimed a half-written file');
+
+      await fs.rm(`${stagedPath}.crdownload`);
+      await fs.writeFile(stagedPath, 'half and rest');
+      await manager.idle();
+
+      assert.strictEqual(completed.length, 1);
+      assert.strictEqual(
+        await fs.readFile(completed[0].path, 'utf8'),
+        'half and rest'
+      );
+    });
+
+    it('should report a completion whose bytes never arrive as a failure', async () => {
+      const session = createFakeCdpSession();
+      manager = await createDownloadManager({
+        engine: 'puppeteer',
+        directory: root,
+        browser: {
+          target: () => ({ createCDPSession: async () => session }),
+        },
+        stagingTimeout: 60,
+        stagingPollInterval: 5,
+      });
+      const failed = collect(DOWNLOAD_EVENT.FAILED);
+      const completed = collect(DOWNLOAD_EVENT.COMPLETED);
+
+      session.emit('Browser.downloadWillBegin', {
+        guid: 'guid-0012',
+        url: 'https://example.com/ghost.pdf',
+        suggestedFilename: 'ghost.pdf',
+      });
+      session.emit('Browser.downloadProgress', {
+        guid: 'guid-0012',
+        state: 'completed',
+      });
+      await manager.idle();
+
+      assert.deepStrictEqual(completed, []);
+      assert.strictEqual(failed.length, 1);
+      assert.match(failed[0].failure, /was not readable within 60ms/);
+      assert.match(failed[0].failure, /guid-0012/);
+    });
+
+    it('should keep a capture waiting until the staged bytes are readable', async () => {
+      const session = createFakeCdpSession();
+      manager = await cdpManagerOver(session);
+
+      const guid = 'guid-0013';
+      const stagedPath = path.join(root, STAGING_DIRECTORY, guid);
+      const artifact = await manager.capture({
+        timeout: 5000,
+        action: async () => {
+          session.emit('Browser.downloadWillBegin', {
+            guid,
+            url: 'https://example.com/captured.pdf',
+            suggestedFilename: 'captured.pdf',
+          });
+          session.emit('Browser.downloadProgress', {
+            guid,
+            state: 'completed',
+          });
+          setTimeout(() => {
+            fs.writeFile(stagedPath, 'captured body').catch(() => {});
+          }, 40);
+        },
+      });
+
+      assert.strictEqual(artifact.state, DOWNLOAD_EVENT.COMPLETED);
+      assert.strictEqual(
+        await fs.readFile(artifact.path, 'utf8'),
+        'captured body'
+      );
+    });
+
     it('should ignore progress for a download it never saw start', async () => {
       const session = createFakeCdpSession();
       manager = await cdpManagerOver(session);

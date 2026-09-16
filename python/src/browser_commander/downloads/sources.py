@@ -13,6 +13,12 @@ from pathlib import Path
 from typing import Any
 
 from browser_commander.downloads.destination import ARTIFACT_DIRECTORY_MODE
+from browser_commander.downloads.staging import (
+    DEFAULT_STAGING_POLL_INTERVAL,
+    DEFAULT_STAGING_TIMEOUT,
+    describe_staging_timeout,
+    wait_for_staged_file,
+)
 from browser_commander.downloads.store import DownloadSource
 
 
@@ -119,7 +125,14 @@ def attach_playwright_source(*, context: Any, sink: Any) -> SourceHandle:
     return SourceHandle(detach=detach)
 
 
-async def attach_cdp_source(*, session: Any, root: str, sink: Any) -> SourceHandle:
+async def attach_cdp_source(
+    *,
+    session: Any,
+    root: str,
+    sink: Any,
+    staging_timeout: float = DEFAULT_STAGING_TIMEOUT,
+    staging_poll_interval: float = DEFAULT_STAGING_POLL_INTERVAL,
+) -> SourceHandle:
     """Point Chromium at a staging directory and report every download it starts.
 
     This is the only source that sees a download a *person* started, because
@@ -129,6 +142,9 @@ async def attach_cdp_source(*, session: Any, root: str, sink: Any) -> SourceHand
         session: CDP session with Browser domain access
         root: Managed download directory
         sink: Object with ``started``/``finished``/``failed``/``track``
+        staging_timeout: Seconds a completed download has to become readable
+            on disk before it is reported as failed (issue #92)
+        staging_poll_interval: Seconds between readings of the staged file
 
     Returns:
         A handle that can detach the listeners
@@ -159,6 +175,41 @@ async def attach_cdp_source(*, session: Any, root: str, sink: Any) -> SourceHand
             suggested_filename=event.get("suggestedFilename"),
         )
 
+    async def publish_when_staged(record: Any, staged_path: str) -> None:
+        """Publish a completed download once its staged bytes are readable.
+
+        ``state: "completed"`` is the browser's word, not the filesystem's.
+        Chromium writes ``<guid>.crdownload`` and renames it, so opening
+        ``<guid>`` the instant the event arrives could - and did, in issue #92 -
+        fail with ``FileNotFoundError`` on a download that had in fact
+        succeeded. Waiting for the file turns that race into either a saved
+        artifact or a named failure, never a lost one.
+
+        Args:
+            record: Artifact record
+            staged_path: Path Chromium staged the bytes under
+        """
+        settled = await wait_for_staged_file(
+            path=staged_path,
+            timeout=staging_timeout,
+            interval=staging_poll_interval,
+        )
+        if not settled.ready:
+            sink.failed(
+                record,
+                DownloadFailure.FAILED,
+                describe_staging_timeout(
+                    path=staged_path,
+                    timeout=staging_timeout,
+                    reason=settled.reason or "",
+                ),
+            )
+            return
+
+        await sink.finished(
+            record, DownloadSource(path=staged_path, remove_source=True)
+        )
+
     def on_progress(event: dict[str, Any]) -> None:
         record = by_guid.get(event["guid"])
         state = event.get("state")
@@ -167,14 +218,11 @@ async def attach_cdp_source(*, session: Any, root: str, sink: Any) -> SourceHand
 
         del by_guid[event["guid"]]
         if state == "completed":
+            # Tracked before it is awaited: the wait is part of the download's
+            # lifecycle, so ``idle()`` and ``dispose()`` must not return while
+            # it runs.
             sink.track(
-                sink.finished(
-                    record,
-                    DownloadSource(
-                        path=str(Path(staging_directory, event["guid"])),
-                        remove_source=True,
-                    ),
-                )
+                publish_when_staged(record, str(Path(staging_directory, event["guid"])))
             )
             return
         sink.failed(

@@ -657,8 +657,56 @@ await writeTraceViewer(bundle, '/tmp/traces/checkout/viewer.html');
 ```
 
 Redaction runs before anything reaches disk, and a run cut short by a closed
-page or a size limit still leaves a readable partial trace. The viewer seeks,
-diffs and replays the captured DOM with scripts and network disabled.
+page or a size limit still leaves a readable partial trace. In `continuous`
+mode the observers are reinstalled from an init script before the page's own
+code runs, so a trace keeps recording across navigations, SPA route changes and
+same-document updates, and it records what a person cannot see in the DOM -
+typing, checking, selecting, focus and scroll - as semantic live-state records
+(issue #93). `initialCheckpoint` (on by default) captures the page as it was
+before the first action, so the first interval has a base to replay onto. The
+viewer seeks, diffs and replays the captured DOM with scripts and network
+disabled; it is a diagnostic replay of what was recorded, not a pixel-accurate
+re-execution of the session.
+
+#### Links Notation Export
+
+The bundle stays authoritative, and `writeTraceLinks()` writes a second,
+portable view of it for tools that keep semantic, actor-aware histories - audit
+graphs, agent memory, cross-run diffing (issue #94):
+
+```javascript
+import { readTrace, writeTraceLinks } from 'browser-commander';
+
+const trace = await readTrace('./run.bc-trace');
+await writeTraceLinks(trace, './run.lino', {
+  include: ['timeline', 'checkpoints', 'control-diffs'],
+});
+```
+
+A long-lived agent can have the same export written as the run happens, so a
+process that is killed still leaves everything it had recorded:
+
+```javascript
+const trace = await commander.startTrace({
+  output: './run.bc-trace',
+  links: { output: './run.lino' },
+});
+// trace.links === './run.lino'
+```
+
+One link per line: one `(timeline: ...)` link per ordered event carrying its
+sequence, time, kind, owner ids, actor, action, target and outcome; one
+`(checkpoint: ...)` link naming its HTML, state and screenshot members by their
+path inside the bundle; one `(control-diff: ...)` link per control that changed
+between two checkpoints, with `path`, `before`, `after` and who changed it.
+Dropped and partial records are written as such rather than left out, no binary
+content is ever copied into the export, and redaction is whatever the bundle
+already decided - the export only reads what was written there. The
+representation is pinned by a golden test against
+[`links-notation`](https://www.npmjs.com/package/links-notation) 0.20, whose
+Python and Rust implementations read the same file;
+`experiments/trace-links-export.mjs` records a real run and parses its export
+from Python to prove it.
 
 ### Truthful Click Results
 

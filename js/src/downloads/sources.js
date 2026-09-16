@@ -11,6 +11,12 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 
 import { ARTIFACT_DIRECTORY_MODE } from './destination.js';
+import {
+  DEFAULT_STAGING_POLL_INTERVAL,
+  DEFAULT_STAGING_TIMEOUT,
+  describeStagingTimeout,
+  waitForStagedFile,
+} from './staging.js';
 
 /** Why a download ended without a file. */
 export const DOWNLOAD_FAILURE = Object.freeze({
@@ -85,10 +91,18 @@ export function attachPlaywrightSource({ context, sink }) {
  * @param {Object} options - Source options
  * @param {Object} options.session - CDP session with Browser domain access
  * @param {string} options.root - Managed download directory
- * @param {Object} options.sink - `{started, finished, failed}` callbacks
+ * @param {Object} options.sink - `{started, finished, failed, track}` callbacks
+ * @param {number} [options.stagingTimeout] - Budget for the bytes to land on disk
+ * @param {number} [options.stagingPollInterval] - Milliseconds between readings
  * @returns {Promise<Object>} Handle with `detach()` and `stagingDirectory`
  */
-export async function attachCdpSource({ session, root, sink }) {
+export async function attachCdpSource({
+  session,
+  root,
+  sink,
+  stagingTimeout,
+  stagingPollInterval,
+}) {
   const stagingDirectory = path.join(root, STAGING_DIRECTORY);
   await fs.mkdir(stagingDirectory, {
     recursive: true,
@@ -117,6 +131,43 @@ export async function attachCdpSource({ session, root, sink }) {
     );
   };
 
+  /**
+   * Publish a completed download once its staged bytes are readable.
+   *
+   * `state: "completed"` is the browser's word, not the filesystem's. Chromium
+   * writes `<guid>.crdownload` and renames it, so opening `<guid>` the instant
+   * the event arrives could - and did, in issue #92 - fail with `ENOENT` on a
+   * download that had in fact succeeded. Waiting for the file turns that race
+   * into either a saved artifact or a named failure, never a lost one.
+   *
+   * @param {Object} record - Artifact record
+   * @param {string} stagedPath - Path Chromium staged the bytes under
+   * @returns {Promise<void>}
+   */
+  const publishWhenStaged = async (record, stagedPath) => {
+    const budget = stagingTimeout ?? DEFAULT_STAGING_TIMEOUT;
+    const settled = await waitForStagedFile({
+      path: stagedPath,
+      timeout: budget,
+      interval: stagingPollInterval ?? DEFAULT_STAGING_POLL_INTERVAL,
+    });
+
+    if (!settled.ready) {
+      sink.failed(
+        record,
+        DOWNLOAD_FAILURE.FAILED,
+        describeStagingTimeout({
+          path: stagedPath,
+          timeout: budget,
+          reason: settled.reason,
+        })
+      );
+      return;
+    }
+
+    await sink.finished(record, { path: stagedPath, removeSource: true });
+  };
+
   const onProgress = ({ guid, state }) => {
     const record = byGuid.get(guid);
     if (!record || state === 'inProgress') {
@@ -125,10 +176,9 @@ export async function attachCdpSource({ session, root, sink }) {
 
     byGuid.delete(guid);
     if (state === 'completed') {
-      sink.finished(record, {
-        path: path.join(stagingDirectory, guid),
-        removeSource: true,
-      });
+      // Tracked before it is awaited: the wait is part of the download's
+      // lifecycle, so `idle()` and `dispose()` must not return while it runs.
+      sink.track(publishWhenStaged(record, path.join(stagingDirectory, guid)));
       return;
     }
     sink.failed(

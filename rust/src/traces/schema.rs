@@ -12,7 +12,14 @@ use serde_json::{Map, Value};
 ///
 /// Readers refuse a major version they were not written for rather than
 /// guessing at the meaning of unknown records.
-pub const TRACE_SCHEMA_VERSION: u64 = 1;
+///
+/// Version 2 (issue #93) is what makes continuous replay complete: mutation
+/// batches name the frame they came from, child-list records carry the
+/// position a node was inserted at or removed from, and live control state -
+/// typing, checking, selecting, focus and scroll - is recorded as it happens
+/// instead of only at checkpoints. A version 1 reader given a version 2 bundle
+/// would quietly replay a different page, so it refuses instead.
+pub const TRACE_SCHEMA_VERSION: u64 = 2;
 
 /// Value of `manifest.json`'s `format` field, for every version.
 pub const TRACE_FORMAT: &str = "browser-commander-trace";
@@ -90,6 +97,52 @@ impl TraceEvent {
     pub const DROPPED: &'static str = "dropped";
 }
 
+/// Record kinds inside a mutation batch.
+pub struct TraceMutationKind;
+
+impl TraceMutationKind {
+    /// An attribute was set, changed or removed.
+    pub const ATTRIBUTES: &'static str = "attributes";
+    /// Text inside a node changed.
+    pub const CHARACTER_DATA: &'static str = "characterData";
+    /// Children were added, moved or removed.
+    pub const CHILD_LIST: &'static str = "childList";
+    /// A change to what an element holds rather than to the document.
+    ///
+    /// Typing into an input, checking a box, choosing an option, moving focus
+    /// and scrolling all change what the user sees and none of them mutate the
+    /// DOM, so no observer reports them and replay skipped them (issue #93).
+    pub const LIVE_STATE: &'static str = "live-state";
+}
+
+/// What a `live-state` record changed.
+pub struct TraceLiveState;
+
+impl TraceLiveState {
+    /// What an input, textarea or editable element holds.
+    pub const VALUE: &'static str = "value";
+    /// Whether a checkbox or radio is ticked.
+    pub const CHECKED: &'static str = "checked";
+    /// Which options of a select are chosen.
+    pub const SELECTED: &'static str = "selected";
+    /// Which element has focus.
+    pub const FOCUS: &'static str = "focus";
+    /// How far an element or the document is scrolled.
+    pub const SCROLL: &'static str = "scroll";
+}
+
+/// Why a checkpoint was taken.
+pub struct TraceCheckpointReason;
+
+impl TraceCheckpointReason {
+    /// The base snapshot every later record is a change against.
+    pub const INITIAL: &'static str = "initial";
+    /// A caller named this moment.
+    pub const CHECKPOINT: &'static str = "checkpoint";
+    /// The run failed here.
+    pub const FAILURE: &'static str = "failure";
+}
+
 /// Why a record was dropped.
 pub struct TraceDropReason;
 
@@ -131,6 +184,44 @@ pub struct TraceCounts {
     /// DOM mutation batches written.
     #[serde(default)]
     pub mutation_batches: u64,
+}
+
+/// What a bundle's records let a viewer reproduce.
+///
+/// Issue #93 asked for the viewer to stop claiming more than it can do. Saying
+/// it in the manifest is better than saying it in the viewer's markup: a bundle
+/// recorded by an older version is honestly described by its own manifest, and
+/// any of the three readers can tell a caller what they are looking at.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TraceReplaySupport {
+    /// Checkpoints are snapshots, always replayable.
+    #[serde(default)]
+    pub checkpoints: bool,
+    /// DOM mutations are recorded between checkpoints.
+    #[serde(default)]
+    pub mutations: bool,
+    /// Child-list records say where a node went, so removals and moves replay.
+    #[serde(default)]
+    pub child_list_positions: bool,
+    /// Typing, checking, selecting, focus and scroll are recorded live.
+    #[serde(default)]
+    pub live_state: bool,
+    /// Every record names the context, page, navigation and frame it is from.
+    #[serde(default)]
+    pub identifiers: bool,
+}
+
+impl Default for TraceReplaySupport {
+    fn default() -> Self {
+        Self {
+            checkpoints: true,
+            mutations: false,
+            child_list_positions: false,
+            live_state: false,
+            identifiers: false,
+        }
+    }
 }
 
 /// What a bundle says about the run that produced it.
@@ -179,6 +270,9 @@ pub struct TraceManifest {
     /// DOM capture settings the recorder applied.
     #[serde(default)]
     pub dom: Map<String, Value>,
+    /// What the bundle's records let a viewer reproduce.
+    #[serde(default)]
+    pub replay: TraceReplaySupport,
     /// Redaction settings the recorder applied.
     #[serde(default)]
     pub privacy: Map<String, Value>,
@@ -220,6 +314,7 @@ impl Default for TraceManifest {
             runtime: Some(format!("rust {}", env!("CARGO_PKG_VERSION"))),
             events: Vec::new(),
             dom: Map::new(),
+            replay: TraceReplaySupport::default(),
             privacy: Map::new(),
             limits: Map::new(),
             counts: TraceCounts::default(),

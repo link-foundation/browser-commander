@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { setImmediate as yieldToEngine } from 'node:timers/promises';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -381,7 +382,7 @@ describe('trace recorder (issue #87)', () => {
         url: () => 'https://example.com/next',
         parentFrame: () => null,
       });
-      await new Promise((resolve) => setImmediate(resolve));
+      await yieldToEngine();
 
       const after = await trace.checkpoint('after');
       const stopped = await trace.stop();

@@ -1,10 +1,11 @@
 /**
- * Can Python open what JavaScript wrote? (issue #87)
+ * Can Python and Rust open what JavaScript wrote? (issue #87)
  *
- * The unit tests on either side write their own fixtures, so both could agree
- * with themselves and disagree with each other. This records a real run with
- * a real browser and then hands the bundle to the Python reader, which prints
- * what it found. The two printouts have to say the same thing.
+ * The unit tests in each language write their own fixtures, so all three
+ * could agree with themselves and disagree with each other. This records a
+ * real run with a real browser and then hands the bundle to the Python and
+ * Rust readers, which print what they found. The three printouts have to say
+ * the same thing.
  *
  * Run with: node experiments/trace-cross-language-read.mjs [playwright|puppeteer]
  */
@@ -57,19 +58,20 @@ print(json.dumps({
 `;
 
 /**
- * Read the bundle with the Python reader.
+ * Run a reader written in another language and let it print its own view.
  *
- * @param {string} bundle - Path to the trace bundle
- * @returns {Promise<void>} Resolves when Python has printed its view
+ * @param {string} what - Name of the language, for the error message
+ * @param {string} command - Program to run
+ * @param {string[]} args - Arguments for the program
+ * @param {Object} [options] - Extra options for `spawn`
+ * @returns {Promise<void>} Resolves when the reader has printed its view
  */
-const readWithPython = (bundle) =>
+const readWith = (what, command, args, options = {}) =>
   new Promise((resolve, reject) => {
-    const python = spawn('python3', ['-c', PYTHON_READER, bundle], {
-      stdio: 'inherit',
-    });
-    python.on('error', reject);
-    python.on('exit', (code) =>
-      code === 0 ? resolve() : reject(new Error(`python3 exited ${code}`))
+    const child = spawn(command, args, { stdio: 'inherit', ...options });
+    child.on('error', reject);
+    child.on('exit', (code) =>
+      code === 0 ? resolve() : reject(new Error(`${what} exited ${code}`))
     );
   });
 
@@ -121,7 +123,15 @@ try {
   );
 
   console.log('\nPython reader:');
-  await readWithPython(stopped.path);
+  await readWith('python3', 'python3', ['-c', PYTHON_READER, stopped.path]);
+
+  console.log('\nRust reader:');
+  await readWith(
+    'cargo',
+    'cargo',
+    ['run', '--quiet', '--example', 'read_trace', '--', stopped.path],
+    { cwd: path.join(REPOSITORY_ROOT, 'rust') }
+  );
 } finally {
   await commander.destroy();
   await cleanup();

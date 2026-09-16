@@ -40,6 +40,7 @@
 //! - [`browser`] - Browser management (launcher, navigation)
 //! - [`fingerprint`] - Fingerprint parity with a hand-started browser (profiles,
 //!   presets, automation parity)
+//! - [`traces`] - Reading privacy-aware portable trace bundles
 //! - [`utilities`] - General utilities (URL handling, wait operations)
 //! - [`high_level`] - High-level DRY utilities
 
@@ -49,6 +50,7 @@ pub mod elements;
 pub mod fingerprint;
 pub mod high_level;
 pub mod interactions;
+pub mod traces;
 pub mod utilities;
 
 // Re-export commonly used items at crate root
@@ -81,6 +83,14 @@ pub use fingerprint::{
     DEFAULT_CHROME_VERSION, FINGERPRINT_FIELD_MECHANISMS, FINGERPRINT_LIMITATIONS,
     FINGERPRINT_LIMITATIONS_SOURCE, FINGERPRINT_PAYLOAD_SOURCE, FINGERPRINT_PRESET_NAMES,
     PLAYWRIGHT_HEADLESS_POINTER_ARG, PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
+};
+
+// Reading trace bundles needs no engine, so the reader is available at the
+// crate root like any other pure helper.
+pub use traces::{
+    diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, ParsedNdjson,
+    Trace, TraceCheckpoint, TraceError, TraceEvent, TraceFiles, TraceManifest, TraceMode,
+    TraceOutcome, TRACE_EVENT_SOURCES, TRACE_FORMAT, TRACE_SCHEMA_VERSION,
 };
 
 /// Prelude module for convenient imports.
@@ -133,6 +143,11 @@ pub mod prelude {
         ClickActionability, ClickActivation, ClickDispatchError, ClickEffect, ClickOptions,
         ClickResult, ClickScroll, ClickStatus, Evidence, FillOptions, FillResult, ScrollBehavior,
         ScrollOptions, ScrollResult,
+    };
+    pub use crate::traces::{
+        diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, Trace,
+        TraceCheckpoint, TraceError, TraceEvent, TraceFiles, TraceManifest, TraceMode,
+        TraceOutcome, TRACE_SCHEMA_VERSION,
     };
     pub use crate::utilities::{
         evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin, unfocus_address_bar,

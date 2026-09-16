@@ -80,6 +80,24 @@ describe('readiness', () => {
       assert.strictEqual(deadline.remainingMs(), 0);
     });
 
+    it('should call itself expired as soon as nothing is left', () => {
+      // A check stops polling when `remainingMs()` reaches zero, so a deadline
+      // that still called itself live at that moment made the result blame the
+      // check ('failed') for what was really the budget running out. The two
+      // answers have to agree at every sub-millisecond point around the edge.
+      for (const spent of [19.5, 19.6, 19.99, 20, 20.4]) {
+        const clock = createFakeClock();
+        const deadline = createDeadline({ timeout: 20, now: clock.now });
+        clock.advance(spent);
+
+        assert.strictEqual(
+          deadline.expired(),
+          deadline.remainingMs() === 0,
+          `expired() disagreed with remainingMs() after ${spent}ms`
+        );
+      }
+    });
+
     it('should ignore a clock that jumps backwards', () => {
       let value = 1000;
       const deadline = createDeadline({ timeout: 1000, now: () => value });

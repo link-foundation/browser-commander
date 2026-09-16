@@ -65,13 +65,18 @@ export function createDeadline(options = {}) {
 
   const startedAt = now();
   const elapsed = () => Math.max(0, now() - startedAt);
+  // `expired` is derived from `remainingMs` rather than measured separately:
+  // rounding otherwise lets a caller read a remaining budget of zero while the
+  // deadline still calls itself live, and a check that stopped because its
+  // budget was gone would then be reported as failed instead of timed out.
+  const remainingMs = () => Math.max(0, Math.round(timeout - elapsed()));
 
   return {
     startedAt,
     timeoutMs: timeout,
     elapsedMs: () => Math.round(elapsed()),
-    remainingMs: () => Math.max(0, Math.round(timeout - elapsed())),
-    expired: () => elapsed() >= timeout,
+    remainingMs,
+    expired: () => remainingMs() === 0,
   };
 }
 

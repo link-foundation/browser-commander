@@ -164,8 +164,15 @@ mod tests {
 
     #[test]
     fn keeps_an_absolute_path_the_caller_chose() {
-        let resolved = resolve_download_directory(Some("/tmp/bc-explicit")).unwrap();
-        assert_eq!(resolved, PathBuf::from("/tmp/bc-explicit"));
+        // Built from the temporary directory rather than written as a literal:
+        // `/tmp/bc-explicit` has no drive, and a path with no drive is not
+        // absolute on Windows, so the literal would be testing the rejection
+        // below instead of this.
+        let chosen = std::env::temp_dir().join("bc-explicit");
+
+        let resolved = resolve_download_directory(Some(chosen.to_str().unwrap())).unwrap();
+
+        assert_eq!(resolved, chosen);
     }
 
     #[test]

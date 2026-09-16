@@ -420,17 +420,23 @@ mod tests {
 
     #[test]
     fn refuses_to_resolve_a_name_that_escapes_the_root() {
-        let root = Path::new("/tmp/bc-downloads");
+        // A real absolute root: `resolve_inside_root` anchors a relative root
+        // to the working directory, and `/tmp/bc-downloads` is relative on
+        // Windows, where a path with no drive letter is not absolute.
+        let root = std::env::temp_dir().join("bc-downloads");
+        let root = root.as_path();
+
         assert_eq!(
             resolve_inside_root(root, "a.pdf").unwrap(),
-            PathBuf::from("/tmp/bc-downloads/a.pdf")
+            root.join("a.pdf")
         );
 
         let error = resolve_inside_root(root, "../escaped.pdf").unwrap_err();
         assert!(
-            error
-                .to_string()
-                .contains("outside the download directory /tmp/bc-downloads"),
+            error.to_string().contains(&format!(
+                "outside the download directory {}",
+                root.display()
+            )),
             "unexpected message: {error}"
         );
     }

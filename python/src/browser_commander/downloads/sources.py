@@ -8,6 +8,8 @@ download a human started by hand is reported exactly like an automated one.
 
 from __future__ import annotations
 
+import contextlib
+import inspect
 import re
 from pathlib import Path
 from typing import Any
@@ -130,6 +132,7 @@ async def attach_cdp_source(
     session: Any,
     root: str,
     sink: Any,
+    browser_context_id: str | None = None,
     staging_timeout: float = DEFAULT_STAGING_TIMEOUT,
     staging_poll_interval: float = DEFAULT_STAGING_POLL_INTERVAL,
 ) -> SourceHandle:
@@ -142,6 +145,7 @@ async def attach_cdp_source(
         session: CDP session with Browser domain access
         root: Managed download directory
         sink: Object with ``started``/``finished``/``failed``/``track``
+        browser_context_id: Chromium context whose download path is configured
         staging_timeout: Seconds a completed download has to become readable
             on disk before it is reported as failed (issue #92)
         staging_poll_interval: Seconds between readings of the staged file
@@ -157,14 +161,14 @@ async def attach_cdp_source(
     # ``allowAndName`` writes each file under its GUID, so two downloads that
     # suggest the same name cannot overwrite each other before we have placed
     # them, and the GUID is the identity we deduplicate on.
-    await session.send(
-        "Browser.setDownloadBehavior",
-        {
-            "behavior": "allowAndName",
-            "downloadPath": staging_directory,
-            "eventsEnabled": True,
-        },
-    )
+    behavior = {
+        "behavior": "allowAndName",
+        "downloadPath": staging_directory,
+        "eventsEnabled": True,
+    }
+    if browser_context_id:
+        behavior["browserContextId"] = browser_context_id
+    await session.send("Browser.setDownloadBehavior", behavior)
 
     by_guid: dict[str, Any] = {}
 
@@ -241,6 +245,75 @@ async def attach_cdp_source(
             remove("Browser.downloadProgress", on_progress)
 
     return SourceHandle(detach=detach, staging_directory=staging_directory)
+
+
+async def browser_context_id_for_page(
+    *,
+    engine: str,
+    browser: Any = None,
+    page: Any = None,
+    browser_session: Any = None,
+) -> str | None:
+    """Read the Chromium browser-context id that owns a page.
+
+    ``Browser.setDownloadBehavior`` is sent over a browser-wide session so its
+    events cover the whole browser, but omitting ``browserContextId`` configures
+    only Chromium's default context. Playwright's ``browser.new_page()``
+    convenience API creates a non-default context, whose id is exposed by its
+    target.
+
+    Args:
+        engine: Engine name
+        browser: Browser or persistent context
+        page: Page whose context downloads belong to
+        browser_session: Browser-wide CDP session
+
+    Returns:
+        Chromium context id, when the page belongs to a non-default context
+    """
+    if engine != "playwright" or page is None:
+        return None
+
+    context = getattr(page, "context", None) or browser
+    # Playwright exposes a persistent context as the browser's default context:
+    # unlike ``browser.new_context()``, its ``browser`` property is ``None``.
+    # Keeping the id absent preserves default-context behavior, including
+    # downloads from tabs opened outside the automation.
+    if hasattr(context, "browser") and context.browser is None:
+        return None
+    open_page_session = getattr(context, "new_cdp_session", None)
+    if open_page_session is None:
+        return None
+
+    page_session = await open_page_session(page)
+    try:
+        response = await page_session.send("Target.getTargetInfo")
+        target_info = response.get("targetInfo", {}) if response else {}
+        browser_context_id = target_info.get("browserContextId") or None
+    finally:
+        # This session exists only for target metadata. A failure to detach it
+        # must not discard the id that lets the long-lived source work correctly.
+        detach = getattr(page_session, "detach", None)
+        if detach:
+            with contextlib.suppress(Exception):
+                result = detach()
+                if inspect.isawaitable(result):
+                    await result
+
+    if browser_context_id is None or browser_session is None:
+        return browser_context_id
+
+    try:
+        # TargetInfo also reports an opaque id for a persistent/default context
+        # in current Chromium. Only ids returned here are true non-default
+        # contexts accepted by Browser.setDownloadBehavior's context parameter.
+        response = await browser_session.send("Target.getBrowserContexts")
+        browser_context_ids = response.get("browserContextIds", [])
+        return browser_context_id if browser_context_id in browser_context_ids else None
+    except Exception:
+        # Older/page-scoped CDP bridges may not expose getBrowserContexts. The
+        # persistent-context guard above handles their known default-context case.
+        return browser_context_id
 
 
 async def open_browser_cdp_session(

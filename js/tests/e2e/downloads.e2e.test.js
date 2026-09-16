@@ -17,8 +17,12 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { openBrowserCdpSession } from '../../src/downloads/sources.js';
-import { launchE2EBrowser } from '../helpers/e2e-browser.js';
+import {
+  browserContextIdForPage,
+  openBrowserCdpSession,
+} from '../../src/downloads/sources.js';
+import { makeBrowserCommander } from '../../src/factory.js';
+import { launchE2EBrowser, SANDBOX_ARGS } from '../helpers/e2e-browser.js';
 import {
   BLOB_PDF_BODY,
   PDF_BODY,
@@ -202,9 +206,16 @@ function describeDownloads(engine) {
       // than through the engine's download API. Issue #88 asks for "one
       // lifecycle for automated *and* manual downloads".
       const session = await openBrowserCdpSession({ engine, browser, page });
+      const browserContextId = await browserContextIdForPage({
+        engine,
+        browser,
+        page,
+        browserSession: session,
+      });
       const captured = downloads.capture({ timeout: 20000 });
       await session.send('Target.createTarget', {
         url: `${server.baseUrl}/file/manual.pdf`,
+        ...(browserContextId ? { browserContextId } : {}),
       });
 
       const artifact = await captured;
@@ -231,5 +242,71 @@ describe(
     for (const engine of ENGINES) {
       describeDownloads(engine);
     }
+
+    it('should persist a Blob from browser.newPage() (issue #97)', async () => {
+      const { chromium } = await import('playwright');
+      const directory = await fs.mkdtemp(
+        path.join(os.tmpdir(), 'bc-e2e-context-downloads-')
+      );
+      const browser = await chromium.launch({
+        headless: true,
+        args: SANDBOX_ARGS,
+      });
+      const page = await browser.newPage();
+      const commander = makeBrowserCommander({
+        page,
+        enableNetworkTracking: false,
+        enableNavigationManager: false,
+        enableDialogManager: false,
+      });
+
+      try {
+        const downloads = await commander.configureDownloads({
+          directory,
+          persist: true,
+        });
+        const completed = [];
+        downloads.on('completed', (artifact) => completed.push(artifact));
+        await page.setContent(`
+          <button id="download">Download</button>
+          <script>
+            document.querySelector('#download').addEventListener('click', () => {
+              const blob = new Blob([${JSON.stringify(BLOB_PDF_BODY)}], {
+                type: 'application/pdf',
+              });
+              const anchor = document.createElement('a');
+              anchor.href = URL.createObjectURL(blob);
+              anchor.download = 'declaration.pdf';
+              anchor.click();
+            });
+          </script>
+        `);
+
+        const artifact = await downloads.capture({
+          action: page.click.bind(page, '#download'),
+        });
+
+        assert.strictEqual(artifact.state, 'completed');
+        assert.strictEqual(path.basename(artifact.path), 'declaration.pdf');
+        assert.strictEqual(
+          await fs.readFile(artifact.path, 'utf8'),
+          BLOB_PDF_BODY
+        );
+        assert.strictEqual(completed.length, 1);
+        const staged = await fs.readdir(
+          path.join(directory, '.browser-commander-staging')
+        );
+        assert.deepStrictEqual(staged, []);
+        assert.ok(
+          !(await fs.readdir(directory)).some((entry) =>
+            entry.endsWith('.partial')
+          )
+        );
+      } finally {
+        await commander.destroy();
+        await browser.close();
+        await fs.rm(directory, { recursive: true, force: true });
+      }
+    });
   }
 );

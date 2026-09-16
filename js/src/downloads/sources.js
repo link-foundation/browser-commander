@@ -92,6 +92,7 @@ export function attachPlaywrightSource({ context, sink }) {
  * @param {Object} options.session - CDP session with Browser domain access
  * @param {string} options.root - Managed download directory
  * @param {Object} options.sink - `{started, finished, failed, track}` callbacks
+ * @param {string} [options.browserContextId] - Chromium context to configure
  * @param {number} [options.stagingTimeout] - Budget for the bytes to land on disk
  * @param {number} [options.stagingPollInterval] - Milliseconds between readings
  * @returns {Promise<Object>} Handle with `detach()` and `stagingDirectory`
@@ -100,6 +101,7 @@ export async function attachCdpSource({
   session,
   root,
   sink,
+  browserContextId,
   stagingTimeout,
   stagingPollInterval,
 }) {
@@ -116,6 +118,7 @@ export async function attachCdpSource({
     behavior: 'allowAndName',
     downloadPath: stagingDirectory,
     eventsEnabled: true,
+    ...(browserContextId ? { browserContextId } : {}),
   });
 
   const byGuid = new Map();
@@ -198,6 +201,74 @@ export async function attachCdpSource({
       session.off?.('Browser.downloadProgress', onProgress);
     },
   };
+}
+
+/**
+ * Read the Chromium browser-context id that owns a page.
+ *
+ * `Browser.setDownloadBehavior` is sent over a browser-wide session so its
+ * events cover the whole browser, but omitting `browserContextId` configures
+ * only Chromium's default context. Playwright's `browser.newPage()` convenience
+ * API creates a non-default context, whose id is exposed by its target.
+ *
+ * @param {Object} options - Browser handles
+ * @param {string} options.engine - Engine name
+ * @param {Object} [options.browser] - Browser or persistent context
+ * @param {Object} [options.page] - Page whose context downloads belong to
+ * @param {Object} [options.browserSession] - Browser-wide CDP session
+ * @returns {Promise<string|undefined>} Chromium context id, when non-default
+ */
+export async function browserContextIdForPage({
+  engine,
+  browser,
+  page,
+  browserSession,
+}) {
+  if (engine !== 'playwright' || !page) {
+    return undefined;
+  }
+
+  const context = page.context?.() ?? browser;
+  // Playwright exposes a persistent context as the browser's default context:
+  // unlike browser.newContext(), its `browser()` is null. Keeping the id
+  // absent preserves default-context behavior, including downloads from tabs
+  // opened outside the automation.
+  if (typeof context?.browser === 'function' && !context.browser()) {
+    return undefined;
+  }
+  const pageSession = await context?.newCDPSession?.(page);
+  if (!pageSession) {
+    return undefined;
+  }
+
+  let browserContextId;
+  try {
+    const { targetInfo } = await pageSession.send('Target.getTargetInfo');
+    browserContextId = targetInfo?.browserContextId || undefined;
+  } finally {
+    // This session exists only for target metadata. A failure to detach it
+    // must not discard the id that lets the long-lived source work correctly.
+    await pageSession.detach?.().catch?.(() => {});
+  }
+  if (!browserContextId || !browserSession) {
+    return browserContextId;
+  }
+
+  try {
+    // TargetInfo also reports an opaque id for a persistent/default context in
+    // current Chromium. Only ids returned here are true non-default contexts
+    // accepted by Browser.setDownloadBehavior's browserContextId parameter.
+    const { browserContextIds = [] } = await browserSession.send(
+      'Target.getBrowserContexts'
+    );
+    return browserContextIds.includes(browserContextId)
+      ? browserContextId
+      : undefined;
+  } catch {
+    // Older/page-scoped CDP bridges may not expose getBrowserContexts. The
+    // persistent-context guard above handles their known default-context case.
+    return browserContextId;
+  }
 }
 
 /**

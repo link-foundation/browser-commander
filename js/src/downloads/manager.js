@@ -22,6 +22,7 @@ import {
 import {
   attachCdpSource,
   attachPlaywrightSource,
+  browserContextIdForPage,
   classifyFailure,
   DOWNLOAD_FAILURE,
   openBrowserCdpSession,
@@ -308,17 +309,25 @@ export async function createDownloadManager(options = {}) {
   try {
     cdpSession = await openBrowserCdpSession({ engine, browser, page });
     if (cdpSession) {
+      const browserContextId = await browserContextIdForPage({
+        engine,
+        browser,
+        page,
+        browserSession: cdpSession,
+      });
       attached.push(
         await attachCdpSource({
           session: cdpSession,
           root,
           sink,
+          browserContextId,
           stagingTimeout,
           stagingPollInterval,
         })
       );
     }
   } catch (error) {
+    await cdpSession?.detach?.().catch?.(() => {});
     cdpSession = undefined;
     log?.warn?.(`manual downloads are not observable: ${error.message}`);
   }

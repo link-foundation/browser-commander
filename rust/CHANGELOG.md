@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- changelog-insert-here -->
+## [0.12.0] - 2026-09-16
+
+### Added
+
+- The `traces` module reads trace schema version 2: the mutation kinds a continuous recording writes, including the semantic live-state records for typing, checking, selecting, focus and scroll, the checkpoint reasons, and the replay-support flags a bundle declares. A bundle recorded by an older JavaScript run still reads, and one recorded by a newer schema is still refused rather than guessed at.
+
 ## [0.11.0] - 2026-09-16
 
 ### Added

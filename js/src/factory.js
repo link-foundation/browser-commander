@@ -21,6 +21,7 @@ import {
 } from './core/page-trigger-manager.js';
 import { createBoundFunctions } from './bindings.js';
 import { attachDownloads } from './downloads/attach.js';
+import { startTrace } from './traces/recorder.js';
 
 /**
  * Create a browser commander instance for a specific page
@@ -175,6 +176,15 @@ export function makeBrowserCommander(options = {}) {
       });
       return commander.downloads;
     },
+
+    /**
+     * Start recording a privacy-aware trace of this session (issue #87).
+     *
+     * @param {Object} [traceOptions] - {output, mode, screenshots, dom, events, privacy, limits}
+     * @returns {Promise<Object>} The running trace: {checkpoint, event, stop}
+     */
+    startTrace: (traceOptions = {}) =>
+      startTrace({ commander, page, log, ...traceOptions }),
 
     // Lifecycle
     destroy,

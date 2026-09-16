@@ -6,12 +6,14 @@
  * a browser.
  */
 
-import { afterEach, beforeEach } from 'node:test';
 import { EventEmitter } from 'node:events';
 import { setImmediate as yieldToEngine } from 'node:timers/promises';
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
+import {
+  makeTempDirectory as makeDirectory,
+  useTempDirectory,
+} from './temp-directory.js';
 
 /**
  * Create a temporary directory that a test can write downloads into.
@@ -19,7 +21,7 @@ import path from 'node:path';
  * @returns {Promise<string>} Absolute directory path
  */
 export async function makeTempDirectory() {
-  return fs.mkdtemp(path.join(os.tmpdir(), 'bc-downloads-'));
+  return makeDirectory('bc-downloads-');
 }
 
 /**
@@ -119,18 +121,5 @@ export function createFakeCdpSession() {
  * @returns {{path: string}} Holder whose `path` is the current directory
  */
 export function useTempDownloadDirectory() {
-  const holder = { path: '' };
-
-  beforeEach(async () => {
-    holder.path = await makeTempDirectory();
-  });
-
-  afterEach(async () => {
-    // A test may have made the directory read-only on purpose; removing it
-    // still has to work, or the next test inherits the mess.
-    await fs.chmod(holder.path, 0o700).catch(() => {});
-    await fs.rm(holder.path, { recursive: true, force: true });
-  });
-
-  return holder;
+  return useTempDirectory('bc-downloads-');
 }

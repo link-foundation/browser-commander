@@ -11,6 +11,25 @@ import path from 'node:path';
 import { test as baseTest } from 'test-anywhere';
 import { launchBrowser } from '../browser/launcher.js';
 import { makeBrowserCommander } from '../factory.js';
+import {
+  finishScenarioTrace,
+  resolveTestDownloads,
+  startScenarioTrace,
+} from './tracing.js';
+
+export {
+  TEST_SCREENSHOT_MODES,
+  TEST_TRACE_MODES,
+  TRACE_BUNDLE_SUFFIX,
+  TEST_DOWNLOADS_DIRNAME,
+  finishScenarioTrace,
+  normalizeTestScreenshots,
+  normalizeTestTrace,
+  resolveTestDownloads,
+  resolveTraceSetting,
+  startScenarioTrace,
+  traceOutputPath,
+} from './tracing.js';
 
 export {
   test,
@@ -406,11 +425,14 @@ export async function createBrowserFixture(options = {}) {
     ...launchOptions,
     engine: normalizedEngine,
   });
-  const { browser, page } = launched;
+  const { browser, page, downloads = null } = launched;
 
   try {
     const commander = makeCommander({
       page,
+      // A managed download manager belongs to the commander that runs the
+      // test, so `commander.downloads` and the trace see the same files.
+      ...(downloads ? { downloads } : {}),
       ...commanderOptions,
     });
 
@@ -418,6 +440,7 @@ export async function createBrowserFixture(options = {}) {
       engine: normalizedEngine,
       browser,
       page,
+      downloads,
       commander,
       async close() {
         if (typeof commander.destroy === 'function') {
@@ -563,36 +586,67 @@ export function runBrowserScenario(scenario, options = {}) {
     launch,
     makeCommander,
     artifactsDir = DEFAULT_ARTIFACTS_DIR,
+    trace = 'off',
+    screenshots,
+    traceOptions = {},
     timeoutMs,
     attempt = 1,
   } = options;
   const testId = browserTestId(normalizedScenario, engine);
+  const scenarioArtifactsDir = normalizedScenario.artifactsDir ?? artifactsDir;
+  const safeName = sanitizeArtifactName(`${testId}-${engine}`);
+  const mergedLaunchOptions = mergeOptions(
+    launchOptions,
+    normalizedScenario.launchOptions
+  );
+  // A download a test made is an artifact of that test, so it is kept beside
+  // the trace that references it rather than in the user's Downloads folder.
+  const downloads = resolveTestDownloads(mergedLaunchOptions.downloads, {
+    artifactsDir: scenarioArtifactsDir,
+    safeName,
+  });
 
   return withBrowserCommander(
     {
       engine,
       launch,
       makeCommander,
-      launchOptions: mergeOptions(
-        launchOptions,
-        normalizedScenario.launchOptions
-      ),
+      launchOptions: downloads
+        ? { ...mergedLaunchOptions, downloads }
+        : mergedLaunchOptions,
       commanderOptions: mergeOptions(
         commanderOptions,
         normalizedScenario.commanderOptions
       ),
     },
     async (fixture) => {
+      const started = await startScenarioTrace({
+        commander: fixture.commander,
+        page: fixture.page,
+        trace: normalizedScenario.trace ?? trace,
+        screenshots: normalizedScenario.screenshots ?? screenshots,
+        artifactsDir: scenarioArtifactsDir,
+        safeName,
+        attempt,
+        traceOptions: mergeOptions(
+          traceOptions,
+          normalizedScenario.traceOptions
+        ),
+      });
+
       try {
-        return await runWithTimeout(
+        const result = await runWithTimeout(
           () =>
             normalizedScenario.fn({
               ...fixture,
+              trace: started?.trace ?? null,
               testInfo: {
                 id: testId,
                 name: normalizedScenario.name,
                 engine,
                 attempt,
+                artifactsDir: scenarioArtifactsDir,
+                tracePath: started?.path ?? null,
                 tags: normalizedScenario.tags || [],
               },
             }),
@@ -601,14 +655,24 @@ export function runBrowserScenario(scenario, options = {}) {
             testId,
           }
         );
+        await finishScenarioTrace(started, { log: fixture.commander?.log });
+        return result;
       } catch (error) {
-        await writeFailureArtifacts({
-          page: fixture.page,
+        const stopped = await finishScenarioTrace(started, {
           error,
-          testId,
-          engine,
-          artifactsDir: normalizedScenario.artifactsDir ?? artifactsDir,
+          log: fixture.commander?.log,
         });
+        // The trace bundle is the failure artifact when one was recorded; the
+        // standalone error file and screenshot stay for runs without a trace.
+        if (!stopped) {
+          await writeFailureArtifacts({
+            page: fixture.page,
+            error,
+            testId,
+            engine,
+            artifactsDir: scenarioArtifactsDir,
+          });
+        }
         throw error;
       }
     }

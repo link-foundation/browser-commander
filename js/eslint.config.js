@@ -51,6 +51,10 @@ export default [
         // Chrome verbatim rather than executed by Node).
         document: 'readonly',
         window: 'readonly',
+        location: 'readonly',
+        MutationObserver: 'readonly',
+        DOMParser: 'readonly',
+        Node: 'readonly',
         navigator: 'readonly',
         Navigator: 'readonly',
         screen: 'readonly',

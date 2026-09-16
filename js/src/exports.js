@@ -223,3 +223,25 @@ export {
   sanitizeDownloadName,
   withExtension,
 } from './downloads/naming.js';
+
+// Re-export the portable trace subsystem: one recorder, one versioned bundle,
+// and one offline viewer for every consumer (issue #87).
+export { startTrace } from './traces/recorder.js';
+export {
+  TRACE_EVENT,
+  TRACE_EVENT_SOURCES,
+  TRACE_FILES,
+  TRACE_MODE,
+  TRACE_OUTCOME,
+  TRACE_SCHEMA_VERSION,
+} from './traces/schema.js';
+export { diffControlState, parseNdjson, readTrace } from './traces/reader.js';
+export { renderTraceViewer, writeTraceViewer } from './traces/viewer.js';
+export {
+  DEFAULT_REDACT_ATTRIBUTES,
+  DEFAULT_REDACT_SELECTORS,
+  REDACTED,
+  normalizePrivacyOptions,
+  redactUrl,
+  redactValue,
+} from './traces/redaction.js';

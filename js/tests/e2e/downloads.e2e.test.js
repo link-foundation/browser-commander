@@ -17,8 +17,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { launchBrowser } from '../../src/browser/launcher.js';
 import { openBrowserCdpSession } from '../../src/downloads/sources.js';
+import { launchE2EBrowser } from '../helpers/e2e-browser.js';
 import {
   PDF_BODY,
   REPORT_BODY,
@@ -26,16 +26,6 @@ import {
 } from '../helpers/download-server.js';
 
 const ENGINES = ['playwright', 'puppeteer'];
-
-/**
- * Extra Chrome arguments for environments without a usable sandbox.
- *
- * Containers commonly forbid unprivileged user namespaces, where Chromium
- * refuses to start at all; CHROME_NO_SANDBOX=true makes the suite runnable
- * there without weakening how the library launches browsers for everyone else.
- */
-const SANDBOX_ARGS =
-  process.env.CHROME_NO_SANDBOX === 'true' ? ['--no-sandbox'] : [];
 
 /**
  * Run the managed-download expectations against one engine.
@@ -50,22 +40,14 @@ function describeDownloads(engine) {
     let page;
     let downloads;
     let directory;
-    let userDataDir;
+    let cleanup;
 
     before(async () => {
       server = await startDownloadServer();
       directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bc-e2e-downloads-'));
-      userDataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bc-e2e-profile-'));
-      ({ browser, page, downloads } = await launchBrowser({
+      ({ browser, page, downloads, cleanup } = await launchE2EBrowser({
         engine,
-        userDataDir,
-        headless: process.env.HEADLESS !== 'false',
-        slowMo: 0,
-        args: SANDBOX_ARGS,
-        ...(process.env.CHROME_PATH
-          ? { executablePath: process.env.CHROME_PATH }
-          : {}),
-        downloads: { directory },
+        downloadDirectory: directory,
       }));
     });
 
@@ -77,10 +59,9 @@ function describeDownloads(engine) {
 
     after(async () => {
       await downloads?.dispose();
-      await browser?.close();
+      await cleanup?.();
       await server?.close();
       await fs.rm(directory, { recursive: true, force: true });
-      await fs.rm(userDataDir, { recursive: true, force: true });
     });
 
     /**

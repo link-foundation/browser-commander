@@ -30,6 +30,7 @@ from browser_commander.downloads.sources import (
     DownloadFailure,
     attach_cdp_source,
     attach_playwright_source,
+    browser_context_id_for_page,
     open_browser_cdp_session,
 )
 from browser_commander.downloads.staging import (
@@ -579,16 +580,30 @@ class DownloadManager:
             if session is None:
                 return
             self._cdp_session = session
+            browser_context_id = await browser_context_id_for_page(
+                engine="playwright",
+                browser=browser,
+                page=page,
+                browser_session=session,
+            )
             self._sources.append(
                 await attach_cdp_source(
                     session=session,
                     root=self.directory,
                     sink=self,
+                    browser_context_id=browser_context_id,
                     staging_timeout=self._staging_timeout,
                     staging_poll_interval=self._staging_poll_interval,
                 )
             )
         except Exception as error:  # Reported, never fatal.
+            if self._cdp_session is not None:
+                detach = getattr(self._cdp_session, "detach", None)
+                if detach:
+                    with contextlib.suppress(Exception):
+                        result = detach()
+                        if inspect.isawaitable(result):
+                            await result
             self._cdp_session = None
             self._warn(f"manual downloads are not observable: {error}")
 

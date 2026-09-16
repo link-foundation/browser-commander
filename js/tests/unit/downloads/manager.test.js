@@ -271,20 +271,93 @@ describe('download manager (issue #88)', () => {
         },
       });
 
+    /**
+     * Describe the CDP command that sends downloads to this test's staging path.
+     *
+     * @param {string} [browserContextId] - Context to configure
+     * @returns {Object} Expected CDP command
+     */
+    const downloadBehaviorCommand = (browserContextId) => ({
+      method: 'Browser.setDownloadBehavior',
+      params: {
+        behavior: 'allowAndName',
+        downloadPath: path.join(root, STAGING_DIRECTORY),
+        eventsEnabled: true,
+        ...(browserContextId ? { browserContextId } : {}),
+      },
+    });
+
     it('should ask Chromium to report downloads it did not automate', async () => {
       const session = createFakeCdpSession();
       manager = await cdpManagerOver(session);
 
-      assert.deepStrictEqual(session.sent, [
-        {
-          method: 'Browser.setDownloadBehavior',
-          params: {
-            behavior: 'allowAndName',
-            downloadPath: path.join(root, STAGING_DIRECTORY),
-            eventsEnabled: true,
-          },
-        },
+      assert.deepStrictEqual(session.sent, [downloadBehaviorCommand()]);
+    });
+
+    it('should scope download behavior to the page browser context', async () => {
+      // Issue #97: browser.newPage() and browser.newContext() create a
+      // non-default Chromium context. Browser download events are global, but
+      // the path configured without this id belongs to the default context.
+      const browserSession = createFakeCdpSession();
+      browserSession.send = async (method, params) => {
+        browserSession.sent.push({ method, params });
+        if (method === 'Target.getBrowserContexts') {
+          return { browserContextIds: ['context-from-target'] };
+        }
+        return undefined;
+      };
+      const pageSession = createFakeCdpSession();
+      pageSession.send = async (method, params) => {
+        pageSession.sent.push({ method, params });
+        return {
+          targetInfo: { browserContextId: 'context-from-target' },
+        };
+      };
+      let pageSessionDetached = false;
+      pageSession.detach = async () => {
+        pageSessionDetached = true;
+      };
+      const browser = {
+        newBrowserCDPSession: async () => browserSession,
+      };
+      const browserContext = {
+        browser: () => browser,
+        newCDPSession: async () => pageSession,
+      };
+      const page = { context: () => browserContext };
+
+      manager = await createDownloadManager({
+        engine: 'playwright',
+        browser: browserContext,
+        page,
+        directory: root,
+      });
+
+      assert.deepStrictEqual(pageSession.sent, [
+        { method: 'Target.getTargetInfo', params: undefined },
       ]);
+      assert.strictEqual(pageSessionDetached, true);
+      assert.deepStrictEqual(browserSession.sent, [
+        { method: 'Target.getBrowserContexts', params: undefined },
+        downloadBehaviorCommand('context-from-target'),
+      ]);
+    });
+
+    it('should keep a persistent context on default download behavior', async () => {
+      const session = createFakeCdpSession();
+      const persistentContext = {
+        browser: () => null,
+        newCDPSession: async () => session,
+      };
+
+      manager = await createDownloadManager({
+        engine: 'playwright',
+        browser: persistentContext,
+        page: { context: () => persistentContext },
+        directory: root,
+      });
+
+      assert.deepStrictEqual(session.sent, [downloadBehaviorCommand()]);
     });
 
     it('should place a manually started download like an automated one', async () => {

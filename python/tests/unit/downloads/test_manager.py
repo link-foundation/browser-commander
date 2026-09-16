@@ -382,6 +382,95 @@ class TestManualDownloadsOverCdp:
         await manager.dispose()
         assert session.detached is True
 
+    async def test_scopes_download_behavior_to_the_page_browser_context(
+        self, tmp_path: Path
+    ) -> None:
+        """The staging path belongs to the page's Chromium context (issue #97)."""
+
+        class TargetSession(FakeCdpSession):
+            async def send(
+                self, method: str, params: dict[str, Any] | None = None
+            ) -> Any:
+                self.sent.append({"method": method, "params": params})
+                return {"targetInfo": {"browserContextId": "context-from-target"}}
+
+        class BrowserSession(FakeCdpSession):
+            async def send(
+                self, method: str, params: dict[str, Any] | None = None
+            ) -> Any:
+                self.sent.append({"method": method, "params": params})
+                if method == "Target.getBrowserContexts":
+                    return {"browserContextIds": ["context-from-target"]}
+                return None
+
+        browser_session = BrowserSession()
+        target_session = TargetSession()
+        browser = FakeBrowser(browser_session)
+
+        class BrowserContext:
+            def __init__(self) -> None:
+                self.browser = browser
+
+            async def new_cdp_session(self, page: Any) -> TargetSession:
+                return target_session
+
+        context = BrowserContext()
+        manager = await create_download_manager(
+            engine="playwright",
+            browser=context,
+            page=FakePage(context),
+            directory=str(tmp_path),
+        )
+
+        assert target_session.sent == [
+            {"method": "Target.getTargetInfo", "params": None}
+        ]
+        assert target_session.detached is True
+        assert browser_session.sent == [
+            {"method": "Target.getBrowserContexts", "params": None},
+            {
+                "method": "Browser.setDownloadBehavior",
+                "params": {
+                    "behavior": "allowAndName",
+                    "downloadPath": str(tmp_path / STAGING_DIRECTORY),
+                    "eventsEnabled": True,
+                    "browserContextId": "context-from-target",
+                },
+            },
+        ]
+        await manager.dispose()
+
+    async def test_keeps_a_persistent_context_on_default_download_behavior(
+        self, tmp_path: Path
+    ) -> None:
+        session = FakeCdpSession()
+
+        class PersistentContext:
+            browser = None
+
+            async def new_cdp_session(self, page: Any) -> FakeCdpSession:
+                return session
+
+        context = PersistentContext()
+        manager = await create_download_manager(
+            engine="playwright",
+            browser=context,
+            page=FakePage(context),
+            directory=str(tmp_path),
+        )
+
+        assert session.sent == [
+            {
+                "method": "Browser.setDownloadBehavior",
+                "params": {
+                    "behavior": "allowAndName",
+                    "downloadPath": str(tmp_path / STAGING_DIRECTORY),
+                    "eventsEnabled": True,
+                },
+            }
+        ]
+        await manager.dispose()
+
     async def test_places_a_manual_download_like_an_automated_one(
         self, tmp_path: Path
     ) -> None:

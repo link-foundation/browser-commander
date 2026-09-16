@@ -114,7 +114,7 @@ const OBSERVED_STATE_KEYS = [
  * @param {Object} [options.preClickState] - State captured before the click
  * @param {Object} [options.adapter] - Engine adapter
  * @param {Object} [options.deadline] - Deadline the whole click shares
- * @returns {Promise<{verified: boolean, effect: string, reason: string, evidence: Array, navigationError?: boolean, timedOut?: boolean}>} Verification outcome
+ * @returns {Promise<{verified: boolean, effect: string, reason: string, evidence: Array, navigationError: (boolean|undefined), timedOut: (boolean|undefined)}>} Verification outcome
  */
 export async function defaultClickVerification(options = {}) {
   const { preClickState = {}, deadline } = options;

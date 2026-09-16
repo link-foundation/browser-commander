@@ -28,6 +28,13 @@ JavaScript-written export back in 4 KiB chunks. That a second language's
 implementation of the notation reconstructs the timeline is the reason the
 export can be called portable rather than merely textual.
 
+One trap in that streaming API, since it cost a debugging round here:
+`write(chunk)` returns the links the chunk completed **but retains them**, and
+`finish()` returns everything not yet drained. Collecting both return values
+therefore reports every link twice — 27 links for a 14-link export. Reading
+each link exactly once means `write()` followed by `drain()` per chunk, then
+`finish()` for the tail.
+
 **What it does not do, and what this branch adds around it.** The formatter
 chooses a quote character the value does not contain, and the parser processes
 no escape sequences at all. Two consequences matter for a trace, because a

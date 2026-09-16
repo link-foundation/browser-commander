@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 from browser_commander.interactions.click import (
+    ClickActionability,
+    ClickActivation,
+    ClickEffect,
     ClickResult,
+    ClickScroll,
+    ClickStatus,
     ClickVerificationResult,
+    ScrollConstraintError,
     capture_pre_click_state,
     click_button,
     click_element,
@@ -31,10 +37,16 @@ from browser_commander.interactions.scroll import (
 )
 
 __all__ = [
+    "ClickActionability",
+    "ClickActivation",
+    "ClickEffect",
     "ClickResult",
+    "ClickScroll",
+    "ClickStatus",
     "ClickVerificationResult",
     "FillResult",
     "FillVerificationResult",
+    "ScrollConstraintError",
     "ScrollResult",
     "ScrollVerificationResult",
     "capture_pre_click_state",

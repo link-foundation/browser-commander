@@ -15,6 +15,7 @@ use crate::browser::media::ColorScheme;
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::core::constants::CHROME_ARGS;
 use crate::core::engine::{EngineAdapter, EngineType};
+use crate::downloads::{attach_downloads, DownloadManager, DownloadSetting};
 use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
 use crate::fingerprint::automation_parity::{
     apply_automation_parity_args, parity_ignored_default_args,
@@ -75,6 +76,13 @@ pub struct LaunchOptions {
     /// [`fingerprint::profile`](crate::fingerprint::profile) for the field list
     /// and [`presets`](crate::fingerprint::presets) for ready-made machines.
     pub fingerprint: Option<FingerprintProfile>,
+    /// Manage the browser's downloads: where they are saved, how they are
+    /// named, and whether they outlive the browser.
+    ///
+    /// Downloads are redirected over CDP, so this only works for the
+    /// chromiumoxide engine; the other engines refuse rather than accept a
+    /// setting they cannot honor. See [`downloads`](crate::downloads).
+    pub downloads: DownloadSetting,
 }
 
 impl Default for LaunchOptions {
@@ -98,6 +106,7 @@ impl Default for LaunchOptions {
             node_working_dir: None,
             automation_parity: true,
             fingerprint: None,
+            downloads: DownloadSetting::Off,
         }
     }
 }
@@ -247,6 +256,17 @@ impl LaunchOptions {
         self
     }
 
+    /// Manage this browser's downloads.
+    ///
+    /// # Arguments
+    ///
+    /// * `downloads` - `true` for the defaults, `false` for none, or
+    ///   [`DownloadOptions`](crate::downloads::DownloadOptions)
+    pub fn downloads(mut self, downloads: impl Into<DownloadSetting>) -> Self {
+        self.downloads = downloads.into();
+        self
+    }
+
     /// Get all Chrome arguments (default + custom).
     pub fn all_chrome_args(&self) -> Vec<String> {
         let mut all_args: Vec<String> = if self.ignore_all_default_args {
@@ -328,6 +348,12 @@ pub struct LaunchResult {
     /// implementing [`EngineAdapter`]. Pass `launch_result.page.as_ref()` to
     /// `goto`, `click`, `evaluate`, and other helpers.
     pub page: Arc<dyn EngineAdapter>,
+    /// The download manager, when the caller asked for managed downloads.
+    ///
+    /// Downloads keep arriving while the browser is open, so the manager
+    /// outlives any single call: hold on to it, and call
+    /// [`DownloadManager::dispose`] before closing the browser.
+    pub downloads: Option<Arc<DownloadManager>>,
 }
 
 impl std::fmt::Debug for LaunchResult {
@@ -335,6 +361,7 @@ impl std::fmt::Debug for LaunchResult {
         f.debug_struct("LaunchResult")
             .field("browser", &self.browser)
             .field("page", &"<dyn EngineAdapter>")
+            .field("downloads", &self.downloads)
             .finish()
     }
 }
@@ -386,6 +413,26 @@ pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyh
     }
 }
 
+/// A transport for engines that have none.
+///
+/// `attach_downloads` refuses an unsupported engine before it sends anything,
+/// so this exists only to satisfy the signature; being asked to send is a bug,
+/// and saying so is better than a command that silently goes nowhere.
+struct UnavailableTransport;
+
+#[async_trait::async_trait]
+impl crate::fingerprint::CdpTransport for UnavailableTransport {
+    async fn send(
+        &self,
+        method: &str,
+        _params: serde_json::Value,
+    ) -> anyhow::Result<serde_json::Value> {
+        Err(anyhow::anyhow!(
+            "this engine has no CDP transport, so {method} cannot be sent"
+        ))
+    }
+}
+
 async fn launch_node_bridge(
     options: LaunchOptions,
     user_data_dir: PathBuf,
@@ -402,6 +449,13 @@ async fn launch_node_bridge(
              JavaScript package, which drives Playwright and Puppeteer directly"
         ));
     }
+    // Same reasoning as the fingerprint above: the bridge has no CDP route, so
+    // a managed download would never be seen and every capture would time out.
+    // `attach_downloads` returns `Ok(None)` when no manager was asked for, and
+    // names the engine and what to use instead when one was.
+    attach_downloads(engine, &UnavailableTransport, options.downloads.clone())
+        .await
+        .map_err(|error| anyhow::anyhow!("{error}"))?;
     let adapter = NodeBridgePage::launch(options, user_data_dir.clone()).await?;
 
     Ok(LaunchResult {
@@ -411,6 +465,7 @@ async fn launch_node_bridge(
             headless,
         },
         page: Arc::new(adapter),
+        downloads: None,
     })
 }
 
@@ -491,6 +546,13 @@ async fn launch_chromiumoxide(
         }
     }
 
+    // Downloads are redirected before the caller can navigate too: a download
+    // that starts on the first page must land in the managed directory like
+    // every later one, rather than in whatever folder Chromium was using.
+    let downloads = attach_downloads(engine, &adapter, options.downloads.clone())
+        .await
+        .map_err(|error| anyhow::anyhow!("{error}"))?;
+
     // Apply color scheme emulation (best-effort).
     if let Some(ref cs) = color_scheme {
         if let Err(err) = adapter.set_color_scheme(Some(cs)).await {
@@ -521,6 +583,7 @@ async fn launch_chromiumoxide(
             headless,
         },
         page: Arc::new(adapter),
+        downloads,
     })
 }
 
@@ -780,6 +843,40 @@ mod tests {
         assert!(err
             .to_string()
             .contains("cannot apply a fingerprint profile"));
+    }
+
+    #[test]
+    fn launch_options_carry_a_download_setting() {
+        assert!(matches!(
+            LaunchOptions::default().downloads,
+            DownloadSetting::Off
+        ));
+        assert!(matches!(
+            LaunchOptions::default().downloads(true).downloads,
+            DownloadSetting::On
+        ));
+
+        let configured = LaunchOptions::default()
+            .downloads(crate::downloads::DownloadOptions::default().directory("/tmp/bc-downloads"));
+        let DownloadSetting::Options(options) = configured.downloads else {
+            panic!("the caller's download options were dropped");
+        };
+        assert_eq!(options.directory.as_deref(), Some("/tmp/bc-downloads"));
+    }
+
+    #[tokio::test]
+    async fn launch_playwright_refuses_downloads_it_cannot_manage() {
+        // Accepting the setting silently would leave the caller waiting on a
+        // manager watching a directory the browser never writes into.
+        let options = LaunchOptions::playwright().headless(true).downloads(true);
+
+        let err = launch_browser(options).await.unwrap_err();
+
+        assert!(
+            err.to_string()
+                .contains("managed downloads are not supported"),
+            "unexpected message: {err}"
+        );
     }
 
     #[tokio::test]

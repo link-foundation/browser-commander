@@ -15,6 +15,7 @@ use crate::browser::connector::{connect_browser, ConnectOptions};
 use crate::browser::launcher::{Browser, LaunchResult};
 use crate::core::constants::CHROME_ARGS;
 use crate::core::engine::{EngineAdapter, EngineType};
+use crate::downloads::{DownloadManager, DownloadSetting};
 
 const MANAGED_ARGUMENTS: [&str; 3] = [
     "--remote-debugging-address",
@@ -61,6 +62,14 @@ pub struct RealBrowserOptions {
     pub node_executable: Option<PathBuf>,
     /// Directory where Node resolves Playwright/Puppeteer.
     pub node_working_dir: Option<PathBuf>,
+    /// Manage the installed browser's downloads.
+    ///
+    /// The same setting and the same manager as
+    /// [`LaunchOptions`](super::launcher::LaunchOptions) and
+    /// [`ConnectOptions`], which is what makes a download started by hand in a
+    /// visible window land where an automated one does. See
+    /// [`downloads`](crate::downloads).
+    pub downloads: DownloadSetting,
 }
 
 impl Default for RealBrowserOptions {
@@ -84,6 +93,7 @@ impl Default for RealBrowserOptions {
             verbose: false,
             node_executable: None,
             node_working_dir: None,
+            downloads: DownloadSetting::Off,
         }
     }
 }
@@ -213,6 +223,17 @@ impl RealBrowserOptions {
         self
     }
 
+    /// Manage the installed browser's downloads.
+    ///
+    /// # Arguments
+    ///
+    /// * `downloads` - `true` for the defaults, `false` for none, or
+    ///   [`DownloadOptions`](crate::downloads::DownloadOptions)
+    pub fn downloads(mut self, downloads: impl Into<DownloadSetting>) -> Self {
+        self.downloads = downloads.into();
+        self
+    }
+
     /// Resolve the configured or managed dedicated profile path.
     pub fn get_user_data_dir(&self) -> PathBuf {
         self.user_data_dir
@@ -281,6 +302,11 @@ pub struct RealBrowserLaunchResult {
     pub user_data_dir: PathBuf,
     /// Owned process handle. Dropping the result terminates the browser.
     pub browser_process: BrowserProcess,
+    /// The download manager, when the caller asked for managed downloads.
+    ///
+    /// A visible installed browser is where a person clicks a link themselves,
+    /// so this is the manager that sees those downloads too.
+    pub downloads: Option<Arc<DownloadManager>>,
 }
 
 impl std::fmt::Debug for RealBrowserLaunchResult {
@@ -293,6 +319,7 @@ impl std::fmt::Debug for RealBrowserLaunchResult {
             .field("executable_path", &self.executable_path)
             .field("user_data_dir", &self.user_data_dir)
             .field("browser_process", &self.browser_process)
+            .field("downloads", &self.downloads)
             .finish()
     }
 }
@@ -699,6 +726,7 @@ fn connection_options(
     connection.verbose = options.verbose;
     connection.node_executable = options.node_executable.clone();
     connection.node_working_dir = options.node_working_dir.clone();
+    connection.downloads = options.downloads.clone();
     Ok(connection)
 }
 
@@ -755,7 +783,11 @@ pub async fn launch_real_browser(
         };
 
     let connect_options = connection_options(&options, &cdp_endpoint)?;
-    let LaunchResult { mut browser, page } = match connect_browser(connect_options).await {
+    let LaunchResult {
+        mut browser,
+        page,
+        downloads,
+    } = match connect_browser(connect_options).await {
         Ok(connection) => connection,
         Err(error) => {
             let _ = browser_process.kill();
@@ -772,6 +804,7 @@ pub async fn launch_real_browser(
         executable_path,
         user_data_dir,
         browser_process,
+        downloads,
     })
 }
 
@@ -785,6 +818,18 @@ pub async fn launch_and_connect_real_browser(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn connection_options_carry_the_download_setting() {
+        // A setting that stopped here would leave an installed browser saving
+        // downloads wherever Chrome felt like, which is the case issue #88 is
+        // about.
+        let options = RealBrowserOptions::default().downloads(true);
+
+        let connection = connection_options(&options, "http://127.0.0.1:9222").expect("options");
+
+        assert!(matches!(connection.downloads, DownloadSetting::On));
+    }
 
     #[test]
     fn default_options_use_native_engine_and_managed_profile() {

@@ -266,10 +266,98 @@ describe('dialog-manager', () => {
     });
   });
 
+  describe('observeDialogs', () => {
+    /**
+     * A manager already listening to the page, as every observer test needs.
+     *
+     * @returns {Object} The dialog manager
+     */
+    const listening = () => {
+      const manager = createDialogManager({ page, engine: 'playwright', log });
+      manager.startListening();
+      return manager;
+    };
+
+    it('should still auto-dismiss when only observers are watching', async () => {
+      const manager = listening();
+
+      const seen = [];
+      manager.observeDialogs((dialog) => seen.push(dialog.message()));
+      const dialog = createMockDialog({ message: 'watched' });
+      await page.emit('dialog', dialog);
+
+      assert.deepStrictEqual(seen, ['watched']);
+      // Watching a dialog must not make the watcher responsible for it, or a
+      // traced run leaves the page waiting for an answer an untraced run got.
+      assert.strictEqual(dialog._wasDismissed(), true);
+    });
+
+    it('should tell observers about a dialog a handler answers', async () => {
+      const manager = listening();
+
+      const seen = [];
+      manager.observeDialogs((dialog) => seen.push(dialog.type()));
+      manager.onDialog(async (dialog) => dialog.accept('ok'));
+      const dialog = createMockDialog({ type: 'prompt' });
+      await page.emit('dialog', dialog);
+
+      assert.deepStrictEqual(seen, ['prompt']);
+      assert.strictEqual(dialog._acceptText(), 'ok');
+      assert.strictEqual(dialog._wasDismissed(), false);
+    });
+
+    it('should keep going when an observer throws', async () => {
+      const manager = listening();
+
+      let secondObserverCalled = false;
+      manager.observeDialogs(() => {
+        throw new Error('observer failed');
+      });
+      manager.observeDialogs(() => {
+        secondObserverCalled = true;
+      });
+      const dialog = createMockDialog();
+      await page.emit('dialog', dialog);
+
+      assert.strictEqual(secondObserverCalled, true);
+      assert.strictEqual(dialog._wasDismissed(), true);
+    });
+
+    it('should stop telling an observer that was removed', async () => {
+      const manager = listening();
+
+      let calls = 0;
+      const stop = manager.observeDialogs(() => {
+        calls += 1;
+      });
+      await page.emit('dialog', createMockDialog());
+      stop();
+      await page.emit('dialog', createMockDialog());
+
+      assert.strictEqual(calls, 1);
+    });
+
+    it('should refuse an observer that is not a function', () => {
+      const manager = createDialogManager({ page, engine: 'playwright', log });
+
+      assert.throws(() => manager.observeDialogs('nope'), /must be a function/);
+    });
+  });
+
   describe('integration with makeBrowserCommander', () => {
-    it('should expose onDialog on commander', async () => {
+    /**
+     * A commander driving the suite's page.
+     *
+     * @param {Object} [options] - Extra options for `makeBrowserCommander`
+     * @returns {Promise<Object>} The commander
+     */
+    const commanderFor = async (options = {}) => {
       const { makeBrowserCommander } = await import('../../../src/factory.js');
-      const commander = makeBrowserCommander({ page, verbose: false });
+      return makeBrowserCommander({ page, verbose: false, ...options });
+    };
+
+    it('should expose onDialog on commander', async () => {
+      const commander = await commanderFor();
 
       assert.ok(typeof commander.onDialog === 'function');
       assert.ok(typeof commander.offDialog === 'function');
@@ -278,8 +366,7 @@ describe('dialog-manager', () => {
     });
 
     it('should handle dialog via commander.onDialog', async () => {
-      const { makeBrowserCommander } = await import('../../../src/factory.js');
-      const commander = makeBrowserCommander({ page, verbose: false });
+      const commander = await commanderFor();
 
       let handlerCalled = false;
       commander.onDialog(async (dialog) => {
@@ -296,13 +383,34 @@ describe('dialog-manager', () => {
       await commander.destroy();
     });
 
+    it('should expose observeDialogs on commander', async () => {
+      const commander = await commanderFor();
+
+      const seen = [];
+      commander.observeDialogs((dialog) => seen.push(dialog.message()));
+      const dialog = createMockDialog({ message: 'from the commander' });
+      await page.emit('dialog', dialog);
+
+      assert.deepStrictEqual(seen, ['from the commander']);
+      assert.strictEqual(dialog._wasDismissed(), true);
+
+      await commander.destroy();
+    });
+
+    it('should throw observeDialogs when enableDialogManager is false', async () => {
+      const commander = await commanderFor({ enableDialogManager: false });
+
+      assert.throws(
+        () => commander.observeDialogs(() => {}),
+        /enableDialogManager/
+      );
+      // Removing an observer from a manager that never existed is a no-op,
+      // so cleanup code does not have to know whether tracing was on.
+      assert.doesNotThrow(() => commander.unobserveDialogs(() => {}));
+    });
+
     it('should throw onDialog when enableDialogManager is false', async () => {
-      const { makeBrowserCommander } = await import('../../../src/factory.js');
-      const commander = makeBrowserCommander({
-        page,
-        verbose: false,
-        enableDialogManager: false,
-      });
+      const commander = await commanderFor({ enableDialogManager: false });
 
       assert.throws(() => commander.onDialog(() => {}), /enableDialogManager/);
     });

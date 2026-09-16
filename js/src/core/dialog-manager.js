@@ -28,6 +28,12 @@ export function createDialogManager(options = {}) {
   // User-registered dialog handlers
   const handlers = [];
 
+  // Passive observers. They are told about every dialog and are never
+  // responsible for answering one, so watching dialogs - which is what a
+  // trace recorder does - cannot leave a page waiting forever for an answer
+  // nobody was going to give.
+  const observers = [];
+
   // Whether we are currently listening to the page's dialog event
   let isListening = false;
 
@@ -44,6 +50,14 @@ export function createDialogManager(options = {}) {
       typeof dialog.message === 'function' ? dialog.message() : dialog.message;
 
     log.debug(() => `💬 Dialog event: type="${type}", message="${message}"`);
+
+    for (const observer of observers) {
+      try {
+        await observer(dialog);
+      } catch (e) {
+        log.debug(() => `⚠️  Error in dialog observer: ${e.message}`);
+      }
+    }
 
     if (handlers.length === 0) {
       log.debug(
@@ -122,6 +136,36 @@ export function createDialogManager(options = {}) {
   }
 
   /**
+   * Watch dialogs without taking responsibility for answering them
+   * @param {Function} observer - Async function receiving the dialog object
+   * @returns {Function} - Removes this observer again
+   */
+  function observeDialogs(observer) {
+    if (typeof observer !== 'function') {
+      throw new Error('Dialog observer must be a function');
+    }
+    observers.push(observer);
+    log.debug(
+      () => `👁  Dialog observer registered (total: ${observers.length})`
+    );
+    return () => unobserveDialogs(observer);
+  }
+
+  /**
+   * Remove a dialog observer
+   * @param {Function} observer - The observer to remove
+   */
+  function unobserveDialogs(observer) {
+    const index = observers.indexOf(observer);
+    if (index !== -1) {
+      observers.splice(index, 1);
+      log.debug(
+        () => `👁  Dialog observer removed (remaining: ${observers.length})`
+      );
+    }
+  }
+
+  /**
    * Start listening for dialog events on the page
    */
   function startListening() {
@@ -150,6 +194,10 @@ export function createDialogManager(options = {}) {
     onDialog,
     offDialog,
     clearDialogHandlers,
+
+    // Passive observation (issue #87)
+    observeDialogs,
+    unobserveDialogs,
 
     // Lifecycle
     startListening,

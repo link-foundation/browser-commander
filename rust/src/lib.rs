@@ -38,17 +38,21 @@
 //! - [`elements`] - Element operations (selectors, visibility, content)
 //! - [`interactions`] - User interactions (click, scroll, fill)
 //! - [`browser`] - Browser management (launcher, navigation)
+//! - [`downloads`] - Managed, persistent downloads (manager, store, sources)
 //! - [`fingerprint`] - Fingerprint parity with a hand-started browser (profiles,
 //!   presets, automation parity)
+//! - [`traces`] - Reading privacy-aware portable trace bundles
 //! - [`utilities`] - General utilities (URL handling, wait operations)
 //! - [`high_level`] - High-level DRY utilities
 
 pub mod browser;
 pub mod core;
+pub mod downloads;
 pub mod elements;
 pub mod fingerprint;
 pub mod high_level;
 pub mod interactions;
+pub mod traces;
 pub mod utilities;
 
 // Re-export commonly used items at crate root
@@ -63,6 +67,12 @@ pub use browser::{
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
     LoggerOptions, PdfOptions, Timing, CHROME_ARGS, TIMING,
+};
+pub use downloads::{
+    attach_downloads, normalize_download_options, supported_engine, CaptureOptions,
+    DownloadArtifact, DownloadConflict, DownloadError, DownloadEvent, DownloadManager,
+    DownloadNamer, DownloadNaming, DownloadOptions, DownloadSetting, DownloadValidator,
+    DEFAULT_CAPTURE_TIMEOUT,
 };
 // `fingerprint::ColorScheme` is the CSS preference a page reads, while
 // `browser::ColorScheme` is the one `emulate_media` writes, so the fingerprint
@@ -81,6 +91,14 @@ pub use fingerprint::{
     DEFAULT_CHROME_VERSION, FINGERPRINT_FIELD_MECHANISMS, FINGERPRINT_LIMITATIONS,
     FINGERPRINT_LIMITATIONS_SOURCE, FINGERPRINT_PAYLOAD_SOURCE, FINGERPRINT_PRESET_NAMES,
     PLAYWRIGHT_HEADLESS_POINTER_ARG, PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
+};
+
+// Reading trace bundles needs no engine, so the reader is available at the
+// crate root like any other pure helper.
+pub use traces::{
+    diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, ParsedNdjson,
+    Trace, TraceCheckpoint, TraceError, TraceEvent, TraceFiles, TraceManifest, TraceMode,
+    TraceOutcome, TRACE_EVENT_SOURCES, TRACE_FORMAT, TRACE_SCHEMA_VERSION,
 };
 
 /// Prelude module for convenient imports.
@@ -103,6 +121,11 @@ pub mod prelude {
         is_navigation_error, is_timeout_error, DialogEvent, DialogManager, DialogType,
         EngineAdapter, EngineError, EngineType, Logger, LoggerOptions, PdfOptions, Timing,
         CHROME_ARGS, TIMING,
+    };
+    pub use crate::downloads::{
+        attach_downloads, normalize_download_options, CaptureOptions, DownloadArtifact,
+        DownloadConflict, DownloadError, DownloadEvent, DownloadManager, DownloadOptions,
+        DownloadSetting,
     };
     pub use crate::elements::{
         count, get_attribute, input_value, is_enabled, is_visible, normalize_selector,
@@ -129,8 +152,15 @@ pub mod prelude {
     };
     pub use crate::interactions::{
         click_button, click_element, fill_text_area, key_down, key_up, perform_fill, press_key,
-        scroll_into_view, scroll_into_view_if_needed, type_text, ClickOptions, ClickResult,
-        FillOptions, FillResult, ScrollBehavior, ScrollOptions, ScrollResult,
+        scroll_into_view, scroll_into_view_if_needed, type_text, ActivationOptions,
+        ClickActionability, ClickActivation, ClickDispatchError, ClickEffect, ClickOptions,
+        ClickResult, ClickScroll, ClickStatus, Evidence, FillOptions, FillResult, ScrollBehavior,
+        ScrollOptions, ScrollResult,
+    };
+    pub use crate::traces::{
+        diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, Trace,
+        TraceCheckpoint, TraceError, TraceEvent, TraceFiles, TraceManifest, TraceMode,
+        TraceOutcome, TRACE_SCHEMA_VERSION,
     };
     pub use crate::utilities::{
         evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin, unfocus_address_bar,

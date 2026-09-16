@@ -22,6 +22,7 @@ export default [
         __filename: 'readonly',
         // Node.js 18+ globals
         fetch: 'readonly',
+        performance: 'readonly',
         // Web/Node.js shared globals
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
@@ -50,6 +51,10 @@ export default [
         // Chrome verbatim rather than executed by Node).
         document: 'readonly',
         window: 'readonly',
+        location: 'readonly',
+        MutationObserver: 'readonly',
+        DOMParser: 'readonly',
+        Node: 'readonly',
         navigator: 'readonly',
         Navigator: 'readonly',
         screen: 'readonly',

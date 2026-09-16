@@ -25,4 +25,5 @@ TIMING: Final[dict[str, int]] = {
     "VERIFICATION_TIMEOUT": 3000,  # Default timeout for action verification
     "VERIFICATION_RETRY_INTERVAL": 100,  # Interval between verification retries
     "NETWORK_IDLE_TIMEOUT": 30000,  # Wait for network idle (30 seconds)
+    "REDIRECT_STABILIZATION_TIME": 1000,  # URL quiet period before ready
 }

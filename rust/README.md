@@ -77,6 +77,8 @@ async fn main() -> anyhow::Result<()> {
 - **Built-in navigation safety handling**
 - **Element visibility and scroll management**
 - **Click, fill, and other interaction support with verification**
+- **Managed downloads whose files outlive the browser**
+- **Portable trace bundles, readable from every supported language**
 - **Async/await support with Tokio**
 
 ## API Reference
@@ -333,6 +335,94 @@ let href = get_attribute(&page, "a.link", "href").await?;
 let count = count(&page, ".item").await?;
 ```
 
+### Managed Downloads
+
+A download that only exists while the browser is open is not a download. Ask for
+`downloads` at any entry point - `launch_browser()`, `connect_browser()` or the
+real-browser helpers - and the manager owns the file from then on:
+
+```rust
+use browser_commander::browser::{launch_browser, LaunchOptions};
+use browser_commander::downloads::{CaptureOptions, DownloadOptions};
+use browser_commander::interactions::click_element;
+
+let launched = launch_browser(
+    LaunchOptions::chromiumoxide()
+        .downloads(DownloadOptions::default().directory("/tmp/reports")),
+)
+.await?;
+let manager = launched.downloads.clone().expect("a manager was requested");
+let page = launched.page.clone();
+
+// capture() starts listening before the action runs, so a download that
+// finishes in 5ms cannot slip past the registration.
+let artifact = manager
+    .capture(
+        CaptureOptions::named("q3-report.pdf").within(Duration::from_secs(20)),
+        async {
+            click_element(page.as_ref(), "#export", &Default::default()).await?;
+            Ok(())
+        },
+    )
+    .await?;
+
+manager.dispose().await;
+drop(launched);
+// The file at `artifact.path` is still there: it outlives the browser.
+```
+
+Chromiumoxide redirects downloads with `Browser.setDownloadBehavior`, which also
+covers a download a person started by hand in a visible browser. The Node bridge
+and Fantoccini have no such mechanism, so asking them for downloads fails with
+that reason rather than quietly doing nothing.
+`examples/managed_download.rs` runs the whole lifecycle against a real Chromium.
+
+### Portable Traces
+
+A trace is one versioned directory - manifest, ordered NDJSON timeline,
+per-checkpoint DOM snapshots and the mutation batches between them - so a bundle
+recorded by a JavaScript run reads back here:
+
+```rust
+use browser_commander::traces::{diff_control_state, read_trace};
+
+let trace = read_trace("/tmp/traces/checkout")?;
+println!("{} {}", trace.manifest.schema_version, trace.manifest.outcome);
+
+for event in &trace.events {
+    println!("{} {}", event["at"], event["kind"]);
+}
+
+let before = trace.state(1)?;
+let after = trace.state(2)?;
+for change in diff_control_state(before.as_ref(), after.as_ref()) {
+    println!("{:?} {:?}", change.path, change.change);
+}
+```
+
+Recording is JavaScript-only today; `docs/feature-parity.md` lists that gap along
+with the rest.
+
+### Truthful Click Results
+
+`click_element()` reports what was observed, not what was attempted:
+
+```rust
+let result = click_element(adapter, "#submit", &ClickOptions::default()).await?;
+
+result.status;   // Succeeded | Failed | TimedOut | Interrupted | Unverified
+result.effect;   // Confirmed | NotObserved | Contradicted
+result.evidence; // why status and effect say what they say
+result.clicked;  // still here: whether the click reached the element
+result.verified; // still here, now derived from effect == Confirmed
+```
+
+`ClickOptions::activation` carries three independent axes. `ClickScroll`
+(`Auto`, `Preserve`, `None`) replaces the deprecated `no_auto_scroll` flag:
+`ClickScroll::None` never scrolls, and on an engine that cannot deliver a click
+without scrolling it returns `ClickDispatchError::ScrollConstraint` naming the
+alternatives rather than scrolling the page and reporting success.
+
 ### Utilities
 
 ```rust
@@ -357,6 +447,8 @@ let result: String = evaluate(&page, "document.title").await?;
 - `browser` - Browser management (launcher, navigation)
 - `utilities` - General utilities (URL handling, wait operations)
 - `high_level` - High-level DRY utilities
+- `downloads` - Managed downloads that outlive the browser
+- `traces` - Reading portable trace bundles
 
 ## Prelude
 

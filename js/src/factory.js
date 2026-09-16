@@ -20,6 +20,8 @@ import {
   notCondition,
 } from './core/page-trigger-manager.js';
 import { createBoundFunctions } from './bindings.js';
+import { attachDownloads } from './downloads/attach.js';
+import { startTrace } from './traces/recorder.js';
 
 /**
  * Create a browser commander instance for a specific page
@@ -28,6 +30,7 @@ import { createBoundFunctions } from './bindings.js';
  * @param {boolean} options.verbose - Enable verbose logging
  * @param {boolean} options.enableNetworkTracking - Enable network request tracking (default: true)
  * @param {boolean} options.enableNavigationManager - Enable navigation manager (default: true)
+ * @param {Object} [options.downloads] - A download manager to expose as commander.downloads, such as the one launchBrowser() returned
  * @returns {Object} - Browser commander API
  */
 export function makeBrowserCommander(options = {}) {
@@ -37,6 +40,7 @@ export function makeBrowserCommander(options = {}) {
     enableNetworkTracking = true,
     enableNavigationManager = true,
     enableDialogManager = true,
+    downloads = null,
   } = options;
 
   if (!page) {
@@ -108,6 +112,12 @@ export function makeBrowserCommander(options = {}) {
 
   // Cleanup function
   const destroy = async () => {
+    // Downloads are disposed first: disposing waits for bytes still being
+    // written, and a caller that destroys the commander right after a click
+    // should still find the file.
+    if (commander.downloads) {
+      await commander.downloads.dispose();
+    }
     if (pageTriggerManager) {
       await pageTriggerManager.destroy();
     }
@@ -141,6 +151,40 @@ export function makeBrowserCommander(options = {}) {
 
     // All bound functions
     ...boundFunctions,
+
+    // Managed downloads (issue #88). Present once a manager is attached,
+    // either by passing the one launchBrowser() returned or by calling
+    // configureDownloads() on an existing commander.
+    downloads,
+
+    /**
+     * Attach a managed download lifecycle to this commander's browser.
+     *
+     * @param {boolean|Object} [downloadOptions=true] - true for defaults, or {directory, persist, conflict}
+     * @returns {Promise<Object>} The attached download manager
+     */
+    configureDownloads: async (downloadOptions = true) => {
+      // Replacing a manager detaches the old one rather than leaving two
+      // sources writing into the same directory.
+      await commander.downloads?.dispose();
+      commander.downloads = await attachDownloads({
+        engine,
+        browser: page.context?.() ?? page.browser?.(),
+        page,
+        downloads: downloadOptions,
+        log,
+      });
+      return commander.downloads;
+    },
+
+    /**
+     * Start recording a privacy-aware trace of this session (issue #87).
+     *
+     * @param {Object} [traceOptions] - {output, mode, screenshots, dom, events, privacy, limits}
+     * @returns {Promise<Object>} The running trace: {checkpoint, event, stop}
+     */
+    startTrace: (traceOptions = {}) =>
+      startTrace({ commander, page, log, ...traceOptions }),
 
     // Lifecycle
     destroy,
@@ -208,6 +252,17 @@ export function makeBrowserCommander(options = {}) {
             'clearDialogHandlers requires enableDialogManager: true'
           );
         },
+
+    // Watch dialogs without answering them (issue #87): an observer is told
+    // about every dialog and never suppresses the manager's auto-dismissal.
+    observeDialogs: dialogManager
+      ? (fn) => dialogManager.observeDialogs(fn)
+      : () => {
+          throw new Error('observeDialogs requires enableDialogManager: true');
+        },
+    unobserveDialogs: dialogManager
+      ? (fn) => dialogManager.unobserveDialogs(fn)
+      : () => {},
 
     // URL condition helpers
     makeUrlCondition,

@@ -11,6 +11,7 @@ import {
   setContent,
   waitForNavigation,
   waitForPageReady,
+  waitForReady,
   waitAfterAction,
 } from './browser/navigation.js';
 import { emulateMedia } from './browser/media.js';
@@ -137,6 +138,15 @@ export function createBoundFunctions(options = {}) {
       log,
       wait: waitBound,
     });
+  const waitForReadyBound = (opts) =>
+    waitForReady({
+      ...opts,
+      page,
+      engine,
+      navigationManager,
+      networkTracker,
+      log,
+    });
   const waitAfterActionBound = (opts) =>
     waitAfterAction({
       ...opts,
@@ -199,7 +209,8 @@ export function createBoundFunctions(options = {}) {
     scrollIntoViewIfNeeded({ ...opts, page, engine, wait: waitBound, log });
 
   // Bound click - now navigation-aware
-  const clickElementBound = (opts) => clickElement({ ...opts, engine, log });
+  const clickElementBound = (opts) =>
+    clickElement({ ...opts, page, engine, log });
   const clickButtonBound = (opts) =>
     clickButton({
       ...opts,
@@ -323,6 +334,7 @@ export function createBoundFunctions(options = {}) {
     getUrl: getUrlBound,
     waitForNavigation: waitForNavigationBound,
     waitForPageReady: waitForPageReadyBound,
+    waitForReady: waitForReadyBound,
     waitAfterAction: waitAfterActionBound,
     getAttribute: getAttributeWrapped,
     isVisible: isVisibleWrapped,

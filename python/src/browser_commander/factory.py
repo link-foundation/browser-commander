@@ -7,6 +7,7 @@ a browser commander instance with all bound methods.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 
 from browser_commander.core.dialog_manager import DialogManager
@@ -23,6 +24,7 @@ from browser_commander.core.page_trigger_manager import (
     make_url_condition,
     not_condition,
 )
+from browser_commander.downloads.attach import attach_downloads
 
 
 class BrowserCommander:
@@ -35,6 +37,7 @@ class BrowserCommander:
         enable_network_tracking: bool = True,
         enable_navigation_manager: bool = True,
         enable_dialog_manager: bool = True,
+        downloads: Any = None,
     ) -> None:
         """Initialize browser commander.
 
@@ -44,8 +47,14 @@ class BrowserCommander:
             enable_network_tracking: Enable network request tracking (default: True)
             enable_navigation_manager: Enable navigation manager (default: True)
             enable_dialog_manager: Enable dialog event handling (default: True)
+            downloads: A download manager to expose as ``commander.downloads``,
+                such as the one ``launch_browser()`` returned (issue #88)
         """
         self.page = page
+        # Managed downloads (issue #88). Present once a manager is attached,
+        # either by passing the one ``launch_browser()`` returned or by calling
+        # ``configure_downloads()`` on an existing commander.
+        self.downloads = downloads
         self.engine: EngineType = detect_engine(page)
         self.log: Logger = create_logger(verbose=verbose)
         self._verbose = verbose
@@ -191,9 +200,45 @@ class BrowserCommander:
             raise RuntimeError("page_trigger requires enable_navigation_manager=True")
         self.page_trigger_manager.page_trigger(config)
 
+    # ==================== Downloads ====================
+    async def configure_downloads(
+        self, downloads: bool | Mapping[str, Any] = True
+    ) -> Any:
+        """Attach a managed download lifecycle to this commander's browser.
+
+        Args:
+            downloads: ``True`` for defaults, or a mapping with ``directory``,
+                ``persist`` and ``conflict``
+
+        Returns:
+            The attached download manager
+        """
+        # Replacing a manager detaches the old one rather than leaving two
+        # sources writing into the same directory.
+        if self.downloads is not None:
+            await self.downloads.dispose()
+
+        browser = getattr(self.page, "context", None) or getattr(
+            self.page, "browser", None
+        )
+        self.downloads = await attach_downloads(
+            engine=self.engine,
+            browser=browser if browser is not None else self.page,
+            page=self.page,
+            downloads=downloads,
+            log=self.log,
+        )
+        return self.downloads
+
     # ==================== Lifecycle ====================
     async def destroy(self) -> None:
         """Clean up all resources."""
+        # Downloads are disposed first: disposing waits for bytes still being
+        # written, and a caller that destroys the commander right after a click
+        # should still find the file.
+        if self.downloads is not None:
+            await self.downloads.dispose()
+
         if self.page_trigger_manager:
             await self.page_trigger_manager.destroy()
 
@@ -741,6 +786,7 @@ def make_browser_commander(
     enable_network_tracking: bool = True,
     enable_navigation_manager: bool = True,
     enable_dialog_manager: bool = True,
+    downloads: Any = None,
 ) -> BrowserCommander:
     """Create a browser commander instance for a specific page.
 
@@ -750,6 +796,7 @@ def make_browser_commander(
         enable_network_tracking: Enable network request tracking (default: True)
         enable_navigation_manager: Enable navigation manager (default: True)
         enable_dialog_manager: Enable dialog event handling (default: True)
+        downloads: A download manager to expose as ``commander.downloads``
 
     Returns:
         BrowserCommander instance
@@ -760,4 +807,5 @@ def make_browser_commander(
         enable_network_tracking=enable_network_tracking,
         enable_navigation_manager=enable_navigation_manager,
         enable_dialog_manager=enable_dialog_manager,
+        downloads=downloads,
     )

@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+import asyncio
+import time
+from typing import Any
 
 import pytest
 
+import browser_commander.interactions.click as click_module
 from browser_commander.interactions.click import (
+    ClickEffect,
+    ClickResult,
+    ClickStatus,
     ClickVerificationResult,
     capture_pre_click_state,
     click_button,
@@ -14,7 +20,90 @@ from browser_commander.interactions.click import (
     default_click_verification,
     verify_click,
 )
-from tests.helpers.mocks import create_mock_logger, create_mock_playwright_page
+from tests.helpers.click_fixtures import (
+    IN_VIEWPORT_POINT,
+    OFF_SCREEN_POINT,
+    UNCHANGED_STATE,
+    ScrollModel,
+)
+from tests.helpers.mocks import (
+    create_mock_logger,
+    create_mock_playwright_page,
+)
+
+
+class ProbeAdapter:
+    """Adapter stub that answers element probes with a fixed result.
+
+    ``probe`` is either the state to return or an exception to raise. The
+    click-point probe is answered separately so the same stub can serve both
+    the verification path and the ``scroll='none'`` path.
+    """
+
+    def __init__(
+        self,
+        probe: Any = None,
+        point: dict[str, Any] | None = None,
+        on_click: Any = None,
+        scroll: ScrollModel | None = None,
+    ) -> None:
+        self.probe = probe if probe is not None else dict(UNCHANGED_STATE)
+        self.point = point or IN_VIEWPORT_POINT
+        self.on_click = on_click
+        self.scroll = scroll
+        self.click_calls: list[bool] = []
+        if scroll is not None:
+            self.evaluate_on_page = scroll.evaluate_on_page
+
+    async def click(self, _locator: Any, force: bool = False) -> None:
+        """Record an engine click, optionally raising or scrolling."""
+        self.click_calls.append(force)
+        if isinstance(self.on_click, Exception):
+            raise self.on_click
+        if callable(self.on_click):
+            self.on_click()
+
+    async def evaluate_on_element(self, _locator: Any, script: str) -> Any:
+        """Serve the click-point probe or the element-state probe."""
+        if "getBoundingClientRect" in script:
+            return {
+                **self.point,
+                "scroll": {"x": 0, "y": self.scroll.y if self.scroll else 0},
+            }
+        if isinstance(self.probe, Exception):
+            raise self.probe
+        return self.probe
+
+
+async def verify_against(post: Any, pre: dict | None = None):
+    """Run the default verifier against a fixed post-click element state."""
+    return await default_click_verification(
+        page=create_mock_playwright_page(),
+        engine="playwright",
+        locator_or_element=object(),
+        pre_click_state=pre or {},
+        adapter=ProbeAdapter(probe=post),
+    )
+
+
+def assert_not_observed(result: ClickVerificationResult, reason_fragment: str) -> None:
+    """Assert that a verdict claims nothing it did not observe."""
+    assert result.verified is False
+    assert result.effect == ClickEffect.NOT_OBSERVED
+    assert reason_fragment in result.reason
+
+
+async def click_with(adapter: ProbeAdapter, **options: Any) -> ClickResult:
+    """Invoke ``click_element`` against the mock page with a given adapter."""
+    options.setdefault("verify", False)
+    return await click_element(
+        page=options.pop("page", None) or create_mock_playwright_page(),
+        engine="playwright",
+        log=create_mock_logger(),
+        locator_or_element=object(),
+        adapter=adapter,
+        **options,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -22,107 +111,63 @@ from tests.helpers.mocks import create_mock_logger, create_mock_playwright_page
 # ---------------------------------------------------------------------------
 class TestDefaultClickVerification:
     async def test_verify_aria_pressed_changed(self):
-        page = create_mock_playwright_page()
-        adapter = MagicMock()
-        adapter.evaluate_on_element = AsyncMock(
-            return_value={
-                "disabled": False,
-                "ariaPressed": "true",
-                "ariaExpanded": None,
-                "ariaSelected": None,
-                "checked": False,
-                "className": "btn",
-                "isConnected": True,
-            }
-        )
-
-        result = await default_click_verification(
-            page=page,
-            engine="playwright",
-            locator_or_element=MagicMock(),
-            pre_click_state={"ariaPressed": "false"},
-            adapter=adapter,
+        result = await verify_against(
+            post={**UNCHANGED_STATE, "ariaPressed": "true"},
+            pre=dict(UNCHANGED_STATE),
         )
 
         assert result.verified is True
+        assert result.effect == ClickEffect.CONFIRMED
         assert "aria-pressed" in result.reason
 
     async def test_verify_class_name_changed(self):
-        page = create_mock_playwright_page()
-        adapter = MagicMock()
-        adapter.evaluate_on_element = AsyncMock(
-            return_value={
-                "disabled": False,
-                "className": "btn active",
-                "isConnected": True,
-            }
-        )
-
-        result = await default_click_verification(
-            page=page,
-            engine="playwright",
-            locator_or_element=MagicMock(),
-            pre_click_state={"className": "btn"},
-            adapter=adapter,
+        result = await verify_against(
+            post={**UNCHANGED_STATE, "className": "btn active"},
+            pre=dict(UNCHANGED_STATE),
         )
 
         assert result.verified is True
         assert "className" in result.reason
 
-    async def test_verify_element_still_connected(self):
-        page = create_mock_playwright_page()
-        adapter = MagicMock()
-        adapter.evaluate_on_element = AsyncMock(
-            return_value={
-                "disabled": False,
-                "isConnected": True,
-            }
+    async def test_does_not_claim_success_when_nothing_changed(self):
+        # Regression test for issue #89: a button whose handler does nothing
+        # left the element connected and unchanged, and that was reported as
+        # success.
+        result = await verify_against(
+            post=dict(UNCHANGED_STATE),
+            pre=dict(UNCHANGED_STATE),
         )
 
-        result = await default_click_verification(
-            page=page,
-            engine="playwright",
-            locator_or_element=MagicMock(),
-            pre_click_state={},
-            adapter=adapter,
-        )
+        assert_not_observed(result, "no observable change")
 
-        assert result.verified is True
-        assert "connected" in result.reason
+    async def test_reports_not_observed_without_pre_click_state(self):
+        result = await verify_against(post=dict(UNCHANGED_STATE))
+
+        assert_not_observed(result, "no pre-click state")
 
     async def test_verify_element_removed_from_dom(self):
-        page = create_mock_playwright_page()
-        adapter = MagicMock()
-        adapter.evaluate_on_element = AsyncMock(return_value={"isConnected": False})
-
-        result = await default_click_verification(
-            page=page,
-            engine="playwright",
-            locator_or_element=MagicMock(),
-            pre_click_state={},
-            adapter=adapter,
-        )
+        result = await verify_against(post={"isConnected": False})
 
         assert result.verified is True
+        assert result.effect == ClickEffect.CONFIRMED
         assert "removed" in result.reason
 
-    async def test_verify_handles_navigation_error(self):
-        page = create_mock_playwright_page()
-        adapter = MagicMock()
-        adapter.evaluate_on_element = AsyncMock(
-            side_effect=Exception("Execution context was destroyed")
-        )
+    async def test_destroyed_context_is_not_proof_of_effect(self):
+        # Regression test for issue #89: the click may or may not have caused
+        # the navigation that destroyed the context. Attribution is the
+        # caller's job.
+        result = await verify_against(post=Exception("Execution context was destroyed"))
 
-        result = await default_click_verification(
-            page=page,
-            engine="playwright",
-            locator_or_element=MagicMock(),
-            pre_click_state={},
-            adapter=adapter,
-        )
-
-        assert result.verified is True
+        assert_not_observed(result, "verification unavailable")
         assert result.navigation_error is True
+
+    async def test_attaches_evidence_to_every_verdict(self):
+        result = await verify_against(
+            post=dict(UNCHANGED_STATE),
+            pre=dict(UNCHANGED_STATE),
+        )
+
+        assert result.evidence[0].type == "element-state"
 
 
 # ---------------------------------------------------------------------------
@@ -130,40 +175,22 @@ class TestDefaultClickVerification:
 # ---------------------------------------------------------------------------
 class TestCapturePreClickState:
     async def test_capture_element_state(self):
-        page = create_mock_playwright_page()
-        adapter = MagicMock()
-        adapter.evaluate_on_element = AsyncMock(
-            return_value={
-                "disabled": False,
-                "ariaPressed": "false",
-                "className": "btn",
-                "isConnected": True,
-            }
-        )
-
         state = await capture_pre_click_state(
-            page=page,
+            page=create_mock_playwright_page(),
             engine="playwright",
-            locator_or_element=MagicMock(),
-            adapter=adapter,
+            locator_or_element=object(),
+            adapter=ProbeAdapter(),
         )
 
-        assert state is not None
         assert state["disabled"] is False
         assert state["className"] == "btn"
 
     async def test_returns_empty_on_navigation_error(self):
-        page = create_mock_playwright_page()
-        adapter = MagicMock()
-        adapter.evaluate_on_element = AsyncMock(
-            side_effect=Exception("Execution context was destroyed")
-        )
-
         state = await capture_pre_click_state(
-            page=page,
+            page=create_mock_playwright_page(),
             engine="playwright",
-            locator_or_element=MagicMock(),
-            adapter=adapter,
+            locator_or_element=object(),
+            adapter=ProbeAdapter(probe=Exception("Execution context was destroyed")),
         )
 
         assert state == {}
@@ -174,43 +201,46 @@ class TestCapturePreClickState:
 # ---------------------------------------------------------------------------
 class TestVerifyClick:
     async def test_uses_custom_verify_function(self):
-        page = create_mock_playwright_page()
-        log = create_mock_logger()
         custom_called = False
 
-        async def custom_verify_fn(**kwargs):
+        async def custom_verify_fn(**_kwargs):
             nonlocal custom_called
             custom_called = True
             return ClickVerificationResult(verified=True, reason="custom verification")
 
         result = await verify_click(
-            page=page,
+            page=create_mock_playwright_page(),
             engine="playwright",
-            locator_or_element=MagicMock(),
+            locator_or_element=object(),
             verify_fn=custom_verify_fn,
-            log=log,
+            log=create_mock_logger(),
         )
 
         assert custom_called is True
         assert result.verified is True
         assert result.reason == "custom verification"
 
-    async def test_logs_verification_result(self):
-        page = create_mock_playwright_page()
-        log = create_mock_logger()
+    @pytest.mark.parametrize(
+        ("verified", "expected_effect"),
+        [(True, ClickEffect.CONFIRMED), (False, ClickEffect.NOT_OBSERVED)],
+    )
+    async def test_derives_an_effect_for_custom_verifiers(
+        self,
+        verified: bool,
+        expected_effect: str,
+    ):
+        async def custom_verify_fn(**_kwargs):
+            return ClickVerificationResult(verified=verified, reason="custom")
 
-        await verify_click(
-            page=page,
+        result = await verify_click(
+            page=create_mock_playwright_page(),
             engine="playwright",
-            locator_or_element=MagicMock(),
-            verify_fn=async_verify_true,
-            log=log,
+            locator_or_element=object(),
+            verify_fn=custom_verify_fn,
+            log=create_mock_logger(),
         )
-        # Should complete without error
 
-
-async def async_verify_true(**kwargs):
-    return ClickVerificationResult(verified=True, reason="test")
+        assert result.effect == expected_effect
 
 
 # ---------------------------------------------------------------------------
@@ -218,85 +248,85 @@ async def async_verify_true(**kwargs):
 # ---------------------------------------------------------------------------
 class TestClickElement:
     async def test_raises_when_locator_not_provided(self):
-        page = create_mock_playwright_page()
-        log = create_mock_logger()
-
         with pytest.raises(ValueError, match="locator_or_element is required"):
             await click_element(
-                page=page,
+                page=create_mock_playwright_page(),
                 engine="playwright",
-                log=log,
+                log=create_mock_logger(),
                 locator_or_element=None,
             )
 
-    async def test_clicks_element(self):
-        page = create_mock_playwright_page()
-        log = create_mock_logger()
-        clicked = False
-        adapter = MagicMock()
+    async def test_reports_unverified_when_verification_not_requested(self):
+        adapter = ProbeAdapter()
 
-        async def mock_click(el, force=False):
-            nonlocal clicked
-            clicked = True
+        result = await click_with(adapter)
 
-        adapter.click = mock_click
-        adapter.evaluate_on_element = AsyncMock(return_value={"isConnected": True})
-
-        result = await click_element(
-            page=page,
-            engine="playwright",
-            log=log,
-            locator_or_element=MagicMock(),
-            adapter=adapter,
-            verify=False,
-        )
-
+        assert adapter.click_calls == [False]
         assert result.clicked is True
-        assert clicked is True
+        assert result.verified is False
+        assert result.status == ClickStatus.UNVERIFIED
 
-    async def test_click_with_force_when_no_auto_scroll(self):
+    async def test_does_not_route_no_auto_scroll_through_force(self):
+        # Regression test for issue #89: force=True skips actionability checks
+        # but does NOT disable scroll-into-view, so the old mapping silently
+        # scrolled the page while reporting that it had not.
         page = create_mock_playwright_page()
-        log = create_mock_logger()
-        click_options = {}
-        adapter = MagicMock()
+        adapter = ProbeAdapter(scroll=ScrollModel())
 
-        async def mock_click(el, force=False):
-            click_options["force"] = force
+        result = await click_with(adapter, page=page, no_auto_scroll=True)
 
-        adapter.click = mock_click
-        adapter.evaluate_on_element = AsyncMock(return_value={"isConnected": True})
+        assert adapter.click_calls == []
+        assert page.mouse.clicks == [
+            {"x": IN_VIEWPORT_POINT["x"], "y": IN_VIEWPORT_POINT["y"], "options": {}}
+        ]
+        assert result.dispatched is True
 
-        await click_element(
-            page=page,
-            engine="playwright",
-            log=log,
-            locator_or_element=MagicMock(),
-            adapter=adapter,
-            no_auto_scroll=True,
-            verify=False,
-        )
+    async def test_passes_force_only_for_actionability_force(self):
+        adapter = ProbeAdapter()
 
-        assert click_options.get("force") is True
+        await click_with(adapter, actionability="force")
 
-    async def test_handles_navigation_error(self):
+        assert adapter.click_calls == [True]
+
+    async def test_fails_clearly_when_scroll_none_cannot_be_honored(self):
         page = create_mock_playwright_page()
-        log = create_mock_logger()
-        adapter = MagicMock()
-        adapter.click = AsyncMock(
-            side_effect=Exception("Execution context was destroyed")
+        adapter = ProbeAdapter(point=OFF_SCREEN_POINT, scroll=ScrollModel())
+
+        result = await click_with(adapter, page=page, scroll="none")
+
+        assert result.status == ClickStatus.FAILED
+        assert result.dispatched is False
+        assert adapter.click_calls == []
+        assert page.mouse.clicks == []
+        assert "outside the viewport" in result.reason
+
+    async def test_restores_the_scroll_position_for_scroll_preserve(self):
+        scroll = ScrollModel()
+        adapter = ProbeAdapter(
+            scroll=scroll, on_click=lambda: setattr(scroll, "y", 3911)
         )
 
-        result = await click_element(
-            page=page,
-            engine="playwright",
-            log=log,
-            locator_or_element=MagicMock(),
-            adapter=adapter,
-            verify=False,
-        )
+        await click_with(adapter, scroll="preserve")
+
+        assert scroll.y == 0
+
+    async def test_reports_interrupted_not_verified_on_navigation(self):
+        # Regression test for issue #89: navigation used to be reported as a
+        # verified click even though nothing confirmed the click caused it.
+        adapter = ProbeAdapter(on_click=Exception("Execution context was destroyed"))
+
+        result = await click_with(adapter)
 
         assert result.clicked is False
-        assert result.verified is True
+        assert result.verified is False
+        assert result.status == ClickStatus.INTERRUPTED
+        assert result.effect == ClickEffect.NOT_OBSERVED
+
+    async def test_carries_an_action_id_for_navigation_correlation(self):
+        result = await click_with(ProbeAdapter())
+
+        assert isinstance(result.action_id, str)
+        assert result.elapsed_ms >= 0
 
 
 # ---------------------------------------------------------------------------
@@ -304,26 +334,22 @@ class TestClickElement:
 # ---------------------------------------------------------------------------
 class TestClickButton:
     async def test_raises_when_selector_not_provided(self):
-        page = create_mock_playwright_page()
-        log = create_mock_logger()
-
-        async def wait_fn(ms, reason):
+        async def wait_fn(_ms, _reason):
             return None
 
         with pytest.raises(ValueError, match="selector is required"):
             await click_button(
-                page=page,
+                page=create_mock_playwright_page(),
                 engine="playwright",
                 wait_fn=wait_fn,
-                log=log,
+                log=create_mock_logger(),
                 selector="",
             )
 
     async def test_click_button_interface(self):
         page = create_mock_playwright_page(elements={"button": None})
-        log = create_mock_logger()
 
-        async def wait_fn(ms, reason):
+        async def wait_fn(_ms, _reason):
             return None
 
         # This tests that the interface works - may succeed or fail based on mock
@@ -332,7 +358,7 @@ class TestClickButton:
                 page=page,
                 engine="playwright",
                 wait_fn=wait_fn,
-                log=log,
+                log=create_mock_logger(),
                 selector="button",
                 scroll_into_view=False,
                 wait_after_click=0,
@@ -341,6 +367,138 @@ class TestClickButton:
             )
             assert isinstance(result.clicked, bool)
             assert isinstance(result.navigated, bool)
+            assert result.status in vars(ClickStatus).values()
         except Exception as e:
             # May fail due to mock limitations, but interface exists
             assert str(e)
+
+
+# ---------------------------------------------------------------------------
+# deadlines
+# ---------------------------------------------------------------------------
+class SlowProbeAdapter(ProbeAdapter):
+    """Adapter whose element-state probe answers once, then never again.
+
+    This is what a real engine looks like after a navigation: the first probe
+    is served by the original document and any later one hangs until the
+    engine's own (far longer) locator timeout fires.
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.state_probes = 0
+
+    async def evaluate_on_element(self, locator: Any, script: str) -> Any:
+        """Serve the click-point probe, then stall every state probe but the first."""
+        if "getBoundingClientRect" in script:
+            return await super().evaluate_on_element(locator, script)
+        self.state_probes += 1
+        if self.state_probes == 1:
+            return await super().evaluate_on_element(locator, script)
+        await asyncio.sleep(30)
+        return self.probe
+
+
+class StallingClickAdapter(ProbeAdapter):
+    """Adapter whose engine click never comes back.
+
+    Dispatch is an engine round-trip too, so an unbounded one spends the budget
+    the caller reserved for the whole click before verification gets a turn.
+    """
+
+    async def click(self, _locator: Any, force: bool = False) -> None:
+        """Never answer, the way a stuck engine call does not."""
+        await asyncio.sleep(30)
+
+
+class TestClickDeadlines:
+    """Issue #89: one monotonic budget has to cover every check in a click."""
+
+    async def test_reports_timed_out_when_the_target_cannot_be_read(self):
+        adapter = SlowProbeAdapter()
+        started = time.monotonic()
+
+        result = await click_with(adapter, verify=True, timeout=150)
+
+        assert (time.monotonic() - started) < 5, "the budget has to bound the probe"
+        assert result.status == ClickStatus.TIMED_OUT
+        assert result.dispatched is True
+        assert result.effect == ClickEffect.NOT_OBSERVED
+        assert result.verified is False
+        assert any(item.type == "verification-timeout" for item in result.evidence)
+
+    async def test_stops_waiting_on_a_dispatch_that_outlives_the_budget(self):
+        started = time.monotonic()
+
+        result = await click_with(StallingClickAdapter(), verify=True, timeout=150)
+
+        assert (time.monotonic() - started) < 5, "the budget has to bound dispatch"
+        assert result.status == ClickStatus.TIMED_OUT
+        assert result.dispatched is False
+        assert result.evidence[0].type == "dispatch-timeout"
+
+    async def test_gives_up_on_a_target_the_page_navigated_away_from(self):
+        page = create_mock_playwright_page()
+        page.url.return_value = "https://example.com/start"
+
+        async def navigate_soon() -> None:
+            await asyncio.sleep(0.06)
+            page.url.return_value = "https://example.com/arrived"
+
+        navigating = asyncio.ensure_future(navigate_soon())
+        started = time.monotonic()
+
+        result = await click_with(
+            SlowProbeAdapter(), page=page, verify=True, timeout=5000
+        )
+
+        await navigating
+        assert (time.monotonic() - started) < 2, (
+            "the navigation, not the budget, should end the wait"
+        )
+        assert result.status == ClickStatus.UNVERIFIED
+        navigation = next(item for item in result.evidence if item.type == "navigation")
+        assert navigation.detail["proves_click_effect"] is False
+        assert navigation.detail["to"] == "https://example.com/arrived"
+
+    async def test_hands_a_button_click_only_the_budget_that_is_left(self, monkeypatch):
+        # click_button locates, scrolls, clicks and verifies; before the shared
+        # deadline each of those started a timer of its own, so a 200ms button
+        # click could quietly cost several times that.
+        handed_down: list[int] = []
+
+        async def slow_locate(**_kwargs: Any) -> Any:
+            # Stand in for a locator wait that spends part of the budget.
+            await asyncio.sleep(0.08)
+            return object()
+
+        async def fake_click_element(**kwargs: Any) -> ClickResult:
+            handed_down.append(kwargs["timeout"])
+            return ClickResult(
+                status=ClickStatus.SUCCEEDED,
+                dispatched=True,
+                effect=ClickEffect.CONFIRMED,
+                elapsed_ms=0,
+            )
+
+        async def wait_fn(_ms: float, _reason: str) -> None:
+            return None
+
+        monkeypatch.setattr(click_module, "wait_for_locator_or_element", slow_locate)
+        monkeypatch.setattr(click_module, "click_element", fake_click_element)
+
+        await click_button(
+            page=create_mock_playwright_page(),
+            engine="playwright",
+            wait_fn=wait_fn,
+            log=create_mock_logger(),
+            selector="button",
+            timeout=200,
+            scroll_into_view=False,
+            wait_after_click=0,
+            wait_for_navigation=False,
+            verify=True,
+        )
+
+        assert handed_down, "click_button has to delegate to click_element"
+        assert handed_down[0] < 200, "the time already spent must come off the budget"

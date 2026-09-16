@@ -10,6 +10,8 @@
 
 import { isNavigationError } from './navigation-safety.js';
 import { TIMING } from './constants.js';
+import { READINESS_STATUS } from './readiness.js';
+import { createReadinessWaiter } from './navigation-readiness.js';
 
 async function setManagedContent(options = {}) {
   const {
@@ -22,7 +24,7 @@ async function setManagedContent(options = {}) {
     triggerNavigationStart,
     updateCurrentUrl,
     waitForPageReady,
-    completeNavigation,
+    abandonNavigation,
   } = options;
 
   if (typeof html !== 'string') {
@@ -42,8 +44,9 @@ async function setManagedContent(options = {}) {
     await waitForPageReady({ timeout, reason: 'after setContent' });
     return true;
   } catch (error) {
-    // Do not leave the manager in its loading state when setContent fails.
-    completeNavigation();
+    // Do not leave the manager in its loading state when setContent fails, but
+    // do not claim the page became ready either - it did not.
+    abandonNavigation('setContent failed');
     if (isNavigationError(error)) {
       log.debug(() => '⚠️  Content loading was interrupted, recovering...');
       return false;
@@ -211,21 +214,44 @@ export function createNavigationManager(options = {}) {
     }
   }
 
-  // Track if waitForPageReady is currently running to prevent concurrent calls
+  // Track if a readiness wait is currently running to prevent concurrent calls
   let pageReadyPromise = null;
 
+  const { waitForReady } = createReadinessWaiter({
+    page,
+    engine,
+    log,
+    networkTracker,
+    config,
+    getState: () => ({ url: currentUrl, sessionId }),
+    onUrlSample: (url) => {
+      if (url !== currentUrl) {
+        currentUrl = url;
+        log.debug(() => `🔄 Redirect detected: ${url}`);
+      }
+    },
+    onReady: () => {
+      finishNavigationTracking({ ready: true });
+      emitPageReady();
+    },
+    onNotReady: () => finishNavigationTracking({ ready: false }),
+  });
+
   /**
-   * Wait for page to be ready (DOM loaded + network idle + no redirects)
-   * @param {Object} options - Configuration options
-   * @param {number} options.timeout - Maximum time to wait
-   * @param {string} options.reason - Reason for waiting (for logging)
-   * @returns {Promise<boolean>} - True if ready, false if timeout
+   * Boolean-returning readiness wait kept for backward compatibility.
+   *
+   * Unlike the previous implementation this returns `false` when the page did
+   * not actually become ready, and it never emits the page-ready event in that
+   * case. Prefer {@link waitForReady} for the structured result.
+   *
+   * @param {Object} [opts] - Same options as {@link waitForReady}
+   * @returns {Promise<boolean>} Whether the page genuinely became ready
    */
   async function waitForPageReady(opts = {}) {
-    const { timeout = config.networkIdleTimeout, reason = 'page ready' } = opts;
+    const { reason = 'page ready' } = opts;
 
-    // If another waitForPageReady is already running, wait for it instead of starting a new one
-    // This prevents concurrent waits that can cause race conditions
+    // Concurrent callers join the in-flight wait instead of racing a second
+    // deadline against the first.
     if (pageReadyPromise) {
       log.debug(
         () => `⏳ Waiting for existing page ready operation (${reason})...`
@@ -233,74 +259,38 @@ export function createNavigationManager(options = {}) {
       return pageReadyPromise;
     }
 
-    log.debug(() => `⏳ Waiting for page ready (${reason})...`);
-
-    // Create the promise and store it
-    pageReadyPromise = (async () => {
-      const startTime = Date.now();
-      let lastUrlChangeTime = Date.now();
-
-      // Wait for URL to stabilize (no more redirects)
-      while (
-        Date.now() - lastUrlChangeTime <
-        config.redirectStabilizationTime
-      ) {
-        if (Date.now() - startTime > timeout) {
-          log.debug(
-            () => `⚠️  Page ready timeout after ${timeout}ms (${reason})`
-          );
-          break;
-        }
-
-        await new Promise((r) => setTimeout(r, 200));
-
-        // Check if URL changed
-        const nowUrl = page.url();
-        if (nowUrl !== currentUrl) {
-          currentUrl = nowUrl;
-          lastUrlChangeTime = Date.now();
-          log.debug(() => `🔄 Redirect detected: ${nowUrl}`);
-        }
-      }
-
-      // Wait for network idle - use remaining time but ensure at least 30s for idle check
-      // The 30s idle time is enforced by the network tracker's idleTimeout config
-      if (networkTracker) {
-        const elapsed = Date.now() - startTime;
-        // Give at least 60 seconds for network idle, or remaining time if more
-        const remainingTimeout = Math.max(60000, timeout - elapsed);
-
-        const networkIdle = await networkTracker.waitForNetworkIdle({
-          timeout: remainingTimeout,
-          // idleTime defaults to TIMING.NAVIGATION_TIMEOUT from tracker config
-        });
-
-        if (!networkIdle) {
-          log.debug(() => `⚠️  Network did not become idle (${reason})`);
-        }
-      }
-
-      // Complete navigation
-      completeNavigation();
-
-      const elapsed = Date.now() - startTime;
-      log.debug(() => `✅ Page ready after ${elapsed}ms (${reason})`);
-
-      return true;
-    })();
+    pageReadyPromise = waitForReady(opts).then((result) => result.ready);
 
     try {
       return await pageReadyPromise;
     } finally {
-      // Clear the promise so next call can start fresh
       pageReadyPromise = null;
     }
   }
 
   /**
-   * Complete current navigation
+   * Leave the navigating state without claiming the page became ready.
+   *
+   * @param {string} reason - Why the navigation was abandoned
    */
-  function completeNavigation() {
+  function abandonNavigation(reason) {
+    log.debug(() => `⚠️  Navigation abandoned: ${reason}`);
+    finishNavigationTracking({ ready: false });
+  }
+
+  /**
+   * Close out navigation bookkeeping.
+   *
+   * This only reports that the navigation stopped being in flight. Whether the
+   * page is usable is a separate question answered by {@link emitPageReady},
+   * which is why the two are no longer one function.
+   *
+   * @param {Object} [options] - Configuration options
+   * @param {boolean} [options.ready=false] - Whether the page reached a ready state
+   */
+  function finishNavigationTracking(options = {}) {
+    const { ready = false } = options;
+
     if (!isNavigating) {
       return;
     }
@@ -310,13 +300,14 @@ export function createNavigationManager(options = {}) {
     navigationStartTime = null;
 
     log.debug(
-      () => `✅ Navigation complete (session ${sessionId}, ${duration}ms)`
+      () =>
+        `${ready ? '✅' : '⚠️ '} Navigation finished (session ${sessionId}, ` +
+        `${duration}ms, ready=${ready})`
     );
 
-    // Notify navigation complete listeners
     listeners.onNavigationComplete.forEach((fn) => {
       try {
-        fn({ url: currentUrl, sessionId, duration });
+        fn({ url: currentUrl, sessionId, duration, ready });
       } catch (e) {
         log.debug(
           () => `⚠️  Error in onNavigationComplete listener: ${e.message}`
@@ -324,7 +315,17 @@ export function createNavigationManager(options = {}) {
       }
     });
 
-    // Notify page ready listeners
+    if (navigationResolve) {
+      navigationResolve(ready);
+      navigationResolve = null;
+      navigationPromise = null;
+    }
+  }
+
+  /**
+   * Announce that the page reached a ready state.
+   */
+  function emitPageReady() {
     listeners.onPageReady.forEach((fn) => {
       try {
         fn({ url: currentUrl, sessionId });
@@ -332,13 +333,6 @@ export function createNavigationManager(options = {}) {
         log.debug(() => `⚠️  Error in onPageReady listener: ${e.message}`);
       }
     });
-
-    // Resolve navigation promise if waiting
-    if (navigationResolve) {
-      navigationResolve(true);
-      navigationResolve = null;
-      navigationPromise = null;
-    }
   }
 
   /**
@@ -369,13 +363,11 @@ export function createNavigationManager(options = {}) {
       currentUrl = page.url();
 
       // Wait for page to be fully ready
-      await waitForPageReady({ timeout, reason: 'after goto' });
-
-      return true;
+      return await waitForPageReady({ timeout, reason: 'after goto' });
     } catch (error) {
       if (isNavigationError(error)) {
         log.debug(() => '⚠️  Navigation was interrupted, recovering...');
-        completeNavigation();
+        abandonNavigation('navigation interrupted');
         return false;
       }
       throw error;
@@ -391,7 +383,7 @@ export function createNavigationManager(options = {}) {
       triggerNavigationStart,
       updateCurrentUrl: () => (currentUrl = page.url()),
       waitForPageReady,
-      completeNavigation,
+      abandonNavigation,
     });
 
   /**
@@ -416,7 +408,7 @@ export function createNavigationManager(options = {}) {
         setTimeout(() => {
           if (isNavigating) {
             log.debug(() => '⚠️  waitForNavigation timeout');
-            completeNavigation();
+            abandonNavigation('waitForNavigation timeout');
             resolve(false);
           }
         }, timeout);
@@ -511,6 +503,7 @@ export function createNavigationManager(options = {}) {
     setContent,
     waitForNavigation,
     waitForPageReady,
+    waitForReady,
 
     // State
     isNavigating: () => isNavigating,
@@ -532,5 +525,8 @@ export function createNavigationManager(options = {}) {
     startListening,
     stopListening,
     configure,
+
+    // Readiness status vocabulary, re-exported for callers matching on it
+    READINESS_STATUS,
   };
 }

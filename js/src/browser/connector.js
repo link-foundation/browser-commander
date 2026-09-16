@@ -1,3 +1,4 @@
+import { attachDownloads } from '../downloads/attach.js';
 import {
   loadStorageState,
   restorePlaywrightStorageState,
@@ -109,7 +110,8 @@ async function connectPuppeteer({ options, loadPuppeteer, storageState }) {
  * @param {Object[]|string|Object} [options.storageState] - Playwright-compatible state path or object
  * @param {Object[]} [options.seedCookies] - Cookies to seed after connecting
  * @param {boolean} [options.verbose=false] - Enable connection logging
- * @returns {Promise<{browser: Object, page: Object}>} Raw browser and page handles
+ * @param {boolean|Object} [options.downloads] - Manage downloads: true for defaults, or {directory, persist, conflict}
+ * @returns {Promise<{browser: Object, page: Object, downloads: Object|null}>} Raw handles and the download manager when one was requested
  */
 export async function connectBrowser(options = {}) {
   return await connectBrowserWithDependencies(options);
@@ -120,7 +122,7 @@ export async function connectBrowser(options = {}) {
  *
  * @param {Object} options - See {@link connectBrowser}
  * @param {Object} dependencies - Optional engine module loaders
- * @returns {Promise<{browser: Object, page: Object}>} Raw browser and page handles
+ * @returns {Promise<{browser: Object, page: Object, downloads: Object|null}>} Raw handles and the download manager when one was requested
  */
 export async function connectBrowserWithDependencies(
   options = {},
@@ -157,7 +159,17 @@ export async function connectBrowserWithDependencies(
   if (verbose) {
     console.log(`Connected to browser with ${engine} engine`);
   }
-  return result;
+
+  // An attached browser gets the same managed lifecycle as a launched one:
+  // the manager is built from the browser and page, not from how we got them.
+  const downloads = await attachDownloads({
+    engine,
+    browser: result.browser,
+    page: result.page,
+    downloads: normalizedOptions.downloads,
+  });
+
+  return { ...result, downloads };
 }
 
 export { buildPlaywrightConnectOptions, buildPuppeteerConnectOptions };

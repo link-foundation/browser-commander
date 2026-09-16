@@ -10,13 +10,20 @@ This module provides navigation lifecycle management including:
 from __future__ import annotations
 
 import asyncio
-import time
+from collections.abc import Sequence
 from typing import Any, Callable
 
 from browser_commander.core.constants import TIMING
 from browser_commander.core.engine_detection import EngineType
 from browser_commander.core.logger import Logger
+from browser_commander.core.navigation_readiness import ReadinessWaiter
 from browser_commander.core.network_tracker import NetworkTracker
+from browser_commander.core.readiness import (
+    Deadline,
+    ReadinessCheck,
+    ReadinessResult,
+    sleep_within_deadline,
+)
 
 
 class NavigationManager:
@@ -46,12 +53,35 @@ class NavigationManager:
         self._is_navigating = False
         self._last_url = ""
         self._abort_controller: asyncio.Event | None = None
+        self._page_ready_task: asyncio.Task[ReadinessResult] | None = None
         self._listeners: dict[str, list[Callable]] = {
             "on_navigation_start": [],
             "on_navigation_complete": [],
             "on_url_change": [],
             "on_page_ready": [],
         }
+        self._readiness = ReadinessWaiter(
+            page=page,
+            engine=engine,
+            log=log,
+            network_tracker=network_tracker,
+            get_url=self._get_current_url,
+            on_url_sample=self._on_url_sample,
+            on_ready=self._on_readiness_satisfied,
+            on_not_ready=lambda: self._finish_navigation_tracking(ready=False),
+        )
+
+    def configure(
+        self,
+        redirect_stabilization_time: int | None = None,
+    ) -> None:
+        """Adjust navigation configuration.
+
+        Args:
+            redirect_stabilization_time: URL quiet period required for readiness
+        """
+        if redirect_stabilization_time is not None:
+            self._readiness.redirect_stabilization_time = redirect_stabilization_time
 
     def start_listening(self) -> None:
         """Start listening for navigation events."""
@@ -155,10 +185,11 @@ class NavigationManager:
                 self.page.set_page_load_timeout(timeout / 1000)
                 self.page.get(url)
 
-            # Wait for page to be ready
-            await self.wait_for_page_ready(timeout=timeout)
-
-            self._is_navigating = False
+            # Wait for page to be ready. A failed wait leaves the navigation
+            # closed out but does not emit a ready page.
+            ready = await self.wait_for_page_ready(timeout=timeout)
+            if not ready:
+                self.abandon_navigation("page did not become ready")
 
             # Notify completion
             for fn in self._listeners["on_navigation_complete"]:
@@ -167,7 +198,7 @@ class NavigationManager:
             return True
 
         except Exception as e:
-            self._is_navigating = False
+            self.abandon_navigation("navigation interrupted")
             self.log.debug(lambda _e=e: f"Navigation error: {_e}")
             raise
 
@@ -186,55 +217,112 @@ class NavigationManager:
         if not self._is_navigating:
             return True
 
-        start_time = time.time() * 1000
+        deadline = Deadline(timeout=timeout)
 
         while self._is_navigating:
-            if time.time() * 1000 - start_time > timeout:
+            if deadline.expired():
                 return False
-            await asyncio.sleep(0.1)
+            await sleep_within_deadline(100, deadline)
 
         return True
+
+    def _on_url_sample(self, url: str) -> None:
+        """Record a URL observed while waiting for readiness.
+
+        Redirects seen mid-wait update the tracked URL but do not restart
+        navigation tracking - the wait already owns the budget.
+        """
+        if url and url != self._last_url:
+            self._last_url = url
+            self.log.debug(lambda: f"Redirect detected: {url}")
+
+    def _on_readiness_satisfied(self) -> None:
+        """Close out navigation and announce readiness, in that order."""
+        self._finish_navigation_tracking(ready=True)
+        self._emit_page_ready()
+
+    def _finish_navigation_tracking(self, ready: bool = False) -> None:
+        """Stop tracking the in-flight navigation.
+
+        This answers only "is a navigation still in flight?". Whether the page
+        is usable is a separate question answered by :meth:`_emit_page_ready`;
+        conflating the two is what let a failed readiness wait still announce a
+        ready page.
+
+        Args:
+            ready: Whether the readiness checks were satisfied
+        """
+        if not self._is_navigating:
+            return
+        self._is_navigating = False
+        if not ready:
+            self.log.debug(lambda: "Navigation tracking finished without readiness")
+
+    def _emit_page_ready(self) -> None:
+        """Announce that the page is usable. Only readiness may call this."""
+        for fn in self._listeners["on_page_ready"]:
+            fn({"url": self._get_current_url()})
+
+    def abandon_navigation(self, reason: str) -> None:
+        """Give up on the in-flight navigation without claiming readiness.
+
+        Args:
+            reason: Why the navigation was abandoned
+        """
+        self.log.debug(lambda: f"Navigation abandoned: {reason}")
+        self._finish_navigation_tracking(ready=False)
+
+    async def wait_for_readiness(
+        self,
+        timeout: int = TIMING["NAVIGATION_TIMEOUT"],
+        reason: str = "page ready",
+        checks: Sequence[ReadinessCheck] | None = None,
+    ) -> ReadinessResult:
+        """Wait for the page to be ready and return the full evidence.
+
+        Concurrent callers join the in-flight wait rather than starting a
+        second one, so the budget is never spent twice over.
+
+        Args:
+            timeout: Maximum time to wait (ms), shared by every check
+            reason: Reason for waiting (for logging)
+            checks: Composable readiness checks, defaults to URL + network idle
+
+        Returns:
+            The structured readiness result
+        """
+        if self._page_ready_task and not self._page_ready_task.done():
+            self.log.debug(lambda: f"Joining in-flight page ready wait ({reason})")
+            return await asyncio.shield(self._page_ready_task)
+
+        self._page_ready_task = asyncio.ensure_future(
+            self._readiness.wait_for_ready(
+                timeout=timeout,
+                reason=reason,
+                checks=checks,
+            )
+        )
+        try:
+            return await self._page_ready_task
+        finally:
+            self._page_ready_task = None
 
     async def wait_for_page_ready(
         self,
         timeout: int = TIMING["NAVIGATION_TIMEOUT"],
         reason: str = "page ready",
     ) -> bool:
-        """Wait for page to be fully ready (DOM loaded + network idle).
+        """Wait for page to be fully ready (URL settled + network idle).
 
         Args:
             timeout: Maximum time to wait (ms)
             reason: Reason for waiting (for logging)
 
         Returns:
-            True if ready, False if timeout
+            True only when every readiness check was satisfied
         """
-        self.log.debug(lambda: f"Waiting for page ready ({reason})...")
-        start_time = time.time() * 1000
-
-        # Wait for network idle if network tracker available
-        if self.network_tracker:
-            remaining_timeout = timeout - (time.time() * 1000 - start_time)
-            if remaining_timeout > 0:
-                network_idle = await self.network_tracker.wait_for_network_idle(
-                    timeout=int(remaining_timeout)
-                )
-                if not network_idle:
-                    self.log.debug(
-                        lambda: f"Page ready timeout after {timeout}ms ({reason})"
-                    )
-                    return False
-
-        elapsed = time.time() * 1000 - start_time
-        self.log.debug(lambda: f"Page ready after {elapsed:.0f}ms ({reason})")
-
-        self._is_navigating = False
-
-        # Notify listeners
-        for fn in self._listeners["on_page_ready"]:
-            fn({"url": self._get_current_url()})
-
-        return True
+        result = await self.wait_for_readiness(timeout=timeout, reason=reason)
+        return result.ready
 
     def on(self, event: str, callback: Callable) -> None:
         """Add event listener."""

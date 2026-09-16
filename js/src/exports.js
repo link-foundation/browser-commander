@@ -60,6 +60,7 @@ export {
   setContent,
   waitForNavigation,
   waitForPageReady,
+  waitForReady,
   waitAfterAction,
   // Navigation verification
   defaultNavigationVerification,
@@ -115,7 +116,30 @@ export {
   defaultClickVerification,
   capturePreClickState,
   verifyClick,
+  // Truthful click result model
+  CLICK_STATUS,
+  CLICK_EFFECT,
+  // Orthogonal activation options
+  CLICK_ACTIVATION,
+  CLICK_SCROLL,
+  CLICK_ACTIONABILITY,
+  ScrollConstraintError,
 } from './interactions/click.js';
+
+export {
+  READINESS_STATUS,
+  LONG_LIVED_REQUEST_PATTERNS,
+  isLongLivedRequest,
+  createDeadline,
+  runReadinessChecks,
+  // Composable readiness checks
+  urlStableFor,
+  networkIdleFor,
+  domStableFor,
+  visibleImages,
+  predicate,
+  stableCheck,
+} from './core/readiness.js';
 
 export {
   checkIfElementEmpty,
@@ -173,3 +197,51 @@ export {
   findFingerprintLimitation,
   relevantFingerprintLimitations,
 } from './fingerprint/limitations.js';
+
+// Re-export the managed download subsystem: one lifecycle for automated and
+// manual downloads, with files that outlive the browser (issue #88).
+export {
+  attachDownloads,
+  normalizeDownloadOptions,
+} from './downloads/attach.js';
+export { DOWNLOAD_EVENT, createDownloadManager } from './downloads/manager.js';
+export {
+  ARTIFACT_DIRECTORY_MODE,
+  ARTIFACT_FILE_MODE,
+  DOWNLOAD_DIRECTORY_PRESETS,
+  prepareDownloadDirectory,
+  resolveDownloadDirectory,
+} from './downloads/destination.js';
+export {
+  DOWNLOAD_CONFLICT,
+  cleanPartials,
+  saveDownload,
+} from './downloads/store.js';
+export { DOWNLOAD_FAILURE } from './downloads/sources.js';
+export {
+  extensionFromContent,
+  sanitizeDownloadName,
+  withExtension,
+} from './downloads/naming.js';
+
+// Re-export the portable trace subsystem: one recorder, one versioned bundle,
+// and one offline viewer for every consumer (issue #87).
+export { startTrace } from './traces/recorder.js';
+export {
+  TRACE_EVENT,
+  TRACE_EVENT_SOURCES,
+  TRACE_FILES,
+  TRACE_MODE,
+  TRACE_OUTCOME,
+  TRACE_SCHEMA_VERSION,
+} from './traces/schema.js';
+export { diffControlState, parseNdjson, readTrace } from './traces/reader.js';
+export { renderTraceViewer, writeTraceViewer } from './traces/viewer.js';
+export {
+  DEFAULT_REDACT_ATTRIBUTES,
+  DEFAULT_REDACT_SELECTORS,
+  REDACTED,
+  normalizePrivacyOptions,
+  redactUrl,
+  redactValue,
+} from './traces/redaction.js';

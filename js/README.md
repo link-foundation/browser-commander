@@ -599,6 +599,90 @@ await keyDown({ page, engine: 'playwright', key: 'Control' });
 await keyUp({ page, engine: 'playwright', key: 'Control' });
 ```
 
+### Managed Downloads
+
+A download that only exists while the browser is open is not a download. Ask for
+`downloads` at any entry point - `launchBrowser()`, `connectBrowser()`,
+`launchRealBrowser()` or `commander.configureDownloads()` - and the manager owns
+the file from then on:
+
+```javascript
+const { commander, downloads } = await launchBrowser({
+  downloads: { directory: '/tmp/reports', conflict: 'rename' },
+});
+
+// capture() starts listening before the action runs, so a download that
+// finishes in 5ms cannot slip past the registration.
+const artifact = await downloads.capture({
+  action: () => commander.clickButton({ selector: '#export' }),
+  filename: 'q3-report.pdf', // the page's UUID name gets the caller's name
+  timeout: 30000,
+});
+
+console.log(artifact.path, artifact.bytes, artifact.checksum);
+
+await commander.destroy();
+// The file is still there: it outlives the page, the context and the browser.
+```
+
+`downloads.on(DOWNLOAD_EVENT.COMPLETED, ...)` observes every download in the
+session, including one a person started by hand in a visible browser, and each
+download is reported exactly once whether it was captured or merely observed. A
+failed or cancelled download raises the failure rather than returning a path.
+
+### Portable Traces
+
+`startTrace()` records a session into a schema-versioned bundle any of the three
+languages can read - the manifest, an ordered NDJSON timeline, per-checkpoint
+DOM snapshots and the mutation batches between them:
+
+```javascript
+import { startTrace, readTrace, writeTraceViewer } from 'browser-commander';
+
+const trace = await startTrace({
+  commander,
+  output: '/tmp/traces/checkout',
+  mode: 'continuous', // keeps DOM mutations between checkpoints
+  privacy: { redact: [/password/i, /token/i] },
+});
+
+await commander.goto({ url: 'https://example.com/checkout' });
+await trace.checkpoint('cart');
+await commander.clickButton({ selector: '#pay' });
+await trace.checkpoint('paid');
+
+const { path } = await trace.stop();
+const bundle = await readTrace(path);
+await writeTraceViewer(bundle, '/tmp/traces/checkout/viewer.html');
+```
+
+Redaction runs before anything reaches disk, and a run cut short by a closed
+page or a size limit still leaves a readable partial trace. The viewer seeks,
+diffs and replays the captured DOM with scripts and network disabled.
+
+### Truthful Click Results
+
+`clickElement()` reports what was observed, not what was attempted:
+
+```javascript
+const result = await clickElement({
+  page,
+  engine,
+  locatorOrElement: '#submit',
+});
+
+result.status; // 'succeeded' | 'failed' | 'timed_out' | 'interrupted' | 'unverified'
+result.effect; // 'confirmed' | 'not-observed' | 'contradicted'
+result.evidence; // why status and effect say what they say
+result.clicked; // still here: whether the click reached the element
+result.verified; // still here, now derived from effect === 'confirmed'
+```
+
+The `scroll` axis (`auto`, `preserve`, `none`) replaces the deprecated
+`noAutoScroll` flag. `scroll: 'none'` never scrolls: on an engine that cannot
+deliver a click without scrolling it throws `ScrollConstraintError` naming the
+alternatives, rather than scrolling the page and reporting success.
+
 ### commander.destroy()
 
 ```javascript

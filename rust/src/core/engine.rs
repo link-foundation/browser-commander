@@ -4,6 +4,8 @@
 //! browser automation engines.
 
 use async_trait::async_trait;
+
+use crate::interactions::click_result::{ClickEffect, Evidence};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -92,6 +94,10 @@ pub struct ElementInfo {
 }
 
 /// Result of a click verification.
+///
+/// `verified` is a legacy alias for "the effect was confirmed". The verdict
+/// itself lives in [`ClickVerificationResult::effect`], which can also say
+/// "nothing was observed" - a distinct answer from "the click failed".
 #[derive(Debug, Clone)]
 pub struct ClickVerificationResult {
     /// Whether the click was verified as successful.
@@ -100,6 +106,40 @@ pub struct ClickVerificationResult {
     pub reason: String,
     /// Whether a navigation error occurred during verification.
     pub navigation_error: bool,
+    /// What the page was observed to do.
+    pub effect: ClickEffect,
+    /// The observations behind the verdict.
+    pub evidence: Vec<Evidence>,
+}
+
+impl ClickVerificationResult {
+    /// Build a verdict from an observed effect.
+    pub fn new(effect: ClickEffect, reason: impl Into<String>, evidence: Vec<Evidence>) -> Self {
+        Self {
+            verified: effect == ClickEffect::Confirmed,
+            reason: reason.into(),
+            navigation_error: false,
+            effect,
+            evidence,
+        }
+    }
+
+    /// Build a verdict confirming that the click had an effect.
+    pub fn confirmed(reason: impl Into<String>, evidence: Vec<Evidence>) -> Self {
+        Self::new(ClickEffect::Confirmed, reason, evidence)
+    }
+
+    /// Build a verdict that observed nothing either way.
+    pub fn not_observed(reason: impl Into<String>, evidence: Vec<Evidence>) -> Self {
+        Self::new(ClickEffect::NotObserved, reason, evidence)
+    }
+
+    /// Mark this verdict as one reached while the page was navigating away.
+    #[must_use]
+    pub fn with_navigation_error(mut self, navigation_error: bool) -> Self {
+        self.navigation_error = navigation_error;
+        self
+    }
 }
 
 /// Result of a scroll verification.
@@ -187,6 +227,28 @@ pub trait EngineAdapter: Send + Sync {
 
     /// Click an element.
     async fn click(&self, selector: &str) -> Result<(), EngineError>;
+
+    /// Click at viewport coordinates, without scrolling anything into view.
+    ///
+    /// This is what `ClickScroll::None` needs: the engine's element click
+    /// scrolls the target into view first, so it cannot honor a "do not scroll"
+    /// request. The default implementation reports that the engine has no such
+    /// API, so the constraint is refused rather than silently ignored.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Viewport x coordinate
+    /// * `y` - Viewport y coordinate
+    ///
+    /// # Returns
+    ///
+    /// Nothing on success, or [`EngineError::Browser`] when unsupported.
+    async fn mouse_click(&self, x: f64, y: f64) -> Result<(), EngineError> {
+        let _ = (x, y);
+        Err(EngineError::Browser(
+            "this engine does not expose viewport-coordinate pointer input".to_string(),
+        ))
+    }
 
     /// Fill an input element with text.
     async fn fill(&self, selector: &str, text: &str) -> Result<(), EngineError>;
@@ -373,12 +435,19 @@ mod tests {
 
     #[test]
     fn click_verification_result_creation() {
-        let result = ClickVerificationResult {
-            verified: true,
-            reason: "element state changed".to_string(),
-            navigation_error: false,
-        };
+        let result = ClickVerificationResult::confirmed(
+            "element state changed",
+            vec![Evidence::message("element-state", "className changed")],
+        );
         assert!(result.verified);
         assert!(!result.navigation_error);
+        assert_eq!(result.effect, ClickEffect::Confirmed);
+        assert_eq!(result.evidence.len(), 1);
+
+        // Regression test for issue #89: "nothing was observed" must never
+        // present itself as a verified click.
+        let unobserved = ClickVerificationResult::not_observed("no observable change", vec![]);
+        assert!(!unobserved.verified);
+        assert_eq!(unobserved.effect, ClickEffect::NotObserved);
     }
 }

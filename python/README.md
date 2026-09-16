@@ -419,6 +419,86 @@ result = await commander.safe_evaluate(
 print(f"Success: {result['success']}, Value: {result['value']}")
 ```
 
+### Managed Downloads
+
+A download that only exists while the browser is open is not a download. Ask for
+`downloads` at any entry point - `launch_browser()`, `connect_browser()`,
+`launch_real_browser()` or `commander.configure_downloads()` - and the manager
+owns the file from then on:
+
+```python
+from browser_commander import LaunchOptions, launch_browser, make_browser_commander
+
+result = await launch_browser(
+    LaunchOptions(
+        engine="playwright",
+        downloads={"directory": "/tmp/reports", "conflict": "rename"},
+    )
+)
+commander = make_browser_commander(page=result.page)
+
+# capture() starts listening before the action runs, so a download that
+# finishes in 5ms cannot slip past the registration.
+artifact = await result.downloads.capture(
+    action=lambda: commander.click_button(selector="#export"),
+    filename="q3-report.pdf",  # the page's UUID name gets the caller's name
+    timeout=30000,
+)
+print(artifact.path, artifact.bytes, artifact.checksum)
+
+await commander.destroy()
+await result.browser.close()
+# The file is still there: it outlives the page, the context and the browser.
+```
+
+`downloads.on(DownloadEvent.COMPLETED, ...)` observes every download in the
+session, including one a person started by hand in a visible browser, and each
+download is reported exactly once whether it was captured or merely observed. A
+failed or cancelled download raises the failure rather than returning a path.
+Playwright listens on a browser-wide CDP session; Selenium, which has no
+download events, watches the staging directory instead.
+
+### Portable Traces
+
+A trace is one versioned directory - manifest, ordered NDJSON timeline,
+per-checkpoint DOM snapshots and the mutation batches between them - so a bundle
+recorded by a JavaScript run reads back here:
+
+```python
+from browser_commander import diff_control_state, read_trace
+
+trace = read_trace("/tmp/traces/checkout")
+print(trace.manifest["schemaVersion"], trace.truncated)
+
+for event in trace.events:
+    print(event["at"], event["kind"])
+
+for change in diff_control_state(trace.state(1), trace.state(2)):
+    print(change.path, change.change, change.before, "->", change.after)
+```
+
+Recording is JavaScript-only today; `docs/feature-parity.md` lists that gap
+along with the rest.
+
+### Truthful Click Results
+
+`click_element()` reports what was observed, not what was attempted:
+
+```python
+result = await click_element(page, engine, log, "#submit")
+
+result.status  # 'succeeded' | 'failed' | 'timed_out' | 'interrupted' | 'unverified'
+result.effect  # 'confirmed' | 'not-observed' | 'contradicted'
+result.evidence  # why status and effect say what they say
+result.clicked  # still here: whether the click reached the element
+result.verified  # still here, now derived from effect == 'confirmed'
+```
+
+The `scroll` axis (`'auto'`, `'preserve'`, `'none'`) replaces the deprecated
+`no_auto_scroll` flag. `scroll='none'` never scrolls: on an engine that cannot
+deliver a click without scrolling it raises `ScrollConstraintError` naming the
+alternatives, rather than scrolling the page and reporting success.
+
 ### commander.destroy()
 
 ```python

@@ -1,222 +1,108 @@
 """Click interactions for browser-commander.
 
 This module provides click functions for both Playwright and Selenium engines.
+
+Click results report what was *observed*. An element that is still present and
+unchanged after a click is not evidence that the click did anything - that is
+exactly the case of a button whose handler is missing or threw - so it is
+reported as ``not-observed`` rather than as success.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import asyncio
+import contextlib
+from collections.abc import Awaitable
 from typing import Any, Callable
 
 from browser_commander.core.constants import TIMING
 from browser_commander.core.engine_adapter import create_engine_adapter
 from browser_commander.core.engine_detection import EngineType
 from browser_commander.core.logger import Logger
-from browser_commander.core.navigation_safety import is_navigation_error
-from browser_commander.core.page_trigger_manager import is_action_stopped_error
+from browser_commander.core.readiness import Deadline, run_within_deadline
 from browser_commander.elements.content import log_element_info
 from browser_commander.elements.locators import wait_for_locator_or_element
+from browser_commander.interactions.click_activation import (
+    ActivationOptions,
+    ClickActionability,
+    ClickActivation,
+    ClickScroll,
+    ScrollConstraintError,
+    dispatch_click,
+    resolve_activation_options,
+)
+from browser_commander.interactions.click_result import (
+    ClickEffect,
+    ClickResult,
+    ClickStatus,
+    ClickVerificationResult,
+    Evidence,
+    evidence,
+    next_action_id,
+)
+from browser_commander.interactions.click_verification import (
+    capture_pre_click_state,
+    default_click_verification,
+    is_interrupted,
+    verify_click,
+)
 from browser_commander.interactions.scroll import scroll_into_view_if_needed
 
+__all__ = [
+    # Orthogonal activation options
+    "ClickActionability",
+    "ClickActivation",
+    "ClickEffect",
+    "ClickResult",
+    "ClickScroll",
+    # Truthful click result model
+    "ClickStatus",
+    "ClickVerificationResult",
+    "ScrollConstraintError",
+    "capture_pre_click_state",
+    "click_button",
+    "click_element",
+    "default_click_verification",
+    "verify_click",
+]
 
-@dataclass
-class ClickVerificationResult:
-    """Result of click verification."""
 
-    verified: bool
-    reason: str
-    navigation_error: bool = False
-
-
-@dataclass
-class ClickResult:
-    """Result of click operation."""
-
-    clicked: bool
-    verified: bool
-    reason: str = ""
-    navigated: bool = False
+def _scroll_changed(detail: Any) -> bool | None:
+    before, after = detail.scroll_before, detail.scroll_after
+    if not before or not after:
+        return None
+    return before.get("x") != after.get("x") or before.get("y") != after.get("y")
 
 
-async def default_click_verification(
-    page: Any,
-    engine: EngineType,
-    locator_or_element: Any,
-    pre_click_state: dict | None = None,
-    adapter: Any | None = None,
-) -> ClickVerificationResult:
-    """Default verification function for click operations.
-
-    Verifies that the click had an effect by checking for common patterns:
-    - Element state changes (disabled, aria-pressed, etc.)
-    - Element class changes
-    - Element visibility changes
-
-    Args:
-        page: Browser page object
-        engine: Engine type ('playwright' or 'selenium')
-        locator_or_element: Element that was clicked
-        pre_click_state: State captured before click (optional)
-        adapter: Engine adapter (optional)
-
-    Returns:
-        ClickVerificationResult
-    """
-    try:
-        if adapter is None:
-            adapter = create_engine_adapter(page, engine)
-
-        # Get current element state
-        get_state_js = """
-        (el) => ({
-            disabled: el.disabled,
-            ariaPressed: el.getAttribute('aria-pressed'),
-            ariaExpanded: el.getAttribute('aria-expanded'),
-            ariaSelected: el.getAttribute('aria-selected'),
-            checked: el.checked,
-            className: el.className,
-            isConnected: el.isConnected,
-        })
-        """
-
-        post_click_state = await adapter.evaluate_on_element(
-            locator_or_element,
-            get_state_js,
+def _dispatch_evidence(
+    detail: Any,
+    activation_options: ActivationOptions,
+) -> list[Evidence]:
+    changed = _scroll_changed(detail)
+    records = [
+        evidence(
+            "dispatch",
+            mode=detail.mode,
+            activation=activation_options.activation,
+            scroll=activation_options.scroll,
+            actionability=activation_options.actionability,
+            scroll_before=detail.scroll_before,
+            scroll_after=detail.scroll_after,
+            scroll_changed=changed,
+            point=detail.point,
         )
-
-        # If we have pre-click state, check for changes
-        if pre_click_state and len(pre_click_state) > 0:
-            if pre_click_state.get("ariaPressed") != post_click_state.get(
-                "ariaPressed"
-            ):
-                return ClickVerificationResult(
-                    verified=True, reason="aria-pressed changed"
-                )
-            if pre_click_state.get("ariaExpanded") != post_click_state.get(
-                "ariaExpanded"
-            ):
-                return ClickVerificationResult(
-                    verified=True, reason="aria-expanded changed"
-                )
-            if pre_click_state.get("ariaSelected") != post_click_state.get(
-                "ariaSelected"
-            ):
-                return ClickVerificationResult(
-                    verified=True, reason="aria-selected changed"
-                )
-            if pre_click_state.get("checked") != post_click_state.get("checked"):
-                return ClickVerificationResult(
-                    verified=True, reason="checked state changed"
-                )
-            if pre_click_state.get("className") != post_click_state.get("className"):
-                return ClickVerificationResult(
-                    verified=True, reason="className changed"
-                )
-
-        # If element is still connected and not disabled, assume click worked
-        if post_click_state.get("isConnected"):
-            return ClickVerificationResult(
-                verified=True,
-                reason="element still connected (assumed success)",
+    ]
+    if activation_options.scroll != ClickScroll.AUTO and changed:
+        # We did not scroll, but the page reacted by scrolling itself. Record it
+        # so callers asserting on viewport stability can see what moved.
+        records.append(
+            evidence(
+                "page-scrolled-itself",
+                before=detail.scroll_before,
+                after=detail.scroll_after,
             )
-
-        # Element was removed from DOM - likely click triggered UI change
-        return ClickVerificationResult(
-            verified=True, reason="element removed from DOM (UI updated)"
         )
-
-    except Exception as error:
-        if is_navigation_error(error) or is_action_stopped_error(error):
-            return ClickVerificationResult(
-                verified=True,
-                reason="navigation detected (expected for navigation clicks)",
-                navigation_error=True,
-            )
-        raise
-
-
-async def capture_pre_click_state(
-    page: Any,
-    engine: EngineType,
-    locator_or_element: Any,
-    adapter: Any | None = None,
-) -> dict:
-    """Capture element state before click for verification.
-
-    Args:
-        page: Browser page object
-        engine: Engine type
-        locator_or_element: Element to capture state from
-        adapter: Engine adapter (optional)
-
-    Returns:
-        Pre-click state dict
-    """
-    try:
-        if adapter is None:
-            adapter = create_engine_adapter(page, engine)
-
-        get_state_js = """
-        (el) => ({
-            disabled: el.disabled,
-            ariaPressed: el.getAttribute('aria-pressed'),
-            ariaExpanded: el.getAttribute('aria-expanded'),
-            ariaSelected: el.getAttribute('aria-selected'),
-            checked: el.checked,
-            className: el.className,
-            isConnected: el.isConnected,
-        })
-        """
-
-        return await adapter.evaluate_on_element(locator_or_element, get_state_js)
-    except Exception as error:
-        if is_navigation_error(error) or is_action_stopped_error(error):
-            return {}
-        raise
-
-
-async def verify_click(
-    page: Any,
-    engine: EngineType,
-    locator_or_element: Any,
-    pre_click_state: dict | None = None,
-    verify_fn: Callable | None = None,
-    log: Logger | None = None,
-) -> ClickVerificationResult:
-    """Verify click operation.
-
-    Args:
-        page: Browser page object
-        engine: Engine type
-        locator_or_element: Element that was clicked
-        pre_click_state: State captured before click
-        verify_fn: Custom verification function (optional)
-        log: Logger instance
-
-    Returns:
-        ClickVerificationResult
-    """
-    if verify_fn is None:
-        verify_fn = default_click_verification
-    if pre_click_state is None:
-        pre_click_state = {}
-
-    result = await verify_fn(
-        page=page,
-        engine=engine,
-        locator_or_element=locator_or_element,
-        pre_click_state=pre_click_state,
-    )
-
-    if log:
-        if result.verified:
-            log.debug(lambda: f"Click verification passed: {result.reason}")
-        else:
-            log.debug(
-                lambda: f"Click verification uncertain: {result.reason or 'unknown'}"
-            )
-
-    return result
+    return records
 
 
 async def click_element(
@@ -224,10 +110,15 @@ async def click_element(
     engine: EngineType,
     log: Logger,
     locator_or_element: Any,
-    no_auto_scroll: bool = False,
+    activation: str | None = None,
+    scroll: str | None = None,
+    actionability: str | None = None,
+    no_auto_scroll: bool | None = None,
     verify: bool = True,
     verify_fn: Callable | None = None,
     adapter: Any | None = None,
+    action_id: str | None = None,
+    timeout: float | None = None,
 ) -> ClickResult:
     """Click an element (low-level).
 
@@ -236,10 +127,15 @@ async def click_element(
         engine: Engine type ('playwright' or 'selenium')
         log: Logger instance
         locator_or_element: Element or locator to click
-        no_auto_scroll: Prevent Playwright's automatic scrolling (default: False)
-        verify: Whether to verify the click operation (default: True)
+        activation: 'pointer' (real input) or 'dom' (untrusted ``el.click()``)
+        scroll: 'auto', 'preserve' (restore position) or 'none' (never scroll)
+        actionability: 'normal' or 'force' (skip engine pre-checks)
+        no_auto_scroll: Deprecated alias for ``scroll='none'``
+        verify: Whether to verify the click effect (default: True)
         verify_fn: Custom verification function (optional)
         adapter: Engine adapter (optional)
+        action_id: Correlation ID for this click
+        timeout: Budget for the whole click, verification included
 
     Returns:
         ClickResult
@@ -247,94 +143,339 @@ async def click_element(
     if not locator_or_element:
         raise ValueError("locator_or_element is required")
 
+    # One monotonic budget covers dispatch, probing and verification, so no
+    # step can quietly extend the click past what the caller asked for.
+    deadline = Deadline(TIMING["VERIFICATION_TIMEOUT"] if timeout is None else timeout)
+    action_id = action_id or next_action_id()
+
+    def elapsed_ms() -> int:
+        return deadline.elapsed_ms()
+
+    activation_options = resolve_activation_options(
+        activation=activation,
+        scroll=scroll,
+        actionability=actionability,
+        no_auto_scroll=no_auto_scroll,
+        log=log,
+    )
+
     try:
         if adapter is None:
             adapter = create_engine_adapter(page, engine)
 
-        # Capture pre-click state for verification
-        pre_click_state = {}
-        if verify:
+        url_before_dispatch = _current_url(page) if page else ""
+
+        pre_click_state: dict = {}
+        if verify and page:
             pre_click_state = await capture_pre_click_state(
                 page=page,
                 engine=engine,
                 locator_or_element=locator_or_element,
                 adapter=adapter,
+                deadline=deadline,
             )
 
-        # Click with appropriate options
-        force_click = False
-        if engine == "playwright" and no_auto_scroll:
-            force_click = True
-            log.debug(lambda: "Clicking with no_auto_scroll (force: True)")
+        try:
+            # Dispatch is bounded too: locating a click point and reading the
+            # scroll position are engine round-trips, and an unbounded one
+            # spends the budget the caller reserved for the whole click.
+            dispatching = await run_within_deadline(
+                deadline,
+                lambda: dispatch_click(
+                    page=page,
+                    adapter=adapter,
+                    locator_or_element=locator_or_element,
+                    activation_options=activation_options,
+                    log=log,
+                ),
+            )
 
-        await adapter.click(locator_or_element, force=force_click)
+            if dispatching.timed_out:
+                return ClickResult(
+                    status=ClickStatus.TIMED_OUT,
+                    dispatched=False,
+                    effect=ClickEffect.NOT_OBSERVED,
+                    reason=(
+                        "click budget expired before the click could be dispatched"
+                    ),
+                    evidence=[
+                        Evidence(
+                            "dispatch-timeout",
+                            {
+                                "timeoutMs": deadline.timeout_ms,
+                                "elapsedMs": deadline.elapsed_ms(),
+                            },
+                        )
+                    ],
+                    elapsed_ms=elapsed_ms(),
+                    action_id=action_id,
+                )
 
-        # Verify click if requested
-        if verify:
-            verification_result = await verify_click(
+            detail = dispatching.value
+        except ScrollConstraintError as error:
+            # The caller asked for no scrolling and we cannot deliver the click
+            # without it. Say so instead of scrolling behind their back.
+            return ClickResult(
+                status=ClickStatus.FAILED,
+                dispatched=False,
+                effect=ClickEffect.NOT_OBSERVED,
+                reason=str(error),
+                evidence=[Evidence("scroll-constraint", error.detail)],
+                elapsed_ms=elapsed_ms(),
+                action_id=action_id,
+            )
+
+        dispatch_records = _dispatch_evidence(detail, activation_options)
+
+        if not verify or not page:
+            return ClickResult(
+                status=ClickStatus.UNVERIFIED,
+                dispatched=True,
+                effect=ClickEffect.NOT_OBSERVED,
+                reason="click dispatched; verification not requested",
+                evidence=dispatch_records,
+                elapsed_ms=elapsed_ms(),
+                action_id=action_id,
+            )
+
+        verification, navigated_to = await _verify_until_navigation(
+            url_before_dispatch,
+            page,
+            verify_click(
                 page=page,
                 engine=engine,
                 locator_or_element=locator_or_element,
                 pre_click_state=pre_click_state,
                 verify_fn=verify_fn,
                 log=log,
-            )
+                adapter=adapter,
+                deadline=deadline,
+            ),
+        )
 
+        if verification is None:
+            # The document the element belonged to is gone, so there is nothing
+            # left to observe. The navigation is recorded as what it is - a
+            # correlated event - and *not* as proof that this click caused it.
             return ClickResult(
-                clicked=True,
-                verified=verification_result.verified,
-                reason=verification_result.reason,
+                status=ClickStatus.UNVERIFIED,
+                dispatched=True,
+                effect=ClickEffect.NOT_OBSERVED,
+                reason=(
+                    "the page navigated after the click, so the click effect "
+                    "could not be observed on the original document"
+                ),
+                evidence=[
+                    *dispatch_records,
+                    evidence(
+                        "navigation",
+                        action_id=action_id,
+                        from_url=url_before_dispatch,
+                        to=navigated_to,
+                        correlated=True,
+                        proves_click_effect=False,
+                    ),
+                ],
+                elapsed_ms=elapsed_ms(),
+                action_id=action_id,
+                navigation_error=True,
             )
 
-        return ClickResult(clicked=True, verified=True)
+        effect = verification.resolved_effect()
+        confirmed = effect == ClickEffect.CONFIRMED
+
+        return ClickResult(
+            # The click was delivered either way; only the observation ran out
+            # of time, and `timed_out` says exactly that rather than blaming
+            # the click.
+            status=_verification_status(confirmed, verification.timed_out),
+            dispatched=True,
+            effect=effect,
+            reason=verification.reason,
+            evidence=[*dispatch_records, *verification.evidence],
+            elapsed_ms=elapsed_ms(),
+            action_id=action_id,
+            navigation_error=verification.navigation_error,
+        )
 
     except Exception as error:
-        if is_navigation_error(error) or is_action_stopped_error(error):
-            print("Navigation/stop detected during click, recovering gracefully")
+        if is_interrupted(error):
+            log.debug(
+                lambda: "Navigation/stop interrupted the click, recovering gracefully"
+            )
             return ClickResult(
-                clicked=False,
-                verified=True,
-                reason="navigation during click",
+                status=ClickStatus.INTERRUPTED,
+                dispatched=False,
+                effect=ClickEffect.NOT_OBSERVED,
+                reason=(
+                    "navigation or stop interrupted the click before it could "
+                    "be observed"
+                ),
+                evidence=[evidence("interrupted", message=str(error))],
+                elapsed_ms=elapsed_ms(),
+                action_id=action_id,
             )
         raise
 
 
-async def _detect_navigation(
+def _verification_status(confirmed: bool, timed_out: bool) -> str:
+    """Report how a dispatched click ended, given what verification observed.
+
+    Args:
+        confirmed: Whether an effect was actually observed
+        timed_out: Whether verification ran out of budget
+
+    Returns:
+        One of :class:`ClickStatus`
+    """
+    if confirmed:
+        return ClickStatus.SUCCEEDED
+    return ClickStatus.TIMED_OUT if timed_out else ClickStatus.UNVERIFIED
+
+
+def _current_url(page: Any) -> str:
+    if hasattr(page, "url"):
+        return page.url() if callable(page.url) else page.url
+    if hasattr(page, "current_url"):
+        return page.current_url
+    return ""
+
+
+#: How often the navigation watch samples the page URL, in seconds.
+_NAVIGATION_POLL_INTERVAL = 0.05
+
+
+async def _watch_for_navigation(page: Any, url_before: str) -> str:
+    """Wait until the page leaves the document a click was dispatched into.
+
+    A navigation replaces the document, and engines answer an element probe on
+    the *new* document instead of failing - which is how a navigating click used
+    to spend its whole budget waiting for an element that no longer exists.
+
+    Args:
+        page: Browser page object
+        url_before: URL read immediately before dispatch
+
+    Returns:
+        The new URL, once it differs from the one before the click
+    """
+    while True:
+        await asyncio.sleep(_NAVIGATION_POLL_INTERVAL)
+        now = _current_url(page)
+        if now and now != url_before:
+            return now
+
+
+async def _verify_until_navigation(
+    url_before: str,
+    page: Any,
+    verification: Awaitable[ClickVerificationResult],
+) -> tuple[ClickVerificationResult | None, str | None]:
+    """Verify a click, giving up as soon as the page navigates away.
+
+    Args:
+        url_before: URL read immediately before dispatch
+        page: Browser page object
+        verification: The verification in progress
+
+    Returns:
+        The verdict and the URL navigated to; exactly one of the two is set
+    """
+    verifying = asyncio.ensure_future(verification)
+    if not url_before:
+        return await verifying, None
+
+    watching = asyncio.ensure_future(_watch_for_navigation(page, url_before))
+    try:
+        done, _pending = await asyncio.wait(
+            {verifying, watching},
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if verifying in done:
+            return verifying.result(), None
+        return None, watching.result()
+    finally:
+        for task in (verifying, watching):
+            if not task.done():
+                task.cancel()
+                # The loser still settles; absorbing it keeps a cancelled probe
+                # from surfacing later as a task nobody awaited.
+                with contextlib.suppress(BaseException):
+                    await task
+
+
+def _detect_navigation(
     page: Any,
     navigation_manager: Any | None,
     start_url: str,
+    start_session_id: int | None,
+    action_id: str,
     log: Logger,
-) -> tuple[bool, str]:
-    """Detect if a click caused navigation by checking URL change or navigation state.
+) -> tuple[bool, bool, str, list[Evidence]]:
+    """Detect whether navigation can be attributed to a specific click.
+
+    A navigation that was already in flight before the click is not evidence
+    about the click, so the navigation session recorded before dispatch is
+    compared against the current one instead of merely asking "are we
+    navigating".
 
     Args:
         page: Browser page object
         navigation_manager: NavigationManager instance (optional)
-        start_url: URL before click
+        start_url: URL before the click
+        start_session_id: Navigation session ID before the click
+        action_id: Correlation ID for the click
         log: Logger instance
 
     Returns:
-        Tuple of (navigated, new_url)
+        Tuple of (navigated, correlated, new_url, evidence)
     """
-    # Get current URL
-    if hasattr(page, "url"):
-        current_url = page.url() if callable(page.url) else page.url
-    elif hasattr(page, "current_url"):
-        current_url = page.current_url
-    else:
-        current_url = ""
+    new_url = _current_url(page)
+    url_changed = new_url != start_url
 
-    url_changed = current_url != start_url
+    session_id = None
+    if navigation_manager is not None and hasattr(navigation_manager, "get_session_id"):
+        session_id = navigation_manager.get_session_id()
 
-    if navigation_manager and navigation_manager.is_navigating():
-        log.debug(lambda: "Navigation detected via NavigationManager")
-        return True, current_url
+    session_advanced = (
+        start_session_id is not None
+        and session_id is not None
+        and session_id > start_session_id
+    )
+    navigating = bool(
+        navigation_manager is not None and navigation_manager.is_navigating()
+    )
 
-    if url_changed:
-        log.debug(lambda: f"URL changed: {start_url} -> {current_url}")
-        return True, current_url
+    correlated = url_changed or session_advanced
+    navigated = correlated or navigating
 
-    return False, current_url
+    if navigated:
+        relation = (
+            "correlated with" if correlated else "in flight but NOT correlated with"
+        )
+        log.debug(
+            lambda: f"Navigation {relation} click {action_id}: {start_url} -> {new_url}"
+        )
+
+    return (
+        navigated,
+        correlated,
+        new_url,
+        [
+            evidence(
+                "navigation",
+                action_id=action_id,
+                start_url=start_url,
+                new_url=new_url,
+                url_changed=url_changed,
+                start_session_id=start_session_id,
+                session_id=session_id,
+                session_advanced=session_advanced,
+                navigating=navigating,
+                correlated=correlated,
+            )
+        ],
+    )
 
 
 async def click_button(
@@ -355,11 +496,15 @@ async def click_button(
     timeout: int | None = None,
     verify: bool = True,
     verify_fn: Callable | None = None,
+    activation: str | None = None,
+    scroll: str | None = None,
+    actionability: str | None = None,
 ) -> ClickResult:
     """Click a button or element (high-level with scrolling and waits).
 
-    Now navigation-aware - automatically waits for page ready after
-    navigation-causing clicks.
+    Navigation-aware: waits for page ready after navigation-causing clicks, and
+    only attributes the navigation to this click when the URL or the navigation
+    session actually advanced.
 
     Args:
         page: Browser page object
@@ -374,11 +519,14 @@ async def click_button(
         wait_after_scroll: Wait time after scroll in ms
         smooth_scroll: Use smooth scroll animation (default: True)
         wait_after_click: Wait time after click in ms (default: 1000)
-        wait_for_navigation: Wait for navigation to complete if click causes navigation
-        navigation_check_delay: Time to check if navigation started (default: 500ms)
+        wait_for_navigation: Wait for navigation to complete if click navigates
+        navigation_check_delay: Time to check if navigation started (500ms)
         timeout: Timeout in ms
         verify: Whether to verify the click operation (default: True)
         verify_fn: Custom verification function (optional)
+        activation: 'pointer' or 'dom'
+        scroll: 'auto', 'preserve' or 'none'
+        actionability: 'normal' or 'force'
 
     Returns:
         ClickResult
@@ -391,16 +539,20 @@ async def click_button(
     if not selector:
         raise ValueError("selector is required")
 
-    # Record URL before click for navigation detection
-    if hasattr(page, "url"):
-        start_url = page.url() if callable(page.url) else page.url
-    elif hasattr(page, "current_url"):
-        start_url = page.current_url
-    else:
-        start_url = ""
+    # The same budget covers locating, scrolling, clicking and verifying, so a
+    # button click cannot quietly cost several times the timeout asked for.
+    deadline = Deadline(timeout)
+    action_id = next_action_id()
+
+    def elapsed_ms() -> int:
+        return deadline.elapsed_ms()
+
+    start_url = _current_url(page)
+    start_session_id = None
+    if navigation_manager is not None and hasattr(navigation_manager, "get_session_id"):
+        start_session_id = navigation_manager.get_session_id()
 
     try:
-        # Step 1: Get locator/element and wait for it to be visible
         locator_or_element = await wait_for_locator_or_element(
             page=page,
             engine=engine,
@@ -408,7 +560,6 @@ async def click_button(
             timeout=timeout,
         )
 
-        # Log element info if verbose
         if verbose:
             await log_element_info(
                 page=page,
@@ -417,7 +568,6 @@ async def click_button(
                 locator_or_element=locator_or_element,
             )
 
-        # Step 2: Scroll into view if needed
         if scroll_into_view:
             behavior = "smooth" if smooth_scroll else "instant"
             scroll_result = await scroll_into_view_if_needed(
@@ -428,101 +578,147 @@ async def click_button(
                 locator_or_element=locator_or_element,
                 behavior=behavior,
                 wait_after_scroll=wait_after_scroll,
-                verify=False,  # Don't verify scroll here, we verify overall click
+                verify=False,  # Overall click verification covers this.
             )
 
-            # Check if scroll was aborted due to navigation/stop
             if not scroll_result.skipped and not scroll_result.scrolled:
                 return ClickResult(
-                    clicked=False,
-                    navigated=True,
-                    verified=True,
-                    reason="navigation during scroll",
+                    status=ClickStatus.INTERRUPTED,
+                    dispatched=False,
+                    effect=ClickEffect.NOT_OBSERVED,
+                    reason="navigation or stop interrupted the scroll before the click",
+                    evidence=[evidence("interrupted", phase="scroll")],
+                    elapsed_ms=elapsed_ms(),
+                    action_id=action_id,
                 )
         else:
             log.debug(lambda: "Skipping scroll (scroll_into_view: False)")
 
-        # Step 3: Execute click operation
         log.debug(lambda: "About to click element")
+
+        # Step 2 above already scrolled when it was allowed to, so a caller who
+        # turned scrolling off means it for the click too.
+        resolved_scroll = scroll
+        if resolved_scroll is None:
+            resolved_scroll = ClickScroll.AUTO if scroll_into_view else ClickScroll.NONE
 
         click_result = await click_element(
             page=page,
             engine=engine,
             log=log,
             locator_or_element=locator_or_element,
-            no_auto_scroll=not scroll_into_view,
+            activation=activation,
+            scroll=resolved_scroll,
+            actionability=actionability,
             verify=verify,
             verify_fn=verify_fn,
+            action_id=action_id,
+            timeout=deadline.remaining_ms(),
         )
 
-        if not click_result.clicked:
-            # Navigation/stop occurred during click itself
-            return ClickResult(
-                clicked=False,
-                navigated=True,
-                verified=True,
-                reason="navigation during click",
-            )
+        if not click_result.dispatched:
+            return click_result
 
         log.debug(lambda: "Click completed")
 
-        # Step 4: Handle navigation detection and waiting
         if wait_for_navigation:
-            # Wait briefly for navigation to potentially start
             await wait_fn(navigation_check_delay, "checking for navigation after click")
 
-            # Detect if navigation occurred
-            navigated, new_url = await _detect_navigation(
+            navigated, correlated, new_url, nav_evidence = _detect_navigation(
                 page=page,
                 navigation_manager=navigation_manager,
                 start_url=start_url,
+                start_session_id=start_session_id,
+                action_id=action_id,
                 log=log,
             )
 
             if navigated:
                 log.debug(lambda: f"Click triggered navigation to: {new_url}")
 
-                # Wait for page to be fully ready
+                ready = True
                 if navigation_manager:
-                    await navigation_manager.wait_for_page_ready(
-                        120000, "after click navigation"
+                    ready = bool(
+                        await navigation_manager.wait_for_page_ready(
+                            120000, "after click navigation"
+                        )
                     )
                 elif network_tracker:
                     await network_tracker.wait_for_network_idle(120000, 30000)
                 else:
                     await wait_fn(2000, "page settle after navigation")
 
+                if not ready:
+                    return ClickResult(
+                        status=ClickStatus.TIMED_OUT,
+                        dispatched=True,
+                        effect=(
+                            ClickEffect.CONFIRMED
+                            if correlated
+                            else ClickEffect.NOT_OBSERVED
+                        ),
+                        navigated=True,
+                        reason="click navigated but the page never became ready",
+                        evidence=[*click_result.evidence, *nav_evidence],
+                        elapsed_ms=elapsed_ms(),
+                        action_id=action_id,
+                    )
+
                 return ClickResult(
-                    clicked=True,
+                    status=(
+                        ClickStatus.SUCCEEDED if correlated else ClickStatus.UNVERIFIED
+                    ),
+                    dispatched=True,
+                    effect=(
+                        ClickEffect.CONFIRMED
+                        if correlated
+                        else ClickEffect.NOT_OBSERVED
+                    ),
                     navigated=True,
-                    verified=True,
-                    reason="click triggered navigation",
+                    reason=(
+                        "click triggered navigation"
+                        if correlated
+                        else "navigation was in flight but could not be attributed "
+                        "to this click"
+                    ),
+                    evidence=[*click_result.evidence, *nav_evidence],
+                    elapsed_ms=elapsed_ms(),
+                    action_id=action_id,
                 )
 
-        # No navigation - wait after click if specified
+            click_result.evidence = [*click_result.evidence, *nav_evidence]
+
         if wait_after_click > 0:
             await wait_fn(
                 wait_after_click, "post-click settling time for modal scroll capture"
             )
 
-        # If we have network tracking, wait for any XHR/fetch to complete
         if network_tracker:
             await network_tracker.wait_for_network_idle(10000, 2000)
 
-        return ClickResult(
-            clicked=True,
-            navigated=False,
-            verified=click_result.verified,
-            reason=click_result.reason if click_result.reason else "no navigation",
-        )
+        click_result.elapsed_ms = elapsed_ms()
+        if not click_result.reason:
+            click_result.reason = "no navigation"
+        return click_result
 
     except Exception as error:
-        if is_navigation_error(error) or is_action_stopped_error(error):
-            print("Navigation/stop detected during click_button, recovering gracefully")
+        if is_interrupted(error):
+            log.debug(
+                lambda: (
+                    "Navigation/stop interrupted click_button, recovering gracefully"
+                )
+            )
             return ClickResult(
-                clicked=False,
+                status=ClickStatus.INTERRUPTED,
+                dispatched=False,
+                effect=ClickEffect.NOT_OBSERVED,
                 navigated=True,
-                verified=True,
-                reason="navigation/stop error",
+                reason=(
+                    "navigation or stop interrupted the click before it could "
+                    "be observed"
+                ),
+                evidence=[evidence("interrupted", message=str(error))],
+                elapsed_ms=elapsed_ms(),
+                action_id=action_id,
             )
         raise

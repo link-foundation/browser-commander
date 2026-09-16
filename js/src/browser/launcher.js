@@ -8,6 +8,7 @@ import {
   resolveChromeArgs,
 } from './launch-options.js';
 import { applyFingerprint } from '../fingerprint/apply.js';
+import { attachDownloads } from '../downloads/attach.js';
 import {
   loadStorageState,
   restorePlaywrightStorageState,
@@ -31,7 +32,8 @@ import {
  * @param {string|Object} [options.storageState] - Playwright-compatible storage state path or object
  * @param {Object} [options.fingerprint] - Environment fields to present to pages, such as userAgent, timezone, locale, hardwareConcurrency or screen. Applied over CDP after launch; see src/fingerprint/profile.js for the full field list and presets.js for ready-made profiles.
  * @param {boolean} [options.automationParity=true] - Keep the command line indistinguishable from a hand-started Chrome. Turning this off restores the pre-parity switches and makes navigator.webdriver true.
- * @returns {Promise<Object>} - Object with browser and page
+ * @param {boolean|Object} [options.downloads] - Manage downloads: true for defaults, or {directory, persist, conflict}. The directory may be an absolute path, 'user-downloads' or 'temporary'.
+ * @returns {Promise<{browser: Object, page: Object, downloads: Object|null}>} - Browser, page and the download manager when one was requested
  */
 export async function launchBrowser(options = {}) {
   const {
@@ -49,6 +51,7 @@ export async function launchBrowser(options = {}) {
     storageState,
     fingerprint,
     automationParity = true,
+    downloads,
   } = options;
 
   const resolvedChromeArgs = resolveChromeArgs({
@@ -169,5 +172,14 @@ export async function launchBrowser(options = {}) {
     }
   }
 
-  return { browser, page };
+  // Downloads are armed before the caller can navigate: a download triggered
+  // by the first page load still lands in the managed directory.
+  const downloadManager = await attachDownloads({
+    engine,
+    browser,
+    page,
+    downloads,
+  });
+
+  return { browser, page, downloads: downloadManager };
 }

@@ -107,9 +107,10 @@ Explicit gaps behind that table:
   `page.mouse` (Playwright and Puppeteer both expose it), Python uses
   `page.mouse` (Playwright only), and Rust uses Chromiumoxide's
   viewport-coordinate `page.click(Point)`. Selenium, the Rust Node bridge and
-  Fantoccini have no such API, so the request fails with a
-  `ScrollConstraintError` naming the alternatives instead of silently scrolling
-  the page.
+  Fantoccini have no such API, so the request fails - with a
+  `ScrollConstraintError` in JavaScript and Python, and
+  `ClickDispatchError::ScrollConstraint` in Rust - naming the alternatives
+  instead of silently scrolling the page.
 - `actionability: 'force'` maps to the engine's own `force` flag in JavaScript
   and Python. Rust's Chromiumoxide path dispatches through CDP, which has no
   actionability pre-checks to skip, so the axis is recorded in the result's

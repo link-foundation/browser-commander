@@ -7,7 +7,7 @@
  * the tests self-contained - no external app has to be running.
  */
 
-import { createServer } from 'node:http';
+import { sendHtml, sendNotFound, startFixtureHost } from './fixture-server.js';
 
 /** A button 4200px down a tall page, matching the issue #89 repro. */
 export const FAR_BELOW_FOLD_PAGE = `<!doctype html>
@@ -70,37 +70,27 @@ export async function startFixtureServer() {
   /** Requests parked on purpose, closed when the server shuts down. */
   const hanging = new Set();
 
-  const server = createServer((req, res) => {
-    const path = req.url.split('?')[0];
+  return startFixtureHost(
+    (path, req, res) => {
+      if (path === '/hang') {
+        hanging.add(res);
+        res.on('close', () => hanging.delete(res));
+        return;
+      }
 
-    if (path === '/hang') {
-      hanging.add(res);
-      res.on('close', () => hanging.delete(res));
-      return;
-    }
+      const body = PAGES[path];
+      if (body === undefined) {
+        sendNotFound(res);
+        return;
+      }
 
-    const body = PAGES[path];
-    if (body === undefined) {
-      res.writeHead(404, { 'content-type': 'text/plain' });
-      res.end('not found');
-      return;
-    }
-
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    res.end(body);
-  });
-
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const { port } = server.address();
-
-  return {
-    baseUrl: `http://127.0.0.1:${port}`,
-    close: async () => {
+      sendHtml(res, body);
+    },
+    () => {
       for (const res of hanging) {
         res.destroy();
       }
       hanging.clear();
-      await new Promise((resolve) => server.close(resolve));
-    },
-  };
+    }
+  );
 }

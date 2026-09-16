@@ -153,9 +153,9 @@ export async function attachCdpSource({ session, root, sink }) {
 /**
  * Open a CDP session that can drive the Browser domain.
  *
- * Puppeteer exposes this on the browser connection; Playwright exposes it per
- * page. Either way the Browser domain is browser-wide, so one session is
- * enough for every page and for downloads no page started.
+ * Both engines can open a session that is not tied to a single page, which is
+ * what the Browser domain needs: one session then covers every page and every
+ * download no page started.
  *
  * @param {Object} options - Session options
  * @param {string} options.engine - Engine name
@@ -170,6 +170,14 @@ export function openBrowserCdpSession({ engine, browser, page }) {
       return target.createCDPSession();
     }
     return page?.target?.().createCDPSession?.();
+  }
+
+  // A page-scoped session only hears about the downloads that page started,
+  // so a browser-wide session is what makes a download a *person* began - in a
+  // tab the automation never opened - observable at all.
+  const browserHandle = browser?.browser?.() ?? browser;
+  if (browserHandle?.newBrowserCDPSession) {
+    return browserHandle.newBrowserCDPSession();
   }
 
   const context = browser?.browserContext?.() ?? browser;

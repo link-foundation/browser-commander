@@ -283,21 +283,34 @@ export async function createDownloadManager(options = {}) {
 
   const attached = [];
 
-  if (engine === 'playwright' && context?.on) {
-    attached.push(attachPlaywrightSource({ context, sink }));
-  }
-
-  // CDP is what makes a *manual* download observable, and it is the only
-  // source Puppeteer has. Attaching it is best-effort: a connection without
-  // Browser-domain access still gets the Playwright source above.
+  // CDP is what makes a download a *person* started observable, and it is the
+  // only source Puppeteer has, so it is tried first. It is also exclusive:
+  // `Browser.setDownloadBehavior` takes the bytes away from Playwright's own
+  // download handling, so attaching both sources would mean one download
+  // reported twice and a Playwright `path()` pointing at a file that was
+  // never written.
   let cdpSession;
   try {
     cdpSession = await openBrowserCdpSession({ engine, browser, page });
-    if (cdpSession && (engine === 'puppeteer' || options.manualDownloads)) {
+    if (cdpSession) {
       attached.push(await attachCdpSource({ session: cdpSession, root, sink }));
     }
   } catch (error) {
+    cdpSession = undefined;
     log?.warn?.(`manual downloads are not observable: ${error.message}`);
+  }
+
+  // Without Browser-domain access - an attached browser that refuses it, or a
+  // context with no page to borrow a session from - Playwright's own event
+  // still covers every automated download.
+  if (attached.length === 0 && engine === 'playwright' && context?.on) {
+    attached.push(attachPlaywrightSource({ context, sink }));
+  }
+
+  if (attached.length === 0) {
+    log?.warn?.(
+      'no download source could be attached: downloads will not be managed'
+    );
   }
 
   /**

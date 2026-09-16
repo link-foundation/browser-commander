@@ -179,6 +179,9 @@ reader refuses a version it does not understand rather than guessing.
 | Record a session (`startTrace`, `commander.startTrace`)                                       | Supported  | Not implemented | Not implemented |
 | Named checkpoints with HTML, control state, frames and screenshots                            | Supported  | Not implemented | Not implemented |
 | Continuous DOM mutation batches across SPA updates and navigations                            | Supported  | Not implemented | Not implemented |
+| Recording survives navigation, SPA route changes and new frames                               | Supported  | Not implemented | Not implemented |
+| Semantic live state (typing, checking, selecting, focus, scroll)                              | Supported  | Not implemented | Not implemented |
+| Stable context, page, navigation, frame and action identities on every record                 | Supported  | Not implemented | Not implemented |
 | One ordered timeline for navigation, clicks, console, dialogs, network failures and downloads | Supported  | Not implemented | Not implemented |
 | Redaction applied before anything is written                                                  | Supported  | Not implemented | Not implemented |
 | Partial trace on truncation, page closure or a size limit                                     | Supported  | Not implemented | Not implemented |
@@ -186,6 +189,7 @@ reader refuses a version it does not understand rather than guessing.
 | Manifest schema-version validation                                                            | Supported  | Supported       | Supported       |
 | Checkpoint state and control-state diffing                                                    | Supported  | Supported       | Supported       |
 | Offline viewer with scripts and network disabled                                              | Supported  | Not implemented | Not implemented |
+| Links Notation export (`writeTraceLinks`) and incremental `links` sink                        | Supported  | Not implemented | Not implemented |
 | `trace: 'retain-on-failure'` in `browser-commander/tests`                                     | Supported  | No test runner  | No test runner  |
 
 Recording is JavaScript-only today; Python and Rust are readers, which is what
@@ -193,6 +197,15 @@ the bundle format exists for. `python/src/browser_commander/traces/` and
 `rust/src/traces/` open the same directory a JavaScript run produced, and
 `experiments/trace-cross-language-read.mjs` reads one bundle from all three to
 prove it.
+
+The Links Notation export (issue #94) is written by the recorder's language for
+the same reason: it is a view of a bundle, and adding a notation dependency to
+the two readers would buy nothing a reader cannot already do. Portability is a
+property of the emitted file rather than of the writer - `links-notation` 0.20
+exists for JavaScript, Python and Rust, and
+`experiments/trace-links-export.mjs` parses a JavaScript-written export with
+the Python implementation, streaming it in chunks, to prove the file is not
+private to its writer.
 
 ## Automation-Friendly Launch Defaults
 

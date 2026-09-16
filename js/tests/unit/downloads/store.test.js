@@ -11,6 +11,7 @@ import {
   saveDownload,
 } from '../../../src/downloads/store.js';
 import { useTempDownloadDirectory } from '../../helpers/download-fixtures.js';
+import { assertMode } from '../../helpers/file-modes.js';
 
 /**
  * A download source made of literal bytes.
@@ -73,8 +74,7 @@ describe('download store (issue #88)', () => {
       suggestedFilename: 'secret.txt',
     });
 
-    const stat = await fs.stat(saved.path);
-    assert.strictEqual(stat.mode & 0o777, 0o600);
+    await assertMode(saved.path, 0o600);
   });
 
   it('should number a colliding name instead of replacing the file', async () => {

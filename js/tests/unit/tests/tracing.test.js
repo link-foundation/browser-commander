@@ -105,7 +105,7 @@ describe('test runner tracing (issues #87 and #88)', () => {
     it('should name a bundle after the scenario', () => {
       assert.strictEqual(
         traceOutputPath({ artifactsDir: '/a', safeName: 'checkout' }),
-        `/a/checkout${TRACE_BUNDLE_SUFFIX}`
+        path.join('/a', `checkout${TRACE_BUNDLE_SUFFIX}`)
       );
     });
 
@@ -116,7 +116,7 @@ describe('test runner tracing (issues #87 and #88)', () => {
           safeName: 'checkout',
           attempt: 2,
         }),
-        `/a/checkout.attempt-2${TRACE_BUNDLE_SUFFIX}`
+        path.join('/a', `checkout.attempt-2${TRACE_BUNDLE_SUFFIX}`)
       );
     });
 
@@ -126,7 +126,7 @@ describe('test runner tracing (issues #87 and #88)', () => {
           artifactsDir: '/a',
           safeName: 'checkout',
         }),
-        { directory: `/a/checkout/${TEST_DOWNLOADS_DIRNAME}` }
+        { directory: path.join('/a', 'checkout', TEST_DOWNLOADS_DIRNAME) }
       );
     });
 
@@ -139,7 +139,7 @@ describe('test runner tracing (issues #87 and #88)', () => {
         {
           timeout: 5000,
           allowOverwrite: true,
-          directory: `/a/checkout/${TEST_DOWNLOADS_DIRNAME}`,
+          directory: path.join('/a', 'checkout', TEST_DOWNLOADS_DIRNAME),
         }
       );
     });

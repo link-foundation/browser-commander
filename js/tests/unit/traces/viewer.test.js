@@ -17,6 +17,7 @@ import {
   makeSnapshot,
   useTempTraceDirectory,
 } from '../../helpers/trace-fixtures.js';
+import { assertMode } from '../../helpers/file-modes.js';
 
 describe('offline trace viewer (issue #87)', () => {
   const directory = useTempTraceDirectory();
@@ -260,8 +261,7 @@ describe('offline trace viewer (issue #87)', () => {
       assert.strictEqual(target, path.join(bundle, TRACE_FILES.VIEWER));
       const body = await fs.readFile(target, 'utf8');
       assert.match(body, /^<!DOCTYPE html>/);
-      const { mode } = await fs.stat(target);
-      assert.strictEqual(mode & 0o777, 0o600);
+      await assertMode(target, 0o600);
     });
 
     it('should still explain a run that never stopped', async () => {

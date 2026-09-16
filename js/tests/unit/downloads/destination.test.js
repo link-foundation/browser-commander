@@ -10,6 +10,7 @@ import {
   resolveDownloadDirectory,
 } from '../../../src/downloads/destination.js';
 import { useTempDownloadDirectory } from '../../helpers/download-fixtures.js';
+import { assertMode, HAS_POSIX_MODES } from '../../helpers/file-modes.js';
 
 describe('download destination (issue #88)', () => {
   const directory = useTempDownloadDirectory();
@@ -65,7 +66,7 @@ describe('download destination (issue #88)', () => {
 
       const stat = await fs.stat(nested);
       assert.ok(stat.isDirectory());
-      assert.strictEqual(stat.mode & 0o777, ARTIFACT_DIRECTORY_MODE);
+      await assertMode(nested, ARTIFACT_DIRECTORY_MODE);
     });
 
     it('should leave no probe file behind', async () => {
@@ -77,8 +78,12 @@ describe('download destination (issue #88)', () => {
     it(
       'should report an unwritable directory before the first download',
       {
-        // Root may write into any directory, so the mode bits prove nothing there.
-        skip: process.getuid?.() === 0 && 'running as root',
+        // Root may write into any directory, so the mode bits prove nothing
+        // there - and on Windows there are no mode bits to take away, since
+        // `chmod` only toggles a read-only flag that directories ignore.
+        skip:
+          (process.getuid?.() === 0 && 'running as root') ||
+          (!HAS_POSIX_MODES && 'Windows has no directory mode bits'),
       },
       async () => {
         // Issue #88: the failure has to surface at configuration time, because a

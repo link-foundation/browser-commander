@@ -253,6 +253,17 @@ export function makeBrowserCommander(options = {}) {
           );
         },
 
+    // Watch dialogs without answering them (issue #87): an observer is told
+    // about every dialog and never suppresses the manager's auto-dismissal.
+    observeDialogs: dialogManager
+      ? (fn) => dialogManager.observeDialogs(fn)
+      : () => {
+          throw new Error('observeDialogs requires enableDialogManager: true');
+        },
+    unobserveDialogs: dialogManager
+      ? (fn) => dialogManager.unobserveDialogs(fn)
+      : () => {},
+
     // URL condition helpers
     makeUrlCondition,
     allConditions,

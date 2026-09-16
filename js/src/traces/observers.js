@@ -23,6 +23,32 @@ export const TRACED_INTERACTIONS = Object.freeze([
 ]);
 
 /**
+ * What an interaction was aimed at.
+ *
+ * A selector and a URL are the useful part of an interaction; typed text is
+ * never taken, because that is where passwords are. Most commander methods
+ * take an options object, and a few legacy ones take the selector directly,
+ * so both shapes are read here.
+ *
+ * @param {*} argument - The interaction's first argument
+ * @returns {string|null} The selector or URL it acted on
+ */
+export function interactionTarget(argument) {
+  if (typeof argument === 'string') {
+    return argument;
+  }
+  if (!argument || typeof argument !== 'object') {
+    return null;
+  }
+  for (const key of ['selector', 'url', 'locatorOrElement']) {
+    if (typeof argument[key] === 'string') {
+      return argument[key];
+    }
+  }
+  return null;
+}
+
+/**
  * Subscribe to everything a running trace listens to.
  *
  * @param {Object} options - `{commander, page, eventSources, record, note}`
@@ -122,7 +148,7 @@ export function attachTimelineObservers(options) {
 
   subscribe('dialog', () => {
     const manager = commander?.dialogManager;
-    if (!manager?.onDialog) {
+    if (!manager?.observeDialogs && !manager?.onDialog) {
       return null;
     }
     const listener = (dialog) => {
@@ -132,6 +158,13 @@ export function attachTimelineObservers(options) {
           typeof dialog?.message === 'function' ? dialog.message() : null,
       });
     };
+    // Recording a dialog must not decide what happens to it: a passive
+    // observer leaves the manager's auto-dismissal in place, so a traced run
+    // answers dialogs exactly the way the same untraced run would.
+    if (manager.observeDialogs) {
+      manager.observeDialogs(listener);
+      return () => manager.unobserveDialogs?.(listener);
+    }
     manager.onDialog(listener);
     return () => manager.offDialog?.(listener);
   });
@@ -181,9 +214,7 @@ export function attachTimelineObservers(options) {
       originals.set(name, original);
       commander[name] = async (...args) => {
         const startedMs = Date.now();
-        // A selector and a URL are the useful part of an interaction; typed
-        // text is not recorded, because that is where passwords are.
-        const target = typeof args[0] === 'string' ? args[0] : null;
+        const target = interactionTarget(args[0]);
         try {
           const result = await original(...args);
           await record(TRACE_EVENT.INTERACTION, {

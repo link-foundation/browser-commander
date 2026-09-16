@@ -14,6 +14,7 @@ import {
 } from '../../../src/traces/schema.js';
 import {
   createFakeCommander,
+  createFakeDialogManager,
   createFakeDownloads,
   createFakePage,
   makeSnapshot,
@@ -54,6 +55,18 @@ describe('trace recorder (issue #87)', () => {
    * @returns {Promise<Object>} The reader
    */
   const read = (stopped) => readTrace(stopped.path);
+
+  /**
+   * The timeline as raw text, for asserting what it does not contain.
+   *
+   * A secret is absent from the record only if it is absent from the bytes,
+   * so these assertions read the file rather than the parsed events.
+   *
+   * @param {Object} stopped - What `stop()` returned
+   * @returns {Promise<string>} The contents of events.ndjson
+   */
+  const timelineText = (stopped) =>
+    fs.readFile(path.join(stopped.path, 'events.ndjson'), 'utf8');
 
   /**
    * The first event of one kind a stopped trace holds.
@@ -331,14 +344,31 @@ describe('trace recorder (issue #87)', () => {
       await commander.typeText('#password', 'hunter2');
       const stopped = await trace.stop();
 
-      const body = await fs.readFile(
-        path.join(stopped.path, 'events.ndjson'),
-        'utf8'
-      );
+      const body = await timelineText(stopped);
       const event = await eventOfKind(stopped, TRACE_EVENT.INTERACTION);
       assert.strictEqual(event.action, 'typeText');
       assert.strictEqual(event.target, '#password');
       assert.strictEqual(event.ok, true);
+      assert.ok(!body.includes('hunter2'));
+    });
+
+    it('should read the target out of the options object a call was given', async () => {
+      const page = createFakePage();
+      const commander = createFakeCommander(page, {
+        click: async (options) => options,
+      });
+      const { trace } = await start({ page, commander });
+
+      await commander.click({ selector: '#buy', text: 'hunter2' });
+      await commander.goto({ url: 'https://example.com/cart' });
+      const stopped = await trace.stop();
+
+      const [clicked, navigated] = (await read(stopped)).events.filter(
+        (event) => event.kind === TRACE_EVENT.INTERACTION
+      );
+      assert.strictEqual(clicked.target, '#buy');
+      assert.strictEqual(navigated.target, 'https://example.com/cart');
+      const body = await timelineText(stopped);
       assert.ok(!body.includes('hunter2'));
     });
 
@@ -372,6 +402,34 @@ describe('trace recorder (issue #87)', () => {
       assert.strictEqual(event.invoice, 'INV-42');
     });
 
+    it('should record a dialog without taking responsibility for it', async () => {
+      const dialogManager = createFakeDialogManager();
+      const { trace } = await start({ commanderExtras: { dialogManager } });
+
+      const dialog = await dialogManager.raise({
+        type: 'alert',
+        message: 'are you sure?',
+      });
+      const stopped = await trace.stop();
+
+      const event = await eventOfKind(stopped, TRACE_EVENT.DIALOG);
+      assert.strictEqual(event.type, 'alert');
+      assert.strictEqual(event.message, 'are you sure?');
+      // Watching is not answering: the dialog is still auto-dismissed, so a
+      // traced page does not sit waiting for an answer an untraced one got.
+      assert.strictEqual(dialog.dismissed, true);
+    });
+
+    it('should stop watching dialogs when the trace stops', async () => {
+      const dialogManager = createFakeDialogManager();
+      const { trace } = await start({ commanderExtras: { dialogManager } });
+
+      await trace.stop();
+      await dialogManager.raise({ type: 'confirm', message: 'after' });
+
+      assert.strictEqual(dialogManager.observerCount(), 0);
+    });
+
     it('should only observe the sources the caller asked for', async () => {
       const { trace, page, commander } = await start({ events: ['console'] });
 
@@ -393,10 +451,7 @@ describe('trace recorder (issue #87)', () => {
 
       assert.strictEqual(page.listenerCount('console'), 0);
       assert.notStrictEqual(commander.goto, wrapped);
-      const body = await fs.readFile(
-        path.join(stopped.path, 'events.ndjson'),
-        'utf8'
-      );
+      const body = await timelineText(stopped);
       assert.ok(!body.includes('after'));
     });
   });

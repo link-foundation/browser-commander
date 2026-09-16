@@ -60,6 +60,10 @@ export async function openTraceBundle(options = {}) {
 
   let written = 0;
   let sequence = 0;
+  // Appends are serialized. Listeners report what happened without waiting
+  // for the previous record to reach the disk, and a timeline whose lines
+  // arrive in a different order than the events did is not a timeline.
+  let appendQueue = Promise.resolve();
   let dropped = 0;
   const counts = { checkpoints: 0, events: 0, mutationBatches: 0 };
   const problems = [];
@@ -124,8 +128,14 @@ export async function openTraceBundle(options = {}) {
       return null;
     }
 
+    const pending = appendQueue.then(() => eventsHandle.write(line));
+    appendQueue = pending.then(
+      () => {},
+      () => {}
+    );
+
     try {
-      await eventsHandle.write(line);
+      await pending;
       written += bytes;
       counts.events += 1;
       return record;
@@ -299,6 +309,8 @@ export async function openTraceBundle(options = {}) {
             ? TRACE_OUTCOME.PARTIAL
             : manifest.outcome,
       };
+      // Anything a listener reported on its way out is still queued.
+      await appendQueue;
       await eventsHandle.close();
       await fs.writeFile(
         path.join(root, TRACE_FILES.MANIFEST),

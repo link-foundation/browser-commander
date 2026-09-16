@@ -156,3 +156,43 @@ export function createFakeDownloads() {
   // fixture: `on`, `off` and `listenerCount` are the calls the recorder makes.
   return new EventEmitter();
 }
+
+/**
+ * A dialog manager's observation surface, without a browser.
+ *
+ * `raise()` plays the manager's own rule back: observers are told, and a
+ * dialog nobody answered is dismissed rather than left blocking the page.
+ *
+ * @returns {Object} `{observeDialogs, unobserveDialogs, observerCount, raise}`
+ */
+export function createFakeDialogManager() {
+  const observers = [];
+
+  return {
+    observeDialogs: (observer) => observers.push(observer),
+    unobserveDialogs: (observer) => {
+      const index = observers.indexOf(observer);
+      if (index !== -1) {
+        observers.splice(index, 1);
+      }
+    },
+    observerCount: () => observers.length,
+    raise: async ({ type, message }) => {
+      const dialog = {
+        dismissed: false,
+        type: () => type,
+        message: () => message,
+        dismiss: async () => {
+          dialog.dismissed = true;
+        },
+      };
+      for (const observer of observers) {
+        await observer(dialog);
+      }
+      if (!dialog.dismissed) {
+        await dialog.dismiss();
+      }
+      return dialog;
+    },
+  };
+}

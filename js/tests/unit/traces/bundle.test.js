@@ -221,6 +221,28 @@ describe('trace bundle writer (issue #87)', () => {
     assert.strictEqual(dropped.reason, TRACE_DROP_REASON.SIZE_LIMIT);
   });
 
+  it('should write the timeline in the order the events happened', async () => {
+    const bundle = await open();
+
+    // Observers report what happened without awaiting the record, so the
+    // writes overlap; the file must still read as the story in order.
+    await Promise.all(
+      Array.from({ length: 50 }, (_unused, index) =>
+        bundle.appendEvent({ kind: TRACE_EVENT.CONSOLE, index })
+      )
+    );
+
+    const written = await timeline(bundle.root);
+    assert.deepStrictEqual(
+      written.map((event) => event.index),
+      Array.from({ length: 50 }, (_unused, index) => index)
+    );
+    assert.deepStrictEqual(
+      written.map((event) => event.sequence),
+      Array.from({ length: 50 }, (_unused, index) => index + 1)
+    );
+  });
+
   it('should stop appending once the bundle limit is reached', async () => {
     const bundle = await open({ limits: { maxBundleBytes: 220 } });
 

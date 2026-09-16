@@ -9,6 +9,7 @@
 
 import { captureSnapshotInPage } from './page-capture.js';
 import { openTraceBundle } from './bundle.js';
+import { openTraceLinks } from './links.js';
 import { createTraceIdentity } from './identity.js';
 import { withDeadline } from './deadline.js';
 import { createMutationStream } from './mutation-stream.js';
@@ -28,6 +29,7 @@ import {
   TRACE_EVENT_SOURCES,
   TRACE_MODE,
   TRACE_OUTCOME,
+  TRACE_SCHEMA_VERSION,
 } from './schema.js';
 
 /** DOM capture defaults: what a checkpoint holds unless the caller narrows it. */
@@ -90,6 +92,7 @@ export async function startTrace(options = {}) {
     events,
     privacy = {},
     limits = {},
+    links = null,
     strict = false,
     captureTimeoutMs = DEFAULT_CAPTURE_TIMEOUT,
     commanderVersion = null,
@@ -121,8 +124,35 @@ export async function startTrace(options = {}) {
   const baseCheckpointName =
     typeof baseCheckpoint === 'string' ? baseCheckpoint : 'initial';
 
-  const bundle = await openTraceBundle({ output, limits, strict, now });
+  // The Links Notation export is a second view of the same records, written
+  // as they are recorded (issue #94), so a run that is killed leaves a
+  // readable export of everything that had happened. The bundle stays
+  // authoritative: nothing is written here that is not written there first.
+  let linksSink = null;
+  const bundle = await openTraceBundle({
+    output,
+    limits,
+    strict,
+    now,
+    onEvent: (event) => linksSink?.event(event),
+  });
   const startedAt = new Date(now()).toISOString();
+
+  if (links) {
+    if (typeof links.output !== 'string' || links.output === '') {
+      throw new Error('trace links require an output path');
+    }
+    linksSink = await openTraceLinks({
+      output: links.output,
+      include: links.include,
+      bundlePath: bundle.root,
+      schemaVersion: TRACE_SCHEMA_VERSION,
+      mode: recorderMode,
+      engine,
+      startedAt,
+      commanderVersion,
+    });
+  }
 
   let stopped = false;
   let checkpointIndex = 0;
@@ -368,17 +398,27 @@ export async function startTrace(options = {}) {
       })
     );
 
+    // Closed after the manifest, because the closing link reports the outcome
+    // the manifest settled on, and the control diffs are read back out of the
+    // finished bundle rather than kept in memory for the length of a run.
+    if (linksSink) {
+      await linksSink.close({ manifest, bundlePath: bundle.root });
+    }
+
     const result = {
       path: bundle.root,
       manifest,
       checkpoints: [...checkpoints],
-      problems: [...bundle.problems],
+      problems: [...bundle.problems, ...(linksSink?.problems ?? [])],
+      links: linksSink?.path ?? null,
     };
     stopped = result;
 
     if (discard) {
       const fs = await import('node:fs/promises');
       await fs.rm(bundle.root, { recursive: true, force: true });
+      // An export of a bundle that no longer exists points at nothing.
+      await linksSink?.discard();
       result.discarded = true;
     }
 
@@ -387,6 +427,7 @@ export async function startTrace(options = {}) {
 
   return {
     path: bundle.root,
+    links: linksSink?.path ?? null,
     mode: recorderMode,
     checkpoint,
     /**

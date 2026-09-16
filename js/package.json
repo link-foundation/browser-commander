@@ -68,6 +68,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",
+    "links-notation": "^0.20.0",
     "log-lazy": "^1.0.4",
     "test-anywhere": "^0.9.1"
   },

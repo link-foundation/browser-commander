@@ -32,7 +32,7 @@ export const TRACE_DIRECTORY_MODE = 0o700;
 /**
  * Open a bundle for writing.
  *
- * @param {Object} options - `{output, limits, strict, now}`
+ * @param {Object} options - `{output, limits, strict, now, onEvent}`
  * @returns {Promise<Object>} The bundle writer
  */
 export async function openTraceBundle(options = {}) {
@@ -41,6 +41,7 @@ export async function openTraceBundle(options = {}) {
     strict = false,
     limits = {},
     now = () => Date.now(),
+    onEvent = null,
   } = options;
 
   if (typeof output !== 'string' || output === '') {
@@ -138,6 +139,20 @@ export async function openTraceBundle(options = {}) {
       await pending;
       written += bytes;
       counts.events += 1;
+      if (onEvent) {
+        try {
+          await onEvent(record);
+        } catch (error) {
+          // A side export that fails is a gap in that export, not in the
+          // bundle. Reporting it through `drop` would write an event and call
+          // this hook again, so it is noted where a caller can still see it.
+          problems.push({
+            reason: TRACE_DROP_REASON.WRITE_FAILED,
+            member: 'links',
+            detail: error.message,
+          });
+        }
+      }
       return record;
     } catch (error) {
       if (retry) {

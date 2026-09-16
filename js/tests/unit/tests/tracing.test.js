@@ -101,11 +101,14 @@ describe('test runner tracing (issues #87 and #88)', () => {
     });
   });
 
+  // The expectations resolve their paths the way the code under test does.
+  // A POSIX literal is not a path on Windows: `path.resolve('/a', 'x')` there
+  // is `D:\\a\\x`, because a rooted path with no drive means the current one.
   describe('where artifacts go', () => {
     it('should name a bundle after the scenario', () => {
       assert.strictEqual(
         traceOutputPath({ artifactsDir: '/a', safeName: 'checkout' }),
-        path.join('/a', `checkout${TRACE_BUNDLE_SUFFIX}`)
+        path.resolve('/a', `checkout${TRACE_BUNDLE_SUFFIX}`)
       );
     });
 
@@ -116,7 +119,7 @@ describe('test runner tracing (issues #87 and #88)', () => {
           safeName: 'checkout',
           attempt: 2,
         }),
-        path.join('/a', `checkout.attempt-2${TRACE_BUNDLE_SUFFIX}`)
+        path.resolve('/a', `checkout.attempt-2${TRACE_BUNDLE_SUFFIX}`)
       );
     });
 
@@ -126,7 +129,7 @@ describe('test runner tracing (issues #87 and #88)', () => {
           artifactsDir: '/a',
           safeName: 'checkout',
         }),
-        { directory: path.join('/a', 'checkout', TEST_DOWNLOADS_DIRNAME) }
+        { directory: path.resolve('/a', 'checkout', TEST_DOWNLOADS_DIRNAME) }
       );
     });
 
@@ -139,7 +142,7 @@ describe('test runner tracing (issues #87 and #88)', () => {
         {
           timeout: 5000,
           allowOverwrite: true,
-          directory: path.join('/a', 'checkout', TEST_DOWNLOADS_DIRNAME),
+          directory: path.resolve('/a', 'checkout', TEST_DOWNLOADS_DIRNAME),
         }
       );
     });

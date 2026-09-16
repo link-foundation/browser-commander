@@ -10,8 +10,11 @@
  * thing, otherwise "portable" is a claim rather than a fact.
  *
  * Needs `links-notation` for Python: pip install links-notation==0.20.0
+ * A virtual environment works too - point `PYTHON` at its interpreter, since
+ * the package has to be importable by whichever Python actually runs.
  *
  * Run with: node experiments/trace-links-export.mjs [playwright|puppeteer]
+ *       or: PYTHON=.venv/bin/python node experiments/trace-links-export.mjs
  */
 
 import { spawn } from 'node:child_process';
@@ -30,17 +33,31 @@ const PYTHON_READER = `
 import json
 import sys
 
-from links_notation import StreamParser
+try:
+    from links_notation import StreamParser
+except ModuleNotFoundError:
+    # Saying which interpreter looked is the whole message: the usual cause is
+    # that the package sits in a virtual environment this Python is not in.
+    sys.exit(
+        f"links-notation is not importable by {sys.executable}.\\n"
+        "Install it there (pip install links-notation==0.20.0), or point "
+        "PYTHON at the interpreter that has it."
+    )
 
 # The export is line oriented, so a reader can follow a run that is still
 # being written. The streaming parser is fed the file in chunks to prove that
 # nothing here needs the whole file in memory.
+#
+# write() returns what a chunk completed but retains it, and finish() returns
+# everything not yet drained, so using both return values counts every link
+# twice. Draining after each write is what reads each link exactly once.
 parser = StreamParser()
 links = []
 with open(sys.argv[1], "rb") as handle:
     while chunk := handle.read(4096):
-        links.extend(parser.parse_chunk(chunk.decode("utf-8")))
-links.extend(parser.finalize())
+        parser.write(chunk.decode("utf-8"))
+        links.extend(parser.drain())
+links.extend(parser.finish())
 
 def fields(link):
     return {
@@ -117,7 +134,11 @@ try {
   console.log(exported);
 
   console.log('Python reader:');
-  await readWith('python3', 'python3', ['-c', PYTHON_READER, stopped.links]);
+  // Whichever Python the caller installed the notation into: a virtual
+  // environment is the normal case, and `python3` is rarely the one holding
+  // it.
+  const python = process.env.PYTHON ?? 'python3';
+  await readWith(python, python, ['-c', PYTHON_READER, stopped.links]);
   console.log(
     `\nThe bundle is still the record: ${stopped.path}\n` +
       `The export duplicates none of its bytes: ` +

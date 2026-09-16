@@ -50,7 +50,10 @@ export function makeSnapshot(overrides = {}) {
 /**
  * Create a fake page the recorder can drive.
  *
- * @param {Object} [options] - `{snapshot, mutations, screenshot}`
+ * @param {Object} [options] - `{snapshot, mutations, screenshot, frames}`
+ * @param {Object[]} [options.frames] - Extra frames, each `{mutations}`; the
+ *   page itself is always the main frame, and a page given no frames has no
+ *   `frames()` at all, the way a page object from neither engine would
  * @returns {Object} The fake page
  */
 export function createFakePage(options = {}) {
@@ -62,10 +65,11 @@ export function createFakePage(options = {}) {
     screenshot: options.screenshot ?? Buffer.from('fake-png'),
     screenshots: 0,
     evaluated: [],
+    initScripts: [],
     failures: new Map(),
   };
 
-  return {
+  const page = {
     state,
     /**
      * Make one in-page call fail, the way a closed page does.
@@ -112,7 +116,17 @@ export function createFakePage(options = {}) {
         const batches = state.mutations.splice(0, state.mutations.length);
         const dropped = state.droppedMutations;
         state.droppedMutations = 0;
-        return { batches, dropped, installed: true };
+        return {
+          batches: batches.map((batch) => ({
+            frameId: 'main',
+            mainFrame: true,
+            ...batch,
+          })),
+          dropped,
+          installed: true,
+          frameId: 'main',
+          mainFrame: true,
+        };
       }
       return true;
     },
@@ -120,10 +134,72 @@ export function createFakePage(options = {}) {
       state.screenshots += 1;
       return state.screenshot;
     },
+    /**
+     * Register a script for every future document, the Playwright spelling.
+     *
+     * @param {Function} fn - The function to run
+     * @param {*} argument - Its argument
+     * @returns {Promise<void>} Resolves once registered
+     */
+    addInitScript: async (fn, argument) => {
+      state.initScripts.push({
+        name: typeof fn === 'function' ? fn.name : String(fn),
+        argument,
+      });
+    },
     on: (event, listener) => emitter.on(event, listener),
     off: (event, listener) => emitter.off(event, listener),
     emit: (event, payload) => emitter.emit(event, payload),
     listenerCount: (event) => emitter.listenerCount(event),
+  };
+
+  if (options.frames) {
+    const children = options.frames.map((frame, index) =>
+      createFakeFrame(state, frame, `child-${index + 1}`)
+    );
+    page.frames = () => [
+      createFakeFrame(state, null, 'main', page),
+      ...children,
+    ];
+  }
+
+  return page;
+}
+
+/**
+ * One frame of a fake page.
+ *
+ * The main frame answers out of the page's own state, so a page with frames
+ * behaves exactly like one without for everything except the extra documents.
+ *
+ * @param {Object} state - The page's state
+ * @param {Object|null} frame - `{mutations, dropped}` for a child frame
+ * @param {string} frameId - What this frame calls itself
+ * @param {Object} [page] - The page, when this is the main frame
+ * @returns {Object} A frame with `evaluate`
+ */
+function createFakeFrame(state, frame, frameId, page) {
+  if (page) {
+    return { evaluate: page.evaluate };
+  }
+  const queued = frame?.mutations ? [...frame.mutations] : [];
+  return {
+    evaluate: async (fn, argument) => {
+      const name = typeof fn === 'function' ? fn.name : String(fn);
+      state.evaluated.push({ name, argument, frameId });
+      if (name === 'drainMutationsInPage') {
+        return {
+          batches: queued
+            .splice(0, queued.length)
+            .map((batch) => ({ frameId, mainFrame: false, ...batch })),
+          dropped: frame?.dropped ?? 0,
+          installed: true,
+          frameId,
+          mainFrame: false,
+        };
+      }
+      return true;
+    },
   };
 }
 

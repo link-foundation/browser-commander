@@ -201,12 +201,22 @@ export function captureSnapshotInPage(options) {
 }
 
 /**
- * Install the mutation recorder in the page.
+ * Install the in-page recorder.
  *
- * Reinstalling after a navigation is safe and expected: the queue lives on
- * the document, which a navigation replaces.
+ * Reinstalling after a navigation is safe and expected: the queue lives on the
+ * document, which a navigation replaces. Issue #93 is why this also runs as an
+ * init script - installing it only from `checkpoint()` left the interval
+ * between a navigation and the next checkpoint unrecorded, so a page that
+ * built its first screen during `DOMContentLoaded` replayed as if it had
+ * always been there.
  *
- * @param {Object} options - `{globalName, redactSelectors, redacted, maxQueued}`
+ * Two kinds of change are recorded. DOM mutations come from a
+ * `MutationObserver`, with the position information a deterministic replay
+ * needs. Live control state - what was typed, checked, selected, focused and
+ * scrolled - produces no mutation records at all, so it is observed from the
+ * events that carry it and recorded on the same queue, in the same order.
+ *
+ * @param {Object} options - `{globalName, redactSelectors, redacted, maxQueued, liveState}`
  * @returns {boolean} True when a recorder is now observing
  */
 export function installMutationRecorderInPage(options) {
@@ -215,6 +225,7 @@ export function installMutationRecorderInPage(options) {
     redactSelectors = [],
     redacted = '[redacted]',
     maxQueued = 5000,
+    liveState = true,
   } = options || {};
 
   if (window[globalName] && window[globalName].observing) {
@@ -226,6 +237,11 @@ export function installMutationRecorderInPage(options) {
     queue: [],
     dropped: 0,
     sequence: 0,
+    // Every document gets its own name, so a batch drained from an iframe is
+    // never mistaken for one drained from the page that holds it.
+    frameId: `frame-${Math.random().toString(36).slice(2, 10)}`,
+    frameName: window.name || null,
+    mainFrame: window.top === window,
   };
 
   const isSecret = (node) => {
@@ -264,6 +280,13 @@ export function installMutationRecorderInPage(options) {
     return steps.join(' > ');
   };
 
+  const childIndexOf = (parent, node) => {
+    if (!parent || !node || !parent.childNodes) {
+      return -1;
+    }
+    return Array.prototype.indexOf.call(parent.childNodes, node);
+  };
+
   const describe = (node) => {
     if (!node) {
       return null;
@@ -287,15 +310,60 @@ export function installMutationRecorderInPage(options) {
     };
   };
 
+  /**
+   * Describe a node that is no longer where it was.
+   *
+   * A removed node has no `parentElement`, so `pathOf` can only name the node
+   * itself. Its position in the parent it left is what a replay needs, and
+   * that is read from the siblings the record still points at.
+   *
+   * @param {Node} node - The node that moved or was removed
+   * @param {MutationRecord} record - The record it came from
+   * @returns {Object|null} The description, with `index` when one is knowable
+   */
+  const describeAt = (node, record) => {
+    const described = describe(node);
+    if (!described) {
+      return null;
+    }
+    const parent = record.target;
+    const own = childIndexOf(parent, node);
+    if (own >= 0) {
+      described.index = own;
+      return described;
+    }
+    const after = childIndexOf(parent, record.previousSibling);
+    if (after >= 0) {
+      described.index = after + 1;
+      return described;
+    }
+    const before = childIndexOf(parent, record.nextSibling);
+    described.index = before >= 0 ? before : null;
+    return described;
+  };
+
+  const push = (batch) => {
+    if (state.queue.length >= maxQueued) {
+      state.dropped += 1;
+      return false;
+    }
+    state.queue.push({
+      sequence: ++state.sequence,
+      at: Date.now(),
+      url: location.href,
+      frameId: state.frameId,
+      mainFrame: state.mainFrame,
+      ...batch,
+    });
+    return true;
+  };
+
   const observer = new MutationObserver((records) => {
     if (state.queue.length >= maxQueued) {
       state.dropped += records.length;
       return;
     }
-    const batch = {
-      sequence: ++state.sequence,
-      at: Date.now(),
-      url: location.href,
+    push({
       records: records.map((record) => {
         const entry = {
           kind: record.type,
@@ -317,13 +385,21 @@ export function installMutationRecorderInPage(options) {
             ? redacted
             : record.target.nodeValue;
         } else {
-          entry.added = [...record.addedNodes].map(describe);
-          entry.removed = [...record.removedNodes].map(describe);
+          // Where a node went is as much of the change as what it was:
+          // appending every addition to the end replays an insertion before a
+          // sibling in the wrong place, and drops moves and removals entirely.
+          entry.added = [...record.addedNodes].map((node) =>
+            describeAt(node, record)
+          );
+          entry.removed = [...record.removedNodes].map((node) =>
+            describeAt(node, record)
+          );
+          entry.previous = describe(record.previousSibling);
+          entry.next = describe(record.nextSibling);
         }
         return entry;
       }),
-    };
-    state.queue.push(batch);
+    });
   });
 
   observer.observe(document, {
@@ -335,8 +411,120 @@ export function installMutationRecorderInPage(options) {
     characterDataOldValue: true,
   });
 
+  const liveDetachers = [];
+  if (liveState) {
+    const lastValues = new WeakMap();
+
+    const liveEntry = (target, property, after, before) => ({
+      kind: 'live-state',
+      property,
+      target: describe(target),
+      before: before === undefined ? null : before,
+      after,
+    });
+
+    const pushLive = (entry) => {
+      // Scrolling fires far more often than it changes anything worth
+      // replaying, so consecutive scrolls of one element collapse into the
+      // position it ended at. Every other property keeps each step, because
+      // "stepwise replay must show each state" (issue #93).
+      const last = state.queue[state.queue.length - 1];
+      const only = last && last.records.length === 1 ? last.records[0] : null;
+      if (
+        entry.property === 'scroll' &&
+        only &&
+        only.kind === 'live-state' &&
+        only.property === 'scroll' &&
+        only.target?.path === entry.target?.path
+      ) {
+        only.after = entry.after;
+        last.at = Date.now();
+        return;
+      }
+      push({ records: [entry] });
+    };
+
+    const valueOf = (element) =>
+      isSecret(element)
+        ? redacted
+        : element.isContentEditable
+          ? element.textContent
+          : element.value;
+
+    const onValue = (event) => {
+      const element = event.target;
+      if (!element || element.nodeType !== 1) {
+        return;
+      }
+      if (element.type === 'checkbox' || element.type === 'radio') {
+        pushLive(liveEntry(element, 'checked', element.checked));
+        return;
+      }
+      if (element.localName === 'select') {
+        pushLive(
+          liveEntry(
+            element,
+            'selected',
+            [...element.selectedOptions].map((option) =>
+              isSecret(element) ? redacted : option.value
+            )
+          )
+        );
+        return;
+      }
+      if (
+        element.localName !== 'input' &&
+        element.localName !== 'textarea' &&
+        !element.isContentEditable
+      ) {
+        return;
+      }
+      const after = valueOf(element);
+      const before = lastValues.get(element);
+      lastValues.set(element, after);
+      pushLive(liveEntry(element, 'value', after, before));
+    };
+
+    const onFocus = (event) => {
+      pushLive(liveEntry(event.target, 'focus', event.type === 'focusin'));
+    };
+
+    const onScroll = (event) => {
+      const target = event.target;
+      const scrolling =
+        target === document || target === document.documentElement || !target
+          ? null
+          : target;
+      pushLive({
+        kind: 'live-state',
+        property: 'scroll',
+        target: scrolling ? describe(scrolling) : null,
+        before: null,
+        after: scrolling
+          ? { top: scrolling.scrollTop, left: scrolling.scrollLeft }
+          : { top: window.scrollY, left: window.scrollX },
+      });
+    };
+
+    const listen = (type, handler) => {
+      document.addEventListener(type, handler, true);
+      liveDetachers.push(() =>
+        document.removeEventListener(type, handler, true)
+      );
+    };
+
+    listen('input', onValue);
+    listen('change', onValue);
+    listen('focusin', onFocus);
+    listen('focusout', onFocus);
+    listen('scroll', onScroll);
+  }
+
   state.stop = () => {
     observer.disconnect();
+    for (const detach of liveDetachers) {
+      detach();
+    }
     state.observing = false;
   };
 
@@ -348,18 +536,47 @@ export function installMutationRecorderInPage(options) {
  * Take everything the recorder has queued and leave the queue empty.
  *
  * @param {string} globalName - Global the recorder lives on
- * @returns {Object} `{batches, dropped}`
+ * @returns {Object} `{batches, dropped, installed, frameId, mainFrame}`
  */
 export function drainMutationsInPage(globalName) {
   const state = window[globalName || '__browserCommanderTrace__'];
   if (!state) {
-    return { batches: [], dropped: 0, installed: false };
+    return {
+      batches: [],
+      dropped: 0,
+      installed: false,
+      frameId: null,
+      mainFrame: window.top === window,
+      url: location.href,
+    };
   }
   const batches = state.queue;
   const dropped = state.dropped;
   state.queue = [];
   state.dropped = 0;
-  return { batches, dropped, installed: true };
+  return {
+    batches,
+    dropped,
+    installed: true,
+    frameId: state.frameId,
+    mainFrame: state.mainFrame,
+    url: location.href,
+  };
+}
+
+/**
+ * Stop the in-page recorder without waiting for the document to go away.
+ *
+ * @param {string} globalName - Global the recorder lives on
+ * @returns {boolean} True when a recorder was stopped
+ */
+export function stopMutationRecorderInPage(globalName) {
+  const state = window[globalName || '__browserCommanderTrace__'];
+  if (!state || !state.observing) {
+    return false;
+  }
+  state.stop();
+  return true;
 }
 
 /* c8 ignore stop */

@@ -7,13 +7,11 @@
  * request, so every caller does not have to.
  */
 
-import {
-  captureSnapshotInPage,
-  drainMutationsInPage,
-  installMutationRecorderInPage,
-  RECORDER_GLOBAL,
-} from './page-capture.js';
+import { captureSnapshotInPage } from './page-capture.js';
 import { openTraceBundle } from './bundle.js';
+import { createTraceIdentity } from './identity.js';
+import { withDeadline } from './deadline.js';
+import { createMutationStream } from './mutation-stream.js';
 import { attachTimelineObservers } from './observers.js';
 import {
   normalizePrivacyOptions,
@@ -24,6 +22,7 @@ import {
 import {
   createManifest,
   DEFAULT_CAPTURE_TIMEOUT,
+  TRACE_CHECKPOINT_REASON,
   TRACE_DROP_REASON,
   TRACE_EVENT,
   TRACE_EVENT_SOURCES,
@@ -35,6 +34,12 @@ import {
 const DEFAULT_DOM_OPTIONS = Object.freeze({
   html: true,
   liveControlState: true,
+  /**
+   * Record what typing, checking, selecting, focus and scroll did, as it
+   * happens (issue #93). Reading it only at checkpoints meant a replay could
+   * show an empty field a moment after the user finished filling it in.
+   */
+  liveState: true,
   mutations: false,
   openShadowRoots: true,
 });
@@ -68,36 +73,6 @@ function normalizeEvents(events) {
 }
 
 /**
- * Run a capture with its own deadline.
- *
- * A page that stopped answering must cost the trace one record, not the run.
- *
- * @param {Promise} work - The capture
- * @param {number} timeoutMs - Budget
- * @param {string} what - Name used in the timeout message
- * @returns {Promise<*>} The capture's result
- */
-async function withDeadline(work, timeoutMs, what) {
-  if (!timeoutMs) {
-    return work;
-  }
-  let timer;
-  try {
-    return await Promise.race([
-      work,
-      new Promise((_resolve, reject) => {
-        timer = setTimeout(
-          () => reject(new Error(`${what} timed out after ${timeoutMs}ms`)),
-          timeoutMs
-        );
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-/**
  * Start recording a session.
  *
  * @param {Object} options - Recorder options, see `commander.startTrace()`
@@ -109,6 +84,7 @@ export async function startTrace(options = {}) {
     page = commander?.page,
     output,
     mode = TRACE_MODE.CHECKPOINTS,
+    initialCheckpoint,
     screenshots = 'checkpoints',
     dom = {},
     events,
@@ -133,6 +109,17 @@ export async function startTrace(options = {}) {
   const eventSources = normalizeEvents(events);
   const privacyOptions = normalizePrivacyOptions(privacy);
   const engine = commander?.engine ?? null;
+  const identity = createTraceIdentity({ page });
+
+  // A continuous trace records changes, and a change is only meaningful against
+  // something. Taking the base snapshot automatically is the safe default,
+  // because a trace that starts mid-air replays as a blank page (issue #93); a
+  // checkpoints-only trace is a list of moments the caller named, so nothing is
+  // added to it uninvited. Passing a string names the base checkpoint.
+  const baseCheckpoint =
+    initialCheckpoint ?? recorderMode === TRACE_MODE.CONTINUOUS;
+  const baseCheckpointName =
+    typeof baseCheckpoint === 'string' ? baseCheckpoint : 'initial';
 
   const bundle = await openTraceBundle({ output, limits, strict, now });
   const startedAt = new Date(now()).toISOString();
@@ -156,6 +143,9 @@ export async function startTrace(options = {}) {
     }
     return await bundle.appendEvent({
       kind,
+      // Who this happened to comes first so a payload that knows better - a
+      // drain that names the frame it came from, say - can say so.
+      ...identity.owner(),
       ...redactValue(payload, privacyOptions),
     });
   }
@@ -169,61 +159,18 @@ export async function startTrace(options = {}) {
     return await page.evaluate(fn, argument);
   }
 
-  async function installMutationRecorder() {
-    if (!domOptions.mutations) {
-      return;
-    }
-    try {
-      await evaluateInPage(installMutationRecorderInPage, {
-        globalName: RECORDER_GLOBAL,
-        redactSelectors: privacyOptions.redactSelectors,
-        redacted: REDACTED,
-        maxQueued: limits.maxQueuedMutations ?? 5000,
-      });
-    } catch (error) {
-      await bundle.drop({
-        reason: TRACE_DROP_REASON.CAPTURE_FAILED,
-        member: 'mutation-recorder',
-        detail: error.message,
-      });
-    }
-  }
-
-  async function drainMutations(index) {
-    if (!domOptions.mutations) {
-      return null;
-    }
-    try {
-      const drained = await withDeadline(
-        evaluateInPage(drainMutationsInPage, RECORDER_GLOBAL),
-        captureTimeoutMs,
-        'trace mutation drain'
-      );
-      if (drained?.dropped) {
-        await bundle.drop({
-          reason: TRACE_DROP_REASON.SIZE_LIMIT,
-          member: 'mutations',
-          detail: `${drained.dropped} records over the in-page queue limit`,
-        });
-      }
-      const member = await bundle.writeMutations(index, drained?.batches ?? []);
-      if (member) {
-        await record(TRACE_EVENT.MUTATIONS, {
-          member,
-          batches: drained.batches.length,
-          checkpoint: index,
-        });
-      }
-      return member;
-    } catch (error) {
-      await bundle.drop({
-        reason: TRACE_DROP_REASON.CAPTURE_FAILED,
-        member: 'mutations',
-        detail: error.message,
-      });
-      return null;
-    }
-  }
+  const mutations = createMutationStream({
+    page,
+    bundle,
+    record,
+    identity,
+    note,
+    domOptions,
+    privacyOptions,
+    limits,
+    captureTimeoutMs,
+    evaluateInPage,
+  });
 
   async function screenshot(reason) {
     const wanted =
@@ -267,7 +214,7 @@ export async function startTrace(options = {}) {
 
     // Mutations are drained first so the batches belong to the interval that
     // ended here, not to the one that starts now.
-    await drainMutations(index - 1 > 0 ? index - 1 : 0);
+    await mutations.drain(index - 1 > 0 ? index - 1 : 0);
 
     let captured = null;
     try {
@@ -318,9 +265,10 @@ export async function startTrace(options = {}) {
     checkpoints.push(entry);
     await record(TRACE_EVENT.CHECKPOINT, entry);
 
-    // A navigation replaces the document and with it the observer, so the
-    // recorder is reinstalled at every checkpoint rather than only at start.
-    await installMutationRecorder();
+    // The init script covers every document created from here on; this covers
+    // a frame that was attached without one, which is cheap because installing
+    // over a recorder that is already observing does nothing.
+    await mutations.install();
 
     return entry;
   }
@@ -331,15 +279,31 @@ export async function startTrace(options = {}) {
     eventSources,
     record,
     note,
+    identity,
   });
+
+  // Registered before the first record, so a navigation that starts in the same
+  // tick as the trace does is still recorded from its first mutation.
+  const detachInitScript = await mutations.installPersistent();
+  if (detachInitScript) {
+    detachers.push(detachInitScript);
+  }
 
   await record(TRACE_EVENT.TRACE_START, {
     mode: recorderMode,
     engine,
     dom: domOptions,
     events: eventSources,
+    initialCheckpoint: Boolean(baseCheckpoint),
   });
-  await installMutationRecorder();
+  await mutations.install();
+
+  if (baseCheckpoint) {
+    await checkpoint(baseCheckpointName, {
+      actor: 'recorder',
+      reason: TRACE_CHECKPOINT_REASON.INITIAL,
+    });
+  }
 
   /**
    * Stop recording and write the manifest.
@@ -353,7 +317,7 @@ export async function startTrace(options = {}) {
     }
     const { discard = false, error = null } = stopOptions;
 
-    await drainMutations(checkpointIndex);
+    await mutations.drain(checkpointIndex);
     if (error) {
       await record(TRACE_EVENT.PAGE_ERROR, {
         message: error.message ?? String(error),
@@ -363,6 +327,10 @@ export async function startTrace(options = {}) {
     }
     await record(TRACE_EVENT.TRACE_STOP, { discarded: discard });
     stopped = true;
+
+    // The documents that exist stop observing here; the engine's init-script
+    // registration is removed with the detachers below.
+    await mutations.stop();
 
     for (const detach of detachers.reverse()) {
       try {
@@ -382,6 +350,14 @@ export async function startTrace(options = {}) {
         engine,
         dom: domOptions,
         events: eventSources,
+        replay: {
+          checkpoints: true,
+          mutations: Boolean(domOptions.mutations),
+          childListPositions: Boolean(domOptions.mutations),
+          liveState:
+            Boolean(domOptions.mutations) && domOptions.liveState !== false,
+          identifiers: true,
+        },
         privacy: {
           redactSelectors: privacyOptions.redactSelectors,
           redactAttributes: privacyOptions.redactAttributes,

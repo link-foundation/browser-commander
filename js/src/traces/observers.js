@@ -51,17 +51,20 @@ export function interactionTarget(argument) {
 /**
  * Subscribe to everything a running trace listens to.
  *
- * @param {Object} options - `{commander, page, eventSources, record, note}`
+ * @param {Object} options - `{commander, page, eventSources, record, note, identity}`
  * @param {Object} [options.commander] - The commander being traced, when there
  *   is one; interactions and managed downloads are reached through it
  * @param {Object} options.page - The page being traced
  * @param {string[]} options.eventSources - Sources the caller asked for
  * @param {Function} options.record - Writes one timeline record
  * @param {Function} options.note - Reports an observer that could not attach
+ * @param {Object} [options.identity] - Trace identity, see `identity.js`; the
+ *   navigation observer is what moves it on to the next navigation, and the
+ *   interaction observer is what names an action (issue #93)
  * @returns {Function[]} One detach function per attached observer
  */
 export function attachTimelineObservers(options) {
-  const { commander, page, eventSources, record, note } = options;
+  const { commander, page, eventSources, record, note, identity } = options;
   const detachers = [];
 
   function subscribe(source, attach) {
@@ -90,8 +93,19 @@ export function attachTimelineObservers(options) {
     if (!manager) {
       // Without the manager the engine's own event still gives ordering.
       return onPage('framenavigated', (frame) => {
+        const isMain =
+          typeof frame?.parentFrame === 'function'
+            ? frame.parentFrame() === null
+            : true;
+        // A record's navigation is the one it happened during, so the counter
+        // moves on before the record that reports the move is written.
+        const navigationId = isMain
+          ? identity?.navigated()
+          : identity?.navigationId;
         void record(TRACE_EVENT.NAVIGATION, {
           phase: 'framenavigated',
+          navigationId,
+          mainFrame: isMain,
           url: typeof frame?.url === 'function' ? frame.url() : String(frame),
         });
       });
@@ -99,7 +113,14 @@ export function attachTimelineObservers(options) {
     const started = (info) =>
       void record(TRACE_EVENT.NAVIGATION, { phase: 'start', ...info });
     const completed = (info) =>
-      void record(TRACE_EVENT.NAVIGATION, { phase: 'complete', ...info });
+      void record(TRACE_EVENT.NAVIGATION, {
+        phase: 'complete',
+        // Everything recorded after this belongs to the document that just
+        // loaded, which is the distinction a replay needs to stop mixing two
+        // pages' changes together (issue #93).
+        navigationId: identity?.navigated(),
+        ...info,
+      });
     const changed = (info) =>
       void record(TRACE_EVENT.NAVIGATION, { phase: 'urlchange', ...info });
     manager.on('onNavigationStart', started);
@@ -215,9 +236,13 @@ export function attachTimelineObservers(options) {
       commander[name] = async (...args) => {
         const startedMs = Date.now();
         const target = interactionTarget(args[0]);
+        // Named before the call, so everything the action causes can be traced
+        // back to it even when the action itself ends in an exception.
+        const actionId = identity?.nextActionId() ?? null;
         try {
           const result = await original(...args);
           await record(TRACE_EVENT.INTERACTION, {
+            actionId,
             action: name,
             target,
             durationMs: Date.now() - startedMs,
@@ -226,6 +251,7 @@ export function attachTimelineObservers(options) {
           return result;
         } catch (error) {
           await record(TRACE_EVENT.INTERACTION, {
+            actionId,
             action: name,
             target,
             durationMs: Date.now() - startedMs,

@@ -197,3 +197,29 @@ export {
   findFingerprintLimitation,
   relevantFingerprintLimitations,
 } from './fingerprint/limitations.js';
+
+// Re-export the managed download subsystem: one lifecycle for automated and
+// manual downloads, with files that outlive the browser (issue #88).
+export {
+  attachDownloads,
+  normalizeDownloadOptions,
+} from './downloads/attach.js';
+export { DOWNLOAD_EVENT, createDownloadManager } from './downloads/manager.js';
+export {
+  ARTIFACT_DIRECTORY_MODE,
+  ARTIFACT_FILE_MODE,
+  DOWNLOAD_DIRECTORY_PRESETS,
+  prepareDownloadDirectory,
+  resolveDownloadDirectory,
+} from './downloads/destination.js';
+export {
+  DOWNLOAD_CONFLICT,
+  cleanPartials,
+  saveDownload,
+} from './downloads/store.js';
+export { DOWNLOAD_FAILURE } from './downloads/sources.js';
+export {
+  extensionFromContent,
+  sanitizeDownloadName,
+  withExtension,
+} from './downloads/naming.js';

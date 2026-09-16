@@ -53,6 +53,26 @@ function nextDownloadId() {
 }
 
 /**
+ * Find the object Playwright emits its `download` event on.
+ *
+ * A download is a *context*-level event. `launchBrowser()` hands back a
+ * persistent context, so the browser handle works there by accident; a
+ * `Browser` returned by `connectBrowser()` never emits `download` at all.
+ * Taking the page's context is what makes an attached browser behave exactly
+ * like a launched one.
+ *
+ * @param {Object} options - Handles the caller supplied
+ * @param {Object} [options.browser] - Browser or persistent context
+ * @param {Object} [options.page] - A page belonging to the browser
+ * @returns {Object|undefined} The context downloads are observed on
+ */
+function playwrightDownloadContext({ browser, page }) {
+  const fromPage =
+    typeof page?.context === 'function' ? page.context() : undefined;
+  return fromPage ?? browser;
+}
+
+/**
  * Create the download manager for a browser.
  *
  * @param {Object} options - Manager options
@@ -72,7 +92,7 @@ export async function createDownloadManager(options = {}) {
   const {
     engine = 'playwright',
     browser,
-    context = browser,
+    context: explicitContext,
     page,
     directory,
     persist = true,
@@ -81,6 +101,12 @@ export async function createDownloadManager(options = {}) {
     validate,
     log,
   } = options;
+
+  const context =
+    explicitContext ??
+    (engine === 'playwright'
+      ? playwrightDownloadContext({ browser, page })
+      : browser);
 
   // Resolved and probed before a single download can start: a permission
   // problem found afterwards looks like a file that never arrived.

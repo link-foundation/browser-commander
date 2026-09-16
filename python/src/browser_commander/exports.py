@@ -224,6 +224,24 @@ from browser_commander.interactions.scroll import (
     scroll_into_view_if_needed,
     verify_scroll,
 )
+
+# Re-export the portable trace format: one versioned bundle, readable from
+# every language the library ships in (issue #87).
+from browser_commander.traces import (
+    TRACE_EVENT_SOURCES,
+    TRACE_SCHEMA_VERSION,
+    ControlChange,
+    ParsedNdjson,
+    Trace,
+    TraceCheckpoint,
+    TraceEvent,
+    TraceFiles,
+    TraceMode,
+    TraceOutcome,
+    diff_control_state,
+    parse_ndjson,
+    read_trace,
+)
 from browser_commander.utilities.url import get_url, unfocus_address_bar
 
 # Re-export utilities
@@ -416,4 +434,18 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "prepare_download_directory",
     "resolve_download_directory",
     "save_download",
+    # Portable traces
+    "TRACE_EVENT_SOURCES",
+    "TRACE_SCHEMA_VERSION",
+    "ControlChange",
+    "ParsedNdjson",
+    "Trace",
+    "TraceCheckpoint",
+    "TraceEvent",
+    "TraceFiles",
+    "TraceMode",
+    "TraceOutcome",
+    "diff_control_state",
+    "parse_ndjson",
+    "read_trace",
 ]

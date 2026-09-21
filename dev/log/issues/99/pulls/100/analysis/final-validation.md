@@ -30,4 +30,13 @@ encoding, so Windows used cp1252 byte `0x97`; production then correctly opened
 the changelog as UTF-8 and rejected that byte. All text fixtures in the test
 now specify UTF-8 explicitly, matching the repository and production contract.
 
+## JavaScript formatting after relocation
+
+On the corrected head `cad30fe636a8ade403a706daf18f86a05d38ea0c`, the
+changeset validation in run `35586359226` succeeded. Its next gate found that
+the relocated fragment used double quotes while the JavaScript package's
+Prettier configuration requires single quotes. The earlier full local check
+could not see the file while it was incorrectly outside `js/`; formatting the
+fragment with the package-local Prettier resolves the downstream gate.
+
 The complete logs and run metadata are preserved in `ci-logs/final/`.

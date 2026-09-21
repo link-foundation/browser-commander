@@ -1,0 +1,1357 @@
+Detect Changes	Set up job	﻿2026-09-21T10:00:18.6831162Z Current runner version: '2.337.0'
+Detect Changes	Set up job	2026-09-21T10:00:18.6852811Z ##[group]Runner Image Provisioner
+Detect Changes	Set up job	2026-09-21T10:00:18.6853911Z Hosted Compute Agent
+Detect Changes	Set up job	2026-09-21T10:00:18.6854556Z Version: 20260828.587
+Detect Changes	Set up job	2026-09-21T10:00:18.6855218Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Detect Changes	Set up job	2026-09-21T10:00:18.6855944Z Build Date: 2026-08-28T16:44:25Z
+Detect Changes	Set up job	2026-09-21T10:00:18.6856671Z Worker ID: {d1fd5b1e-134e-4008-a661-de3a2fa6771f}
+Detect Changes	Set up job	2026-09-21T10:00:18.6857366Z Azure Region: westus3
+Detect Changes	Set up job	2026-09-21T10:00:18.6857955Z ##[endgroup]
+Detect Changes	Set up job	2026-09-21T10:00:18.6859248Z ##[group]Operating System
+Detect Changes	Set up job	2026-09-21T10:00:18.6859995Z Ubuntu
+Detect Changes	Set up job	2026-09-21T10:00:18.6860560Z 24.04.5
+Detect Changes	Set up job	2026-09-21T10:00:18.6861061Z LTS
+Detect Changes	Set up job	2026-09-21T10:00:18.6861552Z ##[endgroup]
+Detect Changes	Set up job	2026-09-21T10:00:18.6862155Z ##[group]Runner Image
+Detect Changes	Set up job	2026-09-21T10:00:18.6862731Z Image: ubuntu-24.04
+Detect Changes	Set up job	2026-09-21T10:00:18.6863609Z Version: 20260907.300.1
+Detect Changes	Set up job	2026-09-21T10:00:18.6864882Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+Detect Changes	Set up job	2026-09-21T10:00:18.6866543Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+Detect Changes	Set up job	2026-09-21T10:00:18.6867490Z ##[endgroup]
+Detect Changes	Set up job	2026-09-21T10:00:18.6868605Z ##[group]GITHUB_TOKEN Permissions
+Detect Changes	Set up job	2026-09-21T10:00:18.6870533Z Contents: read
+Detect Changes	Set up job	2026-09-21T10:00:18.6871119Z Metadata: read
+Detect Changes	Set up job	2026-09-21T10:00:18.6871649Z ##[endgroup]
+Detect Changes	Set up job	2026-09-21T10:00:18.6873597Z Secret source: Actions
+Detect Changes	Set up job	2026-09-21T10:00:18.6874555Z Cache mode: write
+Detect Changes	Set up job	2026-09-21T10:00:18.6875206Z Prepare workflow directory
+Detect Changes	Set up job	2026-09-21T10:00:18.7262664Z Prepare all required actions
+Detect Changes	Set up job	2026-09-21T10:00:18.7309928Z Getting action download info
+Detect Changes	Set up job	2026-09-21T10:00:19.1004393Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Detect Changes	Set up job	2026-09-21T10:00:19.2935140Z Complete job name: Detect Changes
+Detect Changes	Run actions/checkout@v6	﻿2026-09-21T10:00:19.3581816Z ##[group]Run actions/checkout@v6
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3582663Z with:
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3583515Z   fetch-depth: 0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3584142Z   repository: link-foundation/browser-commander
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3587986Z   token: ***
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3588514Z   ssh-strict: true
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3589010Z   ssh-user: git
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3589565Z   persist-credentials: true
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3590124Z   clean: true
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3590648Z   sparse-checkout-cone-mode: true
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3591261Z   fetch-tags: false
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3591808Z   show-progress: true
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3592378Z   lfs: false
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3592864Z   submodules: false
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3593591Z   set-safe-directory: true
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3594236Z   allow-unsafe-pr-checkout: false
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3595005Z env:
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3595508Z   GIT_CONFIG_COUNT: 1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3596060Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3596662Z   GIT_CONFIG_VALUE_0: main
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.3597365Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4610391Z Syncing repository: link-foundation/browser-commander
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4613598Z ##[group]Getting Git version info
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4615026Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4616926Z [command]/usr/bin/git version
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4628456Z git version 2.55.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4647768Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4660038Z Temporarily overriding HOME='/home/runner/work/_temp/34dab441-a86c-42c9-8b5b-6be2c8b5e29e' before making global git config changes
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4662324Z Adding repository directory to the temporary git global config as a safe directory
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4664695Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4705701Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4709398Z ##[group]Determining repository object format
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4711394Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4713681Z ##[group]Initializing the repository
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4715650Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4796657Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4816615Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4839867Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4841252Z ##[group]Disabling automatic garbage collection
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4844427Z [command]/usr/bin/git config --local gc.auto 0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4869922Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4871408Z ##[group]Setting up auth
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4872474Z Removing SSH command configuration
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4875469Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.4903876Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5206914Z Removing HTTP extra header
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5212360Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5242537Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5435486Z Removing includeIf entries pointing to credentials config files
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5440137Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5468563Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5660311Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5693493Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5719735Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5749189Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5775695Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5797546Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5798536Z ##[group]Fetching the repository
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:19.5805891Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +430474b418b1f72ff9274a773eddd4ce08d5f167:refs/remotes/pull/100/merge
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1850097Z From https://github.com/link-foundation/browser-commander
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1852520Z  * [new branch]      issue-1-315bb6a09057                     -> origin/issue-1-315bb6a09057
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1856071Z  * [new branch]      issue-11-f0db41c23d6b                    -> origin/issue-11-f0db41c23d6b
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1859590Z  * [new branch]      issue-13-d9daf7ca6ef8                    -> origin/issue-13-d9daf7ca6ef8
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1862223Z  * [new branch]      issue-15-85e23cad40a2                    -> origin/issue-15-85e23cad40a2
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1865298Z  * [new branch]      issue-17-4fb92dabeabb                    -> origin/issue-17-4fb92dabeabb
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1867787Z  * [new branch]      issue-19-bef12b396c1f                    -> origin/issue-19-bef12b396c1f
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1870189Z  * [new branch]      issue-21-dee364614118                    -> origin/issue-21-dee364614118
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1873129Z  * [new branch]      issue-23-4ea2027e76ed                    -> origin/issue-23-4ea2027e76ed
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1876572Z  * [new branch]      issue-25-1aef64a7e9ec                    -> origin/issue-25-1aef64a7e9ec
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1878940Z  * [new branch]      issue-27-4fd8f05681d7                    -> origin/issue-27-4fd8f05681d7
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1881408Z  * [new branch]      issue-29-ce573bdf1462                    -> origin/issue-29-ce573bdf1462
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1884128Z  * [new branch]      issue-3-8cd3d07cda8b                     -> origin/issue-3-8cd3d07cda8b
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1886689Z  * [new branch]      issue-31-182c0e5f23ed                    -> origin/issue-31-182c0e5f23ed
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1889368Z  * [new branch]      issue-33-c92d3b8449d2                    -> origin/issue-33-c92d3b8449d2
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1892200Z  * [new branch]      issue-35-f4eb7dd30787                    -> origin/issue-35-f4eb7dd30787
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1895210Z  * [new branch]      issue-36-968302a2e3f5                    -> origin/issue-36-968302a2e3f5
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1898051Z  * [new branch]      issue-37-ba59f40c5a7a                    -> origin/issue-37-ba59f40c5a7a
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1901208Z  * [new branch]      issue-38-286678a334ba                    -> origin/issue-38-286678a334ba
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1904522Z  * [new branch]      issue-39-3e80e8af995c                    -> origin/issue-39-3e80e8af995c
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1908061Z  * [new branch]      issue-45-3c5a6e3a096b                    -> origin/issue-45-3c5a6e3a096b
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1911965Z  * [new branch]      issue-47-e0d425c48e8d                    -> origin/issue-47-e0d425c48e8d
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1915218Z  * [new branch]      issue-49-2ea16458d451                    -> origin/issue-49-2ea16458d451
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1918668Z  * [new branch]      issue-5-6ad76e6429cf                     -> origin/issue-5-6ad76e6429cf
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1921793Z  * [new branch]      issue-51-f2a446afa3b9                    -> origin/issue-51-f2a446afa3b9
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1925001Z  * [new branch]      issue-53-a5b1fc1e8376                    -> origin/issue-53-a5b1fc1e8376
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1928224Z  * [new branch]      issue-55-7cb0893ca811                    -> origin/issue-55-7cb0893ca811
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1931135Z  * [new branch]      issue-57-e85104965f87                    -> origin/issue-57-e85104965f87
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1934350Z  * [new branch]      issue-58-e6673ea5b18c                    -> origin/issue-58-e6673ea5b18c
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1937997Z  * [new branch]      issue-59-c78546ebf3ab                    -> origin/issue-59-c78546ebf3ab
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1941506Z  * [new branch]      issue-60-e8d5faf5f51d                    -> origin/issue-60-e8d5faf5f51d
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1944649Z  * [new branch]      issue-65-5d65627189fb                    -> origin/issue-65-5d65627189fb
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1947801Z  * [new branch]      issue-66-5981186aa8ce                    -> origin/issue-66-5981186aa8ce
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1950731Z  * [new branch]      issue-68-710e9903a1a4                    -> origin/issue-68-710e9903a1a4
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1954316Z  * [new branch]      issue-69-d8df3ab30de1                    -> origin/issue-69-d8df3ab30de1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1957298Z  * [new branch]      issue-7-895bb7f9c584                     -> origin/issue-7-895bb7f9c584
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1960140Z  * [new branch]      issue-70-2777eb370ebe                    -> origin/issue-70-2777eb370ebe
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1963033Z  * [new branch]      issue-75-bea1ba5d2c9e                    -> origin/issue-75-bea1ba5d2c9e
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1966276Z  * [new branch]      issue-77-5a236e48ec8f                    -> origin/issue-77-5a236e48ec8f
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1969265Z  * [new branch]      issue-79-694d5f8686e2                    -> origin/issue-79-694d5f8686e2
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1972213Z  * [new branch]      issue-81-9d4c346eb143                    -> origin/issue-81-9d4c346eb143
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1975402Z  * [new branch]      issue-83-4fe3846113f5                    -> origin/issue-83-4fe3846113f5
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1978219Z  * [new branch]      issue-85-0764aad40b22                    -> origin/issue-85-0764aad40b22
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1980917Z  * [new branch]      issue-9-337c4cdf1be2                     -> origin/issue-9-337c4cdf1be2
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1983754Z  * [new branch]      issue-90-82dfe5010a77                    -> origin/issue-90-82dfe5010a77
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1986465Z  * [new branch]      issue-95-cd08931262d7                    -> origin/issue-95-cd08931262d7
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1989171Z  * [new branch]      issue-97-07ae86e55680                    -> origin/issue-97-07ae86e55680
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1992381Z  * [new branch]      issue-99-700c278c07b6                    -> origin/issue-99-700c278c07b6
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1994998Z  * [new branch]      main                                     -> origin/main
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1997141Z  * [new tag]         rust-v0.10.12                            -> rust-v0.10.12
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.1999305Z  * [new tag]         rust-v0.11.0                             -> rust-v0.11.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2001483Z  * [new tag]         rust-v0.12.0                             -> rust-v0.12.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2003728Z  * [new tag]         v0.1.1                                   -> v0.1.1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2005769Z  * [new tag]         v0.10.0                                  -> v0.10.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2007700Z  * [new tag]         v0.10.1                                  -> v0.10.1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2009692Z  * [new tag]         v0.10.10                                 -> v0.10.10
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2011674Z  * [new tag]         v0.10.11                                 -> v0.10.11
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2013760Z  * [new tag]         v0.10.2                                  -> v0.10.2
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2015946Z  * [new tag]         v0.10.3                                  -> v0.10.3
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2017874Z  * [new tag]         v0.10.4                                  -> v0.10.4
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2019901Z  * [new tag]         v0.10.5                                  -> v0.10.5
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2021897Z  * [new tag]         v0.10.6                                  -> v0.10.6
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2023990Z  * [new tag]         v0.10.7                                  -> v0.10.7
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2026009Z  * [new tag]         v0.10.8                                  -> v0.10.8
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2027954Z  * [new tag]         v0.10.9                                  -> v0.10.9
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2029951Z  * [new tag]         v0.11.0                                  -> v0.11.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2031885Z  * [new tag]         v0.12.0                                  -> v0.12.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2033884Z  * [new tag]         v0.13.0                                  -> v0.13.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2035869Z  * [new tag]         v0.14.0                                  -> v0.14.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2037744Z  * [new tag]         v0.15.0                                  -> v0.15.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2039678Z  * [new tag]         v0.16.0                                  -> v0.16.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2041623Z  * [new tag]         v0.16.1                                  -> v0.16.1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2043794Z  * [new tag]         v0.17.0                                  -> v0.17.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2045787Z  * [new tag]         v0.17.1                                  -> v0.17.1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2047654Z  * [new tag]         v0.17.2                                  -> v0.17.2
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2049584Z  * [new tag]         v0.18.0                                  -> v0.18.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2051500Z  * [new tag]         v0.19.0                                  -> v0.19.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2053562Z  * [new tag]         v0.2.0                                   -> v0.2.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2055593Z  * [new tag]         v0.2.1                                   -> v0.2.1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2057517Z  * [new tag]         v0.3.0                                   -> v0.3.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2059565Z  * [new tag]         v0.4.0                                   -> v0.4.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2061490Z  * [new tag]         v0.5.0                                   -> v0.5.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2063514Z  * [new tag]         v0.5.1                                   -> v0.5.1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2065457Z  * [new tag]         v0.5.2                                   -> v0.5.2
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2067367Z  * [new tag]         v0.5.3                                   -> v0.5.3
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2069240Z  * [new tag]         v0.5.4                                   -> v0.5.4
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2071053Z  * [new tag]         v0.6.0                                   -> v0.6.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2072896Z  * [new tag]         v0.7.0                                   -> v0.7.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2074828Z  * [new tag]         v0.8.0                                   -> v0.8.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2076687Z  * [new tag]         v0.8.1                                   -> v0.8.1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2078493Z  * [new tag]         v0.9.0                                   -> v0.9.0
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2080338Z  * [new tag]         v0.9.1                                   -> v0.9.1
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2082335Z  * [new ref]         430474b418b1f72ff9274a773eddd4ce08d5f167 -> pull/100/merge
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2086787Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2088607Z ##[group]Determining the checkout info
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2090635Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2091764Z [command]/usr/bin/git sparse-checkout disable
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2095261Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2099189Z ##[group]Checking out the ref
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.2100907Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/100/merge
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3295071Z Note: switching to 'refs/remotes/pull/100/merge'.
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3296346Z 
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3297371Z You are in 'detached HEAD' state. You can look around, make experimental
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3299830Z changes and commit them, and you can discard any commits you make in this
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3302091Z state without impacting any branches by switching back to a branch.
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3303803Z 
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3304800Z If you want to create a new branch to retain commits you create, you may
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3307309Z do so (now or later) by using -c with the switch command. Example:
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3308507Z 
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3309085Z   git switch -c <new-branch-name>
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3309874Z 
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3310516Z Or undo this operation with:
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3311625Z 
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3312103Z   git switch -
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3312718Z 
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3313987Z Turn off this advice by setting config variable advice.detachedHead to false
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3315491Z 
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3317319Z HEAD is now at 430474b Merge cad30fe636a8ade403a706daf18f86a05d38ea0c into a15837d6a3bbf01f73b62b5c1e216c517dd51afd
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3322221Z ##[endgroup]
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3345114Z [command]/usr/bin/git log -1 --format=%H
+Detect Changes	Run actions/checkout@v6	2026-09-21T10:00:21.3370029Z 430474b418b1f72ff9274a773eddd4ce08d5f167
+Detect Changes	Detect changes	﻿2026-09-21T10:00:21.3616536Z ##[group]Run node scripts/detect-code-changes.mjs
+Detect Changes	Detect changes	2026-09-21T10:00:21.3618440Z ^[[36;1mnode scripts/detect-code-changes.mjs^[[0m
+Detect Changes	Detect changes	2026-09-21T10:00:21.3647038Z shell: /usr/bin/bash -e {0}
+Detect Changes	Detect changes	2026-09-21T10:00:21.3648327Z env:
+Detect Changes	Detect changes	2026-09-21T10:00:21.3649300Z   GIT_CONFIG_COUNT: 1
+Detect Changes	Detect changes	2026-09-21T10:00:21.3650487Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Detect Changes	Detect changes	2026-09-21T10:00:21.3651826Z   GIT_CONFIG_VALUE_0: main
+Detect Changes	Detect changes	2026-09-21T10:00:21.3653050Z   GITHUB_EVENT_NAME: pull_request
+Detect Changes	Detect changes	2026-09-21T10:00:21.3654725Z   GITHUB_BASE_SHA: a15837d6a3bbf01f73b62b5c1e216c517dd51afd
+Detect Changes	Detect changes	2026-09-21T10:00:21.3656512Z   GITHUB_HEAD_SHA: cad30fe636a8ade403a706daf18f86a05d38ea0c
+Detect Changes	Detect changes	2026-09-21T10:00:21.3658033Z ##[endgroup]
+Detect Changes	Detect changes	2026-09-21T10:00:21.5458364Z Detecting file changes for CI/CD...
+Detect Changes	Detect changes	2026-09-21T10:00:21.5459109Z 
+Detect Changes	Detect changes	2026-09-21T10:00:21.5460378Z Comparing PR: a15837d6a3bbf01f73b62b5c1e216c517dd51afd...cad30fe636a8ade403a706daf18f86a05d38ea0c
+Detect Changes	Detect changes	2026-09-21T10:00:21.5759569Z Changed files:
+Detect Changes	Detect changes	2026-09-21T10:00:21.5761077Z   .gitattributes
+Detect Changes	Detect changes	2026-09-21T10:00:21.5762028Z   .github/codeql/codeql-config.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5764257Z   .github/workflows/docs.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5765616Z   .github/workflows/python.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5766887Z   .github/workflows/rust.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5768080Z   .github/workflows/security.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5769422Z   .pre-commit-config.yaml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5770671Z   dev/log/issues/99/pulls/100/PLAN.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5772005Z   dev/log/issues/99/pulls/100/README.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5773555Z   dev/log/issues/99/pulls/100/analysis/final-validation.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5775046Z   dev/log/issues/99/pulls/100/analysis/requirements.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5776618Z   dev/log/issues/99/pulls/100/analysis/root-causes-and-solutions.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5778223Z   dev/log/issues/99/pulls/100/analysis/signal-classification.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5779794Z   dev/log/issues/99/pulls/100/analysis/template-comparison.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5781257Z   dev/log/issues/99/pulls/100/analysis/timeline.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5782713Z   dev/log/issues/99/pulls/100/analysis/web-sources.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5784388Z   dev/log/issues/99/pulls/100/ci-logs/docs-35126461242.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5786087Z   dev/log/issues/99/pulls/100/ci-logs/final/ci-workflow-policy-35585645801.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5787875Z   dev/log/issues/99/pulls/100/ci-logs/final/ci-workflow-policy-35585645801.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5789622Z   dev/log/issues/99/pulls/100/ci-logs/final/js-ci-cd-pipeline-35585645557.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5790873Z   dev/log/issues/99/pulls/100/ci-logs/final/js-ci-cd-pipeline-35585645557.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5792086Z   dev/log/issues/99/pulls/100/ci-logs/final/python-ci-cd-pipeline-35585645620.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5793975Z   dev/log/issues/99/pulls/100/ci-logs/final/python-ci-cd-pipeline-35585645620.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5795699Z   dev/log/issues/99/pulls/100/ci-logs/js-35126461170.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5797092Z   dev/log/issues/99/pulls/100/ci-logs/links-35126461309.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5798715Z   dev/log/issues/99/pulls/100/ci-logs/python-34017112193.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5800162Z   dev/log/issues/99/pulls/100/ci-logs/python-35051926706.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5801291Z   dev/log/issues/99/pulls/100/ci-logs/python-35069740843.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5802374Z   dev/log/issues/99/pulls/100/ci-logs/python-35126461304.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5804105Z   dev/log/issues/99/pulls/100/ci-logs/quality-35126461287.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5805500Z   dev/log/issues/99/pulls/100/ci-logs/security-35126461302.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5806902Z   dev/log/issues/99/pulls/100/github/annotations-34017112193.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5808040Z   dev/log/issues/99/pulls/100/github/annotations-35051926706.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5809202Z   dev/log/issues/99/pulls/100/github/annotations-35069740843.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5810380Z   dev/log/issues/99/pulls/100/github/annotations-35126461170.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5811694Z   dev/log/issues/99/pulls/100/github/annotations-35126461242.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5813300Z   dev/log/issues/99/pulls/100/github/annotations-35126461287.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5815389Z   dev/log/issues/99/pulls/100/github/annotations-35126461302.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5816620Z   dev/log/issues/99/pulls/100/github/annotations-35126461304.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5817771Z   dev/log/issues/99/pulls/100/github/annotations-35126461309.tsv
+Detect Changes	Detect changes	2026-09-21T10:00:21.5818992Z   dev/log/issues/99/pulls/100/github/ci-runs.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5820866Z   dev/log/issues/99/pulls/100/github/issue-comments.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5822103Z   dev/log/issues/99/pulls/100/github/issue-events.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5823522Z   dev/log/issues/99/pulls/100/github/issue.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5824750Z   dev/log/issues/99/pulls/100/github/pr-conversation-comments.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5825903Z   dev/log/issues/99/pulls/100/github/pr-review-comments.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5827181Z   dev/log/issues/99/pulls/100/github/pr-reviews.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5828236Z   dev/log/issues/99/pulls/100/github/pr.diff
+Detect Changes	Detect changes	2026-09-21T10:00:21.5829281Z   dev/log/issues/99/pulls/100/github/pr.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5830370Z   dev/log/issues/99/pulls/100/github/pypi-maintainer-comment.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5831521Z   dev/log/issues/99/pulls/100/github/recent-branch-runs.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5832689Z   dev/log/issues/99/pulls/100/github/recent-main-runs.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5834142Z   dev/log/issues/99/pulls/100/github/run-34017112193.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5835285Z   dev/log/issues/99/pulls/100/github/run-35051926706.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5836422Z   dev/log/issues/99/pulls/100/github/run-35069740843.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5837604Z   dev/log/issues/99/pulls/100/github/run-35126461170.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5838923Z   dev/log/issues/99/pulls/100/github/run-35126461242.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5840972Z   dev/log/issues/99/pulls/100/github/run-35126461287.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5842405Z   dev/log/issues/99/pulls/100/github/run-35126461302.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5843617Z   dev/log/issues/99/pulls/100/github/run-35126461304.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5844856Z   dev/log/issues/99/pulls/100/github/run-35126461309.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5846237Z   dev/log/issues/99/pulls/100/reproductions/actionlint-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5847459Z   dev/log/issues/99/pulls/100/reproductions/after-js-full-clean.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5848628Z   dev/log/issues/99/pulls/100/reproductions/after-js-full.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5849806Z   dev/log/issues/99/pulls/100/reproductions/after-js-regressions-with-deps.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5851069Z   dev/log/issues/99/pulls/100/reproductions/after-js-regressions.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5852253Z   dev/log/issues/99/pulls/100/reproductions/after-python-release-retry.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5853763Z   dev/log/issues/99/pulls/100/reproductions/before-js-regressions.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5855040Z   dev/log/issues/99/pulls/100/reproductions/before-python-release-retry.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5856313Z   dev/log/issues/99/pulls/100/reproductions/file-line-limits-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5857486Z   dev/log/issues/99/pulls/100/reproductions/js-check-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5858690Z   dev/log/issues/99/pulls/100/reproductions/js-filehandle-allocations-after.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5860015Z   dev/log/issues/99/pulls/100/reproductions/js-filehandle-allocations.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5861202Z   dev/log/issues/99/pulls/100/reproductions/js-filehandle-trace.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5862610Z   dev/log/issues/99/pulls/100/reproductions/js-test-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5864087Z   dev/log/issues/99/pulls/100/reproductions/npm-ci-after.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5865261Z   dev/log/issues/99/pulls/100/reproductions/npm-ci-allow-scripts.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5866526Z   dev/log/issues/99/pulls/100/reproductions/npm-lock-update.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5867716Z   dev/log/issues/99/pulls/100/reproductions/python-collector-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5868920Z   dev/log/issues/99/pulls/100/reproductions/python-dev-install.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5870114Z   dev/log/issues/99/pulls/100/reproductions/python-format-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5871489Z   dev/log/issues/99/pulls/100/reproductions/python-mypy-scripts-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5872741Z   dev/log/issues/99/pulls/100/reproductions/python-mypy-scripts.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5874211Z   dev/log/issues/99/pulls/100/reproductions/python-mypy-src-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5875442Z   dev/log/issues/99/pulls/100/reproductions/python-mypy-src.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5876634Z   dev/log/issues/99/pulls/100/reproductions/python-pytest-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5877813Z   dev/log/issues/99/pulls/100/reproductions/python-pytest-full.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5878996Z   dev/log/issues/99/pulls/100/reproductions/python-ruff-check.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5880169Z   dev/log/issues/99/pulls/100/reproductions/python-ruff-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5881336Z   dev/log/issues/99/pulls/100/reproductions/python-ruff-format.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5882635Z   dev/log/issues/99/pulls/100/reproductions/python-test-tools-install.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5884093Z   dev/log/issues/99/pulls/100/reproductions/repo-scripts-lint-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5885385Z   dev/log/issues/99/pulls/100/reproductions/required-docs-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5886564Z   dev/log/issues/99/pulls/100/reproductions/rust-clippy-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5887705Z   dev/log/issues/99/pulls/100/reproductions/rust-clippy.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5888856Z   dev/log/issues/99/pulls/100/reproductions/rust-doc-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5889984Z   dev/log/issues/99/pulls/100/reproductions/rust-fmt-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5891115Z   dev/log/issues/99/pulls/100/reproductions/rust-fmt.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5892243Z   dev/log/issues/99/pulls/100/reproductions/rust-test-doc.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5893562Z   dev/log/issues/99/pulls/100/reproductions/rust-test-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5894827Z   dev/log/issues/99/pulls/100/reproductions/rust-test-full.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5896014Z   dev/log/issues/99/pulls/100/reproductions/shared-assets-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5897174Z   dev/log/issues/99/pulls/100/reproductions/workflow-policy-final.log
+Detect Changes	Detect changes	2026-09-21T10:00:21.5898409Z   dev/log/issues/99/pulls/100/research/CI-CD-BEST-PRACTICES.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5899566Z   dev/log/issues/99/pulls/100/research/better-sqlite-issue-1463.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5900729Z   dev/log/issues/99/pulls/100/research/better-sqlite-issue-1491.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5901939Z   dev/log/issues/99/pulls/100/research/better-sqlite-upstream-issues.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5903171Z   dev/log/issues/99/pulls/100/research/better-sqlite-v13.0.0.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5904538Z   dev/log/issues/99/pulls/100/research/browser-commander-filetree.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5905729Z   dev/log/issues/99/pulls/100/research/hive-mind-best-practices-commit.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5906933Z   dev/log/issues/99/pulls/100/research/js-filehandle-warnings.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5908085Z   dev/log/issues/99/pulls/100/research/js-skips.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5909175Z   dev/log/issues/99/pulls/100/research/js-template-filetree.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5910327Z   dev/log/issues/99/pulls/100/research/js-template-head.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5911455Z   dev/log/issues/99/pulls/100/research/js-template-tree.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5912726Z   dev/log/issues/99/pulls/100/research/js-windows-skip-context.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5914104Z   dev/log/issues/99/pulls/100/research/log-signal-scan.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5915240Z   dev/log/issues/99/pulls/100/research/node-release-schedule.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5916425Z   dev/log/issues/99/pulls/100/research/npm-deprecation-warnings.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5917697Z   dev/log/issues/99/pulls/100/research/pypi-browser-commander-headers.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5918918Z   dev/log/issues/99/pulls/100/research/pypi-browser-commander-response.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5920192Z   dev/log/issues/99/pulls/100/research/pypi-browser-commander-response.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5921428Z   dev/log/issues/99/pulls/100/research/pypi-browser-commander-status.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5922661Z   dev/log/issues/99/pulls/100/research/pypi-maintainer-action.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5924057Z   dev/log/issues/99/pulls/100/research/python-skips.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5925194Z   dev/log/issues/99/pulls/100/research/python-template-bump-issues.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5926500Z   dev/log/issues/99/pulls/100/research/python-template-changelog-issues.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5927814Z   dev/log/issues/99/pulls/100/research/python-template-download-artifact-report.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5929063Z   dev/log/issues/99/pulls/100/research/python-template-filetree.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5930223Z   dev/log/issues/99/pulls/100/research/python-template-head.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5931362Z   dev/log/issues/99/pulls/100/research/python-template-issue-85.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5932602Z   dev/log/issues/99/pulls/100/research/python-template-issue-86.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5934069Z   dev/log/issues/99/pulls/100/research/python-template-manual-scriv-report.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5935336Z   dev/log/issues/99/pulls/100/research/python-template-related-issues.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5936587Z   dev/log/issues/99/pulls/100/research/python-template-tree.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5937742Z   dev/log/issues/99/pulls/100/research/rust-template-filetree.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5938917Z   dev/log/issues/99/pulls/100/research/rust-template-head.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5940053Z   dev/log/issues/99/pulls/100/research/rust-template-tree.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5941174Z   dev/log/issues/99/pulls/100/research/security-signals.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5942307Z   dev/log/issues/99/pulls/100/templates/diffs/js-file-by-file.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5943626Z   dev/log/issues/99/pulls/100/templates/diffs/js-workflow.patch
+Detect Changes	Detect changes	2026-09-21T10:00:21.5944852Z   dev/log/issues/99/pulls/100/templates/diffs/python-file-by-file.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5946064Z   dev/log/issues/99/pulls/100/templates/diffs/python-workflow.patch
+Detect Changes	Detect changes	2026-09-21T10:00:21.5947241Z   dev/log/issues/99/pulls/100/templates/diffs/rust-file-by-file.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5948406Z   dev/log/issues/99/pulls/100/templates/diffs/rust-workflow.patch
+Detect Changes	Detect changes	2026-09-21T10:00:21.5949579Z   dev/log/issues/99/pulls/100/templates/js-release-relevant.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5950724Z   dev/log/issues/99/pulls/100/templates/js-repository-files.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5951843Z   dev/log/issues/99/pulls/100/templates/js-template-files.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5952949Z   dev/log/issues/99/pulls/100/templates/python-release-relevant.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5954252Z   dev/log/issues/99/pulls/100/templates/python-repository-files.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5955482Z   dev/log/issues/99/pulls/100/templates/python-template-files.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5956624Z   dev/log/issues/99/pulls/100/templates/rust-repository-files.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5957748Z   dev/log/issues/99/pulls/100/templates/rust-template-files.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5959212Z   dev/log/issues/99/pulls/100/templates/security-relevant.txt
+Detect Changes	Detect changes	2026-09-21T10:00:21.5960369Z   experiments/trace-open-filehandles.mjs
+Detect Changes	Detect changes	2026-09-21T10:00:21.5961365Z   js/.changeset/quiet-staged-downloads.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5962294Z   js/package-lock.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5963152Z   js/package.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5964203Z   js/scripts/run-tests.mjs
+Detect Changes	Detect changes	2026-09-21T10:00:21.5965119Z   js/src/downloads/staging.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5966027Z   js/src/traces/bundle.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5966892Z   js/src/traces/recorder.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5967796Z   js/tests/helpers/trace-fixtures.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5968733Z   js/tests/unit/downloads/staging.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5969728Z   js/tests/unit/scripts/ci-workflow-policy.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5970763Z   js/tests/unit/scripts/npm-release-helpers.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5971768Z   js/tests/unit/scripts/pre-commit-config.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5972807Z   js/tests/unit/traces/bundle.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5973822Z   js/tests/unit/traces/links.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5974795Z   js/tests/unit/traces/reader.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5975743Z   js/tests/unit/traces/recorder.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5976659Z   js/tests/unit/traces/viewer.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.5977609Z   python/changelog.d/99.fixed.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5978605Z   python/scripts/collect_changelog.py
+Detect Changes	Detect changes	2026-09-21T10:00:21.5979601Z   python/tests/unit/scripts/test_collect_changelog.py
+Detect Changes	Detect changes	2026-09-21T10:00:21.5980604Z   rust/changelog.d/99.fixed.md
+Detect Changes	Detect changes	2026-09-21T10:00:21.5981534Z   rust/src/browser/real_browser.rs
+Detect Changes	Detect changes	2026-09-21T10:00:21.5982467Z   rust/src/downloads/options.rs
+Detect Changes	Detect changes	2026-09-21T10:00:21.5983569Z   rust/src/fingerprint/profile.rs
+Detect Changes	Detect changes	2026-09-21T10:00:21.5984515Z   scripts/check-ci-workflows.mjs
+Detect Changes	Detect changes	2026-09-21T10:00:21.5985045Z 
+Detect Changes	Detect changes	2026-09-21T10:00:21.5985445Z rs-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.5986273Z toml-changed=false
+Detect Changes	Detect changes	2026-09-21T10:00:21.5987118Z mjs-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.5987932Z js-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.5988746Z package-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.5989636Z docs-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.5990580Z workflow-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.5991015Z 
+Detect Changes	Detect changes	2026-09-21T10:00:21.5991483Z Files considered as code changes:
+Detect Changes	Detect changes	2026-09-21T10:00:21.5992349Z   .gitattributes
+Detect Changes	Detect changes	2026-09-21T10:00:21.5993177Z   .github/codeql/codeql-config.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5994244Z   .github/workflows/docs.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5995123Z   .github/workflows/python.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5996053Z   .github/workflows/rust.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5996959Z   .github/workflows/security.yml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5998054Z   .pre-commit-config.yaml
+Detect Changes	Detect changes	2026-09-21T10:00:21.5998954Z   js/package-lock.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.5999825Z   js/package.json
+Detect Changes	Detect changes	2026-09-21T10:00:21.6000685Z   js/scripts/run-tests.mjs
+Detect Changes	Detect changes	2026-09-21T10:00:21.6001566Z   js/src/downloads/staging.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6002475Z   js/src/traces/bundle.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6003533Z   js/src/traces/recorder.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6004456Z   js/tests/helpers/trace-fixtures.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6005361Z   js/tests/unit/downloads/staging.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6006380Z   js/tests/unit/scripts/ci-workflow-policy.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6007380Z   js/tests/unit/scripts/npm-release-helpers.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6008461Z   js/tests/unit/scripts/pre-commit-config.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6009419Z   js/tests/unit/traces/bundle.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6010325Z   js/tests/unit/traces/links.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6011268Z   js/tests/unit/traces/reader.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6012202Z   js/tests/unit/traces/recorder.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6013128Z   js/tests/unit/traces/viewer.test.js
+Detect Changes	Detect changes	2026-09-21T10:00:21.6014150Z   python/scripts/collect_changelog.py
+Detect Changes	Detect changes	2026-09-21T10:00:21.6015144Z   python/tests/unit/scripts/test_collect_changelog.py
+Detect Changes	Detect changes	2026-09-21T10:00:21.6016120Z   rust/src/browser/real_browser.rs
+Detect Changes	Detect changes	2026-09-21T10:00:21.6017063Z   rust/src/downloads/options.rs
+Detect Changes	Detect changes	2026-09-21T10:00:21.6017950Z   rust/src/fingerprint/profile.rs
+Detect Changes	Detect changes	2026-09-21T10:00:21.6018867Z   scripts/check-ci-workflows.mjs
+Detect Changes	Detect changes	2026-09-21T10:00:21.6019348Z 
+Detect Changes	Detect changes	2026-09-21T10:00:21.6019762Z any-code-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.6020618Z js-code-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.6021478Z rust-code-changed=true
+Detect Changes	Detect changes	2026-09-21T10:00:21.6021971Z 
+Detect Changes	Detect changes	2026-09-21T10:00:21.6022336Z Change detection completed.
+Detect Changes	Post Run actions/checkout@v6	﻿2026-09-21T10:00:21.6218209Z Post job cleanup.
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7074022Z [command]/usr/bin/git version
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7113895Z git version 2.55.0
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7156139Z Temporarily overriding HOME='/home/runner/work/_temp/7ba515e9-ab48-4339-a75a-0468bfe7aeb1' before making global git config changes
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7157898Z Adding repository directory to the temporary git global config as a safe directory
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7162797Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7189832Z Removing SSH command configuration
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7196716Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7228422Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7425668Z Removing HTTP extra header
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7431996Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7461512Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7660587Z Removing includeIf entries pointing to credentials config files
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7666700Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7685249Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7688135Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7691913Z includeif.gitdir:/github/workspace/.git.path
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7698922Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7704250Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7716527Z /home/runner/work/_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7726297Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7767345Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7786732Z /home/runner/work/_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7796432Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7828340Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7845972Z /github/runner_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7855691Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7882896Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7903719Z /github/runner_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7912058Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.7942641Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Detect Changes	Post Run actions/checkout@v6	2026-09-21T10:00:21.8128342Z Removing credentials config '/home/runner/work/_temp/git-credentials-d1e82517-1d56-4cbd-8c11-84aa7df69b5d.config'
+Detect Changes	Complete job	﻿2026-09-21T10:00:21.8263047Z Evaluate and set job outputs
+Detect Changes	Complete job	2026-09-21T10:00:21.8274155Z Set output 'mjs-changed'
+Detect Changes	Complete job	2026-09-21T10:00:21.8276864Z Set output 'js-changed'
+Detect Changes	Complete job	2026-09-21T10:00:21.8278524Z Set output 'package-changed'
+Detect Changes	Complete job	2026-09-21T10:00:21.8279864Z Set output 'docs-changed'
+Detect Changes	Complete job	2026-09-21T10:00:21.8281242Z Set output 'workflow-changed'
+Detect Changes	Complete job	2026-09-21T10:00:21.8282486Z Set output 'any-code-changed'
+Detect Changes	Complete job	2026-09-21T10:00:21.8283992Z Set output 'js-code-changed'
+Detect Changes	Complete job	2026-09-21T10:00:21.8285836Z Cleaning up orphan processes
+Lint and Format Check	Set up job	﻿2026-09-21T10:00:28.5566762Z Current runner version: '2.337.0'
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5588033Z ##[group]Runner Image Provisioner
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5588790Z Hosted Compute Agent
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5589412Z Version: 20260828.587
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5589933Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5590909Z Build Date: 2026-08-28T16:44:25Z
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5591490Z Worker ID: {df3ecbc5-9a1c-42db-883c-8d0193b12176}
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5592119Z Azure Region: westus3
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5592667Z ##[endgroup]
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5593808Z ##[group]Operating System
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5594363Z Ubuntu
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5594811Z 24.04.5
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5595268Z LTS
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5595734Z ##[endgroup]
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5596225Z ##[group]Runner Image
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5596744Z Image: ubuntu-24.04
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5597242Z Version: 20260907.300.1
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5598121Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5599599Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5600657Z ##[endgroup]
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5601585Z ##[group]GITHUB_TOKEN Permissions
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5603199Z Contents: read
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5603712Z Metadata: read
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5604177Z ##[endgroup]
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5606191Z Secret source: Actions
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5607050Z Cache mode: write
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5607688Z Prepare workflow directory
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5940635Z Prepare all required actions
+Lint and Format Check	Set up job	2026-09-21T10:00:28.5979109Z Getting action download info
+Lint and Format Check	Set up job	2026-09-21T10:00:28.9059909Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Lint and Format Check	Set up job	2026-09-21T10:00:29.4053601Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Lint and Format Check	Set up job	2026-09-21T10:00:29.8862347Z Complete job name: Lint and Format Check
+Lint and Format Check	Run actions/checkout@v6	﻿2026-09-21T10:00:29.9629227Z ##[group]Run actions/checkout@v6
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9630605Z with:
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9631297Z   fetch-depth: 0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9632132Z   repository: link-foundation/browser-commander
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9638739Z   token: ***
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9639441Z   ssh-strict: true
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9640383Z   ssh-user: git
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9641121Z   persist-credentials: true
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9641927Z   clean: true
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9642661Z   sparse-checkout-cone-mode: true
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9643529Z   fetch-tags: false
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9644264Z   show-progress: true
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9645009Z   lfs: false
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9645717Z   submodules: false
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9646463Z   set-safe-directory: true
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9647302Z   allow-unsafe-pr-checkout: false
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9648362Z env:
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9649023Z   GIT_CONFIG_COUNT: 1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9649829Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9650855Z   GIT_CONFIG_VALUE_0: main
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:29.9651679Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.0508779Z Syncing repository: link-foundation/browser-commander
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.0512267Z ##[group]Getting Git version info
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.0514183Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.0516872Z [command]/usr/bin/git version
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1074365Z git version 2.55.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1093882Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1108188Z Temporarily overriding HOME='/home/runner/work/_temp/4ccb1b30-ca8c-47bd-9667-8917644ea2b9' before making global git config changes
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1112391Z Adding repository directory to the temporary git global config as a safe directory
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1115185Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1157782Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1162751Z ##[group]Determining repository object format
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1165094Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1167164Z ##[group]Initializing the repository
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1169204Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1239634Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1247504Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1284943Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1286482Z ##[group]Disabling automatic garbage collection
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1288099Z [command]/usr/bin/git config --local gc.auto 0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1315815Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1317450Z ##[group]Setting up auth
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1318315Z Removing SSH command configuration
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1320487Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1349641Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1609751Z Removing HTTP extra header
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1615627Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1648437Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1831716Z Removing includeIf entries pointing to credentials config files
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1836483Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.1866227Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.2058329Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.2093013Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.2122253Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.2153222Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.2190086Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.2215935Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.2217807Z ##[group]Fetching the repository
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:30.2225331Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +430474b418b1f72ff9274a773eddd4ce08d5f167:refs/remotes/pull/100/merge
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7632368Z From https://github.com/link-foundation/browser-commander
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7633098Z  * [new branch]      issue-1-315bb6a09057                     -> origin/issue-1-315bb6a09057
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7633584Z  * [new branch]      issue-11-f0db41c23d6b                    -> origin/issue-11-f0db41c23d6b
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7634004Z  * [new branch]      issue-13-d9daf7ca6ef8                    -> origin/issue-13-d9daf7ca6ef8
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7634446Z  * [new branch]      issue-15-85e23cad40a2                    -> origin/issue-15-85e23cad40a2
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7634861Z  * [new branch]      issue-17-4fb92dabeabb                    -> origin/issue-17-4fb92dabeabb
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7635333Z  * [new branch]      issue-19-bef12b396c1f                    -> origin/issue-19-bef12b396c1f
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7635972Z  * [new branch]      issue-21-dee364614118                    -> origin/issue-21-dee364614118
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7636379Z  * [new branch]      issue-23-4ea2027e76ed                    -> origin/issue-23-4ea2027e76ed
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7636822Z  * [new branch]      issue-25-1aef64a7e9ec                    -> origin/issue-25-1aef64a7e9ec
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7637241Z  * [new branch]      issue-27-4fd8f05681d7                    -> origin/issue-27-4fd8f05681d7
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7637659Z  * [new branch]      issue-29-ce573bdf1462                    -> origin/issue-29-ce573bdf1462
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7638088Z  * [new branch]      issue-3-8cd3d07cda8b                     -> origin/issue-3-8cd3d07cda8b
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7638494Z  * [new branch]      issue-31-182c0e5f23ed                    -> origin/issue-31-182c0e5f23ed
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7638943Z  * [new branch]      issue-33-c92d3b8449d2                    -> origin/issue-33-c92d3b8449d2
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7639416Z  * [new branch]      issue-35-f4eb7dd30787                    -> origin/issue-35-f4eb7dd30787
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7639816Z  * [new branch]      issue-36-968302a2e3f5                    -> origin/issue-36-968302a2e3f5
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7640425Z  * [new branch]      issue-37-ba59f40c5a7a                    -> origin/issue-37-ba59f40c5a7a
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7641081Z  * [new branch]      issue-38-286678a334ba                    -> origin/issue-38-286678a334ba
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7641739Z  * [new branch]      issue-39-3e80e8af995c                    -> origin/issue-39-3e80e8af995c
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7642301Z  * [new branch]      issue-45-3c5a6e3a096b                    -> origin/issue-45-3c5a6e3a096b
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7642840Z  * [new branch]      issue-47-e0d425c48e8d                    -> origin/issue-47-e0d425c48e8d
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7643326Z  * [new branch]      issue-49-2ea16458d451                    -> origin/issue-49-2ea16458d451
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7644121Z  * [new branch]      issue-5-6ad76e6429cf                     -> origin/issue-5-6ad76e6429cf
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7644538Z  * [new branch]      issue-51-f2a446afa3b9                    -> origin/issue-51-f2a446afa3b9
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7644947Z  * [new branch]      issue-53-a5b1fc1e8376                    -> origin/issue-53-a5b1fc1e8376
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7645360Z  * [new branch]      issue-55-7cb0893ca811                    -> origin/issue-55-7cb0893ca811
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7645778Z  * [new branch]      issue-57-e85104965f87                    -> origin/issue-57-e85104965f87
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7646184Z  * [new branch]      issue-58-e6673ea5b18c                    -> origin/issue-58-e6673ea5b18c
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7646662Z  * [new branch]      issue-59-c78546ebf3ab                    -> origin/issue-59-c78546ebf3ab
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7647117Z  * [new branch]      issue-60-e8d5faf5f51d                    -> origin/issue-60-e8d5faf5f51d
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7647524Z  * [new branch]      issue-65-5d65627189fb                    -> origin/issue-65-5d65627189fb
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7647925Z  * [new branch]      issue-66-5981186aa8ce                    -> origin/issue-66-5981186aa8ce
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7648323Z  * [new branch]      issue-68-710e9903a1a4                    -> origin/issue-68-710e9903a1a4
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7648721Z  * [new branch]      issue-69-d8df3ab30de1                    -> origin/issue-69-d8df3ab30de1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7649123Z  * [new branch]      issue-7-895bb7f9c584                     -> origin/issue-7-895bb7f9c584
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7649522Z  * [new branch]      issue-70-2777eb370ebe                    -> origin/issue-70-2777eb370ebe
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7650027Z  * [new branch]      issue-75-bea1ba5d2c9e                    -> origin/issue-75-bea1ba5d2c9e
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7650801Z  * [new branch]      issue-77-5a236e48ec8f                    -> origin/issue-77-5a236e48ec8f
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7651229Z  * [new branch]      issue-79-694d5f8686e2                    -> origin/issue-79-694d5f8686e2
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7651768Z  * [new branch]      issue-81-9d4c346eb143                    -> origin/issue-81-9d4c346eb143
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7652199Z  * [new branch]      issue-83-4fe3846113f5                    -> origin/issue-83-4fe3846113f5
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7652607Z  * [new branch]      issue-85-0764aad40b22                    -> origin/issue-85-0764aad40b22
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7653011Z  * [new branch]      issue-9-337c4cdf1be2                     -> origin/issue-9-337c4cdf1be2
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7653417Z  * [new branch]      issue-90-82dfe5010a77                    -> origin/issue-90-82dfe5010a77
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7653864Z  * [new branch]      issue-95-cd08931262d7                    -> origin/issue-95-cd08931262d7
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7654293Z  * [new branch]      issue-97-07ae86e55680                    -> origin/issue-97-07ae86e55680
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7654715Z  * [new branch]      issue-99-700c278c07b6                    -> origin/issue-99-700c278c07b6
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7655104Z  * [new branch]      main                                     -> origin/main
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7655462Z  * [new tag]         rust-v0.10.12                            -> rust-v0.10.12
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7655812Z  * [new tag]         rust-v0.11.0                             -> rust-v0.11.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7656154Z  * [new tag]         rust-v0.12.0                             -> rust-v0.12.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7656478Z  * [new tag]         v0.1.1                                   -> v0.1.1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7656794Z  * [new tag]         v0.10.0                                  -> v0.10.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7657098Z  * [new tag]         v0.10.1                                  -> v0.10.1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7657400Z  * [new tag]         v0.10.10                                 -> v0.10.10
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7657772Z  * [new tag]         v0.10.11                                 -> v0.10.11
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7658076Z  * [new tag]         v0.10.2                                  -> v0.10.2
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7658480Z  * [new tag]         v0.10.3                                  -> v0.10.3
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7658780Z  * [new tag]         v0.10.4                                  -> v0.10.4
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7659075Z  * [new tag]         v0.10.5                                  -> v0.10.5
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7659370Z  * [new tag]         v0.10.6                                  -> v0.10.6
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7659662Z  * [new tag]         v0.10.7                                  -> v0.10.7
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7659955Z  * [new tag]         v0.10.8                                  -> v0.10.8
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7660476Z  * [new tag]         v0.10.9                                  -> v0.10.9
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7660794Z  * [new tag]         v0.11.0                                  -> v0.11.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7661123Z  * [new tag]         v0.12.0                                  -> v0.12.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7661419Z  * [new tag]         v0.13.0                                  -> v0.13.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7661734Z  * [new tag]         v0.14.0                                  -> v0.14.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7662029Z  * [new tag]         v0.15.0                                  -> v0.15.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7662329Z  * [new tag]         v0.16.0                                  -> v0.16.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7662624Z  * [new tag]         v0.16.1                                  -> v0.16.1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7662927Z  * [new tag]         v0.17.0                                  -> v0.17.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7663222Z  * [new tag]         v0.17.1                                  -> v0.17.1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7663517Z  * [new tag]         v0.17.2                                  -> v0.17.2
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7663809Z  * [new tag]         v0.18.0                                  -> v0.18.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7664116Z  * [new tag]         v0.19.0                                  -> v0.19.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7725602Z  * [new tag]         v0.2.0                                   -> v0.2.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7726452Z  * [new tag]         v0.2.1                                   -> v0.2.1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7727064Z  * [new tag]         v0.3.0                                   -> v0.3.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7727561Z  * [new tag]         v0.4.0                                   -> v0.4.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7728063Z  * [new tag]         v0.5.0                                   -> v0.5.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7728504Z  * [new tag]         v0.5.1                                   -> v0.5.1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7728902Z  * [new tag]         v0.5.2                                   -> v0.5.2
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7729344Z  * [new tag]         v0.5.3                                   -> v0.5.3
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7729793Z  * [new tag]         v0.5.4                                   -> v0.5.4
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7730393Z  * [new tag]         v0.6.0                                   -> v0.6.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7730884Z  * [new tag]         v0.7.0                                   -> v0.7.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7731393Z  * [new tag]         v0.8.0                                   -> v0.8.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7731858Z  * [new tag]         v0.8.1                                   -> v0.8.1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7732321Z  * [new tag]         v0.9.0                                   -> v0.9.0
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7732809Z  * [new tag]         v0.9.1                                   -> v0.9.1
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7733366Z  * [new ref]         430474b418b1f72ff9274a773eddd4ce08d5f167 -> pull/100/merge
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7734907Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7735389Z ##[group]Determining the checkout info
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7735931Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7736277Z [command]/usr/bin/git sparse-checkout disable
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7737304Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7738405Z ##[group]Checking out the ref
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.7738960Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/100/merge
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8854814Z Note: switching to 'refs/remotes/pull/100/merge'.
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8855211Z 
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8855446Z You are in 'detached HEAD' state. You can look around, make experimental
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8855878Z changes and commit them, and you can discard any commits you make in this
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8856291Z state without impacting any branches by switching back to a branch.
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8856516Z 
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8856692Z If you want to create a new branch to retain commits you create, you may
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8857078Z do so (now or later) by using -c with the switch command. Example:
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8857295Z 
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8857413Z   git switch -c <new-branch-name>
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8857566Z 
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8857675Z Or undo this operation with:
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8857815Z 
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8857900Z   git switch -
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8858014Z 
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8858211Z Turn off this advice by setting config variable advice.detachedHead to false
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8858483Z 
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8858786Z HEAD is now at 430474b Merge cad30fe636a8ade403a706daf18f86a05d38ea0c into a15837d6a3bbf01f73b62b5c1e216c517dd51afd
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8873456Z ##[endgroup]
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8913485Z [command]/usr/bin/git log -1 --format=%H
+Lint and Format Check	Run actions/checkout@v6	2026-09-21T10:00:31.8937108Z 430474b418b1f72ff9274a773eddd4ce08d5f167
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	﻿2026-09-21T10:00:31.9126148Z ##[group]Run bash scripts/simulate-fresh-merge.sh
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9126542Z ^[[36;1mbash scripts/simulate-fresh-merge.sh^[[0m
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9161458Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9161767Z env:
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9161943Z   GIT_CONFIG_COUNT: 1
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9162162Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9162400Z   GIT_CONFIG_VALUE_0: main
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9162595Z   BASE_REF: main
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9162768Z ##[endgroup]
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9237637Z === Synchronizing pull request with the latest main ===
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9237984Z 
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:31.9265578Z Fetching latest main...
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:32.3066338Z From https://github.com/link-foundation/browser-commander
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:32.3066955Z  * branch            main       -> FETCH_HEAD
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:32.3122983Z Current checkout (merge preview): 430474b418b1f72ff9274a773eddd4ce08d5f167
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:32.3123493Z Latest base branch (main):   a15837d6a3bbf01f73b62b5c1e216c517dd51afd
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:32.3124014Z 
+Lint and Format Check	Simulate fresh merge with base branch (PR only)	2026-09-21T10:00:32.3140967Z Merge preview is up to date with main. No simulation needed.
+Lint and Format Check	Setup Node.js	﻿2026-09-21T10:00:32.3215970Z ##[group]Run actions/setup-node@v6
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3216214Z with:
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3216387Z   node-version: 24.x
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3216577Z   check-latest: false
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3218342Z   token: ***
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3218529Z   package-manager-cache: true
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3218734Z env:
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3218894Z   GIT_CONFIG_COUNT: 1
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3219092Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3219320Z   GIT_CONFIG_VALUE_0: main
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.3219534Z ##[endgroup]
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.4809820Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:32.4814095Z ##[group]Environment details
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:36.0605864Z node: v24.20.0
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:36.0606289Z npm: 11.19.0
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:36.0606502Z yarn: 1.22.22
+Lint and Format Check	Setup Node.js	2026-09-21T10:00:36.0607586Z ##[endgroup]
+Lint and Format Check	Install dependencies	﻿2026-09-21T10:00:36.0708460Z ##[group]Run npm ci --ignore-scripts
+Lint and Format Check	Install dependencies	2026-09-21T10:00:36.0708737Z ^[[36;1mnpm ci --ignore-scripts^[[0m
+Lint and Format Check	Install dependencies	2026-09-21T10:00:36.0790418Z shell: /usr/bin/bash -e {0}
+Lint and Format Check	Install dependencies	2026-09-21T10:00:36.0790636Z env:
+Lint and Format Check	Install dependencies	2026-09-21T10:00:36.0790802Z   GIT_CONFIG_COUNT: 1
+Lint and Format Check	Install dependencies	2026-09-21T10:00:36.0791002Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint and Format Check	Install dependencies	2026-09-21T10:00:36.0791226Z   GIT_CONFIG_VALUE_0: main
+Lint and Format Check	Install dependencies	2026-09-21T10:00:36.0791409Z ##[endgroup]
+Lint and Format Check	Install dependencies	2026-09-21T10:00:40.5406252Z 
+Lint and Format Check	Install dependencies	2026-09-21T10:00:40.5412727Z added 191 packages, and audited 192 packages in 4s
+Lint and Format Check	Install dependencies	2026-09-21T10:00:40.5413021Z 
+Lint and Format Check	Install dependencies	2026-09-21T10:00:40.5413175Z 42 packages are looking for funding
+Lint and Format Check	Install dependencies	2026-09-21T10:00:40.5413480Z   run `npm fund` for details
+Lint and Format Check	Install dependencies	2026-09-21T10:00:40.5416382Z 
+Lint and Format Check	Install dependencies	2026-09-21T10:00:40.5416550Z found 0 vulnerabilities
+Lint and Format Check	Run ESLint	﻿2026-09-21T10:00:40.5859265Z ##[group]Run npm run lint
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.5859508Z ^[[36;1mnpm run lint^[[0m
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.5891669Z shell: /usr/bin/bash -e {0}
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.5891959Z env:
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.5892177Z   GIT_CONFIG_COUNT: 1
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.5892442Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.5892752Z   GIT_CONFIG_VALUE_0: main
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.5893014Z ##[endgroup]
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.6706680Z 
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.6707111Z > browser-commander@0.19.0 lint
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.6707478Z > eslint .
+Lint and Format Check	Run ESLint	2026-09-21T10:00:40.6707628Z 
+Lint and Format Check	Check formatting	﻿2026-09-21T10:00:43.8220855Z ##[group]Run npm run format:check
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.8221146Z ^[[36;1mnpm run format:check^[[0m
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.8253046Z shell: /usr/bin/bash -e {0}
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.8253259Z env:
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.8253419Z   GIT_CONFIG_COUNT: 1
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.8253611Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.8253844Z   GIT_CONFIG_VALUE_0: main
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.8254028Z ##[endgroup]
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.9052354Z 
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.9053058Z > browser-commander@0.19.0 format:check
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.9053459Z > prettier --check .
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.9053584Z 
+Lint and Format Check	Check formatting	2026-09-21T10:00:43.9729085Z Checking formatting...
+Lint and Format Check	Check formatting	2026-09-21T10:00:44.0616726Z [^[[33mwarn^[[39m] .changeset/quiet-staged-downloads.md
+Lint and Format Check	Check formatting	2026-09-21T10:00:45.8679472Z [^[[33mwarn^[[39m] Code style issues found in the above file. Run Prettier with --write to fix.
+Lint and Format Check	Check formatting	2026-09-21T10:00:45.8948804Z ##[error]Process completed with exit code 1.
+Lint and Format Check	Post Run actions/checkout@v6	﻿2026-09-21T10:00:45.9077084Z Post job cleanup.
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:45.9753904Z [command]/usr/bin/git version
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:45.9789481Z git version 2.55.0
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:45.9831280Z Temporarily overriding HOME='/home/runner/work/_temp/9313f380-6724-465d-8316-24afb715f591' before making global git config changes
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:45.9832683Z Adding repository directory to the temporary git global config as a safe directory
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:45.9861180Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:45.9891502Z Removing SSH command configuration
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:45.9892137Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:45.9893769Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0106612Z Removing HTTP extra header
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0112113Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0142994Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0361897Z Removing includeIf entries pointing to credentials config files
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0362994Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0380999Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0382070Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0383113Z includeif.gitdir:/github/workspace/.git.path
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0383845Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0393732Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0415365Z /home/runner/work/_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0425471Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0460039Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0482298Z /home/runner/work/_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0494695Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0523426Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0545879Z /github/runner_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0555714Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0586689Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0608550Z /github/runner_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0615633Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0655188Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Lint and Format Check	Post Run actions/checkout@v6	2026-09-21T10:00:46.0845879Z Removing credentials config '/home/runner/work/_temp/git-credentials-62dee0a2-b122-4018-b5b7-b47ade480995.config'
+Lint and Format Check	Complete job	﻿2026-09-21T10:00:46.0967319Z Cleaning up orphan processes
+Check for Changesets	Set up job	﻿2026-09-21T10:00:28.5347456Z Current runner version: '2.337.0'
+Check for Changesets	Set up job	2026-09-21T10:00:28.5373844Z ##[group]Runner Image Provisioner
+Check for Changesets	Set up job	2026-09-21T10:00:28.5374921Z Hosted Compute Agent
+Check for Changesets	Set up job	2026-09-21T10:00:28.5375551Z Version: 20260828.587
+Check for Changesets	Set up job	2026-09-21T10:00:28.5376259Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Check for Changesets	Set up job	2026-09-21T10:00:28.5377089Z Build Date: 2026-08-28T16:44:25Z
+Check for Changesets	Set up job	2026-09-21T10:00:28.5377836Z Worker ID: {c035ef7c-d40b-4559-aac2-9ca569c332bd}
+Check for Changesets	Set up job	2026-09-21T10:00:28.5378732Z Azure Region: westcentralus
+Check for Changesets	Set up job	2026-09-21T10:00:28.5379373Z ##[endgroup]
+Check for Changesets	Set up job	2026-09-21T10:00:28.5380727Z ##[group]Operating System
+Check for Changesets	Set up job	2026-09-21T10:00:28.5381441Z Ubuntu
+Check for Changesets	Set up job	2026-09-21T10:00:28.5382271Z 24.04.5
+Check for Changesets	Set up job	2026-09-21T10:00:28.5382883Z LTS
+Check for Changesets	Set up job	2026-09-21T10:00:28.5383433Z ##[endgroup]
+Check for Changesets	Set up job	2026-09-21T10:00:28.5384004Z ##[group]Runner Image
+Check for Changesets	Set up job	2026-09-21T10:00:28.5384802Z Image: ubuntu-24.04
+Check for Changesets	Set up job	2026-09-21T10:00:28.5385429Z Version: 20260907.300.1
+Check for Changesets	Set up job	2026-09-21T10:00:28.5386580Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+Check for Changesets	Set up job	2026-09-21T10:00:28.5388342Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+Check for Changesets	Set up job	2026-09-21T10:00:28.5389503Z ##[endgroup]
+Check for Changesets	Set up job	2026-09-21T10:00:28.5390624Z ##[group]GITHUB_TOKEN Permissions
+Check for Changesets	Set up job	2026-09-21T10:00:28.5392790Z Contents: read
+Check for Changesets	Set up job	2026-09-21T10:00:28.5393443Z Metadata: read
+Check for Changesets	Set up job	2026-09-21T10:00:28.5394195Z ##[endgroup]
+Check for Changesets	Set up job	2026-09-21T10:00:28.5396292Z Secret source: Actions
+Check for Changesets	Set up job	2026-09-21T10:00:28.5397396Z Cache mode: write
+Check for Changesets	Set up job	2026-09-21T10:00:28.5398133Z Prepare workflow directory
+Check for Changesets	Set up job	2026-09-21T10:00:28.6496443Z Prepare all required actions
+Check for Changesets	Set up job	2026-09-21T10:00:28.6566615Z Getting action download info
+Check for Changesets	Set up job	2026-09-21T10:00:28.9779351Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Check for Changesets	Set up job	2026-09-21T10:00:29.7030367Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Check for Changesets	Set up job	2026-09-21T10:00:29.9023591Z Complete job name: Check for Changesets
+Check for Changesets	Run actions/checkout@v6	﻿2026-09-21T10:00:29.9919569Z ##[group]Run actions/checkout@v6
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9921090Z with:
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9922161Z   fetch-depth: 0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9923233Z   repository: link-foundation/browser-commander
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9932841Z   token: ***
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9933763Z   ssh-strict: true
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9934714Z   ssh-user: git
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9935683Z   persist-credentials: true
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9936723Z   clean: true
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9937680Z   sparse-checkout-cone-mode: true
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9938813Z   fetch-tags: false
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9939769Z   show-progress: true
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9940747Z   lfs: false
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9941640Z   submodules: false
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9942808Z   set-safe-directory: true
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9943904Z   allow-unsafe-pr-checkout: false
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9945259Z env:
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9946132Z   GIT_CONFIG_COUNT: 1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9947160Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9948327Z   GIT_CONFIG_VALUE_0: main
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:29.9949405Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.0999329Z Syncing repository: link-foundation/browser-commander
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1003547Z ##[group]Getting Git version info
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1005770Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1008860Z [command]/usr/bin/git version
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1041386Z git version 2.55.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1066349Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1082280Z Temporarily overriding HOME='/home/runner/work/_temp/df4f2322-ebea-498b-b35d-dc0297ddfb15' before making global git config changes
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1088128Z Adding repository directory to the temporary git global config as a safe directory
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1091652Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1134585Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1140408Z ##[group]Determining repository object format
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1143748Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1146512Z ##[group]Initializing the repository
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1149383Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1233381Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1244825Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1290080Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1292739Z ##[group]Disabling automatic garbage collection
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1295004Z [command]/usr/bin/git config --local gc.auto 0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1329611Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1332268Z ##[group]Setting up auth
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1333973Z Removing SSH command configuration
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1337875Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1378073Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1727359Z Removing HTTP extra header
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1738023Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.1780816Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2043937Z Removing includeIf entries pointing to credentials config files
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2051273Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2093123Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2342565Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2387662Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2426335Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2466812Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2510039Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2542939Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2544825Z ##[group]Fetching the repository
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:30.2552274Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +430474b418b1f72ff9274a773eddd4ce08d5f167:refs/remotes/pull/100/merge
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9063834Z From https://github.com/link-foundation/browser-commander
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9065513Z  * [new branch]      issue-1-315bb6a09057                     -> origin/issue-1-315bb6a09057
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9066423Z  * [new branch]      issue-11-f0db41c23d6b                    -> origin/issue-11-f0db41c23d6b
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9067272Z  * [new branch]      issue-13-d9daf7ca6ef8                    -> origin/issue-13-d9daf7ca6ef8
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9068078Z  * [new branch]      issue-15-85e23cad40a2                    -> origin/issue-15-85e23cad40a2
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9068922Z  * [new branch]      issue-17-4fb92dabeabb                    -> origin/issue-17-4fb92dabeabb
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9069817Z  * [new branch]      issue-19-bef12b396c1f                    -> origin/issue-19-bef12b396c1f
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9070965Z  * [new branch]      issue-21-dee364614118                    -> origin/issue-21-dee364614118
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9071796Z  * [new branch]      issue-23-4ea2027e76ed                    -> origin/issue-23-4ea2027e76ed
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9073214Z  * [new branch]      issue-25-1aef64a7e9ec                    -> origin/issue-25-1aef64a7e9ec
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9074350Z  * [new branch]      issue-27-4fd8f05681d7                    -> origin/issue-27-4fd8f05681d7
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9075178Z  * [new branch]      issue-29-ce573bdf1462                    -> origin/issue-29-ce573bdf1462
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9075816Z  * [new branch]      issue-3-8cd3d07cda8b                     -> origin/issue-3-8cd3d07cda8b
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9076624Z  * [new branch]      issue-31-182c0e5f23ed                    -> origin/issue-31-182c0e5f23ed
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9077501Z  * [new branch]      issue-33-c92d3b8449d2                    -> origin/issue-33-c92d3b8449d2
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9078594Z  * [new branch]      issue-35-f4eb7dd30787                    -> origin/issue-35-f4eb7dd30787
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9079204Z  * [new branch]      issue-36-968302a2e3f5                    -> origin/issue-36-968302a2e3f5
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9079815Z  * [new branch]      issue-37-ba59f40c5a7a                    -> origin/issue-37-ba59f40c5a7a
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9080416Z  * [new branch]      issue-38-286678a334ba                    -> origin/issue-38-286678a334ba
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9081007Z  * [new branch]      issue-39-3e80e8af995c                    -> origin/issue-39-3e80e8af995c
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9081597Z  * [new branch]      issue-45-3c5a6e3a096b                    -> origin/issue-45-3c5a6e3a096b
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9082435Z  * [new branch]      issue-47-e0d425c48e8d                    -> origin/issue-47-e0d425c48e8d
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9083044Z  * [new branch]      issue-49-2ea16458d451                    -> origin/issue-49-2ea16458d451
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9083885Z  * [new branch]      issue-5-6ad76e6429cf                     -> origin/issue-5-6ad76e6429cf
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9084500Z  * [new branch]      issue-51-f2a446afa3b9                    -> origin/issue-51-f2a446afa3b9
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9085098Z  * [new branch]      issue-53-a5b1fc1e8376                    -> origin/issue-53-a5b1fc1e8376
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9085841Z  * [new branch]      issue-55-7cb0893ca811                    -> origin/issue-55-7cb0893ca811
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9086567Z  * [new branch]      issue-57-e85104965f87                    -> origin/issue-57-e85104965f87
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9087199Z  * [new branch]      issue-58-e6673ea5b18c                    -> origin/issue-58-e6673ea5b18c
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9087917Z  * [new branch]      issue-59-c78546ebf3ab                    -> origin/issue-59-c78546ebf3ab
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9088692Z  * [new branch]      issue-60-e8d5faf5f51d                    -> origin/issue-60-e8d5faf5f51d
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9089315Z  * [new branch]      issue-65-5d65627189fb                    -> origin/issue-65-5d65627189fb
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9089928Z  * [new branch]      issue-66-5981186aa8ce                    -> origin/issue-66-5981186aa8ce
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9090545Z  * [new branch]      issue-68-710e9903a1a4                    -> origin/issue-68-710e9903a1a4
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9091135Z  * [new branch]      issue-69-d8df3ab30de1                    -> origin/issue-69-d8df3ab30de1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9091734Z  * [new branch]      issue-7-895bb7f9c584                     -> origin/issue-7-895bb7f9c584
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9092729Z  * [new branch]      issue-70-2777eb370ebe                    -> origin/issue-70-2777eb370ebe
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9093365Z  * [new branch]      issue-75-bea1ba5d2c9e                    -> origin/issue-75-bea1ba5d2c9e
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9093986Z  * [new branch]      issue-77-5a236e48ec8f                    -> origin/issue-77-5a236e48ec8f
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9094598Z  * [new branch]      issue-79-694d5f8686e2                    -> origin/issue-79-694d5f8686e2
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9095390Z  * [new branch]      issue-81-9d4c346eb143                    -> origin/issue-81-9d4c346eb143
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9095985Z  * [new branch]      issue-83-4fe3846113f5                    -> origin/issue-83-4fe3846113f5
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9096564Z  * [new branch]      issue-85-0764aad40b22                    -> origin/issue-85-0764aad40b22
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9097153Z  * [new branch]      issue-9-337c4cdf1be2                     -> origin/issue-9-337c4cdf1be2
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9097746Z  * [new branch]      issue-90-82dfe5010a77                    -> origin/issue-90-82dfe5010a77
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9098375Z  * [new branch]      issue-95-cd08931262d7                    -> origin/issue-95-cd08931262d7
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9098982Z  * [new branch]      issue-97-07ae86e55680                    -> origin/issue-97-07ae86e55680
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9099619Z  * [new branch]      issue-99-700c278c07b6                    -> origin/issue-99-700c278c07b6
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9100211Z  * [new branch]      main                                     -> origin/main
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9100740Z  * [new tag]         rust-v0.10.12                            -> rust-v0.10.12
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9101271Z  * [new tag]         rust-v0.11.0                             -> rust-v0.11.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9101779Z  * [new tag]         rust-v0.12.0                             -> rust-v0.12.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9102450Z  * [new tag]         v0.1.1                                   -> v0.1.1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9102931Z  * [new tag]         v0.10.0                                  -> v0.10.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9103404Z  * [new tag]         v0.10.1                                  -> v0.10.1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9103878Z  * [new tag]         v0.10.10                                 -> v0.10.10
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9104359Z  * [new tag]         v0.10.11                                 -> v0.10.11
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9104821Z  * [new tag]         v0.10.2                                  -> v0.10.2
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9105440Z  * [new tag]         v0.10.3                                  -> v0.10.3
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9105891Z  * [new tag]         v0.10.4                                  -> v0.10.4
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9106343Z  * [new tag]         v0.10.5                                  -> v0.10.5
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9106868Z  * [new tag]         v0.10.6                                  -> v0.10.6
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9107345Z  * [new tag]         v0.10.7                                  -> v0.10.7
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9107818Z  * [new tag]         v0.10.8                                  -> v0.10.8
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9108273Z  * [new tag]         v0.10.9                                  -> v0.10.9
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9108747Z  * [new tag]         v0.11.0                                  -> v0.11.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9109260Z  * [new tag]         v0.12.0                                  -> v0.12.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9109713Z  * [new tag]         v0.13.0                                  -> v0.13.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9110329Z  * [new tag]         v0.14.0                                  -> v0.14.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9110814Z  * [new tag]         v0.15.0                                  -> v0.15.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9111281Z  * [new tag]         v0.16.0                                  -> v0.16.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9111745Z  * [new tag]         v0.16.1                                  -> v0.16.1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9112481Z  * [new tag]         v0.17.0                                  -> v0.17.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9113020Z  * [new tag]         v0.17.1                                  -> v0.17.1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9113501Z  * [new tag]         v0.17.2                                  -> v0.17.2
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9114047Z  * [new tag]         v0.18.0                                  -> v0.18.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9114518Z  * [new tag]         v0.19.0                                  -> v0.19.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9114981Z  * [new tag]         v0.2.0                                   -> v0.2.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9115600Z  * [new tag]         v0.2.1                                   -> v0.2.1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9116058Z  * [new tag]         v0.3.0                                   -> v0.3.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9116512Z  * [new tag]         v0.4.0                                   -> v0.4.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9117000Z  * [new tag]         v0.5.0                                   -> v0.5.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9117589Z  * [new tag]         v0.5.1                                   -> v0.5.1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9118047Z  * [new tag]         v0.5.2                                   -> v0.5.2
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9118522Z  * [new tag]         v0.5.3                                   -> v0.5.3
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9119013Z  * [new tag]         v0.5.4                                   -> v0.5.4
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9119482Z  * [new tag]         v0.6.0                                   -> v0.6.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9119939Z  * [new tag]         v0.7.0                                   -> v0.7.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9120415Z  * [new tag]         v0.8.0                                   -> v0.8.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9120884Z  * [new tag]         v0.8.1                                   -> v0.8.1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9121371Z  * [new tag]         v0.9.0                                   -> v0.9.0
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9122202Z  * [new tag]         v0.9.1                                   -> v0.9.1
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9122864Z  * [new ref]         430474b418b1f72ff9274a773eddd4ce08d5f167 -> pull/100/merge
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9124331Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9124838Z ##[group]Determining the checkout info
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9125380Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9125780Z [command]/usr/bin/git sparse-checkout disable
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9133884Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9167733Z ##[group]Checking out the ref
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:31.9171422Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/100/merge
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0631753Z Note: switching to 'refs/remotes/pull/100/merge'.
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0635313Z 
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0636634Z You are in 'detached HEAD' state. You can look around, make experimental
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0637898Z changes and commit them, and you can discard any commits you make in this
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0639564Z state without impacting any branches by switching back to a branch.
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0640001Z 
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0640278Z If you want to create a new branch to retain commits you create, you may
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0641646Z do so (now or later) by using -c with the switch command. Example:
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0642191Z 
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0642603Z   git switch -c <new-branch-name>
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0642973Z 
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0643201Z Or undo this operation with:
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0643483Z 
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0643623Z   git switch -
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0643863Z 
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0644261Z Turn off this advice by setting config variable advice.detachedHead to false
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0645374Z 
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0645799Z HEAD is now at 430474b Merge cad30fe636a8ade403a706daf18f86a05d38ea0c into a15837d6a3bbf01f73b62b5c1e216c517dd51afd
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0858193Z ##[endgroup]
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0860437Z [command]/usr/bin/git log -1 --format=%H
+Check for Changesets	Run actions/checkout@v6	2026-09-21T10:00:32.0861506Z 430474b418b1f72ff9274a773eddd4ce08d5f167
+Check for Changesets	Setup Node.js	﻿2026-09-21T10:00:32.1229111Z ##[group]Run actions/setup-node@v6
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1229635Z with:
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1230011Z   node-version: 24.x
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1230444Z   check-latest: false
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1236463Z   token: ***
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1237486Z   package-manager-cache: true
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1238087Z env:
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1238449Z   GIT_CONFIG_COUNT: 1
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1238831Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1239360Z   GIT_CONFIG_VALUE_0: main
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.1239793Z ##[endgroup]
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.2723236Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.2724468Z ##[group]Environment details
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.6144454Z node: v24.20.0
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.6145608Z npm: 11.19.0
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.6145970Z yarn: 1.22.22
+Check for Changesets	Setup Node.js	2026-09-21T10:00:32.6146824Z ##[endgroup]
+Check for Changesets	Install dependencies	﻿2026-09-21T10:00:32.6283884Z ##[group]Run npm ci --ignore-scripts
+Check for Changesets	Install dependencies	2026-09-21T10:00:32.6284290Z ^[[36;1mnpm ci --ignore-scripts^[[0m
+Check for Changesets	Install dependencies	2026-09-21T10:00:32.6335883Z shell: /usr/bin/bash -e {0}
+Check for Changesets	Install dependencies	2026-09-21T10:00:32.6336177Z env:
+Check for Changesets	Install dependencies	2026-09-21T10:00:32.6336399Z   GIT_CONFIG_COUNT: 1
+Check for Changesets	Install dependencies	2026-09-21T10:00:32.6336665Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check for Changesets	Install dependencies	2026-09-21T10:00:32.6336956Z   GIT_CONFIG_VALUE_0: main
+Check for Changesets	Install dependencies	2026-09-21T10:00:32.6337215Z ##[endgroup]
+Check for Changesets	Install dependencies	2026-09-21T10:00:36.2263432Z 
+Check for Changesets	Install dependencies	2026-09-21T10:00:36.2273102Z added 191 packages, and audited 192 packages in 4s
+Check for Changesets	Install dependencies	2026-09-21T10:00:36.2273832Z 
+Check for Changesets	Install dependencies	2026-09-21T10:00:36.2274447Z 42 packages are looking for funding
+Check for Changesets	Install dependencies	2026-09-21T10:00:36.2274959Z   run `npm fund` for details
+Check for Changesets	Install dependencies	2026-09-21T10:00:36.2277967Z 
+Check for Changesets	Install dependencies	2026-09-21T10:00:36.2278301Z found 0 vulnerabilities
+Check for Changesets	Check for changesets	﻿2026-09-21T10:00:36.2869306Z ##[group]Run # Skip changeset check for automated version PRs
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2869859Z ^[[36;1m# Skip changeset check for automated version PRs^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2870315Z ^[[36;1mif [[ "$GITHUB_HEAD_REF" == "changeset-release/"* ]]; then^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2870763Z ^[[36;1m  echo "Skipping changeset check for automated release PR"^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2871135Z ^[[36;1m  exit 0^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2871378Z ^[[36;1mfi^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2871599Z ^[[36;1m^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2872042Z ^[[36;1m# Run changeset validation script^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2872504Z ^[[36;1m# This validates that exactly ONE changeset was ADDED by this PR^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2873005Z ^[[36;1m# Pre-existing changesets from other merged PRs are ignored^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2873439Z ^[[36;1mnode scripts/validate-changeset.mjs^[[0m
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2913204Z shell: /usr/bin/bash -e {0}
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2913491Z env:
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2913721Z   GIT_CONFIG_COUNT: 1
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2913996Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2914359Z   GIT_CONFIG_VALUE_0: main
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2914625Z   GITHUB_BASE_REF: main
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2914935Z   GITHUB_BASE_SHA: a15837d6a3bbf01f73b62b5c1e216c517dd51afd
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2915336Z   GITHUB_HEAD_SHA: cad30fe636a8ade403a706daf18f86a05d38ea0c
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2915690Z   GITHUB_HEAD_REF: issue-99-700c278c07b6
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.2915992Z ##[endgroup]
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3265545Z Validating changesets added by this PR...
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3287515Z Comparing a15837d6a3bbf01f73b62b5c1e216c517dd51afd...cad30fe636a8ade403a706daf18f86a05d38ea0c
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3372746Z Found 1 changeset file(s) added by this PR
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3378320Z Added changesets:
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3380897Z   - quiet-staged-downloads.md
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3382044Z Validating changeset: .changeset/quiet-staged-downloads.md
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3382759Z Changeset validation passed
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3383193Z    Type: minor
+Check for Changesets	Check for changesets	2026-09-21T10:00:36.3384852Z    Description: Wait for a real quiet period before accepting staged download bytes, close unfinished trace bundles explicitly in tests, and move the supported Node.js floor to 22 with the maintained `better-sqlite3` fallback.
+Check for Changesets	Post Setup Node.js	﻿2026-09-21T10:00:36.3550850Z Post job cleanup.
+Check for Changesets	Post Run actions/checkout@v6	﻿2026-09-21T10:00:36.5090403Z Post job cleanup.
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6091195Z [command]/usr/bin/git version
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6142724Z git version 2.55.0
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6217554Z Temporarily overriding HOME='/home/runner/work/_temp/e20d336e-b8ec-4d9b-a2fb-61c6523057e1' before making global git config changes
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6219284Z Adding repository directory to the temporary git global config as a safe directory
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6220954Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6255988Z Removing SSH command configuration
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6266513Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6333162Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6663841Z Removing HTTP extra header
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6664938Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.6706285Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7041228Z Removing includeIf entries pointing to credentials config files
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7042489Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7079473Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7093047Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7107178Z includeif.gitdir:/github/workspace/.git.path
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7108258Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7110826Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7130444Z /home/runner/work/_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7146754Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7221754Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7245705Z /home/runner/work/_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7259847Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7313072Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7342943Z /github/runner_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7355598Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7412167Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7451017Z /github/runner_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7463936Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7526454Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check for Changesets	Post Run actions/checkout@v6	2026-09-21T10:00:36.7881487Z Removing credentials config '/home/runner/work/_temp/git-credentials-294c1aab-5a07-438c-8258-7f2fba9b9a4a.config'
+Check for Changesets	Complete job	﻿2026-09-21T10:00:36.8084711Z Cleaning up orphan processes
+Pipeline Status	Set up job	﻿2026-09-21T10:00:51.0939268Z Current runner version: '2.337.0'
+Pipeline Status	Set up job	2026-09-21T10:00:51.0961190Z ##[group]Runner Image Provisioner
+Pipeline Status	Set up job	2026-09-21T10:00:51.0961881Z Hosted Compute Agent
+Pipeline Status	Set up job	2026-09-21T10:00:51.0962264Z Version: 20260828.587
+Pipeline Status	Set up job	2026-09-21T10:00:51.0962674Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Pipeline Status	Set up job	2026-09-21T10:00:51.0963240Z Build Date: 2026-08-28T16:44:25Z
+Pipeline Status	Set up job	2026-09-21T10:00:51.0963671Z Worker ID: {4251661b-eaee-4654-977d-a68f868282b5}
+Pipeline Status	Set up job	2026-09-21T10:00:51.0964154Z Azure Region: westus3
+Pipeline Status	Set up job	2026-09-21T10:00:51.0964528Z ##[endgroup]
+Pipeline Status	Set up job	2026-09-21T10:00:51.0965368Z ##[group]Operating System
+Pipeline Status	Set up job	2026-09-21T10:00:51.0965819Z Ubuntu
+Pipeline Status	Set up job	2026-09-21T10:00:51.0966185Z 24.04.5
+Pipeline Status	Set up job	2026-09-21T10:00:51.0966497Z LTS
+Pipeline Status	Set up job	2026-09-21T10:00:51.0966875Z ##[endgroup]
+Pipeline Status	Set up job	2026-09-21T10:00:51.0967279Z ##[group]Runner Image
+Pipeline Status	Set up job	2026-09-21T10:00:51.0967698Z Image: ubuntu-24.04
+Pipeline Status	Set up job	2026-09-21T10:00:51.0968059Z Version: 20260907.300.1
+Pipeline Status	Set up job	2026-09-21T10:00:51.0968690Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+Pipeline Status	Set up job	2026-09-21T10:00:51.0969867Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+Pipeline Status	Set up job	2026-09-21T10:00:51.0970492Z ##[endgroup]
+Pipeline Status	Set up job	2026-09-21T10:00:51.0971348Z ##[group]GITHUB_TOKEN Permissions
+Pipeline Status	Set up job	2026-09-21T10:00:51.0972742Z Contents: read
+Pipeline Status	Set up job	2026-09-21T10:00:51.0973104Z Metadata: read
+Pipeline Status	Set up job	2026-09-21T10:00:51.0973476Z ##[endgroup]
+Pipeline Status	Set up job	2026-09-21T10:00:51.0975292Z Secret source: Actions
+Pipeline Status	Set up job	2026-09-21T10:00:51.0975883Z Cache mode: write
+Pipeline Status	Set up job	2026-09-21T10:00:51.0976391Z Prepare workflow directory
+Pipeline Status	Set up job	2026-09-21T10:00:51.1248854Z Prepare all required actions
+Pipeline Status	Set up job	2026-09-21T10:00:51.1282913Z Getting action download info
+Pipeline Status	Set up job	2026-09-21T10:00:51.4611259Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Pipeline Status	Set up job	2026-09-21T10:00:51.6697866Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Pipeline Status	Set up job	2026-09-21T10:00:51.8351769Z Complete job name: Pipeline Status
+Pipeline Status	Run actions/checkout@v6	﻿2026-09-21T10:00:51.8832299Z ##[group]Run actions/checkout@v6
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8832789Z with:
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8833045Z   persist-credentials: false
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8833370Z   repository: link-foundation/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8835585Z   token: ***
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8835827Z   ssh-strict: true
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8836084Z   ssh-user: git
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8836327Z   clean: true
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8836583Z   sparse-checkout-cone-mode: true
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8836880Z   fetch-depth: 1
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8837125Z   fetch-tags: false
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8837382Z   show-progress: true
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8837638Z   lfs: false
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8837872Z   submodules: false
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8838131Z   set-safe-directory: true
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8838423Z   allow-unsafe-pr-checkout: false
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8838779Z env:
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8839008Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8839279Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8839589Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.8839889Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9527800Z Syncing repository: link-foundation/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9529524Z ##[group]Getting Git version info
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9530001Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9530620Z [command]/usr/bin/git version
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9928407Z git version 2.55.0
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9946442Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9960448Z Temporarily overriding HOME='/home/runner/work/_temp/88fb97f5-325f-4ade-b429-c30756407e4f' before making global git config changes
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9961668Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:51.9965666Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0018800Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0021728Z ##[group]Determining repository object format
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0024770Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0026633Z ##[group]Initializing the repository
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0028289Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0177220Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0184967Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0228758Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0229212Z ##[group]Disabling automatic garbage collection
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0231684Z [command]/usr/bin/git config --local gc.auto 0
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0258799Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0259410Z ##[group]Setting up auth
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0259869Z Removing SSH command configuration
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0263543Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0292256Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0687434Z Removing HTTP extra header
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0692434Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0724348Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0907065Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0913612Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.0944589Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.1132358Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.1166075Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.1195000Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.1225871Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.1287183Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.1311490Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.1317147Z ##[group]Fetching the repository
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:52.1318407Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +430474b418b1f72ff9274a773eddd4ce08d5f167:refs/remotes/pull/100/merge
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5148733Z From https://github.com/link-foundation/browser-commander
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5150657Z  * [new ref]         430474b418b1f72ff9274a773eddd4ce08d5f167 -> pull/100/merge
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5154556Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5155820Z ##[group]Determining the checkout info
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5157211Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5158025Z [command]/usr/bin/git sparse-checkout disable
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5218387Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5246723Z ##[group]Checking out the ref
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.5248391Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/100/merge
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6759607Z Note: switching to 'refs/remotes/pull/100/merge'.
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6760566Z 
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6761507Z You are in 'detached HEAD' state. You can look around, make experimental
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6762785Z changes and commit them, and you can discard any commits you make in this
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6764052Z state without impacting any branches by switching back to a branch.
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6764789Z 
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6765298Z If you want to create a new branch to retain commits you create, you may
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6766436Z do so (now or later) by using -c with the switch command. Example:
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6767094Z 
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6767422Z   git switch -c <new-branch-name>
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6767939Z 
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6768320Z Or undo this operation with:
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6768855Z 
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6769203Z   git switch -
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6769650Z 
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6770379Z Turn off this advice by setting config variable advice.detachedHead to false
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6771367Z 
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6772445Z HEAD is now at 430474b Merge cad30fe636a8ade403a706daf18f86a05d38ea0c into a15837d6a3bbf01f73b62b5c1e216c517dd51afd
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6794192Z ##[endgroup]
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6834792Z [command]/usr/bin/git log -1 --format=%H
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6860440Z 430474b418b1f72ff9274a773eddd4ce08d5f167
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6872645Z ##[group]Removing auth
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6873947Z Removing SSH command configuration
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6875786Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.6904507Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7092199Z Removing HTTP extra header
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7094855Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7127100Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7335634Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7336544Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7363777Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7364760Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7365491Z includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7366210Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7372961Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7395074Z /home/runner/work/_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7402916Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7433719Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7455263Z /home/runner/work/_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7461813Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7490087Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7514460Z /github/runner_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7521744Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7555975Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7577664Z /github/runner_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7586371Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7617738Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7798081Z Removing credentials config '/home/runner/work/_temp/git-credentials-6ff6de6f-e4a0-4541-8058-6df586a5635d.config'
+Pipeline Status	Run actions/checkout@v6	2026-09-21T10:00:53.7805003Z ##[endgroup]
+Pipeline Status	Setup Node.js	﻿2026-09-21T10:00:53.8063297Z ##[group]Run actions/setup-node@v6
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8063557Z with:
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8063730Z   node-version: 24.x
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8063899Z   check-latest: false
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8065493Z   token: ***
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8065659Z   package-manager-cache: true
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8065841Z env:
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8065985Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8066153Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8066345Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.8066514Z ##[endgroup]
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.9017256Z Found in cache @ /opt/hostedtoolcache/node/24.20.0/x64
+Pipeline Status	Setup Node.js	2026-09-21T10:00:53.9020681Z ##[group]Environment details
+Pipeline Status	Setup Node.js	2026-09-21T10:00:55.0238845Z node: v24.20.0
+Pipeline Status	Setup Node.js	2026-09-21T10:00:55.0239225Z npm: 11.19.0
+Pipeline Status	Setup Node.js	2026-09-21T10:00:55.0239380Z yarn: 1.22.22
+Pipeline Status	Setup Node.js	2026-09-21T10:00:55.0240456Z ##[endgroup]
+Pipeline Status	Fail the run when a required job was cancelled or failed	﻿2026-09-21T10:00:55.0375775Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0376129Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0419167Z shell: /usr/bin/bash -e {0}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0419372Z env:
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0419532Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0419710Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0419895Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0421140Z   NEEDS_JSON: {
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "detect-changes": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "js-code-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "mjs-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "js-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "package-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "docs-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "workflow-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "any-code-changed": "true"
+Pipeline Status	Fail the run when a required job was cancelled or failed	    }
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "changeset-check": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "lint": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "failure",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "test": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "release": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "instant-release": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "changeset-pr": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+Pipeline Status	Fail the run when a required job was cancelled or failed	}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0422309Z   IS_MAIN: false
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0422485Z   RUN_SHA: 430474b418b1f72ff9274a773eddd4ce08d5f167
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0422697Z ##[endgroup]
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0915130Z Failed jobs:    lint
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0915450Z Cancelled jobs: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0926880Z ##[error]Pipeline failed. Failing jobs: lint
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-09-21T10:00:55.0934213Z ##[error]Process completed with exit code 1.
+Pipeline Status	Post Run actions/checkout@v6	﻿2026-09-21T10:00:55.1032267Z Post job cleanup.
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1602742Z [command]/usr/bin/git version
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1636803Z git version 2.55.0
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1665648Z Temporarily overriding HOME='/home/runner/work/_temp/c6bfa742-cad6-411e-aa92-487b8ec33bc3' before making global git config changes
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1666341Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1669821Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1698852Z Removing SSH command configuration
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1703991Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1733113Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1926703Z Removing HTTP extra header
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1931292Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.1964903Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.2151468Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.2157025Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	Post Run actions/checkout@v6	2026-09-21T10:00:55.2191211Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	Complete job	﻿2026-09-21T10:00:55.2519218Z Cleaning up orphan processes

@@ -1,0 +1,500 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.60s
+     Running unittests src/lib.rs (target/debug/deps/browser_commander-8fceb69d6869ea1d)
+
+running 405 tests
+test browser::browser_cookie_crypto::tests::legacy_dpapi_plaintext_validates_version_24_host_hash ... ok
+test browser::browser_cookie_credentials::tests::kwallet_identity_uses_chromium_product_casing ... ok
+test browser::browser_cookies::tests::operation_key_cache_reads_a_refreshed_credential_once ... ok
+test browser::browser_cookie_crypto::tests::decrypts_windows_gcm_and_rejects_app_bound_cookies ... ok
+test browser::chromiumoxide_adapter::tests::css_length_to_inches_defaults_to_inches ... ok
+test browser::chromiumoxide_adapter::tests::css_length_to_inches_rejects_unknown_units ... ok
+test browser::chromiumoxide_adapter::tests::paper_format_inches_known_formats ... ok
+test browser::connector::tests::connect_options_carry_a_download_setting ... ok
+test browser::connector::tests::connect_options_builders_preserve_endpoints_and_cookies ... ok
+test browser::connector::tests::connect_options_require_exactly_one_endpoint ... ok
+test browser::chromiumoxide_adapter::tests::css_length_to_inches_handles_common_units ... ok
+test browser::chromiumoxide_adapter::tests::paper_format_inches_unknown ... ok
+test browser::launcher::tests::all_chrome_args_appends_extra_args_and_ignores_selected_defaults ... ok
+test browser::launcher::tests::all_chrome_args_can_ignore_every_default ... ok
+test browser::connector::tests::connect_playwright_refuses_downloads_it_cannot_manage ... ok
+test browser::launcher::tests::all_chrome_args_can_ignore_password_store_default_specifically ... ok
+test browser::launcher::tests::all_chrome_args_disables_the_automation_controlled_feature ... ok
+test browser::launcher::tests::all_chrome_args_includes_custom ... ok
+test browser::launcher::tests::all_chrome_args_leaves_the_command_line_alone_when_parity_is_off ... ok
+test browser::launcher::tests::all_ignored_default_args_does_not_repeat_a_switch_the_caller_already_listed ... ok
+test browser::launcher::tests::all_chrome_args_includes_defaults ... ok
+test browser::launcher::tests::all_ignored_default_args_keeps_only_the_caller_list_when_parity_is_off ... ok
+test browser::launcher::tests::all_ignored_default_args_merges_parity_with_the_caller_list ... ok
+test browser::launcher::tests::chromiumoxide_excludes_nothing_by_default ... ok
+test browser::launcher::tests::get_user_data_dir_creates_default ... ok
+test browser::launcher::tests::launch_options_builder ... ok
+test browser::launcher::tests::launch_options_carry_a_download_setting ... ok
+test browser::launcher::tests::get_user_data_dir_uses_custom ... ok
+test browser::launcher::tests::launch_fantoccini_is_unimplemented ... ok
+test browser::launcher::tests::launch_options_fantoccini ... ok
+test browser::launcher::tests::launch_options_node_bridge_configuration ... ok
+test browser::launcher::tests::launch_options_playwright ... ok
+test browser::launcher::tests::launch_options_puppeteer ... ok
+test browser::browser_cookie_cache::tests::in_process_credential_cache_expires_after_ttl ... ok
+test browser::launcher::tests::launch_options_default ... ok
+test browser::launcher::tests::launch_playwright_refuses_downloads_it_cannot_manage ... ok
+test browser::media::tests::color_scheme_as_str ... ok
+test browser::media::tests::color_scheme_display ... ok
+test browser::media::tests::color_scheme_from_str_invalid ... ok
+test browser::media::tests::color_scheme_from_str_valid ... ok
+test browser::media::tests::emulate_media_chromiumoxide ... ok
+test browser::media::tests::emulate_media_fantoccini ... ok
+test browser::media::tests::emulate_media_options_dark ... ok
+test browser::media::tests::emulate_media_options_no_preference ... ok
+test browser::launcher::tests::launch_options_carry_a_fingerprint_profile ... ok
+test browser::launcher::tests::launch_playwright_reports_missing_node_executable ... ok
+test browser::media::tests::emulate_media_options_light ... ok
+test browser::media::tests::emulate_media_options_reset ... ok
+test browser::launcher::tests::launch_playwright_refuses_a_fingerprint_it_cannot_apply ... ok
+test browser::navigation_ops::tests::navigation_result_interrupted ... ok
+test browser::navigation_ops::tests::navigation_options_default ... ok
+test browser::navigation_ops::tests::navigation_result_success ... ok
+test browser::browser_cookie_cache::tests::credential_cache_is_owner_only_and_reused_after_memory_reset ... ok
+test browser::navigation_ops::tests::a_stable_url_is_recorded_as_satisfied_evidence ... ok
+test browser::navigation_ops::tests::stabilization_evidence_carries_its_timing_window ... ok
+test browser::navigation_ops::tests::wait_until_display ... ok
+test browser::node_bridge::tests::connect_params_forward_endpoint_timeouts_and_cookies ... ok
+test browser::node_bridge::tests::launch_params_default_browser_selection_is_null ... ok
+test browser::node_bridge::tests::launch_params_disable_the_automation_controlled_feature ... ok
+test browser::node_bridge::tests::launch_params_forward_browser_selection ... ok
+test browser::node_bridge::tests::launch_params_forward_ignored_defaults ... ok
+test browser::node_bridge::tests::launch_params_forward_only_the_caller_exclusions_when_parity_is_off ... ok
+test browser::raw_cdp::tests::carries_the_method_name_out_of_band ... ok
+test browser::raw_cdp::tests::keeps_the_params_exactly_as_given ... ok
+test browser::raw_cdp::tests::serializes_to_the_params_object_alone ... ok
+test browser::real_browser::tests::all_required_channels_have_discovery_candidates ... ok
+test browser::real_browser::tests::cdp_probe_does_not_wait_for_the_server_to_close_the_connection ... ok
+test browser::real_browser::tests::connection_options_carry_the_download_setting ... ok
+test browser::real_browser::tests::default_options_use_native_engine_and_managed_profile ... ok
+test browser::real_browser::tests::rejects_fantoccini_before_connecting ... ok
+test browser::real_browser::tests::rejects_fantoccini_before_starting_a_browser ... ok
+test browser::real_browser::tests::rejects_the_current_platform_default_profiles ... ok
+test core::constants::tests::chrome_args_contains_crash_related_flags ... ok
+test core::constants::tests::chrome_args_contains_expected_arguments ... ok
+test core::constants::tests::chrome_args_has_at_least_5_arguments ... ok
+test core::constants::tests::chrome_args_is_not_empty ... ok
+test core::constants::tests::timing_default_timeout_is_5000ms ... ok
+test core::constants::tests::timing_default_values_are_reasonable ... ok
+test core::constants::tests::timing_default_wait_after_scroll_is_1000ms ... ok
+test core::constants::tests::timing_navigation_timeout_is_30000ms ... ok
+test core::constants::tests::timing_scroll_animation_wait_is_300ms ... ok
+test core::constants::tests::timing_visibility_check_timeout_is_100ms ... ok
+test core::dialog::tests::dialog_event_from_str_type ... ok
+test core::dialog::tests::dialog_event_new ... ok
+test core::dialog::tests::dialog_event_with_default_value ... ok
+test core::dialog::tests::dialog_manager_clear_handlers ... ok
+test core::dialog::tests::dialog_manager_debug ... ok
+test core::dialog::tests::dialog_manager_dispatch_calls_handlers ... ok
+test core::dialog::tests::dialog_manager_dispatch_calls_multiple_handlers ... ok
+test core::dialog::tests::dialog_manager_dispatch_with_no_handlers ... ok
+test core::dialog::tests::dialog_manager_engine ... ok
+test core::dialog::tests::dialog_manager_is_cloneable ... ok
+test core::dialog::tests::dialog_manager_new ... ok
+test core::dialog::tests::dialog_manager_on_dialog ... ok
+test core::dialog::tests::dialog_type_case_insensitive ... ok
+test core::dialog::tests::dialog_type_display ... ok
+test core::dialog::tests::dialog_type_from_str ... ok
+test core::engine::tests::click_verification_result_creation ... ok
+test core::engine::tests::engine_type_display ... ok
+test core::engine::tests::engine_type_from_str ... ok
+test browser::navigation_ops::tests::verification_that_never_ran_is_pending_not_satisfied ... ok
+test core::engine::tests::engine_type_from_str_case_insensitive ... ok
+test browser::navigation_ops::tests::the_legacy_stabilization_wrapper_still_reports_a_bool ... ok
+test core::engine::tests::engine_type_from_str_invalid ... ok
+test core::engine::tests::pdf_options_default ... ok
+test core::engine::tests::pre_click_state_default ... ok
+test core::engine::tests::pdf_options_can_be_constructed ... ok
+test core::logger::tests::debug_message_fn_called_when_verbose ... ok
+test core::logger::tests::debug_message_fn_not_called_when_not_verbose ... ok
+test core::logger::tests::logger_can_be_created_with_verbose_true ... ok
+test core::logger::tests::logger_can_be_created_with_verbose_false ... ok
+test core::logger::tests::logger_options_default_is_not_verbose ... ok
+test core::logger::tests::logger_default_is_not_verbose ... ok
+test core::navigation::tests::is_navigation_error_detects_common_patterns ... ok
+test core::navigation::tests::is_navigation_error_case_insensitive ... ok
+test core::navigation::tests::is_navigation_error_false_for_other_errors ... ok
+test browser::navigation_ops::tests::goto_shares_one_budget_across_every_check ... ok
+test browser::navigation_ops::tests::verification_never_outlives_the_navigation_budget ... ok
+test browser::navigation_ops::tests::an_unstable_url_is_not_reported_as_verified ... ok
+test core::navigation::tests::is_timeout_error_false_for_other_errors ... ok
+test core::readiness::tests::a_deadline_never_hands_out_more_budget_than_it_was_given ... ok
+test core::readiness::tests::a_skipped_check_does_not_block_readiness ... ok
+test core::readiness::tests::an_expired_budget_reports_timed_out ... ok
+test core::navigation::tests::is_timeout_error_detects_timeout_patterns ... ok
+test core::readiness::tests::an_unsatisfied_check_never_reports_ready ... ok
+test core::readiness::tests::checks_that_never_ran_are_pending_not_satisfied ... ok
+test core::readiness::tests::evidence_carries_the_timing_window_of_each_check ... ok
+test core::navigation::tests::safe_result_navigation_error ... ok
+test core::navigation::tests::safe_result_success ... ok
+test core::navigation::tests::safe_result_error ... ok
+test core::readiness::tests::run_within_deadline_does_not_start_an_operation_with_no_budget_left ... ok
+test core::readiness::tests::remaining_saturates_at_zero ... ok
+test core::readiness::tests::statuses_render_the_documented_names ... ok
+test downloads::attach::tests::leaves_the_browser_alone_when_downloads_are_off ... ok
+test core::readiness::tests::run_within_deadline_returns_a_value_that_arrives_in_time ... ok
+test downloads::attach::tests::reads_the_three_shapes_the_other_languages_accept ... ok
+test downloads::attach::tests::reports_a_browser_that_refuses_to_redirect_its_downloads ... ok
+test downloads::attach::tests::points_the_browser_at_the_staging_directory ... ok
+test downloads::destination::tests::keeps_an_absolute_path_the_caller_chose ... ok
+test downloads::destination::tests::refuses_a_relative_directory ... ok
+test downloads::destination::tests::creates_the_directory_and_proves_it_is_writable ... ok
+test downloads::destination::tests::resolves_the_temporary_preset_under_the_system_temp_folder ... ok
+test downloads::destination::tests::resolves_the_user_folder_by_default ... ok
+test downloads::destination::tests::reports_a_directory_it_cannot_write_into ... ok
+test downloads::attach::tests::refuses_an_engine_that_cannot_manage_downloads ... ok
+test downloads::manager::tests::names_the_states_the_way_the_other_languages_do ... ok
+test downloads::manager::tests::names_a_download_that_finishes_inside_the_action ... ok
+test downloads::manager::tests::keeps_the_file_after_everything_that_made_it_is_gone ... ok
+test downloads::manager::tests::refuses_to_call_a_cancelled_download_a_success ... ok
+test downloads::manager::tests::numbers_a_second_download_of_the_same_name ... ok
+test downloads::manager::tests::reports_one_download_once_however_many_sources_saw_it ... ok
+test downloads::manager::tests::reports_the_actions_own_failure_rather_than_a_timeout ... ok
+test downloads::manager::tests::refuses_to_call_a_rejected_download_a_success ... ok
+test core::readiness::tests::sleeping_is_capped_by_the_remaining_budget ... ok
+test downloads::manager::tests::saves_a_download_where_the_caller_can_find_it_later ... ok
+test downloads::naming::tests::believes_the_bytes_over_a_generic_declaration ... ok
+test downloads::naming::tests::falls_back_when_a_page_suggests_nothing_usable ... ok
+test downloads::manager::tests::saves_a_bare_uuid_under_a_name_a_person_can_open ... ok
+test downloads::naming::tests::keeps_a_candidate_inside_the_root ... ok
+test downloads::manager::tests::writes_a_timestamp_the_other_languages_can_read ... ok
+test downloads::naming::tests::keeps_a_name_that_was_already_safe ... ok
+test downloads::naming::tests::leaves_a_name_unchanged_when_nothing_identifies_it ... ok
+test downloads::naming::tests::names_a_bare_uuid_from_the_declared_type ... ok
+test downloads::naming::tests::leaves_a_name_that_already_has_an_extension_alone ... ok
+test downloads::naming::tests::numbers_conflicting_names_the_way_a_person_would ... ok
+test downloads::naming::tests::reads_a_format_out_of_the_first_bytes ... ok
+test downloads::naming::tests::refuses_to_resolve_a_name_that_escapes_the_root ... ok
+test downloads::naming::tests::steps_around_reserved_device_names ... ok
+test downloads::naming::tests::removes_characters_a_filesystem_cannot_hold ... ok
+test downloads::manager::tests::gives_up_when_no_download_arrives ... ok
+test downloads::sources::tests::names_the_two_outcomes_the_way_the_other_languages_do ... ok
+test downloads::naming::tests::takes_only_the_last_segment_of_a_path ... ok
+test downloads::sources::tests::creates_the_staging_directory_inside_the_managed_root ... ok
+test core::readiness::tests::run_within_deadline_reports_expiry_instead_of_waiting_the_operation_out ... ok
+test downloads::sources::tests::reads_a_cancellation_out_of_the_engines_own_words ... ok
+test downloads::sources::tests::tells_the_browser_where_to_put_downloads ... ok
+test downloads::sources::tests::reports_a_browser_that_refuses_the_browser_domain ... ok
+test downloads::store::tests::refuses_to_touch_an_existing_file_under_the_error_policy ... ok
+test downloads::store::tests::leaves_nothing_behind_when_validation_rejects_a_download ... ok
+test downloads::store::tests::lets_a_caller_choose_the_name_and_keeps_it_inside_the_root ... ok
+test downloads::store::tests::names_a_bare_uuid_from_its_contents ... ok
+test downloads::store::tests::removes_a_staged_file_once_it_has_been_placed ... ok
+test downloads::store::tests::renames_rather_than_replacing_an_existing_file ... ok
+test downloads::store::tests::reports_a_download_whose_bytes_are_gone ... ok
+test downloads::store::tests::sweeps_up_partials_left_by_an_interrupted_run ... ok
+test downloads::store::tests::saves_a_download_under_its_suggested_name ... ok
+test downloads::store::tests::replaces_an_existing_file_when_the_caller_asked_for_that ... ok
+test downloads::watcher::tests::claims_a_download_exactly_once ... ok
+test downloads::store::tests::reports_a_validator_that_failed_rather_than_rejected ... ok
+test downloads::watcher::tests::claims_a_file_only_once_it_has_stopped_growing ... ok
+test downloads::watcher::tests::ignores_files_chromium_is_still_writing ... ok
+test downloads::watcher::tests::survives_a_directory_that_is_not_there ... ok
+test elements::content::tests::element_log_info_display_empty_attribute ... ok
+test elements::content::tests::element_log_info_display ... ok
+test downloads::watcher::tests::ignores_files_that_were_there_before_the_session ... ok
+test elements::content::tests::truncate_for_preview_exact_length ... ok
+test elements::content::tests::element_log_info_display_no_text ... ok
+test downloads::manager::tests::waits_for_a_download_still_being_written ... ok
+test elements::content::tests::truncate_for_preview_trims_whitespace ... ok
+test elements::content::tests::truncate_for_preview_long_string ... ok
+test elements::content::tests::truncate_for_preview_short_string ... ok
+test elements::selectors::tests::build_text_selector_with_element ... ok
+test elements::selectors::tests::build_text_selector_without_element ... ok
+test elements::selectors::tests::escape_selector_value_escapes_special_chars ... ok
+test elements::selectors::tests::has_nth_of_type_detects_pattern ... ok
+test elements::selectors::tests::extract_text_from_selector_returns_none_for_css ... ok
+test elements::selectors::tests::is_text_selector_true_for_text_selectors ... ok
+test elements::selectors::tests::extract_text_from_selector_extracts_text ... ok
+test elements::selectors::tests::normalize_selector_handles_text ... ok
+test elements::selectors::tests::normalize_selector_handles_xpath ... ok
+test elements::selectors::tests::is_text_selector_false_for_css_selectors ... ok
+test elements::selectors::tests::normalize_selector_handles_css ... ok
+test elements::visibility::tests::is_in_viewport_fully_visible ... ok
+test elements::visibility::tests::is_in_viewport_not_visible ... ok
+test elements::visibility::tests::needs_scrolling_element_at_top ... ok
+test elements::visibility::tests::needs_scrolling_element_centered ... ok
+test elements::visibility::tests::needs_scrolling_element_at_bottom ... ok
+test elements::visibility::tests::is_in_viewport_partially_visible ... ok
+test elements::visibility::tests::needs_scrolling_element_outside_viewport ... ok
+test elements::selectors::tests::parse_nth_of_type_extracts_parts ... ok
+test fingerprint::apply::tests::enables_the_page_domain_then_patches_the_open_document ... ok
+test fingerprint::apply::tests::refuses_a_profile_that_does_not_describe_a_real_machine ... ok
+test fingerprint::apply::tests::reports_the_commands_it_sent ... ok
+test fingerprint::apply::tests::sends_nothing_for_a_profile_that_describes_nothing ... ok
+test fingerprint::apply::tests::skips_the_script_commands_when_the_browser_covers_everything ... ok
+test fingerprint::apply::tests::sends_the_emulation_commands_before_installing_the_init_script ... ok
+test fingerprint::automation_parity::tests::appends_the_switch_to_plain_arguments ... ok
+test fingerprint::apply::tests::stops_at_the_first_command_the_page_rejects ... ok
+test fingerprint::automation_parity::tests::detects_an_ephemeral_debugging_port ... ok
+test fingerprint::automation_parity::tests::appends_to_an_empty_list ... ok
+test fingerprint::automation_parity::tests::applying_parity_is_idempotent ... ok
+test fingerprint::automation_parity::tests::detects_enable_automation ... ok
+test fingerprint::automation_parity::tests::detects_headless_with_a_value ... ok
+test fingerprint::automation_parity::tests::detects_no_triggers_in_plain_arguments ... ok
+test fingerprint::automation_parity::tests::disables_is_false_for_a_different_feature ... ok
+test fingerprint::automation_parity::tests::disables_is_false_for_plain_arguments ... ok
+test fingerprint::automation_parity::tests::disables_is_false_when_the_feature_is_enabled_rather_than_disabled ... ok
+test fingerprint::automation_parity::tests::disables_is_true_when_listed_among_other_features ... ok
+test fingerprint::automation_parity::tests::does_not_match_a_switch_that_merely_starts_the_same ... ok
+test fingerprint::automation_parity::tests::engines_that_add_no_automation_defaults_exclude_nothing ... ok
+test fingerprint::automation_parity::tests::detects_remote_debugging_pipe ... ok
+test fingerprint::automation_parity::tests::every_trigger_explains_itself ... ok
+test fingerprint::automation_parity::tests::disables_is_true_for_the_exact_switch ... ok
+test fingerprint::automation_parity::tests::extends_an_existing_blink_feature_list_in_place ... ok
+test fingerprint::automation_parity::tests::extends_only_the_first_blink_feature_list ... ok
+test fingerprint::automation_parity::tests::ignores_a_debugging_port_that_is_not_a_number ... ok
+test fingerprint::automation_parity::tests::playwright_headful_excludes_the_automation_switch ... ok
+test fingerprint::automation_parity::tests::playwright_excludes_the_software_webgl_switch_in_both_modes ... ok
+test fingerprint::automation_parity::tests::playwright_headless_also_excludes_the_pointer_switch ... ok
+test fingerprint::automation_parity::tests::puppeteer_has_no_headless_pointer_switch ... ok
+test fingerprint::automation_parity::tests::leaves_a_fixed_debugging_port_alone ... ok
+test fingerprint::automation_parity::tests::reports_every_trigger_in_order ... ok
+test fingerprint::automation_parity::tests::trigger_table_covers_every_switch_runtime_features_maps ... ok
+test fingerprint::cdp_overrides::tests::always_fills_the_protocol_required_metadata_fields ... ok
+test fingerprint::cdp_overrides::tests::collects_every_media_preference_into_a_single_command ... ok
+test fingerprint::cdp_overrides::tests::disables_touch_emulation_for_a_profile_that_names_zero_touch_points ... ok
+test fingerprint::cdp_overrides::tests::leaves_the_window_size_alone_when_only_the_screen_is_described ... ok
+test fingerprint::cdp_overrides::tests::passes_geolocation_through_as_the_protocol_spells_it ... ok
+test fingerprint::cdp_overrides::tests::sends_every_browser_enforced_field_of_a_preset ... ok
+test fingerprint::cdp_overrides::tests::emits_nothing_for_an_empty_profile ... ok
+test fingerprint::cdp_overrides::tests::sends_only_the_commands_the_profile_asks_for ... ok
+test fingerprint::cdp_overrides::tests::supplies_the_required_empty_user_agent_when_only_the_language_changes ... ok
+test fingerprint::cdp_overrides::tests::sends_the_viewport_without_screen_dimensions_when_no_screen_is_set ... ok
+test fingerprint::cdp_overrides::tests::keeps_a_stable_command_order_for_a_full_profile ... ok
+test fingerprint::derive::tests::includes_the_grease_brand_so_the_brand_list_has_a_real_browser_shape ... ok
+test fingerprint::derive::tests::maps_a_windows_user_agent_onto_the_windows_platform_hints ... ok
+test fingerprint::cdp_overrides::tests::carries_the_client_hints_including_the_deprecated_full_version ... ok
+test fingerprint::derive::tests::pads_a_major_only_chrome_version_into_a_four_part_full_version ... ok
+test fingerprint::derive::tests::recognises_linux_and_chrome_os ... ok
+test fingerprint::derive::tests::returns_none_when_the_string_names_no_chrome_version ... ok
+test fingerprint::field_mechanisms::tests::records_a_mechanism_for_every_field_the_profile_accepts ... ok
+test fingerprint::init_script::tests::adds_webdriver_only_when_the_caller_asks_for_it ... ok
+test fingerprint::init_script::tests::drops_the_screen_dimensions_set_device_metrics_override_already_enforces ... ok
+test fingerprint::init_script::tests::embeds_the_shared_payload_asset_verbatim ... ok
+test fingerprint::init_script::tests::leaves_languages_to_the_browser_unless_explicitly_asked ... ok
+test fingerprint::field_mechanisms::tests::mirrors_the_javascript_mechanism_table ... ok
+test fingerprint::init_script::tests::patches_only_the_fields_the_emulation_domain_has_no_command_for ... ok
+test fingerprint::init_script::tests::patches_webdriver_even_for_an_otherwise_empty_profile ... ok
+test fingerprint::init_script::tests::returns_nothing_when_the_browser_side_overrides_cover_everything ... ok
+test fingerprint::init_script::tests::wraps_the_shared_payload_and_calls_it_with_the_config ... ok
+test fingerprint::init_script::tests::skips_the_screen_patch_when_only_width_and_height_are_given ... ok
+test fingerprint::limitations::tests::always_reports_the_two_nothing_can_be_done_about ... ok
+test fingerprint::limitations::tests::gives_every_entry_a_unique_id_and_the_fields_a_reader_needs ... ok
+test fingerprint::limitations::tests::looks_an_entry_up_by_id ... ok
+test fingerprint::limitations::tests::mentions_headless_only_for_a_headless_browser ... ok
+test fingerprint::limitations::tests::mentions_the_grease_brand_when_the_profile_pins_client_hints ... ok
+test fingerprint::limitations::tests::keeps_the_declaration_order_of_the_catalogue ... ok
+test fingerprint::limitations::tests::mentions_the_javascript_only_fields_when_the_profile_sets_them ... ok
+test fingerprint::limitations::tests::mentions_the_pointer_side_effect_only_when_touch_is_enabled ... ok
+test fingerprint::derive::tests::parses_the_macos_version_out_of_the_user_agent ... ok
+test fingerprint::limitations::tests::mentions_the_launch_only_switch_only_when_attached ... ok
+test fingerprint::limitations::tests::mentions_the_screen_entry_only_for_the_fields_cdp_does_not_emulate ... ok
+test fingerprint::limitations::tests::ships_the_catalogue_that_the_javascript_package_owns ... ok
+test fingerprint::limitations::tests::mentions_workers_for_every_field_a_worker_reads_differently ... ok
+test fingerprint::presets::tests::describes_one_machine_consistently ... ok
+test fingerprint::derive::tests::reports_an_android_phone_as_mobile_and_recovers_the_model ... ok
+test fingerprint::limitations::tests::points_every_measured_entry_at_the_artifact_that_proves_it ... ok
+test fingerprint::presets::tests::every_preset_resolves_with_the_fields_an_override_needs ... ok
+test fingerprint::presets::tests::gives_touch_points_only_to_the_mobile_preset ... ok
+test fingerprint::presets::tests::names_the_platforms_chrome_ships_on ... ok
+test fingerprint::presets::tests::rejects_a_chrome_version_that_is_not_a_dotted_number ... ok
+test fingerprint::presets::tests::puts_the_requested_chrome_version_everywhere_it_appears ... ok
+test fingerprint::presets::tests::keeps_the_viewport_inside_the_screen_it_claims ... ok
+test fingerprint::presets::tests::rejects_an_unknown_preset_and_lists_the_known_ones ... ok
+test fingerprint::profile::tests::allows_max_touch_points_to_be_zero ... ok
+test fingerprint::profile::tests::derives_accept_language_from_languages ... ok
+test fingerprint::profile::tests::accepts_every_configurable_field_at_once ... ok
+test fingerprint::profile::tests::an_empty_profile_serializes_to_an_empty_object ... ok
+test fingerprint::profile::tests::derives_client_hints_from_a_chrome_user_agent ... ok
+test fingerprint::profile::tests::drops_fields_that_were_not_supplied_instead_of_filling_in_defaults ... ok
+test fingerprint::profile::tests::keeps_an_explicit_accept_language_over_the_derived_one ... ok
+test fingerprint::profile::tests::rejects_a_device_memory_that_is_not_a_positive_number ... ok
+test fingerprint::profile::tests::lets_an_explicit_user_agent_data_win_over_the_derived_one ... ok
+test fingerprint::profile::tests::keeps_an_explicit_full_version_instead_of_deriving_one ... ok
+test fingerprint::profile::tests::rejects_a_hardware_concurrency_of_zero ... ok
+test fingerprint::profile::tests::fills_ua_full_version_from_the_chrome_entry_of_full_version_list ... ok
+test fingerprint::profile::tests::rejects_an_empty_languages_list ... ok
+test fingerprint::profile::tests::rejects_out_of_range_coordinates ... ok
+test fingerprint::profile::tests::rejects_an_unknown_field_rather_than_silently_ignoring_it ... ok
+test fingerprint::profile::tests::rejects_q_values_in_accept_language_which_chrome_would_misparse ... ok
+test fingerprint::profile::tests::requires_screen_width_and_height_to_be_given_together ... ok
+test fingerprint::profile::tests::round_trips_through_the_camel_case_names_the_protocol_uses ... ok
+test high_level::universal_logic::tests::check_and_clear_flag_script_escapes_quotes ... ok
+test high_level::universal_logic::tests::install_click_listener_script_escapes_quotes ... ok
+test fingerprint::profile::tests::rejects_an_unsupported_enum_value ... ok
+test interactions::click::tests::a_changed_property_is_confirmed_with_evidence ... ok
+test interactions::click::tests::click_options_default ... ok
+test fingerprint::profile::tests::requires_viewport_width_and_height_to_be_given_together ... ok
+test interactions::click::tests::click_result_failed ... ok
+test interactions::click::tests::click_result_navigation ... ok
+test interactions::click::tests::click_result_success ... ok
+test interactions::click::tests::dispatch_evidence_records_a_page_that_scrolled_itself ... ok
+test interactions::click::tests::pre_click_state_default ... ok
+test interactions::click::tests::no_auto_scroll_forbids_the_pre_click_scroll ... ok
+test downloads::watcher::tests::saves_what_the_browser_left_in_the_staging_directory ... ok
+test interactions::click_activation::tests::axes_render_the_documented_names ... ok
+test interactions::click_activation::tests::defaults_scroll_and_never_force ... ok
+test interactions::click_activation::tests::no_auto_scroll_false_allows_scrolling ... ok
+test interactions::click_activation::tests::no_auto_scroll_maps_to_scroll_none_not_to_force ... ok
+test interactions::click::tests::unchanged_element_is_not_evidence_of_an_effect ... ok
+test interactions::click_activation::tests::scroll_changed_reports_unknown_when_a_reading_is_missing ... ok
+test interactions::click_activation::tests::selectors_are_json_escaped_into_the_probe ... ok
+test interactions::click_result::tests::evidence_carries_structured_detail ... ok
+test interactions::click_result::tests::failed_reports_no_dispatch ... ok
+test interactions::click_result::tests::action_ids_are_unique_per_click ... ok
+test interactions::click_result::tests::navigation_is_not_proof_of_effect ... ok
+test interactions::click_result::tests::statuses_and_effects_render_the_documented_names ... ok
+test interactions::click_result::tests::success_confirms_the_effect ... ok
+test interactions::click_result::tests::unverified_never_claims_verification ... ok
+test interactions::fill::tests::fill_options_default ... ok
+test interactions::fill::tests::fill_result_failed ... ok
+test interactions::fill::tests::fill_result_skipped ... ok
+test interactions::fill::tests::fill_result_success ... ok
+test interactions::keyboard::tests::test_key_up ... ok
+test interactions::keyboard::tests::test_key_down ... ok
+test interactions::keyboard::tests::test_press_key ... ok
+test interactions::keyboard::tests::test_type_text ... ok
+test interactions::keyboard::tests::test_press_enter_key ... ok
+test interactions::scroll::tests::scroll_options_default ... ok
+test interactions::scroll::tests::scroll_behavior_display ... ok
+test interactions::scroll::tests::scroll_result_performed ... ok
+test interactions::scroll::tests::scroll_result_failed ... ok
+test interactions::scroll::tests::scroll_result_skipped ... ok
+test traces::reader::tests::keeps_everything_before_a_half_written_line ... ok
+test traces::reader::tests::reads_a_missing_state_as_no_controls_at_all ... ok
+test traces::reader::tests::reads_an_empty_body_as_an_empty_timeline ... ok
+test downloads::watcher::tests::takes_one_last_look_when_it_is_detached ... ok
+test traces::reader::tests::reads_a_timeline_whose_last_line_was_cut_off ... ok
+test traces::reader::tests::reads_the_manifest_timeline_and_checkpoint_members ... ok
+test traces::reader::tests::rebuilds_a_manifest_for_a_run_that_never_stopped ... ok
+test traces::reader::tests::refuses_a_bundle_written_by_a_newer_format ... ok
+test traces::reader::tests::refuses_a_directory_that_holds_no_trace ... ok
+test traces::reader::tests::reports_a_checkbox_by_what_it_is_checked_to ... ok
+test traces::reader::tests::refuses_a_manifest_that_is_not_readable_json ... ok
+test traces::reader::tests::reports_what_a_step_changed_added_and_removed ... ok
+test traces::schema::tests::accepts_a_manifest_this_reader_was_written_for ... ok
+test traces::schema::tests::declares_the_same_schema_version_as_javascript ... ok
+test traces::reader::tests::refuses_a_directory_that_holds_something_else ... ok
+test traces::schema::tests::refuses_a_newer_schema_rather_than_guessing ... ok
+test traces::schema::tests::refuses_something_that_is_not_a_trace ... ok
+test traces::reader::tests::returns_nothing_for_a_checkpoint_member_that_was_dropped ... ok
+test traces::schema::tests::pads_a_sequence_number_so_it_sorts_in_order ... ok
+test utilities::url::tests::get_domain_invalid ... ok
+test utilities::url::tests::is_about_url_false ... ok
+test utilities::url::tests::get_domain_valid ... ok
+test utilities::url::tests::is_about_url_true ... ok
+test utilities::url::tests::is_data_url_false ... ok
+test utilities::url::tests::is_data_url_true ... ok
+test utilities::url::tests::parse_url_invalid ... ok
+test utilities::url::tests::is_blob_url_false ... ok
+test utilities::url::tests::is_blob_url_true ... ok
+test utilities::url::tests::parse_url_valid ... ok
+test utilities::url::tests::same_origin_false ... ok
+test utilities::url::tests::same_origin_true ... ok
+test utilities::wait::tests::safe_evaluate_result_navigation_error ... ok
+test utilities::wait::tests::safe_evaluate_result_success ... ok
+test utilities::wait::tests::wait_result_completed ... ok
+test utilities::wait::tests::wait_result_aborted ... ok
+test utilities::wait::tests::wait_with_cancel_aborts_on_cancel ... ok
+test interactions::click::tests::gives_up_on_a_target_the_page_navigated_away_from ... ok
+test utilities::wait::tests::wait_with_cancel_completes_normally ... ok
+test utilities::wait::tests::wait_completes ... ok
+test utilities::wait::tests::wait_with_cancel_aborts_during_wait ... ok
+test interactions::click::tests::reports_timed_out_when_the_target_cannot_be_read ... ok
+test interactions::click::tests::keeps_a_button_click_inside_one_budget ... ok
+
+test result: ok. 405 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+
+     Running unittests src/main.rs (target/debug/deps/browser_commander-c66ea6ebf1477fb0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/browser_cookies.rs (target/debug/deps/browser_cookies-64a74bfdc3443418)
+
+running 2 tests
+test partial_result_cache_is_not_reused_for_strict_import ... ok
+test discovers_and_reads_installed_browser_cookie_profiles ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests/connect_smoke.rs (target/debug/deps/connect_smoke-abefc660a9f02029)
+
+running 1 test
+test attach_all_cdp_engines_to_system_chrome ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dependency_features.rs (target/debug/deps/dependency_features-cad8a4650a073834)
+
+running 4 tests
+test default_feature_set_is_empty ... ok
+test fantoccini_is_taken_without_default_features ... ok
+test native_tls_is_available_as_an_opt_in_feature ... ok
+test fantoccini_uses_rustls ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/launch_smoke.rs (target/debug/deps/launch_smoke-0baeea24af6a31a9)
+
+running 1 test
+test launch_and_navigate ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/real_browser_api.rs (target/debug/deps/real_browser_api-27e9108319b32b03)
+
+running 3 tests
+test real_browser_api_builds_protected_launch_arguments ... ok
+test real_browser_api_rejects_managed_arguments ... ok
+test real_browser_api_supports_extra_args_and_per_default_opt_out ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/real_browser_smoke.rs (target/debug/deps/real_browser_smoke-a719c8bf9b1b6dae)
+
+running 1 test
+test launch_system_chrome_and_attach ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/trace_schema_v2.rs (target/debug/deps/trace_schema_v2-5d03da04196d72f6)
+
+running 5 tests
+test reads_a_live_state_record_no_mutation_would_report ... ok
+test reports_what_the_bundle_can_replay_rather_than_assuming ... ok
+test keeps_the_frame_each_batch_came_from ... ok
+test keeps_the_owner_identifiers_on_every_record ... ok
+test reads_a_child_list_record_with_the_position_a_node_went_to ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Doc-tests browser_commander
+
+running 17 tests
+test src/core/dialog.rs - core::dialog (line 8) - compile ... ok
+test src/downloads/manager.rs - downloads::manager (line 14) - compile ... ok
+test src/downloads/mod.rs - downloads (line 26) - compile ... ok
+test src/downloads/destination.rs - downloads::destination (line 9) ... ok
+test src/downloads/naming.rs - downloads::naming (line 9) ... ok
+test src/core/dialog.rs - core::dialog::DialogManager (line 117) ... ok
+test src/downloads/attach.rs - downloads::attach (line 12) ... ok
+test src/core/logger.rs - core::logger::init_logger (line 37) ... ok
+test src/interactions/keyboard.rs - interactions::keyboard::press_key (line 30) - compile ... ok
+test src/downloads/store.rs - downloads::store (line 9) - compile ... ok
+test src/downloads/options.rs - downloads::options (line 10) ... ok
+test src/traces/reader.rs - traces::reader (line 12) - compile ... ok
+test src/traces/mod.rs - traces (line 12) - compile ... ok
+test src/lib.rs - (line 16) - compile ... ok
+test src/lib.rs - prelude (line 108) ... ok
+test src/downloads/sources.rs - downloads::sources (line 17) ... ok
+test src/downloads/watcher.rs - downloads::watcher (line 11) ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.48s
+

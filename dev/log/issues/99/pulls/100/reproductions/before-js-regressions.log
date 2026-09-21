@@ -1,0 +1,120 @@
+✖ tests/unit/downloads/staging.test.js (1.569678ms)
+▶ npm release helpers
+  ▶ removeDeprecatedAlwaysAuth
+    ✔ removes always-auth while preserving other config (2.854495ms)
+    ✔ returns false when no config path exists (0.195635ms)
+  ✔ removeDeprecatedAlwaysAuth (3.544042ms)
+  ▶ isVersionPublished
+    ✔ returns false for npm registry 404 responses without logging npm errors (1.884696ms)
+    ✔ handles scoped package names (0.237324ms)
+  ✔ isVersionPublished (2.463607ms)
+✔ npm release helpers (7.342831ms)
+▶ test runner helper
+  ✔ expands test directories into stable explicit test files (20.278495ms)
+  ✖ builds node --test arguments with reporter and coverage options (3.327098ms)
+  ✖ keeps process isolation on Node versions without isolation controls (0.613844ms)
+✖ test runner helper (24.927791ms)
+▶ trace bundle writer (issue #87)
+  ✔ should refuse to open without an output path (13.922296ms)
+  ✖ should abort an unfinished bundle without writing a manifest (15.389704ms)
+  ✔ should write the layout the format documents (56.837329ms)
+  ✔ should number events and stamp them with both clocks (10.667684ms)
+  ✔ should keep a trace readable for its owner only (14.745002ms)
+  ✔ should store one resource once, however often it is written (10.128118ms)
+  ✔ should drop a member over the per-resource limit and say so (13.141549ms)
+  ✔ should report a partial trace once anything was dropped (22.840185ms)
+  ✔ should raise the first problem in strict mode instead of recording it (13.39958ms)
+  ✔ should record a write it could not perform (17.137316ms)
+  ✔ should write nothing for an empty batch of mutations (14.719294ms)
+  ✔ should count what it wrote in the manifest (12.630045ms)
+  ✔ should record a dropped member even under a tiny resource limit (12.027181ms)
+  ✔ should write the timeline in the order the events happened (31.735855ms)
+  ✔ should stop appending once the bundle limit is reached (9.233016ms)
+✖ trace bundle writer (issue #87) (274.186151ms)
+ℹ tests 23
+ℹ suites 5
+ℹ pass 19
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 373.21998
+
+✖ failing tests:
+
+test at tests/unit/downloads/staging.test.js:1:1
+✖ tests/unit/downloads/staging.test.js (1.569678ms)
+  file:///tmp/gh-issue-solver-1789981134588/js/tests/unit/downloads/staging.test.js:8
+    DEFAULT_STAGING_STABILITY,
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  SyntaxError: The requested module '../../../src/downloads/staging.js' does not provide an export named 'DEFAULT_STAGING_STABILITY'
+      at #asyncInstantiate (node:internal/modules/esm/module_job:455:21)
+      at async ModuleJob.run (node:internal/modules/esm/module_job:553:5)
+      at async node:internal/modules/esm/loader:647:26
+      at async node:internal/test_runner/runner:1091:15
+      at async runFiles (node:internal/test_runner/runner:1057:9)
+      at async runChain (node:internal/test_runner/runner:1135:5)
+
+test at tests/unit/scripts/npm-release-helpers.test.js:114:3
+✖ builds node --test arguments with reporter and coverage options (3.327098ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      '--test',
+  -   '--throw-deprecation',
+      '--test-isolation=none',
+      '--experimental-test-coverage',
+      '--test-reporter',
+      'spec',
+      'tests/unit/a.test.js'
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1789981134588/js/tests/unit/scripts/npm-release-helpers.test.js:130:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [Array],
+    expected: [Array],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/scripts/npm-release-helpers.test.js:144:3
+✖ keeps process isolation on Node versions without isolation controls (0.613844ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      '--test',
+  -   '--throw-deprecation',
+      'tests/unit/a.test.js'
+    ]
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1789981134588/js/tests/unit/scripts/npm-release-helpers.test.js:147:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [Array],
+    expected: [Array],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/traces/bundle.test.js:69:3
+✖ should abort an unfinished bundle without writing a manifest (15.389704ms)
+  TypeError: bundle.abort is not a function
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1789981134588/js/tests/unit/traces/bundle.test.js:73:18)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)

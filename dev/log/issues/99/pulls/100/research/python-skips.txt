@@ -1,0 +1,6 @@
+2015:Test (Python 3.13 on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:56.7790591Z SKIPPED [1] tests\unit\downloads\test_destination.py:35: XDG user directories are a Linux convention
+2016:Test (Python 3.13 on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:56.7791376Z SKIPPED [1] tests\unit\downloads\test_destination.py:92: a read-only directory does not stop root
+2017:Test (Python 3.13 on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:56.7791981Z SKIPPED [1] tests\unit\downloads\test_store.py:79: POSIX file modes
+2018:Test (Python 3.13 on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:56.7792434Z ======================= 716 passed, 3 skipped in 15.48s =======================
+3650:Pipeline Status	UNKNOWN STEP	    "result": "skipped",
+3670:Pipeline Status	UNKNOWN STEP	    "result": "skipped",

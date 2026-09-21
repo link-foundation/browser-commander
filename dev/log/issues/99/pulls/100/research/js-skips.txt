@@ -1,0 +1,10 @@
+2792:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:37.7426320Z   ✔ passes when every job succeeded or was legitimately skipped (94.754209ms)
+3337:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:54.0475610Z ℹ skipped 0
+4806:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:10:48.3301513Z   ✔ passes when every job succeeded or was legitimately skipped (159.1603ms)
+5349:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:05.7128123Z ℹ skipped 6
+6798:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:36.5695112Z   ✔ passes when every job succeeded or was legitimately skipped (55.930398ms)
+7343:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.2634493Z ℹ skipped 0
+7556:Pipeline Status	UNKNOWN STEP	    "result": "skipped",
+7568:Pipeline Status	UNKNOWN STEP	    "result": "skipped",
+7572:Pipeline Status	UNKNOWN STEP	    "result": "skipped",
+7576:Pipeline Status	UNKNOWN STEP	    "result": "skipped",

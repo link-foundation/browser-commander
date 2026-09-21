@@ -1,1 +1,5 @@
 docs/case-studies/issue-55/**/*.log -diff
+dev/log/issues/99/pulls/100/** -whitespace
+dev/log/issues/99/pulls/100/ci-logs/*.log -diff -whitespace
+dev/log/issues/99/pulls/100/reproductions/*.log -diff -whitespace
+dev/log/issues/99/pulls/100/templates/diffs/*.patch -diff -whitespace

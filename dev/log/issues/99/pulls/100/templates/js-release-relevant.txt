@@ -1,0 +1,132 @@
+/tmp/issue99-js-template/.github/workflows/release.yml-179-          persist-credentials: false
+/tmp/issue99-js-template/.github/workflows/release.yml-180-
+/tmp/issue99-js-template/.github/workflows/release.yml-181-      - name: Setup Node.js
+/tmp/issue99-js-template/.github/workflows/release.yml-182-        uses: actions/setup-node@v6
+/tmp/issue99-js-template/.github/workflows/release.yml-183-        with:
+/tmp/issue99-js-template/.github/workflows/release.yml:184:          node-version: '24.x'
+/tmp/issue99-js-template/.github/workflows/release.yml-185-
+/tmp/issue99-js-template/.github/workflows/release.yml-186-      - name: Install dependencies
+/tmp/issue99-js-template/.github/workflows/release.yml-187-        run: npm install
+/tmp/issue99-js-template/.github/workflows/release.yml-188-
+/tmp/issue99-js-template/.github/workflows/release.yml-189-      - name: Check for changesets
+--
+/tmp/issue99-js-template/.github/workflows/release.yml-241-        run: bash scripts/simulate-fresh-merge.sh
+/tmp/issue99-js-template/.github/workflows/release.yml-242-
+/tmp/issue99-js-template/.github/workflows/release.yml-243-      - name: Setup Node.js
+/tmp/issue99-js-template/.github/workflows/release.yml-244-        uses: actions/setup-node@v6
+/tmp/issue99-js-template/.github/workflows/release.yml-245-        with:
+/tmp/issue99-js-template/.github/workflows/release.yml:246:          node-version: '24.x'
+/tmp/issue99-js-template/.github/workflows/release.yml-247-
+/tmp/issue99-js-template/.github/workflows/release.yml-248-      - name: Install dependencies
+/tmp/issue99-js-template/.github/workflows/release.yml-249-        run: npm install
+/tmp/issue99-js-template/.github/workflows/release.yml-250-
+/tmp/issue99-js-template/.github/workflows/release.yml-251-      - name: Run ESLint
+--
+/tmp/issue99-js-template/.github/workflows/release.yml-323-
+/tmp/issue99-js-template/.github/workflows/release.yml-324-      - name: Setup Node.js
+/tmp/issue99-js-template/.github/workflows/release.yml-325-        if: matrix.runtime == 'node'
+/tmp/issue99-js-template/.github/workflows/release.yml-326-        uses: actions/setup-node@v6
+/tmp/issue99-js-template/.github/workflows/release.yml-327-        with:
+/tmp/issue99-js-template/.github/workflows/release.yml:328:          node-version: '24.x'
+/tmp/issue99-js-template/.github/workflows/release.yml-329-
+/tmp/issue99-js-template/.github/workflows/release.yml-330-      - name: Install dependencies (Node.js)
+/tmp/issue99-js-template/.github/workflows/release.yml-331-        if: matrix.runtime == 'node'
+/tmp/issue99-js-template/.github/workflows/release.yml-332-        run: npm install
+/tmp/issue99-js-template/.github/workflows/release.yml-333-
+--
+/tmp/issue99-js-template/.github/workflows/release.yml-533-          fetch-depth: 0
+/tmp/issue99-js-template/.github/workflows/release.yml-534-
+/tmp/issue99-js-template/.github/workflows/release.yml-535-      - name: Setup Node.js
+/tmp/issue99-js-template/.github/workflows/release.yml-536-        uses: actions/setup-node@v6
+/tmp/issue99-js-template/.github/workflows/release.yml-537-        with:
+/tmp/issue99-js-template/.github/workflows/release.yml:538:          node-version: '24.x'
+/tmp/issue99-js-template/.github/workflows/release.yml-539-          registry-url: 'https://registry.npmjs.org'
+/tmp/issue99-js-template/.github/workflows/release.yml-540-
+/tmp/issue99-js-template/.github/workflows/release.yml-541-      - name: Remove deprecated npm auth config
+/tmp/issue99-js-template/.github/workflows/release.yml-542-        run: node scripts/sanitize-npm-userconfig.mjs
+/tmp/issue99-js-template/.github/workflows/release.yml-543-
+--
+/tmp/issue99-js-template/.github/workflows/release.yml-661-          fetch-depth: 0
+/tmp/issue99-js-template/.github/workflows/release.yml-662-
+/tmp/issue99-js-template/.github/workflows/release.yml-663-      - name: Setup Node.js
+/tmp/issue99-js-template/.github/workflows/release.yml-664-        uses: actions/setup-node@v6
+/tmp/issue99-js-template/.github/workflows/release.yml-665-        with:
+/tmp/issue99-js-template/.github/workflows/release.yml:666:          node-version: '24.x'
+/tmp/issue99-js-template/.github/workflows/release.yml-667-          registry-url: 'https://registry.npmjs.org'
+/tmp/issue99-js-template/.github/workflows/release.yml-668-
+/tmp/issue99-js-template/.github/workflows/release.yml-669-      - name: Remove deprecated npm auth config
+/tmp/issue99-js-template/.github/workflows/release.yml-670-        run: node scripts/sanitize-npm-userconfig.mjs
+/tmp/issue99-js-template/.github/workflows/release.yml-671-
+--
+/tmp/issue99-js-template/.github/workflows/release.yml-930-          fi
+/tmp/issue99-js-template/.github/workflows/release.yml-931-
+/tmp/issue99-js-template/.github/workflows/release.yml-932-      - name: Setup Node.js
+/tmp/issue99-js-template/.github/workflows/release.yml-933-        uses: actions/setup-node@v6
+/tmp/issue99-js-template/.github/workflows/release.yml-934-        with:
+/tmp/issue99-js-template/.github/workflows/release.yml:935:          node-version: '24.x'
+/tmp/issue99-js-template/.github/workflows/release.yml-936-
+/tmp/issue99-js-template/.github/workflows/release.yml-937-      - name: Install dependencies
+/tmp/issue99-js-template/.github/workflows/release.yml-938-        run: npm install
+/tmp/issue99-js-template/.github/workflows/release.yml-939-
+/tmp/issue99-js-template/.github/workflows/release.yml-940-      - name: Create changeset file
+--
+/tmp/issue99-js-template/.github/workflows/release.yml-1011-          persist-credentials: false
+/tmp/issue99-js-template/.github/workflows/release.yml-1012-
+/tmp/issue99-js-template/.github/workflows/release.yml-1013-      - name: Setup Node.js
+/tmp/issue99-js-template/.github/workflows/release.yml-1014-        uses: actions/setup-node@v6
+/tmp/issue99-js-template/.github/workflows/release.yml-1015-        with:
+/tmp/issue99-js-template/.github/workflows/release.yml:1016:          node-version: '24.x'
+/tmp/issue99-js-template/.github/workflows/release.yml-1017-
+/tmp/issue99-js-template/.github/workflows/release.yml-1018-      - name: Fail the run when a required job was cancelled or failed
+/tmp/issue99-js-template/.github/workflows/release.yml-1019-        env:
+/tmp/issue99-js-template/.github/workflows/release.yml-1020-          NEEDS_JSON: ${{ toJSON(needs) }}
+/tmp/issue99-js-template/.github/workflows/release.yml-1021-          RUN_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+--
+/tmp/issue99-js-template/package.json-61-  },
+/tmp/issue99-js-template/package.json-62-  "repository": {
+/tmp/issue99-js-template/package.json-63-    "type": "git",
+/tmp/issue99-js-template/package.json-64-    "url": "git+https://github.com/link-foundation/js-ai-driven-development-pipeline-template.git"
+/tmp/issue99-js-template/package.json-65-  },
+/tmp/issue99-js-template/package.json:66:  "engines": {
+/tmp/issue99-js-template/package.json-67-    "node": ">=20.0.0"
+/tmp/issue99-js-template/package.json-68-  },
+/tmp/issue99-js-template/package.json-69-  "devDependencies": {
+/tmp/issue99-js-template/package.json-70-    "@changesets/cli": "^2.29.7",
+/tmp/issue99-js-template/package.json-71-    "eslint": "^9.38.0",
+--
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-415-      'name: Upload desktop package'
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-416-    );
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-417-
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-418-    expect(packageStepIndex).toBeGreaterThanOrEqual(0);
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-419-    expect(uploadStepIndex).toBeGreaterThan(packageStepIndex);
+/tmp/issue99-js-template/tests/workflow-reliability.test.js:420:    expect(desktopPackageJob).toContain("node-version: '24.x'");
+/tmp/issue99-js-template/tests/workflow-reliability.test.js:421:    expect(desktopPackageJob).not.toContain("node-version: '20.x'");
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-422-    expect(desktopPackageJob).toContain('shell: bash');
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-423-    expect(desktopPackageJob).toContain('npm run example:desktop:package');
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-424-    expect(desktopPackageJob).toContain('find examples/universal-app/out');
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-425-    expect(desktopPackageJob).toContain(
+/tmp/issue99-js-template/tests/workflow-reliability.test.js-426-      'Desktop package output was not created at examples/universal-app/out'
+--
+/tmp/issue99-js-template/tests/security-workflow.test.js-104-      .sort();
+/tmp/issue99-js-template/tests/security-workflow.test.js-105-
+/tmp/issue99-js-template/tests/security-workflow.test.js-106-    expect(auditedLocks).toEqual(listPackageLocks());
+/tmp/issue99-js-template/tests/security-workflow.test.js-107-    expect(audit).toContain('    timeout-minutes: 10');
+/tmp/issue99-js-template/tests/security-workflow.test.js-108-    expect(audit).toContain('uses: actions/setup-node@v6');
+/tmp/issue99-js-template/tests/security-workflow.test.js:109:    expect(audit).toContain('node-version: 24');
+/tmp/issue99-js-template/tests/security-workflow.test.js-110-    expect(audit).toContain('working-directory: ${{ matrix.directory }}');
+/tmp/issue99-js-template/tests/security-workflow.test.js-111-    expect(audit).toContain(
+/tmp/issue99-js-template/tests/security-workflow.test.js-112-      'run: npm audit --package-lock-only --audit-level=high'
+/tmp/issue99-js-template/tests/security-workflow.test.js-113-    );
+/tmp/issue99-js-template/tests/security-workflow.test.js-114-  });
+--
+/tmp/issue99-js-template/tests/use-module-integration.test.js-3-/**
+/tmp/issue99-js-template/tests/use-module-integration.test.js-4- * End-to-end guard for the use-m interop shim.
+/tmp/issue99-js-template/tests/use-module-integration.test.js-5- *
+/tmp/issue99-js-template/tests/use-module-integration.test.js-6- * The unit tests in use-module.test.js pin the shapes we normalise; this file
+/tmp/issue99-js-template/tests/use-module-integration.test.js-7- * loads `command-stream` through the real, unpinned use-m on the same Node
+/tmp/issue99-js-template/tests/use-module-integration.test.js:8: * version the release jobs run (`node-version: '24.x'`) and asserts `$` is
+/tmp/issue99-js-template/tests/use-module-integration.test.js-9- * callable. Without it the interop breakage only surfaces on `main`, inside a
+/tmp/issue99-js-template/tests/use-module-integration.test.js-10- * job that pushes tags and publishes to npm.
+/tmp/issue99-js-template/tests/use-module-integration.test.js-11- *
+/tmp/issue99-js-template/tests/use-module-integration.test.js-12- * The test needs network access. When the fetch of use.js or the package
+/tmp/issue99-js-template/tests/use-module-integration.test.js-13- * install fails, it logs the reason and passes, so offline development and

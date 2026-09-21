@@ -1,0 +1,84 @@
+Only in /tmp/issue99-rust-template: .github
+Files rust/.gitignore and /tmp/issue99-rust-template/.gitignore differ
+Only in /tmp/issue99-rust-template: .lycheeignore
+Only in /tmp/issue99-rust-template: .pre-commit-config.yaml
+Only in /tmp/issue99-rust-template: .secretlintrc.json
+Files rust/CHANGELOG.md and /tmp/issue99-rust-template/CHANGELOG.md differ
+Only in /tmp/issue99-rust-template: CONTRIBUTING.md
+Files rust/Cargo.lock and /tmp/issue99-rust-template/Cargo.lock differ
+Files rust/Cargo.toml and /tmp/issue99-rust-template/Cargo.toml differ
+Only in /tmp/issue99-rust-template: LICENSE
+Files rust/README.md and /tmp/issue99-rust-template/README.md differ
+Only in /tmp/issue99-rust-template/changelog.d: 20260909_141920_fix_all_open_pipeline_issues.md
+Only in /tmp/issue99-rust-template/changelog.d: 20260915_122800_close_ci_false_negatives.md
+Files rust/changelog.d/README.md and /tmp/issue99-rust-template/changelog.d/README.md differ
+Only in /tmp/issue99-rust-template: docs
+Only in /tmp/issue99-rust-template/examples: basic_usage.rs
+Only in rust/examples: managed_download.rs
+Only in rust/examples: read_trace.rs
+Only in /tmp/issue99-rust-template: experiments
+Only in rust/scripts: bump-version.mjs
+Only in /tmp/issue99-rust-template/scripts: bump-version.rs
+Only in rust/scripts: changelog.mjs
+Only in /tmp/issue99-rust-template/scripts: check-cargo-lock.rs
+Only in /tmp/issue99-rust-template/scripts: check-changelog-fragment.rs
+Only in /tmp/issue99-rust-template/scripts: check-crate-size.rs
+Only in rust/scripts: check-file-size.mjs
+Only in /tmp/issue99-rust-template/scripts: check-file-size.rs
+Only in /tmp/issue99-rust-template/scripts: check-pipeline-status.sh
+Only in /tmp/issue99-rust-template/scripts: check-release-needed.rs
+Only in /tmp/issue99-rust-template/scripts: check-required-docs.sh
+Only in /tmp/issue99-rust-template/scripts: check-version-modification.rs
+Only in /tmp/issue99-rust-template/scripts: check-web-archive.mjs
+Only in /tmp/issue99-rust-template/scripts: check-web-archive.test.mjs
+Only in rust/scripts: collect-changelog.mjs
+Only in /tmp/issue99-rust-template/scripts: collect-changelog.rs
+Only in /tmp/issue99-rust-template/scripts: create-changelog-fragment.rs
+Only in rust/scripts: create-github-release.mjs
+Only in /tmp/issue99-rust-template/scripts: create-github-release.rs
+Only in /tmp/issue99-rust-template/scripts: desktop-release-resolve.sh
+Only in /tmp/issue99-rust-template/scripts: detect-code-changes.rs
+Only in /tmp/issue99-rust-template/scripts: fixtures
+Only in rust/scripts: get-bump-type.mjs
+Only in /tmp/issue99-rust-template/scripts: get-bump-type.rs
+Only in /tmp/issue99-rust-template/scripts: get-version.rs
+Only in /tmp/issue99-rust-template/scripts: git-config.rs
+Only in /tmp/issue99-rust-template/scripts: install-rust-script.sh
+Only in /tmp/issue99-rust-template/scripts: package-desktop.sh
+Only in /tmp/issue99-rust-template/scripts: preflight-credentials.sh
+Only in rust/scripts: publish-crate.mjs
+Only in /tmp/issue99-rust-template/scripts: publish-crate.rs
+Only in /tmp/issue99-rust-template/scripts: read-job-cancel-in-progress.sh
+Only in /tmp/issue99-rust-template/scripts: recheck-broken-links.mjs
+Only in /tmp/issue99-rust-template/scripts: recheck-broken-links.test.mjs
+Only in /tmp/issue99-rust-template/scripts: release-naming.rs
+Only in /tmp/issue99-rust-template/scripts: run-with-budget-warning.sh
+Only in rust/scripts: rust-paths.mjs
+Only in /tmp/issue99-rust-template/scripts: rust-paths.rs
+Only in /tmp/issue99-rust-template/scripts: simulate-fresh-merge.sh
+Only in /tmp/issue99-rust-template/scripts: smoke-test-published-crate.rs
+Only in /tmp/issue99-rust-template/scripts: test-scripts.sh
+Only in rust/scripts: version-and-commit.mjs
+Only in /tmp/issue99-rust-template/scripts: version-and-commit.rs
+Only in /tmp/issue99-rust-template/scripts: wait-for-crate.rs
+Only in rust/src: browser
+Only in rust/src: core
+Only in rust/src: downloads
+Only in rust/src: elements
+Only in rust/src: fingerprint
+Only in rust/src: high_level
+Only in rust/src: interactions
+Files rust/src/lib.rs and /tmp/issue99-rust-template/src/lib.rs differ
+Files rust/src/main.rs and /tmp/issue99-rust-template/src/main.rs differ
+Only in /tmp/issue99-rust-template/src: sum.rs
+Only in rust/src: traces
+Only in rust/src: utilities
+Only in rust/tests: browser_cookies.rs
+Only in rust/tests: connect_smoke.rs
+Only in rust/tests: dependency_features.rs
+Only in /tmp/issue99-rust-template/tests: integration
+Only in rust/tests: launch_smoke.rs
+Only in rust/tests: real_browser_api.rs
+Only in rust/tests: real_browser_smoke.rs
+Only in rust/tests: trace_schema_v2.rs
+Only in /tmp/issue99-rust-template/tests: unit

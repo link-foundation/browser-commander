@@ -282,6 +282,10 @@ describe('offline trace viewer (issue #87)', () => {
 
       assert.match(body, /outcome truncated/);
       assert.match(body, /the last thing it did|1 checkpoints/);
+
+      // The assertions model an interrupted process; this test process keeps
+      // running, so explicitly release the descriptor afterwards.
+      await trace.stop();
     });
 
     it('should refuse a directory that is not a bundle', async () => {

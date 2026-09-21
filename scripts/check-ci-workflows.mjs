@@ -34,8 +34,8 @@ const DISALLOWED_PATTERNS = [
     replacement: 'actions/upload-artifact@v7',
   },
   {
-    pattern: /\bactions\/download-artifact@v[1-6]\b/,
-    replacement: 'actions/download-artifact@v7',
+    pattern: /\bactions\/download-artifact@v[1-7]\b/,
+    replacement: 'actions/download-artifact@v8',
   },
   {
     pattern: /\bactions\/upload-pages-artifact@v[1-4]\b/,

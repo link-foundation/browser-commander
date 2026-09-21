@@ -1,0 +1,89 @@
+▶ waiting for staged bytes (issue #92)
+  ✔ should report a file that is already complete (149.204512ms)
+  ✔ should wait for a file that appears after the completion event (185.224387ms)
+  ✔ should keep waiting while the file is still growing (198.273053ms)
+  ✔ should survive a pause between writes that is longer than one poll (93.778098ms)
+  ✔ should not claim a file whose partial sibling is still being written (64.833756ms)
+  ✔ should fail explicitly when the bytes never arrive (63.213392ms)
+  ✔ should name the file, the budget and what it last saw (3.047355ms)
+  ✔ should ship defaults a download can actually finish within (1.845332ms)
+✔ waiting for staged bytes (issue #92) (792.216406ms)
+▶ npm release helpers
+  ▶ removeDeprecatedAlwaysAuth
+    ✔ removes always-auth while preserving other config (5.861046ms)
+    ✔ returns false when no config path exists (0.462953ms)
+  ✔ removeDeprecatedAlwaysAuth (7.163556ms)
+  ▶ isVersionPublished
+    ✔ returns false for npm registry 404 responses without logging npm errors (1.687007ms)
+    ✔ handles scoped package names (0.14398ms)
+  ✔ isVersionPublished (2.186851ms)
+✔ npm release helpers (9.774847ms)
+▶ test runner helper
+  ✔ expands test directories into stable explicit test files (20.252266ms)
+  ✔ builds node --test arguments with reporter and coverage options (0.95404ms)
+  ✔ keeps process isolation on Node versions without isolation controls (0.233406ms)
+✔ test runner helper (22.220349ms)
+▶ trace bundle writer (issue #87)
+  ✔ should refuse to open without an output path (6.486262ms)
+  ✔ should abort an unfinished bundle without writing a manifest (5.876564ms)
+  ✔ should write the layout the format documents (15.6177ms)
+  ✔ should number events and stamp them with both clocks (20.712646ms)
+  ✔ should keep a trace readable for its owner only (5.751821ms)
+  ✔ should store one resource once, however often it is written (7.896684ms)
+  ✔ should drop a member over the per-resource limit and say so (6.43171ms)
+  ✔ should report a partial trace once anything was dropped (18.444944ms)
+  ✔ should raise the first problem in strict mode instead of recording it (3.252829ms)
+  ✔ should record a write it could not perform (9.675332ms)
+  ✔ should write nothing for an empty batch of mutations (25.007338ms)
+  ✔ should count what it wrote in the manifest (15.111465ms)
+  ✔ should record a dropped member even under a tiny resource limit (8.404411ms)
+  ✔ should write the timeline in the order the events happened (18.064673ms)
+  ✔ should stop appending once the bundle limit is reached (7.172593ms)
+✔ trace bundle writer (issue #87) (180.043941ms)
+✖ tests/unit/traces/links.test.js (0.09699ms)
+▶ trace reader (issue #87)
+  ▶ parseNdjson
+    ✔ should keep everything before a half-written line (3.234043ms)
+    ✔ should read an empty body as an empty timeline (1.717213ms)
+  ✔ parseNdjson (5.519859ms)
+  ▶ readTrace
+    ✔ should read the manifest, timeline and checkpoint members (31.857428ms)
+    ✔ should return nothing for a checkpoint member that was dropped (16.654864ms)
+    ✔ should rebuild a manifest for a run that never stopped (14.999817ms)
+    ✔ should read a timeline whose last line was cut off (17.099944ms)
+    ✔ should refuse a directory that holds no trace (4.086425ms)
+    ✔ should refuse a manifest that is not readable JSON (16.857803ms)
+    ✔ should refuse a bundle written by a newer format (18.2118ms)
+  ✔ readTrace (123.459247ms)
+  ▶ diffControlState
+    ✔ should report what a step changed, added and removed (7.009809ms)
+    ✔ should report a checkbox by what it is checked to (2.506156ms)
+    ✔ should read a missing state as no controls at all (6.893151ms)
+  ✔ diffControlState (17.632479ms)
+✔ trace reader (issue #87) (147.272126ms)
+ℹ tests 43
+ℹ suites 10
+ℹ pass 42
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1304.218456
+
+✖ failing tests:
+
+test at tests/unit/traces/links.test.js:1:1
+✖ tests/unit/traces/links.test.js (0.09699ms)
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'links-notation' imported from /tmp/gh-issue-solver-1789981134588/js/tests/unit/traces/links.test.js
+      at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)
+      at packageResolve (node:internal/modules/esm/resolve:784:25)
+      at moduleResolve (node:internal/modules/esm/resolve:873:18)
+      at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:705:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:725:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:763:56)
+      at #resolve (node:internal/modules/esm/loader:687:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:607:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:276:33) {
+    code: 'ERR_MODULE_NOT_FOUND'
+  }

@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import {
   DEFAULT_STAGING_POLL_INTERVAL,
+  DEFAULT_STAGING_STABILITY,
   DEFAULT_STAGING_TIMEOUT,
   describeStagingTimeout,
   STAGING_IN_PROGRESS_SUFFIXES,
@@ -61,9 +62,29 @@ describe('waiting for staged bytes (issue #92)', () => {
     clearInterval(grow);
 
     assert.strictEqual(settled.ready, true, settled.reason ?? '');
-    // Two equal readings are what ends the wait, so the file had stopped
-    // growing before it was declared ready.
+    // The quiet period ends the wait, so the file had stopped growing before
+    // it was declared ready.
     assert.strictEqual(settled.bytes, (await fs.stat(staged)).size);
+  });
+
+  it('should survive a pause between writes that is longer than one poll', async () => {
+    const staged = path.join(directory.path, 'guid-paused');
+    await fs.writeFile(staged, 'first');
+    const resume = setTimeout(() => {
+      fs.appendFile(staged, '-second').catch(() => {});
+    }, 25);
+
+    const settled = await waitForStagedFile({
+      path: staged,
+      timeout: 1000,
+      interval: 5,
+      stability: 60,
+    });
+    clearTimeout(resume);
+
+    assert.strictEqual(settled.ready, true, settled.reason ?? '');
+    assert.strictEqual(settled.bytes, 'first-second'.length);
+    assert.ok(settled.waitedMs >= 60);
   });
 
   it('should not claim a file whose partial sibling is still being written', async () => {
@@ -111,6 +132,7 @@ describe('waiting for staged bytes (issue #92)', () => {
   it('should ship defaults a download can actually finish within', () => {
     assert.ok(DEFAULT_STAGING_TIMEOUT >= 1000);
     assert.ok(DEFAULT_STAGING_POLL_INTERVAL > 0);
+    assert.ok(DEFAULT_STAGING_STABILITY > DEFAULT_STAGING_POLL_INTERVAL);
     assert.ok(DEFAULT_STAGING_POLL_INTERVAL < DEFAULT_STAGING_TIMEOUT);
     assert.ok(STAGING_IN_PROGRESS_SUFFIXES.includes('.crdownload'));
   });

@@ -16,10 +16,14 @@ import {
   TRACE_MODE,
   TRACE_OUTCOME,
 } from '../../../src/traces/schema.js';
-import { useTempTraceDirectory } from '../../helpers/trace-fixtures.js';
+import {
+  useTempTraceDirectory,
+  useTraceBundleCleanup,
+} from '../../helpers/trace-fixtures.js';
 
 describe('trace bundle writer (issue #87)', () => {
   const directory = useTempTraceDirectory();
+  const cleanup = useTraceBundleCleanup();
 
   /**
    * Open a bundle inside the suite's temporary directory.
@@ -27,8 +31,13 @@ describe('trace bundle writer (issue #87)', () => {
    * @param {Object} [options] - Options for `openTraceBundle`
    * @returns {Promise<Object>} The bundle writer
    */
-  const open = (options = {}) =>
-    openTraceBundle({ output: path.join(directory.path, 'run'), ...options });
+  const open = async (options = {}) =>
+    cleanup(
+      await openTraceBundle({
+        output: path.join(directory.path, 'run'),
+        ...options,
+      })
+    );
 
   /**
    * List a bundle's members, relative to its root.
@@ -64,6 +73,18 @@ describe('trace bundle writer (issue #87)', () => {
 
   it('should refuse to open without an output path', async () => {
     await assert.rejects(openTraceBundle({}), /trace output must be a path/);
+  });
+
+  it('should abort an unfinished bundle without writing a manifest', async () => {
+    const bundle = await open();
+    await bundle.appendEvent({ kind: TRACE_EVENT.CHECKPOINT });
+
+    await bundle.abort();
+    await bundle.abort();
+
+    await assert.rejects(
+      fs.access(path.join(bundle.root, TRACE_FILES.MANIFEST))
+    );
   });
 
   it('should write the layout the format documents', async () => {

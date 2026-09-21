@@ -8,6 +8,7 @@
  */
 
 import { EventEmitter } from 'node:events';
+import { afterEach } from 'node:test';
 import { useTempDirectory } from './temp-directory.js';
 
 /**
@@ -17,6 +18,23 @@ import { useTempDirectory } from './temp-directory.js';
  */
 export function useTempTraceDirectory() {
   return useTempDirectory('bc-traces-');
+}
+
+/**
+ * Close every bundle a test opened, including deliberately truncated ones.
+ *
+ * @returns {(bundle: Object) => Object} Tracker for an opened bundle
+ */
+export function useTraceBundleCleanup() {
+  const bundles = new Set();
+  afterEach(async () => {
+    await Promise.all([...bundles].map((bundle) => bundle.abort()));
+    bundles.clear();
+  });
+  return (bundle) => {
+    bundles.add(bundle);
+    return bundle;
+  };
 }
 
 /**

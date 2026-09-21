@@ -1,0 +1,802 @@
+npm notice run browser-commander@0.19.0 check
+npm notice run npm run lint && npm run format:check && npm run check:duplication
+npm notice run browser-commander@0.19.0 lint
+npm notice run eslint .
+npm notice run browser-commander@0.19.0 format:check
+npm notice run prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+npm notice run browser-commander@0.19.0 check:duplication
+npm notice run jscpd . --baseline .jscpd-baseline.json --fail-on-new-clones
+Using config from .jscpd.json
+[1mClone found (javascript)[22m
+ - [1m[32mREADME.md:javascript[39m[22m [55:27 - 86:17] (32 lines, 123 tokens)
+   src/README.md:javascript [29:38 - 60:17]
+[1mClone found (javascript)[22m
+ - [1m[32mREADME.md:javascript[39m[22m [224:12 - 229:54] (6 lines, 36 tokens)
+   examples/browser-commander-tests.example.js [11:36 - 18:10]
+[1mClone found (javascript)[22m
+ - [1m[32mREADME.md:javascript[39m[22m [267:27 - 366:4] (100 lines, 255 tokens)
+   src/README.md:javascript [74:38 - 204:4]
+[1mClone found (javascript)[22m
+ - [1m[32mREADME.md:javascript[39m[22m [508:70 - 546:17] (39 lines, 119 tokens)
+   src/README.md:javascript [376:1 - 426:17]
+[1mClone found (javascript)[22m
+ - [1m[32mREADME.md:javascript[39m[22m [538:32 - 560:4] (23 lines, 50 tokens)
+   src/README.md:javascript [428:27 - 450:4]
+[1mClone found (javascript)[22m
+ - [1m[32mREADME.md:javascript[39m[22m [726:16 - 803:6] (78 lines, 177 tokens)
+   src/README.md:javascript [477:40 - 548:6]
+[1mClone found (markdown)[22m
+ - [1m[32mREADME.md:markdown[39m[22m [29:139 - 48:15] (20 lines, 77 tokens)
+   src/README.md:markdown [3:232 - 22:15]
+[1mClone found (markdown)[22m
+ - [1m[32mREADME.md:markdown[39m[22m [257:1 - 323:3] (67 lines, 117 tokens)
+   src/README.md:markdown [64:1 - 130:3]
+[1mClone found (markdown)[22m
+ - [1m[32mREADME.md:markdown[39m[22m [511:1 - 543:15] (33 lines, 30 tokens)
+   src/README.md:markdown [388:1 - 420:15]
+[1mClone found (markdown)[22m
+ - [1m[32mREADME.md:markdown[39m[22m [732:67 - 794:3] (63 lines, 54 tokens)
+   src/README.md:markdown [481:97 - 543:3]
+[1mClone found (javascript)[22m
+ - [1m[32mexamples/pdf-generation.js[39m[22m [56:7 - 61:8] (6 lines, 36 tokens)
+   tests/unit/browser/pdf.test.js [28:9 - 33:10]
+[1mClone found (javascript)[22m
+ - [1m[32mexamples/pdf-generation.js[39m[22m [57:9 - 63:10] (7 lines, 33 tokens)
+   tests/unit/browser/pdf.test.js [29:11 - 35:13]
+[1mClone found (jsx)[22m
+ - [1m[32mexamples/react-test-app/src/App.jsx[39m[22m [5:43 - 15:6] (11 lines, 42 tokens)
+   examples/react-test-app/src/App.jsx [59:16 - 69:8]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/changeset-version.mjs[39m[22m [29:45 - 34:2] (6 lines, 35 tokens)
+   scripts/create-manual-changeset.mjs [80:44 - 85:2]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/changeset-version.mjs[39m[22m [29:45 - 34:2] (6 lines, 35 tokens)
+   scripts/instant-version-bump.mjs [115:53 - 120:2]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/changeset-version.mjs[39m[22m [29:45 - 34:2] (6 lines, 35 tokens)
+   scripts/validate-changeset.mjs [266:53 - 271:2]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/create-github-release.mjs[39m[22m [20:3 - 32:15] (13 lines, 48 tokens)
+   scripts/create-manual-changeset.mjs [19:3 - 30:15]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/create-manual-changeset.mjs[39m[22m [14:37 - 30:15] (17 lines, 56 tokens)
+   scripts/publish-to-npm.mjs [16:56 - 31:18]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/create-manual-changeset.mjs[39m[22m [16:1 - 33:18] (18 lines, 73 tokens)
+   scripts/format-release-notes.mjs [24:1 - 42:18]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/create-manual-changeset.mjs[39m[22m [16:41 - 39:18] (24 lines, 104 tokens)
+   scripts/instant-version-bump.mjs [15:49 - 38:18]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/create-manual-changeset.mjs[39m[22m [16:41 - 30:15] (15 lines, 51 tokens)
+   scripts/version-and-commit.mjs [22:50 - 35:15]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/create-manual-changeset.mjs[39m[22m [18:1 - 38:38] (21 lines, 97 tokens)
+   scripts/format-github-release.mjs [16:1 - 38:9]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/format-github-release.mjs[39m[22m [32:49 - 46:6] (15 lines, 58 tokens)
+   scripts/format-release-notes.mjs [47:38 - 61:6]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/publish-to-npm.mjs[39m[22m [47:69 - 60:2] (14 lines, 38 tokens)
+   scripts/version-and-commit.mjs [100:17 - 113:2]
+[1mClone found (javascript)[22m
+ - [1m[32mscripts/publish-to-npm.mjs[39m[22m [118:3 - 124:8] (7 lines, 30 tokens)
+   scripts/version-and-commit.mjs [255:3 - 261:8]
+[1mClone found (text)[22m
+ - [1m[32msrc/ARCHITECTURE.md:text[39m[22m [10:1 - 15:137] (6 lines, 144 tokens)
+   src/README.md:text [10:1 - 15:137]
+[1mClone found (text)[22m
+ - [1m[32msrc/ARCHITECTURE.md:text[39m[22m [15:83 - 22:52] (8 lines, 32 tokens)
+   src/README.md:text [158:55 - 322:52]
+[1mClone found (text)[22m
+ - [1m[32msrc/ARCHITECTURE.md:text[39m[22m [27:1 - 35:61] (9 lines, 118 tokens)
+   src/README.md:text [324:1 - 332:61]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/browser-cookie-crypto.js[39m[22m [110:33 - 118:2] (9 lines, 36 tokens)
+   src/browser/browser-cookie-crypto.js [120:32 - 128:2]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/browser-cookies.js[39m[22m [117:75 - 129:20] (13 lines, 62 tokens)
+   src/browser/browser-cookies.js [146:63 - 158:20]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/browser-profiles.js[39m[22m [150:49 - 158:2] (9 lines, 43 tokens)
+   src/browser/browser-profiles.js [227:41 - 235:2]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/launch-options.js[39m[22m [63:14 - 71:8] (9 lines, 30 tokens)
+   src/browser/launch-options.js [102:14 - 110:8]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/navigation.js[39m[22m [99:45 - 107:38] (9 lines, 51 tokens)
+   src/interactions/fill.js [55:39 - 63:38]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/navigation.js[39m[22m [99:45 - 107:38] (9 lines, 51 tokens)
+   src/interactions/scroll.js [89:41 - 97:38]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/navigation.js[39m[22m [126:77 - 135:10] (10 lines, 35 tokens)
+   src/interactions/fill.js [82:77 - 91:10]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/navigation.js[39m[22m [126:77 - 135:10] (10 lines, 35 tokens)
+   src/interactions/scroll.js [117:7 - 126:10]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/navigation.js[39m[22m [267:30 - 285:25] (19 lines, 58 tokens)
+   src/browser/navigation.js [324:15 - 342:23]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/browser/storage-state.js[39m[22m [40:58 - 47:10] (8 lines, 34 tokens)
+   src/browser/storage-state.js [64:62 - 71:10]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/dialog-manager.js[39m[22m [65:73 - 71:8] (7 lines, 34 tokens)
+   src/core/dialog-manager.js [90:70 - 96:8]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/engine-adapter.js[39m[22m [304:48 - 311:4] (8 lines, 50 tokens)
+   src/elements/selectors.js [55:65 - 62:6]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/engine-adapter.js[39m[22m [354:48 - 366:28] (13 lines, 35 tokens)
+   src/core/engine-adapter.js [509:7 - 523:28]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/engine-adapter.js[39m[22m [370:33 - 401:40] (32 lines, 105 tokens)
+   src/core/engine-adapter.js [536:7 - 568:40]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/engine-adapter.js[39m[22m [423:3 - 441:7] (19 lines, 54 tokens)
+   src/core/engine-adapter.js [571:3 - 592:7]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/engine-adapter.js[39m[22m [530:7 - 535:23] (6 lines, 49 tokens)
+   src/elements/locators.js [172:11 - 177:15]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/navigation-manager.js[39m[22m [86:36 - 95:5] (10 lines, 32 tokens)
+   tests/helpers/mocks.js [429:46 - 436:5]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/navigation-manager.js[39m[22m [453:43 - 480:11] (28 lines, 83 tokens)
+   src/core/network-tracker.js [323:16 - 351:11]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/navigation-safety.js[39m[22m [56:33 - 61:14] (6 lines, 35 tokens)
+   src/utilities/wait.js [122:60 - 127:16]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/network-tracker.js[39m[22m [63:21 - 68:9] (6 lines, 34 tokens)
+   src/core/network-tracker.js [95:24 - 99:9]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/network-tracker.js[39m[22m [145:5 - 153:6] (9 lines, 30 tokens)
+   src/core/network-tracker.js [352:5 - 358:6]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/core/network-tracker.js[39m[22m [192:5 - 199:20] (8 lines, 34 tokens)
+   src/core/network-tracker.js [353:5 - 359:20]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/content.js[39m[22m [40:3 - 50:26] (11 lines, 44 tokens)
+   src/elements/content.js [76:3 - 86:26]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/content.js[39m[22m [69:34 - 84:13] (16 lines, 73 tokens)
+   src/elements/content.js [105:33 - 120:13]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/content.js[39m[22m [73:54 - 86:26] (14 lines, 47 tokens)
+   src/elements/content.js [154:69 - 167:26]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/content.js[39m[22m [188:36 - 193:4] (6 lines, 36 tokens)
+   src/interactions/fill.js [106:42 - 111:4]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [39:42 - 45:7] (7 lines, 34 tokens)
+   src/elements/locators.js [149:24 - 156:7]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [39:42 - 44:4] (6 lines, 32 tokens)
+   src/elements/selectors.js [12:36 - 17:4]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [39:42 - 50:11] (12 lines, 52 tokens)
+   src/elements/selectors.js [46:39 - 55:66]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [39:42 - 45:7] (7 lines, 34 tokens)
+   src/elements/selectors.js [158:40 - 167:7]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [39:42 - 50:42] (12 lines, 56 tokens)
+   src/elements/visibility.js [13:32 - 22:77]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [39:42 - 45:35] (7 lines, 38 tokens)
+   src/elements/visibility.js [124:28 - 134:17]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [74:37 - 84:73] (11 lines, 44 tokens)
+   src/elements/selectors.js [350:19 - 360:67]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [75:29 - 84:22] (10 lines, 31 tokens)
+   src/elements/visibility.js [67:50 - 77:22]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [76:3 - 84:22] (9 lines, 30 tokens)
+   src/elements/selectors.js [13:34 - 21:22]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [76:5 - 86:12] (11 lines, 41 tokens)
+   src/elements/visibility.js [14:36 - 23:10]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [183:25 - 188:39] (6 lines, 31 tokens)
+   src/elements/locators.js [197:30 - 203:14]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/locators.js[39m[22m [209:41 - 217:8] (9 lines, 38 tokens)
+   src/elements/visibility.js [33:75 - 41:6]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/selectors.js[39m[22m [199:72 - 223:9] (25 lines, 152 tokens)
+   src/elements/selectors.js [247:35 - 271:11]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/selectors.js[39m[22m [244:9 - 249:16] (6 lines, 33 tokens)
+   src/elements/visibility.js [137:7 - 141:17]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/selectors.js[39m[22m [310:5 - 315:6] (6 lines, 31 tokens)
+   src/elements/selectors.js [322:5 - 327:6]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/visibility.js[39m[22m [32:5 - 38:12] (7 lines, 36 tokens)
+   src/elements/visibility.js [88:5 - 95:12]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/elements/visibility.js[39m[22m [81:27 - 87:9] (7 lines, 53 tokens)
+   src/elements/visibility.js [94:24 - 101:11]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/fingerprint/presets.js[39m[22m [52:32 - 60:14] (9 lines, 31 tokens)
+   src/fingerprint/presets.js [135:26 - 143:14]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/fingerprint/presets.js[39m[22m [60:22 - 67:20] (8 lines, 31 tokens)
+   src/fingerprint/presets.js [182:29 - 189:20]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/fingerprint/presets.js[39m[22m [64:35 - 72:19] (9 lines, 30 tokens)
+   src/fingerprint/presets.js [147:22 - 155:19]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/fingerprint/presets.js[39m[22m [67:22 - 75:7] (9 lines, 30 tokens)
+   tests/unit/fingerprint/init-script.test.js [181:31 - 189:7]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/interactions/fill.js[39m[22m [63:55 - 70:24] (8 lines, 30 tokens)
+   src/interactions/scroll.js [97:57 - 104:24]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/interactions/fill.js[39m[22m [109:3 - 116:21] (8 lines, 42 tokens)
+   src/interactions/fill.js [169:3 - 176:21]
+[1mClone found (javascript)[22m
+ - [1m[32msrc/interactions/scroll.js[39m[22m [163:29 - 169:9] (7 lines, 32 tokens)
+   src/interactions/scroll.js [171:17 - 178:11]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/downloads.e2e.test.js[39m[22m [56:9 - 66:12] (11 lines, 35 tokens)
+   tests/e2e/traces.e2e.test.js [68:59 - 76:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/downloads.e2e.test.js[39m[22m [145:49 - 152:8] (8 lines, 33 tokens)
+   tests/e2e/downloads.e2e.test.js [196:7 - 203:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [17:34 - 26:12] (10 lines, 45 tokens)
+   tests/e2e/puppeteer.e2e.test.js [16:40 - 23:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [40:9 - 82:16] (43 lines, 200 tokens)
+   tests/e2e/puppeteer.e2e.test.js [36:7 - 78:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [87:45 - 97:16] (11 lines, 35 tokens)
+   tests/e2e/puppeteer.e2e.test.js [83:43 - 93:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [110:76 - 126:42] (17 lines, 72 tokens)
+   tests/e2e/puppeteer.e2e.test.js [106:60 - 122:40]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [142:9 - 159:29] (18 lines, 67 tokens)
+   tests/e2e/puppeteer.e2e.test.js [132:74 - 148:27]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [159:34 - 167:34] (9 lines, 46 tokens)
+   tests/e2e/puppeteer.e2e.test.js [148:32 - 156:32]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [170:55 - 177:43] (8 lines, 39 tokens)
+   tests/e2e/puppeteer.e2e.test.js [159:50 - 166:41]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [183:43 - 196:10] (14 lines, 54 tokens)
+   tests/e2e/puppeteer.e2e.test.js [166:39 - 179:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [200:36 - 208:42] (9 lines, 39 tokens)
+   tests/e2e/playwright.e2e.test.js [216:36 - 224:42]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [208:75 - 213:70] (6 lines, 44 tokens)
+   tests/e2e/playwright.e2e.test.js [224:75 - 229:70]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [232:32 - 245:71] (14 lines, 88 tokens)
+   tests/e2e/puppeteer.e2e.test.js [214:36 - 232:69]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [248:42 - 255:43] (8 lines, 39 tokens)
+   tests/e2e/puppeteer.e2e.test.js [245:46 - 252:41]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [265:63 - 273:37] (9 lines, 40 tokens)
+   tests/e2e/puppeteer.e2e.test.js [256:61 - 264:35]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [276:39 - 286:14] (11 lines, 40 tokens)
+   tests/e2e/playwright.e2e.test.js [443:50 - 453:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [276:39 - 292:25] (17 lines, 67 tokens)
+   tests/e2e/playwright.e2e.test.js [489:68 - 504:25]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [276:39 - 283:35] (8 lines, 35 tokens)
+   tests/e2e/puppeteer.e2e.test.js [267:42 - 274:33]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [276:39 - 304:12] (29 lines, 121 tokens)
+   tests/e2e/puppeteer.e2e.test.js [455:47 - 480:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [283:40 - 294:16] (12 lines, 40 tokens)
+   tests/e2e/puppeteer.e2e.test.js [274:38 - 285:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [294:29 - 306:10] (13 lines, 56 tokens)
+   tests/e2e/puppeteer.e2e.test.js [285:37 - 297:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [299:40 - 308:10] (10 lines, 33 tokens)
+   tests/e2e/playwright.e2e.test.js [460:40 - 469:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [334:43 - 344:14] (11 lines, 40 tokens)
+   tests/e2e/puppeteer.e2e.test.js [354:47 - 364:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [394:33 - 403:10] (10 lines, 44 tokens)
+   tests/e2e/puppeteer.e2e.test.js [325:35 - 334:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [438:39 - 479:14] (42 lines, 176 tokens)
+   tests/e2e/puppeteer.e2e.test.js [405:72 - 446:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [459:48 - 469:10] (11 lines, 44 tokens)
+   tests/e2e/playwright.e2e.test.js [504:51 - 513:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [479:57 - 489:10] (11 lines, 57 tokens)
+   tests/e2e/puppeteer.e2e.test.js [443:38 - 455:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/e2e/playwright.e2e.test.js[39m[22m [521:41 - 545:3] (25 lines, 99 tokens)
+   tests/e2e/puppeteer.e2e.test.js [476:44 - 498:4]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/helpers/mocks.js[39m[22m [69:41 - 78:8] (10 lines, 35 tokens)
+   tests/helpers/mocks.js [195:40 - 204:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/helpers/mocks.js[39m[22m [78:21 - 88:13] (11 lines, 43 tokens)
+   tests/helpers/mocks.js [204:21 - 214:13]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/helpers/mocks.js[39m[22m [128:45 - 145:26] (18 lines, 110 tokens)
+   tests/helpers/mocks.js [258:53 - 275:24]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/helpers/mocks.js[39m[22m [133:11 - 145:31] (13 lines, 61 tokens)
+   tests/helpers/mocks.js [301:48 - 313:36]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/helpers/mocks.js[39m[22m [151:22 - 156:47] (6 lines, 65 tokens)
+   tests/helpers/mocks.js [226:21 - 231:47]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/helpers/mocks.js[39m[22m [396:5 - 409:7] (14 lines, 86 tokens)
+   tests/helpers/mocks.js [451:38 - 464:7]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/bindings.test.js[39m[22m [13:53 - 24:47] (12 lines, 53 tokens)
+   tests/unit/bindings.test.js [45:50 - 57:47]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/bindings.test.js[39m[22m [13:53 - 20:13] (8 lines, 33 tokens)
+   tests/unit/bindings.test.js [290:37 - 297:13]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/bindings.test.js[39m[22m [219:54 - 228:24] (10 lines, 41 tokens)
+   tests/unit/bindings.test.js [250:62 - 258:41]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/bindings.test.js[39m[22m [219:54 - 228:32] (10 lines, 43 tokens)
+   tests/unit/bindings.test.js [261:57 - 270:33]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/bindings.test.js[39m[22m [220:45 - 228:24] (9 lines, 30 tokens)
+   tests/unit/bindings.test.js [239:8 - 246:41]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/bindings.test.js[39m[22m [322:64 - 331:31] (10 lines, 31 tokens)
+   tests/unit/bindings.test.js [338:64 - 347:31]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/browser-cookies.test.js[39m[22m [52:62 - 57:33] (6 lines, 39 tokens)
+   tests/unit/browser/browser-cookies.test.js [66:31 - 71:33]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/browser-cookies.test.js[39m[22m [272:7 - 284:29] (13 lines, 40 tokens)
+   tests/unit/browser/browser-cookies.test.js [563:56 - 576:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/browser-cookies.test.js[39m[22m [273:7 - 281:8] (9 lines, 31 tokens)
+   tests/unit/browser/browser-cookies.test.js [360:26 - 368:6]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/connector.test.js[39m[22m [41:49 - 47:18] (7 lines, 37 tokens)
+   tests/unit/browser/connector.test.js [83:58 - 90:19]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/launcher.test.js[39m[22m [77:72 - 82:8] (6 lines, 32 tokens)
+   tests/unit/core/constants.test.js [13:62 - 18:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/navigation.test.js[39m[22m [24:40 - 30:49] (7 lines, 31 tokens)
+   tests/unit/browser/navigation.test.js [36:48 - 42:49]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/navigation.test.js[39m[22m [84:50 - 94:45] (11 lines, 49 tokens)
+   tests/unit/interactions/fill.test.js [101:72 - 111:45]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/navigation.test.js[39m[22m [86:12 - 93:8] (8 lines, 31 tokens)
+   tests/unit/interactions/scroll.test.js [76:21 - 83:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/navigation.test.js[39m[22m [111:37 - 117:10] (7 lines, 46 tokens)
+   tests/unit/browser/navigation.test.js [311:30 - 317:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/navigation.test.js[39m[22m [112:59 - 118:57] (7 lines, 51 tokens)
+   tests/unit/interactions/fill.test.js [343:48 - 354:18]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/navigation.test.js[39m[22m [112:59 - 117:10] (6 lines, 38 tokens)
+   tests/unit/interactions/scroll.test.js [261:60 - 267:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/navigation.test.js[39m[22m [134:63 - 139:12] (6 lines, 36 tokens)
+   tests/unit/browser/navigation.test.js [389:57 - 393:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/pdf.test.js[39m[22m [13:61 - 19:19] (7 lines, 37 tokens)
+   tests/unit/browser/pdf.test.js [55:60 - 61:19]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/pdf.test.js[39m[22m [19:44 - 27:16] (9 lines, 43 tokens)
+   tests/unit/browser/pdf.test.js [61:43 - 69:16]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/real-browser.test.js[39m[22m [19:39 - 29:6] (11 lines, 46 tokens)
+   tests/unit/browser/storage-state.test.js [15:33 - 25:6]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/storage-state.test.js[39m[22m [25:71 - 30:10] (6 lines, 38 tokens)
+   tests/unit/browser/storage-state.test.js [124:63 - 129:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/storage-state.test.js[39m[22m [51:69 - 62:19] (12 lines, 66 tokens)
+   tests/unit/browser/storage-state.test.js [78:70 - 89:19]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/browser/storage-state.test.js[39m[22m [69:46 - 78:6] (10 lines, 94 tokens)
+   tests/unit/browser/storage-state.test.js [99:50 - 108:6]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/dialog-manager.test.js[39m[22m [36:26 - 45:12] (10 lines, 34 tokens)
+   tests/unit/core/network-tracker.test.js [9:27 - 18:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/dialog-manager.test.js[39m[22m [102:14 - 107:64] (6 lines, 35 tokens)
+   tests/unit/core/dialog-manager.test.js [372:16 - 377:64]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/dialog-manager.test.js[39m[22m [107:74 - 112:6] (6 lines, 35 tokens)
+   tests/unit/core/dialog-manager.test.js [377:73 - 383:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/dialog-manager.test.js[39m[22m [180:40 - 185:12] (6 lines, 33 tokens)
+   tests/unit/core/dialog-manager.test.js [213:36 - 218:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [56:38 - 62:13] (7 lines, 36 tokens)
+   tests/unit/core/engine-adapter.test.js [155:37 - 161:13]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [63:38 - 69:13] (7 lines, 38 tokens)
+   tests/unit/core/engine-adapter.test.js [162:37 - 168:13]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [70:38 - 76:13] (7 lines, 40 tokens)
+   tests/unit/core/engine-adapter.test.js [169:37 - 175:13]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [77:38 - 84:15] (8 lines, 46 tokens)
+   tests/unit/core/engine-adapter.test.js [176:37 - 183:15]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [85:40 - 91:15] (7 lines, 41 tokens)
+   tests/unit/core/engine-adapter.test.js [184:39 - 190:15]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [92:40 - 98:15] (7 lines, 48 tokens)
+   tests/unit/core/engine-adapter.test.js [191:39 - 197:15]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [99:40 - 105:10] (7 lines, 43 tokens)
+   tests/unit/core/engine-adapter.test.js [198:39 - 204:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [107:40 - 116:10] (10 lines, 64 tokens)
+   tests/unit/core/engine-adapter.test.js [206:39 - 214:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-adapter.test.js[39m[22m [221:44 - 226:8] (6 lines, 41 tokens)
+   tests/unit/core/engine-adapter.test.js [228:43 - 233:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/engine-detection.test.js[39m[22m [45:78 - 50:17] (6 lines, 40 tokens)
+   tests/unit/core/engine-detection.test.js [69:51 - 74:17]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/navigation-manager.test.js[39m[22m [41:78 - 48:59] (8 lines, 30 tokens)
+   tests/unit/core/navigation-manager.test.js [76:36 - 82:59]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/navigation-safety.test.js[39m[22m [22:43 - 27:26] (6 lines, 32 tokens)
+   tests/unit/core/navigation-safety.test.js [81:40 - 86:26]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/navigation-safety.test.js[39m[22m [147:63 - 154:12] (8 lines, 48 tokens)
+   tests/unit/utilities/wait.test.js [149:8 - 156:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/navigation-safety.test.js[39m[22m [158:49 - 165:8] (8 lines, 41 tokens)
+   tests/unit/utilities/wait.test.js [167:7 - 174:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/network-tracker.test.js[39m[22m [53:44 - 60:15] (8 lines, 30 tokens)
+   tests/unit/core/network-tracker.test.js [64:41 - 71:15]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/network-tracker.test.js[39m[22m [113:35 - 120:46] (8 lines, 40 tokens)
+   tests/unit/core/network-tracker.test.js [124:38 - 131:46]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/network-tracker.test.js[39m[22m [113:35 - 120:18] (8 lines, 35 tokens)
+   tests/unit/core/network-tracker.test.js [136:54 - 143:18]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/network-tracker.test.js[39m[22m [170:61 - 179:17] (10 lines, 38 tokens)
+   tests/unit/core/network-tracker.test.js [185:38 - 193:65]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/page-trigger-manager.test.js[39m[22m [199:56 - 205:27] (7 lines, 30 tokens)
+   tests/unit/core/page-trigger-manager.test.js [210:56 - 216:27]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/page-trigger-manager.test.js[39m[22m [223:57 - 229:27] (7 lines, 30 tokens)
+   tests/unit/core/page-trigger-manager.test.js [238:56 - 244:27]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/page-trigger-manager.test.js[39m[22m [290:35 - 297:10] (8 lines, 48 tokens)
+   tests/unit/core/page-trigger-manager.test.js [330:35 - 337:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/core/page-trigger-manager.test.js[39m[22m [302:55 - 309:23] (8 lines, 35 tokens)
+   tests/unit/core/page-trigger-manager.test.js [316:52 - 323:23]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/downloads/manager.test.js[39m[22m [1:46 - 7:9] (7 lines, 30 tokens)
+   tests/unit/traces/recorder.test.js [1:23 - 7:9]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/downloads/manager.test.js[39m[22m [266:7 - 271:11] (6 lines, 33 tokens)
+   tests/unit/downloads/manager.test.js [485:23 - 490:11]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/downloads/manager.test.js[39m[22m [363:72 - 368:12] (6 lines, 32 tokens)
+   tests/unit/downloads/manager.test.js [414:75 - 422:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/downloads/manager.test.js[39m[22m [363:72 - 368:19] (6 lines, 34 tokens)
+   tests/unit/downloads/manager.test.js [451:78 - 456:19]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/downloads/manager.test.js[39m[22m [386:7 - 394:8] (9 lines, 30 tokens)
+   tests/unit/downloads/manager.test.js [444:7 - 451:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/downloads/staging.test.js[39m[22m [93:63 - 102:12] (10 lines, 37 tokens)
+   tests/unit/downloads/staging.test.js [106:60 - 115:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [130:67 - 137:31] (8 lines, 31 tokens)
+   tests/unit/elements/content.test.js [174:9 - 181:31]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [166:36 - 171:30] (6 lines, 30 tokens)
+   tests/unit/elements/content.test.js [232:35 - 237:30]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [166:30 - 171:30] (6 lines, 32 tokens)
+   tests/unit/elements/content.test.js [304:31 - 309:30]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [166:30 - 171:30] (6 lines, 32 tokens)
+   tests/unit/elements/selectors.test.js [59:28 - 64:30]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [166:36 - 171:30] (6 lines, 30 tokens)
+   tests/unit/elements/selectors.test.js [125:44 - 130:30]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [166:36 - 171:30] (6 lines, 30 tokens)
+   tests/unit/elements/visibility.test.js [68:40 - 73:30]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [166:36 - 176:12] (11 lines, 50 tokens)
+   tests/unit/elements/visibility.test.js [216:30 - 226:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [196:62 - 203:32] (8 lines, 31 tokens)
+   tests/unit/elements/content.test.js [240:9 - 247:32]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [270:66 - 278:32] (9 lines, 35 tokens)
+   tests/unit/elements/content.test.js [312:9 - 320:32]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [339:51 - 347:32] (9 lines, 31 tokens)
+   tests/unit/elements/content.test.js [356:10 - 364:32]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/content.test.js[39m[22m [396:8 - 403:28] (8 lines, 32 tokens)
+   tests/unit/interactions/scroll.test.js [178:53 - 184:28]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/locators.test.js[39m[22m [135:19 - 140:30] (6 lines, 30 tokens)
+   tests/unit/elements/selectors.test.js [312:38 - 317:30]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/selectors.test.js[39m[22m [52:43 - 60:8] (9 lines, 36 tokens)
+   tests/unit/elements/selectors.test.js [69:11 - 77:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/selectors.test.js[39m[22m [59:35 - 66:16] (8 lines, 36 tokens)
+   tests/unit/elements/visibility.test.js [136:41 - 143:19]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/selectors.test.js[39m[22m [91:40 - 99:42] (9 lines, 46 tokens)
+   tests/unit/elements/selectors.test.js [117:40 - 125:42]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/selectors.test.js[39m[22m [91:42 - 100:8] (10 lines, 51 tokens)
+   tests/unit/elements/selectors.test.js [133:9 - 142:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/selectors.test.js[39m[22m [95:29 - 102:8] (8 lines, 36 tokens)
+   tests/unit/elements/selectors.test.js [108:28 - 115:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/selectors.test.js[39m[22m [315:70 - 323:12] (9 lines, 42 tokens)
+   tests/unit/elements/visibility.test.js [71:41 - 78:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [24:44 - 29:16] (6 lines, 32 tokens)
+   tests/unit/elements/visibility.test.js [48:43 - 53:16]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [25:44 - 32:34] (8 lines, 36 tokens)
+   tests/unit/elements/visibility.test.js [37:45 - 44:34]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [25:57 - 33:8] (9 lines, 37 tokens)
+   tests/unit/elements/visibility.test.js [76:9 - 84:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [38:7 - 47:7] (10 lines, 35 tokens)
+   tests/unit/elements/visibility.test.js [77:7 - 85:4]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [49:55 - 56:34] (8 lines, 32 tokens)
+   tests/unit/elements/visibility.test.js [61:40 - 68:34]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [68:33 - 74:31] (7 lines, 39 tokens)
+   tests/unit/elements/visibility.test.js [136:33 - 142:24]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [68:33 - 78:12] (11 lines, 52 tokens)
+   tests/unit/interactions/fill.test.js [63:41 - 75:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [98:38 - 105:34] (8 lines, 38 tokens)
+   tests/unit/elements/visibility.test.js [110:55 - 117:34]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [98:58 - 106:8] (9 lines, 36 tokens)
+   tests/unit/elements/visibility.test.js [146:11 - 154:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [111:7 - 120:7] (10 lines, 35 tokens)
+   tests/unit/elements/visibility.test.js [147:7 - 155:4]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [168:40 - 175:28] (8 lines, 32 tokens)
+   tests/unit/elements/visibility.test.js [192:40 - 199:28]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [168:42 - 176:8] (9 lines, 37 tokens)
+   tests/unit/elements/visibility.test.js [224:9 - 232:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/elements/visibility.test.js[39m[22m [193:7 - 202:7] (10 lines, 35 tokens)
+   tests/unit/elements/visibility.test.js [225:7 - 233:4]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:54 - 24:52] (9 lines, 61 tokens)
+   tests/unit/factory.test.js [49:38 - 57:52]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:54 - 26:17] (11 lines, 68 tokens)
+   tests/unit/factory.test.js [62:42 - 73:17]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:54 - 26:26] (11 lines, 69 tokens)
+   tests/unit/factory.test.js [102:35 - 113:18]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:54 - 26:14] (11 lines, 66 tokens)
+   tests/unit/factory.test.js [117:35 - 127:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:54 - 24:54] (9 lines, 62 tokens)
+   tests/unit/factory.test.js [130:49 - 139:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:54 - 24:54] (9 lines, 62 tokens)
+   tests/unit/factory.test.js [147:51 - 156:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:56 - 26:28] (11 lines, 70 tokens)
+   tests/unit/factory.test.js [164:44 - 174:34]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:54 - 27:14] (12 lines, 73 tokens)
+   tests/unit/factory.test.js [180:90 - 194:13]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [16:54 - 22:33] (7 lines, 54 tokens)
+   tests/unit/factory.test.js [199:97 - 205:33]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [22:32 - 28:56] (7 lines, 42 tokens)
+   tests/unit/factory.test.js [40:34 - 46:56]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/factory.test.js[39m[22m [35:53 - 44:14] (10 lines, 45 tokens)
+   tests/unit/factory.test.js [221:85 - 229:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/fingerprint/apply.test.js[39m[22m [34:5 - 41:2] (8 lines, 51 tokens)
+   tests/unit/fingerprint/apply.test.js [50:5 - 57:2]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/fingerprint/apply.test.js[39m[22m [113:70 - 118:10] (6 lines, 36 tokens)
+   tests/unit/fingerprint/apply.test.js [192:69 - 196:10]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/fingerprint/apply.test.js[39m[22m [148:57 - 155:29] (8 lines, 39 tokens)
+   tests/unit/fingerprint/apply.test.js [178:77 - 185:29]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/fingerprint/apply.test.js[39m[22m [204:70 - 211:25] (8 lines, 61 tokens)
+   tests/unit/fingerprint/apply.test.js [217:47 - 222:71]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/high-level/universal-logic.test.js[39m[22m [19:43 - 31:8] (13 lines, 47 tokens)
+   tests/unit/high-level/universal-logic.test.js [105:44 - 117:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/high-level/universal-logic.test.js[39m[22m [134:38 - 142:27] (9 lines, 35 tokens)
+   tests/unit/high-level/universal-logic.test.js [172:39 - 180:27]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/high-level/universal-logic.test.js[39m[22m [192:46 - 202:27] (11 lines, 34 tokens)
+   tests/unit/high-level/universal-logic.test.js [251:48 - 261:27]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [20:45 - 30:49] (11 lines, 38 tokens)
+   tests/unit/interactions/fill.test.js [37:56 - 47:49]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [122:12 - 130:12] (9 lines, 34 tokens)
+   tests/unit/interactions/scroll.test.js [96:26 - 104:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [151:38 - 164:8] (14 lines, 40 tokens)
+   tests/unit/interactions/fill.test.js [167:41 - 180:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [151:38 - 161:33] (11 lines, 32 tokens)
+   tests/unit/interactions/fill.test.js [183:50 - 193:33]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [151:38 - 162:8] (12 lines, 38 tokens)
+   tests/unit/interactions/fill.test.js [201:10 - 212:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [190:16 - 198:12] (9 lines, 33 tokens)
+   tests/unit/interactions/scroll.test.js [236:38 - 244:12]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [216:48 - 224:34] (9 lines, 37 tokens)
+   tests/unit/interactions/fill.test.js [232:60 - 240:34]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [254:22 - 264:24] (11 lines, 39 tokens)
+   tests/unit/interactions/fill.test.js [280:22 - 290:24]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/fill.test.js[39m[22m [325:54 - 337:17] (13 lines, 50 tokens)
+   tests/unit/interactions/fill.test.js [343:50 - 355:21]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/keyboard.test.js[39m[22m [25:44 - 30:37] (6 lines, 32 tokens)
+   tests/unit/interactions/keyboard.test.js [37:43 - 42:37]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/keyboard.test.js[39m[22m [57:49 - 63:14] (7 lines, 30 tokens)
+   tests/unit/interactions/keyboard.test.js [157:46 - 163:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/keyboard.test.js[39m[22m [57:49 - 63:14] (7 lines, 30 tokens)
+   tests/unit/interactions/keyboard.test.js [207:45 - 213:14]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/keyboard.test.js[39m[22m [75:44 - 80:37] (6 lines, 32 tokens)
+   tests/unit/interactions/keyboard.test.js [87:43 - 92:37]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/keyboard.test.js[39m[22m [125:44 - 130:36] (6 lines, 32 tokens)
+   tests/unit/interactions/keyboard.test.js [137:43 - 142:36]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/keyboard.test.js[39m[22m [175:44 - 180:34] (6 lines, 32 tokens)
+   tests/unit/interactions/keyboard.test.js [187:43 - 192:34]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/scroll.test.js[39m[22m [21:45 - 28:42] (8 lines, 31 tokens)
+   tests/unit/interactions/scroll.test.js [35:46 - 42:42]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/scroll.test.js[39m[22m [21:45 - 29:33] (9 lines, 40 tokens)
+   tests/unit/interactions/scroll.test.js [51:10 - 59:33]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/scroll.test.js[39m[22m [43:43 - 53:27] (11 lines, 49 tokens)
+   tests/unit/interactions/scroll.test.js [239:32 - 250:27]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/scroll.test.js[39m[22m [120:22 - 132:42] (13 lines, 39 tokens)
+   tests/unit/interactions/scroll.test.js [186:61 - 198:42]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/scroll.test.js[39m[22m [136:47 - 150:39] (15 lines, 64 tokens)
+   tests/unit/interactions/scroll.test.js [158:52 - 172:39]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/interactions/scroll.test.js[39m[22m [230:36 - 240:8] (11 lines, 35 tokens)
+   tests/unit/interactions/scroll.test.js [247:10 - 257:8]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/cargo-lock-sync.test.js[39m[22m [17:1 - 39:9] (23 lines, 58 tokens)
+   tests/unit/scripts/changelog-collection-order.test.js [26:1 - 43:9]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/cargo-lock-sync.test.js[39m[22m [17:1 - 23:15] (7 lines, 39 tokens)
+   tests/unit/scripts/push-with-rebase-retry.test.js [17:1 - 23:9]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/cargo-lock-sync.test.js[39m[22m [17:1 - 23:15] (7 lines, 39 tokens)
+   tests/unit/scripts/release-tags.test.js [18:1 - 24:9]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/check-release-format.test.js[39m[22m [14:23 - 20:23] (7 lines, 31 tokens)
+   tests/unit/scripts/push-with-rebase-retry.test.js [18:23 - 24:19]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/ci-workflow-policy.test.js[39m[22m [1:45 - 7:9] (7 lines, 34 tokens)
+   tests/unit/scripts/npm-release-helpers.test.js [7:1 - 13:9]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/ci-workflow-policy.test.js[39m[22m [87:52 - 95:6] (9 lines, 33 tokens)
+   tests/unit/scripts/ci-workflow-policy.test.js [174:19 - 182:6]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/ci-workflow-policy.test.js[39m[22m [173:60 - 182:6] (10 lines, 40 tokens)
+   tests/unit/scripts/ci-workflow-policy.test.js [248:81 - 257:6]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/ci-workflow-policy.test.js[39m[22m [173:60 - 180:6] (8 lines, 38 tokens)
+   tests/unit/scripts/ci-workflow-policy.test.js [262:84 - 269:6]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/command-stream-errexit.test.js[39m[22m [25:1 - 39:2] (15 lines, 57 tokens)
+   tests/unit/scripts/use-module-integration.test.js [15:1 - 29:2]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/command-stream-errexit.test.js[39m[22m [88:60 - 93:22] (6 lines, 32 tokens)
+   tests/unit/scripts/command-stream-errexit.test.js [105:45 - 110:22]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/command-stream-errexit.test.js[39m[22m [88:60 - 96:14] (9 lines, 41 tokens)
+   tests/unit/scripts/command-stream-errexit.test.js [118:81 - 130:33]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/read-manifest.test.js[39m[22m [1:10 - 7:7] (7 lines, 35 tokens)
+   tests/unit/scripts/use-module-adoption.test.js [13:23 - 19:6]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/required-docs.test.js[39m[22m [22:56 - 29:25] (8 lines, 41 tokens)
+   tests/unit/scripts/run-with-budget-warning.test.js [15:44 - 22:25]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/scripts/use-module-adoption.test.js[39m[22m [50:48 - 56:6] (7 lines, 33 tokens)
+   tests/unit/scripts/use-module-adoption.test.js [59:51 - 65:6]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/tests/index.test.js[39m[22m [292:75 - 303:7] (12 lines, 115 tokens)
+   tests/unit/tests/index.test.js [331:75 - 342:7]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/traces/recorder.test.js[39m[22m [256:48 - 261:38] (6 lines, 43 tokens)
+   tests/unit/traces/recorder.test.js [407:74 - 414:38]
+[1mClone found (javascript)[22m
+ - [1m[32mtests/unit/utilities/wait.test.js[39m[22m [155:57 - 164:26] (10 lines, 51 tokens)
+   tests/unit/utilities/wait.test.js [174:61 - 183:26]
+[90m┌────────────┬────────────────┬─────────────┬──────────────┬──────────────┬──────────────────┬───────────────────┐[39m
+[90m│[39m[31m Format     [39m[90m│[39m[31m Files analyzed [39m[90m│[39m[31m Total lines [39m[90m│[39m[31m Total tokens [39m[90m│[39m[31m Clones found [39m[90m│[39m[31m Duplicated lines [39m[90m│[39m[31m Duplicated tokens [39m[90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m css        [90m│[39m 1              [90m│[39m 323         [90m│[39m 1321         [90m│[39m 0            [90m│[39m 0 (0.00%)        [90m│[39m 0 (0.00%)         [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m javascript [90m│[39m 198            [90m│[39m 46603       [90m│[39m 196168       [90m│[39m 247          [90m│[39m 2435 (5.22%)     [90m│[39m 11681 (5.95%)     [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m json       [90m│[39m 6              [90m│[39m 495         [90m│[39m 1768         [90m│[39m 0            [90m│[39m 0 (0.00%)        [90m│[39m 0 (0.00%)         [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m jsx        [90m│[39m 2              [90m│[39m 483         [90m│[39m 2565         [90m│[39m 1            [90m│[39m 10 (2.07%)       [90m│[39m 42 (1.64%)        [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m markdown   [90m│[39m 4              [90m│[39m 2069        [90m│[39m 13582        [90m│[39m 4            [90m│[39m 179 (8.65%)      [90m│[39m 278 (2.05%)       [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m markup     [90m│[39m 1              [90m│[39m 25          [90m│[39m 142          [90m│[39m 0            [90m│[39m 0 (0.00%)        [90m│[39m 0 (0.00%)         [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m text       [90m│[39m 3              [90m│[39m 499         [90m│[39m 2367         [90m│[39m 3            [90m│[39m 20 (4.01%)       [90m│[39m 294 (12.42%)      [90m│[39m
+[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤[39m
+[90m│[39m [1mTotal:[22m     [90m│[39m 215            [90m│[39m 50497       [90m│[39m 217913       [90m│[39m 255          [90m│[39m 2644 (5.24%)     [90m│[39m 12295 (5.64%)     [90m│[39m
+[90m└────────────┴────────────────┴─────────────┴──────────────┴──────────────┴──────────────────┴───────────────────┘[39m
+[90mFound 255 clones.[39m
+[32mHTML report saved to ./reports/jscpd/jscpd-report.html[39m
+[90mtime: 237.272ms[39m
+
+[90m💡 Auto-refactor with AI: [1m[39mnpx skills add https://github.com/kucherenko/jscpd --skill dry-refactoring[90m[22m
+[90m🎩 New: Gangsta Agents — discipline your AI coding → gangsta.page[39m
+[90m💖 Support jscpd project → https://opencollective.com/jscpd[39m

@@ -1,0 +1,4 @@
+notice	.github	16		Skipping Codecov upload because CODECOV_TOKEN is not configured	
+failure	.github	36		Process completed with exit code 1.	
+failure	.github	51		Process completed with exit code 1.	
+failure	.github	50		Pipeline failed. Failing jobs: auto-release	

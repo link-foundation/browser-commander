@@ -1,0 +1,7 @@
+name: Browser Commander CodeQL configuration
+
+# Case-study snapshots are immutable evidence copied from other repositories,
+# not code this repository builds or ships. Indexing their standalone Rust
+# scripts produces "no manifest" warnings and dilutes results for live code.
+paths-ignore:
+  - docs/case-studies/**/template-snapshots/**

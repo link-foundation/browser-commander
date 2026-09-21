@@ -1,0 +1,138 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /tmp/gh-issue-solver-1789981134588/python
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 720 items
+
+tests/unit/browser/test_browser_cookies.py ............                  [  1%]
+tests/unit/browser/test_connector.py .....                               [  2%]
+tests/unit/browser/test_launcher.py ...............................      [  6%]
+tests/unit/browser/test_media.py .............                           [  8%]
+tests/unit/browser/test_navigation.py ............                       [ 10%]
+tests/unit/browser/test_pdf.py ......                                    [ 10%]
+tests/unit/browser/test_real_browser.py .........                        [ 12%]
+tests/unit/core/test_constants.py ............                           [ 13%]
+tests/unit/core/test_dialog_manager.py ...................               [ 16%]
+tests/unit/core/test_engine_adapter.py .....                             [ 17%]
+tests/unit/core/test_engine_detection.py ....                            [ 17%]
+tests/unit/core/test_logger.py ..........                                [ 19%]
+tests/unit/core/test_navigation_manager.py ........                      [ 20%]
+tests/unit/core/test_navigation_safety.py ..........                     [ 21%]
+tests/unit/core/test_page_trigger_manager.py .............               [ 23%]
+tests/unit/core/test_readiness.py ...................................... [ 28%]
+...                                                                      [ 29%]
+tests/unit/downloads/test_attach.py .............                        [ 30%]
+tests/unit/downloads/test_destination.py ............                    [ 32%]
+tests/unit/downloads/test_manager.py ............................        [ 36%]
+tests/unit/downloads/test_naming.py .................................... [ 41%]
+......                                                                   [ 42%]
+tests/unit/downloads/test_staging.py .......                             [ 43%]
+tests/unit/downloads/test_store.py ...................                   [ 45%]
+tests/unit/downloads/test_watcher.py ...........                         [ 47%]
+tests/unit/elements/test_content.py ................                     [ 49%]
+tests/unit/elements/test_selectors.py .................                  [ 52%]
+tests/unit/elements/test_visibility.py ...........                       [ 53%]
+tests/unit/fingerprint/test_apply.py .............                       [ 55%]
+tests/unit/fingerprint/test_automation_parity.py ....................... [ 58%]
+..........                                                               [ 60%]
+tests/unit/fingerprint/test_cdp_overrides.py ..............              [ 61%]
+tests/unit/fingerprint/test_derive.py ........                           [ 63%]
+tests/unit/fingerprint/test_init_script.py ............                  [ 64%]
+tests/unit/fingerprint/test_limitations.py .................             [ 67%]
+tests/unit/fingerprint/test_presets.py ..........                        [ 68%]
+tests/unit/fingerprint/test_profile.py ........................          [ 71%]
+tests/unit/high_level/test_universal_logic.py .............              [ 73%]
+tests/unit/interactions/test_click.py ..........................         [ 77%]
+tests/unit/interactions/test_click_activation.py ..................      [ 79%]
+tests/unit/interactions/test_fill.py .................                   [ 82%]
+tests/unit/interactions/test_keyboard.py ..................              [ 84%]
+tests/unit/interactions/test_scroll.py .................                 [ 86%]
+tests/unit/scripts/test_audit_dependencies.py .....                      [ 87%]
+tests/unit/scripts/test_collect_changelog.py ......                      [ 88%]
+tests/unit/scripts/test_explain_pypi_failure.py .......                  [ 89%]
+tests/unit/scripts/test_git_push.py ...................                  [ 92%]
+tests/unit/scripts/test_read_manifest.py ..............                  [ 94%]
+tests/unit/test_factory.py .......                                       [ 95%]
+tests/unit/traces/test_reader.py ..................                      [ 97%]
+tests/unit/traces/test_schema.py .............                           [ 99%]
+tests/unit/utilities/test_url.py ..                                      [ 99%]
+tests/unit/utilities/test_wait.py ...                                    [100%]
+
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.7-final-0 ________________
+
+Name                                                          Stmts   Miss Branch BrPart  Cover   Missing
+---------------------------------------------------------------------------------------------------------
+src/browser_commander/__init__.py                                 5      0      0      0   100%
+src/browser_commander/browser/__init__.py                         9      0      0      0   100%
+src/browser_commander/browser/browser_cookie_cache.py           150     26     36      7    78%   51, 81-86, 91-105, 159, 182-186, 203-213, 244, 262, 302
+src/browser_commander/browser/browser_cookie_credentials.py      70     37     20      4    41%   40-47, 59-60, 77-79, 95, 97-109, 112, 121-143, 153-164
+src/browser_commander/browser/browser_cookie_crypto.py           56      8     22      8    79%   19, 30, 32, 50, 82, 100, 107, 110
+src/browser_commander/browser/browser_cookies.py                134     23     32      8    79%   73-74, 87-88, 176-202, 212-213, 216, 224, 227, 230-239, 313, 326, 343, 370
+src/browser_commander/browser/browser_profiles.py               123     28     40     14    74%   32-33, 49-57, 59-72, 92->88, 94, 101-102, 119-120, 127, 151, 156, 160, 162->164, 165, 179-184, 242, 257-258
+src/browser_commander/browser/connector.py                       80     12     24      5    84%   45-46, 52-54, 58-60, 75, 79-80, 106, 119, 135
+src/browser_commander/browser/launcher.py                       126     74     46      0    34%   127-261
+src/browser_commander/browser/media.py                           25      0     14      0   100%
+src/browser_commander/browser/navigation.py                     233    113    122     28    47%   73-76, 100, 127-135, 163, 166->169, 184->191, 199-201, 212->220, 258, 267-270, 278-279, 286-289, 299-301, 353->357, 359, 362, 367-370, 374-417, 423, 433-437, 441, 449-458, 468-471, 479-487, 506-523, 553-586, 620, 623, 628-631, 641, 646-649, 654-657, 660-674, 678-683
+src/browser_commander/browser/pdf.py                              7      0      0      0   100%
+src/browser_commander/browser/real_browser.py                   206     74     60      8    59%   93-97, 119-120, 138-142, 218-220, 265, 285-298, 317-318, 342-349, 361-400, 409-410, 425, 430-439, 447, 461-462
+src/browser_commander/core/__init__.py                           10      0      0      0   100%
+src/browser_commander/core/constants.py                           4      0      0      0   100%
+src/browser_commander/core/dialog_manager.py                     71      9     24      4    84%   78-79, 93-101, 148->151, 159->166, 163-164
+src/browser_commander/core/engine_adapter.py                    234    118     18      1    48%   43, 59, 71, 83, 99, 116, 128, 151, 163, 175, 192, 210, 220, 230, 239, 252, 261, 270, 279, 296, 305, 319, 348, 353-360, 364-366, 370-372, 381-383, 391-393, 397, 406-408, 412, 424, 432, 436, 440, 444, 468-473, 485, 508, 513, 517-523, 527-529, 538-548, 556-561, 565-566, 576-577, 581, 585, 593, 601-605, 609, 613-614, 618, 626-663, 667-669, 673-683, 687-697, 701-702, 714-715, 732-733
+src/browser_commander/core/engine_detection.py                   24      4     12      4    78%   43, 53, 59, 63
+src/browser_commander/core/logger.py                             28      3      4      0    91%   53, 61, 69
+src/browser_commander/core/navigation_manager.py                134     45     48      9    58%   83->exit, 89, 95->99, 104, 108->111, 117, 122-127, 131-149, 157, 161, 179-203, 217-227, 258->exit, 329->exit, 334->exit
+src/browser_commander/core/navigation_readiness.py               41      5      8      2    82%   90-94, 141->143, 145->147, 167
+src/browser_commander/core/navigation_safety.py                  42     25     12      1    33%   24, 90-117
+src/browser_commander/core/network_tracker.py                   130     78     54      4    30%   57-64, 68-92, 96-118, 122-127, 132, 141->147, 152, 156->163, 182-231, 235, 239-245, 249-250, 254-255, 262-265, 287
+src/browser_commander/core/page_trigger_manager.py              124     66     32      3    43%   76-79, 136-140, 144, 148-149, 160-169, 188-193, 201, 205-211, 248-257, 265-268, 277-300, 311-323, 335-336
+src/browser_commander/core/readiness.py                         217      9     60      9    94%   246, 252, 254, 256, 266, 316, 381, 385, 513
+src/browser_commander/downloads/__init__.py                      10      0      0      0   100%
+src/browser_commander/downloads/attach.py                        18      0      8      0   100%
+src/browser_commander/downloads/destination.py                   51      4     12      1    92%   53, 114-116
+src/browser_commander/downloads/manager.py                      244     29     66     15    84%   195-199, 208-209, 225, 277, 303, 337, 358-359, 373, 387->386, 402->401, 404->406, 462, 531-543, 559, 599-608, 618, 634, 638->643, 641->643
+src/browser_commander/downloads/naming.py                        74      0     22      0   100%
+src/browser_commander/downloads/sources.py                      116      7     32      7    91%   114-115, 124->exit, 243->exit, 286, 297->303, 300->303, 304, 313-316, 343
+src/browser_commander/downloads/staging.py                       47      2     10      0    96%   76-77
+src/browser_commander/downloads/store.py                        112      2     28      2    97%   144->146, 198-201
+src/browser_commander/downloads/watcher.py                       63      2     10      0    97%   99-100
+src/browser_commander/elements/__init__.py                        6      0      0      0   100%
+src/browser_commander/elements/content.py                        79     12     36     12    79%   40, 44, 51, 76, 80, 87, 114, 118, 125, 157, 181, 194
+src/browser_commander/elements/locators.py                      148    104     42      9    28%   30, 36-38, 61, 64, 70-77, 106, 109, 115-128, 132-138, 154-165, 178-179, 184, 188-191, 195-198, 202-206, 210-213, 217-224, 228-235, 239-246, 250-257, 265-282, 288, 294, 298, 302-307, 321-327
+src/browser_commander/elements/selectors.py                     136     62     58     10    52%   52-58, 63, 93-95, 100, 146, 160-176, 205-250, 257-301, 325-328, 336-339, 381-391, 393-399
+src/browser_commander/elements/visibility.py                     70     26     30      7    57%   45-53, 73->76, 101-116, 118->120, 146-160, 165-168, 173
+src/browser_commander/exports.py                                 40      0      0      0   100%
+src/browser_commander/factory.py                                179     81     30      0    56%   107, 112, 117, 122, 130, 164-166, 170-174, 179-181, 185-187, 199-201, 265-274, 286-288, 315-326, 335-337, 341-343, 364-375, 391-393, 413-415, 435-437, 448-450, 468-470, 494-496, 508-510, 526-528, 539-541, 553-555, 566-568, 580-582, 605-621, 653-668, 704-706, 715-717, 725-727, 735-737, 745-747, 766-780
+src/browser_commander/fingerprint/__init__.py                     9      0      0      0   100%
+src/browser_commander/fingerprint/apply.py                       55      0     10      0   100%
+src/browser_commander/fingerprint/automation_parity.py           74      0     28      0   100%
+src/browser_commander/fingerprint/cdp_overrides.py               84      0     52      1    99%   41->43
+src/browser_commander/fingerprint/derive.py                      46      1     22      1    97%   48
+src/browser_commander/fingerprint/init_script.py                 37      0     20      0   100%
+src/browser_commander/fingerprint/limitations.py                 25      0      6      0   100%
+src/browser_commander/fingerprint/presets.py                     37      0      6      0   100%
+src/browser_commander/fingerprint/profile.py                    164     11     92     11    91%   65, 73, 102, 104, 112, 115, 125, 129, 154, 210, 212
+src/browser_commander/high_level/__init__.py                      3      0      0      0   100%
+src/browser_commander/high_level/universal_logic.py              63      6     34      7    87%   44, 64, 68, 117, 150, 173, 184->191
+src/browser_commander/interactions/__init__.py                    5      0      0      0   100%
+src/browser_commander/interactions/click.py                     171     46     72     17    67%   98, 164, 318, 332, 339-341, 386, 433-460, 536->539, 553, 564, 572-585, 602->605, 620, 625-689, 692, 697, 700->702, 706-711
+src/browser_commander/interactions/click_activation.py          101      1     30      1    98%   308
+src/browser_commander/interactions/click_result.py               54      0      2      0   100%
+src/browser_commander/interactions/click_verification.py         66      3     26      5    91%   162, 217, 249, 300->302, 309->317
+src/browser_commander/interactions/fill.py                      131     43     62     14    60%   72-79, 108, 112, 129->135, 142-144, 153->161, 190, 198, 230->233, 240, 249-267, 279, 317->319, 319->322, 325-421
+src/browser_commander/interactions/keyboard.py                   28      0      8      0   100%
+src/browser_commander/interactions/scroll.py                    111     14     52     17    80%   97, 110, 137, 140->143, 153->159, 166-168, 177->185, 238, 246-255, 266, 294, 303, 339->343, 343->346, 381, 384->387, 390
+src/browser_commander/traces/__init__.py                          4      0      0      0   100%
+src/browser_commander/traces/reader.py                           98      0     14      0   100%
+src/browser_commander/traces/schema.py                           71      0      4      0   100%
+src/browser_commander/utilities/__init__.py                       4      0      0      0   100%
+src/browser_commander/utilities/url.py                           18      9     10      2    46%   24, 30, 43-53
+src/browser_commander/utilities/wait.py                          58     27     24      4    45%   55, 57->61, 69-82, 87->90, 112-121, 147-164
+---------------------------------------------------------------------------------------------------------
+TOTAL                                                          5193   1249   1646    262    72%
+Coverage XML written to file coverage.xml
+Required test coverage of 20.0% reached. Total coverage: 72.35%
+============================= 720 passed in 18.57s =============================

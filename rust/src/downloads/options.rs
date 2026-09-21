@@ -84,7 +84,8 @@ pub struct DownloadArtifact {
     pub failure: Option<String>,
 }
 
-/// Naming, validation and conflict rules one [`DownloadManager::capture`] owns.
+/// Naming, validation and conflict rules one
+/// [`DownloadManager::capture`](crate::downloads::DownloadManager::capture) owns.
 #[derive(Clone, Default)]
 pub struct CaptureOptions {
     /// Name for this download, overriding what the page suggested.

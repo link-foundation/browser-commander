@@ -91,7 +91,7 @@ repos:
       # The CI helpers run on the job's Python, not the package's 3.9 floor.
       - id: python-mypy-scripts
         name: mypy (python/scripts)
-        entry: bash -c 'cd python && mypy --python-version 3.13 scripts tests/unit/scripts'
+        entry: bash -c 'cd python && mypy --no-warn-unused-configs --python-version 3.13 scripts tests/unit/scripts'
         language: system
         files: ^python/(scripts|tests/unit/scripts)/.*\.py$
         pass_filenames: false

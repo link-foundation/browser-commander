@@ -131,6 +131,7 @@ describe('test runner helper', () => {
       buildNodeTestArgs(options, ['tests/unit/a.test.js'], '24.18.0'),
       [
         '--test',
+        '--throw-deprecation',
         '--test-isolation=none',
         '--experimental-test-coverage',
         '--test-reporter',
@@ -144,8 +145,8 @@ describe('test runner helper', () => {
     const options = parseTestRunnerArgs(['tests/unit']);
 
     assert.deepEqual(
-      buildNodeTestArgs(options, ['tests/unit/a.test.js'], '20.20.2'),
-      ['--test', 'tests/unit/a.test.js']
+      buildNodeTestArgs(options, ['tests/unit/a.test.js'], '22.22.3'),
+      ['--test', '--throw-deprecation', 'tests/unit/a.test.js']
     );
   });
 });

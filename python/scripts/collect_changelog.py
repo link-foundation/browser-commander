@@ -19,12 +19,22 @@ Exits 0 and does nothing when there are no fragments to collect.
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 FRAGMENT_DIR = "changelog.d"
+
+
+def changelog_has_version(version: str, cwd: Path | str = ".") -> bool:
+    """Whether CHANGELOG.md already contains a level-two version heading."""
+    changelog = Path(cwd) / "CHANGELOG.md"
+    if not changelog.is_file():
+        return False
+    heading = re.compile(rf"^##\s+\[?{re.escape(version)}\]?(?:\s|$)", re.MULTILINE)
+    return heading.search(changelog.read_text(encoding="utf-8")) is not None
 
 
 def list_fragment_files(cwd: Path | str = ".") -> list[Path]:
@@ -51,6 +61,13 @@ def collect(version: str, cwd: Path | str = ".") -> bool:
     fragments = list_fragment_files(cwd)
     if not fragments:
         print("No changelog fragments found, skipping collection")
+        return False
+
+    if changelog_has_version(version, cwd):
+        print(
+            f"CHANGELOG.md already contains version {version}; leaving "
+            f"{len(fragments)} newer fragment(s) for the next version"
+        )
         return False
 
     if shutil.which("scriv") is None:

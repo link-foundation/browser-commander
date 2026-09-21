@@ -199,7 +199,10 @@ jobs:
       # rather than the package's `requires-python = ">=3.9"` floor, so they use
       # tomllib and `X | None` and need their own target version.
       - name: Run mypy on the CI scripts
-        run: mypy --python-version 3.13 scripts tests/unit/scripts
+        # The Playwright/Selenium overrides are used by `src` but not by this
+        # narrow helper pass. Keep useful unused-config checks in the primary
+        # pass without printing a false-positive note here.
+        run: mypy --no-warn-unused-configs --python-version 3.13 scripts tests/unit/scripts
 
       - name: Check file size limit
         run: python scripts/check_file_size.py
@@ -418,7 +421,7 @@ jobs:
 
       - name: Download artifacts
         if: steps.version_check.outputs.should_release == 'true'
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: python-dist
           path: python/dist/

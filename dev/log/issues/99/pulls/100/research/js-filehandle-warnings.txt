@@ -1,0 +1,51 @@
+3202:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8765040Z Command failed with exit code 7(node:4078) Warning: Closing file descriptor 26 on garbage collection
+3204:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8768710Z (node:4078) [DEP0137] DeprecationWarning: Closing a FileHandle object on garbage collection is deprecated. Please close FileHandle objects explicitly using FileHandle.prototype.close(). In the future, an error will be thrown if a file descriptor is closed during garbage collection.
+3205:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8770570Z (node:4078) Warning: Closing file descriptor 25 on garbage collection
+3206:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8771490Z (node:4078) Warning: Closing file descriptor 27 on garbage collection
+3207:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8772330Z (node:4078) Warning: Closing file descriptor 32 on garbage collection
+3208:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8773290Z (node:4078) Warning: Closing file descriptor 17 on garbage collection
+3209:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8774270Z (node:4078) Warning: Closing file descriptor 18 on garbage collection
+3210:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8775010Z (node:4078) Warning: Closing file descriptor 22 on garbage collection
+3211:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8776960Z (node:4078) Warning: Closing file descriptor 29 on garbage collection
+3212:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8778160Z (node:4078) Warning: Closing file descriptor 24 on garbage collection
+3213:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8778890Z (node:4078) Warning: Closing file descriptor 23 on garbage collection
+3214:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8779870Z (node:4078) Warning: Closing file descriptor 21 on garbage collection
+3215:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8780640Z (node:4078) Warning: Closing file descriptor 31 on garbage collection
+3216:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8782290Z (node:4078) Warning: Closing file descriptor 30 on garbage collection
+3217:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8782980Z (node:4078) Warning: Closing file descriptor 20 on garbage collection
+3218:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8785460Z (node:4078) Warning: Closing file descriptor 19 on garbage collection
+3219:Test (Node.js on macos-latest)	UNKNOWN STEP	2026-09-16T17:10:53.8786340Z (node:4078) Warning: Closing file descriptor 28 on garbage collection
+5272:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3234365Z (node:7376) Warning: Closing file descriptor 17 on garbage collection
+5274:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3237866Z (node:7376) [DEP0137] DeprecationWarning: Closing a FileHandle object on garbage collection is deprecated. Please close FileHandle objects explicitly using FileHandle.prototype.close(). In the future, an error will be thrown if a file descriptor is closed during garbage collection.
+5275:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3239450Z (node:7376) Warning: Closing file descriptor 18 on garbage collection
+5276:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3240257Z (node:7376) Warning: Closing file descriptor 11 on garbage collection
+5277:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3240976Z (node:7376) Warning: Closing file descriptor 12 on garbage collection
+5278:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3241444Z (node:7376) Warning: Closing file descriptor 10 on garbage collection
+5279:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3241964Z (node:7376) Warning: Closing file descriptor 4 on garbage collection
+5280:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3242646Z (node:7376) Warning: Closing file descriptor 8 on garbage collection
+5281:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3243877Z (node:7376) Warning: Closing file descriptor 7 on garbage collection
+5282:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3246569Z (node:7376) Warning: Closing file descriptor 9 on garbage collection
+5283:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3248180Z (node:7376) Warning: Closing file descriptor 14 on garbage collection
+5284:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3249462Z (node:7376) Warning: Closing file descriptor 16 on garbage collection
+5285:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3250705Z (node:7376) Warning: Closing file descriptor 13 on garbage collection
+5286:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3252580Z (node:7376) Warning: Closing file descriptor 15 on garbage collection
+5287:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3253694Z (node:7376) Warning: Closing file descriptor 6 on garbage collection
+5288:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3254496Z (node:7376) Warning: Closing file descriptor 5 on garbage collection
+5289:Test (Node.js on windows-latest)	UNKNOWN STEP	2026-09-16T17:11:04.3255265Z (node:7376) Warning: Closing file descriptor 3 on garbage collection
+7212:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1129923Z Command failed with exit code 7(node:2383) Warning: Closing file descriptor 31 on garbage collection
+7214:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1132741Z (node:2383) [DEP0137] DeprecationWarning: Closing a FileHandle object on garbage collection is deprecated. Please close FileHandle objects explicitly using FileHandle.prototype.close(). In the future, an error will be thrown if a file descriptor is closed during garbage collection.
+7215:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1134342Z (node:2383) Warning: Closing file descriptor 27 on garbage collection
+7216:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1134870Z (node:2383) Warning: Closing file descriptor 29 on garbage collection
+7217:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1135348Z (node:2383) Warning: Closing file descriptor 33 on garbage collection
+7218:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1135819Z (node:2383) Warning: Closing file descriptor 36 on garbage collection
+7219:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1136470Z (node:2383) Warning: Closing file descriptor 32 on garbage collection
+7220:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1136951Z (node:2383) Warning: Closing file descriptor 22 on garbage collection
+7221:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1137428Z (node:2383) Warning: Closing file descriptor 34 on garbage collection
+7222:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1138158Z (node:2383) Warning: Closing file descriptor 21 on garbage collection
+7223:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1138632Z (node:2383) Warning: Closing file descriptor 26 on garbage collection
+7224:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1139100Z (node:2383) Warning: Closing file descriptor 28 on garbage collection
+7225:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1139680Z (node:2383) Warning: Closing file descriptor 23 on garbage collection
+7226:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1140163Z (node:2383) Warning: Closing file descriptor 35 on garbage collection
+7227:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1140629Z (node:2383) Warning: Closing file descriptor 24 on garbage collection
+7228:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1141096Z (node:2383) Warning: Closing file descriptor 30 on garbage collection
+7229:Test (Node.js on ubuntu-latest)	UNKNOWN STEP	2026-09-16T17:10:52.1141708Z (node:2383) Warning: Closing file descriptor 25 on garbage collection

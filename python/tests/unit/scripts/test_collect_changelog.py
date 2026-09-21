@@ -30,14 +30,16 @@ version = "literal: pyproject.toml: project.version"
 @pytest.fixture
 def project(tmp_path: Path) -> Path:
     """A minimal project with one changelog fragment."""
-    (tmp_path / "pyproject.toml").write_text(SCRIV_CONFIG)
+    (tmp_path / "pyproject.toml").write_text(SCRIV_CONFIG, encoding="utf-8")
     fragments = tmp_path / "changelog.d"
     (fragments / "templates").mkdir(parents=True)
-    (fragments / "templates" / "new_fragment.md.j2").write_text("")
-    (fragments / "README.md").write_text("Fragments live here.")
-    (fragments / "12.fixed.md").write_text("### Fixed\n\n- Something.\n")
+    (fragments / "templates" / "new_fragment.md.j2").write_text("", encoding="utf-8")
+    (fragments / "README.md").write_text("Fragments live here.", encoding="utf-8")
+    (fragments / "12.fixed.md").write_text(
+        "### Fixed\n\n- Something.\n", encoding="utf-8"
+    )
     (tmp_path / "CHANGELOG.md").write_text(
-        "# Changelog\n\n<!-- scriv-insert-here -->\n"
+        "# Changelog\n\n<!-- scriv-insert-here -->\n", encoding="utf-8"
     )
     return tmp_path
 
@@ -58,6 +60,26 @@ def test_collect_is_a_noop_without_fragments(tmp_path: Path) -> None:
     assert collect("1.2.3", tmp_path) is False
 
 
+def test_collect_leaves_new_fragments_for_the_next_version(
+    project: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failed publish retry must not recollect under its old version."""
+    (project / "CHANGELOG.md").write_text(
+        "# Changelog\n\n<!-- scriv-insert-here -->\n\n"
+        "## 0.5.3 — 2026-09-06\n\n- Already collected.\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("collect_changelog.shutil.which", lambda _name: "scriv")
+
+    def unexpected_run(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("scriv must not run for an existing version")
+
+    monkeypatch.setattr("collect_changelog.subprocess.run", unexpected_run)
+
+    assert collect("0.5.3", project) is False
+    assert (project / "changelog.d" / "12.fixed.md").exists()
+
+
 @pytest.mark.skipif(
     subprocess.run(["which", "scriv"], capture_output=True).returncode != 0,
     reason="scriv is not installed",
@@ -70,7 +92,7 @@ def test_collect_heads_the_section_with_the_version(project: Path) -> None:
     """
     assert collect("0.5.4", project) is True
 
-    changelog = (project / "CHANGELOG.md").read_text()
+    changelog = (project / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## 0.5.4" in changelog
     assert "\n## patch" not in changelog
     assert "- Something." in changelog

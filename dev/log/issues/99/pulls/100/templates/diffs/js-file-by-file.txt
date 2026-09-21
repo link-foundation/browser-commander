@@ -1,0 +1,162 @@
+Files js/.changeset/config.json and /tmp/issue99-js-template/.changeset/config.json differ
+Only in js/.changeset: context-scoped-cdp-downloads.md
+Only in /tmp/issue99-js-template/.changeset: fix-all-open-pipeline-issues.md
+Only in /tmp/issue99-js-template/.changeset: steady-release-checks.md
+Only in /tmp/issue99-js-template/.changeset: strong-pipelines-wait.md
+Only in /tmp/issue99-js-template: .github
+Only in /tmp/issue99-js-template: .gitignore
+Only in /tmp/issue99-js-template: .gitkeep
+Only in /tmp/issue99-js-template: .husky
+Only in js: .jscpd-baseline.json
+Files js/.jscpd.json and /tmp/issue99-js-template/.jscpd.json differ
+Only in /tmp/issue99-js-template: .lycheeignore
+Files js/.prettierignore and /tmp/issue99-js-template/.prettierignore differ
+Only in /tmp/issue99-js-template: .prettierrc
+Only in /tmp/issue99-js-template: .secretlintrc.json
+Files js/CHANGELOG.md and /tmp/issue99-js-template/CHANGELOG.md differ
+Only in /tmp/issue99-js-template: LICENSE
+Files js/README.md and /tmp/issue99-js-template/README.md differ
+Only in /tmp/issue99-js-template: bin
+Only in /tmp/issue99-js-template: deno.json
+Only in /tmp/issue99-js-template: deno.lock
+Only in /tmp/issue99-js-template: docs
+Only in /tmp/issue99-js-template: eslint-rules
+Files js/eslint.config.js and /tmp/issue99-js-template/eslint.config.js differ
+Only in /tmp/issue99-js-template/examples: basic-usage.js
+Only in js/examples: browser-commander-tests.example.js
+Only in js/examples: pdf-generation.js
+Only in js/examples: react-test-app
+Only in /tmp/issue99-js-template/examples: universal-app
+Only in /tmp/issue99-js-template: experiments
+Only in js: jsdoc.json
+Files js/package-lock.json and /tmp/issue99-js-template/package-lock.json differ
+Files js/package.json and /tmp/issue99-js-template/package.json differ
+Only in /tmp/issue99-js-template/scripts: bootstrap-dependencies.mjs
+Files js/scripts/changeset-version.mjs and /tmp/issue99-js-template/scripts/changeset-version.mjs differ
+Only in /tmp/issue99-js-template/scripts: check-changesets.mjs
+Only in /tmp/issue99-js-template/scripts: check-docker-build.mjs
+Only in /tmp/issue99-js-template/scripts: check-docker-publish.mjs
+Only in /tmp/issue99-js-template/scripts: check-file-line-limits.sh
+Only in /tmp/issue99-js-template/scripts: check-mjs-syntax.sh
+Only in /tmp/issue99-js-template/scripts: check-package-manager.mjs
+Only in /tmp/issue99-js-template/scripts: check-pipeline-status.sh
+Only in js/scripts: check-release-format.mjs
+Only in /tmp/issue99-js-template/scripts: check-release-needed.mjs
+Only in /tmp/issue99-js-template/scripts: check-required-docs.sh
+Only in /tmp/issue99-js-template/scripts: check-status-gate-covers-all-jobs.mjs
+Only in /tmp/issue99-js-template/scripts: check-version.mjs
+Only in /tmp/issue99-js-template/scripts: check-web-archive.mjs
+Only in js/scripts: clean-npm-config.mjs
+Files js/scripts/create-github-release.mjs and /tmp/issue99-js-template/scripts/create-github-release.mjs differ
+Files js/scripts/create-manual-changeset.mjs and /tmp/issue99-js-template/scripts/create-manual-changeset.mjs differ
+Only in /tmp/issue99-js-template/scripts: debug-print.mjs
+Only in /tmp/issue99-js-template/scripts: detect-code-changes.mjs
+Files js/scripts/format-github-release.mjs and /tmp/issue99-js-template/scripts/format-github-release.mjs differ
+Only in /tmp/issue99-js-template/scripts: format-release-notes-helpers.mjs
+Files js/scripts/format-release-notes.mjs and /tmp/issue99-js-template/scripts/format-release-notes.mjs differ
+Only in /tmp/issue99-js-template/scripts: github-actions-log.mjs
+Only in /tmp/issue99-js-template/scripts: install-git-hooks.mjs
+Files js/scripts/instant-version-bump.mjs and /tmp/issue99-js-template/scripts/instant-version-bump.mjs differ
+Only in /tmp/issue99-js-template/scripts: js-paths.mjs
+Only in /tmp/issue99-js-template/scripts: land-via-pull-request.mjs
+Only in /tmp/issue99-js-template/scripts: lint-changed-lines.mjs
+Only in /tmp/issue99-js-template/scripts: lint.mjs
+Files js/scripts/merge-changesets.mjs and /tmp/issue99-js-template/scripts/merge-changesets.mjs differ
+Files js/scripts/npm-registry.mjs and /tmp/issue99-js-template/scripts/npm-registry.mjs differ
+Only in /tmp/issue99-js-template/scripts: package-info.mjs
+Only in /tmp/issue99-js-template/scripts: preflight-credentials.sh
+Only in /tmp/issue99-js-template/scripts: publish-failure-classifier.mjs
+Only in /tmp/issue99-js-template/scripts: publish-retry.mjs
+Files js/scripts/publish-to-npm.mjs and /tmp/issue99-js-template/scripts/publish-to-npm.mjs differ
+Only in /tmp/issue99-js-template/scripts: push-failure-classifier.mjs
+Only in /tmp/issue99-js-template/scripts: push-main-with-rebase-retry.mjs
+Only in /tmp/issue99-js-template/scripts: read-job-cancel-in-progress.sh
+Only in /tmp/issue99-js-template/scripts: recheck-broken-links.mjs
+Only in /tmp/issue99-js-template/scripts: release-naming.mjs
+Only in /tmp/issue99-js-template/scripts: run-command.mjs
+Only in js/scripts: run-tests.mjs
+Only in /tmp/issue99-js-template/scripts: run-with-budget-warning.sh
+Only in /tmp/issue99-js-template/scripts: sanitize-npm-userconfig.mjs
+Files js/scripts/setup-npm.mjs and /tmp/issue99-js-template/scripts/setup-npm.mjs differ
+Only in /tmp/issue99-js-template/scripts: simulate-fresh-merge.sh
+Only in /tmp/issue99-js-template/scripts: smoke-test-package.mjs
+Only in /tmp/issue99-js-template/scripts: update-preview-images.mjs
+Only in /tmp/issue99-js-template/scripts: use-module.mjs
+Files js/scripts/validate-changeset.mjs and /tmp/issue99-js-template/scripts/validate-changeset.mjs differ
+Files js/scripts/version-and-commit.mjs and /tmp/issue99-js-template/scripts/version-and-commit.mjs differ
+Only in /tmp/issue99-js-template/scripts: wait-for-npm.mjs
+Only in js/src: ARCHITECTURE.md
+Only in js/src: README.md
+Only in js/src: bindings.js
+Only in js/src: browser
+Only in js/src: core
+Only in js/src: downloads
+Only in js/src: elements
+Only in js/src: exports.js
+Only in js/src: factory.js
+Only in js/src: fingerprint
+Only in js/src: high-level
+Only in /tmp/issue99-js-template/src: index.d.ts
+Files js/src/index.js and /tmp/issue99-js-template/src/index.js differ
+Only in js/src: interactions
+Only in js/src: tests
+Only in js/src: traces
+Only in js/src: utilities
+Only in /tmp/issue99-js-template/tests: bootstrap-dependencies.test.js
+Only in /tmp/issue99-js-template/tests: bot-commit-attribution.test.js
+Only in /tmp/issue99-js-template/tests: check-changesets.test.js
+Only in /tmp/issue99-js-template/tests: check-file-line-limits.test.js
+Only in /tmp/issue99-js-template/tests: check-web-archive.test.js
+Only in /tmp/issue99-js-template/tests: checkout-credentials.test.js
+Only in /tmp/issue99-js-template/tests: ci-timeouts.test.js
+Only in /tmp/issue99-js-template/tests: create-github-release.test.js
+Only in /tmp/issue99-js-template/tests: debug-print.test.js
+Only in /tmp/issue99-js-template/tests: detect-code-changes.test.js
+Only in /tmp/issue99-js-template/tests: docker-build.test.js
+Only in /tmp/issue99-js-template/tests: docker-publish.test.js
+Only in js/tests: e2e
+Only in js/tests/fixtures: browser-cookie-cache-worker.mjs
+Only in /tmp/issue99-js-template/tests/fixtures: lychee-report.md
+Only in /tmp/issue99-js-template/tests/fixtures: preflight-stub
+Only in /tmp/issue99-js-template/tests: github-actions-log.test.js
+Only in js/tests: helpers
+Only in /tmp/issue99-js-template/tests: index.test.js
+Only in /tmp/issue99-js-template/tests: install-git-hooks.test.js
+Only in /tmp/issue99-js-template/tests: land-via-pull-request.test.js
+Only in /tmp/issue99-js-template/tests: links-workflow.test.js
+Only in /tmp/issue99-js-template/tests: lint-changed-lines.test.js
+Only in /tmp/issue99-js-template/tests: merge-changesets.test.js
+Only in /tmp/issue99-js-template/tests: no-changelog-comments.test.js
+Only in /tmp/issue99-js-template/tests: npm-registry.test.js
+Only in /tmp/issue99-js-template/tests: package-info.test.js
+Only in /tmp/issue99-js-template/tests: package-manager.test.js
+Only in /tmp/issue99-js-template/tests: package-metadata.test.js
+Only in /tmp/issue99-js-template/tests: pipeline-status.test.js
+Only in /tmp/issue99-js-template/tests: publish-failure-classifier.test.js
+Only in /tmp/issue99-js-template/tests: publish-retry.test.js
+Only in /tmp/issue99-js-template/tests: push-failure-classifier.test.js
+Only in /tmp/issue99-js-template/tests: push-main-with-rebase-retry.test.js
+Only in /tmp/issue99-js-template/tests: recheck-broken-links.test.js
+Only in /tmp/issue99-js-template/tests: release-badge.test.js
+Only in /tmp/issue99-js-template/tests: release-naming.test.js
+Only in /tmp/issue99-js-template/tests: release-preflight.test.js
+Only in /tmp/issue99-js-template/tests: required-docs.test.js
+Only in /tmp/issue99-js-template/tests: run-with-budget-warning.test.js
+Only in /tmp/issue99-js-template/tests: sanitize-npm-userconfig.test.js
+Only in /tmp/issue99-js-template/tests: scripts-use-module-adoption.test.js
+Only in /tmp/issue99-js-template/tests: security-workflow.test.js
+Only in /tmp/issue99-js-template/tests: setup-buildx-resilient.test.js
+Only in /tmp/issue99-js-template/tests: setup-npm.test.js
+Only in /tmp/issue99-js-template/tests: simulate-fresh-merge.test.js
+Only in /tmp/issue99-js-template/tests: smoke-test-package.test.js
+Only in /tmp/issue99-js-template/tests: status-gate-coverage.test.js
+Only in /tmp/issue99-js-template/tests: tag-prefix.test.js
+Only in js/tests: unit
+Only in /tmp/issue99-js-template/tests: universal-app.test.js
+Only in /tmp/issue99-js-template/tests: use-module-integration.test.js
+Only in /tmp/issue99-js-template/tests: use-module.test.js
+Only in /tmp/issue99-js-template/tests: version-and-commit.test.js
+Only in /tmp/issue99-js-template/tests: wait-for-npm.test.js
+Only in /tmp/issue99-js-template/tests: workflow-permissions.test.js
+Only in /tmp/issue99-js-template/tests: workflow-reliability.test.js
+Only in /tmp/issue99-js-template/tests: workflows-lint.test.js

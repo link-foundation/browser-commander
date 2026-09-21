@@ -16,10 +16,14 @@ import {
   TRACE_MODE,
   TRACE_OUTCOME,
 } from '../../../src/traces/schema.js';
-import { useTempTraceDirectory } from '../../helpers/trace-fixtures.js';
+import {
+  useTempTraceDirectory,
+  useTraceBundleCleanup,
+} from '../../helpers/trace-fixtures.js';
 
 describe('trace reader (issue #87)', () => {
   const directory = useTempTraceDirectory();
+  const cleanup = useTraceBundleCleanup();
 
   /**
    * Write a small bundle the tests can read back.
@@ -29,9 +33,11 @@ describe('trace reader (issue #87)', () => {
    * @returns {Promise<Object>} The bundle writer
    */
   const writeBundle = async ({ close = true } = {}) => {
-    const bundle = await openTraceBundle({
-      output: path.join(directory.path, 'run'),
-    });
+    const bundle = cleanup(
+      await openTraceBundle({
+        output: path.join(directory.path, 'run'),
+      })
+    );
     await bundle.appendEvent({
       kind: TRACE_EVENT.TRACE_START,
       mode: TRACE_MODE.CHECKPOINTS,

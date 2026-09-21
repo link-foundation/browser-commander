@@ -26,6 +26,9 @@ export const DEFAULT_STAGING_TIMEOUT = 10000;
 /** How often the staged file is looked at while waiting. */
 export const DEFAULT_STAGING_POLL_INTERVAL = 25;
 
+/** How long an unchanged size must remain observable before it is complete. */
+export const DEFAULT_STAGING_STABILITY = 100;
+
 /** Suffixes Chromium uses for a file it is still writing. */
 export const STAGING_IN_PROGRESS_SUFFIXES = Object.freeze([
   '.crdownload',
@@ -77,14 +80,15 @@ async function observeStagedFile(filePath, suffixes) {
 /**
  * Wait until a staged download is readable and has stopped growing.
  *
- * Stability is decided by two consecutive readings of the same size, the same
- * evidence the Selenium directory watcher uses: a file that merely exists is
- * not evidence that its last byte was written.
+ * Stability is decided by an unchanged-size quiet period. Two equal readings
+ * only prove that no write landed between those particular polls; a stalled
+ * writer can pause for longer than one interval and resume afterwards.
  *
  * @param {Object} options - Wait options
  * @param {string} options.path - Path the engine staged the download under
  * @param {number} [options.timeout] - Total budget in milliseconds
  * @param {number} [options.interval] - Milliseconds between readings
+ * @param {number} [options.stability] - Required unchanged-size quiet period
  * @param {string[]} [options.inProgressSuffixes] - Suffixes of a partial file
  * @returns {Promise<{ready: boolean, bytes: number|null, reason: string|null, waitedMs: number}>} Outcome
  */
@@ -93,11 +97,13 @@ export async function waitForStagedFile(options = {}) {
     path: filePath,
     timeout = DEFAULT_STAGING_TIMEOUT,
     interval = DEFAULT_STAGING_POLL_INTERVAL,
+    stability = DEFAULT_STAGING_STABILITY,
     inProgressSuffixes = STAGING_IN_PROGRESS_SUFFIXES,
   } = options;
 
   const deadline = createDeadline({ timeout });
   let previousSize;
+  let stableSince;
   // Always set by the reading below before the deadline can be checked.
   let reason;
 
@@ -107,15 +113,21 @@ export async function waitForStagedFile(options = {}) {
       reason = seen.reason;
       // A file that vanished has to prove itself stable again from scratch.
       previousSize = undefined;
+      stableSince = undefined;
     } else if (seen.size === previousSize) {
-      return {
-        ready: true,
-        bytes: seen.size,
-        reason: null,
-        waitedMs: deadline.elapsedMs(),
-      };
+      const stableMs = deadline.elapsedMs() - stableSince;
+      if (stableMs >= stability) {
+        return {
+          ready: true,
+          bytes: seen.size,
+          reason: null,
+          waitedMs: deadline.elapsedMs(),
+        };
+      }
+      reason = `the file had been unchanged for only ${stableMs}ms`;
     } else {
       previousSize = seen.size;
+      stableSince = deadline.elapsedMs();
       reason = `the file was still growing at ${seen.size} bytes`;
     }
 

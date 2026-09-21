@@ -147,13 +147,15 @@ export function buildNodeTestArgs(
   testFiles,
   nodeVersion = process.versions.node
 ) {
-  const args = ['--test'];
+  // A resource leak that is a warning today becomes a runtime failure in a
+  // later Node release. Make deprecations fail at the point that creates them.
+  const args = ['--test', '--throw-deprecation'];
 
   // Node's default process isolation serializes each test file's results over
   // a child-process channel. Node 24 on macOS can intermittently corrupt that
   // stream (ERR_TEST_FAILURE: "Unable to deserialize cloned data"). Running
   // supported runtimes in-process removes that transport while keeping the
-  // Node 20-compatible fallback for consumers on the minimum engine version.
+  // Node 22-compatible fallback for consumers on the minimum engine version.
   if (supportsTestIsolation(nodeVersion)) {
     args.push('--test-isolation=none');
   }

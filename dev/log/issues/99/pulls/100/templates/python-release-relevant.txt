@@ -1,0 +1,240 @@
+92-          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+93-          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+94-        run: python "${{ steps.python_layout.outputs.root }}/scripts/detect_code_changes.py"
+95-
+96-  # REQUIRED CI CHECKS - All must pass before release
+97-  # These jobs ensure code quality and tests pass before any release
+98-
+99-  # === LINT AND FORMAT CHECK ===
+100:  # Lint runs independently of changelog check for detected code changes.
+101-  # See: https://github.com/link-assistant/hive-mind/pull/1024 for why this dependency was removed
+102-  lint:
+103-    name: Lint and Format Check
+104-    runs-on: ubuntu-latest
+105-    timeout-minutes: 20
+106-    concurrency:
+107-      group: ${{ github.workflow }}-${{ github.ref }}-lint
+108-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+--
+193-          SECRETLINT_BUDGET_SECONDS: 300
+194-        run: |
+195-          bash "${{ steps.python_layout.outputs.root }}/scripts/run-with-budget-warning.sh" \
+196-            "$SECRETLINT_BUDGET_SECONDS" "Check for secrets" \
+197-            npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint "**/*"
+198-
+199-  # === DOCUMENTATION VALIDATION ===
+200-  # Principle 12 (issue #72): documentation-only pull requests skip the
+201:  # changelog gate, so this is the one job that observes docs changes. It
+202-  # verifies the required documents exist with the sections other documents
+203-  # link to, and enforces the markdown size budget.
+204-  validate-docs:
+205-    name: Validate Documentation
+206-    runs-on: ubuntu-latest
+207-    timeout-minutes: 10
+208-    concurrency:
+209-      group: ${{ github.workflow }}-${{ github.ref }}-validate-docs
+--
+424-
+425-      - name: Upload artifacts
+426-        uses: actions/upload-artifact@v7
+427-        with:
+428-          name: dist
+429-          path: ${{ steps.python_layout.outputs.dist_dir }}
+430-
+431-  # === CHANGELOG CHECK - only runs on PRs with code changes ===
+432:  # Docs-only PRs (./docs folder, markdown files) don't require changelog fragments
+433:  changelog:
+434-    name: Changelog Fragment Check
+435-    runs-on: ubuntu-latest
+436-    timeout-minutes: 10
+437-    concurrency:
+438:      group: ${{ github.workflow }}-${{ github.ref }}-changelog
+439-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+440-    needs: [detect-changes]
+441-    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.any-code-changed == 'true'
+442-    steps:
+443-      - uses: actions/checkout@v6
+444-        with:
+445-          persist-credentials: false
+446-          fetch-depth: 0
+--
+473-          else
+474-            echo "dist_dir=$PYTHON_ROOT/dist" >> "$GITHUB_OUTPUT"
+475-          fi
+476-          echo "Detected Python layout: root=$PYTHON_ROOT, multi_language=$MULTI_LANGUAGE"
+477-
+478-      - name: Install scriv
+479-        run: pip install "scriv[toml]"
+480-
+481:      - name: Check for changelog fragments
+482-        env:
+483-          GITHUB_BASE_REF: ${{ github.base_ref }}
+484-        run: |
+485-          set -euo pipefail
+486-
+487-          PYTHON_ROOT="${{ steps.python_layout.outputs.root }}"
+488-          if [ "$PYTHON_ROOT" = "." ]; then
+489:            FRAGMENT_DIR="changelog.d"
+490-            SOURCE_PATTERN="^(src/|tests/|scripts/)"
+491-          else
+492:            FRAGMENT_DIR="$PYTHON_ROOT/changelog.d"
+493-            SOURCE_PATTERN="^$PYTHON_ROOT/(src/|tests/|scripts/)"
+494-          fi
+495-
+496-          # Get list of fragment files (excluding README and template)
+497-          FRAGMENTS=$(find "$FRAGMENT_DIR" -name "*.md" ! -name "README.md" ! -name "*.j2" 2>/dev/null | wc -l)
+498-
+499-          # Get changed files in PR
+500-          CHANGED_FILES=$(git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD")
+501-
+502-          # Check if any source files changed (excluding docs and config)
+503-          SOURCE_CHANGED=$(printf '%s\n' "$CHANGED_FILES" | grep -cE "$SOURCE_PATTERN" || true)
+504-
+505-          if [ "$SOURCE_CHANGED" -gt 0 ] && [ "$FRAGMENTS" -eq 0 ]; then
+506:            echo "::error::No changelog fragment found. Please run 'scriv create' and document your changes."
+507-            echo ""
+508:            echo "To create a changelog fragment:"
+509-            echo "  pip install 'scriv[toml]'"
+510-            echo "  scriv create"
+511-            echo ""
+512-            echo "This is similar to adding a changeset in JavaScript projects."
+513:            echo "See changelog.d/README.md for more information."
+514-            exit 1
+515-          fi
+516-
+517-          echo "✓ Changelog check passed"
+518-
+519-  # === DOCKER IMAGE BUILD CHECK (pull requests) ===
+520-  # Build without pushing so a broken Dockerfile fails before package publish.
+521-  # Skip cleanly when a generated repository does not include a Dockerfile.
+--
+559-          # Scoped like the per-platform writes below (issue #66): an unscoped
+560-          # GHA cache export lands in the shared `buildkit` scope, where builds
+561-          # overwrite each other and crowd out actions/cache entries.
+562-          cache-from: type=gha,scope=docker-pr-check
+563-          cache-to: type=gha,mode=max,scope=docker-pr-check
+564-
+565-  # RELEASE JOBS - Only run after all CI checks pass
+566-
+567:  # Automatic release on push to main (if version changed)
+568-  auto-release:
+569-    name: Auto Release
+570-    needs: [lint, test, build, release-preflight]
+571-    outputs:
+572-      released: ${{ steps.github_release.outputs.released }}
+573-      version: ${{ steps.github_release.outputs.version }}
+574-    concurrency:
+575-      group: ${{ github.workflow }}-main-write
+--
+622-          fi
+623-          echo "Detected Python layout: root=$PYTHON_ROOT, multi_language=$MULTI_LANGUAGE"
+624-
+625-      - name: Install dependencies
+626-        run: |
+627-          python -m pip install --upgrade pip
+628-          pip install build twine
+629-
+630:      - name: Check if version changed
+631-        id: version_check
+632-        run: |
+633-          PYTHON_ROOT="${{ steps.python_layout.outputs.root }}"
+634-          PYPROJECT="$PYTHON_ROOT/pyproject.toml"
+635-
+636-          # Read project.version by its table path (issue #67): a grep cannot
+637-          # see TOML tables, so a `version` key in any other table -- the one
+638-          # scriv's documentation recommends adding to [tool.scriv], for
+639-          # instance -- used to surface as a second match and break this step
+640-          # with a multi-line $GITHUB_OUTPUT value.
+641-          CURRENT_VERSION=$(python scripts/read_manifest.py "$PYPROJECT" --field project.version)
+642:          echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+643-
+644-          if [ "${{ steps.python_layout.outputs.multi_language }}" = "true" ]; then
+645-            TAG="py_v$CURRENT_VERSION"
+646-          else
+647-            TAG="v$CURRENT_VERSION"
+648-          fi
+649-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+650-
+--
+667-      - name: Publish to PyPI
+668-        if: steps.version_check.outputs.should_release == 'true'
+669-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2 @ 2026-07-29
+670-
+671-      - name: Smoke test published package
+672-        if: steps.version_check.outputs.should_release == 'true'
+673-        run: |
+674-          python scripts/smoke_test_published_package.py \
+675:            --version "${{ steps.version_check.outputs.current_version }}"
+676-
+677-      - name: Create GitHub Release
+678-        id: github_release
+679-        if: steps.version_check.outputs.should_release == 'true'
+680-        env:
+681-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+682:          RELEASE_VERSION: ${{ steps.version_check.outputs.current_version }}
+683-        run: |
+684-          python "${{ steps.python_layout.outputs.root }}/scripts/create_github_release.py" \
+685-            --version "$RELEASE_VERSION" \
+686-            --repository "${{ github.repository }}" \
+687-            --repository-root "."
+688-          echo "released=true" >> "$GITHUB_OUTPUT"
+689-          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+690-
+--
+760-          python -m pip install --upgrade pip
+761-          pip install build twine "scriv[toml]"
+762-
+763-      - name: Configure git
+764-        run: |
+765-          git config user.name "github-actions[bot]"
+766-          git config user.email "github-actions[bot]@users.noreply.github.com"
+767-
+768:      - name: Collect changelog fragments
+769-        env:
+770:          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+771-        run: |
+772-          cd "${{ steps.python_layout.outputs.root }}"
+773-          # Check if there are any fragments to collect
+774:          FRAGMENTS=$(find changelog.d -name "*.md" ! -name "README.md" ! -name "*.j2" 2>/dev/null | wc -l)
+775-          if [ "$FRAGMENTS" -gt 0 ]; then
+776:            echo "Found $FRAGMENTS changelog fragment(s), collecting..."
+777:            scriv collect --version "$BUMP_TYPE"
+778-          else
+779:            echo "No changelog fragments found, skipping collection"
+780-          fi
+781-
+782-      - name: Version and commit
+783-        id: version
+784-        env:
+785:          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+786-          DESCRIPTION: ${{ github.event.inputs.description }}
+787-        run: |
+788-          cd "${{ steps.python_layout.outputs.root }}"
+789-          python scripts/version_and_commit.py \
+790:            --bump-type "$BUMP_TYPE" \
+791-            --description "$DESCRIPTION"
+792-
+793-      - name: Build package
+794-        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
+795-        run: |
+796-          cd "${{ steps.python_layout.outputs.root }}"
+797-          python -m build
+798-
+--
+988-  # A job killed by timeout-minutes concludes "cancelled", not "failure".
+989-  # Observe every other job so that state cannot silently hide a broken run.
+990-  pipeline-status:
+991-    name: Pipeline Status
+992-    runs-on: ubuntu-latest
+993-    timeout-minutes: 5
+994-    if: always()
+995-    needs: [detect-changes, validate-docs, release-preflight, lint, test, build,
+996:            changelog, docker-build, auto-release, manual-release,
+997-            docker-publish-config, docker-publish-build, docker-publish]
+998-    steps:
+999-      - uses: actions/checkout@v6
+1000-        with:
+1001-          persist-credentials: false
+1002-
+1003-      - name: Fail the run when a required job was cancelled or failed
+1004-        env:

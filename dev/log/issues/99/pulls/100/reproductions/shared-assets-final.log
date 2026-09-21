@@ -1,0 +1,7 @@
+Checking the copies of js/src/fingerprint/init-payload.js...
+ok: python/src/browser_commander/fingerprint/init_payload.js
+ok: rust/src/fingerprint/init_payload.js
+Checking the copies of js/src/fingerprint/limitations.json...
+ok: python/src/browser_commander/fingerprint/limitations.json
+ok: rust/src/fingerprint/limitations.json
+All shared fingerprint asset copies are identical.

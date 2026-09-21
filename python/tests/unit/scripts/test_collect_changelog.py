@@ -58,6 +58,25 @@ def test_collect_is_a_noop_without_fragments(tmp_path: Path) -> None:
     assert collect("1.2.3", tmp_path) is False
 
 
+def test_collect_leaves_new_fragments_for_the_next_version(
+    project: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failed publish retry must not recollect under its old version."""
+    (project / "CHANGELOG.md").write_text(
+        "# Changelog\n\n<!-- scriv-insert-here -->\n\n"
+        "## 0.5.3 — 2026-09-06\n\n- Already collected.\n"
+    )
+    monkeypatch.setattr("collect_changelog.shutil.which", lambda _name: "scriv")
+
+    def unexpected_run(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("scriv must not run for an existing version")
+
+    monkeypatch.setattr("collect_changelog.subprocess.run", unexpected_run)
+
+    assert collect("0.5.3", project) is False
+    assert (project / "changelog.d" / "12.fixed.md").exists()
+
+
 @pytest.mark.skipif(
     subprocess.run(["which", "scriv"], capture_output=True).returncode != 0,
     reason="scriv is not installed",

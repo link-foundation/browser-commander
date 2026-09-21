@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.20.0
+
+### Minor Changes
+
+- Persist managed downloads from Playwright pages in non-default Chromium browser
+  contexts. Browser Commander now resolves the page target's `browserContextId`
+  and applies its staging directory to that context while retaining browser-wide
+  download lifecycle events.
+
+  Wait for a real quiet period before accepting staged download bytes, close unfinished trace bundles explicitly in tests, and move the supported Node.js floor to 22 with the maintained `better-sqlite3` fallback.
+
 ## 0.19.0
 
 ### Minor Changes

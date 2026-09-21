@@ -6,7 +6,9 @@
 //!
 //! Every field here is applied through a documented mechanism -- a Chrome
 //! switch, a CDP `Emulation` command, or a page init script -- and the
-//! mechanism is recorded in [`FINGERPRINT_FIELD_MECHANISMS`] so callers can
+//! mechanism is recorded in
+//! [`FINGERPRINT_FIELD_MECHANISMS`](crate::fingerprint::FINGERPRINT_FIELD_MECHANISMS)
+//! so callers can
 //! tell an override the browser enforces from an override that is only a
 //! JavaScript patch. See `docs/case-studies/issue-79` for the surfaces that
 //! have no mechanism at all.
@@ -387,7 +389,8 @@ impl FingerprintProfile {
 
     /// The camelCase names of the fields this profile actually sets.
     ///
-    /// Every name here has an entry in [`FINGERPRINT_FIELD_MECHANISMS`], which
+    /// Every name here has an entry in
+    /// [`FINGERPRINT_FIELD_MECHANISMS`](crate::fingerprint::FINGERPRINT_FIELD_MECHANISMS), which
     /// is what lets a caller report how strong each override is.
     pub fn populated_fields(&self) -> Vec<&'static str> {
         let present: [(&'static str, bool); 19] = [

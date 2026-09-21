@@ -858,16 +858,18 @@ mod tests {
         }
 
         let chrome = browser_install_candidates("chrome").unwrap();
-        #[cfg(target_os = "macos")]
-        assert!(chrome.contains(&PathBuf::from(
-            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-        )));
-        #[cfg(target_os = "windows")]
-        assert!(chrome.iter().any(
-            |candidate| candidate.ends_with(Path::new("Google/Chrome/Application/chrome.exe"))
-        ));
-        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-        assert!(chrome.contains(&PathBuf::from("/usr/bin/google-chrome")));
+        let has_platform_default = if cfg!(target_os = "macos") {
+            chrome.contains(&PathBuf::from(
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            ))
+        } else if cfg!(target_os = "windows") {
+            chrome.iter().any(|candidate| {
+                candidate.ends_with(Path::new("Google/Chrome/Application/chrome.exe"))
+            })
+        } else {
+            chrome.contains(&PathBuf::from("/usr/bin/google-chrome"))
+        };
+        assert!(has_platform_default);
     }
 
     #[test]

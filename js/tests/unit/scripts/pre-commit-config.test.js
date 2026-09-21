@@ -48,7 +48,8 @@ const MIRRORED_COMMANDS = [
   {
     id: 'python-mypy-scripts',
     workflow: 'python.yml',
-    command: 'mypy --python-version 3.13 scripts tests/unit/scripts',
+    command:
+      'mypy --no-warn-unused-configs --python-version 3.13 scripts tests/unit/scripts',
   },
   {
     id: 'rust-fmt',

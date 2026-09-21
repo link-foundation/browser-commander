@@ -66,6 +66,8 @@ jobs:
       - name: Generate Rust API docs
         working-directory: rust
         shell: bash
+        env:
+          RUSTDOCFLAGS: "-D warnings"
         # The budget, not `timeout-minutes`, owns this step's deadline: a job
         # killed by `timeout-minutes` is reported as cancelled rather than
         # failed. See docs/CI-TIMEOUT-BUDGETS.md.

@@ -155,6 +155,14 @@ jobs:
     assert.equal(countFailures(content), 2);
   });
 
+  it('rejects download-artifact v7 after its runtime emitted DEP0005', () => {
+    const content = workflow({
+      steps: '      - uses: actions/download-artifact@v7',
+    });
+
+    assert.equal(countFailures(content), 1);
+  });
+
   it('accepts a base_ref bound to any environment variable name', () => {
     const content = workflow({
       on: 'pull_request',

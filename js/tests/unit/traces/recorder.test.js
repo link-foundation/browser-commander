@@ -172,6 +172,7 @@ describe('trace recorder (issue #87)', () => {
       await trace.checkpoint('start');
 
       assert.strictEqual(page.state.screenshots, 0);
+      await trace.stop();
     });
 
     it('should take a screenshot only on failure when asked', async () => {
@@ -182,6 +183,7 @@ describe('trace recorder (issue #87)', () => {
 
       await trace.checkpoint('the end', { reason: 'failure' });
       assert.strictEqual(page.state.screenshots, 1);
+      await trace.stop();
     });
 
     it('should keep a gap rather than fail when the page has closed', async () => {
@@ -237,6 +239,7 @@ describe('trace recorder (issue #87)', () => {
       // Once at the start, and once after each of the two checkpoints - the
       // base one the recorder takes itself and the one named above.
       assert.strictEqual(installs.length, 3);
+      await trace.stop();
     });
   });
 

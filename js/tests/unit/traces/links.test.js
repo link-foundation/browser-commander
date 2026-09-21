@@ -27,6 +27,7 @@ import {
   createFakePage,
   makeSnapshot,
   useTempTraceDirectory,
+  useTraceBundleCleanup,
 } from '../../helpers/trace-fixtures.js';
 
 /**
@@ -66,6 +67,7 @@ function parseExport(text) {
 
 describe('trace links export (issue #94)', () => {
   const directory = useTempTraceDirectory();
+  const trackOpenBundle = useTraceBundleCleanup();
 
   /**
    * Write a bundle holding one of everything the export has to say.
@@ -76,6 +78,7 @@ describe('trace links export (issue #94)', () => {
   const writeBundle = async ({ close = true } = {}) => {
     const root = path.join(directory.path, 'run.bc-trace');
     const bundle = await openTraceBundle({ output: root });
+    trackOpenBundle(bundle);
     const owner = {
       traceId: 'trace-1',
       browserContextId: 'context-1',
@@ -457,6 +460,10 @@ describe('trace links export (issue #94)', () => {
     );
     // No closing link, which is how a reader tells this run never finished.
     assert.ok(!links.some((link) => link.id === 'result'));
+
+    // The assertions above model the process being killed. The test process
+    // itself survives, so release its open descriptor explicitly.
+    await trace.stop();
   });
 
   it('should take the export away with a discarded bundle', async () => {

@@ -52,7 +52,7 @@
   },
   "homepage": "https://github.com/link-foundation/browser-commander#readme",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "peerDependencies": {
     "playwright": ">=1.40.0",
@@ -67,7 +67,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "^13.0.3",
     "links-notation": "^0.20.0",
     "log-lazy": "^1.0.4",
     "test-anywhere": "^0.9.1"
@@ -83,5 +83,9 @@
     "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "puppeteer": "^25.10.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true,
+    "puppeteer": false
   }
 }

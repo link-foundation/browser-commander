@@ -58,6 +58,7 @@ export async function openTraceBundle(options = {}) {
 
   const eventsPath = path.join(root, TRACE_FILES.EVENTS);
   const eventsHandle = await fs.open(eventsPath, 'a', TRACE_FILE_MODE);
+  let closeEventsPromise;
 
   let written = 0;
   let sequence = 0;
@@ -68,6 +69,12 @@ export async function openTraceBundle(options = {}) {
   let dropped = 0;
   const counts = { checkpoints: 0, events: 0, mutationBatches: 0 };
   const problems = [];
+
+  /** Close the timeline exactly once, after every queued append. */
+  function closeEvents() {
+    closeEventsPromise ??= appendQueue.then(() => eventsHandle.close());
+    return closeEventsPromise;
+  }
 
   const fits = (bytes) =>
     bytes <= maxResourceBytes && written + bytes <= maxBundleBytes;
@@ -308,6 +315,8 @@ export async function openTraceBundle(options = {}) {
     writeMutations,
     writeArtifact,
     drop,
+    /** Close an unfinished bundle without manufacturing a manifest. */
+    abort: closeEvents,
     /**
      * Write the manifest and close the timeline.
      *
@@ -325,8 +334,7 @@ export async function openTraceBundle(options = {}) {
             : manifest.outcome,
       };
       // Anything a listener reported on its way out is still queued.
-      await appendQueue;
-      await eventsHandle.close();
+      await closeEvents();
       await fs.writeFile(
         path.join(root, TRACE_FILES.MANIFEST),
         `${JSON.stringify(finished, null, 2)}\n`,

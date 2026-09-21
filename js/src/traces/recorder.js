@@ -75,6 +75,18 @@ function normalizeEvents(events) {
 }
 
 /**
+ * Reject a malformed side export before the bundle opens any file handles.
+ *
+ * @param {Object|null} links - Optional Links Notation export options
+ * @returns {void}
+ */
+function validateLinksOptions(links) {
+  if (links && (typeof links.output !== 'string' || links.output === '')) {
+    throw new Error('trace links require an output path');
+  }
+}
+
+/**
  * Start recording a session.
  *
  * @param {Object} options - Recorder options, see `commander.startTrace()`
@@ -111,6 +123,10 @@ export async function startTrace(options = {}) {
   }
   const eventSources = normalizeEvents(events);
   const privacyOptions = normalizePrivacyOptions(privacy);
+  // Validate the optional side export before opening the authoritative bundle.
+  // Otherwise a rejected start (for example `links: {}`) strands the bundle's
+  // events handle because no running trace is returned for the caller to stop.
+  validateLinksOptions(links);
   const engine = commander?.engine ?? null;
   const identity = createTraceIdentity({ page });
 
@@ -139,9 +155,6 @@ export async function startTrace(options = {}) {
   const startedAt = new Date(now()).toISOString();
 
   if (links) {
-    if (typeof links.output !== 'string' || links.output === '') {
-      throw new Error('trace links require an output path');
-    }
     linksSink = await openTraceLinks({
       output: links.output,
       include: links.include,

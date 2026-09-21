@@ -10,7 +10,8 @@ captured on 2026-09-21 UTC. The issue's six reference runs all execute commit
 - `github/`: issue, pull request, every issue/PR comment stream, reviews,
   events, run metadata, check annotations, initial diff, and recent run lists.
 - `ci-logs/`: complete logs for all six issue-listed runs plus the three older
-  Python runs needed to reconstruct the release failure.
+  Python runs needed to reconstruct the release failure and every failed fresh
+  pull-request validation run.
 - `research/`: upstream releases/issues, PyPI responses, Node release data,
   signal extracts, template heads/file trees, upstream reports, and the exact
   hive-mind CI/CD guide used in the audit.
@@ -33,5 +34,6 @@ pass. All are addressed in PR 100 except the PyPI Trusted Publisher account
 setting, which requires a maintainer and is deliberately reported as a hard,
 actionable release failure.
 
-See `analysis/root-causes-and-solutions.md` for the complete result and
-`analysis/signal-classification.md` for the line-by-line signal disposition.
+See `analysis/root-causes-and-solutions.md` for the complete result,
+`analysis/signal-classification.md` for the line-by-line signal disposition,
+and `analysis/final-validation.md` for findings from fresh PR validation.

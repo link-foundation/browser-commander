@@ -112,15 +112,16 @@ of a budget is the same threshold the invariant enforces against the backstop.
 Budgets are set from measured step durations taken from recent successful runs,
 with at least a fivefold margin, and always below 70% of the job's backstop.
 
-| Workflow     | Job          | Backstop | Step                     | Budget | Measured |
-| ------------ | ------------ | -------- | ------------------------ | ------ | -------- |
-| `js.yml`     | `test`       | 20 min   | Node.js test suite       | 300s   | 1–5s     |
-| `python.yml` | `test`       | 20 min   | pytest suite             | 300s   | 5–10s    |
-| `rust.yml`   | `test`       | 20 min   | Rust test suite          | 480s   | 23–86s   |
-| `rust.yml`   | `test`       | 20 min   | Rust doc tests           | 180s   | 6–11s    |
-| `rust.yml`   | `coverage`   | 15 min   | Rust code coverage       | 480s   | 10s      |
-| `docs.yml`   | `build-docs` | 15 min   | Rust API docs            | 480s   | 58s      |
-| `parity.yml` | `parity`     | 30 min   | Fingerprint parity suite | 1200s  | 26s      |
+| Workflow     | Job          | Backstop | Step                        | Budget | Measured |
+| ------------ | ------------ | -------- | --------------------------- | ------ | -------- |
+| `js.yml`     | `test`       | 20 min   | Node.js test suite          | 300s   | 1–5s     |
+| `python.yml` | `test`       | 20 min   | pytest suite                | 300s   | 5–10s    |
+| `rust.yml`   | `test`       | 20 min   | Rust test suite             | 480s   | 23–86s   |
+| `rust.yml`   | `test`       | 20 min   | Rust doc tests              | 180s   | 6–11s    |
+| `rust.yml`   | `coverage`   | 15 min   | Rust code coverage          | 480s   | 10s      |
+| `docs.yml`   | `build-docs` | 15 min   | Rust API docs               | 480s   | 58s      |
+| `parity.yml` | `parity`     | 30 min   | Fingerprint parity suite    | 1200s  | 26s      |
+| `parity.yml` | `cli`        | 15 min   | CLI and API coverage suites | 300s   | 30s      |
 
 The `no-openssl` job in `rust.yml` is deliberately unwrapped: it runs in a
 `rust:slim-bookworm` container that has no `bash` on `PATH`, so GitHub falls

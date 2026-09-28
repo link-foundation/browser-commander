@@ -26,6 +26,9 @@ on:
       - 'js/src/browser/**'
       - 'js/tests/e2e/**'
       - 'experiments/fingerprint-parity/**'
+      - 'js/src/cli/**'
+      - 'js/bin/**'
+      - 'tests/cli-contract/**'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
 
@@ -121,6 +124,60 @@ jobs:
           path: js/parity.log
           retention-days: 14
 
+  # The browser-commander CLI and its serve --stdio bridge (issue #104) against
+  # the same real Chrome: `run tests/cli-contract/basic.json` must match the
+  # expected output the Rust and Python CLIs are held to, and handle.describe
+  # must reach every method Playwright and Puppeteer declare. It is its own job
+  # so its budget does not eat into the parity suite's.
+  cli:
+    name: CLI and bridge (real Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-cli
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Verify Chrome is present
+        run: |
+          test -x "$CHROME_PATH" || {
+            echo "::error::no Chrome binary at $CHROME_PATH"
+            exit 1
+          }
+          "$CHROME_PATH" --version
+
+      - name: Run CLI and API coverage suites under Xvfb
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 300 "CLI and API coverage suites" \
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/cli.e2e.test.js tests/e2e/api-coverage.e2e.test.js 2>&1 | tee cli.log'
+
+      - name: Fail on a suite that asserted nothing
+        run: |
+          if grep -q '# SKIP' cli.log; then
+            echo "::error::the CLI suites skipped a case instead of asserting it"
+            grep '# SKIP' cli.log
+            exit 1
+          fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' cli.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the CLI suites reported no passing tests"
+            exit 1
+          fi
+          echo "CLI suites passed $passed tests against a real Chrome"
+
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
@@ -136,6 +193,7 @@ jobs:
       cancel-in-progress: true
     needs:
       - parity
+      - cli
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs
     # it exists to report. `!cancelled()` keeps it out of a superseded run,

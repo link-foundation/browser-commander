@@ -207,40 +207,80 @@ exists for JavaScript, Python and Rust, and
 the Python implementation, streaming it in chunks, to prove the file is not
 private to its writer.
 
-## Automation-Friendly Launch Defaults
+## Launch Command Line and Opt-In Restrictions
 
-`launchBrowser()`/`launch_browser()` and the real-browser launch helpers add
-the following Chromium-family arguments unless the caller opts out. The
-defaults are the same on Linux, macOS, and Windows and apply when launching
-Chrome, Edge, Brave, or Chromium:
+By default `launchBrowser()`/`launch_browser()` starts the installed browser the
+way a person would, then attaches to it (issue #103). The whole command line is:
 
-| Default argument                   | Why it is applied                                                                                                    |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `--password-store=basic`           | Uses the isolated profile's built-in password backend instead of opening an OS Keychain/libsecret credential dialog. |
-| `--no-first-run`                   | Skips the first-run setup flow that can cover or redirect the first page.                                            |
-| `--no-default-browser-check`       | Prevents a default-browser prompt from interrupting automation.                                                      |
-| `--disable-infobars`               | Suppresses browser information bars that can obstruct page UI.                                                       |
-| `--disable-session-crashed-bubble` | Prevents a killed automation session from offering to restore tabs.                                                  |
-| `--hide-crash-restore-bubble`      | Hides the crash-restore surface on browser variants that honor this switch.                                          |
-| `--disable-crash-restore`          | Prevents stale tabs from being restored into the isolated profile.                                                   |
+```
+<chrome> --user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved loopback port>
+```
 
-The real-browser helpers additionally manage
-`--remote-debugging-address=127.0.0.1`, `--remote-debugging-port=<port>`, and
-`--user-data-dir=<dedicated profile>`. These three arguments cannot be
-overridden or ignored: CDP stays on loopback, and Chrome 136+ refuses remote
-debugging on its default profile. Headless mode is opt-in and emits
-`--headless=new`.
+| Property         | Default                                                                                                                                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Launch mode      | `launch: 'real'`: Browser Commander spawns the browser itself and attaches over CDP. `launch: 'engine'` keeps the engine launcher (`launchPersistentContext`/`puppeteer.launch`).                                                                                   |
+| Browser          | The installed Chrome (or `channel`/`executablePath`); the engine's downloaded Chromium only when no installed browser is found.                                                                                                                                     |
+| Profile          | A fresh temporary directory, deleted on close. Pass `userDataDir` to keep one.                                                                                                                                                                                      |
+| First-run UI     | Suppressed by the `First Run` sentinel and `{"browser":{"last_whats_new_version":9999}}` in `Local State` - the files Chrome writes itself - instead of `--no-first-run`. Without the `Local State` entry a "What's new" tab steals the foreground after attaching. |
+| Remote debugging | A fixed, reserved loopback port. Port `0`, `--remote-debugging-pipe`, `--enable-automation` and `--headless` turn Blink's `AutomationControlled` feature on (so `navigator.webdriver === true`); a fixed port does not.                                             |
+| Port ownership   | The browser's own `DevTools listening on ws://127.0.0.1:<port>/...` line must match `/json/version`, so a port lost to a race is detected and the launch retried with a new port.                                                                                   |
+| Added switches   | None. `--remote-debugging-address` is not passed: DevTools binds to loopback by default.                                                                                                                                                                            |
+| Host environment | Never modified. Restriction environment variables reach the browser process only.                                                                                                                                                                                   |
+| `slowMo`         | `0`.                                                                                                                                                                                                                                                                |
 
-Use `extraArgs` and `ignoreDefaultArgs` in JavaScript, `extra_args` and
-`ignore_default_args` in Python, or the corresponding Rust builder methods to
-append arguments or omit individual Browser Commander defaults. Existing
-`args`/`with_args()` calls remain supported. Opting out of
-`--password-store=basic` can restore operating-system credential prompts.
+Everything Browser Commander used to add on its own is now a named, opt-in
+restriction from `launch-restrictions.json` (shared byte-for-byte by
+JavaScript, Python and Rust):
+
+```js
+await launchBrowser({ restrictions: ['no-sync', 'no-translate'] });
+await launchBrowser({ restrictions: ['legacy-defaults'] }); // the pre-#103 CHROME_ARGS
+```
+
+| Restriction                | Effect                                                                                  |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| `no-first-run`             | `--no-first-run` instead of the sentinel file.                                          |
+| `no-default-browser-check` | `--no-default-browser-check`.                                                           |
+| `no-crash-restore`         | `--disable-session-crashed-bubble --hide-crash-restore-bubble --disable-crash-restore`. |
+| `no-infobars`              | `--disable-infobars` (ignored by current Chrome).                                       |
+| `basic-password-store`     | `--password-store=basic`; real-profile data can no longer be decrypted or migrated.     |
+| `mock-keychain`            | `--use-mock-keychain`; same caveat on macOS.                                            |
+| `no-extensions`            | Disables extensions, background component extensions and default apps.                  |
+| `no-sync`                  | `--disable-sync`.                                                                       |
+| `no-google-services`       | `GOOGLE_API_KEY`/`GOOGLE_DEFAULT_CLIENT_*` = `no` for the browser process only.         |
+| `no-translate`             | `--disable-features=Translate`.                                                         |
+| `no-component-update`      | `--disable-component-update`.                                                           |
+| `no-background-networking` | `--disable-background-networking`.                                                      |
+| `no-popup-blocking`        | `--disable-popup-blocking`.                                                             |
+| `no-phishing-detection`    | `--disable-client-side-phishing-detection`.                                             |
+| `no-https-upgrades`        | `--disable-features=HttpsUpgrades`.                                                     |
+| `no-media-router`          | `--disable-features=MediaRouter,DialMediaRouteProvider,GlobalMediaControls`.            |
+| `no-lens`                  | `--disable-features=LensOverlay`.                                                       |
+| `no-background-throttling` | Keeps hidden tabs at full speed.                                                        |
+| `no-back-forward-cache`    | `--disable-back-forward-cache`.                                                         |
+| `srgb-color-profile`       | `--force-color-profile=srgb`.                                                           |
+| `start-maximized`          | `--start-maximized`.                                                                    |
+
+Presets: `legacy-defaults` (the old `CHROME_ARGS`) and `legacy-launch-browser`
+(the old `launchBrowser()` defaults, including the Google API key override and
+`Translate`). Repeated `--disable-features`/`--enable-features` switches from
+restrictions and `args` are merged into one, because Chrome honours only the
+last occurrence.
+
+`args`/`extraArgs` (`extra_args` in Python, builder methods in Rust) still
+append switches. In `launch: 'engine'` mode, `ignoreDefaultArgs` removes
+switches the engine itself adds, and `--disable-blink-features=AutomationControlled`
+is added only while `automationParity` is on; that switch shows Chrome's
+unsupported-command-line-flag infobar, which is why the real launch is the
+default. The switches the real launch manages - `--user-data-dir`,
+`--remote-debugging-port`, `--remote-debugging-address` and
+`--remote-debugging-pipe` - cannot be overridden; Chrome 136+ refuses remote
+debugging on its default profile.
 
 `connectBrowser()`/`connect_browser()` only attaches to an existing process;
 it cannot change that process's command line. Start an externally managed
-browser with the defaults above and a dedicated remote-debugging profile, or
-use the real-browser launch helper to have Browser Commander apply them.
+browser with a dedicated profile and a fixed `--remote-debugging-port`, or
+let `launchBrowser()` start it for you.
 
 ## Compatibility Notes
 

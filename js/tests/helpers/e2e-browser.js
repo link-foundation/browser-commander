@@ -8,10 +8,6 @@
  * read as the behaviour they check.
  */
 
-import fs from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-
 import { launchBrowser } from '../../src/browser/launcher.js';
 
 /**
@@ -34,15 +30,12 @@ export const SANDBOX_ARGS =
  */
 export async function launchE2EBrowser(options = {}) {
   const { engine, downloadDirectory } = options;
-  const userDataDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'bc-e2e-profile-')
-  );
 
+  // The default launch creates a fresh temporary profile and deletes it on
+  // close, so the helper no longer manages one itself.
   const launched = await launchBrowser({
     engine,
-    userDataDir,
     headless: process.env.HEADLESS !== 'false',
-    slowMo: 0,
     args: SANDBOX_ARGS,
     ...(process.env.CHROME_PATH
       ? { executablePath: process.env.CHROME_PATH }
@@ -60,8 +53,7 @@ export async function launchE2EBrowser(options = {}) {
      * @returns {Promise<void>} Resolves once both are gone
      */
     cleanup: async () => {
-      await launched.browser?.close();
-      await fs.rm(userDataDir, { recursive: true, force: true });
+      await launched.close();
     },
   };
 }

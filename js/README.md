@@ -93,26 +93,31 @@ await commander.destroy();
 await browser.close();
 ```
 
-To reuse an installed Chrome-family browser instead of downloading the
-engine's bundled Chromium, select a browser channel or provide its executable
-path. Both options are passed directly to Playwright or Puppeteer:
+`launchBrowser()` starts the installed Chrome the way a person would and then
+attaches to it. The whole command line is
+`--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port>`:
+no automation switches, so `navigator.webdriver` is `false`, there is no
+"controlled by automated test software" or unsupported-flag infobar, and
+extensions, sync, translation and every other browser feature behave as in a
+hand-started Chrome. The temporary profile is deleted by `browser.close()`.
 
 ```javascript
 const { browser, page } = await launchBrowser({
   engine: 'playwright',
-  channel: 'chrome',
-  // Or: executablePath: '/usr/bin/google-chrome',
-  headless: true,
+  channel: 'msedge', // or executablePath: '/usr/bin/google-chrome'
+  userDataDir: '/tmp/my-profile', // keep the profile instead of a temporary one
   extraArgs: ['--lang=en-US'],
-  // Per-flag escape hatch; `args` remains a compatible append-only alias.
-  ignoreDefaultArgs: ['--disable-infobars'],
+  // Opt-in restrictions, by name (see the table linked below).
+  restrictions: ['no-sync', 'no-translate'],
 });
 ```
 
-Browser Commander applies the documented
-[automation-friendly launch defaults](../docs/feature-parity.md#automation-friendly-launch-defaults),
-including `--password-store=basic` to avoid an additional OS credential
-dialog. `ignoreDefaultArgs: true` omits every Browser Commander default.
+Every switch Browser Commander used to add on its own is available as a named
+[launch restriction](../docs/feature-parity.md#launch-command-line-and-opt-in-restrictions);
+`restrictions: ['legacy-defaults']` restores the old `CHROME_ARGS`. Pass
+`launch: 'engine'` to use Playwright's `launchPersistentContext()` or
+`puppeteer.launch()` instead; the engine then adds its own switches, and
+`ignoreDefaultArgs` removes them.
 
 Attach to a Chrome-family browser that is already listening for CDP connections:
 
@@ -127,11 +132,13 @@ const commander = makeBrowserCommander({ page });
 ```
 
 Attachment cannot change the existing process's launch arguments. Start it
-with a loopback remote-debugging port, a dedicated `--user-data-dir`, and the
-automation-friendly defaults above, or use `launchRealBrowser()`.
+with a fixed `--remote-debugging-port` and a dedicated `--user-data-dir`, or
+let `launchBrowser()`/`launchRealBrowser()` start it.
 
-`launchRealBrowser()` can find and start a genuine installed Chrome,
-Edge, Brave, or Chromium with a loopback CDP endpoint and then attach to it. It
+`launchRealBrowser()` is the lower-level helper behind the default launch: it
+finds and starts an installed Chrome, Edge, Brave, or Chromium on a reserved
+loopback port, confirms from the browser's own `DevTools listening on` line
+that the port is really its own (retrying on a port race), and attaches. It
 always uses a dedicated profile; Chrome 136 and newer do not honor remote
 debugging switches for the default profile. See the
 [Chrome remote-debugging security change](https://developer.chrome.com/blog/remote-debugging-port).
@@ -144,7 +151,7 @@ const connection = await launchRealBrowser({
   channel: 'chrome',
   userDataDir: '/tmp/my-automation-profile',
   extraArgs: ['--lang=en-US'],
-  ignoreDefaultArgs: ['--disable-infobars'],
+  restrictions: ['no-default-browser-check'],
   seedCookies: [
     { name: 'session', value: 'saved', url: 'https://example.com' },
   ],
@@ -188,8 +195,8 @@ scripts touch Keychain, libsecret/KWallet, or DPAPI at most once per TTL window.
 Set `refresh: true` to force a new read, customize `cache.dir`/`ttlMinutes`, or
 set `cache: false` to opt out of disk caching.
 `launchAndConnectRealBrowser()` remains available as a descriptive alias.
-Remote-debugging, loopback, and profile arguments remain managed even when all
-optional defaults are ignored; `headless: true` adds `--headless=new`.
+The remote-debugging and profile switches are always managed;
+`headless: true` adds `--headless=new`.
 
 Reuse a saved authenticated session by passing Playwright-compatible storage
 state as a JSON file path or object. Cookies and localStorage are restored for
@@ -371,16 +378,26 @@ commander.pageTrigger({
 ### launchBrowser(options)
 
 ```javascript
-const { browser, page } = await launchBrowser({
+const { browser, page, close } = await launchBrowser({
   engine: 'playwright', // 'playwright' or 'puppeteer'
+  launch: 'real', // 'real' (start the installed browser, attach) or 'engine'
+  channel: 'chrome', // or executablePath; defaults to the installed Chrome
   headless: false, // Run in headless mode
-  userDataDir: '~/.hh-apply/playwright-data', // Browser profile directory
-  slowMo: 150, // Slow down operations (ms)
+  userDataDir: undefined, // Keep a profile; default is a fresh temporary one
+  restrictions: [], // Opt-in restrictions such as 'no-extensions', 'no-sync'
+  slowMo: 0, // Slow down operations (ms)
   verbose: false, // Enable debug logging
-  args: ['--no-sandbox', '--disable-setuid-sandbox'], // Custom Chrome args to append
+  args: ['--no-sandbox'], // Custom Chrome args to append
   storageState: './session-state.json', // Saved cookies and localStorage, as a path or object
 });
 ```
+
+With Playwright, `browser` is the attached browser's default context, so
+`browser.pages()`, `browser.newPage()` and `browser.close()` work as they did
+with the persistent context. `close()` (and `browser.close()`) closes the
+browser and deletes a temporary profile. The result also carries `launch`,
+`userDataDir`, `temporaryProfile` and the exact `args` the browser was started
+with.
 
 The `args` option allows passing custom Chrome arguments, which is useful for headless server environments (Docker, CI/CD) that require flags like `--no-sandbox`.
 
@@ -414,15 +431,15 @@ Playwright accepts `timeout` and Puppeteer accepts `protocolTimeout`.
 Start an installed browser and connect through `connectBrowser()`. Use
 `channel` (`chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`,
 `msedge-beta`, `msedge-dev`, `msedge-canary`, `brave`, or `chromium`) or an
-explicit `executablePath`. The helper defaults to
-a managed directory under `~/.browser-commander/real-browser/`, rejects known
-default browser-profile paths, protects its remote-debugging arguments, and
-returns the spawned `browserProcess`, resolved `cdpEndpoint`, executable path,
-and profile path alongside `{ browser, page }`.
+explicit `executablePath`. Without `userDataDir` it creates a fresh temporary
+profile that `close()` deletes; it rejects known default browser-profile paths,
+protects its remote-debugging switches, reserves a loopback port (or uses
+`remoteDebuggingPort`, never `0`), and returns the spawned `browserProcess`,
+`cdpEndpoint`, `remoteDebuggingPort`, `executablePath`, `userDataDir`,
+`temporaryProfile` and `args` alongside `{ browser, page, close }`.
 `launchAndConnectRealBrowser()` is an alias with identical behavior.
-`extraArgs` appends custom switches, while `ignoreDefaultArgs` accepts a list
-of defaults to omit (or `true` to omit all optional defaults). The older
-`args` append option remains supported.
+`restrictions` opts into named restrictions, `args`/`extraArgs` append custom
+switches, and `env` adds environment variables for the browser process only.
 
 ### listBrowserProfiles(options)
 

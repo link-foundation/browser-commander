@@ -6,45 +6,64 @@ import {
   buildPuppeteerLaunchOptions,
   resolveChromeArgs,
 } from '../../../src/browser/launch-options.js';
+import { CHROME_ARGS } from '../../../src/core/constants.js';
 
 describe('browser launch options', () => {
-  it('applies safe defaults, appends extra arguments, and supports per-flag opt-out', () => {
-    const options = resolveChromeArgs({
-      args: ['--legacy-arg'],
-      extraArgs: ['--lang=en-US'],
-      ignoreDefaultArgs: ['--no-default-browser-check'],
-    });
+  it('adds no switches of its own by default (issue #103)', () => {
+    const options = resolveChromeArgs();
 
-    assert.ok(options.args.includes('--password-store=basic'));
-    assert.ok(options.args.includes('--no-first-run'));
-    assert.equal(options.args.includes('--no-default-browser-check'), false);
-    assert.deepEqual(options.args.slice(-2), ['--legacy-arg', '--lang=en-US']);
-    assert.deepEqual(options.ignoreDefaultArgs, ['--no-default-browser-check']);
+    assert.deepEqual(options.args, []);
+    assert.deepEqual(options.ignoreDefaultArgs, []);
   });
 
-  it('can ignore every Browser Commander default', () => {
+  it('appends custom args after opt-in restrictions', () => {
     const options = resolveChromeArgs({
+      restrictions: ['no-sync', 'no-translate'],
+      args: ['--legacy-arg', '--disable-features=Foo'],
       extraArgs: ['--lang=en-US'],
-      ignoreDefaultArgs: true,
     });
 
-    assert.deepEqual(options.args, ['--lang=en-US']);
-    assert.equal(options.ignoreDefaultArgs, true);
+    assert.deepEqual(options.args, [
+      '--disable-sync',
+      // Chrome keeps only the last --disable-features, so they are merged.
+      '--disable-features=Translate,Foo',
+      '--legacy-arg',
+      '--lang=en-US',
+    ]);
   });
 
-  it('can opt out of the password-store default specifically', () => {
-    const options = resolveChromeArgs({
-      ignoreDefaultArgs: ['--password-store=basic'],
+  it('restores the pre-#103 switches through the legacy-defaults preset', () => {
+    const options = resolveChromeArgs({ restrictions: ['legacy-defaults'] });
+
+    assert.deepEqual([...options.args].sort(), [...CHROME_ARGS].sort());
+  });
+
+  it('rejects malformed arguments and unknown restrictions', () => {
+    assert.throws(() => resolveChromeArgs({ args: '--x' }), TypeError);
+    assert.throws(
+      () => resolveChromeArgs({ ignoreDefaultArgs: 'yes' }),
+      TypeError
+    );
+    assert.throws(
+      () => resolveChromeArgs({ restrictions: ['no-such-thing'] }),
+      RangeError
+    );
+  });
+
+  it('never adds --start-maximized to Puppeteer', () => {
+    const options = buildPuppeteerLaunchOptions({
+      headless: false,
+      chromeArgs: [],
+      userDataDir: '/tmp/browser-commander-test',
     });
 
-    assert.equal(options.args.includes('--password-store=basic'), false);
-    assert.ok(options.args.includes('--no-first-run'));
+    assert.equal(options.args.includes('--start-maximized'), false);
   });
 
   it('forwards ignored defaults to both browser engines', () => {
     const playwright = buildPlaywrightLaunchOptions({
       headless: false,
-      slowMo: 150,
+      slowMo: 0,
       chromeArgs: [],
       ignoreDefaultArgs: ['--no-first-run'],
     });
@@ -99,7 +118,7 @@ describe('browser launch options', () => {
   it('omits browser selection options by default', () => {
     const playwright = buildPlaywrightLaunchOptions({
       headless: false,
-      slowMo: 150,
+      slowMo: 0,
       chromeArgs: [],
     });
     const puppeteer = buildPuppeteerLaunchOptions({

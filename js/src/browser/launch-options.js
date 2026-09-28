@@ -1,15 +1,31 @@
-import { CHROME_ARGS } from '../core/constants.js';
-import { assertStringArray } from './restrictions.js';
+import {
+  assertStringArray,
+  mergeFeatureSwitches,
+  resolveRestrictions,
+} from './restrictions.js';
 import {
   applyAutomationParityArgs,
   parityIgnoredDefaultArgs,
 } from '../fingerprint/automation-parity.js';
 
-/** Resolve Browser Commander defaults, compatibility args, and extra args. */
+/**
+ * Resolve the switches an engine-launched browser gets on top of the engine's
+ * own: opt-in restrictions, then custom args (issue #103). Browser Commander
+ * adds nothing by default; `CHROME_ARGS` is kept only as the
+ * `legacy-defaults` restriction preset.
+ *
+ * @param {Object} [options]
+ * @param {string[]} [options.args]
+ * @param {string[]} [options.extraArgs]
+ * @param {boolean|string[]} [options.ignoreDefaultArgs] - Engine defaults to omit
+ * @param {string[]} [options.restrictions] - Names from launch-restrictions.json
+ * @returns {{args: string[], ignoreDefaultArgs: boolean|string[]}}
+ */
 export function resolveChromeArgs({
   args = [],
   extraArgs = [],
   ignoreDefaultArgs = [],
+  restrictions = [],
 } = {}) {
   assertStringArray(args, 'args');
   assertStringArray(extraArgs, 'extraArgs');
@@ -23,20 +39,13 @@ export function resolveChromeArgs({
     assertStringArray(ignoreDefaultArgs, 'ignoreDefaultArgs');
   }
 
-  const normalizedIgnoreDefaultArgs =
-    ignoreDefaultArgs === false ? [] : ignoreDefaultArgs;
-  const ignored = new Set(
-    normalizedIgnoreDefaultArgs === true
-      ? CHROME_ARGS
-      : normalizedIgnoreDefaultArgs
-  );
   return {
-    args: [
-      ...CHROME_ARGS.filter((argument) => !ignored.has(argument)),
+    args: mergeFeatureSwitches([
+      ...resolveRestrictions(restrictions).args,
       ...args,
       ...extraArgs,
-    ],
-    ignoreDefaultArgs: normalizedIgnoreDefaultArgs,
+    ]),
+    ignoreDefaultArgs: ignoreDefaultArgs === false ? [] : ignoreDefaultArgs,
   };
 }
 
@@ -50,6 +59,31 @@ function setBrowserSelectionOptions(options, { channel, executablePath }) {
   return options;
 }
 
+/**
+ * The engine default switches to drop: the caller's list plus, with
+ * automation parity, the ones that turn AutomationControlled on.
+ *
+ * @param {'playwright'|'puppeteer'} engine
+ * @returns {true|string[]}
+ */
+function resolveEngineIgnoreDefaultArgs(
+  engine,
+  { headless, ignoreDefaultArgs, automationParity, always = [] }
+) {
+  if (ignoreDefaultArgs === true) {
+    return true;
+  }
+  return [
+    ...new Set([
+      ...always,
+      ...(automationParity
+        ? parityIgnoredDefaultArgs(engine, { headless })
+        : []),
+      ...(ignoreDefaultArgs === false ? [] : ignoreDefaultArgs),
+    ]),
+  ];
+}
+
 export function buildPlaywrightLaunchOptions({
   headless,
   slowMo,
@@ -60,20 +94,12 @@ export function buildPlaywrightLaunchOptions({
   ignoreDefaultArgs = [],
   automationParity = true,
 }) {
-  const normalizedIgnoreDefaultArgs =
-    ignoreDefaultArgs === false ? [] : ignoreDefaultArgs;
-  const engineIgnoreDefaultArgs =
-    normalizedIgnoreDefaultArgs === true
-      ? true
-      : [
-          ...new Set([
-            '--enable-automation',
-            ...(automationParity
-              ? parityIgnoredDefaultArgs('playwright', { headless })
-              : []),
-            ...normalizedIgnoreDefaultArgs,
-          ]),
-        ];
+  const engineIgnoreDefaultArgs = resolveEngineIgnoreDefaultArgs('playwright', {
+    headless,
+    ignoreDefaultArgs,
+    automationParity,
+    always: ['--enable-automation'],
+  });
   const options = {
     headless,
     slowMo,
@@ -99,24 +125,15 @@ export function buildPuppeteerLaunchOptions({
   ignoreDefaultArgs = [],
   automationParity = true,
 }) {
-  const normalizedIgnoreDefaultArgs =
-    ignoreDefaultArgs === false ? [] : ignoreDefaultArgs;
-  const baseArgs = ['--start-maximized', ...chromeArgs];
-  const engineIgnoreDefaultArgs =
-    normalizedIgnoreDefaultArgs === true
-      ? true
-      : [
-          ...new Set([
-            ...(automationParity
-              ? parityIgnoredDefaultArgs('puppeteer', { headless })
-              : []),
-            ...normalizedIgnoreDefaultArgs,
-          ]),
-        ];
+  const engineIgnoreDefaultArgs = resolveEngineIgnoreDefaultArgs('puppeteer', {
+    headless,
+    ignoreDefaultArgs,
+    automationParity,
+  });
   const options = {
     headless,
     defaultViewport: null,
-    args: automationParity ? applyAutomationParityArgs(baseArgs) : baseArgs,
+    args: automationParity ? applyAutomationParityArgs(chromeArgs) : chromeArgs,
     userDataDir,
   };
   if (engineIgnoreDefaultArgs === true || engineIgnoreDefaultArgs.length > 0) {

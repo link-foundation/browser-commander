@@ -9,7 +9,7 @@ reproduced in this repository; the artifacts are under
 The catalogue itself is data, not code: ``limitations.json`` next to this
 module is a byte-for-byte copy of ``js/src/fingerprint/limitations.json``, kept
 in step by ``scripts/check-shared-fingerprint-assets.sh``. Three hand-written
-translations of the same eleven paragraphs would drift within a release.
+translations of the same twelve paragraphs would drift within a release.
 
 ``severity`` describes how much the limitation helps someone identify the
 browser as automated or as a specific machine: ``high`` means it identifies

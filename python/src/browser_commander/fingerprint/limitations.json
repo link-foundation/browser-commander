@@ -4,9 +4,18 @@
     "surface": "navigator.webdriver",
     "severity": "high",
     "evidence": "measured",
-    "detail": "navigator.webdriver is the AutomationControlled Blink runtime feature. Chrome enables it for --enable-automation, --headless, --remote-debugging-pipe and an ephemeral --remote-debugging-port=0, and the only way to turn it back off is the launch switch --disable-blink-features=AutomationControlled. Emulation.setAutomationOverride({enabled:false}) is accepted over CDP but leaves navigator.webdriver true, in the same document and after navigation, so a browser somebody else already launched cannot be corrected from the protocol side.",
-    "workaround": "Launch the browser through this library, which passes the switch. When attaching to a browser somebody else started, apply the profile with the webdriver patch option, which installs a JavaScript getter instead: that is weaker, because it does not reach workers or a renderer that starts before the patch is installed.",
+    "detail": "navigator.webdriver is the AutomationControlled Blink runtime feature. Chrome enables it for --enable-automation, --headless, --remote-debugging-pipe and an ephemeral --remote-debugging-port=0, and the only way to turn it back off is the launch switch --disable-blink-features=AutomationControlled. A fixed non-zero --remote-debugging-port does not enable it. Emulation.setAutomationOverride({enabled:false}) is accepted over CDP but leaves navigator.webdriver true, in the same document and after navigation, so a browser somebody else already launched cannot be corrected from the protocol side.",
+    "workaround": "Launch the browser through this library: the default real launch starts it on a fixed port, so the feature is never enabled, and launch: 'engine' passes the off switch. When attaching to a browser somebody else started, apply the profile with the webdriver patch option, which installs a JavaScript getter instead: that is weaker, because it does not reach workers or a renderer that starts before the patch is installed.",
     "reference": "content/child/runtime_features.cc; analysis-artifacts/remote-debugging-isolation.json"
+  },
+  {
+    "id": "engine-launch-switches",
+    "surface": "Browser UI and chrome://version command line",
+    "severity": "medium",
+    "evidence": "measured",
+    "detail": "With launch: 'engine' the browser is started by Playwright or Puppeteer, which add their own switches (--enable-automation, --remote-debugging-pipe or port 0, --disable-extensions, --disable-sync and more; see chrome://version). Browser Commander removes --enable-automation and adds --disable-blink-features=AutomationControlled so navigator.webdriver stays false, but Chrome answers that switch with the \"You are using an unsupported command-line flag\" infobar, and the remaining engine switches change which browser features exist.",
+    "workaround": "Use the default launch: 'real', which starts the browser with only --user-data-dir and a fixed --remote-debugging-port, and opt into individual restrictions by name when they are wanted.",
+    "reference": "js/tests/e2e/fingerprint-parity.e2e.test.js; experiments/issue-105/"
   },
   {
     "id": "no-cdp-device-memory-override",

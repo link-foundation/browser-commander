@@ -24,9 +24,6 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
 import { existsSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -42,6 +39,18 @@ const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
 const TEST_TIMEOUT = 180000;
 
 /** Why the suite cannot run here, or `false` when it can. */
+/** Fail with every differing path when `report` is not `reference`. */
+function assertIndistinguishable(reference, report, label) {
+  const differences = diffReports(reference, report);
+  assert.deepEqual(
+    differences,
+    [],
+    `${label} differs from a hand-started browser in: ${differences
+      .map((entry) => entry.path)
+      .join(', ')}`
+  );
+}
+
 function skipReason({ headless }) {
   if (!process.env.RUN_E2E) {
     return 'set RUN_E2E=true to run the parity tests';
@@ -64,29 +73,28 @@ function defineParitySuite({ headless }) {
     () => {
       let server;
       let reference;
-      const userDataDirs = [];
 
-      const nextUserDataDir = async () => {
-        const directory = await mkdtemp(path.join(tmpdir(), 'bc-parity-e2e-'));
-        userDataDirs.push(directory);
-        return directory;
-      };
-
-      /** Drive one capture through the shipped launcher. */
+      /**
+       * Drive one capture through the shipped launcher. With no `launch`
+       * option that is the default real launch: a fresh temporary profile and
+       * a clean command line (issue #103).
+       */
       const captureWithLibrary = async (options) => {
         const token = randomUUID();
-        const { browser, page } = await launchBrowser({
+        const launched = await launchBrowser({
           headless,
-          slowMo: 0,
           executablePath: CHROME,
-          userDataDir: await nextUserDataDir(),
           ...options,
         });
         try {
-          await page.goto(server.url(token), { waitUntil: 'load' });
-          return { report: await server.waitForReport(token), token };
+          await launched.page.goto(server.url(token), { waitUntil: 'load' });
+          return {
+            report: await server.waitForReport(token),
+            token,
+            launched,
+          };
         } finally {
-          await browser.close();
+          await launched.browser.close();
         }
       };
 
@@ -128,11 +136,6 @@ function defineParitySuite({ headless }) {
         if (server) {
           await server.close();
         }
-        await Promise.all(
-          userDataDirs.map((directory) =>
-            rm(directory, { recursive: true, force: true, maxRetries: 10 })
-          )
-        );
       });
 
       for (const engine of ['playwright', 'puppeteer']) {
@@ -140,15 +143,28 @@ function defineParitySuite({ headless }) {
           `${engine} is indistinguishable from a hand-started Chrome`,
           { timeout: TEST_TIMEOUT },
           async () => {
-            const { report } = await captureWithLibrary({ engine });
-            const differences = diffReports(reference, report);
+            const { report, launched } = await captureWithLibrary({ engine });
+            assert.equal(launched.launch, 'real');
+            assert.equal(launched.temporaryProfile, true);
+            if (!headless) {
+              assert.equal(launched.args.length, 2, launched.args.join(' '));
+            }
+            assertIndistinguishable(reference, report, `${engine} (${mode})`);
+          }
+        );
 
-            assert.deepEqual(
-              differences,
-              [],
-              `${engine} differs from a real ${mode} browser in: ${differences
-                .map((entry) => entry.path)
-                .join(', ')}`
+        it(
+          `${engine} with launch: 'engine' is indistinguishable from a hand-started Chrome`,
+          { timeout: TEST_TIMEOUT },
+          async () => {
+            const { report } = await captureWithLibrary({
+              engine,
+              launch: 'engine',
+            });
+            assertIndistinguishable(
+              reference,
+              report,
+              `engine-launched ${engine} (${mode})`
             );
           }
         );
@@ -160,8 +176,11 @@ function defineParitySuite({ headless }) {
             // Negative control: without this the parity assertion above could
             // pass for the wrong reason, for example because the probe stopped
             // reporting the field.
+            // An engine launch passes switches that turn AutomationControlled
+            // on; the default real launch has none to undo.
             const { report } = await captureWithLibrary({
               engine,
+              launch: 'engine',
               automationParity: false,
             });
             const paths = diffReports(reference, report).map(
@@ -188,13 +207,10 @@ function defineParitySuite({ headless }) {
               assert.equal(session.args.length, 2, session.args.join(' '));
             }
             assert.equal(report.navigator.webdriver, false);
-            const differences = diffReports(reference, report);
-            assert.deepEqual(
-              differences,
-              [],
-              `real ${engine} session differs from a real ${mode} browser in: ${differences
-                .map((entry) => entry.path)
-                .join(', ')}`
+            assertIndistinguishable(
+              reference,
+              report,
+              `real ${engine} session (${mode})`
             );
           }
         );

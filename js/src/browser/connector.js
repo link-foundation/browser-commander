@@ -5,12 +5,21 @@ import {
   restorePuppeteerStorageState,
 } from './storage-state.js';
 
-function validateConnectionOptions({ engine, cdpEndpoint, wsEndpoint }) {
+/**
+ * Throw unless `engine` is one Browser Commander drives.
+ *
+ * @param {string} engine
+ */
+export function assertSupportedEngine(engine) {
   if (!['playwright', 'puppeteer'].includes(engine)) {
     throw new Error(
       `Invalid engine: ${engine}. Expected 'playwright' or 'puppeteer'`
     );
   }
+}
+
+function validateConnectionOptions({ engine, cdpEndpoint, wsEndpoint }) {
+  assertSupportedEngine(engine);
 
   if (Boolean(cdpEndpoint) === Boolean(wsEndpoint)) {
     throw new Error(

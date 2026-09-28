@@ -51,7 +51,26 @@ export {
   launchAndConnectRealBrowser,
   launchRealBrowser,
 } from './browser/real-browser.js';
-export { launchBrowser } from './browser/launcher.js';
+export {
+  launchBrowser,
+  LAUNCH_MODES,
+  resolveLaunchExecutable,
+} from './browser/launcher.js';
+export {
+  LAUNCH_RESTRICTIONS,
+  LAUNCH_RESTRICTION_PRESETS,
+  resolveRestrictions,
+  mergeFeatureSwitches,
+} from './browser/restrictions.js';
+export {
+  createTemporaryUserDataDir,
+  prepareUserDataDir,
+  removeUserDataDir,
+} from './browser/profile-directory.js';
+export {
+  PortRaceError,
+  reserveLoopbackPort,
+} from './browser/debugging-port.js';
 export { saveStorageState } from './browser/storage-state.js';
 export { emulateMedia } from './browser/media.js';
 export {

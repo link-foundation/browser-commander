@@ -22,6 +22,7 @@ import {
 import { createBoundFunctions } from './bindings.js';
 import { attachDownloads } from './downloads/attach.js';
 import { startTrace } from './traces/recorder.js';
+import { createCdpSession } from './browser/cdp-session.js';
 
 /**
  * Create a browser commander instance for a specific page
@@ -176,6 +177,13 @@ export function makeBrowserCommander(options = {}) {
       });
       return commander.downloads;
     },
+
+    /**
+     * Open a raw CDP session for this commander's page (issue #104).
+     *
+     * @returns {Promise<Object>} {send, on, once, off, detach, session, engine}
+     */
+    createCdpSession: () => createCdpSession(page, { engine }),
 
     /**
      * Start recording a privacy-aware trace of this session (issue #87).

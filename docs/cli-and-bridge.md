@@ -121,6 +121,78 @@ tagged:
 request, `-32601` unknown method, `-32602` invalid params, `-32000` engine
 error with `data: {"name","message","stack"}`.
 
+## Replacing the 27-operation bridge
+
+Before this contract, the Rust crate drove Node engines through
+`rust/src/browser/node_engine_bridge.js`. That script handled exactly 27
+operations, used its own `{id, ok, result|error}` framing and kept a single
+implicit page. `serve --stdio` replaces it. Every old operation maps onto a
+high-level method or a generic handle call, so no method-specific code is
+needed in the port.
+
+In the table below, `page` is the `page` handle that
+`handle.root {"name":"session:<id>"}` returns. `call(page, m, args)` stands for
+`handle.call {"handle": page, "method": m, "args": args}`, and `fn(...)` is a
+`{"$function": "..."}` argument.
+
+| Old operation       | Replacement                                                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `launch`            | `session.launch` (`headless`, `userDataDir`, `slowMo`, `args`, `ignoreDefaultArgs`, `executablePath`, `engine`)                         |
+| `connect`           | `session.connect` (`cdpEndpoint`, `engine`)                                                                                             |
+| `close`             | `session.close`                                                                                                                         |
+| `url`               | `call(page, "url", [])`                                                                                                                 |
+| `goto`              | `page.goto`                                                                                                                             |
+| `querySelector`     | `call(page, "evaluate", [fn(elementInfo), selector])`                                                                                   |
+| `querySelectorAll`  | `call(page, "evaluate", [fn(all elementInfo), selector])`                                                                               |
+| `count`             | `call(page, "evaluate", [fn((s) => document.querySelectorAll(s).length), selector])`                                                    |
+| `click`             | `page.click`                                                                                                                            |
+| `fill`              | `page.fill` (Playwright `fill`; Puppeteer `locator().fill()`)                                                                           |
+| `typeText`          | `call(page, "focus", [selector])`, then `call(keyboard, "type", [text])`                                                                |
+| `textContent`       | `call(page, "evaluate", [fn(...), selector])`                                                                                           |
+| `inputValue`        | `call(page, "evaluate", [fn(...), selector])`; Playwright also has `call(page, "inputValue", [selector])`                               |
+| `getAttribute`      | `call(page, "evaluate", [fn(...), {selector, attribute}])`; Playwright also has `call(page, "getAttribute", [selector, attribute])`     |
+| `isVisible`         | `call(page, "evaluate", [fn(elementInfo), selector])`; Playwright also has `call(page, "isVisible", [selector])`                        |
+| `isEnabled`         | `call(page, "evaluate", [fn(...), selector])`; Playwright also has `call(page, "isEnabled", [selector])`                                |
+| `waitForSelector`   | `call(page, "waitForSelector", [selector, {state: "visible", timeout}])` (Playwright) or `{visible: true, timeout}` (Puppeteer)         |
+| `scrollIntoView`    | `call(page, "evaluate", [fn(...), selector])`                                                                                           |
+| `evaluate`          | `page.eval` (`expression`), or `call(page, "evaluate", [fn(...), ...args])` for a function                                              |
+| `screenshot`        | `page.screenshot` without `path`, which returns `{"data":{"$binary":…}}`                                                                |
+| `pdf`               | `page.pdf` without `path`; other PDF options go through `call(page, "pdf", [options])`                                                  |
+| `bringToFront`      | `call(page, "bringToFront", [])`                                                                                                        |
+| `waitForNavigation` | `call(page, "waitForLoadState", ["load", {timeout}])` (Playwright) or `call(page, "waitForNavigation", [{timeout, waitUntil: "load"}])` |
+| `keyboardPress`     | `call(keyboard, "press", [key])`                                                                                                        |
+| `keyboardType`      | `call(keyboard, "type", [text])`                                                                                                        |
+| `keyboardDown`      | `call(keyboard, "down", [key])`                                                                                                         |
+| `keyboardUp`        | `call(keyboard, "up", [key])`                                                                                                           |
+
+`keyboard` is `handle.get {"handle": page, "property": "keyboard"}`. The old
+bridge returned an error as a stack string. The new one returns a JSON-RPC
+error, and engine errors keep the stack in `data.stack`. The old `sandbox`
+launch flag becomes `args` (for example `--no-sandbox`).
+
+## Implementation notes (JS)
+
+These details are not required by the contract. The other CLIs should follow
+them so that the outputs stay identical.
+
+- **Run entries.** Each `run` result is `{"method", "result"}` or
+  `{"method", "error"}`. `error` has the JSON-RPC shape but its `data` has no
+  `stack`, because stacks differ between machines. A failed step does not
+  stop the script. `run` exits `1` if any step failed.
+- **CLI options in `run`.** Browser options given to `run` on the command line
+  (`--engine`, `--executable-path`, `--headless`, `--arg`, …) become the
+  defaults of every `session.launch` step. The step's own params win.
+- **Ids.** Subscriptions are numbered `e1`, `e2`, … and handles `h1`, `h2`, ….
+  `handle.root` for a session always returns handles for `browser`, `context`
+  and `page`. For `playwright` and `puppeteer` it returns the module's default
+  export.
+- **`handle.describe`** also returns `properties`, the non-function members,
+  next to `type` and `methods`.
+- **`launch` without `--keep-open`** prints the document and then closes the
+  browser. With `--keep-open` the browser also stops when it disconnects.
+- **Values that start with `--`** must use the `=` form, for example
+  `--arg=--lang=de`. Otherwise they are read as another option.
+
 ## Reports
 
 The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):

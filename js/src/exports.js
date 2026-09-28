@@ -213,7 +213,9 @@ export {
   buildFingerprintInitScript,
   buildInitScriptConfig,
 } from './fingerprint/init-script.js';
-export { applyFingerprint, createCdpSession } from './fingerprint/apply.js';
+export { applyFingerprint } from './fingerprint/apply.js';
+// Raw CDP with one surface for both engines (issue #104).
+export { createCdpSession, wrapCdpSession } from './browser/cdp-session.js';
 export {
   FINGERPRINT_PRESET_NAMES,
   createFingerprintPreset,

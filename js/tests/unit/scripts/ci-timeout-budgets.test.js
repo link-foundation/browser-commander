@@ -196,6 +196,7 @@ describe('CI execution budgets', () => {
     assert.deepEqual(budgeted, [
       'docs.yml build-docs Rust API docs',
       'js.yml test Node.js test suite',
+      'parity.yml cli CLI and API coverage suites',
       'parity.yml parity Fingerprint parity suite',
       'python.yml test pytest suite',
       'rust.yml coverage Rust code coverage',

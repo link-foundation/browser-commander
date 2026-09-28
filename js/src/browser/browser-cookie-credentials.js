@@ -1,8 +1,6 @@
-import { execFile as execFileCallback } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { promisify } from 'node:util';
 
-const execFile = promisify(execFileCallback);
+import { runCommand as runSubprocess } from '../utilities/subprocess.js';
 
 const SAFE_STORAGE = {
   brave: {
@@ -27,13 +25,12 @@ const SAFE_STORAGE = {
   },
 };
 
+/**
+ * Run a credential tool (`security`, `secret-tool`, `kwallet-query`,
+ * `powershell.exe`) through command-stream and return its trimmed output.
+ */
 async function runCredentialCommand(command, args, environment) {
-  const { stdout } = await execFile(command, args, {
-    encoding: 'utf8',
-    env: environment,
-    maxBuffer: 1024 * 1024,
-    windowsHide: true,
-  });
+  const { stdout } = await runSubprocess(command, args, { env: environment });
   return stdout.trim();
 }
 

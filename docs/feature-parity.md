@@ -283,6 +283,33 @@ it cannot change that process's command line. Start an externally managed
 browser with a dedicated profile and a fixed `--remote-debugging-port`, or
 let `launchBrowser()` start it for you.
 
+## CLI, `serve --stdio` Bridge, `cdpSession` and command-stream
+
+Issue #104 gives every language one `browser-commander` command with the same
+commands and output. The contract is [cli-and-bridge.md](cli-and-bridge.md).
+
+| Feature                                              | JavaScript                                                                                           |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `browser-commander` CLI                              | `bin` in the npm package. Each command prints one JSON document and exits `0`/`1`/`2`/`64`.          |
+| `run <script.json>`                                  | Same dispatcher as `serve`. Handle and session ids are deterministic (`h1`…, `s1`…, `e1`…).          |
+| `serve --stdio` high-level methods                   | `session.*`, `page.*`, `trace.*`, `cookies.import`, `profile.migrate`, `open`, `doctor`, `version`   |
+| `serve --stdio` generic handles                      | `handle.root/call/get/dispose/describe`, `events.subscribe/unsubscribe`, `events.emit`               |
+| Full engine API through handles                      | Checked against the Playwright and Puppeteer `.d.ts` files (`npm run test:e2e:api-coverage`)         |
+| `cdpSession` (`send`, `on`, `once`, `off`, `detach`) | `createCdpSession(page)` / `commander.createCdpSession()` for Playwright and Puppeteer               |
+| Subprocesses through command-stream                  | The real-browser launch and the cookie credential tools (`security`, `secret-tool`, `kwallet-query`) |
+
+The cross-language contract lives in `tests/cli-contract/`. `basic.json` runs
+through each CLI, `normalize.mjs` removes the values that differ between
+machines, and the output must equal `basic.expected.json`. The JavaScript CLI
+runs it against a real Chrome in the `cli` job of the Browser Parity workflow.
+
+`serve --stdio` replaces the 27-operation `node_engine_bridge.js` the Rust
+crate used for Playwright and Puppeteer. The mapping is in
+[cli-and-bridge.md](cli-and-bridge.md#replacing-the-27-operation-bridge).
+Engine types that the API coverage suite does not reach from a fresh page
+(for example `Route`, `Dialog`, `Download`, `Worker`) are still callable
+through handles, but no test checks them yet.
+
 ## Compatibility Notes
 
 - Existing Rust aliases remain compatible: `chromiumoxide` and `cdp` parse as `EngineType::Chromiumoxide`; `fantoccini` and `webdriver` parse as `EngineType::Fantoccini`.

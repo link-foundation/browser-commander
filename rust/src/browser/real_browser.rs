@@ -4,7 +4,7 @@
 //! debugger would start it (issues #101 and #103):
 //!
 //! ```text
-//! chrome --user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port>
+//! chrome --user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port> about:blank
 //! ```
 //!
 //! and nothing else. The port is a fixed one reserved on loopback (port 0 and
@@ -434,6 +434,16 @@ fn assert_no_managed_arguments(options: &RealBrowserOptions) -> Result<()> {
     Ok(())
 }
 
+/// The page a real launch opens, as Puppeteer and Playwright do.
+///
+/// Without a URL, Chrome opens its New Tab page and Microsoft Edge opens the
+/// MSN New Tab page plus `edge://welcome-new-profile/`, whose flow closes the
+/// window and exits the browser a few seconds after launch (measured with
+/// Edge 153, experiments/issue-103/edge-headful.mjs). A URL is not a switch,
+/// so both engines see the same command line a person gets from `chrome
+/// about:blank`. A start URL among the caller's arguments replaces it.
+pub const START_URL: &str = "about:blank";
+
 pub(crate) fn browser_args(
     options: &RealBrowserOptions,
     user_data_dir: &Path,
@@ -452,8 +462,15 @@ pub(crate) fn browser_args(
     arguments.extend(options.args.iter().cloned());
     arguments.extend(options.extra_args.iter().cloned());
     let arguments = merge_feature_switches(&arguments);
-    if options.automation_parity && !detect_automation_controlled_triggers(&arguments).is_empty() {
-        return Ok(apply_automation_parity_args(&arguments));
+    let mut arguments = if options.automation_parity
+        && !detect_automation_controlled_triggers(&arguments).is_empty()
+    {
+        apply_automation_parity_args(&arguments)
+    } else {
+        arguments
+    };
+    if arguments.iter().all(|argument| argument.starts_with('-')) {
+        arguments.push(START_URL.to_string());
     }
     Ok(arguments)
 }
@@ -462,7 +479,8 @@ pub(crate) fn browser_args(
 ///
 /// `--user-data-dir` and `--remote-debugging-port` come first, then
 /// `--headless=new` when headless, then the opt-in restrictions and the
-/// caller's arguments; repeated feature-list switches are merged. Both
+/// caller's arguments; repeated feature-list switches are merged, and
+/// [`START_URL`] closes the list unless the caller passed a URL. Both
 /// `user_data_dir` and `remote_debugging_port` must be set - a launch picks
 /// them itself when they are not.
 pub fn build_real_browser_args(options: &RealBrowserOptions) -> Result<Vec<String>> {
@@ -831,7 +849,7 @@ where
 /// Launch a genuine installed browser and attach.
 ///
 /// The command line is exactly `--user-data-dir=<profile>
-/// --remote-debugging-port=<port>` (plus `--headless=new`, restrictions and
+/// --remote-debugging-port=<port> about:blank` (plus `--headless=new`, restrictions and
 /// the caller's arguments when asked for), so the browser behaves like one a
 /// person started by hand and `navigator.webdriver` stays false. Without
 /// `user_data_dir` a fresh temporary profile is used and deleted when the

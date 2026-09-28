@@ -33,7 +33,7 @@ use crate::fingerprint::profile::FingerprintProfile;
 pub enum LaunchMode {
     /// Browser Commander starts the installed browser with a hand-started
     /// command line - `--user-data-dir=<fresh profile>
-    /// --remote-debugging-port=<reserved port>` - and attaches the engine.
+    /// --remote-debugging-port=<reserved port> about:blank` - and attaches the engine.
     #[default]
     Real,
     /// The automation engine starts the browser with its own switches, which
@@ -565,7 +565,7 @@ impl std::fmt::Debug for LaunchResult {
 ///
 /// By default ([`LaunchMode::Real`]) Browser Commander starts the installed
 /// Chrome itself: `--user-data-dir=<fresh temporary profile>
-/// --remote-debugging-port=<reserved port>` and nothing else (plus
+/// --remote-debugging-port=<reserved port> about:blank` and nothing else (plus
 /// `--headless=new`, restrictions and the caller's arguments when asked for),
 /// then attaches the engine over CDP. The browser behaves like one a person
 /// started by hand and `navigator.webdriver` stays false. Without an explicit

@@ -126,8 +126,23 @@ fn builds_exactly_the_command_line_a_person_would_type() {
         [
             "--user-data-dir=/tmp/browser-commander-dedicated",
             "--remote-debugging-port=9333",
+            "about:blank",
         ]
     );
+}
+
+#[test]
+fn opens_a_blank_tab_unless_the_caller_passes_a_start_url() {
+    let args = build_real_browser_args(&dedicated(9333).with_args(vec![
+        "--lang=en-US".to_string(),
+        "https://example.com/".to_string(),
+    ]))
+    .unwrap();
+    assert_eq!(
+        args.last().map(String::as_str),
+        Some("https://example.com/")
+    );
+    assert!(!args.iter().any(|arg| arg == START_URL));
 }
 
 #[test]
@@ -169,6 +184,7 @@ fn launches_headless_exactly_as_a_person_would_with_no_off_switch() {
             "--user-data-dir=/tmp/browser-commander-dedicated",
             "--remote-debugging-port=9333",
             "--headless=new",
+            "about:blank",
         ]
     );
 }
@@ -187,6 +203,7 @@ fn adds_the_off_switch_when_a_custom_argument_is_a_trigger() {
             "--remote-debugging-port=9333",
             "--disable-blink-features=Foo,AutomationControlled",
             "--enable-automation",
+            "about:blank",
         ]
     );
     let without_parity = build_real_browser_args(
@@ -221,6 +238,7 @@ fn applies_opt_in_restrictions_and_merges_feature_lists() {
             "--disable-features=Translate,Foo",
             "--legacy-arg",
             "--lang=en-US",
+            "about:blank",
         ]
     );
     let error =
@@ -320,6 +338,7 @@ async fn spawns_waits_connects_and_returns_process_metadata() {
     let expected_args = vec![
         format!("--user-data-dir={}", profile.display()),
         "--remote-debugging-port=9444".to_string(),
+        START_URL.to_string(),
     ];
     assert_eq!(launched.args, expected_args);
     let spawned = hooks.spawned.lock().unwrap().clone();

@@ -17,7 +17,8 @@ bump: minor
 - `LaunchOptions::all_chrome_args()` returns `anyhow::Result<Vec<String>>` (an unknown restriction is an error), and `ignore_default_args` no longer filters it.
 - A real launch uses a reserved fixed DevTools port: port 0 is refused because it turns `navigator.webdriver` on.
 - `RealBrowserOptions::remote_debugging_port` is an `Option<u16>`, and `build_real_browser_args` requires `user_data_dir` and `remote_debugging_port` to be set on the options (`launch_real_browser` picks both itself when they are unset).
-- `--headless` is no longer treated as an AutomationControlled trigger, so a headless real launch has exactly `--user-data-dir`, `--remote-debugging-port` and `--headless=new`.
+- `--headless` is no longer treated as an AutomationControlled trigger, so a headless real launch has exactly `--user-data-dir`, `--remote-debugging-port`, `--headless=new` and the start URL.
+- A real launch opens `about:blank`, as Puppeteer and Playwright do, unless the caller's arguments contain a URL (`START_URL`). Without it Microsoft Edge opened its new-profile welcome flow, which closed the window and exited the browser a few seconds after launch.
 - `BrowserProcess::kill` returns whether a signal was sent, and `try_wait` was removed in favour of `is_running`, `wait_timeout` and `exited`.
 - The Playwright and Puppeteer bridge no longer sets `GOOGLE_API_KEY`, `GOOGLE_DEFAULT_CLIENT_ID` or `GOOGLE_DEFAULT_CLIENT_SECRET` in its own environment, and no longer passes `--start-maximized`.
 

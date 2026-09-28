@@ -27,8 +27,16 @@ LOCAL_STATE_FILE = "Local State"
 #: just updated and opens a "What's new" tab that takes the foreground after the
 #: engine has attached. A ``last_whats_new_version`` no release has reached
 #: keeps that tab closed.
+#:
+#: Microsoft Edge ignores both and opens its own first-run tab,
+#: ``edge://welcome-edge/``, which takes the foreground the same way; it is
+#: skipped once Edge has recorded ``fre.has_user_seen_fre`` (measured with Edge
+#: 153, experiments/issue-103/edge-first-run.sh). Chrome ignores the key.
 INITIAL_LOCAL_STATE: Mapping[str, Any] = MappingProxyType(
-    {"browser": MappingProxyType({"last_whats_new_version": 9999})}
+    {
+        "browser": MappingProxyType({"last_whats_new_version": 9999}),
+        "fre": MappingProxyType({"has_user_seen_fre": True}),
+    }
 )
 
 #: Prefix of the fresh profiles Browser Commander creates and deletes.

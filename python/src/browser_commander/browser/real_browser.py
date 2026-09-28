@@ -142,6 +142,15 @@ class RealBrowserResult(LaunchResult):
     """
 
 
+#: The page a real launch opens, as Puppeteer and Playwright do. Without a URL,
+#: Chrome opens its New Tab page and Microsoft Edge opens the MSN New Tab page
+#: plus ``edge://welcome-new-profile/``, whose flow closes the window and exits
+#: the browser a few seconds after launch (measured with Edge 153,
+#: experiments/issue-103/edge-headful.mjs). A URL is not a switch, so every
+#: engine sees the command line a person gets from ``chrome about:blank``.
+START_URL = "about:blank"
+
+
 def build_real_browser_args(
     *,
     user_data_dir: str | os.PathLike[str],
@@ -155,15 +164,16 @@ def build_real_browser_args(
     """Build the command line for a real browser.
 
     By default it is exactly ``--user-data-dir=<dir>
-    --remote-debugging-port=<port>`` (issue #103). Everything else is opt-in:
-    ``headless``, named ``restrictions`` and custom ``args``. Chrome's DevTools
+    --remote-debugging-port=<port> about:blank`` (issue #103). Everything else
+    is opt-in: ``headless``, named ``restrictions`` and custom ``args``; a start
+    URL among the custom ``args`` replaces ``about:blank``. Chrome's DevTools
     server binds to loopback by default, so no ``--remote-debugging-address``
     is passed; the switch stays managed so custom arguments cannot expose
     DevTools on another interface.
 
-    ``--headless`` turns AutomationControlled on, and a headless browser has no
-    infobar to show, so in that case (and whenever a custom argument is a
-    trigger) the off switch is added unless ``automation_parity`` is false.
+    A hand-started headless browser reports ``navigator.webdriver`` false, so
+    headless adds no off switch; it is added only when a custom argument is an
+    AutomationControlled trigger, unless ``automation_parity`` is false.
 
     Raises:
         ValueError: For port 0, an invalid port, or a managed switch in ``args``.
@@ -195,6 +205,8 @@ def build_real_browser_args(
     )
     if automation_parity and detect_automation_controlled_triggers(browser_args):
         browser_args = apply_automation_parity_args(browser_args)
+    if all(argument.startswith("-") for argument in browser_args):
+        browser_args.append(START_URL)
     return browser_args
 
 

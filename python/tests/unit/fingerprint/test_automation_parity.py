@@ -20,11 +20,10 @@ from browser_commander.fingerprint.automation_parity import (
 class TestTriggerTable:
     """The table mirrors content/child/runtime_features.cc."""
 
-    def test_covers_every_switch_runtime_features_maps(self):
+    def test_covers_every_switch_that_turns_the_feature_on(self):
         switches = {trigger.switch for trigger in AUTOMATION_CONTROLLED_TRIGGERS}
         assert switches == {
             "--enable-automation",
-            "--headless",
             "--remote-debugging-pipe",
             "--remote-debugging-port=0",
         }
@@ -48,10 +47,19 @@ class TestDetectAutomationControlledTriggers:
         assert [trigger.switch for trigger in found] == ["--enable-automation"]
         assert found[0].argument == "--enable-automation"
 
-    def test_detects_headless_with_a_value(self):
-        found = detect_automation_controlled_triggers(["--headless=new"])
-        assert [trigger.switch for trigger in found] == ["--headless"]
-        assert found[0].argument == "--headless=new"
+    def test_does_not_treat_headless_as_a_trigger(self):
+        # Measured: a hand-started headless Chrome reports navigator.webdriver
+        # false, because the renderer never sees the --headless switch.
+        assert (
+            detect_automation_controlled_triggers(
+                ["--headless", "--headless=new", "--headless=old"]
+            )
+            == []
+        )
+
+    def test_reports_the_argument_as_written(self):
+        found = detect_automation_controlled_triggers(["--remote-debugging-port=0"])
+        assert found[0].argument == "--remote-debugging-port=0"
 
     def test_detects_remote_debugging_pipe(self):
         found = detect_automation_controlled_triggers(["--remote-debugging-pipe"])
@@ -82,10 +90,10 @@ class TestDetectAutomationControlledTriggers:
 
     def test_reports_every_trigger_in_order(self):
         found = detect_automation_controlled_triggers(
-            ["--headless", "--no-first-run", "--remote-debugging-pipe"]
+            ["--enable-automation", "--no-first-run", "--remote-debugging-pipe"]
         )
         assert [trigger.switch for trigger in found] == [
-            "--headless",
+            "--enable-automation",
             "--remote-debugging-pipe",
         ]
 

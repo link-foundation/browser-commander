@@ -18,6 +18,7 @@ from browser_commander.browser.debugging_port import PortRaceError
 from browser_commander.browser.launcher import LaunchResult
 from browser_commander.browser.profile_directory import TEMPORARY_PROFILE_PREFIX
 from browser_commander.browser.real_browser import (
+    START_URL,
     _browser_install_candidates,
     assert_dedicated_user_data_dir,
     build_real_browser_args,
@@ -77,7 +78,17 @@ def test_builds_exactly_the_command_line_a_person_would_type() -> None:
     # Issue #103: nothing but the dedicated profile and a fixed port.
     assert build_real_browser_args(
         user_data_dir=DEDICATED, remote_debugging_port=9333
-    ) == [f"--user-data-dir={DEDICATED}", "--remote-debugging-port=9333"]
+    ) == [f"--user-data-dir={DEDICATED}", "--remote-debugging-port=9333", START_URL]
+
+
+def test_opens_a_blank_tab_unless_the_caller_passes_a_start_url() -> None:
+    arguments = build_real_browser_args(
+        user_data_dir=DEDICATED,
+        remote_debugging_port=9333,
+        args=["--lang=en-US", "https://example.com/"],
+    )
+    assert arguments[-1] == "https://example.com/"
+    assert START_URL not in arguments
 
 
 def test_never_turns_automation_controlled_on_in_a_headful_launch() -> None:
@@ -101,23 +112,36 @@ def test_refuses_port_zero_and_invalid_ports(port: Any) -> None:
         build_real_browser_args(user_data_dir=DEDICATED, remote_debugging_port=0)
 
 
-def test_adds_the_off_switch_only_for_headless() -> None:
+def test_launches_headless_exactly_as_a_person_would_with_no_off_switch() -> None:
+    # A hand-started headless Chrome reports navigator.webdriver false, so the
+    # off switch would only be a command-line difference of its own.
     assert build_real_browser_args(
-        user_data_dir=DEDICATED,
-        remote_debugging_port=9333,
-        headless=True,
-        args=["--disable-blink-features=Foo"],
+        user_data_dir=DEDICATED, remote_debugging_port=9333, headless=True
     ) == [
         f"--user-data-dir={DEDICATED}",
         "--remote-debugging-port=9333",
         "--headless=new",
+        START_URL,
+    ]
+
+
+def test_adds_the_off_switch_when_a_custom_argument_is_a_trigger() -> None:
+    assert build_real_browser_args(
+        user_data_dir=DEDICATED,
+        remote_debugging_port=9333,
+        args=["--disable-blink-features=Foo", "--enable-automation"],
+    ) == [
+        f"--user-data-dir={DEDICATED}",
+        "--remote-debugging-port=9333",
         "--disable-blink-features=Foo,AutomationControlled",
+        "--enable-automation",
+        START_URL,
     ]
     assert "--disable-blink-features=AutomationControlled" not in (
         build_real_browser_args(
             user_data_dir=DEDICATED,
             remote_debugging_port=9333,
-            headless=True,
+            args=["--enable-automation"],
             automation_parity=False,
         )
     )
@@ -137,6 +161,7 @@ def test_applies_opt_in_restrictions_and_merges_feature_lists() -> None:
         "--disable-features=Translate,Foo",
         "--legacy-arg",
         "--lang=en-US",
+        START_URL,
     ]
     with pytest.raises(ValueError, match="Unknown launch restriction"):
         build_real_browser_args(
@@ -268,7 +293,7 @@ async def test_spawns_waits_connects_and_returns_process_metadata(
     assert calls[0] == (
         "spawn",
         "/opt/google/chrome",
-        [f"--user-data-dir={profile}", "--remote-debugging-port=9444"],
+        [f"--user-data-dir={profile}", "--remote-debugging-port=9444", START_URL],
         {"env": None, "verbose": False},
     )
     assert calls[1] == ("wait", 9444)

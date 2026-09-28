@@ -116,7 +116,10 @@ def test_creates_a_prepared_temporary_profile() -> None:
         assert Path(directory).name.startswith(TEMPORARY_PROFILE_PREFIX)
         assert (Path(directory) / FIRST_RUN_SENTINEL).is_file()
         local_state = json.loads((Path(directory) / LOCAL_STATE_FILE).read_text())
-        assert local_state == {"browser": {"last_whats_new_version": 9999}}
+        assert local_state == {
+            "browser": {"last_whats_new_version": 9999},
+            "fre": {"has_user_seen_fre": True},
+        }
     finally:
         remove_user_data_dir(directory)
     assert not Path(directory).exists()

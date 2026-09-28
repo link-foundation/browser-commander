@@ -5,6 +5,7 @@ import {
   randomBytes,
 } from 'node:crypto';
 
+import path from 'node:path';
 import BetterSqlite3 from 'better-sqlite3';
 
 /**
@@ -145,7 +146,7 @@ export function buildKey4Database({
     primaryPassword,
   });
 
-  const key4Path = `${dir}/key4.db`;
+  const key4Path = path.join(dir, 'key4.db');
   const db = new BetterSqlite3(key4Path);
   db.exec(
     'CREATE TABLE metadata (id TEXT PRIMARY KEY, item1 BLOB, item2 BLOB);' +

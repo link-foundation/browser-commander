@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
+import path from 'node:path';
 
 import {
   createSourceKeyResolver,
@@ -88,7 +89,7 @@ describe('localStatePathForProfile', () => {
   it('points at Local State next to the profile directory', () => {
     assert.equal(
       localStatePathForProfile('/root/google-chrome/Default'),
-      '/root/google-chrome/Local State'
+      path.join('/root/google-chrome', 'Local State')
     );
   });
 });

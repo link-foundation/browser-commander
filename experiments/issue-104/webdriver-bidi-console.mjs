@@ -14,7 +14,9 @@ const { Domain } = require('selenium-webdriver/bidi/domain');
 
 const headless = process.env.HEADLESS === 'true';
 const options = new chrome.Options();
-options.setChromeBinaryPath(process.env.CHROME_PATH ?? '/usr/bin/google-chrome');
+options.setChromeBinaryPath(
+  process.env.CHROME_PATH ?? '/usr/bin/google-chrome'
+);
 options.addArguments('--remote-debugging-port=9555');
 if (headless) {
   options.addArguments('--headless=new');

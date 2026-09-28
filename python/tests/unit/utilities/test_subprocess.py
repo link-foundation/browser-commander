@@ -62,7 +62,8 @@ def test_run_command_sync() -> None:
 async def test_start_process_streams_output_and_reports_exit() -> None:
     process = await start_process(
         PYTHON,
-        ["-c", "import sys; sys.stderr.write('ready\\n'); sys.stderr.flush()"],
+        # Bytes, so Windows text mode does not turn the newline into CRLF.
+        ["-c", "import sys; sys.stderr.buffer.write(b'ready\\n'); sys.stderr.flush()"],
     )
     chunks: list[str] = []
     process.stderr.on("data", chunks.append)

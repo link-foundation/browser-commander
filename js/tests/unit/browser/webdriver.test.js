@@ -1,7 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { existsSync } from 'node:fs';
-import path from 'node:path';
 
 import {
   CHROMEDRIVER_DEFAULT_SWITCHES,
@@ -142,6 +141,7 @@ function launchDependencies(overrides = {}) {
     dependencies: {
       selenium: mock.selenium,
       environment: { PATH: '/usr/bin' },
+      platform: 'linux',
       checkAccess: accessOnly('/opt/drivers/chromedriver'),
       runCommand: async () =>
         managerOutput({
@@ -191,13 +191,23 @@ describe('resolveWebDriverExecutable', () => {
   it('then looks on PATH', async () => {
     const resolved = await resolveWebDriverExecutable({
       browser: 'firefox',
-      environment: { PATH: ['/a', '/b'].join(path.delimiter) },
+      environment: { PATH: '/a:/b' },
       platform: 'linux',
       checkAccess: accessOnly('/b/geckodriver'),
       runCommand: () => assert.fail('Selenium Manager must not run'),
     });
     assert.equal(resolved.driverPath, '/b/geckodriver');
     assert.equal(resolved.source, 'PATH');
+  });
+
+  it('uses the target platform path rules on PATH', async () => {
+    const resolved = await resolveWebDriverExecutable({
+      environment: { PATH: 'C:\\a;C:\\b' },
+      platform: 'win32',
+      checkAccess: accessOnly('C:\\b\\chromedriver.exe'),
+      runCommand: () => assert.fail('Selenium Manager must not run'),
+    });
+    assert.equal(resolved.driverPath, 'C:\\b\\chromedriver.exe');
   });
 
   it('then asks Selenium Manager for a matching driver', async () => {

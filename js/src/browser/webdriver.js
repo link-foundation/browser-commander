@@ -147,14 +147,14 @@ async function isExecutable(file, checkAccess) {
 }
 
 async function findOnPath(name, { environment, platform, checkAccess }) {
-  const delimiter = platform === 'win32' ? ';' : path.delimiter;
+  const paths = platform === 'win32' ? path.win32 : path.posix;
   const file = platform === 'win32' ? `${name}.exe` : name;
-  for (const directory of (environment.PATH ?? '').split(delimiter)) {
+  for (const directory of (environment.PATH ?? '').split(paths.delimiter)) {
     if (
       directory &&
-      (await isExecutable(path.join(directory, file), checkAccess))
+      (await isExecutable(paths.join(directory, file), checkAccess))
     ) {
-      return path.join(directory, file);
+      return paths.join(directory, file);
     }
   }
   return null;
@@ -433,7 +433,7 @@ async function teardown({
  * @param {Object<string,string>} [options.env] - Extra environment for the driver and browser
  * @param {number} [options.startupTimeout=30000]
  * @param {boolean} [options.verbose=false] - Mirror the driver server's output
- * @param {Object} [dependencies] - Injected selenium modules, runCommand, startProcess, fetch, reservePort (tests)
+ * @param {Object} [dependencies] - Injected selenium modules, runCommand, startProcess, fetch, reservePort, environment, platform (tests)
  * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, bidi: boolean}>}
  */
 export async function launchWebDriver(options = {}, dependencies = {}) {
@@ -473,6 +473,7 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
     ...(dependencies.environment
       ? { environment: dependencies.environment }
       : {}),
+    ...(dependencies.platform ? { platform: dependencies.platform } : {}),
   });
 
   const temporaryProfile = !requestedUserDataDir;

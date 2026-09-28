@@ -6,6 +6,7 @@
  * what it returns without a browser.
  */
 import { EventEmitter } from 'node:events';
+import path from 'node:path';
 
 /** A page that records calls and keeps a URL, a title and field values. */
 export class FakePage extends EventEmitter {
@@ -151,7 +152,7 @@ export function createFakeDependencies() {
       },
     }),
     writeTraceViewer: async (bundle, output) =>
-      output ?? `${bundle}/viewer.html`,
+      output ?? path.join(bundle, 'viewer.html'),
     readBrowserCookies: async ({ domainFilter }) => [
       { name: 'sid', value: '1', domain: `.${domainFilter}`, path: '/' },
       { name: 'bad', value: '2', domain: `.${domainFilter}`, path: '/' },

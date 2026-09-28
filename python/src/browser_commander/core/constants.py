@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Final
 
-# Common Chrome arguments used across both Playwright and Selenium
+# The switches Browser Commander added to every launch before issue #103.
+#
+# They are no longer added by default: a launch starts Chrome with only
+# ``--user-data-dir`` and ``--remote-debugging-port``. The list is kept for
+# callers that relied on it and holds the switches of the ``legacy-defaults``
+# restriction preset, so ``LaunchOptions(restrictions=["legacy-defaults"])``
+# restores the old command line.
 CHROME_ARGS: Final[list[str]] = [
     "--disable-session-crashed-bubble",
     "--hide-crash-restore-bubble",

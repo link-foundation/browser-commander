@@ -9,11 +9,22 @@ from browser_commander.browser.browser_cookies import (
     list_browser_profiles,
     read_browser_cookies,
 )
-from browser_commander.browser.connector import ConnectOptions, connect_browser
+from browser_commander.browser.connector import (
+    ConnectOptions,
+    connect_browser,
+    pick_foreground_page,
+)
+from browser_commander.browser.debugging_port import (
+    PortRaceError,
+    assert_fixed_debugging_port,
+    reserve_loopback_port,
+)
 from browser_commander.browser.launcher import (
+    LAUNCH_MODES,
     LaunchOptions,
     LaunchResult,
     launch_browser,
+    resolve_launch_executable,
 )
 from browser_commander.browser.media import emulate_media
 from browser_commander.browser.navigation import (
@@ -29,14 +40,30 @@ from browser_commander.browser.navigation import (
     wait_for_url_stabilization,
 )
 from browser_commander.browser.pdf import pdf
+from browser_commander.browser.profile_directory import (
+    create_temporary_user_data_dir,
+    prepare_user_data_dir,
+    remove_user_data_dir,
+)
 from browser_commander.browser.real_browser import (
     RealBrowserOptions,
     RealBrowserResult,
+    build_real_browser_args,
     launch_and_connect_real_browser,
     launch_real_browser,
 )
+from browser_commander.browser.restrictions import (
+    LAUNCH_RESTRICTION_PRESETS,
+    LAUNCH_RESTRICTIONS,
+    browser_environment,
+    merge_feature_switches,
+    resolve_restrictions,
+)
 
 __all__ = [
+    "LAUNCH_MODES",
+    "LAUNCH_RESTRICTIONS",
+    "LAUNCH_RESTRICTION_PRESETS",
     "BrowserCookieCacheOptions",
     "BrowserCookieReadOptions",
     "BrowserProfile",
@@ -45,10 +72,15 @@ __all__ = [
     "LaunchOptions",
     "LaunchResult",
     "NavigationVerificationResult",
+    "PortRaceError",
     "RealBrowserOptions",
     "RealBrowserResult",
     "WaitAfterActionResult",
+    "assert_fixed_debugging_port",
+    "browser_environment",
+    "build_real_browser_args",
     "connect_browser",
+    "create_temporary_user_data_dir",
     "default_navigation_verification",
     "emulate_media",
     "goto",
@@ -56,9 +88,16 @@ __all__ = [
     "launch_browser",
     "launch_real_browser",
     "list_browser_profiles",
+    "merge_feature_switches",
     # PDF generation
     "pdf",
+    "pick_foreground_page",
+    "prepare_user_data_dir",
     "read_browser_cookies",
+    "remove_user_data_dir",
+    "reserve_loopback_port",
+    "resolve_launch_executable",
+    "resolve_restrictions",
     "verify_navigation",
     "wait_after_action",
     "wait_for_navigation",

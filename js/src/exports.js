@@ -52,6 +52,13 @@ export {
   launchRealBrowser,
 } from './browser/real-browser.js';
 export {
+  classifyDifferences,
+  compareCommandLines,
+  measureParity,
+  parseSwitches,
+  readBrowserVersionPage,
+} from './browser/parity.js';
+export {
   launchBrowser,
   LAUNCH_MODES,
   resolveLaunchExecutable,

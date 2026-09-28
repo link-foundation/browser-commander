@@ -15,7 +15,7 @@
     "test:e2e": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e",
     "test:e2e:playwright": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/playwright.e2e.test.js",
     "test:e2e:puppeteer": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/puppeteer.e2e.test.js",
-    "test:e2e:parity": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/fingerprint-parity.e2e.test.js",
+    "test:e2e:parity": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/fingerprint-parity.e2e.test.js tests/e2e/measure-parity.e2e.test.js",
     "test:e2e:click-readiness": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/click-readiness.e2e.test.js",
     "test:e2e:downloads": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/downloads.e2e.test.js",
     "test:e2e:traces": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/traces.e2e.test.js",

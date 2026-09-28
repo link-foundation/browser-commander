@@ -23,7 +23,6 @@
  */
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
-import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -31,14 +30,16 @@ import {
   diffReports,
   readProbeSource,
   startProbeServer,
-} from '../../../experiments/fingerprint-parity/harness.mjs';
+} from '../../src/parity/harness.js';
 import { launchBrowser, launchRealBrowser } from '../../src/index.js';
 import { createFingerprintPreset } from '../../src/fingerprint/presets.js';
+import {
+  PARITY_CHROME as CHROME,
+  paritySkipReason as skipReason,
+} from '../helpers/e2e-browser.js';
 
-const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
 const TEST_TIMEOUT = 180000;
 
-/** Why the suite cannot run here, or `false` when it can. */
 /** Fail with every differing path when `report` is not `reference`. */
 function assertIndistinguishable(reference, report, label) {
   const differences = diffReports(reference, report);
@@ -49,19 +50,6 @@ function assertIndistinguishable(reference, report, label) {
       .map((entry) => entry.path)
       .join(', ')}`
   );
-}
-
-function skipReason({ headless }) {
-  if (!process.env.RUN_E2E) {
-    return 'set RUN_E2E=true to run the parity tests';
-  }
-  if (!existsSync(CHROME)) {
-    return `no Chrome binary at ${CHROME}; set CHROME_PATH`;
-  }
-  if (!headless && process.platform === 'linux' && !process.env.DISPLAY) {
-    return 'headful parity needs a display; run under xvfb-run';
-  }
-  return false;
 }
 
 function defineParitySuite({ headless }) {
@@ -138,6 +126,22 @@ function defineParitySuite({ headless }) {
         }
       });
 
+      // Nothing but the profile, the fixed port, --headless=new when headless
+      // and the about:blank start page, so there is no switch that could show
+      // the unsupported-flag infobar.
+      const assertPersonCommandLine = (args) => {
+        assert.deepEqual(
+          args.map((argument) => argument.split('=')[0]),
+          [
+            '--user-data-dir',
+            '--remote-debugging-port',
+            ...(headless ? ['--headless'] : []),
+            'about:blank',
+          ],
+          args.join(' ')
+        );
+      };
+
       for (const engine of ['playwright', 'puppeteer']) {
         it(
           `${engine} is indistinguishable from a hand-started Chrome`,
@@ -146,9 +150,7 @@ function defineParitySuite({ headless }) {
             const { report, launched } = await captureWithLibrary({ engine });
             assert.equal(launched.launch, 'real');
             assert.equal(launched.temporaryProfile, true);
-            if (!headless) {
-              assert.equal(launched.args.length, 2, launched.args.join(' '));
-            }
+            assertPersonCommandLine(launched.args);
             assertIndistinguishable(reference, report, `${engine} (${mode})`);
           }
         );
@@ -201,11 +203,7 @@ function defineParitySuite({ headless }) {
             const { report, session } = await captureWithRealBrowser({
               engine,
             });
-            // Headful: nothing but the profile and the fixed port, so there is
-            // no switch that could show the unsupported-flag infobar.
-            if (!headless) {
-              assert.equal(session.args.length, 2, session.args.join(' '));
-            }
+            assertPersonCommandLine(session.args);
             assert.equal(report.navigator.webdriver, false);
             assertIndistinguishable(
               reference,

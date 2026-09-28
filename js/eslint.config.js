@@ -132,6 +132,16 @@ export default [
     },
   },
   {
+    // The environment probe is source text too: `measureParity()` wraps it as
+    // `(<file contents>)()` for `page.evaluate` and a plain `<script>` tag, and
+    // its length is the surface of the browser API it measures.
+    files: ['src/parity/probe.js'],
+    rules: {
+      'no-unused-vars': 'off',
+      'max-lines-per-function': 'off',
+    },
+  },
+  {
     // Test files have different requirements
     files: ['tests/**/*.js', '**/*.test.js'],
     rules: {

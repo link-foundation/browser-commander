@@ -8,7 +8,33 @@
  * read as the behaviour they check.
  */
 
+import { existsSync } from 'node:fs';
+
 import { launchBrowser } from '../../src/browser/launcher.js';
+
+/** The installed Chrome the parity suites compare against. */
+export const PARITY_CHROME =
+  process.env.CHROME_PATH || '/usr/bin/google-chrome';
+
+/**
+ * Why a parity suite cannot run here, or `false` when it can.
+ *
+ * @param {Object} [options]
+ * @param {boolean} [options.headless=false] - Headless suites need no display
+ * @returns {string|false}
+ */
+export function paritySkipReason({ headless = false } = {}) {
+  if (!process.env.RUN_E2E) {
+    return 'set RUN_E2E=true to run the parity tests';
+  }
+  if (!existsSync(PARITY_CHROME)) {
+    return `no Chrome binary at ${PARITY_CHROME}; set CHROME_PATH`;
+  }
+  if (!headless && process.platform === 'linux' && !process.env.DISPLAY) {
+    return 'headful parity needs a display; run under xvfb-run';
+  }
+  return false;
+}
 
 /**
  * Extra Chrome arguments for environments without a usable sandbox.

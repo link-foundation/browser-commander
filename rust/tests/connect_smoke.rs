@@ -40,7 +40,10 @@ async fn attach_all_cdp_engines_to_system_chrome() -> anyhow::Result<()> {
     );
 
     let endpoint = wait_for_endpoint(temporary_directory.path(), &mut child).await?;
-    let node_working_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../js");
+    // Where Node resolves `playwright` and `puppeteer`.
+    let node_working_dir = std::env::var_os("BROWSER_COMMANDER_NODE_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../js"));
     let options = [
         ConnectOptions::chromiumoxide()
             .cdp_endpoint(&endpoint)
@@ -71,6 +74,11 @@ async fn attach_all_cdp_engines_to_system_chrome() -> anyhow::Result<()> {
             Some("attached"),
             "{engine} should operate through the shared page adapter"
         );
+        // Whoever started the browser owns it: closing an attached result
+        // leaves it running.
+        assert_eq!(result.launch, None);
+        result.close().await?;
+        assert!(child.0.try_wait()?.is_none(), "{engine} closed the browser");
     }
 
     Ok(())

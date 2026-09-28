@@ -5,10 +5,13 @@
 
 use std::time::Duration;
 
-/// Common Chrome arguments used across both browser engines.
+/// Chrome arguments Browser Commander used to add to every launch.
 ///
-/// These arguments are used to configure Chrome/Chromium in a way that
-/// optimizes for automation and reduces user interruptions.
+/// Since issue #103 no launch adds them by default: the browser starts with
+/// only `--user-data-dir` and `--remote-debugging-port`, like a hand-started
+/// Chrome. The same switches are available as the opt-in `legacy-defaults`
+/// launch restriction preset (see [`crate::browser::restrictions`]); the
+/// constant is kept, equal to that preset's switches, for compatibility.
 pub const CHROME_ARGS: &[&str] = &[
     "--disable-session-crashed-bubble",
     "--hide-crash-restore-bubble",

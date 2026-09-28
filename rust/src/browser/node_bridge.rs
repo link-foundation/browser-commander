@@ -4,6 +4,7 @@
 //! keeps those engine names available by delegating browser operations to the
 //! official Node.js packages over a line-delimited JSON protocol.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::Arc;
@@ -19,6 +20,7 @@ use tokio::task::JoinHandle;
 
 use crate::browser::connector::ConnectOptions;
 use crate::browser::launcher::LaunchOptions;
+use crate::browser::media::ColorScheme;
 use crate::core::engine::{ElementInfo, EngineAdapter, EngineError, EngineType, PdfOptions};
 
 const BRIDGE_SCRIPT: &str = include_str!("node_engine_bridge.js");
@@ -48,9 +50,17 @@ struct BridgeResponse {
 }
 
 impl NodeBridgePage {
+    /// Launch the browser through the Node engine
+    /// ([`LaunchMode::Engine`](crate::browser::launcher::LaunchMode::Engine)).
+    ///
+    /// `args` is the resolved command line. `env` is added to the browser
+    /// process's environment only: neither this process's environment nor the
+    /// bridge's own is changed.
     pub(crate) async fn launch(
-        options: LaunchOptions,
-        user_data_dir: PathBuf,
+        options: &LaunchOptions,
+        args: &[String],
+        env: Option<&HashMap<String, String>>,
+        user_data_dir: &Path,
     ) -> Result<Self, anyhow::Error> {
         let page = Self::start(
             options.engine,
@@ -59,14 +69,19 @@ impl NodeBridgePage {
         )
         .await?;
 
-        page.request("launch", launch_params(&options, &user_data_dir))
+        page.request("launch", launch_params(options, args, env, user_data_dir))
             .await
             .map_err(|err| anyhow::anyhow!("{}", err))?;
 
         Ok(page)
     }
 
-    pub(crate) async fn connect(options: ConnectOptions) -> Result<Self, anyhow::Error> {
+    /// Attach the Node engine to a running browser. `color_scheme` is then
+    /// emulated on the page the bridge picked, best-effort.
+    pub(crate) async fn connect(
+        options: ConnectOptions,
+        color_scheme: Option<&ColorScheme>,
+    ) -> Result<Self, anyhow::Error> {
         let page = Self::start(
             options.engine,
             options.node_executable.as_deref(),
@@ -74,7 +89,7 @@ impl NodeBridgePage {
         )
         .await?;
 
-        page.request("connect", connect_params(&options))
+        page.request("connect", connect_params(&options, color_scheme))
             .await
             .map_err(|err| anyhow::anyhow!("{}", err))?;
 
@@ -95,6 +110,11 @@ impl NodeBridgePage {
         let node = node_executable
             .map(Path::to_path_buf)
             .unwrap_or_else(|| PathBuf::from("node"));
+        // The bridge stays on tokio::process rather than command-stream (the
+        // route the one-shot credential subprocesses take): it is a
+        // long-lived, interactive child that answers one JSON request per
+        // line on its stdin, and every request has to wait for the matching
+        // line on stdout while the stderr log is drained concurrently.
         let mut command = Command::new(node);
         command
             .arg("--input-type=module")
@@ -234,14 +254,20 @@ impl NodeBridgePage {
     }
 }
 
-fn launch_params(options: &LaunchOptions, user_data_dir: &Path) -> Value {
+fn launch_params(
+    options: &LaunchOptions,
+    args: &[String],
+    env: Option<&HashMap<String, String>>,
+    user_data_dir: &Path,
+) -> Value {
     json!({
         "engine": options.engine.to_string(),
         "userDataDir": path_to_string(user_data_dir),
         "headless": options.headless,
         "slowMo": options.slow_mo,
         "verbose": options.verbose,
-        "args": options.all_chrome_args(),
+        "args": args,
+        "env": env,
         "ignoreDefaultArgs": if options.ignore_all_default_args {
             Value::Bool(true)
         } else {
@@ -254,8 +280,9 @@ fn launch_params(options: &LaunchOptions, user_data_dir: &Path) -> Value {
     })
 }
 
-fn connect_params(options: &ConnectOptions) -> Value {
+fn connect_params(options: &ConnectOptions, color_scheme: Option<&ColorScheme>) -> Value {
     json!({
+        "colorScheme": color_scheme.map(ColorScheme::as_str),
         "engine": options.engine.to_string(),
         "cdpEndpoint": options.cdp_endpoint,
         "wsEndpoint": options.ws_endpoint,
@@ -525,13 +552,19 @@ fn element_info_from_value(value: &Value) -> Result<Option<ElementInfo>, EngineE
 mod tests {
     use super::*;
 
+    fn params(options: &LaunchOptions) -> Value {
+        let args = options.all_chrome_args().unwrap();
+        let env = options.browser_env().unwrap();
+        launch_params(options, &args, env.as_ref(), Path::new("/tmp/browser-data"))
+    }
+
     #[test]
     fn launch_params_forward_browser_selection() {
         let options = LaunchOptions::playwright()
             .channel("chrome-beta")
             .executable_path("/opt/google/chrome-beta");
 
-        let params = launch_params(&options, Path::new("/tmp/browser-data"));
+        let params = params(&options);
 
         assert_eq!(params["channel"], "chrome-beta");
         assert_eq!(params["executablePath"], "/opt/google/chrome-beta");
@@ -539,10 +572,11 @@ mod tests {
 
     #[test]
     fn launch_params_default_browser_selection_is_null() {
-        let params = launch_params(&LaunchOptions::puppeteer(), Path::new("/tmp/browser-data"));
+        let params = params(&LaunchOptions::puppeteer());
 
         assert!(params["channel"].is_null());
         assert!(params["executablePath"].is_null());
+        assert!(params["env"].is_null());
     }
 
     #[test]
@@ -550,7 +584,7 @@ mod tests {
         let options =
             LaunchOptions::playwright().ignore_default_args(vec!["--no-first-run".to_string()]);
 
-        let params = launch_params(&options, Path::new("/tmp/browser-data"));
+        let params = params(&options);
 
         // Parity exclusions come first, the caller's follow.
         assert_eq!(params["ignoreDefaultArgs"][0], "--enable-automation");
@@ -571,21 +605,35 @@ mod tests {
             .automation_parity(false)
             .ignore_default_args(vec!["--no-first-run".to_string()]);
 
-        let params = launch_params(&options, Path::new("/tmp/browser-data"));
+        let params = params(&options);
 
         assert_eq!(params["ignoreDefaultArgs"], json!(["--no-first-run"]));
     }
 
     #[test]
-    fn launch_params_disable_the_automation_controlled_feature() {
-        let options = LaunchOptions::playwright();
+    fn launch_params_add_only_the_automation_controlled_off_switch() {
+        let params = params(&LaunchOptions::playwright());
 
-        let params = launch_params(&options, Path::new("/tmp/browser-data"));
+        assert_eq!(
+            params["args"],
+            json!(["--disable-blink-features=AutomationControlled"])
+        );
+    }
+
+    #[test]
+    fn launch_params_forward_restrictions_and_the_browser_env() {
+        let options = LaunchOptions::puppeteer()
+            .restrictions(["no-google-services", "basic-password-store"])
+            .env(HashMap::from([("TZ".to_string(), "UTC".to_string())]));
+
+        let params = params(&options);
 
         assert!(params["args"]
             .as_array()
             .unwrap()
-            .contains(&json!("--disable-blink-features=AutomationControlled")));
+            .contains(&json!("--password-store=basic")));
+        assert_eq!(params["env"]["GOOGLE_API_KEY"], "no");
+        assert_eq!(params["env"]["TZ"], "UTC");
     }
 
     #[test]
@@ -596,11 +644,19 @@ mod tests {
             .protocol_timeout(std::time::Duration::from_secs(2))
             .seed_cookies(vec![json!({"name": "SID", "value": "saved"})]);
 
-        let params = connect_params(&options);
+        let params = connect_params(&options, None);
 
         assert_eq!(params["wsEndpoint"], options.ws_endpoint.unwrap());
         assert_eq!(params["timeout"], 1_500);
         assert_eq!(params["protocolTimeout"], 2_000);
         assert_eq!(params["seedCookies"][0]["name"], "SID");
+        assert!(params["colorScheme"].is_null());
+    }
+
+    #[test]
+    fn connect_params_forward_the_color_scheme() {
+        let params = connect_params(&ConnectOptions::playwright(), Some(&ColorScheme::Dark));
+
+        assert_eq!(params["colorScheme"], "dark");
     }
 }

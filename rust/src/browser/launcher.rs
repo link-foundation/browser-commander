@@ -1,52 +1,115 @@
 //! Browser launcher for browser automation.
 //!
-//! This module provides utilities for launching browser instances
-//! with appropriate configuration.
+//! By default ([`LaunchMode::Real`]) Browser Commander starts the installed
+//! Chrome itself, exactly like a person who wants to attach a debugger would,
+//! and attaches the engine over CDP (issues #101 and #103).
+//! [`LaunchMode::Engine`] keeps the engine-launched browser for CI and
+//! headless use. Mirrors `js/src/browser/launcher.js`.
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use chromiumoxide::browser::{Browser as CdpBrowser, BrowserConfig};
-use futures::StreamExt;
-
-use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
+use crate::browser::browser_process::{BrowserCloser, BrowserProcess};
+use crate::browser::connector::{
+    connect_browser_with, refuse_unappliable_fingerprint, AttachSettings,
+};
+use crate::browser::engine_launch::launch_with_engine;
+use crate::browser::launch_executable::DefaultLaunchHooks;
 use crate::browser::media::ColorScheme;
-use crate::browser::node_bridge::NodeBridgePage;
-use crate::core::constants::CHROME_ARGS;
+use crate::browser::real_browser::{launch_real_browser_with, RealBrowserOptions};
+use crate::browser::restrictions::{merge_feature_switches, resolve_restrictions};
 use crate::core::engine::{EngineAdapter, EngineType};
-use crate::downloads::{attach_downloads, DownloadManager, DownloadSetting};
-use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
+use crate::downloads::{normalize_download_options, supported_engine};
+use crate::downloads::{DownloadManager, DownloadSetting};
 use crate::fingerprint::automation_parity::{
     apply_automation_parity_args, parity_ignored_default_args,
 };
 use crate::fingerprint::profile::FingerprintProfile;
+
+/// Who starts the browser (issue #103).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub enum LaunchMode {
+    /// Browser Commander starts the installed browser with a hand-started
+    /// command line - `--user-data-dir=<fresh profile>
+    /// --remote-debugging-port=<reserved port>` - and attaches the engine.
+    #[default]
+    Real,
+    /// The automation engine starts the browser with its own switches, which
+    /// `limitations.json` lists (`engine-launch-switches`).
+    Engine,
+}
+
+/// Every [`LaunchMode`], matching the JavaScript `LAUNCH_MODES`.
+pub const LAUNCH_MODES: [LaunchMode; 2] = [LaunchMode::Real, LaunchMode::Engine];
+
+impl LaunchMode {
+    /// The name shared with the JavaScript and Python packages.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Real => "real",
+            Self::Engine => "engine",
+        }
+    }
+}
+
+impl std::fmt::Display for LaunchMode {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for LaunchMode {
+    type Err = anyhow::Error;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        LAUNCH_MODES
+            .into_iter()
+            .find(|mode| mode.as_str() == value)
+            .ok_or_else(|| {
+                anyhow::anyhow!("Invalid launch mode: {value}. Expected 'real' or 'engine'")
+            })
+    }
+}
 
 /// Options for launching a browser.
 #[derive(Debug, Clone)]
 pub struct LaunchOptions {
     /// The browser engine to use.
     pub engine: EngineType,
-    /// Path to user data directory.
+    /// Who starts the browser; [`LaunchMode::Real`] by default.
+    pub launch: LaunchMode,
+    /// Persistent profile directory. When `None` a fresh temporary profile is
+    /// created for the launch and deleted by [`LaunchResult::close`].
     pub user_data_dir: Option<PathBuf>,
     /// Run in headless mode.
     pub headless: bool,
-    /// Slow down operations by this many milliseconds.
+    /// Slow down operations by this many milliseconds (default 0).
     pub slow_mo: u64,
     /// Enable verbose logging.
     pub verbose: bool,
+    /// Opt-in restrictions from `launch-restrictions.json`, such as
+    /// `no-extensions` or the `legacy-defaults` preset (issue #103).
+    pub restrictions: Vec<String>,
     /// Additional Chrome arguments.
     pub args: Vec<String>,
     /// Additional Chrome arguments appended after the compatibility `args`.
     pub extra_args: Vec<String>,
-    /// Browser Commander default arguments to omit.
+    /// Engine default switches to omit ([`LaunchMode::Engine`] only).
     pub ignore_default_args: Vec<String>,
-    /// Omit every Browser Commander and engine default argument.
+    /// Omit every engine default switch ([`LaunchMode::Engine`] only).
     pub ignore_all_default_args: bool,
-    /// Installed browser channel for Playwright/Puppeteer (for example, `chrome`).
+    /// Extra environment for the browser process only; the parent's
+    /// environment is never modified.
+    pub env: Option<HashMap<String, String>>,
+    /// Installed browser channel, such as `chrome`, `chrome-beta`, `msedge`,
+    /// `brave` or `chromium`.
     pub channel: Option<String>,
     /// Explicit path to a Chrome or Chromium executable.
     pub executable_path: Option<PathBuf>,
+    /// Fixed CDP port for the real launch; a free one is reserved when `None`.
+    pub remote_debugging_port: Option<u16>,
     /// Color scheme to emulate. `None` uses the system default.
     pub color_scheme: Option<ColorScheme>,
     /// Optional timeout for the browser launch handshake.
@@ -55,15 +118,14 @@ pub struct LaunchOptions {
     ///
     /// Defaults to `true`. Disable when running in environments where the
     /// sandbox is unavailable (e.g. CI containers without the required
-    /// capabilities). This translates to the `--no-sandbox` /
-    /// `--disable-setuid-sandbox` Chromium flags.
+    /// capabilities). This adds `--no-sandbox`.
     pub sandbox: bool,
     /// Node.js executable for Playwright/Puppeteer fallback engines.
     pub node_executable: Option<PathBuf>,
     /// Working directory used to resolve Playwright/Puppeteer Node packages.
     pub node_working_dir: Option<PathBuf>,
-    /// Keep `navigator.webdriver` false and the command line free of switches a
-    /// hand-started Chrome does not carry.
+    /// Keep `navigator.webdriver` false where a launch switch would turn it on
+    /// (headless or engine launches).
     ///
     /// Defaults to `true`. Set to `false` to launch with the engine's own
     /// defaults, which is what the parity tests use as a negative control.
@@ -89,16 +151,20 @@ impl Default for LaunchOptions {
     fn default() -> Self {
         Self {
             engine: EngineType::Chromiumoxide,
+            launch: LaunchMode::Real,
             user_data_dir: None,
             headless: false,
             slow_mo: 0,
             verbose: false,
+            restrictions: Vec::new(),
             args: Vec::new(),
             extra_args: Vec::new(),
             ignore_default_args: Vec::new(),
             ignore_all_default_args: false,
+            env: None,
             channel: None,
             executable_path: None,
+            remote_debugging_port: None,
             color_scheme: None,
             launch_timeout: None,
             sandbox: true,
@@ -115,43 +181,33 @@ impl LaunchOptions {
     /// Set the browser automation engine.
     pub fn engine(mut self, engine: EngineType) -> Self {
         self.engine = engine;
-        if engine == EngineType::Playwright && self.slow_mo == 0 {
-            self.slow_mo = 150;
-        }
         self
     }
 
     /// Create options for chromiumoxide engine.
     pub fn chromiumoxide() -> Self {
-        Self {
-            engine: EngineType::Chromiumoxide,
-            ..Default::default()
-        }
+        Self::default().engine(EngineType::Chromiumoxide)
     }
 
     /// Create options for fantoccini (WebDriver) engine.
     pub fn fantoccini() -> Self {
-        Self {
-            engine: EngineType::Fantoccini,
-            ..Default::default()
-        }
+        Self::default().engine(EngineType::Fantoccini)
     }
 
     /// Create options for Playwright through the Node.js CLI bridge.
     pub fn playwright() -> Self {
-        Self {
-            engine: EngineType::Playwright,
-            slow_mo: 150,
-            ..Default::default()
-        }
+        Self::default().engine(EngineType::Playwright)
     }
 
     /// Create options for Puppeteer through the Node.js CLI bridge.
     pub fn puppeteer() -> Self {
-        Self {
-            engine: EngineType::Puppeteer,
-            ..Default::default()
-        }
+        Self::default().engine(EngineType::Puppeteer)
+    }
+
+    /// Choose who starts the browser.
+    pub fn launch(mut self, launch: LaunchMode) -> Self {
+        self.launch = launch;
+        self
     }
 
     /// Set headless mode.
@@ -160,7 +216,7 @@ impl LaunchOptions {
         self
     }
 
-    /// Set the user data directory.
+    /// Use a persistent profile directory instead of a temporary one.
     pub fn user_data_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.user_data_dir = Some(dir.into());
         self
@@ -178,6 +234,16 @@ impl LaunchOptions {
         self
     }
 
+    /// Opt in to restrictions or presets from `launch-restrictions.json`.
+    pub fn restrictions<I, S>(mut self, restrictions: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.restrictions = restrictions.into_iter().map(Into::into).collect();
+        self
+    }
+
     /// Add additional Chrome arguments.
     pub fn with_args(mut self, args: Vec<String>) -> Self {
         self.args = args;
@@ -190,19 +256,25 @@ impl LaunchOptions {
         self
     }
 
-    /// Omit selected Browser Commander defaults.
+    /// Omit selected engine default switches ([`LaunchMode::Engine`] only).
     pub fn ignore_default_args(mut self, args: Vec<String>) -> Self {
         self.ignore_default_args = args;
         self
     }
 
-    /// Omit every Browser Commander and engine default argument.
+    /// Omit every engine default switch ([`LaunchMode::Engine`] only).
     pub fn ignore_all_default_args(mut self) -> Self {
         self.ignore_all_default_args = true;
         self
     }
 
-    /// Select an installed browser channel for Playwright or Puppeteer.
+    /// Extra environment for the browser process only.
+    pub fn env(mut self, env: HashMap<String, String>) -> Self {
+        self.env = Some(env);
+        self
+    }
+
+    /// Select an installed browser channel.
     pub fn channel(mut self, channel: impl Into<String>) -> Self {
         self.channel = Some(channel.into());
         self
@@ -211,6 +283,12 @@ impl LaunchOptions {
     /// Select an explicit Chrome or Chromium executable.
     pub fn executable_path(mut self, executable_path: impl Into<PathBuf>) -> Self {
         self.executable_path = Some(executable_path.into());
+        self
+    }
+
+    /// Use a fixed CDP port for the real launch.
+    pub fn remote_debugging_port(mut self, port: u16) -> Self {
+        self.remote_debugging_port = Some(port);
         self
     }
 
@@ -267,32 +345,31 @@ impl LaunchOptions {
         self
     }
 
-    /// Get all Chrome arguments (default + custom).
-    pub fn all_chrome_args(&self) -> Vec<String> {
-        let mut all_args: Vec<String> = if self.ignore_all_default_args {
-            Vec::new()
+    /// The Chrome arguments an engine launch passes: the opt-in restrictions,
+    /// then `args` and `extra_args`, with repeated feature-list switches
+    /// merged and, with automation parity, the `AutomationControlled` off
+    /// switch the engine's own switches need.
+    ///
+    /// Browser Commander adds nothing else since issue #103; the old defaults
+    /// are the `legacy-defaults` restriction preset.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for an unknown restriction.
+    pub fn all_chrome_args(&self) -> anyhow::Result<Vec<String>> {
+        let mut args = resolve_restrictions(&self.restrictions)?.args;
+        args.extend(self.args.iter().cloned());
+        args.extend(self.extra_args.iter().cloned());
+        let args = merge_feature_switches(&args);
+        Ok(if self.automation_parity {
+            apply_automation_parity_args(&args)
         } else {
-            CHROME_ARGS
-                .iter()
-                .filter(|argument| {
-                    !self
-                        .ignore_default_args
-                        .iter()
-                        .any(|item| item == **argument)
-                })
-                .map(|argument| argument.to_string())
-                .collect()
-        };
-        all_args.extend(self.args.clone());
-        all_args.extend(self.extra_args.clone());
-        if self.automation_parity {
-            all_args = apply_automation_parity_args(&all_args);
-        }
-        all_args
+            args
+        })
     }
 
     /// Engine default switches to suppress so the command line matches a
-    /// hand-started Chrome.
+    /// hand-started Chrome ([`LaunchMode::Engine`] only).
     ///
     /// Merged with the caller's `ignore_default_args`, because a switch the
     /// engine appends after the caller's arguments cannot be countered by
@@ -311,7 +388,26 @@ impl LaunchOptions {
         ignored
     }
 
+    /// The environment the browser process gets on top of the parent's: the
+    /// restrictions' variables, then `env`. `None` when there is nothing to
+    /// add.
+    pub(crate) fn browser_env(&self) -> anyhow::Result<Option<HashMap<String, String>>> {
+        let mut env = resolve_restrictions(&self.restrictions)?.env;
+        if let Some(extra) = &self.env {
+            env.extend(
+                extra
+                    .iter()
+                    .map(|(key, value)| (key.clone(), value.clone())),
+            );
+        }
+        Ok((!env.is_empty() || self.env.is_some()).then_some(env))
+    }
+
     /// Get the user data directory, using a default if not specified.
+    #[deprecated(
+        since = "0.13.0",
+        note = "launch_browser uses a fresh temporary profile unless user_data_dir is set; read LaunchResult::browser.user_data_dir"
+    )]
     pub fn get_user_data_dir(&self) -> PathBuf {
         if let Some(ref dir) = self.user_data_dir {
             dir.clone()
@@ -319,6 +415,41 @@ impl LaunchOptions {
             let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
             home.join(".browser-commander")
                 .join(format!("{}-data", self.engine))
+        }
+    }
+
+    /// The same launch expressed as [`RealBrowserOptions`].
+    pub(crate) fn real_browser_options(&self) -> RealBrowserOptions {
+        let defaults = RealBrowserOptions::default();
+        let mut extra_args = self.extra_args.clone();
+        if !self.sandbox
+            && !self
+                .args
+                .iter()
+                .chain(&extra_args)
+                .any(|a| a == "--no-sandbox")
+        {
+            extra_args.push("--no-sandbox".to_string());
+        }
+        RealBrowserOptions {
+            engine: self.engine,
+            channel: self.channel.clone().unwrap_or(defaults.channel.clone()),
+            executable_path: self.executable_path.clone(),
+            user_data_dir: self.user_data_dir.clone(),
+            remote_debugging_port: self.remote_debugging_port,
+            headless: self.headless,
+            restrictions: self.restrictions.clone(),
+            args: self.args.clone(),
+            extra_args,
+            env: self.env.clone(),
+            automation_parity: self.automation_parity,
+            startup_timeout: self.launch_timeout.unwrap_or(defaults.startup_timeout),
+            slow_mo: self.slow_mo,
+            verbose: self.verbose,
+            node_executable: self.node_executable.clone(),
+            node_working_dir: self.node_working_dir.clone(),
+            downloads: self.downloads.clone(),
+            ..defaults
         }
     }
 }
@@ -336,15 +467,17 @@ pub struct Browser {
 
 /// Result of a browser launch.
 ///
-/// Contains both static metadata (`browser`) and a live
+/// Contains static metadata (`browser` and the launch fields), a live
 /// [`EngineAdapter`] (`page`) that can be passed to the navigation,
-/// interaction, and query helpers exposed by this crate.
+/// interaction, and query helpers exposed by this crate, and
+/// [`close`](Self::close).
 pub struct LaunchResult {
     /// The browser metadata.
     pub browser: Browser,
     /// A live page/adapter tied to the launched browser.
     ///
-    /// For `Chromiumoxide`, this is a [`ChromiumoxidePage`]
+    /// For `Chromiumoxide`, this is a
+    /// [`ChromiumoxidePage`](super::chromiumoxide_adapter::ChromiumoxidePage)
     /// implementing [`EngineAdapter`]. Pass `launch_result.page.as_ref()` to
     /// `goto`, `click`, `evaluate`, and other helpers.
     pub page: Arc<dyn EngineAdapter>,
@@ -354,6 +487,61 @@ pub struct LaunchResult {
     /// outlives any single call: hold on to it, and call
     /// [`DownloadManager::dispose`] before closing the browser.
     pub downloads: Option<Arc<DownloadManager>>,
+    /// Who started the browser; `None` for a browser attached with
+    /// [`connect_browser`](super::connector::connect_browser).
+    pub launch: Option<LaunchMode>,
+    /// Whether `browser.user_data_dir` is a temporary profile that
+    /// [`close`](Self::close) deletes.
+    pub temporary_profile: bool,
+    /// The Chrome arguments Browser Commander passed (the engine adds its own
+    /// in [`LaunchMode::Engine`]).
+    pub args: Vec<String>,
+    /// The DevTools HTTP endpoint of a real launch.
+    pub cdp_endpoint: Option<String>,
+    /// The DevTools port of a real launch.
+    pub remote_debugging_port: Option<u16>,
+    /// The browser binary a real launch started, or the one requested for an
+    /// engine launch.
+    pub executable_path: Option<PathBuf>,
+    /// The browser process of a real launch (the engine owns it otherwise).
+    pub browser_process: Option<BrowserProcess>,
+    closer: Option<Arc<dyn BrowserCloser>>,
+}
+
+impl LaunchResult {
+    /// A browser somebody else started, attached over CDP.
+    pub(crate) fn attached(
+        browser: Browser,
+        page: Arc<dyn EngineAdapter>,
+        downloads: Option<Arc<DownloadManager>>,
+    ) -> Self {
+        Self {
+            browser,
+            page,
+            downloads,
+            launch: None,
+            temporary_profile: false,
+            args: Vec::new(),
+            cdp_endpoint: None,
+            remote_debugging_port: None,
+            executable_path: None,
+            browser_process: None,
+            closer: None,
+        }
+    }
+
+    /// Close the browser this launch started and delete its temporary
+    /// profile. Idempotent.
+    ///
+    /// A browser attached with
+    /// [`connect_browser`](super::connector::connect_browser) is managed by
+    /// whoever started it, so this does nothing for one.
+    pub async fn close(&self) -> anyhow::Result<()> {
+        match &self.closer {
+            Some(closer) => closer.close().await,
+            None => Ok(()),
+        }
+    }
 }
 
 impl std::fmt::Debug for LaunchResult {
@@ -362,529 +550,136 @@ impl std::fmt::Debug for LaunchResult {
             .field("browser", &self.browser)
             .field("page", &"<dyn EngineAdapter>")
             .field("downloads", &self.downloads)
+            .field("launch", &self.launch)
+            .field("temporary_profile", &self.temporary_profile)
+            .field("args", &self.args)
+            .field("cdp_endpoint", &self.cdp_endpoint)
+            .field("remote_debugging_port", &self.remote_debugging_port)
+            .field("executable_path", &self.executable_path)
+            .field("browser_process", &self.browser_process)
             .finish()
     }
 }
 
 /// Launch a browser with the given options.
 ///
-/// For the `Chromiumoxide` engine, this starts a Chromium process, waits for
-/// the CDP handshake, opens a blank page, and returns a [`LaunchResult`]
-/// containing both the metadata (`browser`) and a live page adapter (`page`)
-/// implementing [`EngineAdapter`].
+/// By default ([`LaunchMode::Real`]) Browser Commander starts the installed
+/// Chrome itself: `--user-data-dir=<fresh temporary profile>
+/// --remote-debugging-port=<reserved port>` and nothing else (plus
+/// `--headless=new`, restrictions and the caller's arguments when asked for),
+/// then attaches the engine over CDP. The browser behaves like one a person
+/// started by hand and `navigator.webdriver` stays false. Without an explicit
+/// `channel` or `executable_path` the installed Google Chrome is preferred
+/// and the engine's own browser is the fallback. Every restriction the
+/// library used to add silently is an explicit opt-in through
+/// `restrictions`.
 ///
-/// For the `Playwright` and `Puppeteer` engines, this starts a local Node.js
-/// subprocess and uses the official Node package as a CLI bridge. The selected
-/// package must be available to Node module resolution, usually by running
-/// `npm install playwright` or `npm install puppeteer` in the configured
-/// `node_working_dir`.
+/// [`LaunchMode::Engine`] keeps the chromiumoxide-, Playwright- or
+/// Puppeteer-launched browser for CI and headless use. Playwright and
+/// Puppeteer run as a local Node.js subprocess using the official Node
+/// package as a CLI bridge; the package must be available to Node module
+/// resolution, usually by running `npm install playwright` or `npm install
+/// puppeteer` in the configured `node_working_dir`.
+///
+/// Either way the profile is a fresh temporary one unless `user_data_dir` is
+/// set, and [`LaunchResult::close`] closes the browser and deletes it.
 ///
 /// The `Fantoccini` engine is not yet implemented as a managed launcher; use
 /// chromiumoxide or connect to an externally-managed WebDriver session.
 ///
-/// # Arguments
-///
-/// * `options` - Launch options
-///
-/// # Returns
-///
-/// The launch result containing the browser metadata and a page adapter
-///
 /// # Errors
 ///
-/// Returns an error if the browser fails to launch.
+/// Returns an error if the options are invalid or the browser fails to
+/// launch. Invalid options are refused before anything is started.
 pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyhow::Error> {
-    if options.verbose {
-        tracing::info!("Launching browser with {} engine...", options.engine);
-    }
-
-    let user_data_dir = options.get_user_data_dir();
-    std::fs::create_dir_all(&user_data_dir)?;
-
-    match options.engine {
-        EngineType::Chromiumoxide => launch_chromiumoxide(options, user_data_dir).await,
-        EngineType::Playwright | EngineType::Puppeteer => {
-            launch_node_bridge(options, user_data_dir).await
-        }
-        EngineType::Fantoccini => Err(anyhow::anyhow!(
+    if options.engine == EngineType::Fantoccini {
+        return Err(anyhow::anyhow!(
             "fantoccini engine launch is not yet implemented; \
              connect to an existing WebDriver session or use EngineType::Chromiumoxide"
-        )),
-    }
-}
-
-/// A transport for engines that have none.
-///
-/// `attach_downloads` refuses an unsupported engine before it sends anything,
-/// so this exists only to satisfy the signature; being asked to send is a bug,
-/// and saying so is better than a command that silently goes nowhere.
-struct UnavailableTransport;
-
-#[async_trait::async_trait]
-impl crate::fingerprint::CdpTransport for UnavailableTransport {
-    async fn send(
-        &self,
-        method: &str,
-        _params: serde_json::Value,
-    ) -> anyhow::Result<serde_json::Value> {
-        Err(anyhow::anyhow!(
-            "this engine has no CDP transport, so {method} cannot be sent"
-        ))
-    }
-}
-
-async fn launch_node_bridge(
-    options: LaunchOptions,
-    user_data_dir: PathBuf,
-) -> Result<LaunchResult, anyhow::Error> {
-    let engine = options.engine;
-    let headless = options.headless;
-    if options.fingerprint.is_some() {
-        // Failing here is the honest answer: the node bridge speaks its own
-        // command protocol rather than CDP, so a profile handed to it would be
-        // silently dropped and the page would report the real machine.
-        return Err(anyhow::anyhow!(
-            "the {engine} engine cannot apply a fingerprint profile yet; \
-             use EngineType::Chromiumoxide, or apply the profile from the \
-             JavaScript package, which drives Playwright and Puppeteer directly"
         ));
     }
-    // Same reasoning as the fingerprint above: the bridge has no CDP route, so
-    // a managed download would never be seen and every capture would time out.
-    // `attach_downloads` returns `Ok(None)` when no manager was asked for, and
-    // names the engine and what to use instead when one was.
-    attach_downloads(engine, &UnavailableTransport, options.downloads.clone())
-        .await
+    // Validate before anything is started or written to disk.
+    options.all_chrome_args()?;
+    refuse_unappliable_fingerprint(options.engine, options.fingerprint.as_ref())?;
+    // The node bridge has no CDP route, so a managed download would never be
+    // seen and every capture would time out.
+    normalize_download_options(options.downloads.clone())
+        .map(|_| supported_engine(options.engine))
+        .transpose()
         .map_err(|error| anyhow::anyhow!("{error}"))?;
-    let adapter = NodeBridgePage::launch(options, user_data_dir.clone()).await?;
-
-    Ok(LaunchResult {
-        browser: Browser {
-            engine,
-            user_data_dir,
-            headless,
-        },
-        page: Arc::new(adapter),
-        downloads: None,
-    })
-}
-
-async fn launch_chromiumoxide(
-    options: LaunchOptions,
-    user_data_dir: PathBuf,
-) -> Result<LaunchResult, anyhow::Error> {
-    // chromiumoxide 0.9 stopped re-exporting `HeadlessMode`, so the mode is
-    // selected through the builder's own methods instead of the enum.
-    let builder = BrowserConfig::builder();
-    let builder = if options.headless {
-        builder.new_headless_mode()
-    } else {
-        builder.with_head()
-    };
-    let mut builder = builder
-        .user_data_dir(&user_data_dir)
-        .args(options.all_chrome_args());
-
-    // Chromiumoxide only exposes an all-or-nothing switch for its own default
-    // layer. Disable that layer whenever the caller requests an omission so an
-    // engine-provided duplicate cannot silently re-add the selected flag.
-    if options.ignore_all_default_args || !options.all_ignored_default_args().is_empty() {
-        builder = builder.disable_default_args();
-    }
-
-    if !options.sandbox {
-        builder = builder.no_sandbox();
-    }
-
-    if let Some(ref executable_path) = options.executable_path {
-        builder = builder.chrome_executable(executable_path);
-    }
-
-    if let Some(timeout) = options.launch_timeout {
-        builder = builder.launch_timeout(timeout);
-    }
-
-    let config = builder
-        .build()
-        .map_err(|e| anyhow::anyhow!("failed to build browser config: {}", e))?;
-
-    let (browser, mut handler) = CdpBrowser::launch(config)
-        .await
-        .map_err(|e| anyhow::anyhow!("failed to launch chromium: {}", e))?;
-
-    // Drain the CDP event stream on a background task. Dropping the handler
-    // causes the browser to hang, so we must keep polling it for the lifetime
-    // of the browser. Errors are logged but do not abort the task — the CDP
-    // channel naturally returns errors once the browser is closed.
-    let handler_task = tokio::spawn(async move {
-        while let Some(event) = handler.next().await {
-            if let Err(err) = event {
-                tracing::debug!(error = %err, "chromiumoxide handler event error");
-            }
-        }
-    });
-
-    let page = browser
-        .new_page("about:blank")
-        .await
-        .map_err(|e| anyhow::anyhow!("failed to open initial page: {}", e))?;
-
-    let engine = options.engine;
-    let headless = options.headless;
-    let color_scheme = options.color_scheme.clone();
-
-    let adapter = ChromiumoxidePage::new(page, browser, handler_task, user_data_dir.clone());
-
-    // The fingerprint goes on before the caller can navigate, so the first
-    // document a page loads already sees the configured environment. A failure
-    // here is fatal rather than best-effort: a half-applied profile describes a
-    // machine that does not exist, which is louder than no profile at all.
-    if let Some(ref profile) = options.fingerprint {
-        apply_fingerprint(&adapter, profile, ApplyOptions::default()).await?;
-        if options.verbose {
-            tracing::info!("Fingerprint profile applied");
-        }
-    }
-
-    // Downloads are redirected before the caller can navigate too: a download
-    // that starts on the first page must land in the managed directory like
-    // every later one, rather than in whatever folder Chromium was using.
-    let downloads = attach_downloads(engine, &adapter, options.downloads.clone())
-        .await
-        .map_err(|error| anyhow::anyhow!("{error}"))?;
-
-    // Apply color scheme emulation (best-effort).
-    if let Some(ref cs) = color_scheme {
-        if let Err(err) = adapter.set_color_scheme(Some(cs)).await {
-            if options.verbose {
-                tracing::warn!(error = %err, "could not set color scheme");
-            }
-        }
-    }
-
-    // Bring the page to front so the address bar is not focused when running
-    // headful — mirrors the JS launcher's behavior.
-    if !headless {
-        if let Err(err) = adapter.bring_to_front().await {
-            if options.verbose {
-                tracing::debug!(error = %err, "bring_to_front failed");
-            }
-        }
-    }
 
     if options.verbose {
-        tracing::info!("Browser launched with {} engine", engine);
+        tracing::info!(
+            "Launching browser with {} engine ({})...",
+            options.engine,
+            options.launch
+        );
+    }
+    let result = match options.launch {
+        LaunchMode::Real => launch_real(&options).await?,
+        LaunchMode::Engine => launch_with_engine(&options).await?,
+    };
+    if options.verbose {
+        tracing::info!("Browser launched with {} engine", options.engine);
+    }
+    Ok(result)
+}
+
+async fn launch_real(options: &LaunchOptions) -> Result<LaunchResult, anyhow::Error> {
+    let real = options.real_browser_options();
+    let hooks = Arc::new(DefaultLaunchHooks {
+        explicit_selection: options.channel.is_some() || options.executable_path.is_some(),
+    });
+    let settings = AttachSettings {
+        fingerprint: options.fingerprint.as_ref(),
+        color_scheme: options.color_scheme.as_ref(),
+    };
+    let (mut result, launched) = launch_real_browser_with(&real, hooks, |connect| {
+        connect_browser_with(connect, settings)
+    })
+    .await?;
+
+    // Bring the page to front so the address bar is not focused when running
+    // headful - mirrors the JS launcher's behavior.
+    if !options.headless {
+        if let Err(error) = result.page.bring_to_front().await {
+            if options.verbose {
+                tracing::debug!(%error, "bring_to_front failed");
+            }
+        }
     }
 
-    Ok(LaunchResult {
-        browser: Browser {
-            engine,
-            user_data_dir,
-            headless,
-        },
-        page: Arc::new(adapter),
-        downloads,
-    })
+    result.browser.user_data_dir = launched.user_data_dir;
+    result.browser.headless = options.headless;
+    result.launch = Some(LaunchMode::Real);
+    result.temporary_profile = launched.temporary_profile;
+    result.args = launched.args;
+    result.cdp_endpoint = Some(launched.cdp_endpoint);
+    result.remote_debugging_port = Some(launched.remote_debugging_port);
+    result.executable_path = Some(launched.executable_path);
+    result.browser_process = Some(launched.browser_process);
+    result.closer = Some(launched.closer as Arc<dyn BrowserCloser>);
+    Ok(result)
+}
+
+impl LaunchResult {
+    /// Record an engine launch on an attached result.
+    pub(crate) fn launched_by_engine(
+        mut self,
+        args: Vec<String>,
+        temporary_profile: bool,
+        executable_path: Option<PathBuf>,
+        closer: Arc<dyn BrowserCloser>,
+    ) -> Self {
+        self.launch = Some(LaunchMode::Engine);
+        self.args = args;
+        self.temporary_profile = temporary_profile;
+        self.executable_path = executable_path;
+        self.closer = Some(closer);
+        self
+    }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::fingerprint::automation_parity::{
-        AUTOMATION_CONTROLLED_OFF_ARG, PLAYWRIGHT_HEADLESS_POINTER_ARG,
-        PLAYWRIGHT_SOFTWARE_WEBGL_ARG,
-    };
-    use crate::fingerprint::presets::create_default_fingerprint_preset;
-
-    #[test]
-    fn launch_options_default() {
-        let options = LaunchOptions::default();
-        assert_eq!(options.engine, EngineType::Chromiumoxide);
-        assert!(!options.headless);
-        assert_eq!(options.slow_mo, 0);
-        assert!(!options.verbose);
-        assert!(options.args.is_empty());
-        assert!(options.extra_args.is_empty());
-        assert!(options.ignore_default_args.is_empty());
-        assert!(!options.ignore_all_default_args);
-        assert!(options.automation_parity);
-        assert!(options.channel.is_none());
-        assert!(options.executable_path.is_none());
-        assert!(options.node_executable.is_none());
-        assert!(options.node_working_dir.is_none());
-        // A launch without a profile has to leave the machine as it is, so the
-        // browser reports the real hardware rather than a half-set one.
-        assert!(options.fingerprint.is_none());
-    }
-
-    #[test]
-    fn launch_options_builder() {
-        let options = LaunchOptions::chromiumoxide()
-            .headless(true)
-            .slow_mo(100)
-            .verbose(true)
-            .with_args(vec!["--custom-arg".to_string()]);
-
-        assert_eq!(options.engine, EngineType::Chromiumoxide);
-        assert!(options.headless);
-        assert_eq!(options.slow_mo, 100);
-        assert!(options.verbose);
-        assert_eq!(options.args, vec!["--custom-arg"]);
-    }
-
-    #[test]
-    fn launch_options_fantoccini() {
-        let options = LaunchOptions::fantoccini();
-        assert_eq!(options.engine, EngineType::Fantoccini);
-    }
-
-    #[test]
-    fn launch_options_playwright() {
-        let options = LaunchOptions::playwright();
-        assert_eq!(options.engine, EngineType::Playwright);
-        assert_eq!(options.slow_mo, 150);
-    }
-
-    #[test]
-    fn launch_options_puppeteer() {
-        let options = LaunchOptions::puppeteer();
-        assert_eq!(options.engine, EngineType::Puppeteer);
-    }
-
-    #[test]
-    fn launch_options_node_bridge_configuration() {
-        let options = LaunchOptions::playwright()
-            .node_executable("/custom/node")
-            .node_working_dir("/project/js")
-            .channel("chrome-beta")
-            .executable_path("/opt/google/chrome-beta");
-
-        assert_eq!(options.node_executable, Some(PathBuf::from("/custom/node")));
-        assert_eq!(options.node_working_dir, Some(PathBuf::from("/project/js")));
-        assert_eq!(options.channel.as_deref(), Some("chrome-beta"));
-        assert_eq!(
-            options.executable_path,
-            Some(PathBuf::from("/opt/google/chrome-beta"))
-        );
-    }
-
-    #[test]
-    fn all_chrome_args_includes_defaults() {
-        let options = LaunchOptions::default();
-        let args = options.all_chrome_args();
-
-        assert!(args.contains(&"--disable-infobars".to_string()));
-        assert!(args.contains(&"--password-store=basic".to_string()));
-        assert!(args.contains(&"--no-first-run".to_string()));
-    }
-
-    #[test]
-    fn all_chrome_args_appends_extra_args_and_ignores_selected_defaults() {
-        let options = LaunchOptions::default()
-            .with_args(vec!["--legacy-arg".to_string()])
-            .with_extra_args(vec!["--lang=en-US".to_string()])
-            .ignore_default_args(vec!["--no-default-browser-check".to_string()]);
-
-        let args = options.all_chrome_args();
-        assert!(args.contains(&"--password-store=basic".to_string()));
-        assert!(!args.contains(&"--no-default-browser-check".to_string()));
-        assert_eq!(
-            &args[args.len() - 3..],
-            [
-                "--legacy-arg".to_string(),
-                "--lang=en-US".to_string(),
-                AUTOMATION_CONTROLLED_OFF_ARG.to_string()
-            ]
-        );
-    }
-
-    #[test]
-    fn all_chrome_args_can_ignore_every_default() {
-        let options = LaunchOptions::default()
-            .ignore_all_default_args()
-            .with_extra_args(vec!["--lang=en-US".to_string()]);
-
-        assert_eq!(
-            options.all_chrome_args(),
-            [
-                "--lang=en-US".to_string(),
-                AUTOMATION_CONTROLLED_OFF_ARG.to_string()
-            ]
-        );
-    }
-
-    #[test]
-    fn all_chrome_args_can_ignore_password_store_default_specifically() {
-        let options = LaunchOptions::default()
-            .ignore_default_args(vec!["--password-store=basic".to_string()]);
-
-        let args = options.all_chrome_args();
-        assert!(!args.contains(&"--password-store=basic".to_string()));
-        assert!(args.contains(&"--no-first-run".to_string()));
-    }
-
-    #[test]
-    fn all_chrome_args_includes_custom() {
-        let options = LaunchOptions::default().with_args(vec!["--custom".to_string()]);
-        let args = options.all_chrome_args();
-
-        assert!(args.contains(&"--custom".to_string()));
-    }
-
-    #[test]
-    fn all_chrome_args_disables_the_automation_controlled_feature() {
-        let args = LaunchOptions::default().all_chrome_args();
-        assert_eq!(
-            args.last().map(String::as_str),
-            Some(AUTOMATION_CONTROLLED_OFF_ARG)
-        );
-    }
-
-    #[test]
-    fn all_chrome_args_leaves_the_command_line_alone_when_parity_is_off() {
-        let args = LaunchOptions::default()
-            .automation_parity(false)
-            .all_chrome_args();
-        assert!(!args
-            .iter()
-            .any(|argument| argument == AUTOMATION_CONTROLLED_OFF_ARG));
-    }
-
-    #[test]
-    fn all_ignored_default_args_merges_parity_with_the_caller_list() {
-        let options = LaunchOptions::playwright()
-            .headless(true)
-            .ignore_default_args(vec!["--no-first-run".to_string()]);
-
-        assert_eq!(
-            options.all_ignored_default_args(),
-            [
-                "--enable-automation".to_string(),
-                PLAYWRIGHT_SOFTWARE_WEBGL_ARG.to_string(),
-                PLAYWRIGHT_HEADLESS_POINTER_ARG.to_string(),
-                "--no-first-run".to_string()
-            ]
-        );
-    }
-
-    #[test]
-    fn all_ignored_default_args_does_not_repeat_a_switch_the_caller_already_listed() {
-        let options = LaunchOptions::playwright()
-            .ignore_default_args(vec!["--enable-automation".to_string()]);
-
-        assert_eq!(
-            options.all_ignored_default_args(),
-            [
-                "--enable-automation".to_string(),
-                PLAYWRIGHT_SOFTWARE_WEBGL_ARG.to_string()
-            ]
-        );
-    }
-
-    #[test]
-    fn all_ignored_default_args_keeps_only_the_caller_list_when_parity_is_off() {
-        let options = LaunchOptions::playwright()
-            .headless(true)
-            .automation_parity(false)
-            .ignore_default_args(vec!["--no-first-run".to_string()]);
-
-        assert_eq!(
-            options.all_ignored_default_args(),
-            ["--no-first-run".to_string()]
-        );
-    }
-
-    #[test]
-    fn chromiumoxide_excludes_nothing_by_default() {
-        assert!(LaunchOptions::chromiumoxide()
-            .all_ignored_default_args()
-            .is_empty());
-    }
-
-    #[test]
-    fn get_user_data_dir_uses_custom() {
-        let options = LaunchOptions::default().user_data_dir("/custom/path");
-        assert_eq!(options.get_user_data_dir(), PathBuf::from("/custom/path"));
-    }
-
-    #[test]
-    fn get_user_data_dir_creates_default() {
-        let options = LaunchOptions::default();
-        let dir = options.get_user_data_dir();
-        assert!(dir.to_string_lossy().contains("browser-commander"));
-        assert!(dir.to_string_lossy().contains("chromiumoxide-data"));
-    }
-
-    #[tokio::test]
-    async fn launch_fantoccini_is_unimplemented() {
-        let options = LaunchOptions::fantoccini();
-        let err = launch_browser(options).await.unwrap_err();
-        assert!(err.to_string().contains("fantoccini"));
-    }
-
-    #[test]
-    fn launch_options_carry_a_fingerprint_profile() {
-        let profile = create_default_fingerprint_preset("windows-chrome").expect("preset");
-        let options = LaunchOptions::default().fingerprint(profile.clone());
-
-        assert_eq!(options.fingerprint, Some(profile));
-    }
-
-    #[tokio::test]
-    async fn launch_playwright_refuses_a_fingerprint_it_cannot_apply() {
-        // Dropping the profile silently would leave the page reporting the real
-        // machine while the caller believes it is hidden.
-        let options = LaunchOptions::playwright()
-            .headless(true)
-            .fingerprint(create_default_fingerprint_preset("windows-chrome").expect("preset"));
-
-        let err = launch_browser(options).await.unwrap_err();
-
-        assert!(err
-            .to_string()
-            .contains("cannot apply a fingerprint profile"));
-    }
-
-    #[test]
-    fn launch_options_carry_a_download_setting() {
-        assert!(matches!(
-            LaunchOptions::default().downloads,
-            DownloadSetting::Off
-        ));
-        assert!(matches!(
-            LaunchOptions::default().downloads(true).downloads,
-            DownloadSetting::On
-        ));
-
-        let configured = LaunchOptions::default()
-            .downloads(crate::downloads::DownloadOptions::default().directory("/tmp/bc-downloads"));
-        let DownloadSetting::Options(options) = configured.downloads else {
-            panic!("the caller's download options were dropped");
-        };
-        assert_eq!(options.directory.as_deref(), Some("/tmp/bc-downloads"));
-    }
-
-    #[tokio::test]
-    async fn launch_playwright_refuses_downloads_it_cannot_manage() {
-        // Accepting the setting silently would leave the caller waiting on a
-        // manager watching a directory the browser never writes into.
-        let options = LaunchOptions::playwright().headless(true).downloads(true);
-
-        let err = launch_browser(options).await.unwrap_err();
-
-        assert!(
-            err.to_string()
-                .contains("managed downloads are not supported"),
-            "unexpected message: {err}"
-        );
-    }
-
-    #[tokio::test]
-    async fn launch_playwright_reports_missing_node_executable() {
-        let options = LaunchOptions::playwright()
-            .headless(true)
-            .node_executable("browser-commander-missing-node");
-        let err = launch_browser(options).await.unwrap_err();
-        assert!(err.to_string().contains("failed to start Node.js bridge"));
-    }
-}
+#[path = "launcher_tests.rs"]
+mod tests;

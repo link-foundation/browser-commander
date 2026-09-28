@@ -311,6 +311,29 @@ it cannot change that process's command line. Start an externally managed
 browser with a dedicated profile and a fixed `--remote-debugging-port`, or
 let `launchBrowser()` start it for you.
 
+## Measured Parity: `measureParity()` and `doctor`
+
+The launch defaults above are a claim; `measureParity()` (`measure_parity()`
+in Python and Rust) and `browser-commander doctor` check it against the
+installed browser (issue #103). They launch the browser the way the library
+would, start the same binary by hand with only `--user-data-dir` (and
+`--headless=new` when headless), and compare three things, because each can
+give automation away on its own:
+
+| Compared         | Source                                                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Command line     | `chrome://version`, as the browser itself reports it; `--user-data-dir` is compared by presence, not value.                    |
+| Feature state    | The `--enable-features`/`--disable-features`/`--disable-blink-features` values that command line sets.                         |
+| Page environment | The environment probe (`js/src/parity/probe.js`, shared by every language and by the parity e2e suite), diffed field by field. |
+
+Every difference is explained by an entry in the shared limitations catalogue,
+explained by an option the caller asked for (`args`, `restrictions`), or
+unlisted. A report with any unlisted difference has `ok: false`, and `doctor`
+exits `2`. The report shape is in [cli-and-bridge.md](cli-and-bridge.md). The
+Browser Parity workflow runs the measurement against the current stable Chrome
+every week, so a browser update that reopens a gap fails CI rather than a user
+session.
+
 ## CLI, `serve --stdio` Bridge, `cdpSession` and command-stream
 
 Issue #104 gives every language one `browser-commander` command with the same

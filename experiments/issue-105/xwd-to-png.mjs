@@ -16,7 +16,9 @@ const bitsPerPixel = u32(44);
 const bytesPerLine = u32(48);
 const colormapEntries = u32(76);
 const pixelsStart = headerSize + colormapEntries * 12;
-if (bitsPerPixel !== 32) throw new Error(`unsupported bpp ${bitsPerPixel}`);
+if (bitsPerPixel !== 32) {
+  throw new Error(`unsupported bpp ${bitsPerPixel}`);
+}
 const outHeight = Math.min(height, Number(cropHeightArg ?? height));
 const raw = Buffer.alloc((width * 3 + 1) * outHeight);
 for (let y = 0; y < outHeight; y++) {
@@ -33,12 +35,16 @@ for (let y = 0; y < outHeight; y++) {
 }
 const crcTable = Array.from({ length: 256 }, (_, n) => {
   let c = n;
-  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  for (let k = 0; k < 8; k++) {
+    c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  }
   return c >>> 0;
 });
 const crc32 = (buffer) => {
   let c = 0xffffffff;
-  for (const byte of buffer) c = crcTable[(c ^ byte) & 0xff] ^ (c >>> 8);
+  for (const byte of buffer) {
+    c = crcTable[(c ^ byte) & 0xff] ^ (c >>> 8);
+  }
   return (c ^ 0xffffffff) >>> 0;
 };
 const chunk = (type, body) => {

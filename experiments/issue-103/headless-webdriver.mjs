@@ -28,7 +28,11 @@ try {
       headless: true,
       extraArgs,
     });
-    console.log(JSON.stringify(extraArgs), 'navigator.webdriver =', report.navigator?.webdriver);
+    console.log(
+      JSON.stringify(extraArgs),
+      'navigator.webdriver =',
+      report.navigator?.webdriver
+    );
   }
 } finally {
   await server.close();

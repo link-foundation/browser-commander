@@ -15,21 +15,43 @@ const dir = mkdtempSync(join(tmpdir(), 'edge-hand-'));
 writeFileSync(join(dir, 'First Run'), '');
 writeFileSync(
   join(dir, 'Local State'),
-  JSON.stringify({ browser: { last_whats_new_version: 9999 }, fre: { has_user_seen_fre: true } })
+  JSON.stringify({
+    browser: { last_whats_new_version: 9999 },
+    fre: { has_user_seen_fre: true },
+  })
 );
 const port = 9000 + Math.floor(Math.random() * 1000);
-const child = spawn(executablePath, [`--user-data-dir=${dir}`, `--remote-debugging-port=${port}`, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+const child = spawn(
+  executablePath,
+  [`--user-data-dir=${dir}`, `--remote-debugging-port=${port}`, 'about:blank'],
+  { stdio: ['ignore', 'ignore', 'pipe'] }
+);
 let stderr = '';
 child.stderr.on('data', (chunk) => (stderr += chunk));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const list = async () => (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).map((t) => `${t.type}:${t.url}`);
+const list = async () =>
+  (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).map(
+    (t) => `${t.type}:${t.url}`
+  );
 try {
   for (let i = 0; i < 100; i++) {
-    try { await list(); break; } catch { await sleep(100); }
+    try {
+      await list();
+      break;
+    } catch {
+      await sleep(100);
+    }
   }
   console.log('initial', await list());
-  for (const url of ['about:blank', 'edge://version', 'https://example.com', 'about:blank']) {
-    const response = await fetch(`http://127.0.0.1:${port}/json/new?${url}`, { method: 'PUT' });
+  for (const url of [
+    'about:blank',
+    'edge://version',
+    'https://example.com',
+    'about:blank',
+  ]) {
+    const response = await fetch(`http://127.0.0.1:${port}/json/new?${url}`, {
+      method: 'PUT',
+    });
     console.log('open', url, response.status);
     await sleep(1500);
   }
@@ -39,6 +61,13 @@ try {
 } finally {
   child.kill('SIGKILL');
   await sleep(500);
-  console.log('stderr crash lines:', stderr.split('\n').filter((l) => /crash|Trap|FATAL|renderer|sandbox|ERROR/i.test(l)).slice(0, 15).join('\n'));
+  console.log(
+    'stderr crash lines:',
+    stderr
+      .split('\n')
+      .filter((l) => /crash|Trap|FATAL|renderer|sandbox|ERROR/i.test(l))
+      .slice(0, 15)
+      .join('\n')
+  );
   rmSync(dir, { recursive: true, force: true });
 }

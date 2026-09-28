@@ -15,15 +15,18 @@ await new Promise((r) => server.once('listening', r));
 const port = server.address().port;
 await new Promise((r) => server.close(r));
 const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-window-'));
-if (process.env.SENTINEL !== 'false')
+if (process.env.SENTINEL !== 'false') {
   await writeFile(path.join(dir, 'First Run'), '');
+}
 const extra = (process.env.ARGS ?? '').split(' ').filter(Boolean);
 const args = [
   `--user-data-dir=${dir}`,
   `--remote-debugging-port=${port}`,
   ...extra,
 ];
-if (process.env.URL) args.push(process.env.URL);
+if (process.env.URL) {
+  args.push(process.env.URL);
+}
 const child = spawn(executable, args, { stdio: ['ignore', 'ignore', 'pipe'] });
 child.stderr.resume();
 let version = null;
@@ -31,7 +34,9 @@ for (let i = 0; i < 80 && !version; i++) {
   version = await fetch(`http://127.0.0.1:${port}/json/version`)
     .then((r) => r.json())
     .catch(() => null);
-  if (!version) await new Promise((r) => setTimeout(r, 250));
+  if (!version) {
+    await new Promise((r) => setTimeout(r, 250));
+  }
 }
 console.log(
   `args ${JSON.stringify(args.slice(2))} devtools=${Boolean(version)}`

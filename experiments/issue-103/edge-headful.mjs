@@ -15,7 +15,11 @@ const server = createServer((request, response) => {
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const url = `http://127.0.0.1:${server.address().port}/`;
 
-const session = await launchBrowser({ engine: 'playwright', executablePath, verbose: process.env.VERBOSE === '1' });
+const session = await launchBrowser({
+  engine: 'playwright',
+  executablePath,
+  verbose: process.env.VERBOSE === '1',
+});
 const started = Date.now();
 const stamp = (label) => console.log(`[+${Date.now() - started}ms] ${label}`);
 session.connectedBrowser?.on('disconnected', () => stamp('DISCONNECTED'));
@@ -25,16 +29,24 @@ session.browserProcess?.once?.('exit', (code) => stamp(`EDGE EXIT ${code}`));
 try {
   const pages = session.browser.pages() ?? [];
   console.log('args', session.args);
-  console.log('open pages', pages.map((page) => page.url()));
+  console.log(
+    'open pages',
+    pages.map((page) => page.url())
+  );
   await new Promise((resolve) => setTimeout(resolve, 3000));
-  console.log('open pages after 3s', (session.browser.pages() ?? []).map((page) => page.url()));
+  console.log(
+    'open pages after 3s',
+    (session.browser.pages() ?? []).map((page) => page.url())
+  );
   try {
     await session.page.goto(url, { waitUntil: 'load' });
     console.log('goto ok', await session.page.title());
   } catch (error) {
     console.log('goto failed', error.message.split('\n')[0]);
   }
-  await session.page.screenshot({ path: '/tmp/edge-headful.png' }).catch((e) => console.log('shot', e.message));
+  await session.page
+    .screenshot({ path: '/tmp/edge-headful.png' })
+    .catch((e) => console.log('shot', e.message));
   const other = await session.page.context().newPage();
   try {
     await other.goto(url, { waitUntil: 'load' });

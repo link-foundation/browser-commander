@@ -3,7 +3,7 @@
 // writing the "First Run" sentinel (instead of --no-first-run) matter?
 import { spawn } from 'node:child_process';
 import net from 'node:net';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -14,7 +14,9 @@ await new Promise((r) => server.once('listening', r));
 const port = server.address().port;
 await new Promise((r) => server.close(r));
 const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-headful-'));
-if (sentinel) await writeFile(path.join(dir, 'First Run'), '');
+if (sentinel) {
+  await writeFile(path.join(dir, 'First Run'), '');
+}
 const child = spawn(
   executable,
   [`--user-data-dir=${dir}`, `--remote-debugging-port=${port}`],
@@ -29,7 +31,9 @@ while (Date.now() < deadline && !version) {
   version = await fetch(`http://127.0.0.1:${port}/json/version`)
     .then((r) => r.json())
     .catch(() => null);
-  if (!version) await new Promise((r) => setTimeout(r, 250));
+  if (!version) {
+    await new Promise((r) => setTimeout(r, 250));
+  }
 }
 let webdriver = null;
 if (version) {

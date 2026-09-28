@@ -9,11 +9,19 @@ const argv = process.argv.slice(2);
 const headless = argv.includes('--headless');
 const channelIndex = argv.indexOf('--channel');
 const channel = channelIndex === -1 ? undefined : argv[channelIndex + 1];
-const executablePath = channel ? undefined : process.env.CHROME_PATH || '/usr/bin/google-chrome';
+const executablePath = channel
+  ? undefined
+  : process.env.CHROME_PATH || '/usr/bin/google-chrome';
 
 for (const engine of ['playwright', 'puppeteer']) {
   for (const launch of ['real', 'engine']) {
-    const report = await measureParity({ engine, launch, headless, channel, executablePath });
+    const report = await measureParity({
+      engine,
+      launch,
+      headless,
+      channel,
+      executablePath,
+    });
     console.log(
       JSON.stringify(
         {
@@ -24,7 +32,10 @@ for (const engine of ['playwright', 'puppeteer']) {
           ok: report.ok,
           extra: report.commandLine.extra,
           attachment: report.commandLine.attachment,
-          differences: report.differences.map((d) => `${d.path}${d.limitation ? ` [${d.limitation}]` : ''}${d.requested ? ' [requested]' : ''}`),
+          differences: report.differences.map(
+            (d) =>
+              `${d.path}${d.limitation ? ` [${d.limitation}]` : ''}${d.requested ? ' [requested]' : ''}`
+          ),
         },
         null,
         1

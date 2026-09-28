@@ -28,7 +28,9 @@ await new Promise((r) => setTimeout(r, 4000));
 let activePort = null;
 try {
   activePort = await readFile(path.join(dir, 'DevToolsActivePort'), 'utf8');
-} catch {}
+} catch {
+  // The browser has not written DevToolsActivePort yet.
+}
 console.log({
   port,
   exitCode: child.exitCode,

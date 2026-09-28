@@ -29,7 +29,9 @@ for (let i = 0; i < 40; i++) {
     tabs = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json())
       .filter((t) => t.type === 'page')
       .map((t) => t.url);
-  } catch {}
+  } catch {
+    // The debugging endpoint is not up yet; poll again.
+  }
 }
 chrome.kill();
 await new Promise((r) => chrome.once('exit', r));

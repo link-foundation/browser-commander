@@ -26,7 +26,9 @@ await new Promise((r) => setTimeout(r, Number(process.env.WAIT ?? 4000)));
 let activePort = null;
 try {
   activePort = await readFile(path.join(dir, 'DevToolsActivePort'), 'utf8');
-} catch {}
+} catch {
+  // The browser has not written DevToolsActivePort yet.
+}
 const version = await fetch(`http://127.0.0.1:${port}/json/version`)
   .then((r) => r.json())
   .catch((e) => String(e));

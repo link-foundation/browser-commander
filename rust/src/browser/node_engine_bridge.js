@@ -75,6 +75,33 @@ function ignoredDefaultArgs(params) {
   return [...(params.ignoreDefaultArgs ?? [])];
 }
 
+// The environment the browser process gets: the bridge's own, plus the
+// restrictions' variables and the caller's. The bridge's process.env is never
+// modified, so nothing leaks into later launches.
+function browserEnv(params) {
+  if (params.env === null || params.env === undefined) {
+    return undefined;
+  }
+  return { ...process.env, ...params.env };
+}
+
+// A fresh profile can open a tab (What's New, a welcome page) that takes the
+// foreground after startup, so the tab the person would be looking at wins
+// over the first one in creation order.
+async function pickForegroundPage(pages) {
+  for (const candidate of pages) {
+    try {
+      const state = await candidate.evaluate(() => document.visibilityState);
+      if (state === "visible") {
+        return candidate;
+      }
+    } catch (error) {
+      log(`visibilityState failed: ${error.message}`);
+    }
+  }
+  return pages[0];
+}
+
 function elementInfo(selector) {
   const el = document.querySelector(selector);
   if (!el) {
@@ -118,6 +145,10 @@ async function launchPlaywright(params) {
   if (params.executablePath !== null && params.executablePath !== undefined) {
     contextOptions.executablePath = params.executablePath;
   }
+  const env = browserEnv(params);
+  if (env !== undefined) {
+    contextOptions.env = env;
+  }
 
   context = await chromium.launchPersistentContext(
     params.userDataDir,
@@ -134,9 +165,13 @@ async function launchPuppeteer(params) {
     headless: params.headless,
     slowMo: params.slowMo,
     defaultViewport: null,
-    args: ["--start-maximized", ...chromeArgs(params)],
+    args: chromeArgs(params),
     userDataDir: params.userDataDir,
   };
+  const env = browserEnv(params);
+  if (env !== undefined) {
+    launchOptions.env = env;
+  }
   const ignoredArgs = ignoredDefaultArgs(params);
   if (ignoredArgs === true || ignoredArgs.length > 0) {
     launchOptions.ignoreDefaultArgs = ignoredArgs;
@@ -170,7 +205,7 @@ async function connectPlaywright(params) {
     throw new Error("Connected browser did not expose a default context");
   }
   const pages = context.pages();
-  page = pages[0] ?? (await context.newPage());
+  page = (await pickForegroundPage(pages)) ?? (await context.newPage());
   if (params.seedCookies?.length) {
     await context.addCookies(params.seedCookies);
   }
@@ -188,7 +223,7 @@ async function connectPuppeteer(params) {
     }),
   );
   const pages = await browser.pages();
-  page = pages[0] ?? (await browser.newPage());
+  page = (await pickForegroundPage(pages)) ?? (await browser.newPage());
   if (params.seedCookies?.length) {
     await page.setCookie(...params.seedCookies);
   }
@@ -210,10 +245,6 @@ async function applyColorScheme(colorScheme) {
 async function handleLaunch(params) {
   engineName = params.engine;
   verbose = Boolean(params.verbose);
-
-  process.env.GOOGLE_API_KEY = "no";
-  process.env.GOOGLE_DEFAULT_CLIENT_ID = "no";
-  process.env.GOOGLE_DEFAULT_CLIENT_SECRET = "no";
 
   if (engineName === "playwright") {
     await launchPlaywright(params);
@@ -242,6 +273,14 @@ async function handleConnect(params) {
     await connectPuppeteer(params);
   } else {
     throw new Error(`Unsupported bridge engine: ${engineName}`);
+  }
+
+  if (params.colorScheme !== null && params.colorScheme !== undefined) {
+    try {
+      await applyColorScheme(params.colorScheme);
+    } catch (error) {
+      log(`colorScheme failed: ${error.message}`);
+    }
   }
 
   try {

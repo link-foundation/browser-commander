@@ -14,6 +14,8 @@ pub mod cdp_endpoint;
 pub mod chromiumoxide_adapter;
 pub mod connector;
 pub mod debugging_port;
+mod engine_launch;
+mod launch_executable;
 pub mod launcher;
 pub mod media;
 pub mod navigation_ops;
@@ -36,7 +38,9 @@ pub use cdp_endpoint::{
 pub use chromiumoxide_adapter::ChromiumoxidePage;
 pub use connector::{connect_browser, ConnectOptions};
 pub use debugging_port::{assert_fixed_debugging_port, reserve_loopback_port, PortRaceError};
-pub use launcher::{launch_browser, Browser, LaunchOptions, LaunchResult};
+pub use launcher::{
+    launch_browser, Browser, LaunchMode, LaunchOptions, LaunchResult, LAUNCH_MODES,
+};
 pub use media::{emulate_media, ColorScheme, EmulateMediaOptions};
 pub use navigation_ops::{
     goto, verify_navigation, wait_for_navigation, wait_for_url_stabilization, NavigationOptions,

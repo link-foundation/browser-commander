@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Check that the copies of the shared fingerprint assets are identical.
 #
-# Two assets are shared rather than translated: the page init payload, which all
-# three implementations send to Chrome, and the limitations catalogue, which all
-# three publish as data. npm, PyPI and crates.io each package a single directory
+# Three assets are shared rather than translated: the page init payload, which
+# all three implementations send to Chrome, the limitations catalogue, which all
+# three publish as data, and the catalogue of opt-in launch restrictions (#103),
+# which all three turn into browser switches. npm, PyPI and crates.io each package a single directory
 # and none of them can reference a file outside it, so the bytes have to be
 # duplicated. Duplication without a check is how selenium-stealth and
 # playwright_stealth drifted away from the puppeteer-extra evasions they were
@@ -20,6 +21,9 @@ assets=(
   "js/src/fingerprint/limitations.json \
    python/src/browser_commander/fingerprint/limitations.json \
    rust/src/fingerprint/limitations.json"
+  "js/src/browser/launch-restrictions.json \
+   python/src/browser_commander/browser/launch-restrictions.json \
+   rust/src/browser/launch-restrictions.json"
 )
 
 cd "$repo_root"

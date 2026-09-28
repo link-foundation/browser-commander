@@ -9,7 +9,7 @@
  */
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -162,11 +162,18 @@ export async function captureReferenceReport({
   headless = false,
 }) {
   const userDataDir = await mkdtemp(path.join(tmpdir(), 'bc-parity-real-'));
+  // The profile looks like one Chrome has already opened once: Chrome writes
+  // the First Run sentinel after its first run and records the What's New
+  // milestone in Local State, so neither the first-run UI nor a second tab
+  // opens. Nothing is added to the command line, so the reference is exactly
+  // what a person types.
+  await writeFile(path.join(userDataDir, 'First Run'), '');
+  await writeFile(
+    path.join(userDataDir, 'Local State'),
+    JSON.stringify({ browser: { last_whats_new_version: 9999 } })
+  );
   const args = [
     `--user-data-dir=${userDataDir}`,
-    '--no-first-run',
-    '--no-default-browser-check',
-    '--disable-features=Translate',
     ...(headless ? ['--headless=new'] : []),
     ...extraArgs,
     server.url(token),

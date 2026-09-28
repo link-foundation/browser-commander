@@ -66,6 +66,33 @@ async function prepareStorageState({ storageState, seedCookies }) {
   };
 }
 
+/**
+ * Pick the tab that is on screen.
+ *
+ * A browser attached after it started can already have several tabs - a fresh
+ * Chrome profile opens "What's new" next to the New Tab page - and neither
+ * engine lists them in a stable order. Driving a background tab would make
+ * `document.hidden` true where a person's first navigation would see a visible
+ * page, so the visible tab wins and the first tab is the fallback.
+ *
+ * @param {Object[]} pages - Engine page handles
+ * @returns {Promise<Object|undefined>}
+ */
+export async function pickForegroundPage(pages) {
+  for (const page of pages) {
+    if (typeof page?.evaluate !== 'function') {
+      continue;
+    }
+    const state = await page
+      .evaluate(() => document.visibilityState)
+      .catch(() => null);
+    if (state === 'visible') {
+      return page;
+    }
+  }
+  return pages[0];
+}
+
 async function connectPlaywright({ options, loadPlaywright, storageState }) {
   const { chromium } = await loadPlaywright();
   const endpoint = options.cdpEndpoint ?? options.wsEndpoint;
@@ -77,7 +104,8 @@ async function connectPlaywright({ options, loadPlaywright, storageState }) {
   if (!context) {
     throw new Error('Connected Playwright browser has no default context');
   }
-  const page = context.pages()[0] ?? (await context.newPage());
+  const page =
+    (await pickForegroundPage(context.pages())) ?? (await context.newPage());
 
   await restorePlaywrightStorageState({ context, storageState });
   return { browser, page };
@@ -89,8 +117,9 @@ async function connectPuppeteer({ options, loadPuppeteer, storageState }) {
   const browser = await puppeteer.connect(
     buildPuppeteerConnectOptions(options)
   );
-  const pages = await browser.pages();
-  const page = pages[0] ?? (await browser.newPage());
+  const page =
+    (await pickForegroundPage(await browser.pages())) ??
+    (await browser.newPage());
 
   await restorePuppeteerStorageState({ page, storageState });
   return { browser, page };

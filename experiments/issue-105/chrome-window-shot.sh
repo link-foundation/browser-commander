@@ -13,6 +13,7 @@ xvfb_pid=$!
 sleep 1
 here="$(cd "$(dirname "$0")" && pwd)"
 coproc NODE { DISPLAY="$display" node "$@"; }
+node_pid=$NODE_PID
 while read -r line <&"${NODE[0]}"; do
   echo "$line"
   if [[ "$line" == READY* ]]; then
@@ -23,6 +24,6 @@ while read -r line <&"${NODE[0]}"; do
 done
 exec {NODE[1]}>&-
 cat <&"${NODE[0]}" || true
-wait "$NODE_PID" || true
+wait "$node_pid" || true
 kill "$xvfb_pid" || true
 rm -rf "$fbdir"

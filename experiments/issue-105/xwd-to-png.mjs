@@ -23,7 +23,8 @@ for (let y = 0; y < outHeight; y++) {
   raw[y * (width * 3 + 1)] = 0;
   for (let x = 0; x < width; x++) {
     const offset = pixelsStart + y * bytesPerLine + x * 4;
-    const pixel = byteOrder === 0 ? data.readUInt32LE(offset) : data.readUInt32BE(offset);
+    const pixel =
+      byteOrder === 0 ? data.readUInt32LE(offset) : data.readUInt32BE(offset);
     const target = y * (width * 3 + 1) + 1 + x * 3;
     raw[target] = (pixel >> 16) & 0xff;
     raw[target + 1] = (pixel >> 8) & 0xff;
@@ -53,10 +54,13 @@ ihdr.writeUInt32BE(width, 0);
 ihdr.writeUInt32BE(outHeight, 4);
 ihdr[8] = 8;
 ihdr[9] = 2;
-writeFileSync(output, Buffer.concat([
-  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-  chunk('IHDR', ihdr),
-  chunk('IDAT', deflateSync(raw)),
-  chunk('IEND', Buffer.alloc(0)),
-]));
+writeFileSync(
+  output,
+  Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ])
+);
 console.log(`wrote ${output} ${width}x${outHeight}`);

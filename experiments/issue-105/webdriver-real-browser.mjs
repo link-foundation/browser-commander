@@ -8,10 +8,17 @@ import { launchRealBrowser } from '../../js/src/browser/real-browser.js';
 
 const channel = process.env.CHANNEL ?? 'chrome';
 const userDataDir = await mkdtemp(path.join(os.tmpdir(), 'bc-webdriver-'));
-const session = await launchRealBrowser({ engine: process.env.ENGINE ?? 'playwright', channel, userDataDir, headless: false });
+const session = await launchRealBrowser({
+  engine: process.env.ENGINE ?? 'playwright',
+  channel,
+  userDataDir,
+  headless: false,
+});
 try {
   const webdriver = await session.page.evaluate(() => navigator.webdriver);
-  console.log(JSON.stringify({ channel, cdpEndpoint: session.cdpEndpoint, webdriver }));
+  console.log(
+    JSON.stringify({ channel, cdpEndpoint: session.cdpEndpoint, webdriver })
+  );
 } finally {
   await session.browser.close().catch(() => {});
   session.browserProcess.kill();

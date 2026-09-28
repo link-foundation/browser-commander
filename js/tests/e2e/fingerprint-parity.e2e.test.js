@@ -35,7 +35,7 @@ import {
   readProbeSource,
   startProbeServer,
 } from '../../../experiments/fingerprint-parity/harness.mjs';
-import { launchBrowser } from '../../src/index.js';
+import { launchBrowser, launchRealBrowser } from '../../src/index.js';
 import { createFingerprintPreset } from '../../src/fingerprint/presets.js';
 
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
@@ -87,6 +87,26 @@ function defineParitySuite({ headless }) {
           return { report: await server.waitForReport(token), token };
         } finally {
           await browser.close();
+        }
+      };
+
+      /**
+       * Drive one capture through the real-browser launcher: Chrome is spawned
+       * with `--user-data-dir` and a reserved `--remote-debugging-port` only,
+       * and the engine attaches over CDP afterwards (issue #101).
+       */
+      const captureWithRealBrowser = async (options) => {
+        const token = randomUUID();
+        const session = await launchRealBrowser({
+          headless,
+          executablePath: CHROME,
+          ...options,
+        });
+        try {
+          await session.page.goto(server.url(token), { waitUntil: 'load' });
+          return { report: await server.waitForReport(token), session };
+        } finally {
+          await session.close();
         }
       };
 
@@ -151,6 +171,30 @@ function defineParitySuite({ headless }) {
             assert.ok(
               paths.includes('navigator.webdriver'),
               `expected navigator.webdriver to leak, saw: ${paths.join(', ')}`
+            );
+          }
+        );
+
+        it(
+          `launchRealBrowser with ${engine} is indistinguishable from a hand-started Chrome`,
+          { timeout: TEST_TIMEOUT },
+          async () => {
+            const { report, session } = await captureWithRealBrowser({
+              engine,
+            });
+            // Headful: nothing but the profile and the fixed port, so there is
+            // no switch that could show the unsupported-flag infobar.
+            if (!headless) {
+              assert.equal(session.args.length, 2, session.args.join(' '));
+            }
+            assert.equal(report.navigator.webdriver, false);
+            const differences = diffReports(reference, report);
+            assert.deepEqual(
+              differences,
+              [],
+              `real ${engine} session differs from a real ${mode} browser in: ${differences
+                .map((entry) => entry.path)
+                .join(', ')}`
             );
           }
         );

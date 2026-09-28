@@ -12,13 +12,31 @@ const blocker = net.createServer().listen(0, '127.0.0.1');
 await new Promise((r) => blocker.once('listening', r));
 const port = blocker.address().port;
 const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-port-race-'));
-const child = spawn(executable, [`--user-data-dir=${dir}`, `--remote-debugging-port=${port}`, '--headless=new', 'about:blank'], { stdio: ['ignore', 'pipe', 'pipe'] });
+const child = spawn(
+  executable,
+  [
+    `--user-data-dir=${dir}`,
+    `--remote-debugging-port=${port}`,
+    '--headless=new',
+    'about:blank',
+  ],
+  { stdio: ['ignore', 'pipe', 'pipe'] }
+);
 let stderr = '';
 child.stderr.on('data', (d) => (stderr += d));
 await new Promise((r) => setTimeout(r, 4000));
 let activePort = null;
-try { activePort = await readFile(path.join(dir, 'DevToolsActivePort'), 'utf8'); } catch {}
-console.log({ port, exitCode: child.exitCode, activePort, stderrTail: stderr.split('\n').filter((l) => /devtools|http server|bind/i.test(l)) });
+try {
+  activePort = await readFile(path.join(dir, 'DevToolsActivePort'), 'utf8');
+} catch {}
+console.log({
+  port,
+  exitCode: child.exitCode,
+  activePort,
+  stderrTail: stderr
+    .split('\n')
+    .filter((l) => /devtools|http server|bind/i.test(l)),
+});
 child.kill();
 blocker.close();
 await new Promise((r) => setTimeout(r, 500));

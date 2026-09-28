@@ -1,15 +1,9 @@
 import { CHROME_ARGS } from '../core/constants.js';
+import { assertStringArray } from './restrictions.js';
 import {
   applyAutomationParityArgs,
   parityIgnoredDefaultArgs,
 } from '../fingerprint/automation-parity.js';
-
-function stringArray(value, name) {
-  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
-    throw new TypeError(`${name} must be an array of strings`);
-  }
-  return value;
-}
 
 /** Resolve Browser Commander defaults, compatibility args, and extra args. */
 export function resolveChromeArgs({
@@ -17,8 +11,8 @@ export function resolveChromeArgs({
   extraArgs = [],
   ignoreDefaultArgs = [],
 } = {}) {
-  stringArray(args, 'args');
-  stringArray(extraArgs, 'extraArgs');
+  assertStringArray(args, 'args');
+  assertStringArray(extraArgs, 'extraArgs');
   if (
     typeof ignoreDefaultArgs !== 'boolean' &&
     !Array.isArray(ignoreDefaultArgs)
@@ -26,7 +20,7 @@ export function resolveChromeArgs({
     throw new TypeError('ignoreDefaultArgs must be a boolean or string array');
   }
   if (Array.isArray(ignoreDefaultArgs)) {
-    stringArray(ignoreDefaultArgs, 'ignoreDefaultArgs');
+    assertStringArray(ignoreDefaultArgs, 'ignoreDefaultArgs');
   }
 
   const normalizedIgnoreDefaultArgs =

@@ -1,21 +1,20 @@
 import assert from 'node:assert';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import os from 'node:os';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
 import {
   migrateExtensions,
   selectMigratableExtensions,
 } from '../../../../src/browser/migration/extensions.js';
+import {
+  migrateBetween,
+  readProfileJson,
+  writeProfileJson,
+} from '../../../helpers/migration-fixtures.js';
+import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
-const tempDirs = [];
-
-async function makeTempDir() {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-ext-'));
-  tempDirs.push(dir);
-  return dir;
-}
+const makeTempDir = useTempDirectories('bc-ext-');
 
 async function writeExtension(profileDir, id, version) {
   const dir = path.join(profileDir, 'Extensions', id, version);
@@ -25,12 +24,6 @@ async function writeExtension(profileDir, id, version) {
     JSON.stringify({ name: id, version, manifest_version: 3 })
   );
 }
-
-afterEach(async () => {
-  while (tempDirs.length > 0) {
-    await rm(tempDirs.pop(), { recursive: true, force: true });
-  }
-});
 
 describe('selectMigratableExtensions', () => {
   it('excludes policy-installed and component extensions', () => {
@@ -54,22 +47,16 @@ describe('migrateExtensions', () => {
     const target = await makeTempDir();
     await writeExtension(source, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '1.0');
     await writeExtension(source, 'cccccccccccccccccccccccccccccccc', '2.0');
-    await writeFile(
-      path.join(source, 'Secure Preferences'),
-      JSON.stringify({
-        extensions: {
-          settings: {
-            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: { location: 1, manifest: {} },
-            cccccccccccccccccccccccccccccccc: { location: 5 },
-          },
+    await writeProfileJson(source, 'Secure Preferences', {
+      extensions: {
+        settings: {
+          aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: { location: 1, manifest: {} },
+          cccccccccccccccccccccccccccccccc: { location: 5 },
         },
-      })
-    );
-
-    const report = await migrateExtensions({
-      sourceProfileDir: source,
-      targetProfileDir: target,
+      },
     });
+
+    const report = await migrateBetween(migrateExtensions, source, target);
 
     assert.equal(report.migrated, 1);
     assert.ok(
@@ -93,9 +80,7 @@ describe('migrateExtensions', () => {
     );
     assert.match(copied, /manifest_version/);
 
-    const targetSecure = JSON.parse(
-      await readFile(path.join(target, 'Secure Preferences'), 'utf8')
-    );
+    const targetSecure = await readProfileJson(target, 'Secure Preferences');
     assert.ok(
       targetSecure.extensions.settings.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     );
@@ -106,20 +91,14 @@ describe('migrateExtensions', () => {
     const target = await makeTempDir();
     await writeExtension(source, 'dddddddddddddddddddddddddddddddd', '1.0');
 
-    const report = await migrateExtensions({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-    });
+    const report = await migrateBetween(migrateExtensions, source, target);
     assert.equal(report.migrated, 1);
   });
 
   it('reports nothing when there is no Extensions directory', async () => {
     const source = await makeTempDir();
     const target = await makeTempDir();
-    const report = await migrateExtensions({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-    });
+    const report = await migrateBetween(migrateExtensions, source, target);
     assert.deepEqual(report, { migrated: 0, skipped: [], warnings: [] });
   });
 });

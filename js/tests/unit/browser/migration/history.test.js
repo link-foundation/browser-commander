@@ -1,47 +1,26 @@
 import assert from 'node:assert';
-import { mkdtemp, rm, stat } from 'node:fs/promises';
-import os from 'node:os';
+import { stat } from 'node:fs/promises';
 import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
-
-import BetterSqlite3 from 'better-sqlite3';
+import { describe, it } from 'node:test';
 
 import { migrateHistory } from '../../../../src/browser/migration/history.js';
+import {
+  assertNothingMigrated,
+  assertSourceUnchanged,
+  migrateBetween,
+  writeChromiumHistory,
+} from '../../../helpers/migration-fixtures.js';
+import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
-const tempDirs = [];
-
-async function makeTempDir() {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-history-'));
-  tempDirs.push(dir);
-  return dir;
-}
-
-function writeHistory(dir, urlCount) {
-  const db = new BetterSqlite3(path.join(dir, 'History'));
-  db.exec('CREATE TABLE urls (id INTEGER PRIMARY KEY, url TEXT, title TEXT)');
-  const insert = db.prepare('INSERT INTO urls (url, title) VALUES (?, ?)');
-  for (let i = 0; i < urlCount; i += 1) {
-    insert.run(`https://example.com/${i}`, `Page ${i}`);
-  }
-  db.close();
-}
-
-afterEach(async () => {
-  while (tempDirs.length > 0) {
-    await rm(tempDirs.pop(), { recursive: true, force: true });
-  }
-});
+const makeTempDir = useTempDirectories('bc-history-');
 
 describe('migrateHistory', () => {
   it('snapshots History into the target and reports the URL count', async () => {
     const source = await makeTempDir();
     const target = await makeTempDir();
-    writeHistory(source, 5);
+    writeChromiumHistory(source, 5);
 
-    const report = await migrateHistory({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-    });
+    const report = await migrateBetween(migrateHistory, source, target);
 
     assert.equal(report.migrated, 1);
     await stat(path.join(target, 'History'));
@@ -53,26 +32,17 @@ describe('migrateHistory', () => {
   it('never writes to the source database', async () => {
     const source = await makeTempDir();
     const target = await makeTempDir();
-    writeHistory(source, 2);
-    const before = (await stat(path.join(source, 'History'))).mtimeMs;
+    const historyPath = writeChromiumHistory(source, 2);
 
-    await migrateHistory({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-    });
-
-    const after = (await stat(path.join(source, 'History'))).mtimeMs;
-    assert.equal(before, after);
+    await assertSourceUnchanged(historyPath, () =>
+      migrateBetween(migrateHistory, source, target)
+    );
   });
 
   it('reports a skip when there is no History database', async () => {
     const source = await makeTempDir();
     const target = await makeTempDir();
-    const report = await migrateHistory({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-    });
-    assert.equal(report.migrated, 0);
-    assert.equal(report.skipped[0].reason, 'source-missing');
+    const report = await migrateBetween(migrateHistory, source, target);
+    assertNothingMigrated(report, 'source-missing');
   });
 });

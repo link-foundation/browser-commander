@@ -1,28 +1,20 @@
 import assert from 'node:assert';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
 import {
   MIGRATED_PREFERENCE_PATHS,
   mergePreferenceSubset,
   migratePreferences,
 } from '../../../../src/browser/migration/preferences.js';
+import {
+  assertNothingMigrated,
+  migrateBetween,
+  readProfileJson,
+  writeProfileJson,
+} from '../../../helpers/migration-fixtures.js';
+import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
-const tempDirs = [];
-
-async function makeTempDir() {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-prefs-'));
-  tempDirs.push(dir);
-  return dir;
-}
-
-afterEach(async () => {
-  while (tempDirs.length > 0) {
-    await rm(tempDirs.pop(), { recursive: true, force: true });
-  }
-});
+const makeTempDir = useTempDirectories('bc-prefs-');
 
 describe('mergePreferenceSubset', () => {
   it('copies only the documented subset and skips missing paths', () => {
@@ -57,28 +49,19 @@ describe('migratePreferences', () => {
   it('merges the subset into an existing target Preferences', async () => {
     const source = await makeTempDir();
     const target = await makeTempDir();
-    await writeFile(
-      path.join(source, 'Preferences'),
-      JSON.stringify({
-        intl: { accept_languages: 'de-DE,de' },
-        download: { default_directory: '/home/bob/Downloads' },
-        session: { restore_on_startup: 4, startup_urls: ['https://x/'] },
-      })
-    );
-    await writeFile(
-      path.join(target, 'Preferences'),
-      JSON.stringify({ profile: { name: 'existing' } })
-    );
-
-    const report = await migratePreferences({
-      sourceProfileDir: source,
-      targetProfileDir: target,
+    await writeProfileJson(source, 'Preferences', {
+      intl: { accept_languages: 'de-DE,de' },
+      download: { default_directory: '/home/bob/Downloads' },
+      session: { restore_on_startup: 4, startup_urls: ['https://x/'] },
+    });
+    await writeProfileJson(target, 'Preferences', {
+      profile: { name: 'existing' },
     });
 
+    const report = await migrateBetween(migratePreferences, source, target);
+
     assert.ok(report.migrated >= 2);
-    const merged = JSON.parse(
-      await readFile(path.join(target, 'Preferences'), 'utf8')
-    );
+    const merged = await readProfileJson(target, 'Preferences');
     assert.equal(merged.intl.accept_languages, 'de-DE,de');
     assert.equal(merged.session.restore_on_startup, 4);
     assert.equal(merged.profile.name, 'existing');
@@ -88,11 +71,7 @@ describe('migratePreferences', () => {
   it('reports a skip when the source has no Preferences', async () => {
     const source = await makeTempDir();
     const target = await makeTempDir();
-    const report = await migratePreferences({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-    });
-    assert.equal(report.migrated, 0);
-    assert.equal(report.skipped[0].reason, 'source-missing');
+    const report = await migrateBetween(migratePreferences, source, target);
+    assertNothingMigrated(report, 'source-missing');
   });
 });

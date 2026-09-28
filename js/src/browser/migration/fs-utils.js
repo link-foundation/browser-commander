@@ -1,5 +1,6 @@
 import { access, readFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
+import path from 'node:path';
 
 /**
  * Small filesystem helpers shared by the migration data-class modules.
@@ -35,4 +36,16 @@ export async function readJsonIfPresent(filePath) {
   } catch {
     return null;
   }
+}
+
+/**
+ * Resolve a file inside a profile directory, or null when it is absent.
+ *
+ * @param {string} profileDir
+ * @param {string} name - File name relative to the profile
+ * @returns {Promise<string|null>}
+ */
+export async function profileFileIfPresent(profileDir, name) {
+  const filePath = path.join(profileDir, name);
+  return (await pathExists(filePath)) ? filePath : null;
 }

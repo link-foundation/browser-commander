@@ -42,3 +42,27 @@ export function useTempDirectory(prefix) {
 
   return holder;
 }
+
+/**
+ * Let each test create as many directories as it needs (a source and a target
+ * profile, say), and remove all of them after the test.
+ *
+ * @param {string} [prefix] - Default name prefix for the directories
+ * @returns {(prefix?: string) => Promise<string>} Creates and tracks one more
+ *   directory, optionally with its own prefix
+ */
+export function useTempDirectories(prefix) {
+  const created = [];
+
+  afterEach(async () => {
+    while (created.length > 0) {
+      await fs.rm(created.pop(), { recursive: true, force: true });
+    }
+  });
+
+  return async (directoryPrefix = prefix) => {
+    const directory = await makeTempDirectory(directoryPrefix);
+    created.push(directory);
+    return directory;
+  };
+}

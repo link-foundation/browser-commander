@@ -3,6 +3,9 @@
   "version": "0.20.0",
   "description": "Universal browser automation library that supports both Playwright and Puppeteer with a unified API",
   "main": "src/index.js",
+  "bin": {
+    "browser-commander": "bin/browser-commander.js"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.js",
@@ -19,6 +22,8 @@
     "test:e2e:click-readiness": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/click-readiness.e2e.test.js",
     "test:e2e:downloads": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/downloads.e2e.test.js",
     "test:e2e:traces": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/traces.e2e.test.js",
+    "test:e2e:cli": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/cli.e2e.test.js",
+    "test:e2e:api-coverage": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/api-coverage.e2e.test.js",
     "test:all": "npm run test:unit && npm run test:e2e",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

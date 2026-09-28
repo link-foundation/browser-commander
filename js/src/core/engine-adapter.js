@@ -606,9 +606,115 @@ export function createEngineAdapter(page, engine) {
     return new PlaywrightAdapter(page);
   } else if (engine === 'puppeteer') {
     return new PuppeteerAdapter(page);
+  } else if (engine === 'selenium') {
+    return new SeleniumAdapter(page);
   } else {
     throw new Error(
-      `Unsupported engine: ${engine}. Expected 'playwright' or 'puppeteer'`
+      `Unsupported engine: ${engine}. Expected 'playwright', 'puppeteer' or 'selenium'`
     );
+  }
+}
+
+/**
+ * Selenium (WebDriver) adapter implementation (issue #104).
+ *
+ * The page is a `WebDriverPage` facade, which already speaks the Puppeteer
+ * page API, so everything not listed here is the Puppeteer implementation.
+ * The overrides use WebDriver's native element commands where they exist:
+ * Element Click, Element Send Keys and Element Clear run the browser's own
+ * interactability checks and produce trusted input events.
+ */
+export class SeleniumAdapter extends PuppeteerAdapter {
+  getEngineName() {
+    return 'selenium';
+  }
+
+  async click(locatorOrElement, options = {}) {
+    if (options.force) {
+      // Element Click refuses an obscured element; force means "click where
+      // it is anyway", which is a pointer action at the element's centre.
+      await this.page.evaluate(
+        (el) => el.scrollIntoView({ block: 'center', inline: 'center' }),
+        locatorOrElement
+      );
+      await this.page.driver
+        .actions({ async: true })
+        .move({ origin: locatorOrElement })
+        .click()
+        .perform();
+    } else {
+      await locatorOrElement.click();
+    }
+    // A click may navigate; page.url() should say where it went.
+    await this.page.syncUrl();
+  }
+
+  async type(locatorOrElement, text) {
+    await locatorOrElement.sendKeys(text);
+  }
+
+  async fill(locatorOrElement, text) {
+    await locatorOrElement.clear();
+    await locatorOrElement.sendKeys(text);
+  }
+
+  async focus(locatorOrElement) {
+    await this.page.evaluate((el) => el.focus(), locatorOrElement);
+  }
+
+  // ============================================================================
+  // WebDriver and BiDi access
+  // ============================================================================
+
+  /** @returns {Object} The selenium-webdriver WebDriver */
+  getDriver() {
+    return this.page.driver;
+  }
+
+  /** @returns {Promise<Object|null>} The BiDi connection, null for classic */
+  getBidi() {
+    return this.page.bidi();
+  }
+
+  /**
+   * Subscribe to a raw BiDi event, e.g. 'log.entryAdded'.
+   * @returns {Promise<{unsubscribe: Function}>}
+   */
+  onBidiEvent(method, handler) {
+    return this.page.subscribeBidi(method, handler);
+  }
+
+  /**
+   * Receive console messages (BiDi `log.entryAdded`).
+   * @param {Function} handler - Receives a Puppeteer-shaped ConsoleMessage
+   * @returns {Promise<Function>} Resolves once subscribed, to an unsubscribe
+   */
+  onConsoleMessage(handler) {
+    return this._listen('console', handler);
+  }
+
+  /**
+   * Receive top-level navigations (BiDi browsingContext events).
+   * @param {Function} handler - Receives the new URL
+   * @returns {Promise<Function>} Resolves once subscribed, to an unsubscribe
+   */
+  onNavigation(handler) {
+    return this._listen('framenavigated', (frame) => handler(frame.url()));
+  }
+
+  async _listen(eventName, handler) {
+    await this.page.requireBidi(`page "${eventName}" events`);
+    this.page.on(eventName, handler);
+    await this.page.eventsReady();
+    return () => this.page.off(eventName, handler);
+  }
+
+  /**
+   * Navigate with BiDi `browsingContext.navigate`.
+   * @param {string} url
+   * @param {Object} [options] - {wait: 'none'|'interactive'|'complete'}
+   */
+  navigate(url, options = {}) {
+    return this.page.navigateBidi(url, options);
   }
 }

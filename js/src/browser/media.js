@@ -49,6 +49,11 @@ export async function emulateMedia({ page, engine, colorScheme } = {}) {
         { name: 'prefers-color-scheme', value: colorScheme },
       ]);
     }
+  } else if (engine === 'selenium') {
+    throw new Error(
+      'emulateMedia is not available with the selenium engine: WebDriver has ' +
+        'no media emulation command (see the webdriver-no-cdp-emulation limitation)'
+    );
   } else {
     throw new Error(
       `Unsupported engine: ${engine}. Expected 'playwright' or 'puppeteer'`

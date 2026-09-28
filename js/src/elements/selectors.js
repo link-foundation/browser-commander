@@ -302,9 +302,10 @@ export function withTextSelectorSupport(fn, engine, page) {
   return async (options = {}) => {
     let { selector } = options;
 
-    // Normalize Puppeteer text selectors (object format)
+    // Normalize Puppeteer-style text selectors (object format; Puppeteer and
+    // selenium)
     if (
-      engine === 'puppeteer' &&
+      engine !== 'playwright' &&
       typeof selector === 'object' &&
       selector._isPuppeteerTextSelector
     ) {

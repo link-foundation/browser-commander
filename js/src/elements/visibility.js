@@ -149,6 +149,10 @@ export async function count(options = {}) {
       );
       return result;
     }
+    if (engine === 'selenium' && selector?._isPuppeteerTextSelector) {
+      // The WebDriverPage facade evaluates like a Puppeteer page (issue #104).
+      return await count({ ...options, engine: 'puppeteer' });
+    }
 
     if (engine === 'playwright') {
       return await page.locator(selector).count();

@@ -52,6 +52,11 @@ export {
   launchRealBrowser,
 } from './browser/real-browser.js';
 export {
+  openInUserBrowser,
+  buildOpenCommand,
+  validateOpenUrl,
+} from './browser/open-in-user-browser.js';
+export {
   launchBrowser,
   LAUNCH_MODES,
   resolveLaunchExecutable,

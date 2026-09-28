@@ -197,6 +197,7 @@ describe('CI execution budgets', () => {
       'docs.yml build-docs Rust API docs',
       'js.yml test Node.js test suite',
       'parity.yml parity Fingerprint parity suite',
+      'parity.yml parity WebDriver suite',
       'python.yml test pytest suite',
       'rust.yml coverage Rust code coverage',
       'rust.yml test Rust doc tests',

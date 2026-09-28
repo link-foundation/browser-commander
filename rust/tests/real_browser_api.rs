@@ -21,6 +21,7 @@ fn real_browser_api_builds_a_clean_command_line() {
             "--remote-debugging-port=9333",
             "--headless=new",
             "--lang=en-US",
+            "about:blank",
         ]
     );
 
@@ -46,6 +47,7 @@ fn real_browser_api_adds_restrictions_only_on_request() {
             "--password-store=basic",
             "--legacy-arg",
             "--lang=en-US",
+            "about:blank",
         ]
     );
 }

@@ -28,7 +28,13 @@ pub const LOCAL_STATE_FILE: &str = "Local State";
 /// foreground after the engine has attached. Chrome skips the tab when
 /// `browser.last_whats_new_version` is not older than the running version; a
 /// milestone no release has reached keeps it closed.
-pub const INITIAL_LOCAL_STATE: &str = r#"{"browser":{"last_whats_new_version":9999}}"#;
+///
+/// Microsoft Edge ignores that key and opens its own first-run tab,
+/// `edge://welcome-edge/`, which takes the foreground the same way; it is
+/// skipped once Edge has recorded `fre.has_user_seen_fre` (measured with Edge
+/// 153, experiments/issue-103/edge-first-run.sh). Chrome ignores the key.
+pub const INITIAL_LOCAL_STATE: &str =
+    r#"{"browser":{"last_whats_new_version":9999},"fre":{"has_user_seen_fre":true}}"#;
 
 /// Prefix of the fresh profiles Browser Commander creates and deletes.
 pub const TEMPORARY_PROFILE_PREFIX: &str = "browser-commander-profile-";
@@ -144,6 +150,15 @@ mod tests {
         assert_eq!(
             fs::read_to_string(directory.join(LOCAL_STATE_FILE)).unwrap(),
             INITIAL_LOCAL_STATE
+        );
+        // Chrome's What's New tab and Edge's first-run tab both stay closed.
+        let local_state: serde_json::Value = serde_json::from_str(INITIAL_LOCAL_STATE).unwrap();
+        assert_eq!(
+            local_state,
+            serde_json::json!({
+                "browser": {"last_whats_new_version": 9999},
+                "fre": {"has_user_seen_fre": true},
+            })
         );
         let other = create_temporary_user_data_dir(None).unwrap();
         assert_ne!(directory, other);

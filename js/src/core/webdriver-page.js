@@ -228,7 +228,7 @@ export class WebDriverPage extends EventEmitter {
    * @param {string} url
    * @param {Object} [options]
    * @param {'none'|'interactive'|'complete'} [options.wait='complete']
-   * @returns {Promise<{navigation: string|null, url: string}>}
+   * @returns {Promise<{navigation: (string|null), url: string}>}
    */
   async navigateBidi(url, { wait = 'complete' } = {}) {
     const result = await this.bidiCommand('browsingContext.navigate', {

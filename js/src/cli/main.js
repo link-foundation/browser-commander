@@ -28,9 +28,9 @@ function isUsageError(error) {
  *
  * @param {string[]} argv - Arguments after the program name
  * @param {Object} [io]
- * @param {{write: (text: string) => unknown}} [io.stdout=process.stdout]
- * @param {import('node:stream').Readable} [io.stdin=process.stdin]
- * @param {import('node:events').EventEmitter} [io.signals=process] - Emits SIGINT/SIGTERM
+ * @param {{write: function(string): unknown}} [io.stdout=process.stdout]
+ * @param {Object} [io.stdin=process.stdin]
+ * @param {Object} [io.signals=process] - Emits SIGINT/SIGTERM
  * @param {Object} [io.dependencies] - Dispatcher dependencies (tests)
  * @returns {Promise<number>} The exit code
  */

@@ -23,8 +23,8 @@ export const METHOD_NAMES = Object.freeze(Object.keys(METHODS).sort());
  *
  * @param {Object} [options]
  * @param {Object} [options.dependencies] - Replacements for {@link DEFAULT_DEPENDENCIES}
- * @param {(method: string, params: Object) => void} [options.notify] - Sends a server notification (`events.emit`)
- * @returns {{dispatch: (method: string, params?: Object) => Promise<unknown>, close: () => Promise<void>, state: Object}}
+ * @param {function(string, Object): void} [options.notify] - Sends a server notification (`events.emit`)
+ * @returns {{dispatch: function(string, Object=): Promise<unknown>, close: function(): Promise<void>, state: Object}}
  */
 export function createDispatcher({
   dependencies = {},

@@ -135,7 +135,7 @@ async function resolvePasswordKeys({
  * Migrate a browser profile into a dedicated target profile directory.
  *
  * @param {Object} options
- * @param {{browser: string, profile?: string, userDataDir?: string}} options.from
+ * @param {{browser: string, profile: (string|undefined), userDataDir: (string|undefined)}} options.from
  * @param {string} options.to - Target profile directory
  * @param {string[]} [options.include=ALL_DATA_CLASSES]
  * @param {string[]} [options.domains] - Cookie domain filter

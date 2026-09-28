@@ -35,7 +35,7 @@ function isRequest(message) {
  * Build the handler for one JSON-RPC message or batch.
  *
  * @param {{dispatch: Function}} dispatcher
- * @returns {(message: unknown) => Promise<Object|Object[]|null>} The response, or null for notifications
+ * @returns {function(unknown): Promise<Object|Array<Object>|null>} The response, or null for notifications
  */
 export function createMessageHandler(dispatcher) {
   async function handleOne(message) {
@@ -107,8 +107,8 @@ function delay(ms) {
  * Serve JSON-RPC until `input` ends, then close every session.
  *
  * @param {Object} options
- * @param {import('node:stream').Readable} options.input - Usually process.stdin
- * @param {(text: string) => void} options.write - Writes one line to stdout
+ * @param {Object} options.input - Usually process.stdin
+ * @param {function(string): void} options.write - Writes one line to stdout
  * @param {Object} [options.dependencies] - Dispatcher dependencies (tests)
  * @param {number} [options.drainTimeoutMs] - Grace for in-flight requests
  * @returns {Promise<void>}

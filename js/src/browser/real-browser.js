@@ -325,9 +325,9 @@ function createCloser({
  * @param {number} [options.startupTimeout=30000] - CDP readiness timeout in milliseconds
  * @param {number} [options.closeTimeout=5000] - How long close() waits before killing the process
  * @param {Object[]} [options.seedCookies] - Cookies to seed after connecting
- * @param {{browser: string, profile?: string, userDataDir?: string, include?: string[], domains?: string[]}} [options.migrateFrom] - Migrate a real browser profile into the dedicated profile before launch; on-disk data is written before the browser starts and cookies are seeded over CDP after connecting
+ * @param {{browser: string, profile: (string|undefined), userDataDir: (string|undefined), include: (Array<string>|undefined), domains: (Array<string>|undefined)}} [options.migrateFrom] - Migrate a real browser profile into the dedicated profile before launch; on-disk data is written before the browser starts and cookies are seeded over CDP after connecting
  * @param {boolean} [options.verbose=false] - Show browser and connection logs
- * @returns {Promise<{browser: Object, page: Object, downloads: Object|null, close: () => Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: string[], migration?: Object}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given)
+ * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, migration: (Object|undefined)}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given)
  */
 export async function launchAndConnectRealBrowser(options = {}) {
   return await launchAndConnectRealBrowserWithDependencies(options);
@@ -439,7 +439,7 @@ function browserEnvironment(restrictions, env) {
  * CDP after connecting. On failure a freshly created temporary profile is
  * removed before the error propagates.
  *
- * @returns {Promise<{migration: Object|undefined, migratedCookies: Object[]}>}
+ * @returns {Promise<{migration: (Object|undefined), migratedCookies: Array<Object>}>}
  */
 async function runPreLaunchMigration({
   migrateFrom,

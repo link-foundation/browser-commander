@@ -20,7 +20,7 @@ export const DER_TAG = Object.freeze({
  *
  * @param {Buffer} buffer
  * @param {number} [offset=0]
- * @returns {{tag: number, length: number, header: number, contentStart: number, end: number, content: Buffer, children: Array|null}}
+ * @returns {{tag: number, length: number, header: number, contentStart: number, end: number, content: Buffer, children: (Array|null)}}
  */
 export function decodeDerElement(buffer, offset = 0) {
   const tag = buffer[offset];

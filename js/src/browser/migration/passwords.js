@@ -56,7 +56,7 @@ function hostFromOrigin(originUrl) {
  * @param {string} options.sourceProfileDir
  * @param {string} options.targetProfileDir
  * @param {string} [options.platform=process.platform]
- * @param {(prefix: string) => Promise<Buffer>|Buffer} options.resolveSourceKey
+ * @param {function(string): (Promise<Buffer>|Buffer)} options.resolveSourceKey
  *   Resolve the source decryption key for an encryption prefix (v10/v11).
  * @param {Buffer} options.targetKey - The dedicated profile's encryption key.
  * @param {string} [options.targetPrefix] - Version prefix to write (v10/v11).

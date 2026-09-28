@@ -48,7 +48,7 @@ function buildChromeNode(node, idRef) {
 /**
  * Build the parent→children tree from flat `moz_bookmarks` rows.
  *
- * @param {Array<{id:number,parent:number,type:number,title:string,url:string|null}>} rows
+ * @param {Array<{id: number, parent: number, type: number, title: string, url: (string|null)}>} rows
  * @returns {Map<number, Array>}
  */
 function groupByParent(rows) {

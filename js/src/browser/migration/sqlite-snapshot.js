@@ -35,7 +35,7 @@ const SQLITE_SIDECARS = ['-wal', '-shm', '-journal'];
  * Copy a SQLite file and its sidecars into a temporary directory.
  *
  * @param {string} sourcePath
- * @returns {Promise<{snapshotPath: string, cleanup: () => Promise<void>}>}
+ * @returns {Promise<{snapshotPath: string, cleanup: function(): Promise<void>}>}
  */
 async function copyDatabaseFiles(sourcePath) {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'browser-commander-snap-'));
@@ -61,7 +61,7 @@ async function copyDatabaseFiles(sourcePath) {
  *
  * @param {Object} options
  * @param {string} options.sourcePath - Path to the source database
- * @param {(snapshotPath: string) => Promise<T>|T} options.read - Reader run against the snapshot copy
+ * @param {function(string): (Promise<T>|T)} options.read - Reader run against the snapshot copy
  * @returns {Promise<T>}
  * @template T
  */
@@ -116,7 +116,7 @@ export async function withDatabaseSnapshot({ sourcePath, read }) {
  *
  * @param {Object} options
  * @param {string} options.sourcePath
- * @param {(db: Object) => Promise<T>|T} options.read
+ * @param {function(Object): (Promise<T>|T)} options.read
  * @returns {Promise<T>}
  * @template T
  */

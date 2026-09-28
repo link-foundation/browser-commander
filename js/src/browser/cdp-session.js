@@ -73,11 +73,11 @@ function isLegacyOptions(value) {
  * @typedef {Object} CdpSession
  * @property {string} engine
  * @property {Object} session
- * @property {(method: string, params?: Object) => Promise<Object>} send
- * @property {(event: string, listener: Function) => CdpSession} on
- * @property {(event: string, listener: Function) => CdpSession} once
- * @property {(event: string, listener: Function) => CdpSession} off
- * @property {() => Promise<void>} detach
+ * @property {function(string, Object=): Promise<Object>} send
+ * @property {function(string, Function): CdpSession} on
+ * @property {function(string, Function): CdpSession} once
+ * @property {function(string, Function): CdpSession} off
+ * @property {function(): Promise<void>} detach
  */
 export async function createCdpSession(page, options = {}) {
   const request = isLegacyOptions(page) ? page : { ...options, page };

@@ -103,10 +103,10 @@ export function parseDevToolsOutput(text) {
  * the debugging port. The stream keeps being drained after startup so a
  * chatty browser never blocks on a full pipe.
  *
- * @param {import('node:stream').Readable|null|undefined} stream - Browser stderr
+ * @param {Object|null|undefined} stream - Browser stderr
  * @param {Object} [options]
  * @param {boolean} [options.forward=false] - Also copy the output to process.stderr
- * @returns {{available: boolean, state: () => ReturnType<typeof parseDevToolsOutput>}}
+ * @returns {{available: boolean, state: function(): Object}}
  */
 export function watchDevToolsOutput(stream, { forward = false } = {}) {
   if (!stream || typeof stream.on !== 'function') {

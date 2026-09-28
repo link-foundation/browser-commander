@@ -169,7 +169,7 @@ async function findOnPath(name, { environment, platform, checkAccess }) {
  * @param {string} [options.driverPath] - Explicit driver executable
  * @param {string} [options.executablePath] - Browser the driver must match
  * @param {Function} [options.runCommand] - command-stream runner (tests)
- * @returns {Promise<{driverPath: string, browserPath: string|null, source: 'driverPath'|'PATH'|'selenium-manager'}>}
+ * @returns {Promise<{driverPath: string, browserPath: (string|null), source: string}>}
  */
 export async function resolveWebDriverExecutable({
   browser = 'chrome',
@@ -388,8 +388,8 @@ function buildSession({ selenium, serverUrl, browser, options }) {
 
 /**
  * Wrap a no-argument async function so every call shares the first result.
- * @param {() => Promise<void>} fn
- * @returns {() => Promise<void>}
+ * @param {function(): Promise<void>} fn
+ * @returns {function(): Promise<void>}
  */
 function memoize(fn) {
   let result;
@@ -434,7 +434,7 @@ async function teardown({
  * @param {number} [options.startupTimeout=30000]
  * @param {boolean} [options.verbose=false] - Mirror the driver server's output
  * @param {Object} [dependencies] - Injected selenium modules, runCommand, startProcess, fetch, reservePort (tests)
- * @returns {Promise<{driver: Object, page: Object, close: () => Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, args: string[], bidi: boolean}>}
+ * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, bidi: boolean}>}
  */
 export async function launchWebDriver(options = {}, dependencies = {}) {
   const {
@@ -553,7 +553,7 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
  * @param {string} options.serverUrl - e.g. 'http://127.0.0.1:4444'
  * @param {Object} [options.capabilities] - W3C capabilities; `browserName` defaults to 'chrome'. Set `webSocketUrl: true` for BiDi.
  * @param {Object} [dependencies] - Injected selenium modules (tests)
- * @returns {Promise<{driver: Object, page: Object, close: () => Promise<void>, serverUrl: string}>}
+ * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string}>}
  */
 export async function connectWebDriver(options = {}, dependencies = {}) {
   const { serverUrl, capabilities = {} } = options;

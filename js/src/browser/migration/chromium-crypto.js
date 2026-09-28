@@ -69,8 +69,8 @@ export function encryptChromiumValue({ plaintext, key, platform, prefix }) {
  * generation is testable off Windows.
  *
  * @param {Object} [options]
- * @param {(input: Buffer) => Promise<Buffer>|Buffer} [options.encryptDpapi]
- * @param {() => Buffer} [options.generateKey]
+ * @param {function(Buffer): (Promise<Buffer>|Buffer)} [options.encryptDpapi]
+ * @param {function(): Buffer} [options.generateKey]
  * @returns {Promise<{key: Buffer, encryptedKeyBase64: string}>}
  */
 export async function createWindowsProfileKey({

@@ -99,7 +99,7 @@ export function buildOpenCommand(url, platform) {
  * @param {string} url - The page to open (http/https/file/ftp/about/...)
  * @param {Object} [options]
  * @param {string} [options.platform=process.platform] - Injectable for tests
- * @param {(file: string, args: string[], options?: Object) => Promise<any>} [options.runner=runCommand] - Injectable command runner
+ * @param {function(string, Array<string>, Object=): Promise<any>} [options.runner=runCommand] - Injectable command runner
  * @param {Object<string,string>} [options.env] - Environment for the opener process
  * @returns {Promise<{opened: string, command: string[]}>} The opened URL and the exact command line used
  */

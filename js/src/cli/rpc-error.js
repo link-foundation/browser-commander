@@ -54,7 +54,7 @@ export function describeError(error) {
  * @param {unknown} error
  * @param {Object} [options]
  * @param {boolean} [options.stack=true] - Include the stack in `data`
- * @returns {{code: number, message: string, data?: Object}}
+ * @returns {{code: number, message: string, data: (Object|undefined)}}
  */
 export function toRpcError(error, { stack = true } = {}) {
   if (error instanceof RpcError) {

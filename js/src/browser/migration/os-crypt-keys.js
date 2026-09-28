@@ -32,7 +32,7 @@ import {
  * @param {Function} [options.readSafeStoragePassword]
  * @param {Function} [options.readWindowsEncryptionKey]
  * @param {Function} [options.decryptWindowsDpapi]
- * @returns {(prefix: string) => Promise<Buffer>}
+ * @returns {function(string): Promise<Buffer>}
  */
 export function createSourceKeyResolver({
   browser,

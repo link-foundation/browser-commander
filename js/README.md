@@ -869,6 +869,32 @@ await commander.page.pdf({ format: 'A4' });
 
 This is the **official extensibility mechanism** while awaiting browser-commander to add first-class support for these APIs. Please [report missing APIs](https://github.com/link-foundation/browser-commander/issues) so they can be added.
 
+## Command Line
+
+The package installs a `browser-commander` command. The Rust and Python packages ship the same command, and the contract all three follow is [docs/cli-and-bridge.md](../docs/cli-and-bridge.md). Every command prints exactly one JSON document to stdout. The exit code is `0` on success and `1` on error. `doctor` exits `2` when it finds an unlisted difference, and a usage error exits `64`.
+
+```bash
+npx browser-commander version
+npx browser-commander goto https://example.com --headless
+
+# Keep one browser running and drive it from later commands
+npx browser-commander launch --keep-open &
+npx browser-commander fill '#q' 'hello' --cdp-endpoint http://127.0.0.1:9222
+npx browser-commander eval 'document.title' --cdp-endpoint http://127.0.0.1:9222
+
+# Run a JSON command script (see tests/cli-contract/basic.json)
+npx browser-commander run script.json --engine puppeteer
+
+# JSON-RPC 2.0 over stdin/stdout, one message per line
+echo '{"jsonrpc":"2.0","id":1,"method":"version"}' | npx browser-commander serve --stdio
+```
+
+The other commands are `open`, `click`, `screenshot`, `pdf`, `trace start|stop|view`, `cookies import`, `profile migrate` and `doctor`. Use the `=` form for values that start with `--`, for example `--arg=--lang=de`.
+
+`serve --stdio` exposes the high-level methods (`session.launch`, `page.goto`, …). It also exposes generic handle methods (`handle.root`, `handle.call`, `handle.get`, `handle.describe`, `events.subscribe`, …), which reach every public Playwright and Puppeteer method. The Rust and Python ports use this bridge for the engines they do not implement natively.
+
+For raw Chrome DevTools Protocol access from JavaScript, `createCdpSession(page)` (or `commander.createCdpSession()`) returns the same `send`/`on`/`once`/`off`/`detach` surface for Playwright and Puppeteer pages.
+
 ## Debugging
 
 Enable verbose mode for detailed logs:

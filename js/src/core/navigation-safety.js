@@ -27,6 +27,10 @@ export function isNavigationError(error) {
     'Frame was detached',
     'context was destroyed',
     'Page crashed',
+    // WebDriver (selenium engine): an element or window from the previous
+    // document after a navigation.
+    'stale element reference',
+    'no such window',
   ];
 
   return navigationErrorPatterns.some((pattern) =>

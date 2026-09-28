@@ -25,7 +25,7 @@ import {
   playwrightDeclarations,
   puppeteerDeclarations,
 } from '../helpers/declared-api.js';
-import { SANDBOX_ARGS } from '../helpers/e2e-browser.js';
+import { CHROME_LAUNCH_OPTIONS } from '../helpers/e2e-browser.js';
 import { sendHtml, startFixtureHost } from '../helpers/fixture-server.js';
 
 const E2E = { skip: !process.env.RUN_E2E, timeout: 180_000 };
@@ -130,10 +130,7 @@ for (const [engine, { paths, declarations }] of Object.entries(ENGINES)) {
       const { session } = await dispatcher.dispatch('session.launch', {
         engine,
         headless: true,
-        args: SANDBOX_ARGS,
-        ...(process.env.CHROME_PATH
-          ? { executablePath: process.env.CHROME_PATH }
-          : {}),
+        ...CHROME_LAUNCH_OPTIONS,
       });
       roots = {
         ...(await dispatcher.dispatch('handle.root', {

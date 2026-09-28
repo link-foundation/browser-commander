@@ -24,6 +24,7 @@ on:
     paths:
       - 'js/src/fingerprint/**'
       - 'js/src/browser/**'
+      - 'js/src/core/webdriver-*.js'
       - 'js/tests/e2e/**'
       - 'experiments/fingerprint-parity/**'
       - 'js/src/cli/**'
@@ -47,7 +48,7 @@ jobs:
   parity:
     name: Fingerprint Parity (real Chrome)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-parity
       cancel-in-progress: true
@@ -114,6 +115,35 @@ jobs:
           fi
           echo "parity suite passed $passed tests against a real Chrome"
 
+      - name: Run WebDriver suite under Xvfb
+        # The selenium engine drives the same Chrome through chromedriver
+        # (issue #104). launchWebDriver() finds a chromedriver on PATH or asks
+        # Selenium Manager (shipped inside selenium-webdriver) for one matching
+        # $CHROME_PATH, so nothing else needs installing. The suite asserts
+        # navigator.webdriver stays false under chromedriver, which is the
+        # WebDriver half of the parity this workflow guards. It took 44s
+        # locally; the job backstop was raised to 40 minutes to cover both
+        # budgets (docs/CI-TIMEOUT-BUDGETS.md).
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 300 "WebDriver suite" \
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" npm run test:e2e:webdriver -- --reporter tap 2>&1 | tee webdriver.log'
+
+      - name: Fail on a WebDriver suite that asserted nothing
+        # The runner has no Firefox, so the Firefox half is the only skip
+        # allowed; the Chrome half must have run.
+        run: |
+          if grep '# SKIP' webdriver.log | grep -v 'firefox is not installed'; then
+            echo "::error::the WebDriver suite skipped a Chrome case instead of asserting it"
+            exit 1
+          fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' webdriver.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the WebDriver suite reported no passing tests"
+            exit 1
+          fi
+          echo "WebDriver suite passed $passed tests against a real Chrome"
+
       - name: Upload parity log
         # ${{ }} wrapping is required: a plain YAML scalar cannot begin with the
         # tag indicator "!".
@@ -121,7 +151,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: parity-log
-          path: js/parity.log
+          path: |
+            js/parity.log
+            js/webdriver.log
           retention-days: 14
 
   # The browser-commander CLI and its serve --stdio bridge (issue #104) against

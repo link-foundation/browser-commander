@@ -6,6 +6,7 @@
 
 import { createLogger } from './core/logger.js';
 import { detectEngine } from './core/engine-detection.js';
+import { WebDriverPage } from './core/webdriver-page.js';
 import { createNetworkTracker } from './core/network-tracker.js';
 import { createNavigationManager } from './core/navigation-manager.js';
 import { createPageSessionFactory } from './core/page-session.js';
@@ -27,7 +28,7 @@ import { createCdpSession } from './browser/cdp-session.js';
 /**
  * Create a browser commander instance for a specific page
  * @param {Object} options - Configuration options
- * @param {Object} options.page - Playwright or Puppeteer page object
+ * @param {Object} options.page - Playwright or Puppeteer page object, or a selenium-webdriver WebDriver (or the WebDriverPage launchWebDriver() returns)
  * @param {boolean} options.verbose - Enable verbose logging
  * @param {boolean} options.enableNetworkTracking - Enable network request tracking (default: true)
  * @param {boolean} options.enableNavigationManager - Enable navigation manager (default: true)
@@ -36,7 +37,7 @@ import { createCdpSession } from './browser/cdp-session.js';
  */
 export function makeBrowserCommander(options = {}) {
   const {
-    page,
+    page: providedPage,
     verbose = false,
     enableNetworkTracking = true,
     enableNavigationManager = true,
@@ -44,11 +45,17 @@ export function makeBrowserCommander(options = {}) {
     downloads = null,
   } = options;
 
-  if (!page) {
+  if (!providedPage) {
     throw new Error('page is required in options');
   }
 
-  const engine = detectEngine(page);
+  const engine = detectEngine(providedPage);
+  // A bare selenium-webdriver WebDriver is wrapped in the page facade the
+  // helpers speak to (issue #104); launchWebDriver() already returns one.
+  const page =
+    engine === 'selenium' && !providedPage.isWebDriverPage
+      ? new WebDriverPage(providedPage)
+      : providedPage;
   const log = createLogger({ verbose });
 
   // Create NetworkTracker if enabled

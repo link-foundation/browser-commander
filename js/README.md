@@ -8,7 +8,7 @@ A universal browser automation library for JavaScript/TypeScript that supports b
 npm install browser-commander
 ```
 
-You'll also need either Playwright or Puppeteer:
+You'll also need Playwright, Puppeteer or Selenium WebDriver:
 
 ```bash
 # With Playwright
@@ -16,6 +16,9 @@ npm install playwright
 
 # Or with Puppeteer
 npm install puppeteer
+
+# Or with Selenium WebDriver (W3C WebDriver + WebDriver BiDi)
+npm install selenium-webdriver
 ```
 
 ## Documentation
@@ -461,6 +464,54 @@ const session = await launchRealBrowser({
 });
 console.log(session.migration.migrated, session.migration.skipped);
 ```
+
+### launchWebDriver(options) / connectWebDriver(options)
+
+The `selenium` engine drives Chrome or Firefox over W3C WebDriver through
+`selenium-webdriver` (an optional peer dependency). `launchWebDriver()` finds a
+driver (`driverPath`, then `PATH`, then the Selenium Manager bundled with
+`selenium-webdriver`, which downloads a chromedriver/geckodriver matching the
+browser), starts it on a reserved loopback port, waits for `/status`, and opens
+a session with a fresh temporary profile that `close()` deletes:
+
+```javascript
+import { launchWebDriver, makeBrowserCommander } from 'browser-commander';
+
+const { driver, page, close } = await launchWebDriver({
+  browser: 'chrome', // or 'firefox'
+  headless: false,
+  bidi: true, // WebDriver BiDi: console/dialog/network events, preload scripts
+  // executablePath, driverPath, userDataDir, args, restrictions, env
+});
+const commander = makeBrowserCommander({ page }); // commander.engine === 'selenium'
+
+page.on('console', (message) => console.log(message.text())); // needs bidi
+await commander.goto({ url: 'https://example.com' });
+await commander.fill({ selector: 'input[name="q"]', text: 'hello' });
+await commander.click({ selector: 'button[type="submit"]' });
+const pdf = await page.pdf({ format: 'A4' }); // W3C Print Page
+await close();
+```
+
+`page` is a `WebDriverPage`: a Puppeteer-shaped facade over the `driver`
+(`evaluate`, `$`, `$$`, `keyboard`, `mouse`, `screenshot`, `pdf`, `cookies`,
+`on`), so the rest of Browser Commander runs unchanged. `makeBrowserCommander()`
+also accepts a bare selenium `WebDriver` and wraps it. On the adapter
+(`createEngineAdapter(page, 'selenium')`), `onConsoleMessage(handler)`,
+`onNavigation(handler)`, `onBidiEvent(method, handler)` and
+`navigate(url, {wait})` expose BiDi `log.entryAdded` and `browsingContext`
+directly; they throw when the session has no BiDi.
+
+Chrome gets the same command line as `launchRealBrowser()`
+(`--user-data-dir` and a fixed `--remote-debugging-port`), and every switch
+chromedriver would add on its own - `--enable-automation`,
+`--remote-debugging-port=0`, `--password-store=basic`, `--test-type=webdriver`
+and 16 more - is excluded, so `navigator.webdriver` is `false` headful and
+headless. `connectWebDriver({ serverUrl, capabilities })` opens a session on a
+server that is already running (a Selenium Grid, a cloud provider); pass
+`capabilities: { webSocketUrl: true }` for BiDi. Media emulation, fingerprint
+overrides and managed downloads need CDP and throw on this engine; see
+[docs/feature-parity.md](../docs/feature-parity.md#webdriver-engine).
 
 ### listBrowserProfiles(options)
 

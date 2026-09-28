@@ -101,5 +101,39 @@
     "detail": "A worker has its own Navigator, and overrides set on the page session only partly reach it. Measured in a dedicated worker: userAgent, timezone and locale follow the profile, but platform, language, languages, hardwareConcurrency and deviceMemory all report the real host values, and no JavaScript patch is present because Page.addScriptToEvaluateOnNewDocument runs in documents only. Full worker parity is reachable over raw CDP -- replaying the Emulation commands on the worker session fixes languages and hardwareConcurrency, and evaluating the init script during the waitForDebuggerOnStart pause fixes the rest -- but that needs a sessionId, which neither engine accepts: Playwright newCDPSession takes only Page or Frame, and Puppeteer worker sessions are internal to its TargetManager.",
     "workaround": "Avoid workloads that read the fingerprint from a worker, or drive Chrome over a raw CDP connection and replay the commands the CDP override builder returns on each attached worker session.",
     "reference": "analysis-artifacts/worker-visibility.json"
+  },
+  {
+    "id": "webdriver-driver-launch-switches",
+    "surface": "navigator.webdriver and the browser command line under chromedriver",
+    "severity": "medium",
+    "evidence": "measured",
+    "detail": "chromedriver starts Chrome with twenty switches of its own. Two of them turn navigator.webdriver on by themselves: --enable-automation, and --remote-debugging-port=0 (any debugging port chosen by the browser). With chromedriver's defaults navigator.webdriver is true; excluding --enable-automation alone still leaves it true; excluding every default switch and giving Chrome a fixed debugging port makes it false, headful and headless, with and without BiDi. launchWebDriver() does exactly that, so its command line is the same as a real-browser launch. A driver started by someone else -- a Selenium Grid node, a cloud provider, connectWebDriver() -- keeps whatever switches it was given, and --disable-blink-features=AutomationControlled, the usual workaround, shows an unsupported-flag infobar.",
+    "workaround": "Launch the driver with launchWebDriver(), or pass the same excludeSwitches and a fixed --remote-debugging-port in the capabilities given to connectWebDriver().",
+    "reference": "experiments/issue-104/webdriver-automation-flags.mjs"
+  },
+  {
+    "id": "webdriver-no-cdp-emulation",
+    "surface": "Fingerprint profiles, media emulation and managed downloads on the selenium engine",
+    "severity": "medium",
+    "evidence": "documented",
+    "detail": "Fingerprint profiles, emulateMedia and managed downloads are built on Chrome DevTools Protocol commands and events (Emulation.*, Page.addScriptToEvaluateOnNewDocument with a CDP session, Browser.setDownloadBehavior). A WebDriver session exposes no CDP session through the W3C protocol, and WebDriver BiDi has no equivalent of most Emulation commands yet, so on the selenium engine these operations throw instead of silently doing nothing.",
+    "workaround": "Use the playwright or puppeteer engine for fingerprint profiles, media emulation and managed downloads, or set the equivalent browser preferences in the capabilities."
+  },
+  {
+    "id": "webdriver-classic-has-no-events",
+    "surface": "Console, page error, dialog, request and navigation events on the selenium engine",
+    "severity": "low",
+    "evidence": "documented",
+    "detail": "Classic WebDriver is request/response only: a session cannot be told about console messages, uncaught errors, dialogs, network requests or navigations it did not start. Those events, preload scripts and full-page or clipped screenshots come from WebDriver BiDi, which a session has only when it was created with the webSocketUrl capability. Without it the operations that need events throw an error naming the missing capability.",
+    "workaround": "Launch with bidi: true, or add webSocketUrl: true to the capabilities given to connectWebDriver()."
+  },
+  {
+    "id": "webdriver-print-options",
+    "surface": "pdf() options on the selenium engine",
+    "severity": "low",
+    "evidence": "documented",
+    "detail": "WebDriver Print Page takes orientation, scale, background, page size, margins, shrink-to-fit and page ranges only. Header and footer templates, preferCSSPageSize, tagged and outlined PDFs and omitBackground have no WebDriver equivalent; pdf() rejects them rather than producing a different document than the one asked for. Page and margin sizes are converted to centimetres.",
+    "workaround": "Leave the unsupported options out, or produce the PDF with the playwright or puppeteer engine.",
+    "reference": "https://w3c.github.io/webdriver/#print-page"
   }
 ]

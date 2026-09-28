@@ -47,6 +47,12 @@ export function attachDownloads({ engine, browser, page, downloads, log }) {
   if (!managerOptions) {
     return null;
   }
+  if (engine === 'selenium') {
+    throw new Error(
+      'Managed downloads are not available with the selenium engine: they ' +
+        'are driven by CDP download events (see the webdriver-no-cdp-emulation limitation)'
+    );
+  }
 
   return createDownloadManager({
     engine,

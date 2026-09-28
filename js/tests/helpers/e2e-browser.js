@@ -47,6 +47,17 @@ export const SANDBOX_ARGS =
   process.env.CHROME_NO_SANDBOX === 'true' ? ['--no-sandbox'] : [];
 
 /**
+ * The sandbox arguments plus the CHROME_PATH binary, when one is set: the
+ * launch options every e2e suite shares.
+ */
+export const CHROME_LAUNCH_OPTIONS = {
+  args: SANDBOX_ARGS,
+  ...(process.env.CHROME_PATH
+    ? { executablePath: process.env.CHROME_PATH }
+    : {}),
+};
+
+/**
  * Launch a real browser for one engine, with its own profile.
  *
  * @param {Object} options - Launch options
@@ -62,10 +73,7 @@ export async function launchE2EBrowser(options = {}) {
   const launched = await launchBrowser({
     engine,
     headless: process.env.HEADLESS !== 'false',
-    args: SANDBOX_ARGS,
-    ...(process.env.CHROME_PATH
-      ? { executablePath: process.env.CHROME_PATH }
-      : {}),
+    ...CHROME_LAUNCH_OPTIONS,
     ...(downloadDirectory
       ? { downloads: { directory: downloadDirectory } }
       : {}),

@@ -120,8 +120,13 @@ with at least a fivefold margin, and always below 70% of the job's backstop.
 | `rust.yml`   | `test`       | 20 min   | Rust doc tests              | 180s   | 6–11s    |
 | `rust.yml`   | `coverage`   | 15 min   | Rust code coverage          | 480s   | 10s      |
 | `docs.yml`   | `build-docs` | 15 min   | Rust API docs               | 480s   | 58s      |
-| `parity.yml` | `parity`     | 30 min   | Fingerprint parity suite    | 1200s  | 26s      |
+| `parity.yml` | `parity`     | 40 min   | Fingerprint parity suite    | 1200s  | 26s      |
+| `parity.yml` | `parity`     | 40 min   | WebDriver suite             | 300s   | 44s      |
 | `parity.yml` | `cli`        | 15 min   | CLI and API coverage suites | 300s   | 30s      |
+
+The `parity` backstop went from 30 to 40 minutes when the WebDriver suite joined
+the job (issue #104): the two budgets sum to 1500s, above the 1260s that 70% of
+30 minutes allows.
 
 The `no-openssl` job in `rust.yml` is deliberately unwrapped: it runs in a
 `rust:slim-bookworm` container that has no `bash` on `PATH`, so GitHub falls

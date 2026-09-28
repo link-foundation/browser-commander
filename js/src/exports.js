@@ -27,8 +27,23 @@ export {
   EngineAdapter,
   PlaywrightAdapter,
   PuppeteerAdapter,
+  SeleniumAdapter,
   createEngineAdapter,
 } from './core/engine-adapter.js';
+
+// Selenium / WebDriver engine (issue #104)
+export {
+  WebDriverPage,
+  WebDriverTimeoutError,
+  createWebDriverPage,
+  isWebDriver,
+} from './core/webdriver-page.js';
+export {
+  launchWebDriver,
+  connectWebDriver,
+  resolveWebDriverExecutable,
+  CHROMEDRIVER_DEFAULT_SWITCHES,
+} from './browser/webdriver.js';
 
 // Page trigger system
 export {

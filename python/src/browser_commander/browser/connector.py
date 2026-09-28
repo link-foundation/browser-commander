@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import contextlib
+import inspect
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlparse
@@ -60,6 +62,34 @@ def _default_create_selenium(chrome_options: Any) -> Any:
     return webdriver.Chrome(options=chrome_options)
 
 
+async def pick_foreground_page(pages: Sequence[Any]) -> Any:
+    """Pick the tab that is on screen.
+
+    A browser attached after it started can already have several tabs - a
+    fresh Chrome profile opens "What's new" next to the New Tab page - and the
+    engine does not list them in a stable order. Driving a background tab would
+    make ``document.hidden`` true where a person's first navigation would see a
+    visible page, so the visible tab wins and the first tab is the fallback.
+
+    Returns:
+        The visible page, else the first page, else ``None`` for no pages.
+    """
+
+    for page in pages:
+        evaluate = getattr(page, "evaluate", None)
+        if not callable(evaluate):
+            continue
+        try:
+            state = evaluate("() => document.visibilityState")
+            if inspect.isawaitable(state):
+                state = await state
+        except Exception:
+            state = None
+        if state == "visible":
+            return page
+    return pages[0] if pages else None
+
+
 async def _connect_playwright(
     options: ConnectOptions,
     endpoint: str,
@@ -74,15 +104,54 @@ async def _connect_playwright(
     if options.headers is not None:
         connect_options["headers"] = options.headers
 
-    browser = await playwright.chromium.connect_over_cdp(endpoint, **connect_options)
-    if not browser.contexts:
-        msg = "Connected Playwright browser has no default context"
-        raise RuntimeError(msg)
-    context = browser.contexts[0]
-    page = context.pages[0] if context.pages else await context.new_page()
-    if options.seed_cookies:
-        await context.add_cookies(options.seed_cookies)
+    try:
+        browser = await playwright.chromium.connect_over_cdp(
+            endpoint, **connect_options
+        )
+        if not browser.contexts:
+            msg = "Connected Playwright browser has no default context"
+            raise RuntimeError(msg)
+        context = browser.contexts[0]
+        page = await pick_foreground_page(context.pages) or await context.new_page()
+        if options.seed_cookies:
+            await context.add_cookies(options.seed_cookies)
+    except BaseException:
+        await _stop_playwright(playwright)
+        raise
+    _stop_playwright_on_close(browser, playwright)
     return LaunchResult(browser=browser, page=page)
+
+
+async def _stop_playwright(playwright: Any) -> None:
+    stop = getattr(playwright, "stop", None)
+    if callable(stop):
+        with contextlib.suppress(Exception):
+            result = stop()
+            if inspect.isawaitable(result):
+                await result
+
+
+def _stop_playwright_on_close(browser: Any, playwright: Any) -> None:
+    """Make ``browser.close()`` also stop the Playwright driver it started.
+
+    Each connection starts its own driver process; without this it would
+    outlive the connection.
+    """
+
+    original_close = getattr(browser, "close", None)
+    if not callable(original_close):
+        return
+
+    async def close(*args: Any, **kwargs: Any) -> None:
+        try:
+            result = original_close(*args, **kwargs)
+            if inspect.isawaitable(result):
+                await result
+        finally:
+            await _stop_playwright(playwright)
+
+    with contextlib.suppress(AttributeError, TypeError):
+        browser.close = close
 
 
 async def _connect_selenium(

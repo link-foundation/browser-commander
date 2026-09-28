@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import pytest
+
 from browser_commander.browser.launcher import (
+    LAUNCH_MODES,
     LaunchOptions,
     resolve_chrome_args,
     resolve_ignored_default_args,
     selenium_excluded_switches,
 )
+from browser_commander.browser.restrictions import resolve_restrictions
 from browser_commander.core.constants import CHROME_ARGS
 from browser_commander.fingerprint.automation_parity import (
     AUTOMATION_CONTROLLED_OFF_ARG,
@@ -57,9 +61,20 @@ class TestLaunchOptions:
         options = LaunchOptions(user_data_dir="/tmp/test-profile")
         assert options.user_data_dir == "/tmp/test-profile"
 
-    def test_slow_mo_defaults_to_none(self):
+    def test_slow_mo_defaults_to_zero(self):
+        # Issue #103: no artificial delay unless the caller asks for one.
+        assert LaunchOptions().slow_mo == 0
+
+    def test_launches_the_real_browser_by_default(self):
+        assert LaunchOptions().launch == "real"
+        assert LAUNCH_MODES == ("real", "engine")
+
+    def test_adds_no_restrictions_by_default(self):
         options = LaunchOptions()
-        assert options.slow_mo is None
+        assert options.restrictions == []
+        assert options.env is None
+        assert options.user_data_dir is None
+        assert options.remote_debugging_port is None
 
 
 class TestChromeArgs:
@@ -77,28 +92,36 @@ class TestChromeArgs:
         assert "--no-first-run" in CHROME_ARGS
         assert "--no-default-browser-check" in CHROME_ARGS
 
-    def test_resolves_additive_args_and_per_flag_opt_out(self):
+    def test_chrome_args_equal_the_legacy_defaults_preset(self):
+        # CHROME_ARGS is no longer added by default (issue #103); it is kept as
+        # the legacy-defaults restriction preset.
+        assert set(CHROME_ARGS) == set(resolve_restrictions(["legacy-defaults"]).args)
+
+    def test_resolves_nothing_by_default(self):
+        assert resolve_chrome_args() == []
+
+    def test_resolves_restrictions_then_args(self):
         args = resolve_chrome_args(
-            args=["--legacy-arg"],
+            restrictions=["no-sync", "no-translate"],
+            args=["--legacy-arg", "--disable-features=Foo"],
             extra_args=["--lang=en-US"],
-            ignore_default_args=["--no-default-browser-check"],
         )
 
-        assert "--password-store=basic" in args
-        assert "--no-first-run" in args
-        assert "--no-default-browser-check" not in args
-        assert args[-2:] == ["--legacy-arg", "--lang=en-US"]
+        assert args == [
+            "--disable-sync",
+            "--disable-features=Translate,Foo",
+            "--legacy-arg",
+            "--lang=en-US",
+        ]
 
-    def test_can_ignore_all_defaults(self):
-        assert resolve_chrome_args(
-            extra_args=["--lang=en-US"], ignore_default_args=True
-        ) == ["--lang=en-US"]
+    def test_legacy_defaults_restore_the_old_command_line(self):
+        assert set(resolve_chrome_args(restrictions=["legacy-defaults"])) == set(
+            CHROME_ARGS
+        )
 
-    def test_can_ignore_password_store_default_specifically(self):
-        args = resolve_chrome_args(ignore_default_args=["--password-store=basic"])
-
-        assert "--password-store=basic" not in args
-        assert "--no-first-run" in args
+    def test_rejects_an_unknown_restriction(self):
+        with pytest.raises(ValueError, match='Unknown launch restriction "nope"'):
+            resolve_chrome_args(restrictions=["nope"])
 
 
 class TestAutomationParity:
@@ -193,5 +216,4 @@ class TestChromeArgsWithParity:
 
     def test_defaults_gain_the_parity_switch(self):
         args = apply_automation_parity_args(resolve_chrome_args())
-        assert args[: len(CHROME_ARGS)] == CHROME_ARGS
-        assert args[-1] == AUTOMATION_CONTROLLED_OFF_ARG
+        assert args == [AUTOMATION_CONTROLLED_OFF_ARG]

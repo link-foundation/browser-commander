@@ -6,11 +6,12 @@ import base64
 import ctypes
 import json
 import os
-import subprocess
 import sys
 from collections.abc import Mapping
 from ctypes import wintypes
 from pathlib import Path
+
+from browser_commander.utilities.subprocess import CommandError, run_command_sync
 
 SAFE_STORAGE = {
     "brave": {
@@ -37,14 +38,8 @@ SAFE_STORAGE = {
 
 
 def _run_credential_command(command: list[str], environment: Mapping[str, str]) -> str:
-    completed = subprocess.run(
-        command,
-        check=True,
-        capture_output=True,
-        text=True,
-        env=dict(environment),
-    )
-    return completed.stdout.strip()
+    file, *arguments = command
+    return run_command_sync(file, arguments, env=environment).stdout.strip()
 
 
 def _read_linux_safe_storage_password(
@@ -58,7 +53,7 @@ def _read_linux_safe_storage_password(
         )
         if password:
             return password
-    except (OSError, subprocess.CalledProcessError):
+    except (OSError, CommandError):
         pass
     try:
         password = _run_credential_command(
@@ -74,7 +69,7 @@ def _read_linux_safe_storage_password(
         )
         if password:
             return password
-    except (OSError, subprocess.CalledProcessError):
+    except (OSError, CommandError):
         pass
     raise RuntimeError(
         f"Could not read {identity['service']} from libsecret or KWallet; "

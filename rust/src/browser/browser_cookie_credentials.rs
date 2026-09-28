@@ -51,9 +51,7 @@ fn run_credential_command(command: &str, arguments: &[&str]) -> Result<String> {
         Err(CommandError::Spawn { message, .. }) => {
             Err(anyhow!("Could not start {command}: {message}"))
         }
-        Err(CommandError::Exited { code, .. }) => {
-            Err(anyhow!("{command} exited with code {code}"))
-        }
+        Err(CommandError::Exited { code, .. }) => Err(anyhow!("{command} exited with code {code}")),
     }
 }
 

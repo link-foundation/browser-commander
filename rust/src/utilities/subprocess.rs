@@ -373,6 +373,22 @@ impl ManagedProcess {
     pub async fn wait_timeout(&self, timeout: Duration) -> Option<i32> {
         tokio::time::timeout(timeout, self.wait()).await.ok()
     }
+
+    /// A future that resolves with the exit code once the process exits.
+    ///
+    /// Unlike [`wait`](Self::wait) it does not borrow the handle, so it can be
+    /// moved into a task (the launcher uses it to delete a temporary profile
+    /// as soon as the browser is gone).
+    pub fn exited(&self) -> impl std::future::Future<Output = i32> + Send + 'static {
+        let mut exit = self.exit.clone();
+        async move {
+            let waited = exit.wait_for(Option::is_some).await.map(|code| *code);
+            match waited {
+                Ok(code) => code.unwrap_or(1),
+                Err(_) => exit.borrow().unwrap_or(1),
+            }
+        }
+    }
 }
 
 impl Drop for ManagedProcess {

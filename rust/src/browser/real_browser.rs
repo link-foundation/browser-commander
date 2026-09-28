@@ -1,27 +1,72 @@
 //! Launch genuine installed Chrome-family browsers and attach over CDP.
+//!
+//! The browser is started exactly like a person who wants to attach a
+//! debugger would start it (issues #101 and #103):
+//!
+//! ```text
+//! chrome --user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port>
+//! ```
+//!
+//! and nothing else. The port is a fixed one reserved on loopback (port 0 and
+//! `--remote-debugging-pipe` make Chrome turn `AutomationControlled` on), its
+//! ownership is confirmed from the browser's own `DevTools listening on ...`
+//! line before the endpoint is trusted, and a lost race is retried on a new
+//! port. Every switch the library used to add on its own is an explicit
+//! opt-in through [`RealBrowserOptions::restrictions`].
 
-use std::collections::HashSet;
-use std::io;
+use std::collections::HashMap;
+use std::future::Future;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, ExitStatus, Stdio};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
+use anyhow::{anyhow, Result};
+use async_trait::async_trait;
+use chromiumoxide::Browser as CdpBrowser;
+use futures::StreamExt;
 use serde_json::Value;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
 
+use crate::browser::browser_process::{BrowserCloser, BrowserProcess};
+use crate::browser::cdp_endpoint::{wait_for_cdp_endpoint, CdpEndpointRequest};
 use crate::browser::connector::{connect_browser, ConnectOptions};
+use crate::browser::debugging_port::{
+    assert_fixed_debugging_port, reserve_loopback_port, DevToolsOutputWatcher, PortRaceError,
+};
 use crate::browser::launcher::{Browser, LaunchResult};
-use crate::core::constants::CHROME_ARGS;
+use crate::browser::profile_directory::{
+    create_temporary_user_data_dir, prepare_user_data_dir, remove_user_data_dir,
+};
+use crate::browser::restrictions::{merge_feature_switches, resolve_restrictions};
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::{DownloadManager, DownloadSetting};
+use crate::fingerprint::automation_parity::{
+    apply_automation_parity_args, detect_automation_controlled_triggers,
+};
+use crate::utilities::{start_process, StartProcessOptions};
 
-const MANAGED_ARGUMENTS: [&str; 3] = [
+use crate::browser::system_browser::resolve_browser_executable;
+pub use crate::browser::system_browser::{
+    assert_dedicated_user_data_dir, default_real_browser_user_data_dir,
+};
+
+const MANAGED_ARGUMENTS: [&str; 4] = [
     "--remote-debugging-address",
     "--remote-debugging-port",
+    "--remote-debugging-pipe",
     "--user-data-dir",
 ];
+
+/// Ports tried when the launcher reserves the port itself.
+pub const DEFAULT_PORT_ATTEMPTS: u32 = 3;
+
+/// How long [`RealBrowserLaunchResult::close`] waits for each shutdown step.
+pub const DEFAULT_CLOSE_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// How long a browser that lost a port race gets to exit before the retry.
+const RACE_EXIT_WAIT: Duration = Duration::from_secs(5);
+
+const FANTOCCINI_OVER_CDP: &str =
+    "fantoccini does not connect over CDP; use chromiumoxide, playwright, or puppeteer";
 
 /// Options for launching an installed browser and attaching over CDP.
 #[derive(Debug, Clone)]
@@ -32,22 +77,43 @@ pub struct RealBrowserOptions {
     pub channel: String,
     /// Explicit installed-browser executable, bypassing channel discovery.
     pub executable_path: Option<PathBuf>,
-    /// Dedicated, non-default browser profile.
+    /// Dedicated, non-default browser profile. When `None` a fresh temporary
+    /// profile is created for the launch and deleted when the browser exits.
     pub user_data_dir: Option<PathBuf>,
-    /// Loopback CDP port. Zero lets Chrome choose an available port.
-    pub remote_debugging_port: u16,
-    /// Run the installed browser headlessly.
+    /// Fixed loopback CDP port. When `None` a free port is reserved (and a
+    /// lost port race retried). Zero is refused: it makes Chrome enable
+    /// `AutomationControlled`.
+    pub remote_debugging_port: Option<u16>,
+    /// Ports to try when the port is reserved by the launcher.
+    pub port_attempts: u32,
+    /// Run the installed browser headlessly (`--headless=new`).
     pub headless: bool,
+    /// Opt-in restrictions from the shared catalogue, such as
+    /// `no-extensions` or the `legacy-defaults` preset. See
+    /// [`restrictions`](super::restrictions).
+    pub restrictions: Vec<String>,
     /// Additional browser arguments.
     pub args: Vec<String>,
     /// Additional browser arguments appended after the compatibility `args`.
     pub extra_args: Vec<String>,
-    /// Browser Commander default arguments to omit.
+    /// Ignored since issue #103: there are no Browser Commander defaults left
+    /// to omit. Kept so existing code compiles.
     pub ignore_default_args: Vec<String>,
-    /// Omit every Browser Commander default argument.
+    /// Ignored since issue #103; see [`ignore_default_args`](Self::ignore_default_args).
     pub ignore_all_default_args: bool,
-    /// Maximum time to wait for Chrome's `/json/version` endpoint.
+    /// Extra environment for the browser process only. The caller's process
+    /// environment is never modified.
+    pub env: Option<HashMap<String, String>>,
+    /// Add `--disable-blink-features=AutomationControlled` when the command
+    /// line contains a switch that would turn `navigator.webdriver` on (such
+    /// as a caller-supplied `--enable-automation`). A plain launch, headful or
+    /// headless, has none, so its command line stays exactly as typed.
+    pub automation_parity: bool,
+    /// Maximum time to wait for Chrome's DevTools endpoint.
     pub startup_timeout: Duration,
+    /// Maximum time [`RealBrowserLaunchResult::close`] waits for the browser
+    /// to exit before killing it.
+    pub close_timeout: Duration,
     /// Delay Playwright/Puppeteer operations by this many milliseconds.
     pub slow_mo: u64,
     /// Optional connection timeout.
@@ -56,7 +122,7 @@ pub struct RealBrowserOptions {
     pub protocol_timeout: Option<Duration>,
     /// Cookies to seed immediately after attaching.
     pub seed_cookies: Vec<Value>,
-    /// Enable browser and connector logging.
+    /// Enable browser and connector logging; the browser's output is mirrored.
     pub verbose: bool,
     /// Node.js executable for Playwright/Puppeteer bridge engines.
     pub node_executable: Option<PathBuf>,
@@ -79,13 +145,18 @@ impl Default for RealBrowserOptions {
             channel: "chrome".to_string(),
             executable_path: None,
             user_data_dir: None,
-            remote_debugging_port: 0,
+            remote_debugging_port: None,
+            port_attempts: DEFAULT_PORT_ATTEMPTS,
             headless: false,
+            restrictions: Vec::new(),
             args: Vec::new(),
             extra_args: Vec::new(),
             ignore_default_args: Vec::new(),
             ignore_all_default_args: false,
+            env: None,
+            automation_parity: true,
             startup_timeout: Duration::from_secs(30),
+            close_timeout: DEFAULT_CLOSE_TIMEOUT,
             slow_mo: 0,
             timeout: None,
             protocol_timeout: None,
@@ -108,7 +179,6 @@ impl RealBrowserOptions {
     pub fn playwright() -> Self {
         Self {
             engine: EngineType::Playwright,
-            slow_mo: 150,
             ..Self::default()
         }
     }
@@ -133,21 +203,38 @@ impl RealBrowserOptions {
         self
     }
 
-    /// Select a dedicated browser profile.
+    /// Select a dedicated browser profile instead of a temporary one.
     pub fn user_data_dir(mut self, user_data_dir: impl Into<PathBuf>) -> Self {
         self.user_data_dir = Some(user_data_dir.into());
         self
     }
 
-    /// Select a loopback CDP port. Zero asks Chrome to allocate one.
+    /// Use a fixed loopback CDP port instead of a reserved one. Zero is
+    /// refused at launch.
     pub fn remote_debugging_port(mut self, port: u16) -> Self {
-        self.remote_debugging_port = port;
+        self.remote_debugging_port = Some(port);
+        self
+    }
+
+    /// Set how many reserved ports to try when another process takes one.
+    pub fn port_attempts(mut self, attempts: u32) -> Self {
+        self.port_attempts = attempts;
         self
     }
 
     /// Enable or disable headless mode.
     pub fn headless(mut self, headless: bool) -> Self {
         self.headless = headless;
+        self
+    }
+
+    /// Opt in to named launch restrictions or presets.
+    pub fn restrictions<I, S>(mut self, restrictions: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.restrictions = restrictions.into_iter().map(Into::into).collect();
         self
     }
 
@@ -163,21 +250,47 @@ impl RealBrowserOptions {
         self
     }
 
-    /// Omit selected Browser Commander defaults.
+    /// Has no effect since issue #103: Browser Commander adds no defaults.
+    #[deprecated(
+        since = "0.13.0",
+        note = "Browser Commander adds no default switches any more; opt in with `restrictions` instead"
+    )]
     pub fn ignore_default_args(mut self, args: Vec<String>) -> Self {
         self.ignore_default_args = args;
         self
     }
 
-    /// Omit every Browser Commander default argument.
+    /// Has no effect since issue #103: Browser Commander adds no defaults.
+    #[deprecated(
+        since = "0.13.0",
+        note = "Browser Commander adds no default switches any more; opt in with `restrictions` instead"
+    )]
     pub fn ignore_all_default_args(mut self) -> Self {
         self.ignore_all_default_args = true;
+        self
+    }
+
+    /// Extra environment for the browser process only.
+    pub fn env(mut self, env: HashMap<String, String>) -> Self {
+        self.env = Some(env);
+        self
+    }
+
+    /// Keep `navigator.webdriver` false when a switch would turn it on.
+    pub fn automation_parity(mut self, enabled: bool) -> Self {
+        self.automation_parity = enabled;
         self
     }
 
     /// Set the CDP readiness timeout.
     pub fn startup_timeout(mut self, timeout: Duration) -> Self {
         self.startup_timeout = timeout;
+        self
+    }
+
+    /// Set how long closing waits for the browser to exit before killing it.
+    pub fn close_timeout(mut self, timeout: Duration) -> Self {
+        self.close_timeout = timeout;
         self
     }
 
@@ -234,57 +347,16 @@ impl RealBrowserOptions {
         self
     }
 
-    /// Resolve the configured or managed dedicated profile path.
+    /// The profile a launch would use: the configured one, or Browser
+    /// Commander's old managed per-channel directory.
+    #[deprecated(
+        since = "0.13.0",
+        note = "launch_real_browser uses a fresh temporary profile unless user_data_dir is set; read RealBrowserLaunchResult::user_data_dir"
+    )]
     pub fn get_user_data_dir(&self) -> PathBuf {
         self.user_data_dir
             .clone()
             .unwrap_or_else(|| default_real_browser_user_data_dir(&self.channel))
-    }
-}
-
-/// Owned installed-browser process. Dropping it terminates the spawned browser.
-pub struct BrowserProcess {
-    child: Child,
-}
-
-impl BrowserProcess {
-    fn new(child: Child) -> Self {
-        Self { child }
-    }
-
-    /// Operating-system process identifier.
-    pub fn id(&self) -> u32 {
-        self.child.id()
-    }
-
-    /// Return the exit status if the browser has stopped.
-    pub fn try_wait(&mut self) -> io::Result<Option<ExitStatus>> {
-        self.child.try_wait()
-    }
-
-    /// Terminate and reap the installed-browser process.
-    pub fn kill(&mut self) -> io::Result<()> {
-        if self.child.try_wait()?.is_some() {
-            return Ok(());
-        }
-        self.child.kill()?;
-        self.child.wait()?;
-        Ok(())
-    }
-}
-
-impl std::fmt::Debug for BrowserProcess {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter
-            .debug_struct("BrowserProcess")
-            .field("id", &self.id())
-            .finish()
-    }
-}
-
-impl Drop for BrowserProcess {
-    fn drop(&mut self) {
-        let _ = self.kill();
     }
 }
 
@@ -296,17 +368,35 @@ pub struct RealBrowserLaunchResult {
     pub page: Arc<dyn EngineAdapter>,
     /// Resolved loopback DevTools endpoint.
     pub cdp_endpoint: String,
+    /// The fixed port the browser listens on.
+    pub remote_debugging_port: u16,
     /// Resolved installed-browser executable.
     pub executable_path: PathBuf,
-    /// Dedicated profile used by the browser.
+    /// Profile used by the browser.
     pub user_data_dir: PathBuf,
-    /// Owned process handle. Dropping the result terminates the browser.
+    /// Whether `user_data_dir` is a temporary profile that is deleted when
+    /// the browser exits.
+    pub temporary_profile: bool,
+    /// The browser's exact command line (without the executable).
+    pub args: Vec<String>,
+    /// The spawned browser. Dropping the result (and every clone of this
+    /// handle) stops it; [`close`](Self::close) shuts it down gracefully.
     pub browser_process: BrowserProcess,
     /// The download manager, when the caller asked for managed downloads.
     ///
     /// A visible installed browser is where a person clicks a link themselves,
     /// so this is the manager that sees those downloads too.
     pub downloads: Option<Arc<DownloadManager>>,
+    closer: Arc<RealBrowserCloser>,
+}
+
+impl RealBrowserLaunchResult {
+    /// Close the browser: ask it to shut down over CDP, wait up to
+    /// `close_timeout`, kill it if it is still running, then delete a
+    /// temporary profile. Calling it again does nothing.
+    pub async fn close(&self) -> Result<()> {
+        self.closer.close().await
+    }
 }
 
 impl std::fmt::Debug for RealBrowserLaunchResult {
@@ -316,407 +406,117 @@ impl std::fmt::Debug for RealBrowserLaunchResult {
             .field("browser", &self.browser)
             .field("page", &"<dyn EngineAdapter>")
             .field("cdp_endpoint", &self.cdp_endpoint)
+            .field("remote_debugging_port", &self.remote_debugging_port)
             .field("executable_path", &self.executable_path)
             .field("user_data_dir", &self.user_data_dir)
+            .field("temporary_profile", &self.temporary_profile)
+            .field("args", &self.args)
             .field("browser_process", &self.browser_process)
             .field("downloads", &self.downloads)
             .finish()
     }
 }
 
-/// Return Browser Commander's managed dedicated profile for a channel.
-pub fn default_real_browser_user_data_dir(channel: &str) -> PathBuf {
-    let directory_name: String = channel
-        .chars()
-        .map(|character| {
-            if character.is_ascii_alphanumeric() || "_.-".contains(character) {
-                character
-            } else {
-                '-'
-            }
-        })
-        .collect();
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join(".browser-commander")
-        .join("real-browser")
-        .join(directory_name)
-}
-
-fn known_default_user_data_dirs() -> Vec<PathBuf> {
-    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-
-    #[cfg(target_os = "macos")]
-    {
-        let support = home.join("Library").join("Application Support");
-        return vec![
-            support.join("Google/Chrome"),
-            support.join("Google/Chrome Beta"),
-            support.join("Google/Chrome Canary"),
-            support.join("Google/Chrome Dev"),
-            support.join("Chromium"),
-            support.join("BraveSoftware/Brave-Browser"),
-            support.join("BraveSoftware/Brave-Browser-Beta"),
-            support.join("BraveSoftware/Brave-Browser-Nightly"),
-            support.join("Microsoft Edge"),
-            support.join("Microsoft Edge Beta"),
-            support.join("Microsoft Edge Canary"),
-            support.join("Microsoft Edge Dev"),
-        ];
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        let local = std::env::var_os("LOCALAPPDATA")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| home.join("AppData/Local"));
-        return vec![
-            local.join("Google/Chrome/User Data"),
-            local.join("Google/Chrome Beta/User Data"),
-            local.join("Google/Chrome Dev/User Data"),
-            local.join("Google/Chrome SxS/User Data"),
-            local.join("Chromium/User Data"),
-            local.join("BraveSoftware/Brave-Browser/User Data"),
-            local.join("BraveSoftware/Brave-Browser-Beta/User Data"),
-            local.join("BraveSoftware/Brave-Browser-Nightly/User Data"),
-            local.join("Microsoft/Edge/User Data"),
-            local.join("Microsoft/Edge Beta/User Data"),
-            local.join("Microsoft/Edge Dev/User Data"),
-            local.join("Microsoft/Edge SxS/User Data"),
-        ];
-    }
-
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-    {
-        vec![
-            home.join(".config/google-chrome"),
-            home.join(".config/google-chrome-beta"),
-            home.join(".config/google-chrome-unstable"),
-            home.join(".config/chromium"),
-            home.join(".config/BraveSoftware/Brave-Browser"),
-            home.join(".config/BraveSoftware/Brave-Browser-Beta"),
-            home.join(".config/BraveSoftware/Brave-Browser-Nightly"),
-            home.join(".config/microsoft-edge"),
-            home.join(".config/microsoft-edge-beta"),
-            home.join(".config/microsoft-edge-dev"),
-        ]
-    }
-}
-
-fn normalize_for_comparison(path: &Path) -> PathBuf {
-    let normalized = std::fs::canonicalize(path).unwrap_or_else(|_| {
-        if path.is_absolute() {
-            path.to_path_buf()
-        } else {
-            std::env::current_dir()
-                .unwrap_or_else(|_| PathBuf::from("."))
-                .join(path)
-        }
-    });
-
-    #[cfg(target_os = "windows")]
-    {
-        return PathBuf::from(normalized.to_string_lossy().to_lowercase());
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    {
-        normalized
-    }
-}
-
-/// Ensure Chrome is not asked to expose a known default profile over CDP.
-pub fn assert_dedicated_user_data_dir(user_data_dir: &Path) -> Result<(), anyhow::Error> {
-    let requested = normalize_for_comparison(user_data_dir);
-    if known_default_user_data_dirs()
-        .iter()
-        .any(|default| normalize_for_comparison(default) == requested)
-    {
-        return Err(anyhow::anyhow!(
-            "launch_real_browser requires a dedicated user_data_dir, not a browser default profile"
-        ));
-    }
-    Ok(())
-}
-
-fn channel_executable_names(channel: &str) -> Result<&'static [&'static str], anyhow::Error> {
-    match channel {
-        "brave" => Ok(&["brave-browser", "brave-browser-stable", "brave"]),
-        "chrome" => Ok(&["google-chrome", "google-chrome-stable", "chrome"]),
-        "chrome-beta" => Ok(&["google-chrome-beta"]),
-        "chrome-canary" => Ok(&["google-chrome-canary"]),
-        "chrome-dev" => Ok(&["google-chrome-unstable"]),
-        "chromium" => Ok(&["chromium", "chromium-browser"]),
-        "msedge" => Ok(&["microsoft-edge", "microsoft-edge-stable", "msedge"]),
-        "msedge-beta" => Ok(&["microsoft-edge-beta"]),
-        "msedge-canary" => Ok(&["microsoft-edge-canary"]),
-        "msedge-dev" => Ok(&["microsoft-edge-dev"]),
-        _ => Err(anyhow::anyhow!(
-            "unknown browser channel: {channel}; expected chrome, chrome-beta, chrome-canary, chrome-dev, chromium, brave, msedge, msedge-beta, msedge-canary, or msedge-dev"
-        )),
-    }
-}
-
-fn browser_install_candidates(channel: &str) -> Result<Vec<PathBuf>, anyhow::Error> {
-    let names = channel_executable_names(channel)?;
-    let mut candidates = Vec::new();
-
-    #[cfg(target_os = "macos")]
-    {
-        let relative = match channel {
-            "brave" => "Brave Browser.app/Contents/MacOS/Brave Browser",
-            "chrome" => "Google Chrome.app/Contents/MacOS/Google Chrome",
-            "chrome-beta" => "Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta",
-            "chrome-canary" => "Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-            "chrome-dev" => "Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev",
-            "chromium" => "Chromium.app/Contents/MacOS/Chromium",
-            "msedge" => "Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-            "msedge-beta" => "Microsoft Edge Beta.app/Contents/MacOS/Microsoft Edge Beta",
-            "msedge-canary" => "Microsoft Edge Canary.app/Contents/MacOS/Microsoft Edge Canary",
-            "msedge-dev" => "Microsoft Edge Dev.app/Contents/MacOS/Microsoft Edge Dev",
-            _ => unreachable!("channel was validated above"),
-        };
-        candidates.push(Path::new("/Applications").join(relative));
-        if let Some(home) = dirs::home_dir() {
-            candidates.push(home.join("Applications").join(relative));
-        }
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        let relative: &[&str] = match channel {
-            "brave" => &["BraveSoftware", "Brave-Browser", "Application", "brave.exe"],
-            "chrome" => &["Google", "Chrome", "Application", "chrome.exe"],
-            "chrome-beta" => &["Google", "Chrome Beta", "Application", "chrome.exe"],
-            "chrome-canary" => &["Google", "Chrome SxS", "Application", "chrome.exe"],
-            "chrome-dev" => &["Google", "Chrome Dev", "Application", "chrome.exe"],
-            "chromium" => &["Chromium", "Application", "chrome.exe"],
-            "msedge" => &["Microsoft", "Edge", "Application", "msedge.exe"],
-            "msedge-beta" => &["Microsoft", "Edge Beta", "Application", "msedge.exe"],
-            "msedge-canary" => &["Microsoft", "Edge SxS", "Application", "msedge.exe"],
-            "msedge-dev" => &["Microsoft", "Edge Dev", "Application", "msedge.exe"],
-            _ => unreachable!("channel was validated above"),
-        };
-        for key in ["PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA"] {
-            if let Some(root) = std::env::var_os(key) {
-                let mut candidate = PathBuf::from(root);
-                candidate.extend(relative);
-                candidates.push(candidate);
-            }
-        }
-    }
-
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-    {
-        for name in names {
-            candidates.push(Path::new("/usr/bin").join(name));
-            candidates.push(Path::new("/usr/local/bin").join(name));
-        }
-        if channel == "chrome" {
-            candidates.push(PathBuf::from("/opt/google/chrome/google-chrome"));
-        }
-    }
-
-    if let Some(path) = std::env::var_os("PATH") {
-        for directory in std::env::split_paths(&path) {
-            for name in names {
-                #[cfg(target_os = "windows")]
-                let executable_name = format!("{name}.exe");
-                #[cfg(not(target_os = "windows"))]
-                let executable_name = (*name).to_string();
-                candidates.push(directory.join(executable_name));
-            }
-        }
-    }
-
-    let mut seen = HashSet::new();
-    candidates.retain(|candidate| seen.insert(candidate.clone()));
-    Ok(candidates)
-}
-
-fn is_executable(path: &Path) -> bool {
-    if !path.is_file() {
-        return false;
-    }
-
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        path.metadata()
-            .map(|metadata| metadata.permissions().mode() & 0o111 != 0)
-            .unwrap_or(false)
-    }
-
-    #[cfg(not(unix))]
-    {
-        true
-    }
-}
-
 /// Resolve a genuine installed Chrome-family browser executable.
-pub fn resolve_system_browser_executable(
-    options: &RealBrowserOptions,
-) -> Result<PathBuf, anyhow::Error> {
-    let candidates = if let Some(executable_path) = &options.executable_path {
-        vec![normalize_for_comparison(executable_path)]
-    } else {
-        browser_install_candidates(&options.channel)?
-    };
-
-    for candidate in candidates {
-        if is_executable(&candidate) {
-            return Ok(candidate);
-        }
-    }
-
-    if let Some(executable_path) = &options.executable_path {
-        Err(anyhow::anyhow!(
-            "browser executable is not accessible: {}",
-            executable_path.display()
-        ))
-    } else {
-        Err(anyhow::anyhow!(
-            "could not find an installed {} browser; provide executable_path",
-            options.channel
-        ))
-    }
+pub fn resolve_system_browser_executable(options: &RealBrowserOptions) -> Result<PathBuf> {
+    resolve_browser_executable(&options.channel, options.executable_path.as_deref())
 }
 
-/// Build the protected command line for an installed browser process.
-pub fn build_real_browser_args(options: &RealBrowserOptions) -> Result<Vec<String>, anyhow::Error> {
-    let custom_args = options.args.iter().chain(&options.extra_args);
-    for argument in custom_args.clone() {
+fn assert_no_managed_arguments(options: &RealBrowserOptions) -> Result<()> {
+    for argument in options.args.iter().chain(&options.extra_args) {
         if MANAGED_ARGUMENTS
             .iter()
             .any(|managed| argument == managed || argument.starts_with(&format!("{managed}=")))
         {
-            return Err(anyhow::anyhow!(
-                "{argument} is managed by launch_real_browser"
-            ));
+            return Err(anyhow!("{argument} is managed by launch_real_browser"));
         }
     }
+    Ok(())
+}
 
+pub(crate) fn browser_args(
+    options: &RealBrowserOptions,
+    user_data_dir: &Path,
+    remote_debugging_port: u16,
+) -> Result<Vec<String>> {
+    let port = assert_fixed_debugging_port(remote_debugging_port)?;
+    assert_no_managed_arguments(options)?;
     let mut arguments = vec![
-        "--remote-debugging-address=127.0.0.1".to_string(),
-        format!("--remote-debugging-port={}", options.remote_debugging_port),
-        format!("--user-data-dir={}", options.get_user_data_dir().display()),
+        format!("--user-data-dir={}", user_data_dir.display()),
+        format!("--remote-debugging-port={port}"),
     ];
-    if !options.ignore_all_default_args {
-        arguments.extend(
-            CHROME_ARGS
-                .iter()
-                .filter(|argument| {
-                    !options
-                        .ignore_default_args
-                        .iter()
-                        .any(|item| item == **argument)
-                })
-                .map(|argument| argument.to_string()),
-        );
-    }
     if options.headless {
         arguments.push("--headless=new".to_string());
     }
-    arguments.extend(options.args.clone());
-    arguments.extend(options.extra_args.clone());
+    arguments.extend(resolve_restrictions(&options.restrictions)?.args);
+    arguments.extend(options.args.iter().cloned());
+    arguments.extend(options.extra_args.iter().cloned());
+    let arguments = merge_feature_switches(&arguments);
+    if options.automation_parity && !detect_automation_controlled_triggers(&arguments).is_empty() {
+        return Ok(apply_automation_parity_args(&arguments));
+    }
     Ok(arguments)
 }
 
-fn response_has_cdp_websocket(response: &[u8]) -> bool {
-    if !(response.starts_with(b"HTTP/1.1 200") || response.starts_with(b"HTTP/1.0 200")) {
-        return false;
+/// Build the exact command line for an installed browser process.
+///
+/// `--user-data-dir` and `--remote-debugging-port` come first, then
+/// `--headless=new` when headless, then the opt-in restrictions and the
+/// caller's arguments; repeated feature-list switches are merged. Both
+/// `user_data_dir` and `remote_debugging_port` must be set - a launch picks
+/// them itself when they are not.
+pub fn build_real_browser_args(options: &RealBrowserOptions) -> Result<Vec<String>> {
+    let user_data_dir = options.user_data_dir.as_deref().ok_or_else(|| {
+        anyhow!("build_real_browser_args needs user_data_dir; launch_real_browser creates a temporary profile when it is not set")
+    })?;
+    let port = options.remote_debugging_port.ok_or_else(|| {
+        anyhow!("build_real_browser_args needs remote_debugging_port; launch_real_browser reserves a free port when it is not set")
+    })?;
+    browser_args(options, user_data_dir, port)
+}
+
+fn validate_launch_request(options: &RealBrowserOptions) -> Result<()> {
+    if options.engine == EngineType::Fantoccini {
+        return Err(anyhow!(FANTOCCINI_OVER_CDP));
     }
-    let Some(header_end) = response.windows(4).position(|window| window == b"\r\n\r\n") else {
-        return false;
-    };
-    serde_json::from_slice::<Value>(&response[header_end + 4..])
-        .ok()
-        .and_then(|value| value.get("webSocketDebuggerUrl").cloned())
-        .and_then(|value| value.as_str().map(str::to_owned))
-        .is_some()
-}
-
-async fn fetch_cdp_version(port: u16, timeout: Duration) -> bool {
-    let request = format!(
-        "GET /json/version HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n"
-    );
-    let request_future = async {
-        let mut stream = TcpStream::connect(("127.0.0.1", port)).await?;
-        stream.write_all(request.as_bytes()).await?;
-        let mut response = Vec::new();
-        let mut chunk = [0_u8; 4096];
-        loop {
-            let bytes_read = stream.read(&mut chunk).await?;
-            if bytes_read == 0 {
-                break;
-            }
-            response.extend_from_slice(&chunk[..bytes_read]);
-            if response_has_cdp_websocket(&response) {
-                return Ok::<bool, io::Error>(true);
-            }
-            if response.len() > 1024 * 1024 {
-                return Ok(false);
-            }
-        }
-        Ok(response_has_cdp_websocket(&response))
-    };
-    matches!(
-        tokio::time::timeout(timeout, request_future).await,
-        Ok(Ok(true))
-    )
-}
-
-async fn wait_for_cdp_endpoint(
-    options: &RealBrowserOptions,
-    user_data_dir: &Path,
-    browser_process: &mut BrowserProcess,
-) -> Result<String, anyhow::Error> {
-    let started = Instant::now();
-    let active_port_path = user_data_dir.join("DevToolsActivePort");
-
-    while started.elapsed() < options.startup_timeout {
-        if let Some(status) = browser_process.try_wait()? {
-            return Err(anyhow::anyhow!(
-                "browser exited before its DevTools endpoint was ready ({status})"
-            ));
-        }
-
-        let mut port = options.remote_debugging_port;
-        if port == 0 {
-            port = std::fs::read_to_string(&active_port_path)
-                .ok()
-                .and_then(|contents| contents.lines().next()?.parse::<u16>().ok())
-                .unwrap_or(0);
-        }
-
-        if port > 0 {
-            let remaining = options.startup_timeout.saturating_sub(started.elapsed());
-            if fetch_cdp_version(port, remaining.min(Duration::from_millis(500))).await {
-                return Ok(format!("http://127.0.0.1:{port}"));
-            }
-        }
-        tokio::time::sleep(Duration::from_millis(100)).await;
+    if let Some(port) = options.remote_debugging_port {
+        assert_fixed_debugging_port(port)?;
     }
-
-    Err(anyhow::anyhow!(
-        "timed out after {}ms waiting for the DevTools endpoint",
-        options.startup_timeout.as_millis()
-    ))
+    browser_args(
+        options,
+        options
+            .user_data_dir
+            .as_deref()
+            .unwrap_or_else(|| Path::new("validation")),
+        options.remote_debugging_port.unwrap_or(1),
+    )?;
+    if let Some(user_data_dir) = &options.user_data_dir {
+        assert_dedicated_user_data_dir(user_data_dir)?;
+    }
+    Ok(())
 }
 
-fn connection_options(
+fn browser_environment(options: &RealBrowserOptions) -> Result<Option<HashMap<String, String>>> {
+    let mut env = resolve_restrictions(&options.restrictions)?.env;
+    if let Some(extra) = &options.env {
+        env.extend(
+            extra
+                .iter()
+                .map(|(key, value)| (key.clone(), value.clone())),
+        );
+    }
+    Ok((!env.is_empty() || options.env.is_some()).then_some(env))
+}
+
+pub(crate) fn connection_options(
     options: &RealBrowserOptions,
     endpoint: &str,
-) -> Result<ConnectOptions, anyhow::Error> {
+) -> Result<ConnectOptions> {
     let mut connection = match options.engine {
         EngineType::Chromiumoxide => ConnectOptions::chromiumoxide(),
         EngineType::Playwright => ConnectOptions::playwright(),
         EngineType::Puppeteer => ConnectOptions::puppeteer(),
-        EngineType::Fantoccini => {
-            return Err(anyhow::anyhow!(
-                "fantoccini does not connect over CDP; use chromiumoxide, playwright, or puppeteer"
-            ));
-        }
+        EngineType::Fantoccini => return Err(anyhow!(FANTOCCINI_OVER_CDP)),
     };
     connection.cdp_endpoint = Some(endpoint.to_string());
     connection.slow_mo = options.slow_mo;
@@ -730,189 +530,354 @@ fn connection_options(
     Ok(connection)
 }
 
-/// Launch a genuine installed browser with an isolated profile and attach.
-///
-/// Chrome 136 and newer ignore remote-debugging switches for default profiles,
-/// so this helper rejects known default profile roots. It only binds CDP to
-/// loopback, verifies `/json/version`, and then delegates to [`connect_browser`].
-pub async fn launch_real_browser(
-    options: RealBrowserOptions,
-) -> Result<RealBrowserLaunchResult, anyhow::Error> {
-    if options.engine == EngineType::Fantoccini {
-        return Err(anyhow::anyhow!(
-            "fantoccini does not connect over CDP; use chromiumoxide, playwright, or puppeteer"
-        ));
+/// A spawned browser and, when its stderr is captured, the watcher that sees
+/// its `DevTools listening on ...` line.
+pub(crate) struct SpawnedBrowser {
+    pub(crate) process: BrowserProcess,
+    pub(crate) dev_tools_output: Option<DevToolsOutputWatcher>,
+}
+
+/// The side effects of a launch, replaceable in tests.
+#[async_trait]
+pub(crate) trait LaunchHooks: Send + Sync {
+    fn resolve_executable(&self, options: &RealBrowserOptions) -> Result<PathBuf> {
+        resolve_system_browser_executable(options)
     }
 
-    let user_data_dir = options.get_user_data_dir();
-    assert_dedicated_user_data_dir(&user_data_dir)?;
-    std::fs::create_dir_all(&user_data_dir)?;
+    fn reserve_port(&self) -> Result<u16> {
+        reserve_loopback_port()
+    }
 
-    let executable_path = resolve_system_browser_executable(&options)?;
-    let arguments = build_real_browser_args(&options)?;
-    let output = if options.verbose {
-        Stdio::inherit()
-    } else {
-        Stdio::null()
-    };
-    let child = Command::new(&executable_path)
-        .args(arguments)
-        .stdin(Stdio::null())
-        .stdout(output)
-        .stderr(if options.verbose {
-            Stdio::inherit()
-        } else {
-            Stdio::null()
-        })
-        .spawn()
-        .map_err(|error| {
-            anyhow::anyhow!(
-                "failed to start installed browser {}: {error}",
+    async fn spawn_browser(
+        &self,
+        executable_path: &Path,
+        args: &[String],
+        env: Option<HashMap<String, String>>,
+        verbose: bool,
+    ) -> Result<SpawnedBrowser> {
+        let file = executable_path.to_str().ok_or_else(|| {
+            anyhow!(
+                "browser executable path is not valid UTF-8: {}",
                 executable_path.display()
             )
         })?;
-    let mut browser_process = BrowserProcess::new(child);
+        let watcher = DevToolsOutputWatcher::new();
+        let process = start_process(
+            file,
+            args,
+            StartProcessOptions {
+                env,
+                forward_output: verbose,
+                on_stderr: vec![watcher.listener()],
+                ..StartProcessOptions::default()
+            },
+        )
+        .await
+        .map_err(|error| anyhow!("failed to start installed browser {file}: {error}"))?;
+        Ok(SpawnedBrowser {
+            process: BrowserProcess::from_managed(process),
+            dev_tools_output: Some(watcher),
+        })
+    }
 
-    let cdp_endpoint =
-        match wait_for_cdp_endpoint(&options, &user_data_dir, &mut browser_process).await {
-            Ok(endpoint) => endpoint,
-            Err(error) => {
-                let _ = browser_process.kill();
-                return Err(error);
-            }
+    async fn wait_for_endpoint(&self, request: CdpEndpointRequest<'_>) -> Result<String> {
+        wait_for_cdp_endpoint(request).await
+    }
+
+    /// Ask the browser to shut down (`Browser.close` over CDP).
+    async fn request_close(&self, cdp_endpoint: &str, timeout: Duration) -> Result<()> {
+        let endpoint = cdp_endpoint.to_owned();
+        let close = async move {
+            let (mut browser, mut handler) = CdpBrowser::connect(endpoint).await?;
+            let handler_task = tokio::spawn(async move { while handler.next().await.is_some() {} });
+            let result = browser.close().await;
+            handler_task.abort();
+            result.map(|_| ()).map_err(anyhow::Error::from)
         };
+        tokio::time::timeout(timeout, close)
+            .await
+            .map_err(|_| anyhow!("Browser.close did not answer within {timeout:?}"))?
+    }
+}
 
-    let connect_options = connection_options(&options, &cdp_endpoint)?;
+/// The real side effects.
+pub(crate) struct SystemLaunchHooks;
+
+impl LaunchHooks for SystemLaunchHooks {}
+
+pub(crate) struct RealBrowserCloser {
+    hooks: Arc<dyn LaunchHooks>,
+    process: BrowserProcess,
+    cdp_endpoint: String,
+    user_data_dir: PathBuf,
+    temporary_profile: bool,
+    close_timeout: Duration,
+    closed: tokio::sync::OnceCell<()>,
+}
+
+#[async_trait]
+impl BrowserCloser for RealBrowserCloser {
+    async fn close(&self) -> Result<()> {
+        self.closed
+            .get_or_try_init(|| async {
+                if self.process.is_running() {
+                    // A browser that is gone already, or that does not
+                    // answer, is handled by the kill below.
+                    let _ = self
+                        .hooks
+                        .request_close(&self.cdp_endpoint, self.close_timeout)
+                        .await;
+                }
+                if self
+                    .process
+                    .wait_timeout(self.close_timeout)
+                    .await
+                    .is_none()
+                {
+                    self.process.kill();
+                    self.process.wait_timeout(self.close_timeout).await;
+                }
+                if self.temporary_profile {
+                    remove_user_data_dir(&self.user_data_dir).await?;
+                }
+                Ok::<(), anyhow::Error>(())
+            })
+            .await
+            .map(|_| ())
+    }
+}
+
+/// Everything a launch produced besides the engine connection.
+pub(crate) struct LaunchedRealBrowser {
+    pub(crate) cdp_endpoint: String,
+    pub(crate) remote_debugging_port: u16,
+    pub(crate) executable_path: PathBuf,
+    pub(crate) user_data_dir: PathBuf,
+    pub(crate) temporary_profile: bool,
+    pub(crate) args: Vec<String>,
+    pub(crate) browser_process: BrowserProcess,
+    pub(crate) closer: Arc<RealBrowserCloser>,
+}
+
+impl std::fmt::Debug for LaunchedRealBrowser {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("LaunchedRealBrowser")
+            .field("cdp_endpoint", &self.cdp_endpoint)
+            .field("remote_debugging_port", &self.remote_debugging_port)
+            .field("executable_path", &self.executable_path)
+            .field("user_data_dir", &self.user_data_dir)
+            .field("temporary_profile", &self.temporary_profile)
+            .field("args", &self.args)
+            .field("browser_process", &self.browser_process)
+            .finish()
+    }
+}
+
+struct Spawned {
+    process: BrowserProcess,
+    cdp_endpoint: String,
+    port: u16,
+    args: Vec<String>,
+}
+
+async fn spawn_on_free_port(
+    options: &RealBrowserOptions,
+    hooks: &dyn LaunchHooks,
+    executable_path: &Path,
+    user_data_dir: &Path,
+    env: Option<HashMap<String, String>>,
+) -> Result<Spawned> {
+    let attempts = match options.remote_debugging_port {
+        Some(_) => 1,
+        None => options.port_attempts.max(1),
+    };
+    let mut attempt = 1;
+    loop {
+        let port = match options.remote_debugging_port {
+            Some(port) => port,
+            None => hooks.reserve_port()?,
+        };
+        let args = browser_args(options, user_data_dir, port)?;
+        if options.verbose {
+            tracing::info!(executable = %executable_path.display(), ?args, "starting installed browser");
+        }
+        let spawned = hooks
+            .spawn_browser(executable_path, &args, env.clone(), options.verbose)
+            .await?;
+        let waited = hooks
+            .wait_for_endpoint(CdpEndpointRequest {
+                remote_debugging_port: port,
+                user_data_dir,
+                browser_process: &spawned.process,
+                dev_tools_output: spawned.dev_tools_output.as_ref(),
+                timeout: options.startup_timeout,
+            })
+            .await;
+        match waited {
+            Ok(cdp_endpoint) => {
+                return Ok(Spawned {
+                    process: spawned.process,
+                    cdp_endpoint,
+                    port,
+                    args,
+                })
+            }
+            Err(error) => {
+                spawned.process.kill();
+                if error.downcast_ref::<PortRaceError>().is_none() || attempt >= attempts {
+                    return Err(error);
+                }
+                if options.verbose {
+                    tracing::info!("{error}; retrying with a new port");
+                }
+                spawned.process.wait_timeout(RACE_EXIT_WAIT).await;
+                attempt += 1;
+            }
+        }
+    }
+}
+
+/// Start the browser and attach with `connect`, returning the connection and
+/// the launch. Generic over the connection so the launcher can apply a
+/// fingerprint while attaching and tests can attach to nothing.
+pub(crate) async fn launch_real_browser_with<T, C, F>(
+    options: &RealBrowserOptions,
+    hooks: Arc<dyn LaunchHooks>,
+    connect: C,
+) -> Result<(T, LaunchedRealBrowser)>
+where
+    C: FnOnce(ConnectOptions) -> F,
+    F: Future<Output = Result<T>>,
+{
+    validate_launch_request(options)?;
+    let executable_path = hooks.resolve_executable(options)?;
+    let temporary_profile = options.user_data_dir.is_none();
+    let user_data_dir = match &options.user_data_dir {
+        Some(user_data_dir) => prepare_user_data_dir(user_data_dir)?,
+        None => create_temporary_user_data_dir(None)?,
+    };
+    let env = browser_environment(options)?;
+
+    let spawned = match spawn_on_free_port(
+        options,
+        hooks.as_ref(),
+        &executable_path,
+        &user_data_dir,
+        env,
+    )
+    .await
+    {
+        Ok(spawned) => spawned,
+        Err(error) => {
+            if temporary_profile {
+                let _ = remove_user_data_dir(&user_data_dir).await;
+            }
+            return Err(error);
+        }
+    };
+    let process = spawned.process;
+    if temporary_profile {
+        // The profile goes away with the browser, also when the user closes
+        // the window instead of the caller calling close().
+        let exited = process.exited();
+        let directory = user_data_dir.clone();
+        tokio::spawn(async move {
+            exited.await;
+            let _ = remove_user_data_dir(&directory).await;
+        });
+    }
+
+    let connection = match connection_options(options, &spawned.cdp_endpoint) {
+        Ok(connect_options) => connect(connect_options).await,
+        Err(error) => Err(error),
+    };
+    let connection = match connection {
+        Ok(connection) => connection,
+        Err(error) => {
+            process.kill();
+            process.wait_timeout(options.close_timeout).await;
+            if temporary_profile {
+                let _ = remove_user_data_dir(&user_data_dir).await;
+            }
+            return Err(error);
+        }
+    };
+
+    let closer = Arc::new(RealBrowserCloser {
+        hooks,
+        process: process.clone(),
+        cdp_endpoint: spawned.cdp_endpoint.clone(),
+        user_data_dir: user_data_dir.clone(),
+        temporary_profile,
+        close_timeout: options.close_timeout,
+        closed: tokio::sync::OnceCell::new(),
+    });
+    Ok((
+        connection,
+        LaunchedRealBrowser {
+            cdp_endpoint: spawned.cdp_endpoint,
+            remote_debugging_port: spawned.port,
+            executable_path,
+            user_data_dir,
+            temporary_profile,
+            args: spawned.args,
+            browser_process: process,
+            closer,
+        },
+    ))
+}
+
+/// Launch a genuine installed browser and attach.
+///
+/// The command line is exactly `--user-data-dir=<profile>
+/// --remote-debugging-port=<port>` (plus `--headless=new`, restrictions and
+/// the caller's arguments when asked for), so the browser behaves like one a
+/// person started by hand and `navigator.webdriver` stays false. Without
+/// `user_data_dir` a fresh temporary profile is used and deleted when the
+/// browser exits; known default profiles are refused because Chrome 136 and
+/// newer ignore remote-debugging switches for them.
+pub async fn launch_real_browser(options: RealBrowserOptions) -> Result<RealBrowserLaunchResult> {
+    let (connection, launched) =
+        launch_real_browser_with(&options, Arc::new(SystemLaunchHooks), connect_browser).await?;
+    Ok(real_browser_result(connection, launched, options.headless))
+}
+
+pub(crate) fn real_browser_result(
+    connection: LaunchResult,
+    launched: LaunchedRealBrowser,
+    headless: bool,
+) -> RealBrowserLaunchResult {
     let LaunchResult {
         mut browser,
         page,
         downloads,
-    } = match connect_browser(connect_options).await {
-        Ok(connection) => connection,
-        Err(error) => {
-            let _ = browser_process.kill();
-            return Err(error);
-        }
-    };
-    browser.user_data_dir = user_data_dir.clone();
-    browser.headless = options.headless;
-
-    Ok(RealBrowserLaunchResult {
+        ..
+    } = connection;
+    browser.user_data_dir = launched.user_data_dir.clone();
+    browser.headless = headless;
+    RealBrowserLaunchResult {
         browser,
         page,
-        cdp_endpoint,
-        executable_path,
-        user_data_dir,
-        browser_process,
+        cdp_endpoint: launched.cdp_endpoint,
+        remote_debugging_port: launched.remote_debugging_port,
+        executable_path: launched.executable_path,
+        user_data_dir: launched.user_data_dir,
+        temporary_profile: launched.temporary_profile,
+        args: launched.args,
+        browser_process: launched.browser_process,
         downloads,
-    })
+        closer: launched.closer,
+    }
 }
 
 /// Descriptive alias for [`launch_real_browser`].
 pub async fn launch_and_connect_real_browser(
     options: RealBrowserOptions,
-) -> Result<RealBrowserLaunchResult, anyhow::Error> {
+) -> Result<RealBrowserLaunchResult> {
     launch_real_browser(options).await
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn connection_options_carry_the_download_setting() {
-        // A setting that stopped here would leave an installed browser saving
-        // downloads wherever Chrome felt like, which is the case issue #88 is
-        // about.
-        let options = RealBrowserOptions::default().downloads(true);
-
-        let connection = connection_options(&options, "http://127.0.0.1:9222").expect("options");
-
-        assert!(matches!(connection.downloads, DownloadSetting::On));
-    }
-
-    #[test]
-    fn default_options_use_native_engine_and_managed_profile() {
-        let options = RealBrowserOptions::default();
-        assert_eq!(options.engine, EngineType::Chromiumoxide);
-        assert_eq!(options.channel, "chrome");
-        assert_eq!(options.remote_debugging_port, 0);
-        assert!(options
-            .get_user_data_dir()
-            .to_string_lossy()
-            .contains("real-browser"));
-    }
-
-    #[test]
-    fn rejects_the_current_platform_default_profiles() {
-        for profile in known_default_user_data_dirs() {
-            let error = assert_dedicated_user_data_dir(&profile).unwrap_err();
-            assert!(error.to_string().contains("dedicated user_data_dir"));
-        }
-    }
-
-    #[test]
-    fn all_required_channels_have_discovery_candidates() {
-        for channel in ["chrome", "chromium", "brave", "msedge"] {
-            assert!(!browser_install_candidates(channel).unwrap().is_empty());
-        }
-
-        let chrome = browser_install_candidates("chrome").unwrap();
-        let has_platform_default = if cfg!(target_os = "macos") {
-            chrome.contains(&PathBuf::from(
-                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-            ))
-        } else if cfg!(target_os = "windows") {
-            chrome.iter().any(|candidate| {
-                candidate.ends_with(Path::new("Google/Chrome/Application/chrome.exe"))
-            })
-        } else {
-            chrome.contains(&PathBuf::from("/usr/bin/google-chrome"))
-        };
-        assert!(has_platform_default);
-    }
-
-    #[test]
-    fn rejects_fantoccini_before_connecting() {
-        let options = RealBrowserOptions {
-            engine: EngineType::Fantoccini,
-            ..RealBrowserOptions::default()
-        };
-        assert!(connection_options(&options, "http://127.0.0.1:9222").is_err());
-    }
-
-    #[tokio::test]
-    async fn rejects_fantoccini_before_starting_a_browser() {
-        let options = RealBrowserOptions {
-            engine: EngineType::Fantoccini,
-            executable_path: Some(PathBuf::from("missing-browser")),
-            ..RealBrowserOptions::default()
-        };
-
-        let error = launch_real_browser(options).await.unwrap_err();
-        assert!(error.to_string().contains("does not connect over CDP"));
-    }
-
-    #[tokio::test]
-    async fn cdp_probe_does_not_wait_for_the_server_to_close_the_connection() {
-        let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0))
-            .await
-            .unwrap();
-        let port = listener.local_addr().unwrap().port();
-        let response_body = r#"{"webSocketDebuggerUrl":"ws://127.0.0.1/devtools/browser/id"}"#;
-        let response = format!(
-            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{response_body}",
-            response_body.len()
-        );
-        let server = tokio::spawn(async move {
-            let (mut stream, _) = listener.accept().await.unwrap();
-            let mut request = [0_u8; 1024];
-            let _ = stream.read(&mut request).await.unwrap();
-            stream.write_all(response.as_bytes()).await.unwrap();
-            tokio::time::sleep(Duration::from_secs(1)).await;
-        });
-
-        assert!(fetch_cdp_version(port, Duration::from_millis(200)).await);
-        server.abort();
-    }
-}
+#[path = "real_browser_tests.rs"]
+mod tests;

@@ -2,12 +2,13 @@
 
 use std::fs;
 use std::path::Path;
-use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use serde_json::Value;
+
+use crate::utilities::subprocess::{run_command_blocking, CommandError, RunCommandOptions};
 
 struct SafeStorageIdentity {
     application: &'static str,
@@ -42,17 +43,18 @@ fn safe_storage_identity(browser: &str) -> Result<SafeStorageIdentity> {
     Ok(identity)
 }
 
+/// Run a credential tool through command-stream (issue #104) with exact argv
+/// and return its trimmed stdout.
 fn run_credential_command(command: &str, arguments: &[&str]) -> Result<String> {
-    let output = Command::new(command)
-        .args(arguments)
-        .output()
-        .with_context(|| format!("Could not start {command}"))?;
-    if !output.status.success() {
-        return Err(anyhow!("{command} exited with {}", output.status));
+    match run_command_blocking(command, arguments, RunCommandOptions::default()) {
+        Ok(output) => Ok(output.stdout.trim().to_string()),
+        Err(CommandError::Spawn { message, .. }) => {
+            Err(anyhow!("Could not start {command}: {message}"))
+        }
+        Err(CommandError::Exited { code, .. }) => {
+            Err(anyhow!("{command} exited with code {code}"))
+        }
     }
-    String::from_utf8(output.stdout)
-        .context("credential command returned invalid UTF-8")
-        .map(|value| value.trim().to_string())
 }
 
 pub(crate) fn read_safe_storage_password(browser: &str, platform: &str) -> Result<String> {

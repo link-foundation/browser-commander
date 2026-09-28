@@ -1,5 +1,4 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { execFile as execFileCallback } from 'node:child_process';
 import {
   chmod,
   mkdir,
@@ -10,13 +9,13 @@ import {
   stat,
 } from 'node:fs/promises';
 import path from 'node:path';
-import { promisify } from 'node:util';
+
+import { runCommand } from '../utilities/subprocess.js';
 
 const DEFAULT_TTL_MINUTES = 60;
 const LOCK_STALE_MILLISECONDS = 30_000;
 const LOCK_WAIT_MILLISECONDS = 30_000;
 const credentialPromises = new Map();
-const execFile = promisify(execFileCallback);
 let windowsPrincipalPromise;
 
 function hash(value) {
@@ -47,9 +46,9 @@ export function normalizeCookieCache(cache, homeDir, ttlMinutes) {
 }
 
 function windowsPrincipal() {
-  windowsPrincipalPromise ??= execFile('whoami', [], {
-    windowsHide: true,
-  }).then(({ stdout }) => stdout.trim());
+  windowsPrincipalPromise ??= runCommand('whoami').then(({ stdout }) =>
+    stdout.trim()
+  );
   return windowsPrincipalPromise;
 }
 
@@ -60,17 +59,13 @@ async function restrictOwnerOnly(targetPath, directory) {
       throw new Error('Could not identify the current Windows user');
     }
     const permission = directory ? '(OI)(CI)F' : 'F';
-    await execFile(
-      'icacls',
-      [
-        targetPath,
-        '/inheritance:r',
-        '/grant:r',
-        `${principal}:${permission}`,
-        '/q',
-      ],
-      { windowsHide: true }
-    );
+    await runCommand('icacls', [
+      targetPath,
+      '/inheritance:r',
+      '/grant:r',
+      `${principal}:${permission}`,
+      '/q',
+    ]);
     return;
   }
   await chmod(targetPath, directory ? 0o700 : 0o600);

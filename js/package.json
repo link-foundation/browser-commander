@@ -19,6 +19,7 @@
     "test:e2e:click-readiness": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/click-readiness.e2e.test.js",
     "test:e2e:downloads": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/downloads.e2e.test.js",
     "test:e2e:traces": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/traces.e2e.test.js",
+    "test:e2e:google-probe": "node scripts/run-tests.mjs --env RUN_E2E=true --env RUN_GOOGLE_PROBE=true tests/e2e/google-signin-probe.e2e.test.js",
     "test:all": "npm run test:unit && npm run test:e2e",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

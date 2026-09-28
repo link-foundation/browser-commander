@@ -56,6 +56,7 @@ export {
   buildOpenCommand,
   validateOpenUrl,
 } from './browser/open-in-user-browser.js';
+export { migrateProfile, ALL_DATA_CLASSES } from './browser/migration/index.js';
 export {
   launchBrowser,
   LAUNCH_MODES,

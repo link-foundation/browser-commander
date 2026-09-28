@@ -45,10 +45,22 @@ const MANAGED_ARGUMENTS = [
 ];
 
 /**
+ * The page a real launch opens when the caller passes no start URL.
+ *
+ * With no URL at all a browser opens its start pages instead: Chrome the New
+ * Tab page, Edge the MSN New Tab page and edge://welcome-new-profile, whose
+ * flow closes the window - and so ends the browser - a few seconds after the
+ * launch. Playwright and Puppeteer open about:blank for the same reason. The
+ * URL is not a switch, and a page cannot see how its tab was first opened.
+ */
+const START_URL = 'about:blank';
+
+/**
  * Build the command line for a real browser.
  *
  * By default it is exactly what a person would type to allow a debugger:
- * `--user-data-dir=<dir> --remote-debugging-port=<port>` (issue #103). The
+ * `--user-data-dir=<dir> --remote-debugging-port=<port> about:blank` (issue
+ * #103), and a start URL among the custom `args` replaces `about:blank`. The
  * fixed port keeps `navigator.webdriver` false without any extra switch
  * (issue #101). Everything else is opt-in: `headless`, named `restrictions`
  * and custom `args`.
@@ -57,10 +69,10 @@ const MANAGED_ARGUMENTS = [
  * `--remote-debugging-address` is passed; the switch stays managed so custom
  * arguments cannot expose DevTools on another interface.
  *
- * `--headless` is one of the switches that turns AutomationControlled on, and
- * a headless browser has no infobar to show, so in that case (and whenever a
- * custom argument is a trigger) the off switch is added unless
- * `automationParity` is false.
+ * `--headless` is not an AutomationControlled trigger (a hand-started headless
+ * Chrome reports `navigator.webdriver === false`), so a headless launch gets
+ * no off switch either. Only when a custom argument is a trigger is the off
+ * switch added, unless `automationParity` is false.
  *
  * @param {Object} options
  * @param {string} options.userDataDir - Dedicated profile directory
@@ -109,6 +121,9 @@ export function buildRealBrowserArgs({
     detectAutomationControlledTriggers(browserArgs).length > 0
   ) {
     browserArgs = applyAutomationParityArgs(browserArgs);
+  }
+  if (browserArgs.every((argument) => argument.startsWith('-'))) {
+    browserArgs.push(START_URL);
   }
   return browserArgs;
 }
@@ -305,7 +320,7 @@ function createCloser({
  * @param {string[]} [options.args] - Additional browser arguments
  * @param {string[]} [options.extraArgs] - Additional browser arguments appended after args
  * @param {Object<string,string>} [options.env] - Extra environment for the browser process only
- * @param {boolean} [options.automationParity=true] - Keep navigator.webdriver false in headless mode
+ * @param {boolean} [options.automationParity=true] - Add the AutomationControlled off switch when a custom argument turns the feature on
  * @param {number} [options.startupTimeout=30000] - CDP readiness timeout in milliseconds
  * @param {number} [options.closeTimeout=5000] - How long close() waits before killing the process
  * @param {Object[]} [options.seedCookies] - Cookies to seed after connecting

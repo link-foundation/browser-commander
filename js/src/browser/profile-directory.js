@@ -27,9 +27,15 @@ export const LOCAL_STATE_FILE = 'Local State';
  * showed What's New for in `browser.last_whats_new_version` and skips the tab
  * when it is not older than the running version; a milestone no release has
  * reached keeps the tab closed without asking the binary for its version.
+ *
+ * Microsoft Edge ignores both and opens its own first-run tab,
+ * `edge://welcome-edge/`, which takes the foreground the same way; it is
+ * skipped once Edge has recorded `fre.has_user_seen_fre` (measured with Edge
+ * 153, experiments/issue-103/edge-first-run.sh). Chrome ignores the key.
  */
 export const INITIAL_LOCAL_STATE = Object.freeze({
   browser: Object.freeze({ last_whats_new_version: 9999 }),
+  fre: Object.freeze({ has_user_seen_fre: true }),
 });
 
 /** Prefix of the fresh profiles Browser Commander creates and deletes. */

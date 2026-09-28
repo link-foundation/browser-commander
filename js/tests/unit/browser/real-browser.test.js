@@ -49,6 +49,25 @@ describe('launchAndConnectRealBrowser', () => {
       [
         '--user-data-dir=/tmp/browser-commander-dedicated',
         '--remote-debugging-port=9333',
+        'about:blank',
+      ]
+    );
+  });
+
+  it('opens a blank tab unless the caller passes a start URL', () => {
+    // With no URL, Edge opens edge://welcome-new-profile, which closes the
+    // window a few seconds later. Both engines open about:blank the same way.
+    assert.deepEqual(
+      buildRealBrowserArgs({
+        userDataDir: '/tmp/browser-commander-dedicated',
+        remoteDebuggingPort: 9333,
+        args: ['--lang=en-US', 'https://example.com/'],
+      }),
+      [
+        '--user-data-dir=/tmp/browser-commander-dedicated',
+        '--remote-debugging-port=9333',
+        '--lang=en-US',
+        'https://example.com/',
       ]
     );
   });
@@ -76,24 +95,42 @@ describe('launchAndConnectRealBrowser', () => {
     );
   });
 
-  it('adds the off switch only for headless, where no infobar can show', () => {
-    const headless = buildRealBrowserArgs({
+  it('launches headless exactly as a person would, with no off switch', () => {
+    // A hand-started headless Chrome reports navigator.webdriver false, so the
+    // off switch would only be a command-line difference of its own.
+    assert.deepEqual(
+      buildRealBrowserArgs({
+        userDataDir: '/tmp/browser-commander-dedicated',
+        remoteDebuggingPort: 9333,
+        headless: true,
+      }),
+      [
+        '--user-data-dir=/tmp/browser-commander-dedicated',
+        '--remote-debugging-port=9333',
+        '--headless=new',
+        'about:blank',
+      ]
+    );
+  });
+
+  it('adds the off switch when a custom argument is a trigger', () => {
+    const args = buildRealBrowserArgs({
       userDataDir: '/tmp/browser-commander-dedicated',
       remoteDebuggingPort: 9333,
-      headless: true,
-      args: ['--disable-blink-features=Foo'],
+      args: ['--disable-blink-features=Foo', '--enable-automation'],
     });
-    assert.deepEqual(headless, [
+    assert.deepEqual(args, [
       '--user-data-dir=/tmp/browser-commander-dedicated',
       '--remote-debugging-port=9333',
-      '--headless=new',
       '--disable-blink-features=Foo,AutomationControlled',
+      '--enable-automation',
+      'about:blank',
     ]);
     assert.equal(
       buildRealBrowserArgs({
         userDataDir: '/tmp/browser-commander-dedicated',
         remoteDebuggingPort: 9333,
-        headless: true,
+        args: ['--enable-automation'],
         automationParity: false,
       }).includes('--disable-blink-features=AutomationControlled'),
       false
@@ -116,6 +153,7 @@ describe('launchAndConnectRealBrowser', () => {
       '--disable-features=Translate,Foo',
       '--legacy-arg',
       '--lang=en-US',
+      'about:blank',
     ]);
     assert.throws(
       () =>
@@ -209,7 +247,11 @@ describe('launchAndConnectRealBrowser', () => {
     assert.deepEqual(calls[0], [
       'spawn',
       '/opt/google/chrome',
-      [`--user-data-dir=${temporaryDirectory}`, '--remote-debugging-port=9444'],
+      [
+        `--user-data-dir=${temporaryDirectory}`,
+        '--remote-debugging-port=9444',
+        'about:blank',
+      ],
       { env: undefined, verbose: false },
     ]);
     assert.deepEqual(calls[1], ['wait', 9444]);

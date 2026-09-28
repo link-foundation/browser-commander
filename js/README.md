@@ -95,7 +95,7 @@ await browser.close();
 
 `launchBrowser()` starts the installed Chrome the way a person would and then
 attaches to it. The whole command line is
-`--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port>`:
+`--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port> about:blank`:
 no automation switches, so `navigator.webdriver` is `false`, there is no
 "controlled by automated test software" or unsupported-flag infobar, and
 extensions, sync, translation and every other browser feature behave as in a

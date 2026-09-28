@@ -8,12 +8,12 @@ opt-in (#101, #103).
 `launchBrowser()` now starts the installed Chrome (or `channel`/
 `executablePath`) itself and attaches over CDP. The whole command line is
 `--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved
-port>`: no `--enable-automation`, no `--disable-blink-features`, so
+port> about:blank` (a URL in `args` replaces `about:blank`): no `--enable-automation`, no `--disable-blink-features`, so
 `navigator.webdriver` is `false` and Chrome shows neither the "controlled by
 automated test software" nor the unsupported-flag infobar. The temporary
-profile is seeded with the `First Run` sentinel and a `Local State` entry that
-keeps the "What's new" tab from stealing the foreground, and it is deleted on
-close. `launch: 'engine'` keeps the Playwright/Puppeteer launcher.
+profile is seeded with the `First Run` sentinel and `Local State` entries that
+keep the "What's new" tab and Microsoft Edge's first-run tab from stealing the
+foreground, and it is deleted on close. `launch: 'engine'` keeps the Playwright/Puppeteer launcher.
 
 The debugging port is reserved on loopback and its ownership is proven from the
 browser's own `DevTools listening on` line, so a port lost to another process is

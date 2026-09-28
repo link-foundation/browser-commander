@@ -10,7 +10,7 @@
 //! module is a byte-for-byte copy of `js/src/fingerprint/limitations.json`,
 //! embedded with `include_str!` and kept in step by
 //! `scripts/check-shared-fingerprint-assets.sh`. Three hand-written
-//! translations of the same twelve paragraphs would drift within a release.
+//! translations of the same sixteen paragraphs would drift within a release.
 
 use std::sync::LazyLock;
 
@@ -175,7 +175,7 @@ mod tests {
             assert!(!limitation.surface.is_empty(), "{}", limitation.id);
             assert!(!limitation.detail.is_empty(), "{}", limitation.id);
         }
-        assert_eq!(seen.len(), 12);
+        assert_eq!(seen.len(), 16);
     }
 
     #[test]

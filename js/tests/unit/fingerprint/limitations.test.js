@@ -44,7 +44,7 @@ describe('the documented limitations', () => {
 
   it('is the shared JSON asset Python and Rust also publish', () => {
     // The catalogue is data, not code, so the three packages ship one file
-    // rather than three translations of the same twelve paragraphs.
+    // rather than three translations of the same sixteen paragraphs.
     const asset = JSON.parse(
       readFileSync(
         new URL('../../../src/fingerprint/limitations.json', import.meta.url),

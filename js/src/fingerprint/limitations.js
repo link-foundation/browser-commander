@@ -8,7 +8,7 @@
  * `docs/case-studies/issue-79/analysis-artifacts/`.
  *
  * The catalogue itself lives in `limitations.json`, because Python and Rust
- * publish the same twelve entries and a hand-copied paragraph of prose drifts
+ * publish the same sixteen entries and a hand-copied paragraph of prose drifts
  * as easily as a hand-copied patch. This module owns the JSON; the copies are
  * checked byte for byte by `scripts/check-shared-fingerprint-assets.sh`.
  *

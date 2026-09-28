@@ -1,8 +1,7 @@
 import assert from 'node:assert';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
-import os from 'node:os';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
 import BetterSqlite3 from 'better-sqlite3';
 
@@ -20,20 +19,21 @@ import {
   buildKey4Database,
   encodeLoginField,
 } from '../../../fixtures/firefox-nss-fixtures.mjs';
+import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
-const tempDirs = [];
+const makeTempDir = useTempDirectories('bc-nss-');
 
-async function makeTempDir() {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-nss-'));
-  tempDirs.push(dir);
-  return dir;
-}
-
-afterEach(async () => {
-  while (tempDirs.length > 0) {
-    await rm(tempDirs.pop(), { recursive: true, force: true });
+// Build a key4.db, open it read-only as the migration does, and hand it to
+// `check` together with the fixture's `loginKey`.
+async function withKey4Database(options, check) {
+  const fixture = buildKey4Database({ dir: await makeTempDir(), ...options });
+  const db = new BetterSqlite3(fixture.key4Path, { readonly: true });
+  try {
+    check(db, fixture);
+  } finally {
+    db.close();
   }
-});
+}
 
 describe('firefox-der', () => {
   it('decodes a nested SEQUENCE and OID', () => {
@@ -56,63 +56,41 @@ describe('firefox-der', () => {
 
 describe('recoverFirefoxKeyFromDatabase', () => {
   it('recovers the 3DES login key via PBES2 with no primary password', async () => {
-    const dir = await makeTempDir();
-    const { key4Path, loginKey } = buildKey4Database({ dir });
-    const db = new BetterSqlite3(key4Path, { readonly: true });
-    try {
+    await withKey4Database({}, (db, { loginKey }) => {
       const recovered = recoverFirefoxKeyFromDatabase(db);
       assert.deepEqual(recovered, loginKey);
-    } finally {
-      db.close();
-    }
+    });
   });
 
   it('round-trips a login field decryption', async () => {
-    const dir = await makeTempDir();
-    const { key4Path, loginKey } = buildKey4Database({ dir });
-    const db = new BetterSqlite3(key4Path, { readonly: true });
-    try {
+    await withKey4Database({}, (db) => {
       const recovered = recoverFirefoxKeyFromDatabase(db);
       const encoded = encodeLoginField({
         key: recovered,
         plaintext: 'super-secret',
       });
       assert.equal(decryptFirefoxField(encoded, recovered), 'super-secret');
-    } finally {
-      db.close();
-    }
+    });
   });
 
   it('throws PrimaryPasswordError when the wrong password is supplied', async () => {
-    const dir = await makeTempDir();
-    const { key4Path } = buildKey4Database({
-      dir,
-      primaryPassword: Buffer.from('correct horse'),
-    });
-    const db = new BetterSqlite3(key4Path, { readonly: true });
-    try {
+    const primaryPassword = Buffer.from('correct horse');
+    await withKey4Database({ primaryPassword }, (db) => {
       assert.throws(
         () => recoverFirefoxKeyFromDatabase(db, Buffer.from('wrong')),
         PrimaryPasswordError
       );
-    } finally {
-      db.close();
-    }
+    });
   });
 
   it('recovers with the correct primary password', async () => {
-    const dir = await makeTempDir();
     const primaryPassword = Buffer.from('correct horse');
-    const { key4Path, loginKey } = buildKey4Database({ dir, primaryPassword });
-    const db = new BetterSqlite3(key4Path, { readonly: true });
-    try {
+    await withKey4Database({ primaryPassword }, (db, { loginKey }) => {
       assert.deepEqual(
         recoverFirefoxKeyFromDatabase(db, primaryPassword),
         loginKey
       );
-    } finally {
-      db.close();
-    }
+    });
   });
 
   it('reports a helpful error when metadata is missing', async () => {

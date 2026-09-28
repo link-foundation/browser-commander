@@ -1,8 +1,7 @@
 import assert from 'node:assert';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import os from 'node:os';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
 import {
   DBSC_BOUND_COOKIE_NAMES,
@@ -10,19 +9,9 @@ import {
   migrateCookies,
 } from '../../../../src/browser/migration/cookies.js';
 
-const tempDirs = [];
+import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
-async function makeTempDir() {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-cookies-'));
-  tempDirs.push(dir);
-  return dir;
-}
-
-afterEach(async () => {
-  while (tempDirs.length > 0) {
-    await rm(tempDirs.pop(), { recursive: true, force: true });
-  }
-});
+const makeTempDir = useTempDirectories('bc-cookies-');
 
 describe('isDbscBoundCookie', () => {
   it('flags rotating Google session-token cookies', () => {

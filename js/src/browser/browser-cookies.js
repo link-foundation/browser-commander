@@ -92,7 +92,8 @@ function readChromiumRows(database, domainFilter) {
   );
 }
 
-function mapFirefoxRows(rows) {
+/** Map `moz_cookies` rows to cookies; profile migration reuses this too. */
+export function mapFirefoxCookieRows(rows) {
   return rows.map((row) => ({
     name: row.name,
     value: row.value,
@@ -306,7 +307,9 @@ export async function readBrowserCookiesWithDependencies(
   let cookies;
   try {
     if (browser === 'firefox') {
-      cookies = mapFirefoxRows(readFirefoxRows(database, options.domainFilter));
+      cookies = mapFirefoxCookieRows(
+        readFirefoxRows(database, options.domainFilter)
+      );
     } else {
       const databaseVersion = readDatabaseVersion(database);
       const rows = readChromiumRows(database, options.domainFilter);

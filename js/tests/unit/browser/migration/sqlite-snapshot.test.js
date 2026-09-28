@@ -1,8 +1,6 @@
 import assert from 'node:assert';
-import { mkdtemp, rm, stat } from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { stat } from 'node:fs/promises';
+import { describe, it } from 'node:test';
 
 import BetterSqlite3 from 'better-sqlite3';
 
@@ -10,28 +8,17 @@ import {
   readDatabaseSnapshot,
   withDatabaseSnapshot,
 } from '../../../../src/browser/migration/sqlite-snapshot.js';
+import {
+  assertSourceUnchanged,
+  writeChromiumHistory,
+} from '../../../helpers/migration-fixtures.js';
+import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
-const tempDirs = [];
+const makeTempDir = useTempDirectories('bc-snap-');
 
 async function makeDatabase(rowCount) {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-snap-'));
-  tempDirs.push(dir);
-  const dbPath = path.join(dir, 'History');
-  const db = new BetterSqlite3(dbPath);
-  db.exec('CREATE TABLE urls (id INTEGER PRIMARY KEY, url TEXT)');
-  const insert = db.prepare('INSERT INTO urls (url) VALUES (?)');
-  for (let i = 0; i < rowCount; i += 1) {
-    insert.run(`https://example.com/${i}`);
-  }
-  db.close();
-  return dbPath;
+  return writeChromiumHistory(await makeTempDir(), rowCount);
 }
-
-afterEach(async () => {
-  while (tempDirs.length > 0) {
-    await rm(tempDirs.pop(), { recursive: true, force: true });
-  }
-});
 
 describe('withDatabaseSnapshot', () => {
   it('produces a consistent snapshot readable by the reader', async () => {
@@ -76,13 +63,13 @@ describe('withDatabaseSnapshot', () => {
 describe('readDatabaseSnapshot', () => {
   it('opens the snapshot read-only and does not modify the source', async () => {
     const dbPath = await makeDatabase(2);
-    const before = (await stat(dbPath)).mtimeMs;
-    const count = await readDatabaseSnapshot({
-      sourcePath: dbPath,
-      read: (db) => db.prepare('SELECT COUNT(*) AS c FROM urls').get().c,
+    let count;
+    await assertSourceUnchanged(dbPath, async () => {
+      count = await readDatabaseSnapshot({
+        sourcePath: dbPath,
+        read: (db) => db.prepare('SELECT COUNT(*) AS c FROM urls').get().c,
+      });
     });
     assert.equal(Number(count), 2);
-    const after = (await stat(dbPath)).mtimeMs;
-    assert.equal(before, after);
   });
 });

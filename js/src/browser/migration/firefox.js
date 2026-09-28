@@ -1,9 +1,9 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { pathExists } from './fs-utils.js';
+import { profileFileIfPresent } from './fs-utils.js';
 
 import { openSqliteDatabase } from '../browser-cookie-database.js';
-import { firefoxSameSite } from '../browser-cookie-crypto.js';
+import { mapFirefoxCookieRows } from '../browser-cookies.js';
 import { readDatabaseSnapshot } from './sqlite-snapshot.js';
 import { encryptChromiumValue } from './chromium-crypto.js';
 import { firefoxBookmarksToChrome } from './firefox-bookmarks.js';
@@ -95,8 +95,8 @@ function signonRealm(originUrl) {
  * @returns {Promise<Object[]>}
  */
 export async function readFirefoxCookies({ profileDir, domains }) {
-  const cookiePath = path.join(profileDir, 'cookies.sqlite');
-  if (!(await pathExists(cookiePath))) {
+  const cookiePath = await profileFileIfPresent(profileDir, 'cookies.sqlite');
+  if (!cookiePath) {
     return [];
   }
   return readDatabaseSnapshot({
@@ -108,22 +108,15 @@ export async function readFirefoxCookies({ profileDir, domains }) {
              FROM moz_cookies ORDER BY host, name, path`
         )
         .all();
-      return rows
-        .filter((row) =>
+      // The installed-browser cookie reader owns the row → cookie mapping, so
+      // a migrated cookie and an imported one always have the same shape.
+      return mapFirefoxCookieRows(
+        rows.filter((row) =>
           Array.isArray(domains) && domains.length > 0
             ? domains.some((domain) => (row.host ?? '').includes(domain))
             : true
         )
-        .map((row) => ({
-          name: row.name,
-          value: row.value,
-          domain: row.host,
-          path: row.path || '/',
-          expires: Number(row.expiry) || -1,
-          httpOnly: Boolean(row.isHttpOnly),
-          secure: Boolean(row.isSecure),
-          sameSite: firefoxSameSite(row.sameSite),
-        }));
+      );
     },
   });
 }
@@ -140,8 +133,8 @@ export async function migrateFirefoxBookmarks({
   profileDir,
   targetProfileDir,
 }) {
-  const placesPath = path.join(profileDir, 'places.sqlite');
-  if (!(await pathExists(placesPath))) {
+  const placesPath = await profileFileIfPresent(profileDir, 'places.sqlite');
+  if (!placesPath) {
     return {
       migrated: 0,
       skipped: [
@@ -187,8 +180,8 @@ export async function migrateFirefoxBookmarks({
  * @returns {Promise<{migrated: number, skipped: Array, warnings: Array}>}
  */
 export async function reportFirefoxHistory({ profileDir }) {
-  const placesPath = path.join(profileDir, 'places.sqlite');
-  if (!(await pathExists(placesPath))) {
+  const placesPath = await profileFileIfPresent(profileDir, 'places.sqlite');
+  if (!placesPath) {
     return { migrated: 0, skipped: [], warnings: [] };
   }
   const count = await readDatabaseSnapshot({
@@ -236,9 +229,9 @@ export async function migrateFirefoxPasswords({
   targetPrefix = platform === 'win32' ? 'v10' : 'v11',
   primaryPassword = Buffer.alloc(0),
 }) {
-  const loginsPath = path.join(profileDir, 'logins.json');
-  const key4Path = path.join(profileDir, 'key4.db');
-  if (!(await pathExists(loginsPath)) || !(await pathExists(key4Path))) {
+  const loginsPath = await profileFileIfPresent(profileDir, 'logins.json');
+  const key4Path = await profileFileIfPresent(profileDir, 'key4.db');
+  if (!loginsPath || !key4Path) {
     return {
       migrated: 0,
       skipped: [

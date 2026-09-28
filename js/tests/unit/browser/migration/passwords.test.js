@@ -1,25 +1,21 @@
 import assert from 'node:assert';
-import { mkdtemp, rm, stat } from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
 import BetterSqlite3 from 'better-sqlite3';
 
 import { migratePasswords } from '../../../../src/browser/migration/passwords.js';
 import { encryptChromiumValue } from '../../../../src/browser/migration/chromium-crypto.js';
+import { deriveChromiumCookieKey } from '../../../../src/browser/browser-cookie-crypto.js';
 import {
-  decryptChromiumCookie,
-  deriveChromiumCookieKey,
-} from '../../../../src/browser/browser-cookie-crypto.js';
+  assertNothingMigrated,
+  assertSourceUnchanged,
+  migrateBetween,
+  readMigratedLogins,
+} from '../../../helpers/migration-fixtures.js';
+import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
-const tempDirs = [];
-
-async function makeTempDir(prefix) {
-  const dir = await mkdtemp(path.join(os.tmpdir(), prefix));
-  tempDirs.push(dir);
-  return dir;
-}
+const makeTempDir = useTempDirectories();
 
 function writeLoginData(dir, rows) {
   const db = new BetterSqlite3(path.join(dir, 'Login Data'));
@@ -35,11 +31,28 @@ function writeLoginData(dir, rows) {
   db.close();
 }
 
-afterEach(async () => {
-  while (tempDirs.length > 0) {
-    await rm(tempDirs.pop(), { recursive: true, force: true });
-  }
-});
+// A source login whose password is encrypted with the Linux source key.
+function encryptedLogin({ originUrl, username, plaintext, key, prefix }) {
+  return {
+    originUrl,
+    username,
+    passwordValue: encryptChromiumValue({
+      plaintext,
+      key,
+      platform: 'linux',
+      prefix,
+    }),
+  };
+}
+
+// Migrate on Linux, decrypting the source with `sourceKey`.
+function migrateLinuxPasswords(source, target, { sourceKey, ...options }) {
+  return migrateBetween(migratePasswords, source, target, {
+    platform: 'linux',
+    resolveSourceKey: () => sourceKey,
+    ...options,
+  });
+}
 
 describe('migratePasswords', () => {
   it('re-encrypts each password for the target key on Linux', async () => {
@@ -49,33 +62,24 @@ describe('migratePasswords', () => {
     const targetKey = deriveChromiumCookieKey('target-pass', 'linux');
 
     writeLoginData(source, [
-      {
+      encryptedLogin({
         originUrl: 'https://a.example/login',
         username: 'alice',
-        passwordValue: encryptChromiumValue({
-          plaintext: 'secret-A',
-          key: sourceKey,
-          platform: 'linux',
-          prefix: 'v11',
-        }),
-      },
-      {
+        plaintext: 'secret-A',
+        key: sourceKey,
+        prefix: 'v11',
+      }),
+      encryptedLogin({
         originUrl: 'https://b.example/login',
         username: 'bob',
-        passwordValue: encryptChromiumValue({
-          plaintext: 'secret-B',
-          key: sourceKey,
-          platform: 'linux',
-          prefix: 'v10',
-        }),
-      },
+        plaintext: 'secret-B',
+        key: sourceKey,
+        prefix: 'v10',
+      }),
     ]);
 
-    const report = await migratePasswords({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-      platform: 'linux',
-      resolveSourceKey: () => sourceKey,
+    const report = await migrateLinuxPasswords(source, target, {
+      sourceKey,
       targetKey,
       targetPrefix: 'v11',
     });
@@ -83,24 +87,8 @@ describe('migratePasswords', () => {
     assert.equal(report.migrated, 2);
     assert.deepEqual(report.skipped, []);
 
-    const db = new BetterSqlite3(path.join(target, 'Login Data'), {
-      readonly: true,
-    });
-    const stored = db
-      .prepare(
-        'SELECT origin_url, password_value FROM logins ORDER BY origin_url'
-      )
-      .all();
-    db.close();
-
-    const decrypted = stored.map((row) =>
-      decryptChromiumCookie({
-        encryptedValue: row.password_value,
-        host: new URL(row.origin_url).hostname,
-        databaseVersion: 0,
-        platform: 'linux',
-        key: targetKey,
-      })
+    const decrypted = readMigratedLogins(target, targetKey).map(
+      (login) => login.password
     );
     assert.deepEqual(decrypted, ['secret-A', 'secret-B']);
   });
@@ -117,16 +105,12 @@ describe('migratePasswords', () => {
       },
     ]);
 
-    const report = await migratePasswords({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-      platform: 'linux',
-      resolveSourceKey: () => targetKey,
+    const report = await migrateLinuxPasswords(source, target, {
+      sourceKey: targetKey,
       targetKey,
     });
 
-    assert.equal(report.migrated, 0);
-    assert.equal(report.skipped[0].reason, 'app-bound-v20');
+    assertNothingMigrated(report, 'app-bound-v20');
   });
 
   it('never modifies the source Login Data', async () => {
@@ -134,42 +118,27 @@ describe('migratePasswords', () => {
     const target = await makeTempDir('bc-pw-dst-');
     const key = deriveChromiumCookieKey('pw', 'linux');
     writeLoginData(source, [
-      {
+      encryptedLogin({
         originUrl: 'https://a.example/login',
         username: 'a',
-        passwordValue: encryptChromiumValue({
-          plaintext: 'x',
-          key,
-          platform: 'linux',
-          prefix: 'v11',
-        }),
-      },
+        plaintext: 'x',
+        key,
+        prefix: 'v11',
+      }),
     ]);
-    const before = (await stat(path.join(source, 'Login Data'))).mtimeMs;
 
-    await migratePasswords({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-      platform: 'linux',
-      resolveSourceKey: () => key,
-      targetKey: key,
-    });
-
-    const after = (await stat(path.join(source, 'Login Data'))).mtimeMs;
-    assert.equal(before, after);
+    await assertSourceUnchanged(path.join(source, 'Login Data'), () =>
+      migrateLinuxPasswords(source, target, { sourceKey: key, targetKey: key })
+    );
   });
 
   it('reports a skip when there is no Login Data', async () => {
     const source = await makeTempDir('bc-pw-src-');
     const target = await makeTempDir('bc-pw-dst-');
-    const report = await migratePasswords({
-      sourceProfileDir: source,
-      targetProfileDir: target,
-      platform: 'linux',
-      resolveSourceKey: () => Buffer.alloc(16),
+    const report = await migrateLinuxPasswords(source, target, {
+      sourceKey: Buffer.alloc(16),
       targetKey: Buffer.alloc(16),
     });
-    assert.equal(report.migrated, 0);
-    assert.equal(report.skipped[0].reason, 'source-missing');
+    assertNothingMigrated(report, 'source-missing');
   });
 });

@@ -203,9 +203,7 @@ describe('launchAndConnectRealBrowser', () => {
   });
 
   it('spawns, waits, connects, and returns process metadata', async () => {
-    temporaryDirectory = await mkdtemp(
-      path.join(os.tmpdir(), 'browser-commander-real-browser-test-')
-    );
+    temporaryDirectory = await makeDedicatedProfile();
     const calls = [];
     const browserProcess = fakeProcess(calls);
     const browser = { id: 'browser' };
@@ -269,9 +267,7 @@ describe('launchAndConnectRealBrowser', () => {
   });
 
   it('migrates a profile before launch and seeds the migrated cookies', async () => {
-    temporaryDirectory = await mkdtemp(
-      path.join(os.tmpdir(), 'browser-commander-real-browser-test-')
-    );
+    temporaryDirectory = await makeDedicatedProfile();
     const calls = [];
     const browserProcess = fakeProcess(calls);
     let connectOptions;
@@ -472,9 +468,7 @@ describe('launchAndConnectRealBrowser', () => {
   });
 
   it('terminates the spawned browser when connection fails', async () => {
-    temporaryDirectory = await mkdtemp(
-      path.join(os.tmpdir(), 'browser-commander-real-browser-test-')
-    );
+    temporaryDirectory = await makeDedicatedProfile();
     let killed = false;
     const browserProcess = {
       exitCode: null,
@@ -586,6 +580,13 @@ describe('waitForCdpEndpoint', () => {
     assert.equal(probes, 0);
   });
 });
+
+// A dedicated user-data directory; the suite's afterEach removes it.
+function makeDedicatedProfile() {
+  return mkdtemp(
+    path.join(os.tmpdir(), 'browser-commander-real-browser-test-')
+  );
+}
 
 function fakeProcess(calls) {
   const listeners = [];

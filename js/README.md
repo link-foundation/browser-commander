@@ -441,6 +441,27 @@ protects its remote-debugging switches, reserves a loopback port (or uses
 `restrictions` opts into named restrictions, `args`/`extraArgs` append custom
 switches, and `env` adds environment variables for the browser process only.
 
+The launch is clean by default, so signing in with a Google account works
+(a nonexistent address shows "Couldn't find your Google Account" rather than
+"This browser or app may not be secure"). Pass `migrateFrom` to opt into a
+read-only migration from an installed browser's main profile before the launch;
+the migrated cookies are seeded automatically and the returned session carries a
+`migration` report (see `migrateProfile()` below):
+
+```javascript
+const session = await launchRealBrowser({
+  channel: 'chrome',
+  userDataDir, // dedicated; clean by default
+  migrateFrom: {
+    browser: 'chrome', // chrome | edge | brave | chromium | firefox
+    profile: 'Default',
+    include: ['cookies', 'bookmarks', 'history', 'passwords', 'preferences'],
+    domains: ['npmjs.com', 'github.com'], // optional cookie filter
+  },
+});
+console.log(session.migration.migrated, session.migration.skipped);
+```
+
 ### listBrowserProfiles(options)
 
 Discover cookie-bearing profiles for Chrome, Edge, Brave, Chromium, and Firefox.
@@ -482,6 +503,75 @@ cookies is acceptable.
 
 Treat imported cookies like passwords: keep cache directories private, use a
 short TTL, never commit them, and seed only a dedicated automation profile.
+
+### migrateProfile(options)
+
+Copy data from an installed browser's main profile into a dedicated target
+profile directory (usually the `Default` folder of a `launchRealBrowser()`
+`userDataDir`). This is the same migration `launchRealBrowser({ migrateFrom })`
+runs, exposed directly. It is **opt-in and strictly read-only** on the source:
+SQLite databases (`History`, `Top Sites`, cookies, Firefox `places.sqlite`) are
+copied through the SQLite Online Backup API so a running browser is never
+disturbed, and JSON files (`Bookmarks`, `Preferences`) are copied as is.
+
+```javascript
+import { migrateProfile } from 'browser-commander';
+
+const report = await migrateProfile({
+  from: { browser: 'chrome', profile: 'Default' },
+  to: '/path/to/dedicated/User Data/Default',
+  targetBrowser: 'chrome', // launching channel, for key derivation
+  include: [
+    'cookies',
+    'bookmarks',
+    'history',
+    'passwords',
+    'preferences',
+    'extensions',
+  ],
+  domains: ['github.com'], // optional cookie filter
+});
+```
+
+The report is `{ source, target, migrated, skipped, warnings, cookies }`:
+`migrated` counts each data class, `cookies` holds the seedable Playwright-shape
+cookies, and `skipped`/`warnings` explain everything that could not be migrated
+verbatim, for example:
+
+- **DBSC-bound Google cookies** (`__Secure-1PSIDTS`/`3PSIDTS`/`SIDTS`) are
+  reported `dbsc-bound`: their Device Bound Session Credentials key cannot leave
+  the source profile, so those sessions expire quickly and are not copied.
+- **Windows app-bound `v20`** passwords/cookies are reported `app-bound-v20`
+  because they require the browser's privileged elevation service.
+- **Migrated extensions** are reported `mac-will-not-validate`: Chromium's
+  `Secure Preferences` MAC cannot be forged externally, so migrated extensions
+  are likely disabled until re-enabled in the browser.
+- **Firefox with a primary password** is reported `primary-password-set`.
+
+Data classes: `cookies`, `bookmarks`, `history`, `passwords`, `preferences`,
+`extensions` (exported as `ALL_DATA_CLASSES`). Chromium sources
+(`chrome`/`edge`/`brave`/`chromium`) re-encrypt passwords with the target
+profile's OS-keystore key; Firefox uses its own NSS (`key4.db`) path for
+`cookies.sqlite`, `places.sqlite` and `logins.json`.
+
+### openInUserBrowser(url)
+
+Open a URL in the user's own default browser with **no automation** - no CDP,
+no dedicated profile, no `navigator.webdriver`. Use it when a consumer only has
+to show a page where the user is already signed in (an OAuth consent screen or a
+CLI web-login page). It shells out to the platform opener (macOS `open`, Linux
+`xdg-open`, Windows `start`) after validating the URL:
+
+```javascript
+import { openInUserBrowser } from 'browser-commander';
+
+await openInUserBrowser('https://github.com/login/device');
+```
+
+Only a browser-safe scheme set is accepted (`http:`, `https:`, `file:`, `ftp:`,
+`about:`, `chrome:`, `edge:`, `view-source:`); `validateOpenUrl()` and
+`buildOpenCommand()` are exported for callers that want to validate or build the
+command separately.
 
 ### saveStorageState(page, filePath)
 

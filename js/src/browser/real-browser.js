@@ -7,6 +7,7 @@ import {
   detectAutomationControlledTriggers,
 } from '../fingerprint/automation-parity.js';
 import { connectBrowser } from './connector.js';
+import { migrateProfile } from './migration/index.js';
 import {
   assertFixedDebuggingPort,
   classifyDevToolsOwnership,
@@ -324,8 +325,9 @@ function createCloser({
  * @param {number} [options.startupTimeout=30000] - CDP readiness timeout in milliseconds
  * @param {number} [options.closeTimeout=5000] - How long close() waits before killing the process
  * @param {Object[]} [options.seedCookies] - Cookies to seed after connecting
+ * @param {{browser: string, profile?: string, userDataDir?: string, include?: string[], domains?: string[]}} [options.migrateFrom] - Migrate a real browser profile into the dedicated profile before launch; on-disk data is written before the browser starts and cookies are seeded over CDP after connecting
  * @param {boolean} [options.verbose=false] - Show browser and connection logs
- * @returns {Promise<{browser: Object, page: Object, downloads: Object|null, close: () => Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: string[]}>} Connected handles and process metadata
+ * @returns {Promise<{browser: Object, page: Object, downloads: Object|null, close: () => Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: string[], migration?: Object}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given)
  */
 export async function launchAndConnectRealBrowser(options = {}) {
   return await launchAndConnectRealBrowserWithDependencies(options);
@@ -427,6 +429,47 @@ function browserEnvironment(restrictions, env) {
 }
 
 /** Dependency-injected implementation used by the public helper and tests. */
+/**
+ * Migrate a real browser profile into the dedicated profile before launch.
+ *
+ * On-disk data classes (bookmarks, history, passwords, preferences,
+ * extensions) must be in place before the browser starts, so this runs before
+ * the process is spawned. Cookies are returned instead of written because a
+ * running Chromium re-derives its own encryption; the caller seeds them over
+ * CDP after connecting. On failure a freshly created temporary profile is
+ * removed before the error propagates.
+ *
+ * @returns {Promise<{migration: Object|undefined, migratedCookies: Object[]}>}
+ */
+async function runPreLaunchMigration({
+  migrateFrom,
+  userDataDir,
+  channel,
+  temporaryProfile,
+  migrate,
+}) {
+  if (!migrateFrom) {
+    return { migration: undefined, migratedCookies: [] };
+  }
+  const { include, domains, ...from } = migrateFrom;
+  try {
+    const report = await migrate({
+      from,
+      to: path.join(userDataDir, 'Default'),
+      include,
+      domains,
+      targetBrowser: channel,
+    });
+    const { cookies, ...migration } = report;
+    return { migration, migratedCookies: cookies ?? [] };
+  } catch (error) {
+    if (temporaryProfile) {
+      await removeUserDataDir(userDataDir);
+    }
+    throw error;
+  }
+}
+
 export async function launchAndConnectRealBrowserWithDependencies(
   options = {},
   dependencies = {}
@@ -450,6 +493,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
     verbose = false,
     cdpEndpoint,
     wsEndpoint,
+    migrateFrom,
     ...connectionOptions
   } = options;
   const argOptions = {
@@ -478,6 +522,14 @@ export async function launchAndConnectRealBrowserWithDependencies(
     ? await createTemporaryUserDataDir()
     : await prepareUserDataDir(requestedUserDataDir);
   const childEnv = browserEnvironment(restrictions, env);
+
+  const { migration, migratedCookies } = await runPreLaunchMigration({
+    migrateFrom,
+    userDataDir,
+    channel,
+    temporaryProfile,
+    migrate: dependencies.migrateProfile ?? migrateProfile,
+  });
 
   let launched;
   try {
@@ -509,10 +561,15 @@ export async function launchAndConnectRealBrowserWithDependencies(
 
   try {
     const connect = dependencies.connect ?? connectBrowser;
+    const seedCookies =
+      migratedCookies.length > 0
+        ? [...(connectionOptions.seedCookies ?? []), ...migratedCookies]
+        : connectionOptions.seedCookies;
     const connection = await connect({
       engine,
       cdpEndpoint: resolvedCdpEndpoint,
       ...connectionOptions,
+      seedCookies,
       verbose,
     });
     const close = createCloser({
@@ -533,6 +590,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       userDataDir,
       temporaryProfile,
       args: launched.browserArgs,
+      ...(migration ? { migration } : {}),
     };
   } catch (error) {
     if (browserProcess.exitCode === null) {

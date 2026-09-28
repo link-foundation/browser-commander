@@ -79,6 +79,34 @@ TTL window. Cache directories/files use `0700`/`0600` modes on POSIX; on
 Windows they remove inherited ACL entries and grant access only to the current
 user.
 
+## Profile Migration and No-Automation Open
+
+The default real-browser launch is clean, so a Google sign-in probe reaches
+"Couldn't find your Google Account" instead of "This browser or app may not be
+secure". Migration from the user's main profile is opt-in and strictly
+read-only on the source (SQLite copied through the Online Backup API), and a
+no-automation `openInUserBrowser()` mode shows a URL in the user's own browser.
+
+| Capability                                                       | JavaScript                            | Rust         | Python       |
+| ---------------------------------------------------------------- | ------------------------------------- | ------------ | ------------ |
+| Clean default launch passes the Google sign-in probe             | Supported                             | Supported    | Supported    |
+| Opt-in `launchRealBrowser({ migrateFrom })` before launch        | Supported                             | Planned      | Planned      |
+| `migrateProfile()` read-only migration report                    | Supported                             | Planned      | Planned      |
+| Cookies (Playwright shape, DBSC-bound Google cookies reported)   | Supported                             | Planned      | Planned      |
+| Bookmarks (`Bookmarks` JSON copied verbatim)                     | Supported                             | Planned      | Planned      |
+| History / Top Sites (SQLite Online Backup snapshot)              | Supported                             | Planned      | Planned      |
+| Passwords (`Login Data`, re-encrypted with the target key)       | Supported                             | Planned      | Planned      |
+| Preferences subset (language, search engine, theme)              | Supported                             | Planned      | Planned      |
+| Extensions (unpacked copy; MAC will not validate, reported)      | Supported                             | Planned      | Planned      |
+| Firefox path (`cookies.sqlite`, `places.sqlite`, NSS `key4.db`)  | Supported                             | Planned      | Planned      |
+| macOS / Linux / Windows key handling with per-class fixtures     | Supported                             | Planned      | Planned      |
+| No-automation `openInUserBrowser(url)`                           | Supported                             | Planned      | Planned      |
+
+Windows app-bound `v20` passwords/cookies are reported `app-bound-v20`, and
+migrated extensions are reported `mac-will-not-validate` because Chromium's
+`Secure Preferences` MAC cannot be forged externally. Rust and Python track the
+same API surface under umbrella #105.
+
 ## Truthful Click Results and Readiness
 
 A click reports what was observed, not what was attempted (issue #89). `status`

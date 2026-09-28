@@ -268,6 +268,88 @@ describe('launchAndConnectRealBrowser', () => {
     await access(path.join(temporaryDirectory, 'First Run'));
   });
 
+  it('migrates a profile before launch and seeds the migrated cookies', async () => {
+    temporaryDirectory = await mkdtemp(
+      path.join(os.tmpdir(), 'browser-commander-real-browser-test-')
+    );
+    const calls = [];
+    const browserProcess = fakeProcess(calls);
+    let connectOptions;
+    let migrateOptions;
+
+    const result = await launchAndConnectRealBrowserWithDependencies(
+      {
+        engine: 'puppeteer',
+        channel: 'chrome',
+        userDataDir: temporaryDirectory,
+        seedCookies: [{ name: 'existing', value: 'keep' }],
+        migrateFrom: {
+          browser: 'chrome',
+          profile: 'Default',
+          include: ['cookies', 'bookmarks'],
+          domains: ['google.com'],
+        },
+      },
+      {
+        resolveExecutable: async () => '/opt/google/chrome',
+        reservePort: async () => 9445,
+        spawnBrowser: () => browserProcess,
+        waitForEndpoint: async () => 'http://127.0.0.1:9445',
+        connect: async (options) => {
+          connectOptions = options;
+          return { browser: {}, page: {} };
+        },
+        migrateProfile: async (options) => {
+          migrateOptions = options;
+          return {
+            source: {
+              browser: 'chrome',
+              profile: 'Default',
+              userDataDir: null,
+            },
+            target: options.to,
+            migrated: {
+              cookies: 1,
+              bookmarks: 2,
+              history: 0,
+              passwords: 0,
+              preferences: 0,
+              extensions: 0,
+            },
+            skipped: [],
+            warnings: [],
+            cookies: [
+              { name: 'SID', value: 'migrated', domain: '.google.com' },
+            ],
+          };
+        },
+      }
+    );
+
+    // Migration runs before launch, targeting the Default profile directory,
+    // and receives the launching channel as the target browser for key
+    // derivation.
+    assert.equal(migrateOptions.to, path.join(temporaryDirectory, 'Default'));
+    assert.equal(migrateOptions.targetBrowser, 'chrome');
+    assert.deepEqual(migrateOptions.include, ['cookies', 'bookmarks']);
+    assert.deepEqual(migrateOptions.domains, ['google.com']);
+    assert.deepEqual(migrateOptions.from, {
+      browser: 'chrome',
+      profile: 'Default',
+    });
+
+    // Migrated cookies are appended to any explicit seedCookies.
+    assert.deepEqual(connectOptions.seedCookies, [
+      { name: 'existing', value: 'keep' },
+      { name: 'SID', value: 'migrated', domain: '.google.com' },
+    ]);
+
+    // The session exposes the report without the bulky raw cookie array.
+    assert.equal(result.migration.migrated.bookmarks, 2);
+    assert.equal(result.migration.migrated.cookies, 1);
+    assert.equal(result.migration.cookies, undefined);
+  });
+
   it('retries with a new reserved port after a port race', async () => {
     const calls = [];
     const ports = [40001, 40002];

@@ -10,7 +10,7 @@ This matrix tracks the shared API surface across the maintained language impleme
 | Puppeteer     | Supported through the official Node.js package | Bridge through Node.js  | Puppeteer documents itself as a JavaScript library for driving Chrome/Firefox over CDP or WebDriver BiDi.                                            |
 | Chromiumoxide | Not applicable                                 | Native Rust             | Rust CDP backend.                                                                                                                                    |
 | Fantoccini    | Not applicable                                 | Engine type preserved   | Managed launch is not implemented; keep the variant for compatibility and future WebDriver support.                                                  |
-| Selenium      | Not applicable                                 | Not implemented in Rust | Python-specific backend today.                                                                                                                       |
+| Selenium      | Supported through `selenium-webdriver` (#104)  | Not implemented in Rust | JavaScript drives chromedriver/geckodriver over W3C WebDriver, with WebDriver BiDi for events. See [WebDriver Engine](#webdriver-engine).            |
 
 ## API Matrix
 
@@ -281,6 +281,93 @@ debugging on its default profile.
 it cannot change that process's command line. Start an externally managed
 browser with a dedicated profile and a fixed `--remote-debugging-port`, or
 let `launchBrowser()` start it for you.
+
+## WebDriver Engine
+
+The JavaScript `selenium` engine (issue #104) drives a browser through
+`selenium-webdriver`, an optional peer dependency. `makeBrowserCommander()`
+detects a selenium `WebDriver` (or the `WebDriverPage` facade wrapping one) and
+runs every commander operation through it. `launchWebDriver()` starts the
+driver server itself; `connectWebDriver()` opens a session on a server that is
+already running (a Selenium Grid, a cloud provider).
+
+| Capability                                 | Chrome (chromedriver)                                     | Firefox (geckodriver)                     |
+| ------------------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
+| Driver lookup                              | `driverPath`, then `PATH`, then Selenium Manager          | Same                                      |
+| Driver server                              | Reserved loopback port, `/status` readiness probe         | Same                                      |
+| Profile                                    | Fresh temporary `--user-data-dir`, deleted on close       | Fresh temporary `-profile`, same lifetime |
+| Navigate / URL / title / content           | Classic WebDriver                                         | Classic WebDriver                         |
+| Query / count / visibility / text / values | Classic WebDriver + Execute Script                        | Same                                      |
+| Click / fill / type                        | Element Click / Element Clear / Element Send Keys         | Same                                      |
+| Keyboard and mouse                         | Perform Actions                                           | Same                                      |
+| Evaluate JavaScript                        | Execute Script                                            | Same                                      |
+| Screenshot                                 | Take Screenshot; `fullPage` needs BiDi                    | Same                                      |
+| PDF                                        | Print Page (`webdriver-print-options` limits the options) | Same                                      |
+| Cookies                                    | Get/Add/Delete Cookie                                     | Same                                      |
+| Console, dialog, request and frame events  | BiDi only (`bidi: true`)                                  | BiDi only                                 |
+| Init scripts (`evaluateOnNewDocument`)     | BiDi `script.addPreloadScript`                            | Same                                      |
+| Launch restrictions                        | Supported                                                 | Refused: they are Chrome switches         |
+| Media emulation, fingerprint, downloads    | Refused (`webdriver-no-cdp-emulation`)                    | Refused                                   |
+| End-to-end coverage                        | `js/tests/e2e/webdriver.e2e.test.js`                      | Same file; skipped without Firefox        |
+
+### What chromedriver adds, and what `launchWebDriver()` keeps
+
+Left alone, chromedriver starts Chrome with 20 switches of its own (measured
+with Chrome and chromedriver 153 by
+`experiments/issue-104/webdriver-automation-flags.mjs`):
+
+```
+--allow-pre-commit-input --disable-background-networking
+--disable-background-timer-throttling --disable-backgrounding-occluded-windows
+--disable-client-side-phishing-detection --disable-default-apps
+--disable-features=IgnoreDuplicateNavs,Prewarm --disable-hang-monitor
+--disable-popup-blocking --disable-prompt-on-repost --disable-sync
+--enable-automation --enable-logging --log-level=0 --no-first-run
+--no-service-autorun --password-store=basic --remote-debugging-port=0
+--test-type=webdriver --use-mock-keychain
+```
+
+`launchWebDriver()` lists all 19 named switches in `excludeSwitches`
+(`CHROMEDRIVER_DEFAULT_SWITCHES`) and passes the same command line as the
+real-browser launch: `--user-data-dir=<temporary profile>
+--remote-debugging-port=<reserved loopback port>`, plus `--headless=new` and
+any restrictions or `args` the caller asked for. chromedriver then adds nothing,
+because it only supplies a debugging port when none is given.
+
+`navigator.webdriver` measured in each configuration:
+
+| chromedriver configuration                                        | Headful | Headless |
+| ----------------------------------------------------------------- | ------- | -------- |
+| chromedriver defaults                                             | `true`  | `true`   |
+| `excludeSwitches: ['enable-automation']`                          | `true`  | `true`   |
+| `--disable-blink-features=AutomationControlled`                   | `false` | `false`  |
+| `excludeSwitches: ['enable-automation']` + a fixed debugging port | `false` | `false`  |
+| All 19 switches excluded + a fixed debugging port                 | `false` | `false`  |
+| `launchWebDriver()` (with and without `bidi: true`)               | `false` | `false`  |
+
+Excluding `enable-automation` is not enough on its own: chromedriver's
+`--remote-debugging-port=0` turns Blink's `AutomationControlled` feature on as
+well. `--disable-blink-features=AutomationControlled` also hides the flag, but
+headful Chrome then shows its unsupported-command-line-flag infobar, so
+`launchWebDriver()` relies on the fixed port instead and adds that switch only
+for `--headless=new` while `automationParity` is on (the same rule as the
+real-browser launch). The limitation `webdriver-driver-launch-switches`
+records this for sessions Browser Commander did not start.
+
+Gaps that stay open, each an entry in `limitations.json`:
+
+- `webdriver-no-cdp-emulation`: WebDriver has no media emulation command, no
+  CDP session for fingerprint overrides and no download events, so
+  `emulateMedia()`, fingerprint application and managed downloads throw on the
+  selenium engine instead of pretending.
+- `webdriver-classic-has-no-events`: without `bidi: true` nothing tells the
+  client a console message was logged, a dialog opened or a request went out.
+  `page.on()` listeners stay silent (the commander's own trackers attach them
+  on every engine), while the explicit BiDi helpers - `adapter.onConsoleMessage()`,
+  `adapter.onNavigation()`, `adapter.navigate()`, `evaluateOnNewDocument()` and
+  full-page screenshots - throw an error naming the `bidi` option.
+- `webdriver-print-options`: Print Page has no header/footer templates or
+  `preferCSSPageSize`; those options are refused rather than dropped.
 
 ## Compatibility Notes
 

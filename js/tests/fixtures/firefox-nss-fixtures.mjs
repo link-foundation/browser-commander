@@ -74,6 +74,7 @@ function derInteger(number) {
   return derElement(0x02, Buffer.from(bytes));
 }
 
+// Mirrors the NSS key4.db scheme so fixtures decrypt like a real profile.
 function pbes2Key(globalSalt, entrySalt, iterations, primaryPassword) {
   const passwordHash = createHash('sha1')
     .update(Buffer.concat([globalSalt, primaryPassword]))

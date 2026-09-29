@@ -93,6 +93,9 @@ function decryptPbes2(
   const keyLength = integerValue(params[2]);
   const [, ivElement] = derChildren(encryptionScheme);
 
+  // This is not password storage: key4.db fixes the scheme as
+  // PBKDF2(SHA-1(globalSalt + primaryPassword)), and reading the profile
+  // Firefox wrote requires reproducing it byte for byte.
   const passwordHash = createHash('sha1')
     .update(Buffer.concat([globalSalt, primaryPassword]))
     .digest();
@@ -136,7 +139,8 @@ function decryptPbeSha1Triple3Des(
 
   // NSS's SHA1-based PKCS#12 KDF for pbeWithSha1AndTripleDES-CBC. The entry
   // salt is right-padded with zeros to 20 bytes, and the 3DES key and IV are
-  // derived through three chained HMAC-SHA1 rounds.
+  // derived through three chained HMAC-SHA1 rounds. The format is fixed by
+  // NSS, so the SHA-1 password hash cannot be swapped for a slower one.
   const hp = createHash('sha1')
     .update(Buffer.concat([globalSalt, primaryPassword]))
     .digest();

@@ -357,17 +357,22 @@ describe(
 
         // Use click which auto-scrolls
         let alertHandled = false;
-        page.on('dialog', async (dialog) => {
+        const onDialog = async (dialog) => {
           alertHandled = true;
           await dialog.accept();
-        });
+        };
+        commander.onDialog(onDialog);
 
-        await commander.click({
-          selector: '[data-testid="scroll-target-button"]',
-        });
-        await commander.wait({ ms: 100 });
+        try {
+          await commander.click({
+            selector: '[data-testid="scroll-target-button"]',
+          });
+          await commander.wait({ ms: 100 });
 
-        assert.strictEqual(alertHandled, true);
+          assert.strictEqual(alertHandled, true);
+        } finally {
+          commander.offDialog(onDialog);
+        }
       });
     });
 

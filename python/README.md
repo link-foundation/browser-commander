@@ -177,7 +177,9 @@ result = await launch_browser(
     LaunchOptions(engine="playwright", storage_state="./session-state.json")
 )
 # After navigating and signing in, save the session for a later launch.
-await save_storage_state("playwright", result.browser, result.page, "./session-state.json")
+await save_storage_state(
+    "playwright", result.browser, result.page, "./session-state.json"
+)
 ```
 
 Selenium saves cookies and localStorage for the current page origin. Playwright

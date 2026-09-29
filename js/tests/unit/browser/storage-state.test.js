@@ -22,7 +22,6 @@ describe('browser storage state', () => {
     }
   });
 
-  // feature-parity: storage.portable@native-typed
   it('loads storage state from a path and accepts an object unchanged', async () => {
     temporaryDirectory = await mkdtemp(
       path.join(os.tmpdir(), 'browser-commander-storage-state-')
@@ -147,3 +146,5 @@ describe('browser storage state', () => {
     assert.deepEqual(JSON.parse(await readFile(filePath, 'utf8')), state);
   });
 });
+
+// feature-parity: storage.portable@native-typed

@@ -32,7 +32,7 @@ use crate::browser::connector::{connect_browser, ConnectOptions};
 use crate::browser::debugging_port::{
     assert_fixed_debugging_port, reserve_loopback_port, DevToolsOutputWatcher, PortRaceError,
 };
-use crate::browser::launcher::{Browser, LaunchResult};
+use crate::browser::launcher::Browser;
 use crate::browser::migration::{
     migrate_profile, MigrateProfileOptions, MigrationSource, MigrationSummary,
 };
@@ -416,9 +416,9 @@ impl RealBrowserOptions {
 
 /// Browser/page handles plus metadata for the spawned installed browser.
 pub struct RealBrowserLaunchResult {
-    /// Browser metadata matching [`LaunchResult`].
+    /// Browser metadata matching [`crate::browser::launcher::LaunchResult`].
     pub browser: Browser,
-    /// Shared engine adapter matching [`LaunchResult`].
+    /// Shared engine adapter matching [`crate::browser::launcher::LaunchResult`].
     pub page: Arc<dyn EngineAdapter>,
     /// Resolved loopback DevTools endpoint.
     pub cdp_endpoint: String,
@@ -970,41 +970,16 @@ pub async fn launch_real_browser(options: RealBrowserOptions) -> Result<RealBrow
     Ok(real_browser_result(connection, launched, options.headless))
 }
 
-pub(crate) fn real_browser_result(
-    connection: LaunchResult,
-    launched: LaunchedRealBrowser,
-    headless: bool,
-) -> RealBrowserLaunchResult {
-    let LaunchResult {
-        mut browser,
-        page,
-        downloads,
-        ..
-    } = connection;
-    browser.user_data_dir = launched.user_data_dir.clone();
-    browser.headless = headless;
-    RealBrowserLaunchResult {
-        browser,
-        page,
-        cdp_endpoint: launched.cdp_endpoint,
-        remote_debugging_port: launched.remote_debugging_port,
-        executable_path: launched.executable_path,
-        user_data_dir: launched.user_data_dir,
-        temporary_profile: launched.temporary_profile,
-        args: launched.args,
-        browser_process: launched.browser_process,
-        downloads,
-        migration: launched.migration,
-        closer: launched.closer,
-    }
-}
-
 /// Descriptive alias for [`launch_real_browser`].
 pub async fn launch_and_connect_real_browser(
     options: RealBrowserOptions,
 ) -> Result<RealBrowserLaunchResult> {
     launch_real_browser(options).await
 }
+
+#[path = "real_browser_result.rs"]
+mod result;
+use result::real_browser_result;
 
 #[cfg(test)]
 #[path = "real_browser_tests.rs"]

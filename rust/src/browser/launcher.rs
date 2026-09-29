@@ -22,6 +22,7 @@ use crate::browser::launch_executable::DefaultLaunchHooks;
 use crate::browser::media::ColorScheme;
 use crate::browser::real_browser::{launch_real_browser_with, RealBrowserOptions};
 use crate::browser::restrictions::{merge_feature_switches, resolve_restrictions};
+use crate::browser::storage_state::StorageStateInput;
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::{normalize_download_options, supported_engine};
 use crate::downloads::{DownloadManager, DownloadSetting};
@@ -93,6 +94,8 @@ pub struct LaunchOptions {
     pub preferences: Value,
     /// Preferences merged into Local State before launch.
     pub local_state: Value,
+    /// Playwright-compatible cookie and localStorage state to restore.
+    pub storage_state: Option<StorageStateInput>,
     /// Run in headless mode.
     pub headless: bool,
     /// Slow down operations by this many milliseconds (default 0).
@@ -167,6 +170,7 @@ impl Default for LaunchOptions {
             first_run: false,
             preferences: serde_json::json!({}),
             local_state: serde_json::json!({}),
+            storage_state: None,
             headless: false,
             slow_mo: 0,
             verbose: false,
@@ -195,6 +199,12 @@ impl LaunchOptions {
     /// Set the browser automation engine.
     pub fn engine(mut self, engine: EngineType) -> Self {
         self.engine = engine;
+        self
+    }
+
+    /// Restore portable session state before the first caller navigation.
+    pub fn storage_state(mut self, state: impl Into<StorageStateInput>) -> Self {
+        self.storage_state = Some(state.into());
         self
     }
 
@@ -454,6 +464,7 @@ impl LaunchOptions {
             first_run: self.first_run,
             preferences: self.preferences.clone(),
             local_state: self.local_state.clone(),
+            storage_state: self.storage_state.clone(),
             remote_debugging_port: self.remote_debugging_port,
             headless: self.headless,
             restrictions: self.restrictions.clone(),
@@ -618,6 +629,9 @@ pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyh
     }
     // Validate before anything is started or written to disk.
     options.all_chrome_args()?;
+    if let Some(state) = &options.storage_state {
+        state.load()?;
+    }
     refuse_unappliable_fingerprint(options.engine, options.fingerprint.as_ref())?;
     // The node bridge has no CDP route, so a managed download would never be
     // seen and every capture would time out.

@@ -26,6 +26,7 @@ pub mod profile_directory;
 pub mod raw_cdp;
 pub mod real_browser;
 pub mod restrictions;
+pub mod storage_state;
 pub mod system_browser;
 
 pub use browser_cookie_cache::clear_browser_cookie_memory_cache;
@@ -65,6 +66,9 @@ pub use restrictions::{
     launch_restriction_preset, launch_restriction_presets, launch_restrictions,
     merge_feature_switches, resolve_restrictions, LaunchRestriction, ResolvedRestrictions,
     LAUNCH_RESTRICTIONS_SOURCE,
+};
+pub use storage_state::{
+    save_storage_state, StorageEntry, StorageOrigin, StorageState, StorageStateInput,
 };
 pub use system_browser::{
     assert_dedicated_user_data_dir, default_real_browser_user_data_dir,

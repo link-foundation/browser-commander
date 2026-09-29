@@ -41,6 +41,7 @@ use crate::browser::profile_directory::{
     prepare_user_data_dir_with_first_run, remove_user_data_dir,
 };
 use crate::browser::restrictions::{merge_feature_switches, resolve_restrictions};
+use crate::browser::storage_state::StorageStateInput;
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::{DownloadManager, DownloadSetting};
 use crate::fingerprint::automation_parity::{
@@ -92,6 +93,8 @@ pub struct RealBrowserOptions {
     pub preferences: Value,
     /// JSON object deep-merged into Local State before launch.
     pub local_state: Value,
+    /// Playwright-compatible cookie and localStorage state to restore.
+    pub storage_state: Option<StorageStateInput>,
     /// Fixed loopback CDP port. When `None` a free port is reserved (and a
     /// lost port race retried). Zero is refused: it makes Chrome enable
     /// `AutomationControlled`.
@@ -167,6 +170,7 @@ impl Default for RealBrowserOptions {
             first_run: false,
             preferences: serde_json::json!({}),
             local_state: serde_json::json!({}),
+            storage_state: None,
             remote_debugging_port: None,
             port_attempts: DEFAULT_PORT_ATTEMPTS,
             headless: false,
@@ -233,7 +237,11 @@ impl RealBrowserOptions {
         self.user_data_dir = Some(user_data_dir.into());
         self
     }
-
+    /// Restore portable cookies and origin-scoped localStorage after connecting.
+    pub fn storage_state(mut self, state: impl Into<StorageStateInput>) -> Self {
+        self.storage_state = Some(state.into());
+        self
+    }
     /// Use a fixed loopback CDP port instead of a reserved one. Zero is
     /// refused at launch.
     pub fn remote_debugging_port(mut self, port: u16) -> Self {
@@ -598,6 +606,7 @@ pub(crate) fn connection_options(
     connection.timeout = options.timeout;
     connection.protocol_timeout = options.protocol_timeout;
     connection.seed_cookies = options.seed_cookies.clone();
+    connection.storage_state = options.storage_state.clone();
     connection.verbose = options.verbose;
     connection.node_executable = options.node_executable.clone();
     connection.node_working_dir = options.node_working_dir.clone();
@@ -828,6 +837,9 @@ where
     F: Future<Output = Result<T>>,
 {
     validate_launch_request(options)?;
+    if let Some(state) = &options.storage_state {
+        state.load()?;
+    }
     let executable_path = hooks.resolve_executable(options)?;
     let temporary_profile = options.user_data_dir.is_none();
     let user_data_dir = match &options.user_data_dir {

@@ -13,7 +13,8 @@ use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::launcher::{Browser, LaunchResult};
 use crate::browser::media::ColorScheme;
 use crate::browser::node_bridge::NodeBridgePage;
-use crate::core::engine::EngineType;
+use crate::browser::storage_state::{StorageState, StorageStateInput};
+use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::{attach_downloads, DownloadSetting};
 use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
 use crate::fingerprint::profile::FingerprintProfile;
@@ -35,6 +36,8 @@ pub struct ConnectOptions {
     pub protocol_timeout: Option<Duration>,
     /// Cookies to seed after attaching, in CDP/Playwright cookie format.
     pub seed_cookies: Vec<Value>,
+    /// Playwright-compatible cookies and origin-scoped localStorage to restore.
+    pub storage_state: Option<StorageStateInput>,
     /// Enable verbose bridge logging.
     pub verbose: bool,
     /// Node.js executable for Playwright/Puppeteer bridge engines.
@@ -60,6 +63,7 @@ impl Default for ConnectOptions {
             timeout: None,
             protocol_timeout: None,
             seed_cookies: Vec::new(),
+            storage_state: None,
             verbose: false,
             node_executable: None,
             node_working_dir: None,
@@ -123,6 +127,12 @@ impl ConnectOptions {
     /// Seed cookies immediately after the connection is established.
     pub fn seed_cookies(mut self, cookies: Vec<Value>) -> Self {
         self.seed_cookies = cookies;
+        self
+    }
+
+    /// Restore portable state before returning the connected page.
+    pub fn storage_state(mut self, state: impl Into<StorageStateInput>) -> Self {
+        self.storage_state = Some(state.into());
         self
     }
 
@@ -213,16 +223,24 @@ pub(crate) async fn connect_browser_with(
     settings: AttachSettings<'_>,
 ) -> Result<LaunchResult, anyhow::Error> {
     let endpoint = options.endpoint()?.to_string();
+    let storage_state = options
+        .storage_state
+        .as_ref()
+        .map(StorageStateInput::load)
+        .transpose()?;
     refuse_unappliable_fingerprint(options.engine, settings.fingerprint)?;
     if options.verbose {
         tracing::info!(engine = %options.engine, %endpoint, "connecting to browser");
     }
 
     match options.engine {
-        EngineType::Chromiumoxide => connect_chromiumoxide(options, endpoint, settings).await,
+        EngineType::Chromiumoxide => {
+            connect_chromiumoxide(options, endpoint, settings, storage_state).await
+        }
         EngineType::Playwright | EngineType::Puppeteer => {
             let engine = options.engine;
             let timeout = options.timeout;
+            let seed_cookies = options.seed_cookies.clone();
             // Refused before the connection is made, for the same reason the
             // launcher refuses it: the bridge has no CDP route, so a manager
             // here would watch a directory the browser never writes into.
@@ -238,6 +256,14 @@ pub(crate) async fn connect_browser_with(
             } else {
                 connection.await?
             };
+            if let Some(mut state) = storage_state {
+                state.cookies.extend(seed_cookies);
+                let value = serde_json::to_value(state)?;
+                if let Err(error) = page.restore_storage_state(value).await {
+                    let _ = page.close().await;
+                    return Err(error.into());
+                }
+            }
             Ok(LaunchResult::attached(
                 Browser {
                     engine,
@@ -258,6 +284,7 @@ async fn connect_chromiumoxide(
     options: ConnectOptions,
     endpoint: String,
     settings: AttachSettings<'_>,
+    storage_state: Option<StorageState>,
 ) -> Result<LaunchResult, anyhow::Error> {
     let connection = CdpBrowser::connect(endpoint);
     let (browser, mut handler) = if let Some(timeout) = options.timeout {
@@ -293,6 +320,17 @@ async fn connect_chromiumoxide(
     };
     let engine = options.engine;
     let adapter = ChromiumoxidePage::new(page, browser, handler_task, PathBuf::new());
+
+    if let Some(mut state) = storage_state {
+        state.cookies.extend(options.seed_cookies.clone());
+        if let Err(error) = adapter
+            .restore_storage_state(serde_json::to_value(state)?)
+            .await
+        {
+            let _ = adapter.close().await;
+            return Err(error.into());
+        }
+    }
 
     // A failure here is fatal rather than best-effort: a half-applied profile
     // describes a machine that does not exist, which is louder than none.

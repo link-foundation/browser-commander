@@ -106,6 +106,21 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
         }
     };
 
+    if let Some(input) = &options.storage_state {
+        let state = input.load()?;
+        if let Err(error) = browser
+            .page()
+            .restore_storage_state(serde_json::to_value(state)?)
+            .await
+        {
+            browser.close().await;
+            if temporary_profile {
+                let _ = remove_user_data_dir(&user_data_dir).await;
+            }
+            return Err(error.into());
+        }
+    }
+
     let page = browser.page();
     let closer = Arc::new(EngineCloser {
         browser,

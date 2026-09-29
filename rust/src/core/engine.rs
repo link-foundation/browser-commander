@@ -284,6 +284,22 @@ pub trait EngineAdapter: Send + Sync {
     /// Evaluate JavaScript in the page context.
     async fn evaluate(&self, script: &str) -> Result<serde_json::Value, EngineError>;
 
+    /// Restore portable cookies and origin-scoped localStorage before navigation.
+    async fn restore_storage_state(&self, _state: serde_json::Value) -> Result<(), EngineError> {
+        Err(EngineError::Browser(format!(
+            "portable storage state is unavailable for the {} engine",
+            self.engine_type()
+        )))
+    }
+
+    /// Export portable cookies and the current page's localStorage.
+    async fn export_storage_state(&self) -> Result<serde_json::Value, EngineError> {
+        Err(EngineError::Browser(format!(
+            "portable storage state is unavailable for the {} engine",
+            self.engine_type()
+        )))
+    }
+
     /// Take a screenshot.
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError>;
 

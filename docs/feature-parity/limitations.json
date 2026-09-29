@@ -19,12 +19,6 @@
     "reason": "The native packages do not yet host the authenticated extension relay or install and manage its browser extension. The shared JavaScript CLI exposes the extension attach command."
   },
   {
-    "id": "rust-portable-state",
-    "features": ["storage.portable"],
-    "languages": ["rust"],
-    "reason": "The Rust Chromiumoxide and bridge adapters do not yet implement import and export of Playwright-compatible cookie and origin-scoped localStorage state."
-  },
-  {
     "id": "rust-measure-parity",
     "features": ["parity.measure"],
     "languages": ["rust"],

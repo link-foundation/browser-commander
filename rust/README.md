@@ -148,6 +148,36 @@ let chromiumoxide = LaunchOptions::chromiumoxide()
     .headless(true);
 ```
 
+### Portable session state
+
+Export cookies and the current page origin's localStorage in Playwright's
+`cookies`/`origins` format. The same JSON file can be restored by the
+Chromiumoxide, Playwright, and Puppeteer engines before the first caller
+navigation, in either real or engine launch mode:
+
+```rust
+use browser_commander::{launch_browser, save_storage_state, LaunchOptions};
+use std::path::Path;
+
+let first = launch_browser(LaunchOptions::chromiumoxide().headless(true)).await?;
+first.page.goto("https://example.com").await?;
+save_storage_state(first.page.as_ref(), Some(Path::new("session.json"))).await?;
+first.close().await?;
+
+let next = launch_browser(
+    LaunchOptions::playwright()
+        .headless(true)
+        .storage_state(Path::new("session.json")),
+).await?;
+next.page.goto("https://example.com").await?;
+```
+
+`ConnectOptions::storage_state(...)` restores the same format when attaching
+to a running browser. `save_storage_state(page, None)` returns a typed
+`StorageState` without writing a file. Chromiumoxide and Puppeteer capture
+localStorage for the current page origin; Playwright captures every visited
+origin in its context.
+
 You can also set a custom Node executable:
 
 ```rust

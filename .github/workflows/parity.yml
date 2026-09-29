@@ -33,6 +33,7 @@ on:
       - 'tests/cli-contract/**'
       - 'python/src/**'
       - 'rust/src/**'
+      - 'rust/tests/storage_state_smoke.rs'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
 
@@ -245,6 +246,13 @@ jobs:
             exit 1
           }
           "$CHROME_PATH" --version
+
+      - name: Transfer Rust storage state across engines
+        working-directory: rust
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 600 "Rust storage state transfer" \
+            cargo test --locked --test storage_state_smoke -- --ignored --nocapture
 
       - name: Run CLI and API coverage suites under Xvfb
         shell: bash

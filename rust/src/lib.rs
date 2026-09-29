@@ -62,11 +62,12 @@ pub mod utilities;
 pub use browser::{
     build_real_browser_args, clear_browser_cookie_memory_cache, connect_browser, emulate_media,
     launch_and_connect_real_browser, launch_browser, launch_real_browser, launch_restrictions,
-    list_browser_profiles, read_browser_cookies, resolve_restrictions, Browser, BrowserCookie,
-    BrowserCookieReadOptions, BrowserProcess, BrowserProfile, BrowserProfileOptions,
+    list_browser_profiles, read_browser_cookies, resolve_restrictions, save_storage_state, Browser,
+    BrowserCookie, BrowserCookieReadOptions, BrowserProcess, BrowserProfile, BrowserProfileOptions,
     ChromiumoxidePage, ColorScheme, ConnectOptions, EmulateMediaOptions, LaunchMode, LaunchOptions,
     LaunchRestriction, LaunchResult, NodeBridgePage, RealBrowserLaunchResult, RealBrowserOptions,
-    LAUNCH_MODES, SUPPORTED_COOKIE_BROWSERS,
+    StorageEntry, StorageOrigin, StorageState, StorageStateInput, LAUNCH_MODES,
+    SUPPORTED_COOKIE_BROWSERS,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,

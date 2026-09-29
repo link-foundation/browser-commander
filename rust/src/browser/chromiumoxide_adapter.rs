@@ -16,6 +16,7 @@ use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 
 use crate::browser::media::ColorScheme;
+use crate::browser::storage_state::{restore_script, StorageState};
 use crate::core::engine::{ElementInfo, EngineAdapter, EngineError, EngineType, PdfOptions};
 
 /// A [`EngineAdapter`] that drives a Chromium browser through
@@ -360,6 +361,83 @@ impl EngineAdapter for ChromiumoxidePage {
 
     async fn evaluate(&self, script: &str) -> Result<serde_json::Value, EngineError> {
         eval_value(&self.page, script.to_string()).await
+    }
+
+    async fn restore_storage_state(&self, value: serde_json::Value) -> Result<(), EngineError> {
+        use chromiumoxide::cdp::browser_protocol::network::CookieParam;
+
+        let state: StorageState = serde_json::from_value(value).map_err(to_engine_error)?;
+        let cookies = state
+            .cookies
+            .iter()
+            .map(|cookie| {
+                let mut value = cookie.clone();
+                if value.get("expires").and_then(serde_json::Value::as_f64) == Some(-1.0) {
+                    value.as_object_mut().map(|cookie| cookie.remove("expires"));
+                }
+                serde_json::from_value::<CookieParam>(value).map_err(to_engine_error)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        if !cookies.is_empty() {
+            let browser = self.browser.lock().await;
+            let browser = browser
+                .as_ref()
+                .ok_or_else(|| EngineError::Browser("browser is closed".to_string()))?;
+            browser
+                .set_cookies(cookies)
+                .await
+                .map_err(to_engine_error)?;
+        }
+        if !state.origins.is_empty() {
+            let script = restore_script(&state).map_err(to_engine_error)?;
+            self.page
+                .evaluate_on_new_document(script.clone())
+                .await
+                .map_err(to_engine_error)?;
+            eval_value(&self.page, script).await?;
+        }
+        Ok(())
+    }
+
+    async fn export_storage_state(&self) -> Result<serde_json::Value, EngineError> {
+        let cookies = {
+            let browser = self.browser.lock().await;
+            let browser = browser
+                .as_ref()
+                .ok_or_else(|| EngineError::Browser("browser is closed".to_string()))?;
+            browser.get_cookies().await.map_err(to_engine_error)?
+        };
+        let cookies = cookies
+            .into_iter()
+            .map(|cookie| {
+                let value = serde_json::to_value(cookie).map_err(to_engine_error)?;
+                let mut result = serde_json::Map::new();
+                for key in [
+                    "name", "value", "domain", "path", "expires", "httpOnly", "secure", "sameSite",
+                ] {
+                    if let Some(value) = value.get(key) {
+                        result.insert(key.to_string(), value.clone());
+                    }
+                }
+                Ok(serde_json::Value::Object(result))
+            })
+            .collect::<Result<Vec<_>, EngineError>>()?;
+        let origin = eval_value(
+            &self.page,
+            "(() => { if (location.origin === 'null') return null; \
+             return { origin: location.origin, localStorage: \
+             Array.from({ length: localStorage.length }, (_, index) => { \
+             const name = localStorage.key(index); \
+             return { name, value: localStorage.getItem(name) }; }) }; })()"
+                .to_string(),
+        )
+        .await?;
+        let origins = if origin.is_null() {
+            vec![]
+        } else {
+            vec![origin]
+        };
+        Ok(serde_json::json!({ "cookies": cookies, "origins": origins }))
     }
 
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {

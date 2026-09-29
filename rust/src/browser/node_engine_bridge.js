@@ -242,6 +242,55 @@ async function applyColorScheme(colorScheme) {
   }
 }
 
+function restoreOriginLocalStorage(origins) {
+  const entry = origins.find(
+    (item) => item.origin === globalThis.location.origin,
+  );
+  if (!entry) return;
+  for (const item of entry.localStorage) {
+    globalThis.localStorage.setItem(item.name, item.value);
+  }
+}
+
+async function restoreStorageState(state) {
+  const cookies = state.cookies ?? [];
+  const origins = state.origins ?? [];
+  if (engineName === "playwright") {
+    if (cookies.length) await context.addCookies(cookies);
+    if (origins.length) {
+      await context.addInitScript(restoreOriginLocalStorage, origins);
+      await Promise.all(
+        context.pages().map((current) =>
+          current.evaluate(restoreOriginLocalStorage, origins),
+        ),
+      );
+    }
+  } else {
+    if (cookies.length) await page.setCookie(...cookies);
+    if (origins.length) {
+      await page.evaluateOnNewDocument(restoreOriginLocalStorage, origins);
+      await page.evaluate(restoreOriginLocalStorage, origins);
+    }
+  }
+}
+
+async function exportStorageState() {
+  if (engineName === "playwright") return context.storageState();
+  const cookies = await page.cookies();
+  const origin = new URL(page.url()).origin;
+  const origins = [];
+  if (origin !== "null") {
+    const localStorage = await page.evaluate(() =>
+      Array.from({ length: globalThis.localStorage.length }, (_, index) => {
+        const name = globalThis.localStorage.key(index);
+        return { name, value: globalThis.localStorage.getItem(name) };
+      }),
+    );
+    origins.push({ origin, localStorage });
+  }
+  return { cookies, origins };
+}
+
 async function handleLaunch(params) {
   engineName = params.engine;
   verbose = Boolean(params.verbose);
@@ -298,6 +347,11 @@ async function handleCommand(method, params) {
       return await handleLaunch(params);
     case "connect":
       return await handleConnect(params);
+    case "restoreStorageState":
+      await restoreStorageState(params.state);
+      return null;
+    case "exportStorageState":
+      return await exportStorageState();
     case "close":
       if (browser) {
         await browser.close();

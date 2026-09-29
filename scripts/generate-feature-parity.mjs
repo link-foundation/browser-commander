@@ -225,8 +225,11 @@ export function evaluate({
   return { sections, errors };
 }
 
-function escapeCell(text) {
-  return String(text).replace(/\|/gu, '\\|').replace(/\n/gu, ' ');
+export function escapeCell(value) {
+  return String(value)
+    .replaceAll('\\', '\\\\')
+    .replaceAll('|', '\\|')
+    .replaceAll('\n', ' ');
 }
 
 /** A Markdown table padded the way Prettier pads it, so the output is stable. */

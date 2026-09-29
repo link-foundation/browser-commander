@@ -453,7 +453,9 @@ def _pbes2_key(
 ) -> bytes:
     """Mirror the NSS key4.db scheme so fixtures decrypt like a real profile."""
 
-    # SHA-1 is the on-disk NSS format, not a password-hashing choice.
+    # This fixture mirrors Firefox's fixed NSS on-disk derivation:
+    # SHA-1(globalSalt + primaryPassword) is then fed to PBKDF2-HMAC-SHA256.
+    # A stronger hash here would make synthetic key4.db unlike a real one.
     password_hash = hashlib.sha1(global_salt + primary_password).digest()
     return PBKDF2HMAC(
         algorithm=hashes.SHA256(), length=32, salt=entry_salt, iterations=iterations
@@ -540,7 +542,12 @@ def build_key4_database(
 
 
 def _triple_des(key: bytes) -> Any:
-    """Return a TripleDES algorithm, wherever this ``cryptography`` keeps it."""
+    """Return Firefox's legacy login-field cipher for the test fixture.
+
+    Production only decrypts these fields, then re-encrypts for the target
+    profile. This fixture must write 3DES-CBC to match real ``logins.json``;
+    an AES fixture would not exercise NSS migration.
+    """
 
     try:
         module = importlib.import_module(

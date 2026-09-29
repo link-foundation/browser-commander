@@ -17,11 +17,20 @@ import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
+import { pathToFileURL } from 'node:url';
 
 import { repoPath } from '../../helpers/repo.js';
 
-const { BEGIN_MARKER, END_MARKER, generate, parseTags, renderTable } =
-  await import(repoPath('scripts/generate-feature-parity.mjs'));
+const {
+  BEGIN_MARKER,
+  END_MARKER,
+  escapeCell,
+  generate,
+  parseTags,
+  renderTable,
+} = await import(
+  pathToFileURL(repoPath('scripts/generate-feature-parity.mjs'))
+);
 
 const TAG = ['feature', 'parity:'].join('-');
 
@@ -75,9 +84,13 @@ describe('feature parity generator', () => {
     assert.deepEqual(parseTags(tag('//', 'a.b c-d')), ['a.b', 'c-d']);
     assert.deepEqual(parseTags(tag('  #', 'a.b,c.d')), ['a.b', 'c.d']);
     assert.deepEqual(parseTags(`const s = '${tag('//', 'a.b').trim()}';`), []);
-    assert.deepEqual(parseTags(tag('//', 'a.b').replace('\n', '\r\n')), [
+    assert.deepEqual(parseTags(tag('//', 'a.b').replaceAll('\n', '\r\n')), [
       'a.b',
     ]);
+  });
+
+  it('escapes both Markdown pipes and backslashes in feature names', () => {
+    assert.equal(escapeCell('a\\b|c\nx'), 'a\\\\b\\|c x');
   });
 
   it('pads tables so the output is stable under Prettier', () => {

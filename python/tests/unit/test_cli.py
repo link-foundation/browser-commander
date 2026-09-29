@@ -29,7 +29,7 @@ async def test_script_forwards_exact_arguments(monkeypatch: Any, capsys: Any) ->
     assert calls == [
         (
             "node",
-            ["/tmp/cli.js", "run", "script.json", "--engine", "playwright"],
+            [str(Path("/tmp/cli.js")), "run", "script.json", "--engine", "playwright"],
             {"check": False},
         )
     ]
@@ -54,7 +54,7 @@ async def test_stdio_bridge_inherits_input(monkeypatch: Any) -> None:
     assert calls == [
         (
             "node",
-            ["/tmp/cli.js", "serve", "--stdio"],
+            [str(Path("/tmp/cli.js")), "serve", "--stdio"],
             {"forward_output": True, "stdin_mode": "inherit"},
         )
     ]

@@ -91,7 +91,13 @@ def _password_hash(global_salt: bytes, primary_password: bytes) -> bytes:
 
 
 def _triple_des(key: bytes) -> Any:
-    """Return a TripleDES algorithm, wherever this cryptography keeps it."""
+    """Return Firefox's legacy login cipher, wherever cryptography keeps it.
+
+    This path only decrypts existing profile data. Migrated passwords are
+    re-encrypted with the target Chromium profile's current scheme. AES
+    cannot read Firefox's existing 3DES-CBC fields, so replacing 3DES here
+    would break read-only migration rather than improve stored data security.
+    """
 
     try:
         module = importlib.import_module(

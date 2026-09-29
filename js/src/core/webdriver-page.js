@@ -26,6 +26,7 @@ import {
   buildEvaluateScript,
   fromWebDriverCookie,
   toPrintOptions,
+  toScriptLiteral,
   toWebDriverChord,
   toWebDriverCookie,
   toWebDriverKey,
@@ -367,7 +368,7 @@ export class WebDriverPage extends EventEmitter {
   async evaluateOnNewDocument(pageFunction, ...args) {
     const source =
       typeof pageFunction === 'function'
-        ? `(${pageFunction.toString()})(...${JSON.stringify(args)})`
+        ? `(${pageFunction.toString()})(...${toScriptLiteral(args)})`
         : pageFunction;
     const result = await this.bidiCommand('script.addPreloadScript', {
       functionDeclaration: `() => { ${source}; }`,

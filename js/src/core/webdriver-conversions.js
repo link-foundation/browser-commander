@@ -128,8 +128,8 @@ export function toCentimetres(value) {
   if (typeof value === 'number') {
     return value * CM_PER_UNIT.px;
   }
-  const match = /^\s*(-?\d+(?:\.\d+)?)\s*(px|in|cm|mm)?\s*$/i.exec(
-    String(value)
+  const match = /^(-?\d+(?:\.\d+)?)\s*(px|in|cm|mm)?$/i.exec(
+    String(value).trim()
   );
   if (!match) {
     throw new Error(`Cannot convert "${value}" to a print length`);
@@ -275,6 +275,29 @@ export function buildEvaluateScript(pageFunction) {
     'const args = Array.prototype.slice.call(arguments);',
     `return (async () => [await ${call}, location.href])();`,
   ].join('\n');
+}
+
+const SCRIPT_UNSAFE_CHARACTERS = {
+  '<': '\\u003C',
+  '>': '\\u003E',
+  '/': '\\u002F',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029',
+};
+
+/**
+ * A JSON value as a JavaScript literal that is safe to splice into script
+ * source: `JSON.stringify` alone leaves `</script>`, U+2028 and U+2029, which
+ * end or break the surrounding code.
+ *
+ * @param {*} value - JSON-serialisable value
+ * @returns {string}
+ */
+export function toScriptLiteral(value) {
+  return JSON.stringify(value).replace(
+    /[<>/\u2028\u2029]/gu,
+    (character) => SCRIPT_UNSAFE_CHARACTERS[character]
+  );
 }
 
 /**

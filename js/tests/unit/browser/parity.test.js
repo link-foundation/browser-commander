@@ -26,6 +26,30 @@ describe('parsing a chrome://version command line', () => {
     );
   });
 
+  it('keeps a value that contains spaces and drops only a trailing URL', () => {
+    assert.deepEqual(
+      [
+        ...parseSwitches(
+          `${CHROME} --user-data-dir=/tmp/My Profile --flag data:text/html,hi`
+        ),
+      ],
+      [
+        ['--user-data-dir', '/tmp/My Profile'],
+        ['--flag', null],
+      ]
+    );
+    assert.deepEqual(
+      [...parseSwitches(`${CHROME} --enable-features=A,B`)],
+      [['--enable-features', 'A,B']]
+    );
+  });
+
+  it('stays linear on a long run of whitespace', () => {
+    const started = Date.now();
+    parseSwitches(`--a${' '.repeat(200000)}x`);
+    assert.ok(Date.now() - started < 1000);
+  });
+
   it('accepts an argument array', () => {
     assert.deepEqual(
       [...parseSwitches(['--headless=new', 'https://example.com'])],

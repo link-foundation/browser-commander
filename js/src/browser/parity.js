@@ -58,6 +58,29 @@ const FEATURE_SWITCHES = new Set([
  */
 const ATTACHMENT_SWITCHES = new Set(['--remote-debugging-port']);
 
+const URL_WORD = /^[a-z][a-z0-9+.-]*:/iu;
+
+/**
+ * Regroup whitespace-separated words into switches: a word starting with `--`
+ * starts a switch, any other word continues the previous one's value. The
+ * start URL, when there is one, is the last word and is dropped.
+ */
+function joinSwitchWords(words) {
+  const last = words.at(-1) ?? '';
+  if (words.length > 1 && !last.startsWith('--') && URL_WORD.test(last)) {
+    words.pop();
+  }
+  const tokens = [];
+  for (const word of words) {
+    if (word.startsWith('--') || tokens.length === 0) {
+      tokens.push(word);
+    } else {
+      tokens[tokens.length - 1] += ` ${word}`;
+    }
+  }
+  return tokens;
+}
+
 /**
  * Split a command line into `--switch[=value]` entries.
  *
@@ -72,11 +95,7 @@ const ATTACHMENT_SWITCHES = new Set(['--remote-debugging-port']);
 export function parseSwitches(commandLine) {
   const tokens = Array.isArray(commandLine)
     ? commandLine
-    : String(commandLine)
-        .trim()
-        // The start URL, when there is one, is the last word.
-        .replace(/\s+[a-z][a-z0-9+.-]*:\S*$/iu, '')
-        .split(/\s+(?=--)/u);
+    : joinSwitchWords(String(commandLine).trim().split(/\s+/u));
   const switches = new Map();
   for (const token of tokens) {
     if (!token.startsWith('--')) {

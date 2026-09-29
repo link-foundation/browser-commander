@@ -42,7 +42,7 @@ function openCdpSocket(url) {
   socket.addEventListener('message', (event) => {
     const message = JSON.parse(String(event.data));
     const waiter = pending.get(message.id);
-    if (waiter) {
+    if (typeof waiter === 'function') {
       pending.delete(message.id);
       waiter(message);
     }

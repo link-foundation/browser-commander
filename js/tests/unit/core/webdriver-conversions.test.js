@@ -8,6 +8,7 @@ import {
   toConsoleMessage,
   toNetworkRequest,
   toPrintOptions,
+  toScriptLiteral,
   toWebDriverChord,
   toWebDriverCookie,
   toWebDriverKey,
@@ -53,6 +54,16 @@ describe('WebDriver print options', () => {
     closeTo(toCentimetres('2cm'), 2);
     closeTo(toCentimetres('48px'), 1.27);
     assert.throws(() => toCentimetres('1em'), /Cannot convert/);
+  });
+
+  it('accepts surrounding and inner whitespace, and stays linear on long runs of it', () => {
+    closeTo(toCentimetres(' 10 mm '), 1);
+    const started = Date.now();
+    assert.throws(
+      () => toCentimetres(`9${' '.repeat(100000)}x`),
+      /Cannot convert/
+    );
+    assert.ok(Date.now() - started < 1000);
   });
 
   it('maps Puppeteer pdf options onto Print Page parameters', () => {
@@ -211,5 +222,14 @@ describe('WebDriver BiDi event conversion', () => {
       toNetworkRequest({ request: {}, errorText: 'net::ERR_FAILED' }).failure(),
       { errorText: 'net::ERR_FAILED' }
     );
+  });
+});
+
+describe('script literals', () => {
+  it('round-trips the value and cannot close a script element or a line', () => {
+    const value = ['</script>', 'a\\b', '\u2028\u2029', { path: '/x' }];
+    const literal = toScriptLiteral(value);
+    assert.doesNotMatch(literal, /[<>/\u2028\u2029]/u);
+    assert.deepEqual(new Function(`return ${literal};`)(), value);
   });
 });

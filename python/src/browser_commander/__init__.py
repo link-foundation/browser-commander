@@ -139,6 +139,7 @@ from browser_commander.exports import (
     launch_browser,
     launch_real_browser,
     list_browser_profiles,
+    load_storage_state,
     locator,
     log_element_info,
     make_url_condition,
@@ -171,6 +172,7 @@ from browser_commander.exports import (
     run_readiness_checks,
     safe_evaluate,
     safe_operation,
+    save_storage_state,
     # Scroll interactions
     scroll_into_view,
     scroll_into_view_if_needed,
@@ -331,6 +333,7 @@ __all__ = [
     "launch_browser",
     "launch_real_browser",
     "list_browser_profiles",
+    "load_storage_state",
     "locator",
     "log_element_info",
     "make_browser_commander",
@@ -364,6 +367,7 @@ __all__ = [
     "run_readiness_checks",
     "safe_evaluate",
     "safe_operation",
+    "save_storage_state",
     # Scroll interactions
     "scroll_into_view",
     "scroll_into_view_if_needed",

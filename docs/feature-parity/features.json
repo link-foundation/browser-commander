@@ -28,6 +28,15 @@
       ]
     },
     {
+      "title": "Portable session state",
+      "features": [
+        {
+          "id": "storage.portable",
+          "title": "Save and restore cookie and localStorage state"
+        }
+      ]
+    },
+    {
       "title": "Parity and traces",
       "features": [
         {

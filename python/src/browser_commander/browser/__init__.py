@@ -72,6 +72,10 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.storage_state import (
+    load_storage_state,
+    save_storage_state,
+)
 
 __all__ = [
     "ALL_DATA_CLASSES",
@@ -105,6 +109,7 @@ __all__ = [
     "launch_browser",
     "launch_real_browser",
     "list_browser_profiles",
+    "load_storage_state",
     "measure_parity",
     "merge_feature_switches",
     "migrate_profile",
@@ -120,6 +125,7 @@ __all__ = [
     "reserve_loopback_port",
     "resolve_launch_executable",
     "resolve_restrictions",
+    "save_storage_state",
     "validate_open_url",
     "verify_navigation",
     "wait_after_action",

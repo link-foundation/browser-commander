@@ -33,6 +33,10 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.storage_state import (
+    StorageStateInput,
+    restore_storage_state,
+)
 from browser_commander.core.engine_detection import EngineType
 from browser_commander.downloads.attach import attach_downloads
 from browser_commander.fingerprint.apply import apply_fingerprint
@@ -63,6 +67,7 @@ class LaunchOptions:
     first_run: bool = False
     preferences: Mapping[str, Any] | None = None
     local_state: Mapping[str, Any] | None = None
+    storage_state: StorageStateInput = None
     headless: bool = False
     slow_mo: int = 0
     verbose: bool = False
@@ -299,6 +304,7 @@ async def _launch_real(
                 first_run=options.first_run,
                 preferences=options.preferences,
                 local_state=options.local_state,
+                storage_state=options.storage_state,
                 remote_debugging_port=options.remote_debugging_port,
                 headless=options.headless,
                 restrictions=list(options.restrictions),
@@ -444,6 +450,7 @@ async def _launch_with_engine(
             )
             browser = await _resolve(create_selenium(chrome_options, child_env))
             page = browser  # In Selenium, the driver is both browser and page
+        await restore_storage_state(engine, browser, page, options.storage_state)
     except BaseException:
         await _close_engine_browser(engine, browser, playwright, None)
         if temporary_profile:

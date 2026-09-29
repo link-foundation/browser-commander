@@ -43,6 +43,7 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.storage_state import StorageStateInput
 from browser_commander.browser.system_browser import (
     _CHANNEL_EXECUTABLE_NAMES,
     CHANNEL_EXECUTABLE_NAMES,
@@ -135,6 +136,7 @@ class RealBrowserOptions:
     timeout: int | None = None
     headers: dict[str, str] | None = None
     seed_cookies: list[dict[str, Any]] = field(default_factory=list)
+    storage_state: StorageStateInput = None
     verbose: bool = False
     downloads: bool | Mapping[str, Any] | None = None
     """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
@@ -703,6 +705,7 @@ async def launch_real_browser_with_dependencies(
                     seed_cookies=[*options.seed_cookies, *migrated_cookies]
                     if migrated_cookies
                     else options.seed_cookies,
+                    storage_state=options.storage_state,
                     verbose=options.verbose,
                     downloads=options.downloads,
                 )

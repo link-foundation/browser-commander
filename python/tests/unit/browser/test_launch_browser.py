@@ -123,6 +123,17 @@ async def test_forwards_restrictions_and_slow_mo_to_the_real_launch() -> None:
     assert calls[-1] == ("close",)
 
 
+async def test_forwards_portable_storage_state_to_the_real_launch() -> None:
+    calls: list[Any] = []
+    state = {"cookies": [], "origins": []}
+    result = await launch_browser_with_dependencies(
+        LaunchOptions(storage_state=state), real_dependencies(calls)
+    )
+    assert calls[0][1].storage_state == state
+    assert result.close is not None
+    await result.close()
+
+
 async def test_emulates_the_colour_scheme_on_the_attached_page() -> None:
     calls: list[Any] = []
     await launch_browser_with_dependencies(

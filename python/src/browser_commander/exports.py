@@ -78,6 +78,10 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.storage_state import (
+    load_storage_state,
+    save_storage_state,
+)
 from browser_commander.core.constants import CHROME_ARGS, TIMING
 
 # Re-export new core components
@@ -407,6 +411,7 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",
+    "load_storage_state",
     "list_browser_profiles",
     "locator",
     "log_element_info",
@@ -500,6 +505,7 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "browser_environment",
     "merge_feature_switches",
     "resolve_restrictions",
+    "save_storage_state",
     "create_temporary_user_data_dir",
     "prepare_user_data_dir",
     "remove_user_data_dir",

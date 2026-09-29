@@ -165,6 +165,25 @@ Switches the library used to add, such as `--password-store=basic`, are opt-in
 `launch="engine"` keeps the engine launcher, and `ignore_default_args=True`
 omits that launcher's own defaults.
 
+Pass Playwright-compatible `storage_state` as a JSON file path or object to
+restore cookies and origin-scoped localStorage before navigation. The option
+works with `launch_browser()`, `launch_real_browser()`, and `connect_browser()`
+for both Playwright and Selenium:
+
+```python
+from browser_commander import LaunchOptions, launch_browser, save_storage_state
+
+result = await launch_browser(
+    LaunchOptions(engine="playwright", storage_state="./session-state.json")
+)
+# After navigating and signing in, save the session for a later launch.
+await save_storage_state("playwright", result.browser, result.page, "./session-state.json")
+```
+
+Selenium saves cookies and localStorage for the current page origin. Playwright
+saves all origins available to its browser context. Treat saved state as a
+secret because cookies may contain login credentials.
+
 ### connect_browser(options)
 
 Attach Playwright or Selenium to an already-running Chrome-family browser over

@@ -296,6 +296,8 @@ pub(crate) fn build_key4_database(dir: &Path, primary_password: &[u8]) -> Key4Fi
 }
 
 /// Encode one NSS login field as base64, exactly like `logins.json` stores it.
+/// The fixture writes Firefox's legacy 3DES-CBC format so the migration test
+/// exercises compatibility with real source profiles.
 pub(crate) fn encode_login_field(key: &[u8], plaintext: &str) -> String {
     let iv = random_bytes(8).expect("iv");
     let mut padded = plaintext.as_bytes().to_vec();

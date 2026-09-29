@@ -102,6 +102,9 @@ fn resolve_source_key(
                 .ok_or_else(|| anyhow!("The source Local State path is unknown"))?;
             (hooks.read_windows_encryption_key)(path)
         }
+        // Chromium's legacy Linux v10 format uses this fixed fallback secret.
+        // Read it only to decrypt an existing source profile; target values
+        // use the launching profile's key from Safe Storage below.
         "linux" if prefix == "v10" => derive_chromium_cookie_key("peanuts", "linux"),
         "linux" | "darwin" => {
             let password = (hooks.read_safe_storage_password)(browser, platform)?;

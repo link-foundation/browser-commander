@@ -136,6 +136,8 @@ fn hmac_sha1(key: &[u8], parts: &[&[u8]]) -> Result<Vec<u8>> {
 }
 
 fn decrypt_3des_cbc(key: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>> {
+    // Firefox's legacy NSS blobs are 3DES-CBC on disk. Migration only
+    // decrypts these source bytes; Chromium receives newly encrypted values.
     let plaintext = TdesCbcDecryptor::new_from_slices(key, iv)
         .map_err(|_| anyhow!("3DES key or IV has the wrong length"))?
         .decrypt_padded_vec::<NoPadding>(ciphertext)

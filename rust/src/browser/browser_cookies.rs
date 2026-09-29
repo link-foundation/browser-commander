@@ -16,7 +16,7 @@ use super::browser_cookie_credentials::{
     decrypt_windows_dpapi, read_safe_storage_password, read_windows_encryption_key,
 };
 use super::browser_cookie_crypto::{
-    chromium_same_site, decode_chromium_plaintext, decrypt_chromium_cookie,
+    app_bound_cookie_error, chromium_same_site, decode_chromium_plaintext, decrypt_chromium_cookie,
     derive_chromium_cookie_key, firefox_same_site,
 };
 use super::browser_profiles::{
@@ -240,7 +240,7 @@ fn read_chromium_rows(
         .map_err(Into::into)
 }
 
-fn read_firefox_cookies(
+pub(crate) fn read_firefox_cookies(
     database: &Connection,
     domain_filter: Option<&str>,
 ) -> Result<Vec<BrowserCookie>> {
@@ -296,6 +296,8 @@ fn chromium_key_for_prefix(
     state: &mut CookieDecryptionState<'_>,
 ) -> Result<Vec<u8>> {
     if platform == "linux" && prefix == b"v10" {
+        // Chromium's legacy Linux v10 format uses this public fallback secret;
+        // a different value would make existing source cookies unreadable.
         return derive_chromium_cookie_key("peanuts", "linux");
     }
     if platform == "linux" || platform == "darwin" {
@@ -365,20 +367,13 @@ fn decrypt_chromium_row(
         let prefix = row.encrypted_value.get(..3).unwrap_or_default();
         if platform == "win32" && prefix != b"v10" && prefix != b"v11" {
             if prefix == b"v20" {
-                decrypt_chromium_cookie(
-                    &row.encrypted_value,
-                    &row.host,
-                    database_version,
-                    platform,
-                    &[0_u8; 32],
-                )?
-            } else {
-                decode_chromium_plaintext(
-                    &decrypt_windows_dpapi(&row.encrypted_value)?,
-                    &row.host,
-                    database_version,
-                )?
+                return Err(app_bound_cookie_error());
             }
+            decode_chromium_plaintext(
+                &decrypt_windows_dpapi(&row.encrypted_value)?,
+                &row.host,
+                database_version,
+            )?
         } else {
             let key = chromium_key_for_prefix(prefix, browser, platform, profile, refresh, state)?;
             decrypt_chromium_cookie(

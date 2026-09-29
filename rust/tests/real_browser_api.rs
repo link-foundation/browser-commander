@@ -4,7 +4,7 @@ use browser_commander::{
 };
 
 #[test]
-fn real_browser_api_builds_protected_launch_arguments() {
+fn real_browser_api_builds_a_clean_command_line() {
     let options = RealBrowserOptions::playwright()
         .channel("chrome")
         .user_data_dir("dedicated-profile")
@@ -14,32 +14,41 @@ fn real_browser_api_builds_protected_launch_arguments() {
 
     let arguments = build_real_browser_args(&options).unwrap();
 
-    assert_eq!(arguments[0], "--remote-debugging-address=127.0.0.1");
-    assert_eq!(arguments[1], "--remote-debugging-port=9333");
-    assert_eq!(arguments[2], "--user-data-dir=dedicated-profile");
-    assert!(arguments.contains(&"--password-store=basic".to_string()));
-    assert!(arguments.contains(&"--headless=new".to_string()));
-    assert!(arguments.contains(&"--lang=en-US".to_string()));
+    assert_eq!(
+        arguments,
+        [
+            "--user-data-dir=dedicated-profile",
+            "--remote-debugging-port=9333",
+            "--headless=new",
+            "--lang=en-US",
+            "about:blank",
+        ]
+    );
 
     let _short_helper = launch_real_browser;
     let _compatible_helper = launch_and_connect_real_browser;
 }
 
 #[test]
-fn real_browser_api_supports_extra_args_and_per_default_opt_out() {
+fn real_browser_api_adds_restrictions_only_on_request() {
     let options = RealBrowserOptions::chromiumoxide()
         .user_data_dir("dedicated-profile")
+        .remote_debugging_port(9333)
+        .restrictions(["basic-password-store"])
         .with_args(vec!["--legacy-arg".to_string()])
-        .with_extra_args(vec!["--lang=en-US".to_string()])
-        .ignore_default_args(vec!["--no-first-run".to_string()]);
+        .with_extra_args(vec!["--lang=en-US".to_string()]);
 
     let arguments = build_real_browser_args(&options).unwrap();
-    assert!(arguments.contains(&"--password-store=basic".to_string()));
-    assert!(!arguments.contains(&"--no-first-run".to_string()));
-    assert!(arguments.contains(&"--no-default-browser-check".to_string()));
     assert_eq!(
-        &arguments[arguments.len() - 2..],
-        ["--legacy-arg".to_string(), "--lang=en-US".to_string()]
+        arguments,
+        [
+            "--user-data-dir=dedicated-profile",
+            "--remote-debugging-port=9333",
+            "--password-store=basic",
+            "--legacy-arg",
+            "--lang=en-US",
+            "about:blank",
+        ]
     );
 }
 
@@ -47,8 +56,19 @@ fn real_browser_api_supports_extra_args_and_per_default_opt_out() {
 fn real_browser_api_rejects_managed_arguments() {
     let options = RealBrowserOptions::chromiumoxide()
         .user_data_dir("dedicated-profile")
+        .remote_debugging_port(9333)
         .with_args(vec!["--user-data-dir=other-profile".to_string()]);
 
     let error = build_real_browser_args(&options).unwrap_err();
     assert!(error.to_string().contains("managed by launch_real_browser"));
+}
+
+#[test]
+fn real_browser_api_refuses_an_ephemeral_port() {
+    let options = RealBrowserOptions::chromiumoxide()
+        .user_data_dir("dedicated-profile")
+        .remote_debugging_port(0);
+
+    let error = build_real_browser_args(&options).unwrap_err();
+    assert!(error.to_string().contains("AutomationControlled"));
 }

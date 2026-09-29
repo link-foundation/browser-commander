@@ -19,6 +19,14 @@
 //! the browser. A specific port number is left alone on purpose, since that is
 //! what a human attaching a debugger passes.
 //!
+//! `kHeadless` is in that table but is not a trigger in practice: the mapping
+//! does not reach the renderer in today's (new) headless mode. A hand-started
+//! Chrome 153 with `--headless`, `--headless=new` or `--headless=old` and
+//! nothing else reports `navigator.webdriver === false`
+//! (`experiments/issue-103/headless-webdriver.mjs`), so a headless launch
+//! needs no off switch to match it, and adding one would be a difference of
+//! its own.
+//!
 //! <https://chromium.googlesource.com/chromium/src/+/refs/heads/main/content/child/runtime_features.cc>
 //!
 //! This module is the Rust side of the same table as
@@ -60,10 +68,6 @@ pub const AUTOMATION_CONTROLLED_TRIGGERS: &[AutomationTrigger] = &[
     AutomationTrigger {
         switch: "--enable-automation",
         reason: "Mapped onto AutomationControlled in content/child/runtime_features.cc; also shows the \"controlled by automated test software\" infobar.",
-    },
-    AutomationTrigger {
-        switch: "--headless",
-        reason: "Mapped onto AutomationControlled in content/child/runtime_features.cc; covers --headless and --headless=new alike.",
     },
     AutomationTrigger {
         switch: "--remote-debugging-pipe",
@@ -142,7 +146,6 @@ fn is_ephemeral_debugging_port(argument: &str) -> bool {
 fn is_trigger(argument: &str, trigger: &AutomationTrigger) -> bool {
     match trigger.switch {
         "--remote-debugging-port=0" => is_ephemeral_debugging_port(argument),
-        "--headless" => switch_name(argument) == "--headless",
         other => switch_name(argument) == other,
     }
 }
@@ -246,7 +249,6 @@ mod tests {
             switches,
             [
                 "--enable-automation",
-                "--headless",
                 "--remote-debugging-pipe",
                 "--remote-debugging-port=0",
             ]
@@ -274,11 +276,15 @@ mod tests {
     }
 
     #[test]
-    fn detects_headless_with_a_value() {
-        let found = detect_automation_controlled_triggers(&args(&["--headless=new"]));
-        assert_eq!(found.len(), 1);
-        assert_eq!(found[0].switch, "--headless");
-        assert_eq!(found[0].argument, "--headless=new");
+    fn does_not_treat_headless_as_a_trigger() {
+        // Measured: a hand-started headless Chrome reports navigator.webdriver
+        // false, because the renderer never sees the --headless switch.
+        assert!(detect_automation_controlled_triggers(&args(&[
+            "--headless",
+            "--headless=new",
+            "--headless=old",
+        ]))
+        .is_empty());
     }
 
     #[test]
@@ -323,12 +329,13 @@ mod tests {
     #[test]
     fn reports_every_trigger_in_order() {
         let found = detect_automation_controlled_triggers(&args(&[
+            "--remote-debugging-pipe",
             "--headless",
             "--no-first-run",
-            "--remote-debugging-pipe",
+            "--enable-automation",
         ]));
         let switches: Vec<&str> = found.iter().map(|trigger| trigger.switch).collect();
-        assert_eq!(switches, ["--headless", "--remote-debugging-pipe"]);
+        assert_eq!(switches, ["--remote-debugging-pipe", "--enable-automation"]);
     }
 
     #[test]

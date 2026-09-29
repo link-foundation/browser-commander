@@ -27,8 +27,23 @@ export {
   EngineAdapter,
   PlaywrightAdapter,
   PuppeteerAdapter,
+  SeleniumAdapter,
   createEngineAdapter,
 } from './core/engine-adapter.js';
+
+// Selenium / WebDriver engine (issue #104)
+export {
+  WebDriverPage,
+  WebDriverTimeoutError,
+  createWebDriverPage,
+  isWebDriver,
+} from './core/webdriver-page.js';
+export {
+  launchWebDriver,
+  connectWebDriver,
+  resolveWebDriverExecutable,
+  CHROMEDRIVER_DEFAULT_SWITCHES,
+} from './browser/webdriver.js';
 
 // Page trigger system
 export {
@@ -51,7 +66,49 @@ export {
   launchAndConnectRealBrowser,
   launchRealBrowser,
 } from './browser/real-browser.js';
-export { launchBrowser } from './browser/launcher.js';
+export {
+  classifyDifferences,
+  compareCommandLines,
+  measureParity,
+  parseSwitches,
+  readBrowserVersionPage,
+} from './browser/parity.js';
+export {
+  openInUserBrowser,
+  buildOpenCommand,
+  validateOpenUrl,
+} from './browser/open-in-user-browser.js';
+export { migrateProfile, ALL_DATA_CLASSES } from './browser/migration/index.js';
+export {
+  attachUserBrowser,
+  attachViaExtension,
+  ATTACH_MODES,
+  DEFAULT_RELAY_PORT,
+  describeAttachDifferences,
+  EXTENSION_DIRECTORY,
+  RELAY_PATH,
+  snapshotUserDataDir,
+} from './browser/attach/index.js';
+export {
+  launchBrowser,
+  LAUNCH_MODES,
+  resolveLaunchExecutable,
+} from './browser/launcher.js';
+export {
+  LAUNCH_RESTRICTIONS,
+  LAUNCH_RESTRICTION_PRESETS,
+  resolveRestrictions,
+  mergeFeatureSwitches,
+} from './browser/restrictions.js';
+export {
+  createTemporaryUserDataDir,
+  prepareUserDataDir,
+  removeUserDataDir,
+} from './browser/profile-directory.js';
+export {
+  PortRaceError,
+  reserveLoopbackPort,
+} from './browser/debugging-port.js';
 export { saveStorageState } from './browser/storage-state.js';
 export { emulateMedia } from './browser/media.js';
 export {
@@ -187,7 +244,9 @@ export {
   buildFingerprintInitScript,
   buildInitScriptConfig,
 } from './fingerprint/init-script.js';
-export { applyFingerprint, createCdpSession } from './fingerprint/apply.js';
+export { applyFingerprint } from './fingerprint/apply.js';
+// Raw CDP with one surface for both engines (issue #104).
+export { createCdpSession, wrapCdpSession } from './browser/cdp-session.js';
 export {
   FINGERPRINT_PRESET_NAMES,
   createFingerprintPreset,

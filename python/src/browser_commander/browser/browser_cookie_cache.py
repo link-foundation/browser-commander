@@ -6,7 +6,6 @@ import base64
 import hashlib
 import json
 import os
-import subprocess
 import threading
 import time
 import uuid
@@ -14,6 +13,8 @@ from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
+
+from browser_commander.utilities.subprocess import run_command_sync
 
 DEFAULT_TTL_MINUTES = 60.0
 LOCK_STALE_SECONDS = 30.0
@@ -79,8 +80,7 @@ def _cache_path(cache: NormalizedCookieCache, kind: str, identity: str) -> Path:
 def _current_windows_principal() -> str:
     global _windows_principal
     if _windows_principal is None:
-        result = subprocess.run(["whoami"], check=True, capture_output=True, text=True)
-        _windows_principal = result.stdout.strip()
+        _windows_principal = run_command_sync("whoami").stdout.strip()
     if not _windows_principal:
         raise OSError("Could not identify the current Windows user")
     return _windows_principal
@@ -89,18 +89,15 @@ def _current_windows_principal() -> str:
 def _restrict_owner_only(path: Path, *, directory: bool) -> None:
     if os.name == "nt":
         permission = "(OI)(CI)F" if directory else "F"
-        subprocess.run(
+        run_command_sync(
+            "icacls",
             [
-                "icacls",
                 str(path),
                 "/inheritance:r",
                 "/grant:r",
                 f"{_current_windows_principal()}:{permission}",
                 "/q",
             ],
-            check=True,
-            capture_output=True,
-            text=True,
         )
         return
     path.chmod(0o700 if directory else 0o600)

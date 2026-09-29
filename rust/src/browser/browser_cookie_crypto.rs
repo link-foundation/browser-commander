@@ -11,6 +11,13 @@ use sha2::{Digest, Sha256};
 
 type Aes128CbcDecryptor = cbc::Decryptor<Aes128>;
 
+/// Reject Chromium's device-bound format before attempting key-based decryption.
+pub(crate) fn app_bound_cookie_error() -> anyhow::Error {
+    anyhow!(
+        "Windows app-bound v20 cookies cannot be decrypted outside the browser; use a browser-supported export or a previously saved storage state"
+    )
+}
+
 pub(crate) fn derive_chromium_cookie_key(password: &str, platform: &str) -> Result<Vec<u8>> {
     let iterations = match platform {
         "darwin" => 1003,
@@ -18,6 +25,8 @@ pub(crate) fn derive_chromium_cookie_key(password: &str, platform: &str) -> Resu
         _ => return Err(anyhow!("CBC cookie keys are not used on {platform}")),
     };
     let mut key = vec![0_u8; 16];
+    // Chromium's legacy CBC format specifies this fixed salt. The derived key
+    // is used only to decrypt data already written by the source browser.
     pbkdf2_hmac::<Sha1>(password.as_bytes(), b"saltysalt", iterations, &mut key);
     Ok(key)
 }
@@ -80,13 +89,13 @@ pub(crate) fn decrypt_chromium_cookie(
         return Err(anyhow!("encrypted Chromium cookie is truncated"));
     }
     match &encrypted[..3] {
-        b"v20" => {
+        b"v20" => return Err(app_bound_cookie_error()),
+        b"v10" | b"v11" => {}
+        _ => {
             return Err(anyhow!(
-                "Windows app-bound v20 cookies cannot be decrypted outside the browser; use a browser-supported export or a previously saved storage state"
+                "cookie has an unsupported Chromium encryption prefix"
             ))
         }
-        b"v10" | b"v11" => {}
-        _ => return Err(anyhow!("cookie has an unsupported Chromium encryption prefix")),
     }
     let plaintext = if platform == "win32" {
         decrypt_gcm(encrypted, key)?

@@ -5,7 +5,7 @@ different when browser-commander drives Chrome, compared to the same Chrome
 started by hand?**
 
 The reference capture never speaks CDP. Chrome is started as a plain child
-process pointed at a local page; the page runs `probe.js` and POSTs the JSON
+process pointed at a local page; the page runs [`probe.js`](../../js/src/parity/probe.js) and POSTs the JSON
 report back to a local server. Every automated capture is delivered the same
 way, so a difference in the diff is a difference in the browser rather than a
 difference in how the probe was invoked.
@@ -14,7 +14,7 @@ difference in how the probe was invoked.
 
 | Script | Question it answers |
 | --- | --- |
-| `probe.js` | The environment surface itself: one deterministic JSON report of everything a page can read. |
+| [`js/src/parity/probe.js`](../../js/src/parity/probe.js) | The environment surface itself (shipped with the package for `measureParity()`): one deterministic JSON report of everything a page can read. |
 | `harness.mjs` | Probe server, reference capture, deep report diff. |
 | `run-baseline.mjs` | What does each engine leak today, and does the shipped launcher close it? |
 | `run-flag-matrix.mjs` | Which Chrome switch flips which surface? |

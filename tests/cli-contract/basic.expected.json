@@ -1,0 +1,52 @@
+{
+  "results": [
+    {
+      "method": "version",
+      "result": {
+        "name": "browser-commander"
+      }
+    },
+    {
+      "method": "session.launch",
+      "result": {
+        "session": "s1",
+        "cdpEndpoint": "<volatile>",
+        "remoteDebuggingPort": "<volatile>",
+        "userDataDir": "<volatile>",
+        "temporaryProfile": true
+      }
+    },
+    {
+      "method": "page.goto",
+      "result": {
+        "url": "data:text/html,%3Ctitle%3ECLI%20contract%3C%2Ftitle%3E%3Cinput%20id%3D%22name%22%3E%3Cbutton%20id%3D%22go%22%20onclick%3D%22document.title%3D'Hello%20'%2Bdocument.getElementById('name').value%3Bdocument.getElementById('out').textContent%3Ddocument.title%22%3EGo%3C%2Fbutton%3E%3Cp%20id%3D%22out%22%3E%3C%2Fp%3E",
+        "title": "CLI contract"
+      }
+    },
+    {
+      "method": "page.fill",
+      "result": {
+        "filled": "#name",
+        "value": "Ada"
+      }
+    },
+    {
+      "method": "page.click",
+      "result": {
+        "clicked": "#go"
+      }
+    },
+    {
+      "method": "page.eval",
+      "result": {
+        "value": ["Hello Ada", "Ada", "Hello Ada"]
+      }
+    },
+    {
+      "method": "session.close",
+      "result": {
+        "closed": true
+      }
+    }
+  ]
+}

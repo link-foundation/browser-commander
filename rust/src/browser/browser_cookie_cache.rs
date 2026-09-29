@@ -104,35 +104,34 @@ fn restrict_owner_only(path: &Path, directory: bool) -> Result<()> {
 
 #[cfg(windows)]
 fn restrict_owner_only(path: &Path, directory: bool) -> Result<()> {
-    use std::process::Command;
+    use crate::utilities::subprocess::{run_command_blocking, RunCommandOptions};
 
-    let whoami = Command::new("whoami")
-        .output()
-        .context("Could not identify the current Windows user")?;
-    if !whoami.status.success() {
-        return Err(anyhow!("Could not identify the current Windows user"));
-    }
-    let principal = String::from_utf8(whoami.stdout)
-        .context("Windows user identity was not valid UTF-8")?
-        .trim()
-        .to_owned();
+    let whoami = run_command_blocking("whoami", &[] as &[&str], RunCommandOptions::default())
+        .map_err(|error| anyhow!("Could not identify the current Windows user: {error}"))?;
+    let principal = whoami.stdout.trim().to_owned();
     if principal.is_empty() {
         return Err(anyhow!("Could not identify the current Windows user"));
     }
     let permission = if directory { "(OI)(CI)F" } else { "F" };
-    let status = Command::new("icacls")
-        .arg(path)
-        .args(["/inheritance:r", "/grant:r"])
-        .arg(format!("{principal}:{permission}"))
-        .arg("/q")
-        .status()
-        .with_context(|| format!("Could not protect cookie cache {}", path.display()))?;
-    if !status.success() {
-        return Err(anyhow!(
-            "Could not protect cookie cache {} with a Windows ACL",
+    let target = path.to_string_lossy().into_owned();
+    let grant = format!("{principal}:{permission}");
+    run_command_blocking(
+        "icacls",
+        &[
+            target.as_str(),
+            "/inheritance:r",
+            "/grant:r",
+            grant.as_str(),
+            "/q",
+        ],
+        RunCommandOptions::default(),
+    )
+    .map_err(|error| {
+        anyhow!(
+            "Could not protect cookie cache {} with a Windows ACL: {error}",
             path.display()
-        ));
-    }
+        )
+    })?;
     Ok(())
 }
 
@@ -447,12 +446,14 @@ mod tests {
         assert_eq!(cached.metadata()?.permissions().mode() & 0o777, 0o600);
         #[cfg(windows)]
         {
-            use std::process::Command;
+            use crate::utilities::subprocess::{run_command_blocking, RunCommandOptions};
 
-            let acl = Command::new("icacls").arg(cached.path()).output()?;
-            let principal = Command::new("whoami").output()?;
-            let acl = String::from_utf8(acl.stdout)?.to_lowercase();
-            let principal = String::from_utf8(principal.stdout)?.trim().to_lowercase();
+            let target = cached.path().to_string_lossy().into_owned();
+            let acl = run_command_blocking("icacls", &[target], RunCommandOptions::default())?;
+            let principal =
+                run_command_blocking("whoami", &[] as &[&str], RunCommandOptions::default())?;
+            let acl = acl.stdout.to_lowercase();
+            let principal = principal.stdout.trim().to_lowercase();
             assert!(acl.contains(&principal));
             assert!(!acl.contains("(i)"));
         }

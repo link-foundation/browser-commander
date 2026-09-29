@@ -23,9 +23,16 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'js/src/fingerprint/**'
+      - 'js/src/parity/**'
       - 'js/src/browser/**'
+      - 'js/src/core/webdriver-*.js'
       - 'js/tests/e2e/**'
       - 'experiments/fingerprint-parity/**'
+      - 'js/src/cli/**'
+      - 'js/bin/**'
+      - 'tests/cli-contract/**'
+      - 'python/src/**'
+      - 'rust/src/**'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
 
@@ -44,7 +51,7 @@ jobs:
   parity:
     name: Fingerprint Parity (real Chrome)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-parity
       cancel-in-progress: true
@@ -79,6 +86,22 @@ jobs:
             exit 1
           }
 
+      - name: Give the preinstalled browsers a usable sandbox
+        # The measureParity suite also starts the runner's Chromium and Edge by
+        # hand. On ubuntu-24.04 both abort before opening a window: AppArmor
+        # blocks the unprivileged user namespaces Chromium's sandbox needs
+        # ("No usable sandbox!"), and Edge's SUID helper ships without the
+        # setuid bit ("msedge-sandbox is owned by root and has mode ...").
+        # Fixing the host rather than passing --no-sandbox keeps the reference
+        # command line exactly what a person would type.
+        working-directory: .
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          if [ -e /opt/microsoft/msedge/msedge-sandbox ]; then
+            sudo chown root:root /opt/microsoft/msedge/msedge-sandbox
+            sudo chmod 4755 /opt/microsoft/msedge/msedge-sandbox
+          fi
+
       - name: Run parity suite under Xvfb
         # A display is only needed by the headful half, but running both halves
         # under the same server keeps the two references comparable.
@@ -111,6 +134,35 @@ jobs:
           fi
           echo "parity suite passed $passed tests against a real Chrome"
 
+      - name: Run WebDriver suite under Xvfb
+        # The selenium engine drives the same Chrome through chromedriver
+        # (issue #104). launchWebDriver() finds a chromedriver on PATH or asks
+        # Selenium Manager (shipped inside selenium-webdriver) for one matching
+        # $CHROME_PATH, so nothing else needs installing. The suite asserts
+        # navigator.webdriver stays false under chromedriver, which is the
+        # WebDriver half of the parity this workflow guards. It took 44s
+        # locally; the job backstop was raised to 40 minutes to cover both
+        # budgets (docs/CI-TIMEOUT-BUDGETS.md).
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 300 "WebDriver suite" \
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" npm run test:e2e:webdriver -- --reporter tap 2>&1 | tee webdriver.log'
+
+      - name: Fail on a WebDriver suite that asserted nothing
+        # The runner has no Firefox, so the Firefox half is the only skip
+        # allowed; the Chrome half must have run.
+        run: |
+          if grep '# SKIP' webdriver.log | grep -v 'firefox is not installed'; then
+            echo "::error::the WebDriver suite skipped a Chrome case instead of asserting it"
+            exit 1
+          fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' webdriver.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the WebDriver suite reported no passing tests"
+            exit 1
+          fi
+          echo "WebDriver suite passed $passed tests against a real Chrome"
+
       - name: Upload parity log
         # ${{ }} wrapping is required: a plain YAML scalar cannot begin with the
         # tag indicator "!".
@@ -118,8 +170,99 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: parity-log
-          path: js/parity.log
+          path: |
+            js/parity.log
+            js/webdriver.log
           retention-days: 14
+
+  # The browser-commander CLI and its serve --stdio bridge (issue #104) against
+  # the same real Chrome: `run tests/cli-contract/basic.json` must match the
+  # expected output the Rust and Python CLIs are held to, and handle.describe
+  # must reach every method Playwright and Puppeteer declare. It is its own job
+  # so its budget does not eat into the parity suite's.
+  cli:
+    name: CLI and bridge (real Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-cli
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install Python package
+        working-directory: .
+        run: python -m pip install -e ./python
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+        with:
+          toolchain: stable
+
+      - name: Cache Cargo build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cli-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cli-cargo-
+
+      - name: Build Rust CLI
+        working-directory: rust
+        shell: bash
+        run: bash ../scripts/run-with-budget-warning.sh 900 "Rust CLI build" cargo build --locked
+
+      - name: Verify Chrome is present
+        run: |
+          test -x "$CHROME_PATH" || {
+            echo "::error::no Chrome binary at $CHROME_PATH"
+            exit 1
+          }
+          "$CHROME_PATH" --version
+
+      - name: Run CLI and API coverage suites under Xvfb
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 300 "CLI and API coverage suites" \
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/cli.e2e.test.js tests/e2e/api-coverage.e2e.test.js 2>&1 | tee cli.log'
+
+      - name: Fail on a suite that asserted nothing
+        run: |
+          if grep -q '# SKIP' cli.log; then
+            echo "::error::the CLI suites skipped a case instead of asserting it"
+            grep '# SKIP' cli.log
+            exit 1
+          fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' cli.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the CLI suites reported no passing tests"
+            exit 1
+          fi
+          echo "CLI suites passed $passed tests against a real Chrome"
+
+      - name: Compare all three CLIs against the shared browser contract
+        working-directory: .
+        shell: bash
+        run: bash scripts/run-with-budget-warning.sh 300 "Cross-language CLI contract" node tests/cli-contract/check.mjs
 
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran
@@ -136,6 +279,7 @@ jobs:
       cancel-in-progress: true
     needs:
       - parity
+      - cli
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs
     # it exists to report. `!cancelled()` keeps it out of a superseded run,

@@ -16,12 +16,16 @@ async function collectBrowserCommanderEnvironmentReport() {
   const report = {};
   const errors = {};
 
+  const fail = (section, error) => {
+    report[section] = null;
+    errors[section] = String((error && error.message) || error);
+  };
+
   const record = (section, producer) => {
     try {
       report[section] = producer();
     } catch (error) {
-      report[section] = null;
-      errors[section] = String((error && error.message) || error);
+      fail(section, error);
     }
   };
 
@@ -29,8 +33,7 @@ async function collectBrowserCommanderEnvironmentReport() {
     try {
       report[section] = await producer();
     } catch (error) {
-      report[section] = null;
-      errors[section] = String((error && error.message) || error);
+      fail(section, error);
     }
   };
 
@@ -197,24 +200,21 @@ async function collectBrowserCommanderEnvironmentReport() {
     return result;
   });
 
+  const describeMimeType = ({ description, suffixes, type }) => ({
+    description,
+    suffixes,
+    type,
+  });
   record('plugins', () => ({
     length: navigator.plugins.length,
     items: Array.from(navigator.plugins).map((plugin) => ({
       description: plugin.description,
       filename: plugin.filename,
       name: plugin.name,
-      mimeTypes: Array.from(plugin).map((mimeType) => ({
-        description: mimeType.description,
-        suffixes: mimeType.suffixes,
-        type: mimeType.type,
-      })),
+      mimeTypes: Array.from(plugin).map(describeMimeType),
     })),
     mimeTypesLength: navigator.mimeTypes.length,
-    mimeTypes: Array.from(navigator.mimeTypes).map((mimeType) => ({
-      description: mimeType.description,
-      suffixes: mimeType.suffixes,
-      type: mimeType.type,
-    })),
+    mimeTypes: Array.from(navigator.mimeTypes).map(describeMimeType),
     pluginsIsPluginArray:
       Object.prototype.toString.call(navigator.plugins) ===
       '[object PluginArray]',

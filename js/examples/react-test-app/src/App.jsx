@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
+const createEmptyFormData = () => ({
+  name: '',
+  email: '',
+  password: '',
+  bio: '',
+  gender: '',
+  interests: [],
+  country: '',
+  newsletter: false,
+  terms: false,
+});
 
 function App() {
   // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    bio: '',
-    gender: '',
-    interests: [],
-    country: '',
-    newsletter: false,
-    terms: false,
-  });
+  const [formData, setFormData] = useState(createEmptyFormData);
 
   const [submitResult, setSubmitResult] = useState(null);
   const [counter, setCounter] = useState(0);
@@ -22,6 +24,15 @@ function App() {
   const [selectedOption, setSelectedOption] = useState('');
   const [dynamicContent, setDynamicContent] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!showModal) return;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setShowModal(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [showModal]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -56,17 +67,7 @@ function App() {
   };
 
   const handleReset = () => {
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      bio: '',
-      gender: '',
-      interests: [],
-      country: '',
-      newsletter: false,
-      terms: false,
-    });
+    setFormData(createEmptyFormData());
     setSubmitResult(null);
   };
 

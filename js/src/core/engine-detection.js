@@ -2,10 +2,25 @@ import { isVerboseEnabled } from './logger.js';
 
 /**
  * Detect which browser automation engine is being used
- * @param {Object} pageOrContext - Page or context object from Playwright or Puppeteer
- * @returns {string} - 'playwright' or 'puppeteer'
+ * @param {Object} pageOrContext - Page or context object from Playwright or
+ *   Puppeteer, a selenium-webdriver WebDriver, or a WebDriverPage over one
+ * @returns {string} - 'playwright', 'puppeteer' or 'selenium'
  */
 export function detectEngine(pageOrContext) {
+  // Selenium first: the WebDriverPage facade has $eval/$$eval like Puppeteer,
+  // and a bare WebDriver has none of the page methods the checks below use.
+  if (
+    pageOrContext.isWebDriverPage === true ||
+    (typeof pageOrContext.findElements === 'function' &&
+      typeof pageOrContext.executeScript === 'function' &&
+      typeof pageOrContext.getCurrentUrl === 'function')
+  ) {
+    if (isVerboseEnabled()) {
+      console.log('🔍 [ENGINE DETECTION] Detected: selenium');
+    }
+    return 'selenium';
+  }
+
   const hasEval = !!pageOrContext.$eval;
   const hasEvalAll = !!pageOrContext.$$eval;
   const locatorType = typeof pageOrContext.locator;
@@ -44,6 +59,6 @@ export function detectEngine(pageOrContext) {
     console.log('🔍 [ENGINE DETECTION] Could not detect engine!');
   }
   throw new Error(
-    'Unknown browser automation engine. Expected Playwright or Puppeteer page object.'
+    'Unknown browser automation engine. Expected a Playwright or Puppeteer page, or a selenium-webdriver WebDriver.'
   );
 }

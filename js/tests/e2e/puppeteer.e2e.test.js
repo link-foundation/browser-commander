@@ -12,6 +12,7 @@ import assert from 'node:assert';
 // Dynamic import for puppeteer since it may not be installed
 let puppeteer;
 let createCommander;
+const TOGGLE_SLIDER = '[data-testid="toggle-switch"] + .toggle-slider';
 
 describe('E2E Tests - Puppeteer Engine', { skip: !process.env.RUN_E2E }, () => {
   let browser;
@@ -216,30 +217,23 @@ describe('E2E Tests - Puppeteer Engine', { skip: !process.env.RUN_E2E }, () => {
         return;
       }
 
-      // Get initial state
-      const initialStatus = await commander.textContent({
-        selector: '[data-testid="toggle-status"]',
-      });
+      const initialChecked = await page.$eval(
+        '[data-testid="toggle-switch"]',
+        (input) => input.checked
+      );
+      await commander.click({ selector: TOGGLE_SLIDER });
+      const changedChecked = await page.$eval(
+        '[data-testid="toggle-switch"]',
+        (input) => input.checked
+      );
+      assert.notStrictEqual(changedChecked, initialChecked);
 
-      // Toggle
-      await commander.click({ selector: '[data-testid="toggle-switch"]' });
-      await commander.wait({ ms: 50 });
-
-      // Verify changed
-      const newStatus = await commander.textContent({
-        selector: '[data-testid="toggle-status"]',
-      });
-      assert.notStrictEqual(initialStatus.trim(), newStatus.trim());
-
-      // Toggle back
-      await commander.click({ selector: '[data-testid="toggle-switch"]' });
-      await commander.wait({ ms: 50 });
-
-      // Verify back to original
-      const finalStatus = await commander.textContent({
-        selector: '[data-testid="toggle-status"]',
-      });
-      assert.strictEqual(initialStatus.trim(), finalStatus.trim());
+      await commander.click({ selector: TOGGLE_SLIDER });
+      const finalChecked = await page.$eval(
+        '[data-testid="toggle-switch"]',
+        (input) => input.checked
+      );
+      assert.strictEqual(finalChecked, initialChecked);
     });
 
     it('should interact with custom dropdown', async () => {

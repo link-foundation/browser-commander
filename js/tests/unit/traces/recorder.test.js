@@ -1,3 +1,4 @@
+// feature-parity: trace.record
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { setImmediate as yieldToEngine } from 'node:timers/promises';

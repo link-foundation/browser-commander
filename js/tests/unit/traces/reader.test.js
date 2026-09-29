@@ -1,3 +1,4 @@
+// feature-parity: trace.read
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs/promises';

@@ -1,0 +1,42 @@
+{
+  "sections": [
+    {
+      "title": "Command protocol",
+      "features": [
+        { "id": "cli.version", "title": "Native CLI version" },
+        { "id": "cli.script", "title": "Run a command script" },
+        { "id": "cli.serve", "title": "Serve JSON-RPC over stdio" }
+      ]
+    },
+    {
+      "title": "Profile and user browser",
+      "features": [
+        { "id": "migration.profile", "title": "Read-only profile migration" },
+        {
+          "id": "migration.launch",
+          "title": "Migrate before real browser launch"
+        },
+        { "id": "attach.snapshot", "title": "Attach to a profile snapshot" },
+        {
+          "id": "attach.extension",
+          "title": "Attach through a browser extension"
+        },
+        {
+          "id": "attach.open",
+          "title": "Open in the user browser without automation"
+        }
+      ]
+    },
+    {
+      "title": "Parity and traces",
+      "features": [
+        {
+          "id": "parity.measure",
+          "title": "Measure against a hand-started browser"
+        },
+        { "id": "trace.record", "title": "Record a portable trace" },
+        { "id": "trace.read", "title": "Read a portable trace" }
+      ]
+    }
+  ]
+}

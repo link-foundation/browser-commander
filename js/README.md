@@ -8,7 +8,7 @@ A universal browser automation library for JavaScript/TypeScript that supports b
 npm install browser-commander
 ```
 
-You'll also need either Playwright or Puppeteer:
+You'll also need Playwright, Puppeteer or Selenium WebDriver:
 
 ```bash
 # With Playwright
@@ -16,6 +16,9 @@ npm install playwright
 
 # Or with Puppeteer
 npm install puppeteer
+
+# Or with Selenium WebDriver (W3C WebDriver + WebDriver BiDi)
+npm install selenium-webdriver
 ```
 
 ## Documentation
@@ -93,26 +96,31 @@ await commander.destroy();
 await browser.close();
 ```
 
-To reuse an installed Chrome-family browser instead of downloading the
-engine's bundled Chromium, select a browser channel or provide its executable
-path. Both options are passed directly to Playwright or Puppeteer:
+`launchBrowser()` starts the installed Chrome the way a person would and then
+attaches to it. The whole command line is
+`--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port> about:blank`:
+no automation switches, so `navigator.webdriver` is `false`, there is no
+"controlled by automated test software" or unsupported-flag infobar, and
+extensions, sync, translation and every other browser feature behave as in a
+hand-started Chrome. The temporary profile is deleted by `browser.close()`.
 
 ```javascript
 const { browser, page } = await launchBrowser({
   engine: 'playwright',
-  channel: 'chrome',
-  // Or: executablePath: '/usr/bin/google-chrome',
-  headless: true,
+  channel: 'msedge', // or executablePath: '/usr/bin/google-chrome'
+  userDataDir: '/tmp/my-profile', // keep the profile instead of a temporary one
   extraArgs: ['--lang=en-US'],
-  // Per-flag escape hatch; `args` remains a compatible append-only alias.
-  ignoreDefaultArgs: ['--disable-infobars'],
+  // Opt-in restrictions, by name (see the table linked below).
+  restrictions: ['no-sync', 'no-translate'],
 });
 ```
 
-Browser Commander applies the documented
-[automation-friendly launch defaults](../docs/feature-parity.md#automation-friendly-launch-defaults),
-including `--password-store=basic` to avoid an additional OS credential
-dialog. `ignoreDefaultArgs: true` omits every Browser Commander default.
+Every switch Browser Commander used to add on its own is available as a named
+[launch restriction](../docs/feature-parity.md#launch-command-line-and-opt-in-restrictions);
+`restrictions: ['legacy-defaults']` restores the old `CHROME_ARGS`. Pass
+`launch: 'engine'` to use Playwright's `launchPersistentContext()` or
+`puppeteer.launch()` instead; the engine then adds its own switches, and
+`ignoreDefaultArgs` removes them.
 
 Attach to a Chrome-family browser that is already listening for CDP connections:
 
@@ -127,11 +135,13 @@ const commander = makeBrowserCommander({ page });
 ```
 
 Attachment cannot change the existing process's launch arguments. Start it
-with a loopback remote-debugging port, a dedicated `--user-data-dir`, and the
-automation-friendly defaults above, or use `launchRealBrowser()`.
+with a fixed `--remote-debugging-port` and a dedicated `--user-data-dir`, or
+let `launchBrowser()`/`launchRealBrowser()` start it.
 
-`launchRealBrowser()` can find and start a genuine installed Chrome,
-Edge, Brave, or Chromium with a loopback CDP endpoint and then attach to it. It
+`launchRealBrowser()` is the lower-level helper behind the default launch: it
+finds and starts an installed Chrome, Edge, Brave, or Chromium on a reserved
+loopback port, confirms from the browser's own `DevTools listening on` line
+that the port is really its own (retrying on a port race), and attaches. It
 always uses a dedicated profile; Chrome 136 and newer do not honor remote
 debugging switches for the default profile. See the
 [Chrome remote-debugging security change](https://developer.chrome.com/blog/remote-debugging-port).
@@ -144,7 +154,7 @@ const connection = await launchRealBrowser({
   channel: 'chrome',
   userDataDir: '/tmp/my-automation-profile',
   extraArgs: ['--lang=en-US'],
-  ignoreDefaultArgs: ['--disable-infobars'],
+  restrictions: ['no-default-browser-check'],
   seedCookies: [
     { name: 'session', value: 'saved', url: 'https://example.com' },
   ],
@@ -188,8 +198,8 @@ scripts touch Keychain, libsecret/KWallet, or DPAPI at most once per TTL window.
 Set `refresh: true` to force a new read, customize `cache.dir`/`ttlMinutes`, or
 set `cache: false` to opt out of disk caching.
 `launchAndConnectRealBrowser()` remains available as a descriptive alias.
-Remote-debugging, loopback, and profile arguments remain managed even when all
-optional defaults are ignored; `headless: true` adds `--headless=new`.
+The remote-debugging and profile switches are always managed;
+`headless: true` adds `--headless=new`.
 
 Reuse a saved authenticated session by passing Playwright-compatible storage
 state as a JSON file path or object. Cookies and localStorage are restored for
@@ -371,16 +381,26 @@ commander.pageTrigger({
 ### launchBrowser(options)
 
 ```javascript
-const { browser, page } = await launchBrowser({
+const { browser, page, close } = await launchBrowser({
   engine: 'playwright', // 'playwright' or 'puppeteer'
+  launch: 'real', // 'real' (start the installed browser, attach) or 'engine'
+  channel: 'chrome', // or executablePath; defaults to the installed Chrome
   headless: false, // Run in headless mode
-  userDataDir: '~/.hh-apply/playwright-data', // Browser profile directory
-  slowMo: 150, // Slow down operations (ms)
+  userDataDir: undefined, // Keep a profile; default is a fresh temporary one
+  restrictions: [], // Opt-in restrictions such as 'no-extensions', 'no-sync'
+  slowMo: 0, // Slow down operations (ms)
   verbose: false, // Enable debug logging
-  args: ['--no-sandbox', '--disable-setuid-sandbox'], // Custom Chrome args to append
+  args: ['--no-sandbox'], // Custom Chrome args to append
   storageState: './session-state.json', // Saved cookies and localStorage, as a path or object
 });
 ```
+
+With Playwright, `browser` is the attached browser's default context, so
+`browser.pages()`, `browser.newPage()` and `browser.close()` work as they did
+with the persistent context. `close()` (and `browser.close()`) closes the
+browser and deletes a temporary profile. The result also carries `launch`,
+`userDataDir`, `temporaryProfile` and the exact `args` the browser was started
+with.
 
 The `args` option allows passing custom Chrome arguments, which is useful for headless server environments (Docker, CI/CD) that require flags like `--no-sandbox`.
 
@@ -414,15 +434,84 @@ Playwright accepts `timeout` and Puppeteer accepts `protocolTimeout`.
 Start an installed browser and connect through `connectBrowser()`. Use
 `channel` (`chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`,
 `msedge-beta`, `msedge-dev`, `msedge-canary`, `brave`, or `chromium`) or an
-explicit `executablePath`. The helper defaults to
-a managed directory under `~/.browser-commander/real-browser/`, rejects known
-default browser-profile paths, protects its remote-debugging arguments, and
-returns the spawned `browserProcess`, resolved `cdpEndpoint`, executable path,
-and profile path alongside `{ browser, page }`.
+explicit `executablePath`. Without `userDataDir` it creates a fresh temporary
+profile that `close()` deletes; it rejects known default browser-profile paths,
+protects its remote-debugging switches, reserves a loopback port (or uses
+`remoteDebuggingPort`, never `0`), and returns the spawned `browserProcess`,
+`cdpEndpoint`, `remoteDebuggingPort`, `executablePath`, `userDataDir`,
+`temporaryProfile` and `args` alongside `{ browser, page, close }`.
 `launchAndConnectRealBrowser()` is an alias with identical behavior.
-`extraArgs` appends custom switches, while `ignoreDefaultArgs` accepts a list
-of defaults to omit (or `true` to omit all optional defaults). The older
-`args` append option remains supported.
+`restrictions` opts into named restrictions, `args`/`extraArgs` append custom
+switches, and `env` adds environment variables for the browser process only.
+
+The launch is clean by default, so signing in with a Google account works
+(a nonexistent address shows "Couldn't find your Google Account" rather than
+"This browser or app may not be secure"). Pass `migrateFrom` to opt into a
+read-only migration from an installed browser's main profile before the launch;
+the migrated cookies are seeded automatically and the returned session carries a
+`migration` report (see `migrateProfile()` below):
+
+```javascript
+const session = await launchRealBrowser({
+  channel: 'chrome',
+  userDataDir, // dedicated; clean by default
+  migrateFrom: {
+    browser: 'chrome', // chrome | edge | brave | chromium | firefox
+    profile: 'Default',
+    include: ['cookies', 'bookmarks', 'history', 'passwords', 'preferences'],
+    domains: ['npmjs.com', 'github.com'], // optional cookie filter
+  },
+});
+console.log(session.migration.migrated, session.migration.skipped);
+```
+
+### launchWebDriver(options) / connectWebDriver(options)
+
+The `selenium` engine drives Chrome or Firefox over W3C WebDriver through
+`selenium-webdriver` (an optional peer dependency). `launchWebDriver()` finds a
+driver (`driverPath`, then `PATH`, then the Selenium Manager bundled with
+`selenium-webdriver`, which downloads a chromedriver/geckodriver matching the
+browser), starts it on a reserved loopback port, waits for `/status`, and opens
+a session with a fresh temporary profile that `close()` deletes:
+
+```javascript
+import { launchWebDriver, makeBrowserCommander } from 'browser-commander';
+
+const { driver, page, close } = await launchWebDriver({
+  browser: 'chrome', // or 'firefox'
+  headless: false,
+  bidi: true, // WebDriver BiDi: console/dialog/network events, preload scripts
+  // executablePath, driverPath, userDataDir, args, restrictions, env
+});
+const commander = makeBrowserCommander({ page }); // commander.engine === 'selenium'
+
+page.on('console', (message) => console.log(message.text())); // needs bidi
+await commander.goto({ url: 'https://example.com' });
+await commander.fill({ selector: 'input[name="q"]', text: 'hello' });
+await commander.click({ selector: 'button[type="submit"]' });
+const pdf = await page.pdf({ format: 'A4' }); // W3C Print Page
+await close();
+```
+
+`page` is a `WebDriverPage`: a Puppeteer-shaped facade over the `driver`
+(`evaluate`, `$`, `$$`, `keyboard`, `mouse`, `screenshot`, `pdf`, `cookies`,
+`on`), so the rest of Browser Commander runs unchanged. `makeBrowserCommander()`
+also accepts a bare selenium `WebDriver` and wraps it. On the adapter
+(`createEngineAdapter(page, 'selenium')`), `onConsoleMessage(handler)`,
+`onNavigation(handler)`, `onBidiEvent(method, handler)` and
+`navigate(url, {wait})` expose BiDi `log.entryAdded` and `browsingContext`
+directly; they throw when the session has no BiDi.
+
+Chrome gets the same command line as `launchRealBrowser()`
+(`--user-data-dir` and a fixed `--remote-debugging-port`), and every switch
+chromedriver would add on its own - `--enable-automation`,
+`--remote-debugging-port=0`, `--password-store=basic`, `--test-type=webdriver`
+and 16 more - is excluded, so `navigator.webdriver` is `false` headful and
+headless. `connectWebDriver({ serverUrl, capabilities })` opens a session on a
+server that is already running (a Selenium Grid, a cloud provider); pass
+`capabilities: { webSocketUrl: true }` for BiDi. Media emulation, fingerprint
+overrides and managed downloads need CDP and throw on this engine; see
+[docs/feature-parity.md](../docs/feature-parity.md#webdriver-engine).
 
 ### listBrowserProfiles(options)
 
@@ -465,6 +554,75 @@ cookies is acceptable.
 
 Treat imported cookies like passwords: keep cache directories private, use a
 short TTL, never commit them, and seed only a dedicated automation profile.
+
+### migrateProfile(options)
+
+Copy data from an installed browser's main profile into a dedicated target
+profile directory (usually the `Default` folder of a `launchRealBrowser()`
+`userDataDir`). This is the same migration `launchRealBrowser({ migrateFrom })`
+runs, exposed directly. It is **opt-in and strictly read-only** on the source:
+SQLite databases (`History`, `Top Sites`, cookies, Firefox `places.sqlite`) are
+copied through the SQLite Online Backup API so a running browser is never
+disturbed, and JSON files (`Bookmarks`, `Preferences`) are copied as is.
+
+```javascript
+import { migrateProfile } from 'browser-commander';
+
+const report = await migrateProfile({
+  from: { browser: 'chrome', profile: 'Default' },
+  to: '/path/to/dedicated/User Data/Default',
+  targetBrowser: 'chrome', // launching channel, for key derivation
+  include: [
+    'cookies',
+    'bookmarks',
+    'history',
+    'passwords',
+    'preferences',
+    'extensions',
+  ],
+  domains: ['github.com'], // optional cookie filter
+});
+```
+
+The report is `{ source, target, migrated, skipped, warnings, cookies }`:
+`migrated` counts each data class, `cookies` holds the seedable Playwright-shape
+cookies, and `skipped`/`warnings` explain everything that could not be migrated
+verbatim, for example:
+
+- **DBSC-bound Google cookies** (`__Secure-1PSIDTS`/`3PSIDTS`/`SIDTS`) are
+  reported `dbsc-bound`: their Device Bound Session Credentials key cannot leave
+  the source profile, so those sessions expire quickly and are not copied.
+- **Windows app-bound `v20`** passwords/cookies are reported `app-bound-v20`
+  because they require the browser's privileged elevation service.
+- **Migrated extensions** are reported `mac-will-not-validate`: Chromium's
+  `Secure Preferences` MAC cannot be forged externally, so migrated extensions
+  are likely disabled until re-enabled in the browser.
+- **Firefox with a primary password** is reported `primary-password-set`.
+
+Data classes: `cookies`, `bookmarks`, `history`, `passwords`, `preferences`,
+`extensions` (exported as `ALL_DATA_CLASSES`). Chromium sources
+(`chrome`/`edge`/`brave`/`chromium`) re-encrypt passwords with the target
+profile's OS-keystore key; Firefox uses its own NSS (`key4.db`) path for
+`cookies.sqlite`, `places.sqlite` and `logins.json`.
+
+### openInUserBrowser(url)
+
+Open a URL in the user's own default browser with **no automation** - no CDP,
+no dedicated profile, no `navigator.webdriver`. Use it when a consumer only has
+to show a page where the user is already signed in (an OAuth consent screen or a
+CLI web-login page). It shells out to the platform opener (macOS `open`, Linux
+`xdg-open`, Windows `explorer.exe`) after validating the URL:
+
+```javascript
+import { openInUserBrowser } from 'browser-commander';
+
+await openInUserBrowser('https://github.com/login/device');
+```
+
+Only a browser-safe scheme set is accepted (`http:`, `https:`, `file:`, `ftp:`,
+`about:`, `chrome:`, `edge:`, `view-source:`); `validateOpenUrl()` and
+`buildOpenCommand()` are exported for callers that want to validate or build the
+command separately.
 
 ### saveStorageState(page, filePath)
 
@@ -851,6 +1009,32 @@ await commander.page.pdf({ format: 'A4' });
 ```
 
 This is the **official extensibility mechanism** while awaiting browser-commander to add first-class support for these APIs. Please [report missing APIs](https://github.com/link-foundation/browser-commander/issues) so they can be added.
+
+## Command Line
+
+The package installs a `browser-commander` command. The Rust and Python packages ship the same command, and the contract all three follow is [docs/cli-and-bridge.md](../docs/cli-and-bridge.md). Every command prints exactly one JSON document to stdout. The exit code is `0` on success and `1` on error. `doctor` exits `2` when it finds an unlisted difference, and a usage error exits `64`.
+
+```bash
+npx browser-commander version
+npx browser-commander goto https://example.com --headless
+
+# Keep one browser running and drive it from later commands
+npx browser-commander launch --keep-open &
+npx browser-commander fill '#q' 'hello' --cdp-endpoint http://127.0.0.1:9222
+npx browser-commander eval 'document.title' --cdp-endpoint http://127.0.0.1:9222
+
+# Run a JSON command script (see tests/cli-contract/basic.json)
+npx browser-commander run script.json --engine puppeteer
+
+# JSON-RPC 2.0 over stdin/stdout, one message per line
+echo '{"jsonrpc":"2.0","id":1,"method":"version"}' | npx browser-commander serve --stdio
+```
+
+The other commands are `open`, `click`, `screenshot`, `pdf`, `trace start|stop|view`, `cookies import`, `profile migrate` and `doctor`. Use the `=` form for values that start with `--`, for example `--arg=--lang=de`.
+
+`serve --stdio` exposes the high-level methods (`session.launch`, `page.goto`, …). It also exposes generic handle methods (`handle.root`, `handle.call`, `handle.get`, `handle.describe`, `events.subscribe`, …), which reach every public Playwright and Puppeteer method. The Rust and Python ports use this bridge for the engines they do not implement natively.
+
+For raw Chrome DevTools Protocol access from JavaScript, `createCdpSession(page)` (or `commander.createCdpSession()`) returns the same `send`/`on`/`once`/`off`/`detach` surface for Playwright and Puppeteer pages.
 
 ## Debugging
 

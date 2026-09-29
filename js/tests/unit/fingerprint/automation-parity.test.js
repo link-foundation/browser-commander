@@ -22,7 +22,7 @@ describe('AutomationControlled triggers', () => {
     }
   });
 
-  it('finds each switch Chromium maps onto the feature', () => {
+  it('finds each switch that turns the feature on', () => {
     const found = detectAutomationControlledTriggers([
       '--enable-automation',
       '--headless=new',
@@ -32,16 +32,29 @@ describe('AutomationControlled triggers', () => {
 
     assert.deepEqual(found, [
       '--enable-automation',
-      '--headless',
       '--remote-debugging-pipe',
       '--remote-debugging-port=0',
     ]);
   });
 
+  it('does not treat headless as a trigger', () => {
+    // Measured: a hand-started headless Chrome reports navigator.webdriver
+    // false, because the renderer never sees the --headless switch.
+    assert.deepEqual(
+      detectAutomationControlledTriggers([
+        '--headless',
+        '--headless=new',
+        '--headless=old',
+      ]),
+      []
+    );
+  });
+
   it('reports the argument as written next to the switch it matched', () => {
     assert.deepEqual(
-      detectAutomationControlledTriggers(['--headless=new'])[0].argument,
-      '--headless=new'
+      detectAutomationControlledTriggers(['--remote-debugging-port=0'])[0]
+        .argument,
+      '--remote-debugging-port=0'
     );
   });
 

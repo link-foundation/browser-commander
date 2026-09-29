@@ -12,6 +12,7 @@ import assert from 'node:assert';
 // Dynamic import for playwright since it may not be installed
 let playwright;
 let createCommander;
+const TOGGLE_SLIDER = '[data-testid="toggle-switch"] + .toggle-slider';
 
 describe(
   'E2E Tests - Playwright Engine',
@@ -124,12 +125,11 @@ describe(
         }
 
         await commander.click({ selector: '[data-testid="radio-male"]' });
-        const checked = await commander.getAttribute({
-          selector: '[data-testid="radio-male"]',
-          attribute: 'checked',
-        });
-        // Playwright returns empty string for checked attribute when true
-        assert.ok(checked !== null);
+        // React controls the live property without adding a checked attribute.
+        assert.strictEqual(
+          await page.locator('[data-testid="radio-male"]').isChecked(),
+          true
+        );
       });
 
       it('should check checkbox', async () => {
@@ -237,7 +237,7 @@ describe(
         const initialStatus = await commander.textContent({
           selector: '[data-testid="toggle-status"]',
         });
-        await commander.click({ selector: '[data-testid="toggle-switch"]' });
+        await commander.click({ selector: TOGGLE_SLIDER });
         await commander.wait({ ms: 50 });
         const newStatus = await commander.textContent({
           selector: '[data-testid="toggle-status"]',
@@ -337,7 +337,10 @@ describe(
         }
 
         // Scroll to target item (item 15)
-        await commander.scroll({ selector: '[data-testid="scroll-item-15"]' });
+        await commander.scrollIntoView({
+          locatorOrElement: page.locator('[data-testid="scroll-item-15"]'),
+          behavior: 'instant',
+        });
         await commander.wait({ ms: 500 });
 
         // Element should now be visible
@@ -354,17 +357,22 @@ describe(
 
         // Use click which auto-scrolls
         let alertHandled = false;
-        page.on('dialog', async (dialog) => {
+        const onDialog = async (dialog) => {
           alertHandled = true;
           await dialog.accept();
-        });
+        };
+        commander.onDialog(onDialog);
 
-        await commander.click({
-          selector: '[data-testid="scroll-target-button"]',
-        });
-        await commander.wait({ ms: 100 });
+        try {
+          await commander.click({
+            selector: '[data-testid="scroll-target-button"]',
+          });
+          await commander.wait({ ms: 100 });
 
-        assert.strictEqual(alertHandled, true);
+          assert.strictEqual(alertHandled, true);
+        } finally {
+          commander.offDialog(onDialog);
+        }
       });
     });
 

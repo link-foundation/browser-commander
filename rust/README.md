@@ -98,11 +98,15 @@ let options = LaunchOptions::chromiumoxide()
 let result = launch_browser(options).await?;
 ```
 
-Browser Commander applies the documented
-[automation-friendly defaults](../docs/feature-parity.md#automation-friendly-launch-defaults),
-including `--password-store=basic` to avoid an extra OS credential dialog.
-`ignore_all_default_args()` omits every optional Browser Commander and engine
-default; `with_args()` remains a compatible append-only builder.
+By default Browser Commander starts the installed browser the way a person
+would: `--user-data-dir=<fresh temporary profile>
+--remote-debugging-port=<reserved port> about:blank` and nothing else (see
+[Launch Command Line and Opt-In Restrictions](../docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
+Switches the library used to add, such as `--password-store=basic`, are opt-in
+`restrictions` (the `legacy-defaults` preset restores the old set).
+`LaunchMode::Engine` keeps the engine launcher, `ignore_all_default_args()`
+omits that launcher's own defaults, and `with_args()` remains a compatible
+append-only builder.
 
 ### Playwright and Puppeteer
 

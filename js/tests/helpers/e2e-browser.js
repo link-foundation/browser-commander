@@ -8,11 +8,33 @@
  * read as the behaviour they check.
  */
 
-import fs from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
+import { existsSync } from 'node:fs';
 
 import { launchBrowser } from '../../src/browser/launcher.js';
+
+/** The installed Chrome the parity suites compare against. */
+export const PARITY_CHROME =
+  process.env.CHROME_PATH || '/usr/bin/google-chrome';
+
+/**
+ * Why a parity suite cannot run here, or `false` when it can.
+ *
+ * @param {Object} [options]
+ * @param {boolean} [options.headless=false] - Headless suites need no display
+ * @returns {string|false}
+ */
+export function paritySkipReason({ headless = false } = {}) {
+  if (!process.env.RUN_E2E) {
+    return 'set RUN_E2E=true to run the parity tests';
+  }
+  if (!existsSync(PARITY_CHROME)) {
+    return `no Chrome binary at ${PARITY_CHROME}; set CHROME_PATH`;
+  }
+  if (!headless && process.platform === 'linux' && !process.env.DISPLAY) {
+    return 'headful parity needs a display; run under xvfb-run';
+  }
+  return false;
+}
 
 /**
  * Extra Chrome arguments for environments without a usable sandbox.
@@ -25,6 +47,17 @@ export const SANDBOX_ARGS =
   process.env.CHROME_NO_SANDBOX === 'true' ? ['--no-sandbox'] : [];
 
 /**
+ * The sandbox arguments plus the CHROME_PATH binary, when one is set: the
+ * launch options every e2e suite shares.
+ */
+export const CHROME_LAUNCH_OPTIONS = {
+  args: SANDBOX_ARGS,
+  ...(process.env.CHROME_PATH
+    ? { executablePath: process.env.CHROME_PATH }
+    : {}),
+};
+
+/**
  * Launch a real browser for one engine, with its own profile.
  *
  * @param {Object} options - Launch options
@@ -34,19 +67,13 @@ export const SANDBOX_ARGS =
  */
 export async function launchE2EBrowser(options = {}) {
   const { engine, downloadDirectory } = options;
-  const userDataDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'bc-e2e-profile-')
-  );
 
+  // The default launch creates a fresh temporary profile and deletes it on
+  // close, so the helper no longer manages one itself.
   const launched = await launchBrowser({
     engine,
-    userDataDir,
     headless: process.env.HEADLESS !== 'false',
-    slowMo: 0,
-    args: SANDBOX_ARGS,
-    ...(process.env.CHROME_PATH
-      ? { executablePath: process.env.CHROME_PATH }
-      : {}),
+    ...CHROME_LAUNCH_OPTIONS,
     ...(downloadDirectory
       ? { downloads: { directory: downloadDirectory } }
       : {}),
@@ -60,8 +87,7 @@ export async function launchE2EBrowser(options = {}) {
      * @returns {Promise<void>} Resolves once both are gone
      */
     cleanup: async () => {
-      await launched.browser?.close();
-      await fs.rm(userDataDir, { recursive: true, force: true });
+      await launched.close();
     },
   };
 }

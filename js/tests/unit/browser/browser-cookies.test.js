@@ -37,6 +37,7 @@ import {
   listBrowserProfiles as publicListBrowserProfiles,
   readBrowserCookies as publicReadBrowserCookies,
 } from '../../../src/index.js';
+import { writeFirefoxCookies } from '../../helpers/migration-fixtures.js';
 
 const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600;
 const execFile = promisify(execFileCallback);
@@ -136,43 +137,12 @@ async function createFirefoxProfile({ homeDir, rows }) {
   const root = path.join(homeDir, '.mozilla', 'firefox');
   const profileName = 'fixture.default-release';
   const profilePath = path.join(root, profileName);
-  const cookiePath = path.join(profilePath, 'cookies.sqlite');
   await mkdir(profilePath, { recursive: true });
   await writeFile(
     path.join(root, 'profiles.ini'),
     `[Profile0]\nName=default-release\nIsRelative=1\nPath=${profileName}\nDefault=1\n`
   );
-  const database = await openSqliteDatabase(cookiePath);
-  database.exec(`
-    CREATE TABLE moz_cookies (
-      name TEXT,
-      value TEXT,
-      host TEXT,
-      path TEXT,
-      expiry INTEGER,
-      isSecure INTEGER,
-      isHttpOnly INTEGER,
-      sameSite INTEGER
-    );
-  `);
-  const insert = database.prepare(`
-    INSERT INTO moz_cookies
-      (name, value, host, path, expiry, isSecure, isHttpOnly, sameSite)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  for (const row of rows) {
-    insert.run(
-      row.name,
-      row.value,
-      row.host,
-      row.path ?? '/',
-      row.expiry ?? 0,
-      row.secure ? 1 : 0,
-      row.httpOnly ? 1 : 0,
-      row.sameSite ?? 0
-    );
-  }
-  database.close();
+  const cookiePath = await writeFirefoxCookies(profilePath, rows);
   return { cookiePath, profilePath, root };
 }
 

@@ -133,8 +133,8 @@ async fn run(url: &str, downloads: &std::path::Path) -> anyhow::Result<String> {
     // Everything that produced the file is gone before the file is read: a
     // download that only exists while the browser is open is not a download.
     manager.dispose().await;
+    launched.close().await?;
     drop(launched);
-    tokio::time::sleep(Duration::from_millis(250)).await;
 
     let contents = std::fs::read(&path)?;
     Ok(format!(

@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   connectBrowser,
+  pickForegroundPage,
   connectBrowserWithDependencies,
 } from '../../../src/browser/connector.js';
 import { connectBrowser as publicConnectBrowser } from '../../../src/index.js';
@@ -125,5 +126,27 @@ describe('connectBrowser', () => {
         ),
       /Invalid engine: invalid/
     );
+  });
+});
+
+describe('pickForegroundPage', () => {
+  const page = (id, state) => ({ id, evaluate: async () => state });
+
+  it('prefers the visible tab over the first one', async () => {
+    const picked = await pickForegroundPage([
+      page('ntp', 'hidden'),
+      page('whats-new', 'visible'),
+    ]);
+    assert.equal(picked.id, 'whats-new');
+  });
+
+  it('falls back to the first tab when none reports visible', async () => {
+    const failing = {
+      id: 'crashed',
+      evaluate: async () => Promise.reject(new Error('gone')),
+    };
+    const picked = await pickForegroundPage([failing, page('b', 'hidden')]);
+    assert.equal(picked.id, 'crashed');
+    assert.equal(await pickForegroundPage([]), undefined);
   });
 });

@@ -11,9 +11,12 @@ use serde_json::Value;
 
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::launcher::{Browser, LaunchResult};
+use crate::browser::media::ColorScheme;
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::core::engine::EngineType;
 use crate::downloads::{attach_downloads, DownloadSetting};
+use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
+use crate::fingerprint::profile::FingerprintProfile;
 
 /// Options for attaching to a running browser over CDP.
 #[derive(Debug, Clone)]
@@ -169,13 +172,54 @@ impl ConnectOptions {
 /// The returned page implements the crate's shared [`EngineAdapter`](crate::core::EngineAdapter)
 /// API. The browser's profile and process remain externally managed.
 pub async fn connect_browser(options: ConnectOptions) -> Result<LaunchResult, anyhow::Error> {
+    connect_browser_with(options, AttachSettings::default()).await
+}
+
+/// What [`launch_browser`](super::launcher::launch_browser) sets up on the
+/// page it attaches to, before the caller gets it.
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct AttachSettings<'a> {
+    /// Applied before the caller can navigate, so the first document already
+    /// sees the configured environment.
+    pub(crate) fingerprint: Option<&'a FingerprintProfile>,
+    /// Emulated on the attached page (best-effort).
+    pub(crate) color_scheme: Option<&'a ColorScheme>,
+}
+
+/// Refuse a fingerprint profile an engine cannot apply.
+///
+/// The node bridge speaks its own command protocol rather than CDP, so a
+/// profile handed to it would be silently dropped and the page would report
+/// the real machine. Failing is the honest answer.
+pub(crate) fn refuse_unappliable_fingerprint(
+    engine: EngineType,
+    fingerprint: Option<&FingerprintProfile>,
+) -> Result<(), anyhow::Error> {
+    if fingerprint.is_some() && engine != EngineType::Chromiumoxide {
+        return Err(anyhow::anyhow!(
+            "the {engine} engine cannot apply a fingerprint profile yet; \
+             use EngineType::Chromiumoxide, or apply the profile from the \
+             JavaScript package, which drives Playwright and Puppeteer directly"
+        ));
+    }
+    Ok(())
+}
+
+/// [`connect_browser`] with the page set up as `settings` asks. Used by
+/// [`launch_browser`](super::launcher::launch_browser) to attach to the
+/// browser it started.
+pub(crate) async fn connect_browser_with(
+    options: ConnectOptions,
+    settings: AttachSettings<'_>,
+) -> Result<LaunchResult, anyhow::Error> {
     let endpoint = options.endpoint()?.to_string();
+    refuse_unappliable_fingerprint(options.engine, settings.fingerprint)?;
     if options.verbose {
         tracing::info!(engine = %options.engine, %endpoint, "connecting to browser");
     }
 
     match options.engine {
-        EngineType::Chromiumoxide => connect_chromiumoxide(options, endpoint).await,
+        EngineType::Chromiumoxide => connect_chromiumoxide(options, endpoint, settings).await,
         EngineType::Playwright | EngineType::Puppeteer => {
             let engine = options.engine;
             let timeout = options.timeout;
@@ -186,7 +230,7 @@ pub async fn connect_browser(options: ConnectOptions) -> Result<LaunchResult, an
                 .map(|_| crate::downloads::supported_engine(engine))
                 .transpose()
                 .map_err(|error| anyhow::anyhow!("{error}"))?;
-            let connection = NodeBridgePage::connect(options);
+            let connection = NodeBridgePage::connect(options, settings.color_scheme);
             let page = if let Some(timeout) = timeout {
                 tokio::time::timeout(timeout, connection)
                     .await
@@ -194,15 +238,15 @@ pub async fn connect_browser(options: ConnectOptions) -> Result<LaunchResult, an
             } else {
                 connection.await?
             };
-            Ok(LaunchResult {
-                browser: Browser {
+            Ok(LaunchResult::attached(
+                Browser {
                     engine,
                     user_data_dir: PathBuf::new(),
                     headless: false,
                 },
-                page: Arc::new(page),
-                downloads: None,
-            })
+                Arc::new(page),
+                None,
+            ))
         }
         EngineType::Fantoccini => Err(anyhow::anyhow!(
             "fantoccini does not connect over CDP; use chromiumoxide, playwright, or puppeteer"
@@ -213,6 +257,7 @@ pub async fn connect_browser(options: ConnectOptions) -> Result<LaunchResult, an
 async fn connect_chromiumoxide(
     options: ConnectOptions,
     endpoint: String,
+    settings: AttachSettings<'_>,
 ) -> Result<LaunchResult, anyhow::Error> {
     let connection = CdpBrowser::connect(endpoint);
     let (browser, mut handler) = if let Some(timeout) = options.timeout {
@@ -242,12 +287,28 @@ async fn connect_chromiumoxide(
         browser.set_cookies(cookies).await?;
     }
 
-    let page = match browser.pages().await?.into_iter().next() {
+    let page = match pick_foreground_page(browser.pages().await?).await {
         Some(page) => page,
         None => browser.new_page("about:blank").await?,
     };
     let engine = options.engine;
     let adapter = ChromiumoxidePage::new(page, browser, handler_task, PathBuf::new());
+
+    // A failure here is fatal rather than best-effort: a half-applied profile
+    // describes a machine that does not exist, which is louder than none.
+    if let Some(profile) = settings.fingerprint {
+        apply_fingerprint(&adapter, profile, ApplyOptions::default()).await?;
+        if options.verbose {
+            tracing::info!("Fingerprint profile applied");
+        }
+    }
+    if let Some(color_scheme) = settings.color_scheme {
+        if let Err(error) = adapter.set_color_scheme(Some(color_scheme)).await {
+            if options.verbose {
+                tracing::warn!(%error, "could not set color scheme");
+            }
+        }
+    }
 
     // `Browser.setDownloadBehavior` is browser-wide, so an attached browser's
     // downloads are managed even when a person starts them from the window
@@ -257,15 +318,36 @@ async fn connect_chromiumoxide(
         .await
         .map_err(|error| anyhow::anyhow!("{error}"))?;
 
-    Ok(LaunchResult {
-        browser: Browser {
+    Ok(LaunchResult::attached(
+        Browser {
             engine,
             user_data_dir: PathBuf::new(),
             headless: false,
         },
-        page: Arc::new(adapter),
+        Arc::new(adapter),
         downloads,
-    })
+    ))
+}
+
+/// Pick the tab that is on screen.
+///
+/// A browser attached after it started can already have several tabs - a
+/// fresh profile can open a welcome tab next to the New Tab page - and CDP
+/// does not list them in a stable order. Driving a background tab would make
+/// `document.hidden` true where a person's first navigation sees a visible
+/// page, so the visible tab wins and the first tab is the fallback.
+async fn pick_foreground_page(pages: Vec<chromiumoxide::Page>) -> Option<chromiumoxide::Page> {
+    for page in &pages {
+        let state = page
+            .evaluate("document.visibilityState")
+            .await
+            .ok()
+            .and_then(|result| result.into_value::<String>().ok());
+        if state.as_deref() == Some("visible") {
+            return Some(page.clone());
+        }
+    }
+    pages.into_iter().next()
 }
 
 #[cfg(test)]

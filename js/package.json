@@ -3,6 +3,9 @@
   "version": "0.20.0",
   "description": "Universal browser automation library that supports both Playwright and Puppeteer with a unified API",
   "main": "src/index.js",
+  "bin": {
+    "browser-commander": "bin/browser-commander.js"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.js",
@@ -15,10 +18,14 @@
     "test:e2e": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e",
     "test:e2e:playwright": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/playwright.e2e.test.js",
     "test:e2e:puppeteer": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/puppeteer.e2e.test.js",
-    "test:e2e:parity": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/fingerprint-parity.e2e.test.js",
+    "test:e2e:webdriver": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/webdriver.e2e.test.js",
+    "test:e2e:parity": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/fingerprint-parity.e2e.test.js tests/e2e/measure-parity.e2e.test.js",
     "test:e2e:click-readiness": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/click-readiness.e2e.test.js",
     "test:e2e:downloads": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/downloads.e2e.test.js",
     "test:e2e:traces": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/traces.e2e.test.js",
+    "test:e2e:cli": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/cli.e2e.test.js",
+    "test:e2e:api-coverage": "node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/api-coverage.e2e.test.js",
+    "test:e2e:google-probe": "node scripts/run-tests.mjs --env RUN_E2E=true --env RUN_GOOGLE_PROBE=true tests/e2e/google-signin-probe.e2e.test.js",
     "test:all": "npm run test:unit && npm run test:e2e",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -42,6 +49,8 @@
     "automation",
     "playwright",
     "puppeteer",
+    "selenium",
+    "webdriver",
     "testing",
     "e2e"
   ],
@@ -56,7 +65,8 @@
   },
   "peerDependencies": {
     "playwright": ">=1.40.0",
-    "puppeteer": ">=21.0.0"
+    "puppeteer": ">=21.0.0",
+    "selenium-webdriver": ">=4.20.0"
   },
   "peerDependenciesMeta": {
     "playwright": {
@@ -64,10 +74,14 @@
     },
     "puppeteer": {
       "optional": true
+    },
+    "selenium-webdriver": {
+      "optional": true
     }
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
+    "command-stream": "^1.2.0",
     "links-notation": "^0.20.0",
     "log-lazy": "^1.0.4",
     "test-anywhere": "^0.9.1"
@@ -82,7 +96,8 @@
     "jsdoc": "^4.0.4",
     "playwright": "^1.62.1",
     "prettier": "^3.9.6",
-    "puppeteer": "^25.10.0"
+    "puppeteer": "^25.10.0",
+    "selenium-webdriver": "^4.49.0"
   },
   "allowScripts": {
     "better-sqlite3@13.0.3": true,

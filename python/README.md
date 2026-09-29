@@ -152,10 +152,14 @@ result = await launch_browser(options)
 browser, page = result.browser, result.page
 ```
 
-Both launch APIs apply the documented
-[automation-friendly defaults](../docs/feature-parity.md#automation-friendly-launch-defaults),
-including `--password-store=basic` to avoid an extra OS credential dialog.
-Set `ignore_default_args=True` to omit every optional default.
+By default both launch APIs start the installed browser the way a person would:
+`--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved
+port> about:blank` and nothing else (see
+[Launch Command Line and Opt-In Restrictions](../docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
+Switches the library used to add, such as `--password-store=basic`, are opt-in
+`restrictions` (`restrictions=["legacy-defaults"]` restores the old set).
+`launch="engine"` keeps the engine launcher, and `ignore_default_args=True`
+omits that launcher's own defaults.
 
 ### connect_browser(options)
 

@@ -38,10 +38,22 @@ describe('emulateMedia', () => {
         () =>
           emulateMedia({
             page: mockPage,
-            engine: 'selenium',
+            engine: 'webkit-classic',
             colorScheme: 'dark',
           }),
         /Unsupported engine/
+      );
+    });
+
+    it('should explain that the selenium engine has no media emulation', async () => {
+      await assert.rejects(
+        () =>
+          emulateMedia({
+            page: {},
+            engine: 'selenium',
+            colorScheme: 'dark',
+          }),
+        /not available with the selenium engine.*webdriver-no-cdp-emulation/
       );
     });
   });

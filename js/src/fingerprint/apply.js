@@ -14,6 +14,12 @@ import { resolveFingerprintProfile } from './profile.js';
 
 /** Open a CDP session for a page, whichever engine owns it. */
 export function createCdpSession({ browser, page, engine }) {
+  if (engine === 'selenium') {
+    throw new Error(
+      'Fingerprint profiles need a CDP session, which the selenium engine does ' +
+        'not have (see the webdriver-no-cdp-emulation limitation)'
+    );
+  }
   if (engine === 'puppeteer') {
     if (typeof page.createCDPSession === 'function') {
       return page.createCDPSession();

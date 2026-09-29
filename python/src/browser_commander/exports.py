@@ -14,13 +14,25 @@ from browser_commander.browser.browser_cookies import (
     list_browser_profiles,
     read_browser_cookies,
 )
-from browser_commander.browser.connector import ConnectOptions, connect_browser
+from browser_commander.browser.connector import (
+    ConnectOptions,
+    connect_browser,
+    pick_foreground_page,
+)
+from browser_commander.browser.debugging_port import (
+    PortRaceError,
+    assert_fixed_debugging_port,
+    reserve_loopback_port,
+)
 from browser_commander.browser.launcher import (
+    LAUNCH_MODES,
     LaunchOptions,
     LaunchResult,
     launch_browser,
+    resolve_launch_executable,
 )
 from browser_commander.browser.media import emulate_media
+from browser_commander.browser.migration import ALL_DATA_CLASSES, migrate_profile
 from browser_commander.browser.navigation import (
     GotoResult,
     NavigationVerificationResult,
@@ -34,12 +46,37 @@ from browser_commander.browser.navigation import (
     wait_for_page_ready,
     wait_for_url_stabilization,
 )
+from browser_commander.browser.open_in_user_browser import (
+    build_open_command,
+    open_in_user_browser,
+    validate_open_url,
+)
+from browser_commander.browser.parity import (
+    classify_differences,
+    compare_command_lines,
+    measure_parity,
+    parse_switches,
+    read_browser_version_page,
+)
 from browser_commander.browser.pdf import pdf
+from browser_commander.browser.profile_directory import (
+    create_temporary_user_data_dir,
+    prepare_user_data_dir,
+    remove_user_data_dir,
+)
 from browser_commander.browser.real_browser import (
     RealBrowserOptions,
     RealBrowserResult,
+    build_real_browser_args,
     launch_and_connect_real_browser,
     launch_real_browser,
+)
+from browser_commander.browser.restrictions import (
+    LAUNCH_RESTRICTION_PRESETS,
+    LAUNCH_RESTRICTIONS,
+    browser_environment,
+    merge_feature_switches,
+    resolve_restrictions,
 )
 from browser_commander.core.constants import CHROME_ARGS, TIMING
 
@@ -241,6 +278,12 @@ from browser_commander.traces import (
     diff_control_state,
     parse_ndjson,
     read_trace,
+)
+from browser_commander.utilities.subprocess import (
+    CommandError,
+    ManagedProcess,
+    run_command,
+    start_process,
 )
 from browser_commander.utilities.url import get_url, unfocus_address_bar
 
@@ -448,4 +491,35 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "diff_control_state",
     "parse_ndjson",
     "read_trace",
+    # Real launch (issues #101, #103) and subprocess helpers
+    "LAUNCH_MODES",
+    "resolve_launch_executable",
+    "pick_foreground_page",
+    "LAUNCH_RESTRICTIONS",
+    "LAUNCH_RESTRICTION_PRESETS",
+    "browser_environment",
+    "merge_feature_switches",
+    "resolve_restrictions",
+    "create_temporary_user_data_dir",
+    "prepare_user_data_dir",
+    "remove_user_data_dir",
+    "PortRaceError",
+    "assert_fixed_debugging_port",
+    "reserve_loopback_port",
+    "build_real_browser_args",
+    "CommandError",
+    "ManagedProcess",
+    "run_command",
+    "start_process",
+    # Open in the user's browser, profile migration and parity (#102, #103)
+    "ALL_DATA_CLASSES",
+    "build_open_command",
+    "classify_differences",
+    "compare_command_lines",
+    "measure_parity",
+    "migrate_profile",
+    "open_in_user_browser",
+    "parse_switches",
+    "read_browser_version_page",
+    "validate_open_url",
 ]

@@ -16,6 +16,13 @@
  * the browser. A specific port number is left alone on purpose, since that is
  * what a human attaching a debugger passes.
  *
+ * `kHeadless` is in that table but is not a trigger in practice: the renderer
+ * never sees the switch in today's headless mode. A hand-started Chrome 153
+ * with `--headless`, `--headless=new` or `--headless=old` and nothing else
+ * reports `navigator.webdriver === false`
+ * (experiments/issue-103/headless-webdriver.mjs), so a headless launch needs
+ * no off switch to match it, and adding one would be a difference of its own.
+ *
  * https://chromium.googlesource.com/chromium/src/+/refs/heads/main/content/child/runtime_features.cc
  */
 
@@ -29,11 +36,6 @@ export const AUTOMATION_CONTROLLED_TRIGGERS = Object.freeze([
     switch: '--enable-automation',
     reason:
       'Mapped onto AutomationControlled in content/child/runtime_features.cc; also shows the "controlled by automated test software" infobar.',
-  }),
-  Object.freeze({
-    switch: '--headless',
-    reason:
-      'Mapped onto AutomationControlled in content/child/runtime_features.cc; covers --headless and --headless=new alike.',
   }),
   Object.freeze({
     switch: '--remote-debugging-pipe',
@@ -58,9 +60,6 @@ function isTrigger(argument, trigger) {
       switchName(argument) === '--remote-debugging-port' &&
       Number(argument.slice('--remote-debugging-port='.length)) === 0
     );
-  }
-  if (trigger.switch === '--headless') {
-    return switchName(argument) === '--headless';
   }
   return switchName(argument) === trigger.switch;
 }

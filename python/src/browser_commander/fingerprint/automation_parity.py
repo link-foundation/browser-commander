@@ -17,6 +17,13 @@ enables the feature, because an ephemeral port is how ChromeDriver launches the
 browser. A specific port number is left alone on purpose, since that is what a
 human attaching a debugger passes.
 
+``kHeadless`` is in that table but is not a trigger in practice: the renderer
+never sees the switch in today's headless mode. A hand-started Chrome 153 with
+``--headless``, ``--headless=new`` or ``--headless=old`` and nothing else
+reports ``navigator.webdriver === false``
+(experiments/issue-103/headless-webdriver.mjs), so a headless launch needs no
+off switch to match it, and adding one would be a difference of its own.
+
 https://chromium.googlesource.com/chromium/src/+/refs/heads/main/content/child/runtime_features.cc
 
 This module is the Python side of the same table as
@@ -64,13 +71,6 @@ AUTOMATION_CONTROLLED_TRIGGERS = (
         ),
     ),
     AutomationTrigger(
-        switch="--headless",
-        reason=(
-            "Mapped onto AutomationControlled in content/child/runtime_features.cc; "
-            "covers --headless and --headless=new alike."
-        ),
-    ),
-    AutomationTrigger(
         switch="--remote-debugging-pipe",
         reason=(
             "Mapped onto AutomationControlled in content/child/runtime_features.cc. "
@@ -108,8 +108,6 @@ def _is_ephemeral_debugging_port(argument: str) -> bool:
 def _is_trigger(argument: str, trigger: AutomationTrigger) -> bool:
     if trigger.switch == "--remote-debugging-port=0":
         return _is_ephemeral_debugging_port(argument)
-    if trigger.switch == "--headless":
-        return _switch_name(argument) == "--headless"
     return _switch_name(argument) == trigger.switch
 
 

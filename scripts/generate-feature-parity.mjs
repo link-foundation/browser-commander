@@ -336,7 +336,9 @@ export function generate(root) {
   const claims = collectClaims(root);
   const { sections, errors } = evaluate({ features, limitations, claims });
   const documentPath = path.join(root, DOCUMENT);
-  const current = readFileSync(documentPath, 'utf8');
+  // Git may check Markdown out with CRLF on Windows. Compare logical content
+  // using the LF endings emitted by renderMatrix, avoiding false drift.
+  const current = readFileSync(documentPath, 'utf8').replaceAll('\r\n', '\n');
   const next = spliceDocument(current, renderMatrix({ sections, limitations }));
   return { documentPath, current, next, errors };
 }

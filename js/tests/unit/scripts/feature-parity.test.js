@@ -93,6 +93,20 @@ describe('feature parity generator', () => {
     assert.equal(escapeCell('a\\b|c\nx'), 'a\\\\b\\|c x');
   });
 
+  it('accepts a generated document checked out with CRLF endings', () => {
+    const root = fixture({ tests: ALL_LANGUAGES });
+    try {
+      const documentPath = path.join(root, 'docs/feature-parity.md');
+      const { next } = generate(root);
+      fs.writeFileSync(documentPath, next.replaceAll('\n', '\r\n'));
+      const generated = generate(root);
+      assert.equal(generated.current, generated.next);
+      assert.equal(generated.next.includes('\r'), false);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('pads tables so the output is stable under Prettier', () => {
     assert.equal(
       renderTable(['A', 'Long header'], [['wide cell', 'x']]),

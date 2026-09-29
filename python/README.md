@@ -4,19 +4,23 @@ A universal browser automation library for Python that supports both Playwright 
 
 ## Installation
 
+The first PyPI release is pending trusted publisher registration. Until the
+[PyPI project](https://pypi.org/project/browser-commander/) is available,
+install directly from this repository:
+
 ```bash
-pip install browser-commander
+pip install "git+https://github.com/link-foundation/browser-commander.git#subdirectory=python"
 ```
 
 You'll also need either Playwright or Selenium:
 
 ```bash
 # With Playwright
-pip install browser-commander[playwright]
+pip install playwright
 playwright install chromium
 
 # Or with Selenium
-pip install browser-commander[selenium]
+pip install selenium
 ```
 
 ## Core Concept: Page State Machine

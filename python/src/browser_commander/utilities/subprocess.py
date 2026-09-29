@@ -138,7 +138,21 @@ async def run_command(
         env=_environment(env),
         cwd=None if cwd is None else os.fspath(cwd),
     )
-    stdout, stderr = await process.communicate(_encode(input))
+    try:
+        stdout, stderr = await process.communicate(_encode(input))
+    except asyncio.CancelledError:
+        # Cancelling the awaiting task does not stop the child. Reap it before
+        # propagating cancellation so a command cannot outlive its caller.
+        if process.returncode is None:
+            with contextlib.suppress(ProcessLookupError):
+                process.terminate()
+            try:
+                await asyncio.wait_for(process.wait(), timeout=2)
+            except asyncio.TimeoutError:
+                with contextlib.suppress(ProcessLookupError):
+                    process.kill()
+                await process.wait()
+        raise
     result = CommandResult(
         stdout=_decode(stdout),
         stderr=_decode(stderr),

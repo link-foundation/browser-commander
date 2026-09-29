@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
+import os
+import signal
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -102,3 +106,33 @@ def test_output_channel_keeps_output_until_the_first_listener() -> None:
     channel.off("data", received.append)
     channel.emit("ignored")
     assert received == ["early ", "late"]
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="uses /proc")
+async def test_cancelling_run_command_reaps_its_child(tmp_path: Path) -> None:
+    """Cancelling an awaited command must not leave a detached child alive."""
+    pid_file = tmp_path / "pid"
+    task = asyncio.create_task(
+        run_command(
+            PYTHON,
+            [
+                "-c",
+                "import os, pathlib, sys, time; pathlib.Path(sys.argv[1]).write_text(str(os.getpid())); time.sleep(60)",
+                str(pid_file),
+            ],
+        )
+    )
+    for _ in range(100):
+        if pid_file.exists():
+            break
+        await asyncio.sleep(0.01)
+    assert pid_file.exists()
+    pid = int(pid_file.read_text())
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    try:
+        assert not Path(f"/proc/{pid}").exists()
+    finally:
+        if Path(f"/proc/{pid}").exists():
+            os.kill(pid, signal.SIGKILL)

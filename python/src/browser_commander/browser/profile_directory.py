@@ -21,6 +21,7 @@ FIRST_RUN_SENTINEL = "First Run"
 
 #: Chrome's profile-wide settings file, next to the profile directories.
 LOCAL_STATE_FILE = "Local State"
+PREFERENCES_FILE = Path("Default") / "Preferences"
 
 #: Local State written into a brand-new user data directory. With only the
 #: First Run sentinel, Chrome treats a new directory like a browser that was
@@ -49,7 +50,87 @@ def _plain(value: Any) -> Any:
     return value
 
 
-def prepare_user_data_dir(user_data_dir: str | os.PathLike[str]) -> str:
+def _merge_json(
+    path: Path, defaults: Mapping[str, Any], overrides: Mapping[str, Any]
+) -> None:
+    if path.exists():
+        current = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(current, dict):
+            raise TypeError(f"{path} must contain a JSON object")
+    else:
+        current = {}
+
+    def merge(target: dict[str, Any], source: Mapping[str, Any]) -> None:
+        for key, value in source.items():
+            if isinstance(value, Mapping):
+                previous = target.get(key)
+                nested = previous if isinstance(previous, dict) else {}
+                merge(nested, value)
+                target[key] = nested
+            else:
+                target[key] = value
+
+    merge(current, defaults)
+    merge(current, overrides)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(current, separators=(",", ":")), encoding="utf-8")
+
+
+def configure_user_data_dir(
+    user_data_dir: str | os.PathLike[str],
+    *,
+    default_browser_check: bool | None = None,
+    preferences: Mapping[str, Any] | None = None,
+    local_state: Mapping[str, Any] | None = None,
+) -> None:
+    """Apply launch preferences after fresh creation, migration, or snapshot."""
+    if default_browser_check is not None and not isinstance(
+        default_browser_check, bool
+    ):
+        raise TypeError("default_browser_check must be a boolean")
+    if preferences is not None and not isinstance(preferences, Mapping):
+        raise TypeError("preferences must be a JSON object")
+    if local_state is not None and not isinstance(local_state, Mapping):
+        raise TypeError("local_state must be a JSON object")
+    overrides = _plain(preferences or {})
+    if default_browser_check is not None:
+        browser = overrides.get("browser", {})
+        if not isinstance(browser, dict):
+            raise TypeError("preferences.browser must be a JSON object")
+        overrides["browser"] = {
+            **browser,
+            "check_default_browser": default_browser_check,
+        }
+    directory = Path(user_data_dir)
+    _merge_json(
+        directory / PREFERENCES_FILE,
+        {"browser": {"check_default_browser": False}},
+        overrides,
+    )
+    browser = overrides.get("browser", {})
+    if not isinstance(browser, dict):
+        raise TypeError("preferences.browser must be a JSON object")
+    check = browser.get("check_default_browser", False)
+    _merge_json(
+        directory / LOCAL_STATE_FILE,
+        {
+            "browser": {
+                "default_browser_infobar_declined_count": 0 if check else 5,
+                "default_browser_declined_count": 0 if check else 5,
+            }
+        },
+        _plain(local_state or {}),
+    )
+
+
+def prepare_user_data_dir(
+    user_data_dir: str | os.PathLike[str],
+    *,
+    first_run: bool = False,
+    default_browser_check: bool | None = None,
+    preferences: Mapping[str, Any] | None = None,
+    local_state: Mapping[str, Any] | None = None,
+) -> str:
     """Make sure a user data directory exists and has the First Run sentinel.
 
     An existing sentinel is left alone, so a profile Chrome already used keeps
@@ -62,17 +143,31 @@ def prepare_user_data_dir(user_data_dir: str | os.PathLike[str]) -> str:
 
     directory = Path(user_data_dir)
     directory.mkdir(parents=True, exist_ok=True)
-    (directory / FIRST_RUN_SENTINEL).touch(exist_ok=True)
+    if not isinstance(first_run, bool):
+        raise TypeError("first_run must be a boolean")
+    if not first_run:
+        (directory / FIRST_RUN_SENTINEL).touch(exist_ok=True)
     try:
         with (directory / LOCAL_STATE_FILE).open("x", encoding="utf-8") as handle:
             json.dump(_plain(INITIAL_LOCAL_STATE), handle, separators=(",", ":"))
     except FileExistsError:
         pass
+    configure_user_data_dir(
+        directory,
+        default_browser_check=default_browser_check,
+        preferences=preferences,
+        local_state=local_state,
+    )
     return os.fspath(user_data_dir)
 
 
 def create_temporary_user_data_dir(
-    *, parent: str | os.PathLike[str] | None = None
+    *,
+    parent: str | os.PathLike[str] | None = None,
+    first_run: bool = False,
+    default_browser_check: bool | None = None,
+    preferences: Mapping[str, Any] | None = None,
+    local_state: Mapping[str, Any] | None = None,
 ) -> str:
     """Create a fresh, prepared profile for one launch.
 
@@ -84,7 +179,13 @@ def create_temporary_user_data_dir(
         prefix=TEMPORARY_PROFILE_PREFIX,
         dir=None if parent is None else os.fspath(parent),
     )
-    return prepare_user_data_dir(directory)
+    return prepare_user_data_dir(
+        directory,
+        first_run=first_run,
+        default_browser_check=default_browser_check,
+        preferences=preferences,
+        local_state=local_state,
+    )
 
 
 def remove_user_data_dir(

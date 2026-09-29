@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use super::*;
 use crate::browser::browser_process::fake::FakeProcess;
-use crate::browser::profile_directory::FIRST_RUN_SENTINEL;
+use crate::browser::profile_directory::{create_temporary_user_data_dir, FIRST_RUN_SENTINEL};
 use crate::fingerprint::automation_parity::disables_automation_controlled;
 
 const DEDICATED: &str = "/tmp/browser-commander-dedicated";

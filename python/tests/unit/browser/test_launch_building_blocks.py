@@ -117,9 +117,16 @@ def test_creates_a_prepared_temporary_profile() -> None:
         assert (Path(directory) / FIRST_RUN_SENTINEL).is_file()
         local_state = json.loads((Path(directory) / LOCAL_STATE_FILE).read_text())
         assert local_state == {
-            "browser": {"last_whats_new_version": 9999},
+            "browser": {
+                "last_whats_new_version": 9999,
+                "default_browser_infobar_declined_count": 5,
+                "default_browser_declined_count": 5,
+            },
             "fre": {"has_user_seen_fre": True},
         }
+        assert json.loads(
+            (Path(directory) / "Default" / "Preferences").read_text()
+        ) == {"browser": {"check_default_browser": False}}
     finally:
         remove_user_data_dir(directory)
     assert not Path(directory).exists()
@@ -130,8 +137,55 @@ def test_creates_a_prepared_temporary_profile() -> None:
 def test_prepare_leaves_existing_chrome_state_alone(tmp_path: Path) -> None:
     (tmp_path / LOCAL_STATE_FILE).write_text('{"mine": true}')
     assert prepare_user_data_dir(tmp_path) == os.fspath(tmp_path)
-    assert json.loads((tmp_path / LOCAL_STATE_FILE).read_text()) == {"mine": True}
+    assert json.loads((tmp_path / LOCAL_STATE_FILE).read_text()) == {
+        "mine": True,
+        "browser": {
+            "default_browser_infobar_declined_count": 5,
+            "default_browser_declined_count": 5,
+        },
+    }
     assert (tmp_path / FIRST_RUN_SENTINEL).is_file()
+
+
+def test_profile_settings_merge_and_named_override(tmp_path: Path) -> None:
+    prepare_user_data_dir(tmp_path)
+    (tmp_path / "Default" / "Preferences").write_text(
+        '{"browser":{"check_default_browser":true,"show_home_button":false},"intl":{"accept_languages":"en"}}'
+    )
+    prepare_user_data_dir(
+        tmp_path,
+        default_browser_check=False,
+        preferences={"browser": {"show_home_button": True}},
+        local_state={"browser": {"extra": 1}},
+    )
+    assert json.loads((tmp_path / "Default" / "Preferences").read_text()) == {
+        "browser": {"check_default_browser": False, "show_home_button": True},
+        "intl": {"accept_languages": "en"},
+    }
+    assert json.loads((tmp_path / LOCAL_STATE_FILE).read_text())["browser"] == {
+        "last_whats_new_version": 9999,
+        "default_browser_infobar_declined_count": 5,
+        "default_browser_declined_count": 5,
+        "extra": 1,
+    }
+    prepare_user_data_dir(tmp_path, default_browser_check=True)
+    assert (
+        json.loads((tmp_path / "Default" / "Preferences").read_text())["browser"][
+            "check_default_browser"
+        ]
+        is True
+    )
+    assert (
+        json.loads((tmp_path / LOCAL_STATE_FILE).read_text())["browser"][
+            "default_browser_declined_count"
+        ]
+        == 0
+    )
+
+
+def test_first_run_can_be_enabled_in_a_fresh_profile(tmp_path: Path) -> None:
+    prepare_user_data_dir(tmp_path, first_run=True)
+    assert not (tmp_path / FIRST_RUN_SENTINEL).exists()
 
 
 # -- restrictions ------------------------------------------------------------

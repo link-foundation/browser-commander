@@ -32,6 +32,7 @@ from browser_commander.browser.debugging_port import (
 )
 from browser_commander.browser.launcher import LaunchResult
 from browser_commander.browser.profile_directory import (
+    configure_user_data_dir,
     create_temporary_user_data_dir,
     prepare_user_data_dir,
     remove_user_data_dir,
@@ -96,6 +97,14 @@ class RealBrowserOptions:
     channel: str = "chrome"
     executable_path: str | None = None
     user_data_dir: str | None = None
+    default_browser_check: bool | None = None
+    """False by default; True allows the browser to ask to become the default."""
+    first_run: bool = False
+    """True allows the browser's first-run flow in a fresh profile."""
+    preferences: Mapping[str, Any] | None = None
+    """Deep-merged into Default/Preferences before launch."""
+    local_state: Mapping[str, Any] | None = None
+    """Deep-merged into Local State before launch."""
     """Persistent dedicated profile. When omitted a fresh temporary profile is
     created and deleted on close (and when the browser exits)."""
     remote_debugging_port: int | None = None
@@ -625,9 +634,11 @@ async def launch_real_browser_with_dependencies(
 
     temporary_profile = not options.user_data_dir
     user_data_dir = (
-        create_temporary_user_data_dir()
+        create_temporary_user_data_dir(first_run=options.first_run)
         if temporary_profile
-        else prepare_user_data_dir(str(options.user_data_dir))
+        else prepare_user_data_dir(
+            str(options.user_data_dir), first_run=options.first_run
+        )
     )
     child_env = browser_environment(options.restrictions, options.env)
 
@@ -637,6 +648,19 @@ async def launch_real_browser_with_dependencies(
         temporary_profile=temporary_profile,
         migrate=migrate_profile,
     )
+
+    # A migrated profile may have opted into the default-browser prompt.
+    try:
+        configure_user_data_dir(
+            user_data_dir,
+            default_browser_check=options.default_browser_check,
+            preferences=options.preferences,
+            local_state=options.local_state,
+        )
+    except BaseException:
+        if temporary_profile:
+            await _remove_profile(user_data_dir)
+        raise
 
     try:
         launched = await _spawn_on_free_port(

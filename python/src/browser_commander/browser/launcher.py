@@ -59,6 +59,10 @@ class LaunchOptions:
     user_data_dir: str | None = None
     """Persistent profile directory. When omitted a fresh temporary profile is
     created and deleted on close."""
+    default_browser_check: bool | None = None
+    first_run: bool = False
+    preferences: Mapping[str, Any] | None = None
+    local_state: Mapping[str, Any] | None = None
     headless: bool = False
     slow_mo: int = 0
     verbose: bool = False
@@ -291,6 +295,10 @@ async def _launch_real(
                 channel=options.channel or "chrome",
                 executable_path=executable_path,
                 user_data_dir=options.user_data_dir,
+                default_browser_check=options.default_browser_check,
+                first_run=options.first_run,
+                preferences=options.preferences,
+                local_state=options.local_state,
                 remote_debugging_port=options.remote_debugging_port,
                 headless=options.headless,
                 restrictions=list(options.restrictions),

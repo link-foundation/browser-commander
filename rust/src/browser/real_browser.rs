@@ -37,7 +37,8 @@ use crate::browser::migration::{
     migrate_profile, MigrateProfileOptions, MigrationSource, MigrationSummary,
 };
 use crate::browser::profile_directory::{
-    create_temporary_user_data_dir, prepare_user_data_dir, remove_user_data_dir,
+    configure_user_data_dir, create_temporary_user_data_dir_with_first_run,
+    prepare_user_data_dir_with_first_run, remove_user_data_dir,
 };
 use crate::browser::restrictions::{merge_feature_switches, resolve_restrictions};
 use crate::core::engine::{EngineAdapter, EngineType};
@@ -83,6 +84,14 @@ pub struct RealBrowserOptions {
     /// Dedicated, non-default browser profile. When `None` a fresh temporary
     /// profile is created for the launch and deleted when the browser exits.
     pub user_data_dir: Option<PathBuf>,
+    /// Whether to ask to become the OS default browser. Defaults to false.
+    pub default_browser_check: Option<bool>,
+    /// Allow the browser's first-run flow in a fresh profile.
+    pub first_run: bool,
+    /// JSON object deep-merged into Default/Preferences before launch.
+    pub preferences: Value,
+    /// JSON object deep-merged into Local State before launch.
+    pub local_state: Value,
     /// Fixed loopback CDP port. When `None` a free port is reserved (and a
     /// lost port race retried). Zero is refused: it makes Chrome enable
     /// `AutomationControlled`.
@@ -154,6 +163,10 @@ impl Default for RealBrowserOptions {
             channel: "chrome".to_string(),
             executable_path: None,
             user_data_dir: None,
+            default_browser_check: None,
+            first_run: false,
+            preferences: serde_json::json!({}),
+            local_state: serde_json::json!({}),
             remote_debugging_port: None,
             port_attempts: DEFAULT_PORT_ATTEMPTS,
             headless: false,
@@ -818,8 +831,10 @@ where
     let executable_path = hooks.resolve_executable(options)?;
     let temporary_profile = options.user_data_dir.is_none();
     let user_data_dir = match &options.user_data_dir {
-        Some(user_data_dir) => prepare_user_data_dir(user_data_dir)?,
-        None => create_temporary_user_data_dir(None)?,
+        Some(user_data_dir) => {
+            prepare_user_data_dir_with_first_run(user_data_dir, options.first_run)?
+        }
+        None => create_temporary_user_data_dir_with_first_run(None, options.first_run)?,
     };
     let (migration, migrated_cookies) = if let Some(source) = options.migrate_from.clone() {
         let target = user_data_dir.join("Default");
@@ -854,6 +869,17 @@ where
     } else {
         (None, Vec::new())
     };
+    if let Err(error) = configure_user_data_dir(
+        &user_data_dir,
+        options.default_browser_check,
+        &options.preferences,
+        &options.local_state,
+    ) {
+        if temporary_profile {
+            let _ = remove_user_data_dir(&user_data_dir).await;
+        }
+        return Err(error);
+    }
     let env = browser_environment(options)?;
 
     let spawned = match spawn_on_free_port(

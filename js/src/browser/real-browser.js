@@ -21,6 +21,7 @@ import {
   watchDevToolsOutput,
 } from './debugging-port.js';
 import {
+  configureUserDataDir,
   createTemporaryUserDataDir,
   prepareUserDataDir,
   removeUserDataDir,
@@ -324,6 +325,9 @@ function createCloser({
  * @param {string[]} [options.restrictions] - Opt-in restrictions from launch-restrictions.json, such as 'no-extensions'
  * @param {string[]} [options.args] - Additional browser arguments
  * @param {string[]} [options.extraArgs] - Additional browser arguments appended after args
+ * @param {boolean} [options.defaultBrowserCheck=false] - Allow the disposable browser to ask to become the default
+ * @param {Object} [options.preferences] - Deep-merged into Default/Preferences before launch
+ * @param {Object} [options.localState] - Deep-merged into Local State before launch
  * @param {Object<string,string>} [options.env] - Extra environment for the browser process only
  * @param {boolean} [options.automationParity=true] - Add the AutomationControlled off switch when a custom argument turns the feature on
  * @param {number} [options.startupTimeout=30000] - CDP readiness timeout in milliseconds
@@ -455,6 +459,7 @@ async function prepareProfile({
   requestedUserDataDir,
   argOptions,
   snapshot,
+  firstRun,
 }) {
   if (attach) {
     const snapshotLaunch = await prepareSnapshotLaunch({
@@ -469,8 +474,8 @@ async function prepareProfile({
   }
   return {
     userDataDir: requestedUserDataDir
-      ? await prepareUserDataDir(requestedUserDataDir)
-      : await createTemporaryUserDataDir(),
+      ? await prepareUserDataDir(requestedUserDataDir, { firstRun })
+      : await createTemporaryUserDataDir({ firstRun }),
   };
 }
 
@@ -541,6 +546,10 @@ export async function launchAndConnectRealBrowserWithDependencies(
     wsEndpoint,
     migrateFrom,
     attach,
+    defaultBrowserCheck,
+    preferences,
+    localState,
+    firstRun,
     ...connectionOptions
   } = options;
   const argOptions = {
@@ -573,6 +582,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
     requestedUserDataDir,
     argOptions,
     snapshot: dependencies.snapshotUserDataDir,
+    firstRun,
   });
   const childEnv = browserEnvironment(restrictions, env);
 
@@ -583,6 +593,22 @@ export async function launchAndConnectRealBrowserWithDependencies(
     temporaryProfile,
     migrate: dependencies.migrateProfile ?? migrateProfile,
   });
+
+  // Migration and snapshot attach can copy a preference that enables the
+  // default-browser infobar, so apply launch settings after either copy.
+  try {
+    await configureUserDataDir(userDataDir, {
+      defaultBrowserCheck,
+      preferences,
+      localState,
+      profileDirectory: attach?.profile ?? 'Default',
+    });
+  } catch (error) {
+    if (temporaryProfile) {
+      await removeUserDataDir(userDataDir);
+    }
+    throw error;
+  }
 
   let launched;
   try {

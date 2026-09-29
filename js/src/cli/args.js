@@ -27,6 +27,10 @@ const BROWSER_OPTIONS = Object.freeze({
   launch: STRING,
   restriction: STRINGS,
   arg: STRINGS,
+  pref: STRINGS,
+  'local-state': STRINGS,
+  'default-browser-check': FLAG,
+  'first-run': FLAG,
 });
 
 /** Options accepted by every page command. */
@@ -182,6 +186,45 @@ export function requireOption(options, name, command) {
  * `--restriction` → `restrictions`), with unset options left out.
  */
 export function launchParams(options) {
+  const settings = (entries, flag) => {
+    if (entries === undefined) {
+      return undefined;
+    }
+    const result = {};
+    for (const entry of entries) {
+      const separator = entry.indexOf('=');
+      const path = entry.slice(0, separator).split('.');
+      if (
+        separator < 1 ||
+        path.some(
+          (part) =>
+            !part || ['__proto__', 'prototype', 'constructor'].includes(part)
+        )
+      ) {
+        throw new UsageError(`${flag} requires a dotted key=value`);
+      }
+      let value = entry.slice(separator + 1);
+      try {
+        value = JSON.parse(value);
+      } catch {
+        // Unquoted CLI text is a string.
+      }
+      let parent = result;
+      for (const part of path.slice(0, -1)) {
+        parent[part] ??= {};
+        if (
+          !parent[part] ||
+          typeof parent[part] !== 'object' ||
+          Array.isArray(parent[part])
+        ) {
+          throw new UsageError(`${flag} has a conflicting key: ${entry}`);
+        }
+        parent = parent[part];
+      }
+      parent[path.at(-1)] = value;
+    }
+    return result;
+  };
   const params = {
     engine: options.engine,
     browser: options.browser,
@@ -191,6 +234,10 @@ export function launchParams(options) {
     launch: options.launch,
     restrictions: options.restriction,
     args: options.arg,
+    preferences: settings(options.pref, '--pref'),
+    localState: settings(options.localState, '--local-state'),
+    defaultBrowserCheck: options.defaultBrowserCheck,
+    firstRun: options.firstRun,
   };
   return Object.fromEntries(
     Object.entries(params).filter(([, value]) => value !== undefined)

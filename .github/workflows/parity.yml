@@ -134,6 +134,13 @@ jobs:
           fi
           echo "parity suite passed $passed tests against a real Chrome"
 
+      - name: Verify native browser window has no default-browser infobar
+        working-directory: .
+        run: |
+          python -m pip install mss pillow
+          PYTHONPATH=python/src xvfb-run -a --server-args="-screen 0 1360x900x24" \
+            python experiments/issue-110/capture-infobar.py
+
       - name: Run WebDriver suite under Xvfb
         # The selenium engine drives the same Chrome through chromedriver
         # (issue #104). launchWebDriver() finds a chromedriver on PATH or asks

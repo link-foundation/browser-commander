@@ -6,6 +6,7 @@ import path from 'node:path';
 import { PassThrough } from 'node:stream';
 import {
   access,
+  mkdir,
   mkdtemp,
   readFile,
   rm,
@@ -22,8 +23,10 @@ import {
   FIRST_RUN_SENTINEL,
   INITIAL_LOCAL_STATE,
   LOCAL_STATE_FILE,
+  PREFERENCES_FILE,
   TEMPORARY_PROFILE_PREFIX,
   createTemporaryUserDataDir,
+  configureUserDataDir,
   prepareUserDataDir,
   removeUserDataDir,
 } from '../../../src/browser/profile-directory.js';
@@ -106,6 +109,11 @@ describe('launch restrictions', () => {
 });
 
 describe('profile directory', () => {
+  const readPreferences = async (directory) =>
+    JSON.parse(
+      await readFile(path.join(directory, 'Default', 'Preferences'), 'utf8')
+    );
+
   it('creates a fresh profile with the First Run sentinel', async () => {
     const dir = await createTemporaryUserDataDir();
     try {
@@ -113,15 +121,25 @@ describe('profile directory', () => {
       await access(path.join(dir, FIRST_RUN_SENTINEL));
       assert.deepEqual(
         JSON.parse(await readFile(path.join(dir, LOCAL_STATE_FILE), 'utf8')),
-        INITIAL_LOCAL_STATE
+        {
+          browser: {
+            ...INITIAL_LOCAL_STATE.browser,
+            default_browser_infobar_declined_count: 5,
+            default_browser_declined_count: 5,
+          },
+          fre: INITIAL_LOCAL_STATE.fre,
+        }
       );
+      assert.deepEqual(await readPreferences(dir), {
+        browser: { check_default_browser: false },
+      });
     } finally {
       await removeUserDataDir(dir);
     }
     await assert.rejects(() => access(dir), /ENOENT/);
   });
 
-  it('never overwrites Local State that Chrome already wrote', async () => {
+  it('preserves other Local State values that Chrome already wrote', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-profile-test-'));
     try {
       const localState = path.join(dir, LOCAL_STATE_FILE);
@@ -130,9 +148,61 @@ describe('profile directory', () => {
         '{"browser":{"enabled_labs_experiments":[]}}'
       );
       await prepareUserDataDir(dir);
+      assert.deepEqual(JSON.parse(await readFile(localState, 'utf8')), {
+        browser: {
+          enabled_labs_experiments: [],
+          default_browser_infobar_declined_count: 5,
+          default_browser_declined_count: 5,
+        },
+      });
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('deep-merges settings and lets the named default-browser option override a copied preference', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-profile-test-'));
+    try {
+      await prepareUserDataDir(dir);
+      await writeFile(
+        path.join(dir, 'Default', 'Preferences'),
+        JSON.stringify({
+          browser: { check_default_browser: true, show_home_button: false },
+          intl: { accept_languages: 'en' },
+        })
+      );
+      await prepareUserDataDir(dir, {
+        defaultBrowserCheck: false,
+        preferences: { browser: { show_home_button: true } },
+        localState: { browser: { extra: 1 } },
+      });
+      assert.deepEqual(await readPreferences(dir), {
+        browser: { check_default_browser: false, show_home_button: true },
+        intl: { accept_languages: 'en' },
+      });
+      assert.deepEqual(
+        JSON.parse(await readFile(path.join(dir, LOCAL_STATE_FILE), 'utf8')),
+        {
+          browser: {
+            last_whats_new_version: 9999,
+            default_browser_infobar_declined_count: 5,
+            default_browser_declined_count: 5,
+            extra: 1,
+          },
+          fre: { has_user_seen_fre: true },
+        }
+      );
+      await prepareUserDataDir(dir, { defaultBrowserCheck: true });
       assert.equal(
-        await readFile(localState, 'utf8'),
-        '{"browser":{"enabled_labs_experiments":[]}}'
+        JSON.parse(
+          await readFile(path.join(dir, 'Default', 'Preferences'), 'utf8')
+        ).browser.check_default_browser,
+        true
+      );
+      assert.equal(
+        JSON.parse(await readFile(path.join(dir, LOCAL_STATE_FILE), 'utf8'))
+          .browser.default_browser_declined_count,
+        0
       );
     } finally {
       await rm(dir, { recursive: true, force: true });
@@ -151,6 +221,59 @@ describe('profile directory', () => {
       assert.equal(await readFile(sentinel, 'utf8'), '');
     } finally {
       await rm(parent, { recursive: true, force: true });
+    }
+  });
+
+  it('allows an explicit first-run flow in a new profile', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-profile-test-'));
+    try {
+      await prepareUserDataDir(dir, { firstRun: true });
+      await assert.rejects(
+        () => access(path.join(dir, FIRST_RUN_SENTINEL)),
+        /ENOENT/
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects malformed profile settings before writing them', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-profile-test-'));
+    try {
+      await assert.rejects(
+        prepareUserDataDir(dir, { preferences: { browser: false } }),
+        /preferences.browser/u
+      );
+      await assert.rejects(
+        prepareUserDataDir(dir, { preferences: JSON.parse('{"__proto__":1}') }),
+        /profile setting key/u
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('configures a selected snapshot profile instead of Default', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-profile-test-'));
+    try {
+      const selected = path.join(dir, 'Profile 1');
+      await mkdir(selected);
+      await writeFile(
+        path.join(selected, 'Preferences'),
+        '{"browser":{"check_default_browser":true}}'
+      );
+      await configureUserDataDir(dir, { profileDirectory: 'Profile 1' });
+      assert.equal(
+        JSON.parse(await readFile(path.join(selected, 'Preferences'), 'utf8'))
+          .browser.check_default_browser,
+        false
+      );
+      await assert.rejects(
+        () => access(path.join(dir, PREFERENCES_FILE)),
+        /ENOENT/
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
     }
   });
 });

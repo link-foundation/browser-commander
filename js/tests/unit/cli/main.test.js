@@ -7,7 +7,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { PassThrough } from 'node:stream';
 
-import { parseCommandLine, UsageError } from '../../../src/cli/args.js';
+import {
+  launchParams,
+  parseCommandLine,
+  UsageError,
+} from '../../../src/cli/args.js';
 import { TRACE_STOP_MARKER } from '../../../src/cli/commands.js';
 import { EXIT_CODES, runCli } from '../../../src/cli/main.js';
 import { runScript } from '../../../src/cli/script.js';
@@ -33,6 +37,30 @@ async function assertUsageErrors(commands) {
 }
 
 describe('parseCommandLine', () => {
+  it('maps profile settings to real-browser launch options', () => {
+    const { options } = parseCommandLine([
+      'launch',
+      '--pref',
+      'browser.show_home_button=true',
+      '--pref',
+      'intl.accept_languages=en-US',
+      '--local-state',
+      'fre.has_user_seen_fre=false',
+      '--default-browser-check',
+    ]);
+    assert.deepEqual(launchParams(options), {
+      preferences: {
+        browser: { show_home_button: true },
+        intl: { accept_languages: 'en-US' },
+      },
+      localState: { fre: { has_user_seen_fre: false } },
+      defaultBrowserCheck: true,
+    });
+    assert.throws(
+      () => launchParams({ pref: ['__proto__.polluted=true'] }),
+      UsageError
+    );
+  });
   it('parses positionals, kebab-case options and two-word commands', () => {
     assert.deepEqual(
       parseCommandLine([

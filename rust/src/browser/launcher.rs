@@ -11,6 +11,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
+use serde_json::Value;
+
 use crate::browser::browser_process::{BrowserCloser, BrowserProcess};
 use crate::browser::connector::{
     connect_browser_with, refuse_unappliable_fingerprint, AttachSettings,
@@ -83,6 +85,14 @@ pub struct LaunchOptions {
     /// Persistent profile directory. When `None` a fresh temporary profile is
     /// created for the launch and deleted by [`LaunchResult::close`].
     pub user_data_dir: Option<PathBuf>,
+    /// Allow the disposable browser to ask to become the system default.
+    pub default_browser_check: Option<bool>,
+    /// Allow first-run UI in a fresh profile.
+    pub first_run: bool,
+    /// Preferences merged into Default/Preferences before launch.
+    pub preferences: Value,
+    /// Preferences merged into Local State before launch.
+    pub local_state: Value,
     /// Run in headless mode.
     pub headless: bool,
     /// Slow down operations by this many milliseconds (default 0).
@@ -153,6 +163,10 @@ impl Default for LaunchOptions {
             engine: EngineType::Chromiumoxide,
             launch: LaunchMode::Real,
             user_data_dir: None,
+            default_browser_check: None,
+            first_run: false,
+            preferences: serde_json::json!({}),
+            local_state: serde_json::json!({}),
             headless: false,
             slow_mo: 0,
             verbose: false,
@@ -436,6 +450,10 @@ impl LaunchOptions {
             channel: self.channel.clone().unwrap_or(defaults.channel.clone()),
             executable_path: self.executable_path.clone(),
             user_data_dir: self.user_data_dir.clone(),
+            default_browser_check: self.default_browser_check,
+            first_run: self.first_run,
+            preferences: self.preferences.clone(),
+            local_state: self.local_state.clone(),
             remote_debugging_port: self.remote_debugging_port,
             headless: self.headless,
             restrictions: self.restrictions.clone(),

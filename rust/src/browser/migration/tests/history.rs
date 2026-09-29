@@ -20,7 +20,11 @@ fn snapshots_history_into_the_target_and_reports_the_url_count() {
         .iter()
         .find(|warning| warning.reason == "snapshot-copied")
         .expect("snapshot warning");
-    assert!(warning.detail.as_deref().unwrap().contains("5 history URLs"));
+    assert!(warning
+        .detail
+        .as_deref()
+        .unwrap()
+        .contains("5 history URLs"));
 }
 
 #[test]

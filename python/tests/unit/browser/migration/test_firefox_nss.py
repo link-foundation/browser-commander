@@ -38,9 +38,7 @@ def _open_read_only(database_path: Path) -> Iterator[sqlite3.Connection]:
 class TestFirefoxDer:
     def test_decodes_a_nested_sequence_and_oid(self) -> None:
         # SEQUENCE { OID 1.2.840.113549.1.5.13, OCTET STRING 0x01 0x02 }
-        oid = bytes(
-            [0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x05, 0x0D]
-        )
+        oid = bytes([0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x05, 0x0D])
         octet = bytes([0x04, 0x02, 0x01, 0x02])
         sequence = bytes([0x30, len(oid) + len(octet)]) + oid + octet
 
@@ -85,8 +83,9 @@ class TestRecoverFirefoxKeyFromDatabase:
         key4_path, _, _ = build_key4_database(
             tmp_path, primary_password=b"correct horse"
         )
-        with _open_read_only(key4_path) as database, pytest.raises(
-            PrimaryPasswordError
+        with (
+            _open_read_only(key4_path) as database,
+            pytest.raises(PrimaryPasswordError),
         ):
             recover_firefox_key_from_database(database, b"wrong")
 
@@ -96,8 +95,9 @@ class TestRecoverFirefoxKeyFromDatabase:
         key4_path, _, _ = build_key4_database(
             tmp_path, primary_password=b"correct horse"
         )
-        with _open_read_only(key4_path) as database, pytest.raises(
-            PrimaryPasswordError
+        with (
+            _open_read_only(key4_path) as database,
+            pytest.raises(PrimaryPasswordError),
         ):
             recover_firefox_key_from_database(database)
 
@@ -124,8 +124,9 @@ class TestRecoverFirefoxKeyFromDatabase:
             database.execute("CREATE TABLE metadata (id TEXT, item1 BLOB, item2 BLOB)")
             database.commit()
         (tmp_path / "marker").write_text("x")
-        with _open_read_only(key4_path) as database, pytest.raises(
-            ValueError, match="no password metadata"
+        with (
+            _open_read_only(key4_path) as database,
+            pytest.raises(ValueError, match="no password metadata"),
         ):
             recover_firefox_key_from_database(database)
 

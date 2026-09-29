@@ -50,7 +50,9 @@ impl Default for KeystoreHooks {
 
 impl fmt::Debug for KeystoreHooks {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.debug_struct("KeystoreHooks").finish_non_exhaustive()
+        formatter
+            .debug_struct("KeystoreHooks")
+            .finish_non_exhaustive()
     }
 }
 
@@ -70,7 +72,9 @@ pub(crate) fn create_source_key_resolver(
     let platform = platform.to_string();
     let cache: Mutex<HashMap<String, Result<Vec<u8>, String>>> = Mutex::new(HashMap::new());
     Arc::new(move |prefix: &str| {
-        let mut cache = cache.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut cache = cache
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let entry = cache.entry(prefix.to_string()).or_insert_with(|| {
             resolve_source_key(
                 &browser,

@@ -324,6 +324,21 @@ class ManagedProcess:
         """Wait for the process to exit and return its exit code."""
         return await asyncio.shield(self._exited)
 
+    async def write_stdin(self, data: str) -> None:
+        """Write a request to a child started with ``stdin_mode='pipe'``."""
+        stream = self._process.stdin
+        if stream is None:
+            raise ValueError("the process was not started with a stdin pipe")
+        stream.write(data.encode("utf-8"))
+        await stream.drain()
+
+    async def close_stdin(self) -> None:
+        """Tell a child with a stdin pipe that no more requests will arrive."""
+        stream = self._process.stdin
+        if stream is not None:
+            stream.close()
+            await stream.wait_closed()
+
     def on(self, event: str, listener: ExitListener) -> ManagedProcess:
         """Register an ``exit`` listener; it runs at once if already exited."""
         if event == "exit":
@@ -378,6 +393,7 @@ async def start_process(
     cwd: str | os.PathLike[str] | None = None,
     forward_output: bool = False,
     kill_grace: float = 2.0,
+    stdin_mode: str = "null",
 ) -> ManagedProcess:
     """Start a long-running process, such as a browser.
 
@@ -391,10 +407,18 @@ async def start_process(
             :meth:`ManagedProcess.kill`.
     """
 
+    stdin = {
+        "null": asyncio.subprocess.DEVNULL,
+        "inherit": None,
+        "pipe": asyncio.subprocess.PIPE,
+    }.get(stdin_mode)
+    if stdin_mode not in ("null", "inherit", "pipe"):
+        raise ValueError("stdin_mode must be null, inherit, or pipe")
+
     process = await asyncio.create_subprocess_exec(
         file,
         *[str(argument) for argument in args],
-        stdin=asyncio.subprocess.DEVNULL,
+        stdin=stdin,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         env=_environment(env),

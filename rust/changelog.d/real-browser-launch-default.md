@@ -3,6 +3,12 @@ bump: minor
 ---
 
 ### Added
+- A `browser-commander` binary with the shared JSON command and `serve
+  --stdio` protocols. Browser commands use the companion JavaScript CLI
+  through `command-stream`; `version` reports the crate version locally.
+- Read-only profile migration before `launch_real_browser`, including a
+  migration report and cookie seeding, plus `open_in_user_browser()` for
+  opening a URL without automation.
 - `LaunchMode` (`Real`, the default, or `Engine`) and `LAUNCH_MODES`, selected with `LaunchOptions::launch` (issue #103). A real launch starts the installed Chrome itself and attaches the engine over CDP, so the browser behaves like one a person started and `navigator.webdriver` stays false. Without a `channel` or `executable_path` the installed Google Chrome is preferred and the engine's own browser is the fallback.
 - `LaunchOptions::restrictions`, `LaunchOptions::env` and `LaunchOptions::remote_debugging_port`. Restrictions come from the shared catalogue (the old defaults are the `legacy-defaults` preset). Their environment and `env` go to the browser process only; the caller's environment is never modified.
 - `LaunchResult::close()` closes a launched browser and deletes its temporary profile. It does nothing for a browser attached with `connect_browser`.

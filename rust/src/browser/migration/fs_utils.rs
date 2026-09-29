@@ -38,10 +38,7 @@ pub(crate) fn make_temp_dir(prefix: &str) -> Result<PathBuf> {
             .map(|elapsed| elapsed.as_nanos())
             .unwrap_or_default();
         let count = COUNTER.fetch_add(1, Ordering::Relaxed);
-        let candidate = parent.join(format!(
-            "{prefix}{}-{nanos:x}-{count}",
-            std::process::id()
-        ));
+        let candidate = parent.join(format!("{prefix}{}-{nanos:x}-{count}", std::process::id()));
         match fs::create_dir(&candidate) {
             Ok(()) => return Ok(candidate),
             Err(error) if error.kind() == ErrorKind::AlreadyExists => continue,
@@ -63,8 +60,9 @@ pub(crate) fn remove_dir_quietly(path: &Path) {
 /// Recursively copy a directory tree, overwriting existing files (the
 /// `fs.cp(source, target, { recursive: true, force: true })` equivalent).
 pub(crate) fn copy_dir_recursive(source: &Path, target: &Path) -> Result<()> {
-    fs::create_dir_all(target)
-        .map_err(|error| anyhow!(error).context(format!("Could not create {}", target.display())))?;
+    fs::create_dir_all(target).map_err(|error| {
+        anyhow!(error).context(format!("Could not create {}", target.display()))
+    })?;
     for entry in fs::read_dir(source)
         .map_err(|error| anyhow!(error).context(format!("Could not read {}", source.display())))?
     {

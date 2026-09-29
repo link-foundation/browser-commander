@@ -78,7 +78,7 @@ user's real browser:
   the migrated cookies automatically, and returns a `migration` report on the
   session.
 - `openInUserBrowser(url)` opens a URL in the user's own default browser with no
-  automation (macOS `open`, Linux `xdg-open`, Windows `start`) for flows that
+  automation (macOS `open`, Linux `xdg-open`, Windows `explorer.exe`) for flows that
   only need to show a page, such as an OAuth or CLI web-login screen.
 
 `migrateProfile`, `ALL_DATA_CLASSES`, `openInUserBrowser`, `buildOpenCommand`
@@ -104,9 +104,10 @@ launch a temporary one. The Rust and Python CLIs follow the same contract,
 every public Playwright and Puppeteer method, and an e2e suite checks this
 against the engines' shipped `.d.ts` files. Values that are not JSON are
 tagged (`$handle`, `$binary`, `$function`, `$date`, …), and handle ids are
-deterministic, so `tests/cli-contract/basic.json` gives byte-identical results
-in every language. The bridge replaces the 27-operation
-`node_engine_bridge.js` used by the Rust crate.
+deterministic. The shared CLI contract checks equivalent results through all
+three language entry points. The Rust crate's existing 27-operation
+`node_engine_bridge.js` remains available for its typed adapter; callers can
+use the generic CLI bridge to reach methods beyond that adapter.
 
 `createCdpSession(page)` and `commander.createCdpSession()` return one raw CDP
 surface (`send`, `on`, `once`, `off`, `detach`) for Playwright and Puppeteer

@@ -33,11 +33,24 @@ fn reads_and_maps_cookies_applying_the_domain_filter() {
     write_firefox_cookies(
         dir.path(),
         &[
-            FirefoxCookieRow { name: "a", value: "1", host: ".example.com", secure: true },
-            FirefoxCookieRow { name: "b", value: "2", host: ".other.com", secure: false },
+            FirefoxCookieRow {
+                name: "a",
+                value: "1",
+                host: ".example.com",
+                secure: true,
+            },
+            FirefoxCookieRow {
+                name: "b",
+                value: "2",
+                host: ".other.com",
+                secure: false,
+            },
         ],
     );
-    assert_eq!(read_firefox_profile_cookies(dir.path(), &[]).unwrap().len(), 2);
+    assert_eq!(
+        read_firefox_profile_cookies(dir.path(), &[]).unwrap().len(),
+        2
+    );
     let filtered = read_firefox_profile_cookies(dir.path(), &["example.com".to_string()]).unwrap();
     assert_eq!(filtered.len(), 1);
     assert_eq!(filtered[0].domain, ".example.com");
@@ -47,7 +60,9 @@ fn reads_and_maps_cookies_applying_the_domain_filter() {
 #[test]
 fn returns_an_empty_list_when_there_is_no_cookies_sqlite() {
     let dir = TempDir::new("bc-ff-");
-    assert!(read_firefox_profile_cookies(dir.path(), &[]).unwrap().is_empty());
+    assert!(read_firefox_profile_cookies(dir.path(), &[])
+        .unwrap()
+        .is_empty());
 }
 
 #[test]
@@ -64,7 +79,10 @@ fn converts_places_bookmarks_into_a_chrome_bookmarks_document() {
         document["roots"]["bookmark_bar"]["children"][0]["url"],
         "https://toolbar.example/"
     );
-    assert_eq!(document["roots"]["other"]["children"][0]["url"], "https://menu.example/");
+    assert_eq!(
+        document["roots"]["other"]["children"][0]["url"],
+        "https://menu.example/"
+    );
 }
 
 #[test]
@@ -88,7 +106,11 @@ fn decrypts_logins_and_re_encrypts_them_into_a_chrome_login_data() {
     let target = TempDir::new("bc-ff-");
     let fixture = write_firefox_logins(
         source.path(),
-        &[LoginEntry { hostname: "https://a.example", username: "alice", password: "secret-A" }],
+        &[LoginEntry {
+            hostname: "https://a.example",
+            username: "alice",
+            password: "secret-A",
+        }],
         b"",
     );
     assert_eq!(fixture.key4_path, source.path().join("key4.db"));
@@ -108,7 +130,11 @@ fn reports_primary_password_set_when_the_key_is_locked() {
     let target = TempDir::new("bc-ff-");
     write_firefox_logins(
         source.path(),
-        &[LoginEntry { hostname: "https://a.example", username: "a", password: "b" }],
+        &[LoginEntry {
+            hostname: "https://a.example",
+            username: "a",
+            password: "b",
+        }],
         b"locked",
     );
     let target_key = derive_chromium_cookie_key("t", "linux").unwrap();

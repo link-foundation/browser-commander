@@ -29,6 +29,8 @@ from browser_commander.traces.schema import (
     create_manifest,
 )
 
+# feature-parity: trace.read
+
 
 def ndjson(records: list[dict[str, Any]]) -> str:
     """Render records the way the recorder appends them.

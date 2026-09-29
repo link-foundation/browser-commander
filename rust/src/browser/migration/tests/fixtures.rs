@@ -86,7 +86,10 @@ pub(crate) fn write_chromium_history(profile_dir: &Path, url_count: usize) -> Pa
         database
             .execute(
                 "INSERT INTO urls (url, title) VALUES (?1, ?2)",
-                params![format!("https://example.com/{index}"), format!("Page {index}")],
+                params![
+                    format!("https://example.com/{index}"),
+                    format!("Page {index}")
+                ],
             )
             .expect("insert url");
     }
@@ -133,7 +136,13 @@ pub(crate) fn write_firefox_places(profile_dir: &Path, with_menu_bookmark: bool)
                parent INTEGER, position INTEGER, title TEXT, guid TEXT);",
         )
         .expect("create places");
-    let bookmark = |id: i64, kind: i64, fk: Option<i64>, parent: i64, position: i64, title: &str, guid: &str| {
+    let bookmark = |id: i64,
+                    kind: i64,
+                    fk: Option<i64>,
+                    parent: i64,
+                    position: i64,
+                    title: &str,
+                    guid: &str| {
         database
             .execute(
                 "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title, guid)
@@ -144,7 +153,10 @@ pub(crate) fn write_firefox_places(profile_dir: &Path, with_menu_bookmark: bool)
     };
     let place = |id: i64, url: &str| {
         database
-            .execute("INSERT INTO moz_places (id, url) VALUES (?1, ?2)", params![id, url])
+            .execute(
+                "INSERT INTO moz_places (id, url) VALUES (?1, ?2)",
+                params![id, url],
+            )
             .expect("insert place");
     };
     bookmark(1, 2, None, 0, 0, "", "root________");
@@ -341,10 +353,16 @@ pub(crate) struct MigratedLogin {
 
 /// Read back the logins a migration wrote, decrypting each password with the
 /// target profile's key (Linux `v10`/`v11` scheme), sorted by origin.
-pub(crate) fn read_migrated_logins(target_profile_dir: &Path, target_key: &[u8]) -> Vec<MigratedLogin> {
-    let database = Connection::open(target_profile_dir.join("Login Data")).expect("open Login Data");
+pub(crate) fn read_migrated_logins(
+    target_profile_dir: &Path,
+    target_key: &[u8],
+) -> Vec<MigratedLogin> {
+    let database =
+        Connection::open(target_profile_dir.join("Login Data")).expect("open Login Data");
     let mut statement = database
-        .prepare("SELECT origin_url, username_value, password_value FROM logins ORDER BY origin_url")
+        .prepare(
+            "SELECT origin_url, username_value, password_value FROM logins ORDER BY origin_url",
+        )
         .expect("prepare logins");
     let rows = statement
         .query_map([], |row| {

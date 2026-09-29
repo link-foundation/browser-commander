@@ -188,9 +188,11 @@ pub(crate) fn migrate_extensions(
 
     let mut outcome = ClassOutcome::default();
     for (id, reason) in &selection.excluded {
-        outcome
-            .skipped
-            .push(MigrationEntry::new("extensions", id.as_str(), reason.as_str()));
+        outcome.skipped.push(MigrationEntry::new(
+            "extensions",
+            id.as_str(),
+            reason.as_str(),
+        ));
     }
 
     let target_extensions_dir = target_profile_dir.join("Extensions");
@@ -198,9 +200,11 @@ pub(crate) fn migrate_extensions(
     for id in &selection.eligible {
         let source_dir = source_extensions_dir.join(id);
         if !path_exists(&source_dir) {
-            outcome
-                .skipped
-                .push(MigrationEntry::new("extensions", id.as_str(), "files-missing"));
+            outcome.skipped.push(MigrationEntry::new(
+                "extensions",
+                id.as_str(),
+                "files-missing",
+            ));
             continue;
         }
         copy_dir_recursive(&source_dir, &target_extensions_dir.join(id))?;
@@ -220,8 +224,12 @@ pub(crate) fn migrate_extensions(
             write_target_settings(target_profile_dir, migrated_settings)?;
         }
         outcome.warnings.push(
-            MigrationEntry::new("extensions", "Secure Preferences MAC", "mac-will-not-validate")
-                .with_detail(MAC_DETAIL),
+            MigrationEntry::new(
+                "extensions",
+                "Secure Preferences MAC",
+                "mac-will-not-validate",
+            )
+            .with_detail(MAC_DETAIL),
         );
     }
     Ok(outcome)

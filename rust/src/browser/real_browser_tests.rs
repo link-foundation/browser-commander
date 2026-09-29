@@ -364,6 +364,64 @@ async fn spawns_waits_connects_and_returns_process_metadata() {
 }
 
 #[tokio::test]
+async fn migrates_bookmarks_into_the_profile_before_launch() {
+    // feature-parity: migration.launch
+    let source = create_temporary_user_data_dir(None).unwrap();
+    let source_profile = source.join("Default");
+    std::fs::create_dir_all(&source_profile).unwrap();
+    let bookmarks = serde_json::json!({
+        "roots": {"bookmark_bar": {"children": [
+            {"type": "url", "name": "Example", "url": "https://example.com/"}
+        ]}}
+    });
+    std::fs::write(
+        source_profile.join("Bookmarks"),
+        serde_json::to_vec(&bookmarks).unwrap(),
+    )
+    .unwrap();
+    let target = create_temporary_user_data_dir(None).unwrap();
+    let hooks = Arc::new(FakeHooks::with_ports(&[9445]));
+    let options = RealBrowserOptions::default()
+        .user_data_dir(&target)
+        .migrate_from(MigrationSource {
+            browser: "chrome".to_string(),
+            profile: None,
+            user_data_dir: Some(source.clone()),
+        })
+        .migrate_include(["bookmarks"]);
+
+    let (connect, launched) = launch(&options, &hooks).await.unwrap();
+    assert_eq!(connect.seed_cookies.len(), 0);
+    assert_eq!(launched.migration.as_ref().unwrap().migrated.bookmarks, 1);
+    assert_eq!(
+        serde_json::from_slice::<serde_json::Value>(
+            &std::fs::read(target.join("Default/Bookmarks")).unwrap()
+        )
+        .unwrap(),
+        bookmarks
+    );
+    launched.closer.close().await.unwrap();
+    remove_user_data_dir(&source).await.unwrap();
+    remove_user_data_dir(&target).await.unwrap();
+}
+
+#[tokio::test]
+async fn migration_error_prevents_browser_spawn() {
+    let hooks = Arc::new(FakeHooks::with_ports(&[9446]));
+    let options = RealBrowserOptions::default()
+        .migrate_from(MigrationSource {
+            browser: "unknown".to_string(),
+            profile: None,
+            user_data_dir: None,
+        })
+        .migrate_include(["bookmarks"]);
+
+    let error = launch(&options, &hooks).await.unwrap_err();
+    assert!(error.to_string().contains("unknown"));
+    assert!(hooks.spawned.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
 async fn retries_with_a_new_reserved_port_after_a_port_race() {
     let hooks = Arc::new(FakeHooks::with_ports(&[40001, 40002]));
     hooks

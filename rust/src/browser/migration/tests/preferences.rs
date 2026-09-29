@@ -21,7 +21,9 @@ fn copies_only_the_documented_subset_and_skips_missing_paths() {
     assert_eq!(target["intl"]["accept_languages"], "en-US,en");
     assert_eq!(target["homepage"], "https://start.example/");
     assert!(target.get("unrelated").is_none());
-    assert!(migrated_paths.iter().any(|path| path == "intl.accept_languages"));
+    assert!(migrated_paths
+        .iter()
+        .any(|path| path == "intl.accept_languages"));
     assert!(migrated_paths.iter().any(|path| path == "homepage"));
 }
 

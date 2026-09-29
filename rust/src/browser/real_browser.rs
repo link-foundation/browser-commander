@@ -33,6 +33,9 @@ use crate::browser::debugging_port::{
     assert_fixed_debugging_port, reserve_loopback_port, DevToolsOutputWatcher, PortRaceError,
 };
 use crate::browser::launcher::{Browser, LaunchResult};
+use crate::browser::migration::{
+    migrate_profile, MigrateProfileOptions, MigrationSource, MigrationSummary,
+};
 use crate::browser::profile_directory::{
     create_temporary_user_data_dir, prepare_user_data_dir, remove_user_data_dir,
 };
@@ -122,6 +125,12 @@ pub struct RealBrowserOptions {
     pub protocol_timeout: Option<Duration>,
     /// Cookies to seed immediately after attaching.
     pub seed_cookies: Vec<Value>,
+    /// Read-only source profile to copy into the dedicated profile before launch.
+    pub migrate_from: Option<MigrationSource>,
+    /// Data classes to copy. `None` selects every supported class.
+    pub migrate_include: Option<Vec<String>>,
+    /// Host filters for migrated cookies.
+    pub migrate_domains: Vec<String>,
     /// Enable browser and connector logging; the browser's output is mirrored.
     pub verbose: bool,
     /// Node.js executable for Playwright/Puppeteer bridge engines.
@@ -161,6 +170,9 @@ impl Default for RealBrowserOptions {
             timeout: None,
             protocol_timeout: None,
             seed_cookies: Vec::new(),
+            migrate_from: None,
+            migrate_include: None,
+            migrate_domains: Vec::new(),
             verbose: false,
             node_executable: None,
             node_working_dir: None,
@@ -318,6 +330,35 @@ impl RealBrowserOptions {
         self
     }
 
+    /// Copy supported profile data before launch and seed its cookies over CDP.
+    #[must_use]
+    pub fn migrate_from(mut self, source: MigrationSource) -> Self {
+        self.migrate_from = Some(source);
+        self
+    }
+
+    /// Restrict a profile migration to the selected data classes.
+    #[must_use]
+    pub fn migrate_include<I, S>(mut self, include: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.migrate_include = Some(include.into_iter().map(Into::into).collect());
+        self
+    }
+
+    /// Restrict migrated cookies to the selected hosts.
+    #[must_use]
+    pub fn migrate_domains<I, S>(mut self, domains: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.migrate_domains = domains.into_iter().map(Into::into).collect();
+        self
+    }
+
     /// Enable launch and connection logging.
     pub fn verbose(mut self, verbose: bool) -> Self {
         self.verbose = verbose;
@@ -387,6 +428,8 @@ pub struct RealBrowserLaunchResult {
     /// A visible installed browser is where a person clicks a link themselves,
     /// so this is the manager that sees those downloads too.
     pub downloads: Option<Arc<DownloadManager>>,
+    /// Cookie-free profile migration report when `migrate_from` was set.
+    pub migration: Option<MigrationSummary>,
     closer: Arc<RealBrowserCloser>,
 }
 
@@ -413,6 +456,7 @@ impl std::fmt::Debug for RealBrowserLaunchResult {
             .field("args", &self.args)
             .field("browser_process", &self.browser_process)
             .field("downloads", &self.downloads)
+            .field("migration", &self.migration)
             .finish()
     }
 }
@@ -674,6 +718,7 @@ pub(crate) struct LaunchedRealBrowser {
     pub(crate) temporary_profile: bool,
     pub(crate) args: Vec<String>,
     pub(crate) browser_process: BrowserProcess,
+    pub(crate) migration: Option<MigrationSummary>,
     pub(crate) closer: Arc<RealBrowserCloser>,
 }
 
@@ -688,6 +733,7 @@ impl std::fmt::Debug for LaunchedRealBrowser {
             .field("temporary_profile", &self.temporary_profile)
             .field("args", &self.args)
             .field("browser_process", &self.browser_process)
+            .field("migration", &self.migration)
             .finish()
     }
 }
@@ -775,6 +821,39 @@ where
         Some(user_data_dir) => prepare_user_data_dir(user_data_dir)?,
         None => create_temporary_user_data_dir(None)?,
     };
+    let (migration, migrated_cookies) = if let Some(source) = options.migrate_from.clone() {
+        let target = user_data_dir.join("Default");
+        let mut migrate_options = MigrateProfileOptions::new(source, target);
+        migrate_options.target_browser = Some(options.channel.clone());
+        if let Some(include) = &options.migrate_include {
+            migrate_options.include = include.clone();
+        }
+        migrate_options.domains = options.migrate_domains.clone();
+        let result = tokio::task::spawn_blocking(move || migrate_profile(migrate_options)).await;
+        let report = match result {
+            Ok(Ok(report)) => report,
+            Ok(Err(error)) => {
+                if temporary_profile {
+                    let _ = remove_user_data_dir(&user_data_dir).await;
+                }
+                return Err(error);
+            }
+            Err(error) => {
+                if temporary_profile {
+                    let _ = remove_user_data_dir(&user_data_dir).await;
+                }
+                return Err(error.into());
+            }
+        };
+        let (cookies, summary) = report.into_parts();
+        let values = cookies
+            .into_iter()
+            .map(serde_json::to_value)
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        (Some(summary), values)
+    } else {
+        (None, Vec::new())
+    };
     let env = browser_environment(options)?;
 
     let spawned = match spawn_on_free_port(
@@ -807,7 +886,10 @@ where
     }
 
     let connection = match connection_options(options, &spawned.cdp_endpoint) {
-        Ok(connect_options) => connect(connect_options).await,
+        Ok(mut connect_options) => {
+            connect_options.seed_cookies.extend(migrated_cookies);
+            connect(connect_options).await
+        }
         Err(error) => Err(error),
     };
     let connection = match connection {
@@ -841,6 +923,7 @@ where
             temporary_profile,
             args: spawned.args,
             browser_process: process,
+            migration,
             closer,
         },
     ))
@@ -885,6 +968,7 @@ pub(crate) fn real_browser_result(
         args: launched.args,
         browser_process: launched.browser_process,
         downloads,
+        migration: launched.migration,
         closer: launched.closer,
     }
 }

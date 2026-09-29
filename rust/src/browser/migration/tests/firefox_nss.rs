@@ -21,7 +21,9 @@ fn with_key4_database(primary_password: &[u8], check: impl FnOnce(&Connection, &
 #[test]
 fn decodes_a_nested_sequence_and_oid() {
     // SEQUENCE { OID 1.2.840.113549.1.5.13, OCTET STRING 0x01 0x02 }
-    let oid = [0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x05, 0x0d];
+    let oid = [
+        0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x05, 0x0d,
+    ];
     let octet = [0x04, 0x02, 0x01, 0x02];
     let sequence = [
         vec![0x30, (oid.len() + octet.len()) as u8],
@@ -48,7 +50,10 @@ fn round_trips_a_login_field_decryption() {
     with_key4_database(b"", |database, _| {
         let recovered = recover_firefox_key_from_database(database, b"").unwrap();
         let encoded = encode_login_field(&recovered, "super-secret");
-        assert_eq!(decrypt_firefox_field(&encoded, &recovered).unwrap(), "super-secret");
+        assert_eq!(
+            decrypt_firefox_field(&encoded, &recovered).unwrap(),
+            "super-secret"
+        );
     });
 }
 

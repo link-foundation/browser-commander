@@ -31,6 +31,8 @@ on:
       - 'js/src/cli/**'
       - 'js/bin/**'
       - 'tests/cli-contract/**'
+      - 'python/src/**'
+      - 'rust/src/**'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
 
@@ -181,7 +183,7 @@ jobs:
   cli:
     name: CLI and bridge (real Chrome)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-cli
       cancel-in-progress: true
@@ -198,6 +200,36 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install Python package
+        working-directory: .
+        run: python -m pip install -e ./python
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+        with:
+          toolchain: stable
+
+      - name: Cache Cargo build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cli-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cli-cargo-
+
+      - name: Build Rust CLI
+        working-directory: rust
+        shell: bash
+        run: bash ../scripts/run-with-budget-warning.sh 900 "Rust CLI build" cargo build --locked
 
       - name: Verify Chrome is present
         run: |
@@ -226,6 +258,11 @@ jobs:
             exit 1
           fi
           echo "CLI suites passed $passed tests against a real Chrome"
+
+      - name: Compare all three CLIs against the shared browser contract
+        working-directory: .
+        shell: bash
+        run: bash scripts/run-with-budget-warning.sh 300 "Cross-language CLI contract" node tests/cli-contract/check.mjs
 
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran

@@ -6,7 +6,10 @@ requires one `browser-commander` CLI with identical commands in the npm package
 JSON-RPC mode that lets any language or shell script drive any engine. This
 document is the contract the three implementations follow; the cross-language
 CLI tests (`tests/cli-contract/`) run the same command script through each CLI
-and compare the results.
+and compare the results. The Python and Rust CLIs use the companion npm package
+for the generic Playwright/Puppeteer dispatcher: install it alongside the
+Python package or Rust binary, or set `BROWSER_COMMANDER_JS_CLI` to its bin
+script. `BROWSER_COMMANDER_NODE` selects the Node executable.
 
 ## Output conventions
 
@@ -24,7 +27,7 @@ and compare the results.
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `version`                 |                                                                                                                                                                                        | `{"name":"browser-commander","version":"…","language":"js\|rust\|python"}`                                                                                                                                                                    |
 | `launch`                  | `--engine`, `--browser chrome\|edge\|brave\|chromium`, `--executable-path`, `--user-data-dir`, `--headless`, `--restriction NAME` (repeatable), `--launch real\|engine`, `--keep-open` | `{"cdpEndpoint","remoteDebuggingPort","userDataDir","temporaryProfile","args"}`. With `--keep-open` the document is printed once the browser is ready and the process stays up until SIGINT/SIGTERM or stdin closes, then closes the browser. |
-| `open <url>`              |                                                                                                                                                                                        | Opens `url` in the user's default browser with no automation (macOS `open`, Linux `xdg-open`, Windows `cmd /c start ""`). `{"opened": url, "command": [...]}`                                                                                 |
+| `open <url>`              |                                                                                                                                                                                        | Opens `url` in the user's default browser with no automation (macOS `open`, Linux `xdg-open`, Windows `explorer.exe`). `{"opened": url, "command": [...]}`                                                                                    |
 | `goto <url>`              | page options                                                                                                                                                                           | `{"url": finalUrl, "title"}`                                                                                                                                                                                                                  |
 | `click <selector>`        | page options                                                                                                                                                                           | `{"clicked": selector}`                                                                                                                                                                                                                       |
 | `fill <selector> <value>` | page options                                                                                                                                                                           | `{"filled": selector, "value"}`                                                                                                                                                                                                               |
@@ -56,8 +59,9 @@ A command script is a JSON document `{"steps": [{"method": …, "params": …}]}
 using the JSON-RPC method names below. `run` executes the steps in order inside
 one process and prints `{"results": [...]}` with each step's `result` (or
 `error`). Handle ids are deterministic (`h1`, `h2`, … in allocation order;
-sessions `s1`, `s2`, …), so the same script produces byte-identical results in
-every language. `$session` in params is replaced with the id returned by the
+sessions `s1`, `s2`, …), so the same script produces equivalent results in
+every language after normalizing endpoints, temporary paths, and versions.
+`$session` in params is replaced with the id returned by the
 latest `session.launch`/`session.connect`.
 
 ## JSON-RPC methods (`serve --stdio`, `run`)
@@ -67,7 +71,8 @@ responses carry the request `id`. Notifications from the server have no `id`.
 
 ### High-level methods
 
-These mirror the CLI commands and are implemented natively in every language.
+These mirror the CLI commands. Python and Rust forward this protocol to the
+companion JavaScript dispatcher.
 
 | Method                       | Params                                                                                     | Result                                                                             |
 | ---------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |

@@ -33,7 +33,10 @@ fn flags_rotating_google_session_token_cookies() {
         assert!(is_dbsc_bound_cookie(&cookie(name, ".google.com")), "{name}");
     }
     assert!(!is_dbsc_bound_cookie(&cookie("SID", ".google.com")));
-    assert!(!is_dbsc_bound_cookie(&cookie("__Secure-1PSIDTS", ".example.com")));
+    assert!(!is_dbsc_bound_cookie(&cookie(
+        "__Secure-1PSIDTS",
+        ".example.com"
+    )));
 }
 
 #[test]
@@ -43,7 +46,10 @@ fn dedupes_across_domain_filters_and_tags_dbsc_bound_cookies() {
     let read_cookies = reader(move |options| {
         recorded.lock().unwrap().push(options.domain_filter.clone());
         if options.domain_filter.as_deref() == Some("google.com") {
-            vec![cookie("__Secure-1PSIDTS", ".google.com"), cookie("SID", ".google.com")]
+            vec![
+                cookie("__Secure-1PSIDTS", ".google.com"),
+                cookie("SID", ".google.com"),
+            ]
         } else {
             vec![cookie("session", ".example.com")]
         }
@@ -54,7 +60,10 @@ fn dedupes_across_domain_filters_and_tags_dbsc_bound_cookies() {
 
     assert_eq!(
         *calls.lock().unwrap(),
-        vec![Some("google.com".to_string()), Some("example.com".to_string())]
+        vec![
+            Some("google.com".to_string()),
+            Some("example.com".to_string())
+        ]
     );
     assert_eq!(cookies.len(), 3);
     assert_eq!(report.migrated, 3);
@@ -66,7 +75,11 @@ fn dedupes_across_domain_filters_and_tags_dbsc_bound_cookies() {
 fn warns_when_the_source_has_a_dbsc_registration_database() {
     let profile = TempDir::new("bc-cookies-");
     fs::create_dir_all(profile.path().join("Network")).unwrap();
-    fs::write(profile.path().join("Network").join("DeviceBoundSessions"), "x").unwrap();
+    fs::write(
+        profile.path().join("Network").join("DeviceBoundSessions"),
+        "x",
+    )
+    .unwrap();
     let read_cookies = reader(|_| vec![cookie("a", ".example.com")]);
 
     let (_, report) = migrate_cookies(&source(&[], Some(profile.path())), &read_cookies).unwrap();

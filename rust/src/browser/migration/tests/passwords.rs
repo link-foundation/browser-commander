@@ -83,13 +83,30 @@ fn re_encrypts_each_password_for_the_target_key_on_linux() {
     write_login_data(
         source.path(),
         &[
-            encrypted_login("https://a.example/login", "alice", "secret-A", &source_key, "v11"),
-            encrypted_login("https://b.example/login", "bob", "secret-B", &source_key, "v10"),
+            encrypted_login(
+                "https://a.example/login",
+                "alice",
+                "secret-A",
+                &source_key,
+                "v11",
+            ),
+            encrypted_login(
+                "https://b.example/login",
+                "bob",
+                "secret-B",
+                &source_key,
+                "v10",
+            ),
         ],
     );
 
-    let report =
-        migrate_linux_passwords(source.path(), target.path(), source_key, &target_key, Some("v11"));
+    let report = migrate_linux_passwords(
+        source.path(),
+        target.path(),
+        source_key,
+        &target_key,
+        Some("v11"),
+    );
 
     assert_eq!(report.migrated, 2);
     assert!(report.skipped.is_empty());
@@ -114,8 +131,13 @@ fn reports_app_bound_v20_passwords_as_skipped() {
         }],
     );
 
-    let report =
-        migrate_linux_passwords(source.path(), target.path(), target_key.clone(), &target_key, None);
+    let report = migrate_linux_passwords(
+        source.path(),
+        target.path(),
+        target_key.clone(),
+        &target_key,
+        None,
+    );
 
     assert_nothing_migrated(&report, "app-bound-v20");
 }
@@ -127,7 +149,13 @@ fn never_modifies_the_source_login_data() {
     let key = derive_chromium_cookie_key("pw", "linux").unwrap();
     write_login_data(
         source.path(),
-        &[encrypted_login("https://a.example/login", "a", "x", &key, "v11")],
+        &[encrypted_login(
+            "https://a.example/login",
+            "a",
+            "x",
+            &key,
+            "v11",
+        )],
     );
 
     assert_source_unchanged(&source.path().join("Login Data"), || {
@@ -139,7 +167,6 @@ fn never_modifies_the_source_login_data() {
 fn reports_a_skip_when_there_is_no_login_data() {
     let source = TempDir::new("bc-pw-src-");
     let target = TempDir::new("bc-pw-dst-");
-    let report =
-        migrate_linux_passwords(source.path(), target.path(), vec![0; 16], &[0; 16], None);
+    let report = migrate_linux_passwords(source.path(), target.path(), vec![0; 16], &[0; 16], None);
     assert_nothing_migrated(&report, "source-missing");
 }

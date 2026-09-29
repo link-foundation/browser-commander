@@ -182,7 +182,9 @@ def encrypted_login(
     }
 
 
-def write_chromium_extension(profile_dir: Path, extension_id: str, version: str) -> Path:
+def write_chromium_extension(
+    profile_dir: Path, extension_id: str, version: str
+) -> Path:
     """Write ``Extensions/<id>/<version>/manifest.json`` into a profile."""
 
     directory = profile_dir / "Extensions" / extension_id / version
@@ -484,9 +486,7 @@ def _encode_pbes2_blob(
         ),
     )
     enc = _der_sequence(_der_oid(_OID_BYTES["AES_256_CBC"]), _der_octet(iv14))
-    algorithm_id = _der_sequence(
-        _der_oid(_OID_BYTES["PBES2"]), _der_sequence(kdf, enc)
-    )
+    algorithm_id = _der_sequence(_der_oid(_OID_BYTES["PBES2"]), _der_sequence(kdf, enc))
     return _der_sequence(algorithm_id, _der_octet(ciphertext))
 
 

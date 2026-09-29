@@ -1,3 +1,4 @@
+// feature-parity: attach.open
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 
@@ -61,13 +62,14 @@ describe('buildOpenCommand', () => {
     ]);
   });
 
-  it('uses cmd /c start "" on Windows with an empty title argument', () => {
+  it('uses Explorer on Windows without parsing URL metacharacters as shell syntax', () => {
     assert.deepEqual(buildOpenCommand('https://x.dev/', 'win32'), [
-      'cmd',
-      '/c',
-      'start',
-      '',
+      'explorer.exe',
       'https://x.dev/',
+    ]);
+    assert.deepEqual(buildOpenCommand('https://x.dev/?a=1&b=2', 'win32'), [
+      'explorer.exe',
+      'https://x.dev/?a=1&b=2',
     ]);
   });
 

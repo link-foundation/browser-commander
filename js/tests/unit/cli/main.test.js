@@ -1,3 +1,4 @@
+// feature-parity: cli.version cli.script cli.serve
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { EventEmitter } from 'node:events';
@@ -23,6 +24,12 @@ async function cli(argv, { fakes = createFakeDependencies(), ...io } = {}) {
     ...io,
   });
   return { exitCode, documents, document: documents.at(-1), ...fakes };
+}
+
+async function assertUsageErrors(commands) {
+  for (const argv of commands) {
+    assert.equal((await cli(argv)).exitCode, EXIT_CODES.USAGE, argv.join(' '));
+  }
 }
 
 describe('parseCommandLine', () => {
@@ -263,14 +270,12 @@ describe('runCli', () => {
       profile: 'P',
     });
     assert.equal(document.attach.mode, 'snapshot');
-    for (const argv of [
+    await assertUsageErrors([
       ['launch', '--attach', 'extension'],
       ['launch', '--from', 'chrome'],
       ['launch', '--attach', 'snapshot', '--user-data-dir', '/tmp/x'],
       ['launch', '--attach', 'snapshot', '--launch', 'engine'],
-    ]) {
-      assert.equal((await cli(argv)).exitCode, 64, argv.join(' '));
-    }
+    ]);
   });
 
   it('attaches through the extension and closes the relay', async () => {
@@ -295,13 +300,11 @@ describe('runCli', () => {
     assert.equal(relays[0].options.port, 9444);
     assert.equal(relays[0].options.timeoutMs, 5000);
     assert.equal(relays[0].closed, true);
-    for (const argv of [
+    await assertUsageErrors([
       ['attach'],
       ['attach', '--mode', 'snapshot'],
       ['attach', '--mode', 'extension', '--port', 'x'],
-    ]) {
-      assert.equal((await cli(argv)).exitCode, 64, argv.join(' '));
-    }
+    ]);
   });
 
   it('runs a script and exits 1 when a step failed', async () => {

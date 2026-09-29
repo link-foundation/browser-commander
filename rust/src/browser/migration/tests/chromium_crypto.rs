@@ -15,8 +15,7 @@ fn round_trips_through_aes_128_cbc_on_darwin_and_linux() {
         let encrypted = encrypt_chromium_value(b"hunter2", &key, platform, Some("v11")).unwrap();
         assert_eq!(&encrypted[..3], b"v11");
         let decrypted =
-            decrypt_chromium_cookie(&encrypted, "accounts.example.com", 0, platform, &key)
-                .unwrap();
+            decrypt_chromium_cookie(&encrypted, "accounts.example.com", 0, platform, &key).unwrap();
         assert_eq!(decrypted, "hunter2", "{platform}");
     }
 }

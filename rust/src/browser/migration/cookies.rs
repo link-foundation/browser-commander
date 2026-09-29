@@ -100,7 +100,11 @@ pub(crate) fn migrate_cookies(
     let domain_filters: Vec<Option<&str>> = if source.domains.is_empty() {
         vec![None]
     } else {
-        source.domains.iter().map(|domain| Some(domain.as_str())).collect()
+        source
+            .domains
+            .iter()
+            .map(|domain| Some(domain.as_str()))
+            .collect()
     };
 
     // A JavaScript Map keeps the first insertion position and the last value.
@@ -125,10 +129,7 @@ pub(crate) fn migrate_cookies(
             seen.insert(key, cookie);
         }
     }
-    let cookies: Vec<BrowserCookie> = order
-        .iter()
-        .filter_map(|key| seen.remove(key))
-        .collect();
+    let cookies: Vec<BrowserCookie> = order.iter().filter_map(|key| seen.remove(key)).collect();
 
     let skipped = cookies
         .iter()
@@ -149,8 +150,12 @@ pub(crate) fn migrate_cookies(
         .is_some()
     {
         warnings.push(
-            MigrationEntry::new("cookies", "DeviceBoundSessions", "dbsc-registration-present")
-                .with_detail(DBSC_REGISTRATION_DETAIL),
+            MigrationEntry::new(
+                "cookies",
+                "DeviceBoundSessions",
+                "dbsc-registration-present",
+            )
+            .with_detail(DBSC_REGISTRATION_DETAIL),
         );
     }
 

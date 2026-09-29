@@ -1,3 +1,4 @@
+// feature-parity: attach.snapshot
 import assert from 'node:assert';
 import { createHash } from 'node:crypto';
 import {
@@ -28,6 +29,10 @@ import {
 import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
 const makeTempDir = useTempDirectories('bc-attach-snapshot-');
+
+function snapshotChrome(root, to) {
+  return snapshotUserDataDir({ browser: 'chrome', userDataDir: root, to });
+}
 
 /** Write `content` to `root/relativePath`, creating the parent folders. */
 async function put(root, relativePath, content = relativePath) {
@@ -136,11 +141,7 @@ describe('snapshotUserDataDir', () => {
     const root = await makeUserDataDir();
     const to = path.join(await makeTempDir(), 'copy');
 
-    const report = await snapshotUserDataDir({
-      browser: 'chrome',
-      userDataDir: root,
-      to,
-    });
+    const report = await snapshotChrome(root, to);
 
     assert.deepEqual(report.source, {
       browser: 'chrome',
@@ -253,11 +254,7 @@ describe('snapshotUserDataDir', () => {
         );
         const to = path.join(await makeTempDir(), 'copy');
 
-        const report = await snapshotUserDataDir({
-          browser: 'chrome',
-          userDataDir: root,
-          to,
-        });
+        const report = await snapshotChrome(root, to);
 
         const copy = path.join(to, 'Default', 'History');
         // One self-contained file: the committed WAL content is folded in.

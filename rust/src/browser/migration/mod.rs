@@ -259,7 +259,10 @@ impl std::fmt::Debug for MigrationKeys {
         formatter
             .debug_struct("MigrationKeys")
             .field("resolve_source_key", &self.resolve_source_key.is_some())
-            .field("target_key", &self.target_key.as_ref().map(|_| "<redacted>"))
+            .field(
+                "target_key",
+                &self.target_key.as_ref().map(|_| "<redacted>"),
+            )
             .field("target_prefix", &self.target_prefix)
             .finish_non_exhaustive()
     }
@@ -311,7 +314,10 @@ impl MigrateProfileOptions {
         Self {
             from,
             to: to.into(),
-            include: ALL_DATA_CLASSES.iter().map(|name| name.to_string()).collect(),
+            include: ALL_DATA_CLASSES
+                .iter()
+                .map(|name| name.to_string())
+                .collect(),
             domains: Vec::new(),
             platform: current_platform().to_string(),
             target_browser: None,
@@ -406,7 +412,9 @@ fn resolve_source_profile_dir(
         });
     }
     if is_chromium(browser) {
-        return Ok(browser_profile_root(browser, &options.platform, &options.home_dir)?.join(profile));
+        return Ok(
+            browser_profile_root(browser, &options.platform, &options.home_dir)?.join(profile),
+        );
     }
     let profile_options = BrowserProfileOptions::default()
         .home_dir(&options.home_dir)
@@ -456,10 +464,13 @@ fn migrate_passwords_class(
     report: &mut MigrationReport,
 ) -> Result<()> {
     let is_firefox = browser == "firefox";
-    let target_browser = options
-        .target_browser
-        .clone()
-        .unwrap_or_else(|| if is_firefox { "chrome".into() } else { browser.into() });
+    let target_browser = options.target_browser.clone().unwrap_or_else(|| {
+        if is_firefox {
+            "chrome".into()
+        } else {
+            browser.into()
+        }
+    });
     let keys = resolve_password_keys(options, browser, &target_browser, source_profile_dir)?;
     let Some((keys, target_key)) = keys.and_then(|keys| {
         let target_key = keys.target_key.clone().filter(|key| !key.is_empty())?;
@@ -522,9 +533,7 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
         return Err(anyhow!("migrate_profile requires from.browser"));
     }
     if options.to.as_os_str().is_empty() {
-        return Err(anyhow!(
-            "migrate_profile requires a target directory (to)"
-        ));
+        return Err(anyhow!("migrate_profile requires a target directory (to)"));
     }
     let browser = normalize_cookie_browser(&options.from.browser)?.to_string();
     let profile = options
@@ -551,7 +560,8 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
 
     if selected("cookies") {
         if is_firefox {
-            let cookies = firefox::read_firefox_profile_cookies(&source_profile_dir, &options.domains)?;
+            let cookies =
+                firefox::read_firefox_profile_cookies(&source_profile_dir, &options.domains)?;
             report.migrated.cookies = cookies.len() as u64;
             report.cookies = cookies;
         } else {

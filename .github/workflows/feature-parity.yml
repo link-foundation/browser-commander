@@ -1,0 +1,62 @@
+name: Feature Parity Matrix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/feature-parity.md'
+      - 'docs/feature-parity/**'
+      - 'js/tests/**'
+      - 'python/tests/**'
+      - 'rust/src/**'
+      - 'rust/tests/**'
+      - 'scripts/generate-feature-parity.mjs'
+      - '.github/workflows/feature-parity.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'docs/feature-parity.md'
+      - 'docs/feature-parity/**'
+      - 'js/tests/**'
+      - 'python/tests/**'
+      - 'rust/src/**'
+      - 'rust/tests/**'
+      - 'scripts/generate-feature-parity.mjs'
+      - '.github/workflows/feature-parity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Reject missing or stale parity claims
+        run: node scripts/generate-feature-parity.mjs --check
+
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [matrix]
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Report failed or cancelled jobs
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

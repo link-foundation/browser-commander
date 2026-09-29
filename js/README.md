@@ -611,7 +611,7 @@ Open a URL in the user's own default browser with **no automation** - no CDP,
 no dedicated profile, no `navigator.webdriver`. Use it when a consumer only has
 to show a page where the user is already signed in (an OAuth consent screen or a
 CLI web-login page). It shells out to the platform opener (macOS `open`, Linux
-`xdg-open`, Windows `start`) after validating the URL:
+`xdg-open`, Windows `explorer.exe`) after validating the URL:
 
 ```javascript
 import { openInUserBrowser } from 'browser-commander';

@@ -260,7 +260,9 @@ class TestMigrateFirefoxPasswords:
     def test_requires_a_target_key(self, tmp_path: Path) -> None:
         write_firefox_logins(
             tmp_path,
-            entries=[{"hostname": "https://a.example", "username": "a", "password": "b"}],
+            entries=[
+                {"hostname": "https://a.example", "username": "a", "password": "b"}
+            ],
         )
         with pytest.raises(TypeError, match="target key"):
             migrate_firefox_passwords(

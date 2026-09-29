@@ -53,7 +53,9 @@ class TestEncryptChromiumValue:
     @pytest.mark.parametrize(
         ("platform", "iterations"), [("darwin", 1003), ("linux", 1)]
     )
-    def test_uses_chromiums_key_derivation(self, platform: str, iterations: int) -> None:
+    def test_uses_chromiums_key_derivation(
+        self, platform: str, iterations: int
+    ) -> None:
         key = derive_chromium_cookie_key("keychain-pass", platform)
         assert key == _saltysalt_key("keychain-pass", iterations)
         assert len(key) == 16

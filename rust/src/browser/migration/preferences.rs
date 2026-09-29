@@ -65,7 +65,8 @@ fn ensure_object(node: &mut Value) -> &mut Map<String, Value> {
     if !node.is_object() {
         *node = Value::Object(Map::new());
     }
-    node.as_object_mut().expect("the node was just made an object")
+    node.as_object_mut()
+        .expect("the node was just made an object")
 }
 
 /// Merge the selected subset of source Preferences into `target` (pure, so it
@@ -108,8 +109,7 @@ pub(crate) fn migrate_preferences(
         .and_then(|contents| serde_json::from_str::<Value>(&contents).ok())
         .filter(Value::is_object)
         .unwrap_or_else(|| Value::Object(Map::new()));
-    let migrated_paths =
-        merge_preference_subset(&source, &mut target, &MIGRATED_PREFERENCE_PATHS);
+    let migrated_paths = merge_preference_subset(&source, &mut target, &MIGRATED_PREFERENCE_PATHS);
     fs::create_dir_all(target_profile_dir)
         .with_context(|| format!("Could not create {}", target_profile_dir.display()))?;
     fs::write(&target_path, serde_json::to_string(&target)?)

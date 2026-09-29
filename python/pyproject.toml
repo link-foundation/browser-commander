@@ -34,6 +34,9 @@ classifiers = [
 ]
 dependencies = ["cryptography>=42.0.0"]
 
+[project.scripts]
+browser-commander = "browser_commander.cli:main"
+
 [project.optional-dependencies]
 playwright = ["playwright>=1.40.0"]
 selenium = ["selenium>=4.15.0"]

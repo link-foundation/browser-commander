@@ -3,6 +3,8 @@
 
 use std::sync::Arc;
 
+// feature-parity: migration.profile
+
 use serde_json::json;
 
 use super::super::{
@@ -19,16 +21,27 @@ fn firefox_source(dir: &std::path::Path) -> MigrationSource {
 }
 
 fn example_cookie_row() -> [FirefoxCookieRow<'static>; 1] {
-    [FirefoxCookieRow { name: "a", value: "1", host: ".example.com", secure: false }]
+    [FirefoxCookieRow {
+        name: "a",
+        value: "1",
+        host: ".example.com",
+        secure: false,
+    }]
 }
 
 #[test]
 fn validates_required_options() {
-    let error =
-        migrate_profile(MigrateProfileOptions::new(MigrationSource::default(), "/tmp/x")).unwrap_err();
+    let error = migrate_profile(MigrateProfileOptions::new(
+        MigrationSource::default(),
+        "/tmp/x",
+    ))
+    .unwrap_err();
     assert!(error.to_string().contains("from.browser"));
-    let error =
-        migrate_profile(MigrateProfileOptions::new(MigrationSource::new("chrome"), "")).unwrap_err();
+    let error = migrate_profile(MigrateProfileOptions::new(
+        MigrationSource::new("chrome"),
+        "",
+    ))
+    .unwrap_err();
     assert!(error.to_string().contains("target directory"));
 }
 
@@ -40,7 +53,11 @@ fn migrates_a_firefox_source_and_returns_the_documented_report_shape() {
     write_firefox_places(source.path(), false);
     write_firefox_logins(
         source.path(),
-        &[LoginEntry { hostname: "https://a.example", username: "alice", password: "pw" }],
+        &[LoginEntry {
+            hostname: "https://a.example",
+            username: "alice",
+            password: "pw",
+        }],
         b"",
     );
     let target_key = derive_chromium_cookie_key("target-pass", "linux").unwrap();
@@ -83,7 +100,10 @@ fn migrates_a_firefox_source_and_returns_the_documented_report_shape() {
 
     // Cookies are returned for CDP seeding, not written to disk.
     assert_eq!(report.cookies[0].domain, ".example.com");
-    assert_eq!(read_migrated_logins(target.path(), &target_key)[0].password, "pw");
+    assert_eq!(
+        read_migrated_logins(target.path(), &target_key)[0].password,
+        "pw"
+    );
 }
 
 #[test]
@@ -150,7 +170,10 @@ fn reads_chromium_cookies_through_the_injected_reader() {
     assert_eq!(cookies.len(), 1);
     let value = serde_json::to_value(&summary).unwrap();
     assert!(value.get("cookies").is_none());
-    assert_eq!(value["source"], json!({ "browser": "chrome", "profile": "Default", "userDataDir": source.path() }));
+    assert_eq!(
+        value["source"],
+        json!({ "browser": "chrome", "profile": "Default", "userDataDir": source.path() })
+    );
     assert_eq!(value["migrated"]["cookies"], 1);
 }
 

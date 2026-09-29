@@ -13,7 +13,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
@@ -30,11 +30,11 @@ function tag(comment, ids) {
 }
 
 function fixture({ tests, limitations = [] }) {
-  const root = mkdtempSync(path.join(tmpdir(), 'feature-parity-'));
+  const root = fs.mkdtempSync(path.join(tmpdir(), 'feature-parity-'));
   const write = (relative, content) => {
     const full = path.join(root, relative);
-    mkdirSync(path.dirname(full), { recursive: true });
-    writeFileSync(full, content);
+    fs.mkdirSync(path.dirname(full), { recursive: true });
+    fs.writeFileSync(full, content);
   };
   write(
     'docs/feature-parity/features.json',
@@ -105,7 +105,7 @@ describe('feature parity generator', () => {
       assert.match(next, /None: every feature is tested in every language/u);
       assert.match(next, /\n\ntail\n$/u);
     } finally {
-      rmSync(root, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
     }
   });
 
@@ -121,7 +121,7 @@ describe('feature parity generator', () => {
       ]);
       assert.match(next, /\| Missing +\|/u);
     } finally {
-      rmSync(root, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
     }
   });
 
@@ -148,7 +148,7 @@ describe('feature parity generator', () => {
         /<a id="rust-no-attach"><\/a>\*\*`rust-no-attach`\*\* \(Rust\): The crate has no WebSocket server\./u
       );
     } finally {
-      rmSync(root, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
     }
   });
 
@@ -178,7 +178,7 @@ describe('feature parity generator', () => {
         'unknown feature "launch.unknown" claimed by js/tests/unit/extra.test.js; add it to docs/feature-parity/features.json',
       ]);
     } finally {
-      rmSync(root, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
     }
   });
 

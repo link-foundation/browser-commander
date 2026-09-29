@@ -77,17 +77,20 @@ fn reencrypt_logins(database: &Connection, keys: &PasswordKeys<'_>) -> Result<Cl
         })?;
         mapped.collect::<rusqlite::Result<Vec<_>>>()?
     };
-    let target_prefix = keys
-        .target_prefix
-        .unwrap_or(if keys.platform == "win32" { "v10" } else { "v11" });
+    let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "win32" {
+        "v10"
+    } else {
+        "v11"
+    });
     let mut outcome = ClassOutcome::default();
     for row in rows {
         if row.password_value.is_empty() {
             continue;
         }
         let item = row.origin_url.as_deref().unwrap_or("(unknown)");
-        let prefix = String::from_utf8_lossy(&row.password_value[..row.password_value.len().min(3)])
-            .into_owned();
+        let prefix =
+            String::from_utf8_lossy(&row.password_value[..row.password_value.len().min(3)])
+                .into_owned();
         if prefix == "v20" {
             outcome
                 .skipped
@@ -95,9 +98,11 @@ fn reencrypt_logins(database: &Connection, keys: &PasswordKeys<'_>) -> Result<Cl
             continue;
         }
         if prefix != "v10" && prefix != "v11" {
-            outcome
-                .skipped
-                .push(MigrationEntry::new("passwords", item, "unsupported-encryption"));
+            outcome.skipped.push(MigrationEntry::new(
+                "passwords",
+                item,
+                "unsupported-encryption",
+            ));
             continue;
         }
         let decrypted = (keys.resolve_source_key)(&prefix).and_then(|key| {

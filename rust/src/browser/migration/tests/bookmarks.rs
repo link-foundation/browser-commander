@@ -45,7 +45,10 @@ fn copies_the_bookmarks_json_verbatim_and_reports_the_count() {
 
     assert_eq!(report.migrated, 2);
     assert!(report.skipped.is_empty());
-    assert_eq!(read_profile_json(target.path(), "Bookmarks"), sample_bookmarks());
+    assert_eq!(
+        read_profile_json(target.path(), "Bookmarks"),
+        sample_bookmarks()
+    );
 }
 
 #[test]

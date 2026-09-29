@@ -58,8 +58,11 @@ fn copies_eligible_extension_files_and_warns_about_the_mac() {
     let report = migrate_extensions(source.path(), target.path()).unwrap();
 
     assert_eq!(report.migrated, 1);
-    assert!(report.skipped.iter().any(|entry| entry.item == COMPONENT_EXTENSION
-        && entry.reason == "policy-or-component-extension"));
+    assert!(report
+        .skipped
+        .iter()
+        .any(|entry| entry.item == COMPONENT_EXTENSION
+            && entry.reason == "policy-or-component-extension"));
     assert_eq!(report.warnings[0].reason, "mac-will-not-validate");
     let copied = fs::read_to_string(
         target

@@ -1,3 +1,4 @@
+// feature-parity: migration.profile
 import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';

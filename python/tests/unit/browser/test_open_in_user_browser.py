@@ -13,6 +13,8 @@ from browser_commander.browser.open_in_user_browser import (
     validate_open_url,
 )
 
+# feature-parity: attach.open
+
 
 def _recording_runner() -> tuple[list[dict[str, Any]], Any]:
     calls: list[dict[str, Any]] = []
@@ -64,13 +66,14 @@ def test_uses_xdg_open_on_linux() -> None:
     ]
 
 
-def test_uses_cmd_start_on_windows_with_an_empty_title_argument() -> None:
+def test_uses_explorer_on_windows_without_shell_parsing() -> None:
     assert build_open_command("https://x.dev/", "win32") == [
-        "cmd",
-        "/c",
-        "start",
-        "",
+        "explorer.exe",
         "https://x.dev/",
+    ]
+    assert build_open_command("https://x.dev/?a=1&b=2", "win32") == [
+        "explorer.exe",
+        "https://x.dev/?a=1&b=2",
     ]
 
 

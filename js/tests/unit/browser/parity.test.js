@@ -1,3 +1,4 @@
+// feature-parity: parity.measure
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 

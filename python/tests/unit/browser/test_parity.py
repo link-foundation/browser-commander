@@ -13,6 +13,7 @@ from browser_commander import (
 )
 from browser_commander.parity import diff_reports
 
+# feature-parity: parity.measure
 CHROME = "/opt/google/chrome/chrome"
 
 

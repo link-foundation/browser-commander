@@ -10,8 +10,8 @@ import { runCommand } from '../utilities/subprocess.js';
  * Each platform has one canonical opener:
  * - macOS: `open <url>`
  * - Linux: `xdg-open <url>` (the freedesktop.org standard launcher)
- * - Windows: `cmd /c start "" <url>` (the empty `""` is `start`'s window-title
- *   argument, so a quoted URL is not mistaken for the title)
+ * - Windows: `explorer.exe <url>` (Explorer hands the URL to the registered
+ *   browser without a `cmd.exe` parser seeing its query string)
  *
  * All of them run through command-stream (issue #104) with exact argv
  * boundaries and no shell in between, so a URL can never be reinterpreted as
@@ -22,7 +22,7 @@ import { runCommand } from '../utilities/subprocess.js';
 const PLATFORM_OPENERS = {
   darwin: ['open'],
   linux: ['xdg-open'],
-  win32: ['cmd', '/c', 'start', ''],
+  win32: ['explorer.exe'],
 };
 
 /**

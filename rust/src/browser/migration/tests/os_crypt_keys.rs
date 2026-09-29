@@ -46,7 +46,10 @@ fn derives_the_safe_storage_key_for_linux_v11_and_caches_it() {
     let resolve = create_source_key_resolver("chrome", "linux", None, hooks);
     let first = resolve("v11").unwrap();
     let second = resolve("v11").unwrap();
-    assert_eq!(first, derive_chromium_cookie_key("keyring-pass", "linux").unwrap());
+    assert_eq!(
+        first,
+        derive_chromium_cookie_key("keyring-pass", "linux").unwrap()
+    );
     assert_eq!(second, first);
     assert_eq!(calls.load(Ordering::SeqCst), 1);
 }
@@ -71,7 +74,8 @@ fn reads_the_windows_key_from_local_state() {
 
 #[test]
 fn derives_the_macos_safe_storage_key() {
-    let resolve = create_source_key_resolver("chrome", "darwin", None, hooks_with_password("mac-pass"));
+    let resolve =
+        create_source_key_resolver("chrome", "darwin", None, hooks_with_password("mac-pass"));
     assert_eq!(
         resolve("v10").unwrap(),
         derive_chromium_cookie_key("mac-pass", "darwin").unwrap()
@@ -80,8 +84,12 @@ fn derives_the_macos_safe_storage_key() {
 
 #[test]
 fn derives_the_launching_profile_key_on_macos_and_linux() {
-    let result = resolve_target_key("chrome", "linux", &hooks_with_password("target-pass")).unwrap();
-    assert_eq!(result.key, derive_chromium_cookie_key("target-pass", "linux").unwrap());
+    let result =
+        resolve_target_key("chrome", "linux", &hooks_with_password("target-pass")).unwrap();
+    assert_eq!(
+        result.key,
+        derive_chromium_cookie_key("target-pass", "linux").unwrap()
+    );
     assert_eq!(result.prefix, "v11");
 }
 

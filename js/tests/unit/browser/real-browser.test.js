@@ -1,3 +1,4 @@
+// feature-parity: migration.launch
 import assert from 'node:assert';
 import { access, mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';

@@ -9,8 +9,8 @@ Each platform has one canonical opener:
 
 - macOS: ``open <url>``
 - Linux: ``xdg-open <url>``
-- Windows: ``cmd /c start "" <url>`` (the empty ``""`` is ``start``'s
-  window-title argument, so a quoted URL is not mistaken for the title)
+- Windows: ``explorer.exe <url>`` (Explorer hands the URL to the registered
+  browser without a ``cmd.exe`` parser seeing its query string)
 
 The opener runs through :func:`browser_commander.utilities.subprocess.run_command`
 with exact argv boundaries and no shell, so a URL is never reinterpreted as
@@ -41,7 +41,7 @@ __all__ = [
 PLATFORM_OPENERS: dict[str, tuple[str, ...]] = {
     "darwin": ("open",),
     "linux": ("xdg-open",),
-    "win32": ("cmd", "/c", "start", ""),
+    "win32": ("explorer.exe",),
 }
 
 #: URL schemes a browser opens. The openers would also launch local

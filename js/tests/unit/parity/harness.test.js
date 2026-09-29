@@ -87,6 +87,45 @@ describe('captureReferenceReport', () => {
     );
   });
 
+  it('retries a fresh profile after the browser network service crashes', async () => {
+    const tokens = [];
+    let starts = 0;
+    const report = await captureReferenceReport({
+      server: {
+        url: (token) => {
+          tokens.push(token);
+          return `http://127.0.0.1:1/probe/${token}`;
+        },
+        waitForReport: (token) =>
+          token === 't4'
+            ? new Promise((resolve, reject) =>
+                setTimeout(
+                  () =>
+                    reject(new Error(`timed out waiting for report ${token}`)),
+                  20
+                )
+              )
+            : Promise.resolve({ navigator: { webdriver: false } }),
+      },
+      token: 't4',
+      timeoutMs: 50,
+      start: () => {
+        starts += 1;
+        return fakeProcess({
+          exitCode: null,
+          stderr:
+            starts === 1
+              ? 'Network service crashed or was terminated, restarting service.'
+              : '',
+        });
+      },
+    });
+    assert.deepEqual(report, { navigator: { webdriver: false } });
+    assert.equal(starts, 2);
+    assert.equal(tokens.length, 2);
+    assert.notEqual(tokens[0], tokens[1]);
+  });
+
   it('keeps waiting when a launcher script exits cleanly', async () => {
     const report = await captureReferenceReport({
       server: fakeServer({ report: { navigator: { webdriver: false } } }),

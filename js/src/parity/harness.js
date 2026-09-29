@@ -189,7 +189,7 @@ async function exitedBeforeReport(child, executablePath, stderr) {
  *
  * @returns {Promise<Object>} The probe report with `commandLine` attached
  */
-export async function captureReferenceReport({
+async function captureReferenceAttempt({
   executablePath = process.env.CHROME_PATH || 'google-chrome',
   server,
   token,
@@ -223,6 +223,35 @@ export async function captureReferenceReport({
     child.kill('SIGTERM');
     await child.exited;
     await removeUserDataDir(userDataDir);
+  }
+}
+
+/**
+ * Edge can keep running after its network service crashes during startup,
+ * leaving the probe page unable to POST. Retry only that observed transient
+ * startup failure; a separate profile and token keep late first-attempt
+ * reports from being mistaken for the retry's report.
+ */
+export async function captureReferenceReport(options) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await captureReferenceAttempt({
+        ...options,
+        token:
+          attempt === 0 ? options.token : `${options.token}-retry-${attempt}`,
+      });
+    } catch (error) {
+      if (
+        attempt === 0 &&
+        error.message.startsWith('timed out waiting for report ') &&
+        error.message.includes(
+          'Network service crashed or was terminated, restarting service.'
+        )
+      ) {
+        continue;
+      }
+      throw error;
+    }
   }
 }
 

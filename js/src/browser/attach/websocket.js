@@ -259,7 +259,7 @@ function isValidCloseCode(code) {
  */
 export class WebSocketConnection extends EventEmitter {
   /**
-   * @param {import('node:net').Socket} socket
+   * @param {net.Socket} socket
    * @param {Object} [options]
    * @param {'server'|'client'} [options.role='server']
    * @param {Buffer} [options.head] - Bytes read past the handshake
@@ -487,7 +487,7 @@ export class WebSocketConnection extends EventEmitter {
 /**
  * Answer an HTTP upgrade request with an error status and close the socket.
  *
- * @param {import('node:net').Socket} socket
+ * @param {net.Socket} socket
  * @param {number} status - HTTP status code such as 403
  * @param {string} [message] - Plain-text body
  */
@@ -519,8 +519,8 @@ function headerHasToken(value, token) {
  * `'upgrade'` event. An invalid handshake is answered with 400 (or 426 for an
  * unsupported version) and null is returned.
  *
- * @param {import('node:http').IncomingMessage} request
- * @param {import('node:net').Socket} socket
+ * @param {http.IncomingMessage} request
+ * @param {net.Socket} socket
  * @param {Buffer} [head]
  * @param {Object} [options]
  * @param {number} [options.maxPayload]

@@ -28,10 +28,18 @@ on:
 permissions:
   contents: read
 
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
 jobs:
   matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-matrix
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -44,6 +52,9 @@ jobs:
     name: Pipeline Status
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
     needs: [matrix]
     if: >-
       !cancelled()

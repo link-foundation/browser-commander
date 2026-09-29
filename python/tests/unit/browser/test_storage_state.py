@@ -45,7 +45,7 @@ async def test_playwright_state_round_trip_from_file(tmp_path: Path) -> None:
     context.add_cookies.assert_awaited_once_with(STATE["cookies"])
     script = context.add_init_script.call_args.kwargs["script"]
     assert "theme" in script
-    assert "https://example.test" in script
+    assert json.dumps(STATE["origins"], separators=(",", ":")) in script
     page.evaluate.assert_awaited_once_with(script)
     assert await save_storage_state("playwright", context, page) == STATE
 

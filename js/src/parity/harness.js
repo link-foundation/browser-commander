@@ -141,6 +141,44 @@ export function buildReferenceArgs({
   ];
 }
 
+const STDERR_TAIL_BYTES = 4000;
+
+/** Keep the last few kilobytes a process wrote, for error messages. */
+function collectTail(channel) {
+  let tail = '';
+  channel?.on?.('data', (chunk) => {
+    tail = (tail + String(chunk)).slice(-STDERR_TAIL_BYTES);
+  });
+  return () => tail.trim();
+}
+
+function withOutput(error, output) {
+  if (output) {
+    error.message += `\nbrowser stderr:\n${output}`;
+  }
+  return error;
+}
+
+/**
+ * Reject as soon as the reference browser exits without having reported, so a
+ * browser that cannot start (a missing sandbox, a bad switch) fails with its
+ * own exit code and stderr instead of a silent report timeout. A clean exit
+ * never settles: a launcher script may hand off to a browser that keeps
+ * running and still reports.
+ */
+async function exitedBeforeReport(child, executablePath, stderr) {
+  const code = await child.exited;
+  if (code === 0) {
+    return new Promise(() => {});
+  }
+  throw withOutput(
+    new Error(
+      `reference browser ${executablePath} exited with code ${code} before reporting`
+    ),
+    stderr()
+  );
+}
+
 /**
  * Start the browser as an ordinary user would - no CDP, no automation
  * switches - and collect the probe report its page POSTs back.
@@ -168,8 +206,14 @@ export async function captureReferenceReport({
     extraArgs,
   });
   const child = start(executablePath, args, { killGrace: 3000 });
+  const stderr = collectTail(child.stderr);
   try {
-    const report = await server.waitForReport(token, timeoutMs);
+    const report = await Promise.race([
+      server.waitForReport(token, timeoutMs).catch((error) => {
+        throw withOutput(error, stderr());
+      }),
+      exitedBeforeReport(child, executablePath, stderr),
+    ]);
     Object.defineProperty(report, 'commandLine', {
       value: args,
       enumerable: false,

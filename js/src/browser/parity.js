@@ -191,6 +191,27 @@ function commandLineDifferences(comparison) {
   ];
 }
 
+// Switches that change which Blink features and field trials are active. A
+// non-Chrome-branded build (Chromium) applies its testing field-trial config
+// unless told otherwise, so Playwright's --disable-field-trial-config alone
+// changes the API surface (the Protected Audience methods on navigator) and
+// the language list on Chromium, while Chrome and Edge are unaffected.
+const FEATURE_CONFIG_SWITCHES = new Set([
+  '--disable-field-trial-config',
+  '--disable-features',
+  '--enable-features',
+]);
+
+// Surfaces those switches are measured to move: which properties an object
+// exposes, and the reduced or full Accept-Language list.
+const FEATURE_CONFIG_SURFACES = /(?:^|\.)(?:keys|languages)$/u;
+
+function changesFeatureConfig(extraSwitches = []) {
+  return extraSwitches.some((entry) =>
+    FEATURE_CONFIG_SWITCHES.has(entry.split('=')[0])
+  );
+}
+
 /**
  * Explain a difference: a limitation id, `requested` for a switch the caller
  * asked for (or that follows from an option they set), or `null`.
@@ -206,6 +227,13 @@ export function explainDifference(difference, context) {
       return { limitation: 'engine-launch-switches' };
     }
     return {};
+  }
+  if (
+    context.launch === 'engine' &&
+    FEATURE_CONFIG_SURFACES.test(path) &&
+    changesFeatureConfig(context.extraSwitches)
+  ) {
+    return { limitation: 'engine-launch-switches' };
   }
   if (path.startsWith('navigator.userAgentData.brands')) {
     return { limitation: 'grease-brand-not-reproduced' };
@@ -384,6 +412,7 @@ export async function measureParity(options = {}, dependencies = {}) {
       {
         launch,
         attached,
+        extraSwitches: commandLine.extra,
         requestedArgs: requestedArgsFor(session, { ...options, headless }),
       }
     );

@@ -142,6 +142,44 @@ describe('explaining differences', () => {
     assert.deepEqual(unlisted, []);
   });
 
+  it('ties field-trial surfaces to the engine switches that move them', () => {
+    const surfaces = [
+      {
+        path: 'navigator.keys',
+        reference: ['clipboard'],
+        candidate: ['clipboard', 'runAdAuction'],
+      },
+      {
+        path: 'worker.navigator.languages',
+        reference: ['en-US'],
+        candidate: ['en-US', 'en'],
+      },
+    ];
+    const engine = classifyDifferences(surfaces, {
+      launch: 'engine',
+      extraSwitches: ['--disable-field-trial-config'],
+      requestedArgs: [],
+    });
+    assert.deepEqual(engine.unlisted, []);
+    assert.deepEqual(
+      engine.differences.map((entry) => entry.limitation),
+      ['engine-launch-switches', 'engine-launch-switches']
+    );
+
+    // The same surfaces stay unexplained for the real launch, and for an
+    // engine launch that did not touch the feature configuration.
+    for (const context of [
+      { launch: 'real', extraSwitches: ['--disable-field-trial-config'] },
+      { launch: 'engine', extraSwitches: ['--disable-sync'] },
+    ]) {
+      const { unlisted } = classifyDifferences(surfaces, {
+        ...context,
+        requestedArgs: [],
+      });
+      assert.equal(unlisted.length, 2);
+    }
+  });
+
   it('does not excuse navigator.webdriver for a launched browser', () => {
     const { unlisted } = classifyDifferences(
       [{ path: 'navigator.webdriver', reference: false, candidate: true }],

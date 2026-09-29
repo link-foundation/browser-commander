@@ -328,7 +328,11 @@ give automation away on its own:
 
 Every difference is explained by an entry in the shared limitations catalogue,
 explained by an option the caller asked for (`args`, `restrictions`), or
-unlisted. A report with any unlisted difference has `ok: false`, and `doctor`
+unlisted. With `launch: 'engine'` the engine's switches explain the command
+line, and on a non-Chrome-branded Chromium they also explain the API surface
+and language list: such a build applies its testing field-trial config unless
+Playwright's `--disable-field-trial-config` turns it off, which Chrome and Edge
+do not. A report with any unlisted difference has `ok: false`, and `doctor`
 exits `2`. The report shape is in [cli-and-bridge.md](cli-and-bridge.md). The
 Browser Parity workflow runs the measurement against the current stable Chrome
 every week, so a browser update that reopens a gap fails CI rather than a user

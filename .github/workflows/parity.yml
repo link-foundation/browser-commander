@@ -84,6 +84,22 @@ jobs:
             exit 1
           }
 
+      - name: Give the preinstalled browsers a usable sandbox
+        # The measureParity suite also starts the runner's Chromium and Edge by
+        # hand. On ubuntu-24.04 both abort before opening a window: AppArmor
+        # blocks the unprivileged user namespaces Chromium's sandbox needs
+        # ("No usable sandbox!"), and Edge's SUID helper ships without the
+        # setuid bit ("msedge-sandbox is owned by root and has mode ...").
+        # Fixing the host rather than passing --no-sandbox keeps the reference
+        # command line exactly what a person would type.
+        working-directory: .
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          if [ -e /opt/microsoft/msedge/msedge-sandbox ]; then
+            sudo chown root:root /opt/microsoft/msedge/msedge-sandbox
+            sudo chmod 4755 /opt/microsoft/msedge/msedge-sandbox
+          fi
+
       - name: Run parity suite under Xvfb
         # A display is only needed by the headful half, but running both halves
         # under the same server keeps the two references comparable.

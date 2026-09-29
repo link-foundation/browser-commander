@@ -9,13 +9,13 @@ from browser_commander import cli
 from browser_commander.utilities.subprocess import CommandResult
 
 
-# feature-parity: cli.version
+# feature-parity: cli.version@native-typed
 async def test_version_reports_the_python_package(capsys: Any) -> None:
     assert await cli.run_cli(["version"]) == 0
     assert '"language":"python"' in capsys.readouterr().out
 
 
-# feature-parity: cli.script
+# feature-parity: cli.script@untyped-via-cli
 async def test_script_forwards_exact_arguments(monkeypatch: Any, capsys: Any) -> None:
     calls: list[Any] = []
 
@@ -36,7 +36,7 @@ async def test_script_forwards_exact_arguments(monkeypatch: Any, capsys: Any) ->
     assert capsys.readouterr().out == '{"results":[]}'
 
 
-# feature-parity: cli.serve
+# feature-parity: cli.serve@untyped-via-cli
 async def test_stdio_bridge_inherits_input(monkeypatch: Any) -> None:
     calls: list[Any] = []
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from browser_commander.browser.migration.profile import migrate_profile
 
 
-# feature-parity: migration.profile
+# feature-parity: migration.profile@native-typed
 async def test_copies_bookmarks_without_touching_the_source(tmp_path: Path) -> None:
     source = tmp_path / "source"
     profile = source / "Default"

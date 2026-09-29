@@ -13,7 +13,7 @@ from browser_commander.browser.open_in_user_browser import (
     validate_open_url,
 )
 
-# feature-parity: attach.open
+# feature-parity: attach.open@native-typed
 
 
 def _recording_runner() -> tuple[list[dict[str, Any]], Any]:

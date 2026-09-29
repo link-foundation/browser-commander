@@ -1,4 +1,4 @@
-// feature-parity: cli.version cli.script cli.serve
+// feature-parity: cli.version@native-typed cli.script@untyped-via-cli cli.serve@untyped-via-cli
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { EventEmitter } from 'node:events';

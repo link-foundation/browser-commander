@@ -1,5 +1,5 @@
 //! Reading a trace bundle (issue #87).
-// feature-parity: trace.read
+// feature-parity: trace.read@native-typed
 //!
 //! The reader assumes nothing finished cleanly. A run that was killed leaves a
 //! bundle with no manifest and a half-written last line; that bundle still

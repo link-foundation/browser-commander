@@ -365,7 +365,7 @@ async fn spawns_waits_connects_and_returns_process_metadata() {
 
 #[tokio::test]
 async fn migrates_bookmarks_into_the_profile_before_launch() {
-    // feature-parity: migration.launch
+    // feature-parity: migration.launch@native-typed
     let source = create_temporary_user_data_dir(None).unwrap();
     let source_profile = source.join("Default");
     std::fs::create_dir_all(&source_profile).unwrap();

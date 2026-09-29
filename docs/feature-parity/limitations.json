@@ -1,5 +1,12 @@
 [
   {
+    "id": "dynamic-cli-protocol",
+    "features": ["cli.script", "cli.serve"],
+    "languages": ["javascript", "python", "rust"],
+    "tier": "untyped-via-cli",
+    "reason": "The command-script and stdio protocols accept dynamic JSON payloads by design. Their CLI entry points are untyped; callers that need compile-time engine types must use the language APIs instead."
+  },
+  {
     "id": "native-snapshot-attach",
     "features": ["attach.snapshot"],
     "languages": ["python", "rust"],

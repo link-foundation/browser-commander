@@ -35,7 +35,11 @@ const {
 const TAG = ['feature', 'parity:'].join('-');
 
 function tag(comment, ids) {
-  return `${comment} ${TAG} ${ids}\n`;
+  return `${comment} ${TAG} ${ids
+    .split(/[\s,]+/u)
+    .filter(Boolean)
+    .map((id) => `${id}@native-typed`)
+    .join(' ')}\n`;
 }
 
 function fixture({ tests, limitations = [] }) {
@@ -73,6 +77,15 @@ function fixture({ tests, limitations = [] }) {
   return root;
 }
 
+function inspectFixture(options, assertion) {
+  const root = fixture(options);
+  try {
+    assertion(generate(root));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 const ALL_LANGUAGES = {
   'js/tests/unit/launch.test.js': tag('//', 'launch.real launch.attach'),
   'python/tests/unit/test_launch.py': tag('#', 'launch.real, launch.attach'),
@@ -81,11 +94,17 @@ const ALL_LANGUAGES = {
 
 describe('feature parity generator', () => {
   it('reads space- and comma-separated tags from line comments only', () => {
-    assert.deepEqual(parseTags(tag('//', 'a.b c-d')), ['a.b', 'c-d']);
-    assert.deepEqual(parseTags(tag('  #', 'a.b,c.d')), ['a.b', 'c.d']);
+    assert.deepEqual(parseTags(tag('//', 'a.b c-d')), [
+      'a.b@native-typed',
+      'c-d@native-typed',
+    ]);
+    assert.deepEqual(parseTags(tag('  #', 'a.b,c.d')), [
+      'a.b@native-typed',
+      'c.d@native-typed',
+    ]);
     assert.deepEqual(parseTags(`const s = '${tag('//', 'a.b').trim()}';`), []);
     assert.deepEqual(parseTags(tag('//', 'a.b').replaceAll('\n', '\r\n')), [
-      'a.b',
+      'a.b@native-typed',
     ]);
   });
 
@@ -126,7 +145,7 @@ describe('feature parity generator', () => {
       assert.match(next, /^# Parity\n\nprose\n\n<!-- feature-parity/u);
       assert.match(
         next,
-        /\| Real launch +\| \[Supported\]\(\.\.\/js\/tests\/unit\/launch\.test\.js\) +\| \[Supported\]\(\.\.\/python\/tests\/unit\/test_launch\.py\) +\| \[Supported\]\(\.\.\/rust\/src\/launch\.rs\) +\|/u
+        /\| Real launch +\| \[Native typed\]\(\.\.\/js\/tests\/unit\/launch\.test\.js\) +\| \[Native typed\]\(\.\.\/python\/tests\/unit\/test_launch\.py\) +\| \[Native typed\]\(\.\.\/rust\/src\/launch\.rs\) +\|/u
       );
       assert.match(next, /Attach \\\| snapshot/u);
       assert.match(next, /None: every feature is tested in every language/u);
@@ -177,6 +196,93 @@ describe('feature parity generator', () => {
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  it('rejects a claim without an API tier', () => {
+    inspectFixture(
+      {
+        tests: {
+          ...ALL_LANGUAGES,
+          'js/tests/unit/legacy.test.js': `// ${TAG} launch.real\n`,
+        },
+      },
+      ({ errors }) => {
+        assert.ok(errors.some((error) => /has no valid API tier/u.test(error)));
+      }
+    );
+  });
+
+  it('requires a technical reason for untyped CLI access', () => {
+    inspectFixture(
+      {
+        tests: {
+          ...ALL_LANGUAGES,
+          'rust/src/launch.rs': `// ${TAG} launch.real@untyped-via-cli launch.attach@native-typed\n`,
+        },
+      },
+      ({ errors }) => {
+        assert.ok(
+          errors.some((error) => /below typed via bridge/u.test(error))
+        );
+      }
+    );
+  });
+
+  it('renders typed bridge access and a documented CLI exception', () => {
+    inspectFixture(
+      {
+        tests: {
+          ...ALL_LANGUAGES,
+          'python/tests/unit/test_launch.py': `# ${TAG} launch.real@typed-via-bridge launch.attach@native-typed\n`,
+          'rust/src/launch.rs': `// ${TAG} launch.real@untyped-via-cli launch.attach@native-typed\n`,
+        },
+        limitations: [
+          {
+            id: 'dynamic-launch',
+            features: ['launch.real'],
+            languages: ['rust'],
+            tier: 'untyped-via-cli',
+            reason: 'This command accepts a dynamic JSON script.',
+          },
+        ],
+      },
+      ({ errors, next }) => {
+        assert.deepEqual(errors, []);
+        assert.match(
+          next,
+          /\[Typed via bridge\]\(\.\.\/python\/tests\/unit\/test_launch\.py\)/u
+        );
+        assert.match(
+          next,
+          /\[Untyped via CLI\]\(\.\.\/rust\/src\/launch\.rs\) \(\[reason\]\(#dynamic-launch\)\)/u
+        );
+      }
+    );
+  });
+
+  it('rejects a stale CLI exception that has no claim', () => {
+    inspectFixture(
+      {
+        tests: {
+          ...ALL_LANGUAGES,
+          'rust/src/launch.rs': tag('//', 'launch.attach'),
+        },
+        limitations: [
+          {
+            id: 'stale-cli-exception',
+            features: ['launch.real'],
+            languages: ['rust'],
+            tier: 'untyped-via-cli',
+            reason: 'Dynamic JSON input.',
+          },
+        ],
+      },
+      ({ errors }) => {
+        assert.ok(
+          errors.some((error) => /expects untyped CLI access/u.test(error))
+        );
+      }
+    );
   });
 
   it('rejects stale, reasonless and unknown entries', () => {

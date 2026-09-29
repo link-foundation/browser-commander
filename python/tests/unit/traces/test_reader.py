@@ -29,7 +29,7 @@ from browser_commander.traces.schema import (
     create_manifest,
 )
 
-# feature-parity: trace.read
+# feature-parity: trace.read@native-typed
 
 
 def ndjson(records: list[dict[str, Any]]) -> str:

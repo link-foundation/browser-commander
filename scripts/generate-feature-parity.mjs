@@ -9,8 +9,8 @@
  *
  * - `docs/feature-parity/features.json` names every feature once, grouped in
  *   sections. It carries no status: nobody edits "Supported" by hand.
- * - A test claims a feature with a `feature-parity:` comment, for example
- *   `// feature-parity: launch.real-browser launch.fixed-port` in JavaScript
+ * - A test claims a feature and its API tier with a `feature-parity:` comment,
+ *   for example `// feature-parity: launch.real-browser@native-typed` in JavaScript
  *   or Rust and `# feature-parity: ...` in Python. A language supports a
  *   feature when at least one of its test files claims it.
  * - `docs/feature-parity/limitations.json` is the only way to leave a gap. An
@@ -50,6 +50,16 @@ const SKIPPED_DIRECTORIES = new Set([
 // tag (the generator's own tests build fixtures that way) claims nothing.
 const TAG_PATTERN = /^[ \t]*(?:\/\/|#)[ \t]*feature-parity:([^\n]*)/gmu;
 const FEATURE_ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/u;
+const API_TIERS = new Map([
+  ['untyped-via-cli', 0],
+  ['typed-via-bridge', 1],
+  ['native-typed', 2],
+]);
+const TIER_LABELS = new Map([
+  ['untyped-via-cli', 'Untyped via CLI'],
+  ['typed-via-bridge', 'Typed via bridge'],
+  ['native-typed', 'Native typed'],
+]);
 
 export const BEGIN_MARKER = '<!-- feature-parity:generated:begin -->';
 export const END_MARKER = '<!-- feature-parity:generated:end -->';
@@ -91,16 +101,17 @@ export function parseTags(source) {
 
 /**
  * Collect the claims of every test file, as
- * `Map<featureId, Map<languageId, string[]>>` with repository-relative paths.
+ * `Map<featureId, Map<languageId, Array<{ file, tier }>>>` with repository-relative paths.
  */
 export function collectClaims(root, languages = LANGUAGES) {
   const claims = new Map();
   for (const language of languages) {
     for (const testRoot of language.roots) {
       for (const file of walk(path.join(root, testRoot))) {
-        const ids = parseTags(readFileSync(file, 'utf8'));
+        const tokens = parseTags(readFileSync(file, 'utf8'));
         const relative = path.relative(root, file).split(path.sep).join('/');
-        for (const id of ids) {
+        for (const token of tokens) {
+          const [id, tier] = token.split('@');
           if (!claims.has(id)) {
             claims.set(id, new Map());
           }
@@ -108,8 +119,12 @@ export function collectClaims(root, languages = LANGUAGES) {
           if (!byLanguage.has(language.id)) {
             byLanguage.set(language.id, []);
           }
-          if (!byLanguage.get(language.id).includes(relative)) {
-            byLanguage.get(language.id).push(relative);
+          if (
+            !byLanguage
+              .get(language.id)
+              .some((claim) => claim.file === relative && claim.tier === tier)
+          ) {
+            byLanguage.get(language.id).push({ file: relative, tier });
           }
         }
       }
@@ -145,10 +160,24 @@ export function evaluate({
 
   for (const [id, byLanguage] of claims) {
     if (!known.has(id)) {
-      const files = [...byLanguage.values()].flat().join(', ');
+      const files = [...byLanguage.values()]
+        .flat()
+        .map((claim) => claim.file)
+        .join(', ');
       errors.push(
         `unknown feature "${id}" claimed by ${files}; add it to ${FEATURES}`
       );
+    }
+  }
+  for (const [id, byLanguage] of claims) {
+    for (const [language, entries] of byLanguage) {
+      for (const entry of entries) {
+        if (!API_TIERS.has(entry.tier)) {
+          errors.push(
+            `feature "${id}" in ${language} at ${entry.file} has no valid API tier`
+          );
+        }
+      }
     }
   }
 
@@ -161,6 +190,14 @@ export function evaluate({
     limitationIds.add(limitation.id);
     if (typeof limitation.reason !== 'string' || !limitation.reason.trim()) {
       errors.push(`limitation "${limitation.id}" gives no technical reason`);
+    }
+    if (
+      limitation.tier !== undefined &&
+      limitation.tier !== 'untyped-via-cli'
+    ) {
+      errors.push(
+        `limitation "${limitation.id}" has invalid API tier "${limitation.tier}"`
+      );
     }
     for (const language of limitation.languages || []) {
       if (!languages.some((candidate) => candidate.id === language)) {
@@ -187,16 +224,38 @@ export function evaluate({
       const byLanguage = claims.get(feature.id) || new Map();
       const cells = {};
       for (const language of languages) {
-        const files = byLanguage.get(language.id) || [];
+        const entries = byLanguage.get(language.id) || [];
+        const validEntries = entries.filter((entry) =>
+          API_TIERS.has(entry.tier)
+        );
+        validEntries.sort(
+          (a, b) => API_TIERS.get(b.tier) - API_TIERS.get(a.tier)
+        );
+        const tier = validEntries[0]?.tier;
+        const files = validEntries.map((entry) => entry.file);
         const limitation = gaps.get(`${feature.id}\u0000${language.id}`);
-        if (files.length > 0 && limitation) {
+        if (files.length === 0 && limitation?.tier === 'untyped-via-cli') {
+          errors.push(
+            `limitation "${limitation.id}" expects untyped CLI access for ${feature.id} in ${language.id}, but no test claims it`
+          );
+        }
+        if (
+          files.length > 0 &&
+          limitation &&
+          !(tier === 'untyped-via-cli' && limitation.tier === 'untyped-via-cli')
+        ) {
           errors.push(
             `limitation "${limitation.id}" covers ${feature.id} in ${language.id}, ` +
               `but ${files[0]} tests it; remove the stale entry`
           );
         }
         if (files.length > 0) {
-          cells[language.id] = { status: 'supported', files };
+          if (tier === 'untyped-via-cli' && !limitation) {
+            errors.push(
+              `feature "${feature.id}" in ${language.id} is below typed via bridge and ${LIMITATIONS} gives no technical reason`
+            );
+          }
+          cells[language.id] = { status: 'supported', files, tier, limitation };
         } else if (limitation) {
           cells[language.id] = { status: 'limitation', limitation };
         } else {
@@ -250,7 +309,8 @@ export function renderTable(header, rows) {
 function renderCell(cell, documentDirectory) {
   if (cell.status === 'supported') {
     const link = path.posix.relative(documentDirectory, cell.files[0]);
-    return `[Supported](${link})`;
+    const label = TIER_LABELS.get(cell.tier);
+    return `[${label}](${link})${cell.limitation ? ` ([reason](#${cell.limitation.id}))` : ''}`;
   }
   if (cell.status === 'limitation') {
     return `[Limitation](#${cell.limitation.id})`;
@@ -266,7 +326,9 @@ export function renderMatrix(
   const parts = [
     '_Generated by `node scripts/generate-feature-parity.mjs` from the ' +
       '`feature-parity:` tags in the test suites. Do not edit by hand: tag a ' +
-      'test, or add a reason to `docs/feature-parity/limitations.json`._',
+      'test, or add a reason to `docs/feature-parity/limitations.json`. ' +
+      'A claim must state `@native-typed`, `@typed-via-bridge`, or ' +
+      '`@untyped-via-cli`; CLI-only claims require a technical reason._',
   ];
   for (const section of sections) {
     parts.push(`### ${section.title}`);

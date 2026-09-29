@@ -1,4 +1,4 @@
-// feature-parity: attach.snapshot
+// feature-parity: attach.snapshot@native-typed
 import assert from 'node:assert';
 import { createHash } from 'node:crypto';
 import {

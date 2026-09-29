@@ -1,4 +1,4 @@
-// feature-parity: attach.extension
+// feature-parity: attach.extension@native-typed
 import assert from 'node:assert';
 import { once } from 'node:events';
 import { access } from 'node:fs/promises';

@@ -76,7 +76,7 @@ pub async fn open_in_user_browser(url: &str) -> Result<OpenInUserBrowserResult> 
 mod tests {
     use super::*;
 
-    // feature-parity: attach.open
+    // feature-parity: attach.open@native-typed
     #[test]
     fn builds_each_system_opener_without_a_shell() {
         assert_eq!(

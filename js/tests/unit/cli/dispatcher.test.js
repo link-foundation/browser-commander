@@ -35,6 +35,11 @@ describe('dispatcher: high-level methods', () => {
       'trace.stop',
       'cookies.import',
       'profile.migrate',
+      'profile.snapshot',
+      'attach',
+      'attach.tabs',
+      'attach.send',
+      'attach.close',
       'open',
       'doctor',
       'version',
@@ -181,6 +186,72 @@ describe('dispatcher: high-level methods', () => {
     assert.deepEqual(migrated.options.include, ['cookies']);
     assert.deepEqual(await dispatch('doctor', {}), { ok: true, unlisted: [] });
     assert.equal((await dispatch('version')).language, 'js');
+  });
+
+  it('forwards profile.snapshot and launches with attach', async () => {
+    const { dispatcher, launches } = setup();
+    const { dispatch } = dispatcher;
+
+    const report = await dispatch('profile.snapshot', {
+      from: 'chrome',
+      profile: 'Profile 1',
+      to: '/tmp/copy',
+    });
+    assert.equal(report.target, '/tmp/copy');
+    assert.equal(report.source.profile, 'Profile 1');
+    await assert.rejects(dispatch('profile.snapshot', {}), { code: -32602 });
+
+    await dispatch('session.launch', {
+      attach: { mode: 'snapshot', browser: 'chrome' },
+    });
+    assert.deepEqual(launches[0].options.attach, {
+      mode: 'snapshot',
+      browser: 'chrome',
+    });
+  });
+
+  it('keeps an extension relay open until attach.close', async () => {
+    const { dispatcher, relays } = setup();
+    const { dispatch } = dispatcher;
+
+    await assert.rejects(dispatch('attach', { mode: 'snapshot' }), {
+      code: -32602,
+    });
+    await assert.rejects(dispatch('attach.tabs'), { code: -32602 });
+    const attached = await dispatch('attach', { mode: 'extension', port: 0 });
+    assert.equal(attached.mode, 'extension');
+    assert.equal(attached.extension.id, 'abc');
+    assert.equal(attached.tabs[0].tabId, 1);
+    assert.equal(attached.differences[0].aspect, 'debugger-infobar');
+    assert.equal(relays[0].options.port, 0);
+    await assert.rejects(dispatch('attach', { mode: 'extension' }), {
+      code: -32602,
+    });
+
+    assert.deepEqual(await dispatch('attach.tabs'), attached.tabs);
+    assert.deepEqual(
+      await dispatch('attach.send', {
+        tabId: 1,
+        method: 'Runtime.evaluate',
+        params: { expression: '1' },
+      }),
+      { ok: true }
+    );
+    assert.deepEqual(relays[0].sent, [
+      { tabId: 1, method: 'Runtime.evaluate', params: { expression: '1' } },
+    ]);
+    await assert.rejects(dispatch('attach.send', { tabId: 'x' }), {
+      code: -32602,
+    });
+
+    assert.equal(relays[0].closed, false);
+    assert.deepEqual(await dispatch('attach.close'), { closed: true });
+    assert.equal(relays[0].closed, true);
+    assert.deepEqual(await dispatch('attach.close'), { closed: false });
+
+    await dispatch('attach', { mode: 'extension' });
+    await dispatcher.close();
+    assert.equal(relays[1].closed, true);
   });
 
   it('reports a missing optional module as an engine error', async () => {

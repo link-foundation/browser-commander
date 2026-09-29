@@ -6,6 +6,10 @@ import {
   applyAutomationParityArgs,
   detectAutomationControlledTriggers,
 } from '../fingerprint/automation-parity.js';
+import {
+  prepareSnapshotLaunch,
+  validateAttachOption,
+} from './attach/snapshot-launch.js';
 import { connectBrowser } from './connector.js';
 import { migrateProfile } from './migration/index.js';
 import {
@@ -326,8 +330,9 @@ function createCloser({
  * @param {number} [options.closeTimeout=5000] - How long close() waits before killing the process
  * @param {Object[]} [options.seedCookies] - Cookies to seed after connecting
  * @param {{browser: string, profile: (string|undefined), userDataDir: (string|undefined), include: (Array<string>|undefined), domains: (Array<string>|undefined)}} [options.migrateFrom] - Migrate a real browser profile into the dedicated profile before launch; on-disk data is written before the browser starts and cookies are seeded over CDP after connecting
+ * @param {{mode: 'snapshot', browser: (string|undefined), profile: (string|undefined), userDataDir: (string|undefined)}} [options.attach] - Launch on a read-only snapshot of a real profile (issue #102, addendum): `snapshotUserDataDir()` copies it into a temporary user data directory, which is deleted on close. `browser` defaults to the channel's browser and `profile` to Default. Mutually exclusive with `migrateFrom` and `userDataDir`.
  * @param {boolean} [options.verbose=false] - Show browser and connection logs
- * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, migration: (Object|undefined)}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given)
+ * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, migration: (Object|undefined), attach: ({mode: 'snapshot', snapshot: Object, differences: Array<{aspect: string, description: string}>}|undefined)}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given and an `attach` entry when `attach` was given)
  */
 export async function launchAndConnectRealBrowser(options = {}) {
   return await launchAndConnectRealBrowserWithDependencies(options);
@@ -397,12 +402,22 @@ function validateLaunchRequest({
   userDataDir,
   remoteDebuggingPort,
   endpoint,
+  attach,
+  migrateFrom,
 }) {
   if (endpoint) {
     throw new Error(
       'launchAndConnectRealBrowser creates its own endpoint; use connectBrowser to attach to an existing endpoint'
     );
   }
+  validateAttachOption({
+    attach,
+    migrateFrom,
+    userDataDir,
+    customArgs: [argOptions.args, argOptions.extraArgs].flatMap((list) =>
+      Array.isArray(list) ? list : []
+    ),
+  });
   if (remoteDebuggingPort !== undefined) {
     assertFixedDebuggingPort(remoteDebuggingPort);
   }
@@ -426,6 +441,37 @@ function browserEnvironment(restrictions, env) {
   return env || Object.keys(restrictionEnv).length > 0
     ? { ...process.env, ...restrictionEnv, ...env }
     : undefined;
+}
+
+/**
+ * Create the profile the browser starts with: a snapshot of a real profile
+ * for `attach`, a fresh temporary one, or the caller's dedicated one. A
+ * snapshot is a temporary profile too and is deleted on close. The snapshot's
+ * `--profile-directory` switch is put before the custom `args`.
+ */
+async function prepareProfile({
+  attach,
+  channel,
+  requestedUserDataDir,
+  argOptions,
+  snapshot,
+}) {
+  if (attach) {
+    const snapshotLaunch = await prepareSnapshotLaunch({
+      attach,
+      channel,
+      restrictions: argOptions.restrictions,
+      customArgs: [...argOptions.args, ...argOptions.extraArgs],
+      snapshot,
+    });
+    argOptions.args = [...snapshotLaunch.args, ...argOptions.args];
+    return { userDataDir: snapshotLaunch.userDataDir, snapshotLaunch };
+  }
+  return {
+    userDataDir: requestedUserDataDir
+      ? await prepareUserDataDir(requestedUserDataDir)
+      : await createTemporaryUserDataDir(),
+  };
 }
 
 /** Dependency-injected implementation used by the public helper and tests. */
@@ -494,6 +540,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
     cdpEndpoint,
     wsEndpoint,
     migrateFrom,
+    attach,
     ...connectionOptions
   } = options;
   const argOptions = {
@@ -508,6 +555,8 @@ export async function launchAndConnectRealBrowserWithDependencies(
     userDataDir: requestedUserDataDir,
     remoteDebuggingPort,
     endpoint: cdpEndpoint || wsEndpoint,
+    attach,
+    migrateFrom,
   });
 
   const resolveExecutable =
@@ -518,9 +567,13 @@ export async function launchAndConnectRealBrowserWithDependencies(
   });
 
   const temporaryProfile = !requestedUserDataDir;
-  const userDataDir = temporaryProfile
-    ? await createTemporaryUserDataDir()
-    : await prepareUserDataDir(requestedUserDataDir);
+  const { userDataDir, snapshotLaunch } = await prepareProfile({
+    attach,
+    channel,
+    requestedUserDataDir,
+    argOptions,
+    snapshot: dependencies.snapshotUserDataDir,
+  });
   const childEnv = browserEnvironment(restrictions, env);
 
   const { migration, migratedCookies } = await runPreLaunchMigration({
@@ -591,6 +644,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       temporaryProfile,
       args: launched.browserArgs,
       ...(migration ? { migration } : {}),
+      ...(snapshotLaunch ? { attach: snapshotLaunch.attach } : {}),
     };
   } catch (error) {
     if (browserProcess.exitCode === null) {

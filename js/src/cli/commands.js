@@ -11,7 +11,13 @@
 import { readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { launchParams, requireOption, UsageError } from './args.js';
+import {
+  integerOption,
+  launchAttachParams,
+  launchParams,
+  requireOption,
+  UsageError,
+} from './args.js';
 import { createDispatcher } from './dispatcher.js';
 import { DEFAULT_DEPENDENCIES } from './modules.js';
 import { runScript } from './script.js';
@@ -119,12 +125,13 @@ async function version(parsed, io) {
  * is closed right after printing, which is only useful to check a launch.
  */
 async function launch(parsed, io) {
+  const attach = launchAttachParams(parsed.options);
   const dispatcher = createDispatcher({ dependencies: io.dependencies });
   try {
-    const opened = await dispatcher.dispatch(
-      'session.launch',
-      launchParams(parsed.options)
-    );
+    const opened = await dispatcher.dispatch('session.launch', {
+      ...launchParams(parsed.options),
+      ...(attach ? { attach } : {}),
+    });
     const session = dispatcher.state.sessions.get(opened.session);
     const document = {
       cdpEndpoint: opened.cdpEndpoint,
@@ -132,6 +139,7 @@ async function launch(parsed, io) {
       userDataDir: opened.userDataDir,
       temporaryProfile: opened.temporaryProfile,
       args: session.args,
+      ...(opened.attach ? { attach: opened.attach } : {}),
     };
     if (!parsed.options.keepOpen) {
       return done(document);
@@ -212,6 +220,42 @@ async function profileMigrate(parsed, io) {
   );
 }
 
+/** Copy a real profile into `--to` (or a new temporary directory). */
+async function profileSnapshot(parsed, io) {
+  const { options } = parsed;
+  return done(
+    await dispatchOnce(io, 'profile.snapshot', {
+      from: requireOption(options, 'from', 'profile snapshot'),
+      profile: options.profile,
+      to: options.to && path.resolve(options.to),
+    })
+  );
+}
+
+/**
+ * Wait for the companion extension, print its tabs, and close the relay.
+ * `serve --stdio` keeps the relay open instead (`attach` ... `attach.close`).
+ */
+async function attach(parsed, io) {
+  const { options } = parsed;
+  const mode = requireOption(options, 'mode', 'attach');
+  if (mode !== 'extension') {
+    throw new UsageError(
+      `attach: --mode supports "extension", got "${mode}"; use launch --attach snapshot or open <url> for the other modes`
+    );
+  }
+  const params = { mode };
+  const port = integerOption(options, 'port', 'attach');
+  const timeoutMs = integerOption(options, 'timeout', 'attach');
+  if (port !== undefined) {
+    params.port = port;
+  }
+  if (timeoutMs !== undefined) {
+    params.timeoutMs = timeoutMs;
+  }
+  return done(await dispatchOnce(io, 'attach', params));
+}
+
 /** Exit 2 when the report has a difference not listed in limitations.json. */
 async function doctor(parsed, io) {
   const report = await dispatchOnce(io, 'doctor', launchParams(parsed.options));
@@ -280,6 +324,8 @@ export const COMMAND_HANDLERS = Object.freeze({
     domains: options.domain,
   })),
   'profile migrate': profileMigrate,
+  'profile snapshot': profileSnapshot,
+  attach,
   doctor,
   run,
   serve,

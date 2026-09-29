@@ -32,6 +32,7 @@ from browser_commander.browser.launcher import (
     resolve_launch_executable,
 )
 from browser_commander.browser.media import emulate_media
+from browser_commander.browser.migration import ALL_DATA_CLASSES, migrate_profile
 from browser_commander.browser.navigation import (
     GotoResult,
     NavigationVerificationResult,
@@ -44,6 +45,18 @@ from browser_commander.browser.navigation import (
     wait_for_navigation,
     wait_for_page_ready,
     wait_for_url_stabilization,
+)
+from browser_commander.browser.open_in_user_browser import (
+    build_open_command,
+    open_in_user_browser,
+    validate_open_url,
+)
+from browser_commander.browser.parity import (
+    classify_differences,
+    compare_command_lines,
+    measure_parity,
+    parse_switches,
+    read_browser_version_page,
 )
 from browser_commander.browser.pdf import pdf
 from browser_commander.browser.profile_directory import (
@@ -498,4 +511,15 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "ManagedProcess",
     "run_command",
     "start_process",
+    # Open in the user's browser, profile migration and parity (#102, #103)
+    "ALL_DATA_CLASSES",
+    "build_open_command",
+    "classify_differences",
+    "compare_command_lines",
+    "measure_parity",
+    "migrate_profile",
+    "open_in_user_browser",
+    "parse_switches",
+    "read_browser_version_page",
+    "validate_open_url",
 ]

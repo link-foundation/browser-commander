@@ -30,11 +30,16 @@ const loadEngine = {
   puppeteer: async () => (await import('puppeteer')).default,
 };
 
-function validateLaunchMode({ engine, launch }) {
+function validateLaunchMode({ engine, launch, attach }) {
   assertSupportedEngine(engine);
   if (!LAUNCH_MODES.includes(launch)) {
     throw new Error(
       `Invalid launch mode: ${launch}. Expected 'real' or 'engine'`
+    );
+  }
+  if (attach !== undefined && launch !== 'real') {
+    throw new TypeError(
+      "attach needs launch: 'real'; an engine launch starts its own profile"
     );
   }
 }
@@ -95,6 +100,9 @@ async function launchReal(options, dependencies) {
     dependencies.launchRealBrowser ?? launchRealBrowser;
   const session = await launchRealImplementation({
     ...rest,
+    // The channel still names the browser whose profile an attach snapshot
+    // copies and a migration targets; the executable is resolved here.
+    ...(channel ? { channel } : {}),
     engine,
     verbose,
     storageState,
@@ -300,7 +308,7 @@ export async function launchBrowserWithDependencies(
     downloads,
     ...rest
   } = options;
-  validateLaunchMode({ engine, launch });
+  validateLaunchMode({ engine, launch, attach: rest.attach });
   // Validate arguments before anything is started or written to disk.
   resolveChromeArgs({ args, extraArgs, ignoreDefaultArgs, restrictions });
   const resolvedStorageState = await loadStorageState(storageState);

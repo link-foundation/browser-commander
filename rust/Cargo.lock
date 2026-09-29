@@ -193,9 +193,12 @@ dependencies = [
  "cbc",
  "chromiumoxide",
  "command-stream",
+ "des",
  "dirs",
  "fantoccini",
  "futures",
+ "getrandom 0.4.3",
+ "hmac",
  "pbkdf2",
  "pretty_assertions",
  "regex",
@@ -520,6 +523,15 @@ name = "deranged"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c"
+
+[[package]]
+name = "des"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "916a94e407b54f9034d71dd748234cd1e516ced6284009906ae246f177eafe5a"
+dependencies = [
+ "cipher",
+]
 
 [[package]]
 name = "diff"

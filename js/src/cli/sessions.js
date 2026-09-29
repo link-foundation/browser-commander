@@ -33,6 +33,7 @@ const LAUNCH_PASSTHROUGH = Object.freeze([
   'automationParity',
   'env',
   'startupTimeout',
+  'attach',
 ]);
 
 /** Validate an engine name, defaulting to Playwright. */

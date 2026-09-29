@@ -32,6 +32,7 @@ async function launchSession(state, params) {
     remoteDebuggingPort: launched.remoteDebuggingPort ?? null,
     userDataDir: launched.userDataDir ?? null,
     temporaryProfile: launched.temporaryProfile ?? false,
+    ...(launched.attach ? { attach: launched.attach } : {}),
   };
 }
 
@@ -199,6 +200,75 @@ function migrateProfile(state, params) {
   });
 }
 
+function snapshotProfile(state, params) {
+  return state.dependencies.snapshotUserDataDir({
+    browser: requireString(params, 'from'),
+    profile: params.profile,
+    userDataDir: params.userDataDir,
+    to: params.to,
+  });
+}
+
+function relayOf(state) {
+  if (!state.relay) {
+    throw invalidParams('No extension is attached; call attach first');
+  }
+  return state.relay;
+}
+
+/**
+ * Start the extension relay and wait for the companion extension. The relay
+ * stays open until `attach.close` or the end of the connection.
+ */
+async function attach(state, params) {
+  if (params.mode !== 'extension') {
+    throw invalidParams(
+      `attach supports mode "extension", got ${JSON.stringify(params.mode)}; use session.launch with attach for a snapshot and open for the user's browser`
+    );
+  }
+  if (state.relay) {
+    throw invalidParams('An extension is already attached; call attach.close');
+  }
+  const relay = await state.dependencies.attachUserBrowser({
+    mode: 'extension',
+    port: params.port,
+    host: params.host,
+    timeoutMs: params.timeoutMs,
+    allowedExtensionIds: params.allowedExtensionIds,
+  });
+  state.relay = relay;
+  return {
+    mode: relay.mode,
+    extension: relay.extension,
+    tabs: await relay.tabs(),
+    differences: relay.differences,
+  };
+}
+
+async function attachTabs(state) {
+  return await relayOf(state).tabs();
+}
+
+/** Send one CDP command to a tab of the attached browser. */
+async function attachSend(state, params) {
+  const relay = relayOf(state);
+  if (!Number.isInteger(params.tabId)) {
+    throw invalidParams('tabId must be an integer');
+  }
+  const session = await relay.session(params.tabId);
+  return await session.send(
+    requireString(params, 'method'),
+    params.params ?? {}
+  );
+}
+
+async function attachClose(state) {
+  const { relay } = state;
+  state.relay = null;
+  await relay?.close();
+  return { closed: Boolean(relay) };
+}
+
 async function open(state, params) {
   const url = requireString(params, 'url');
   const result = await state.dependencies.openInUserBrowser(url);
@@ -229,6 +299,11 @@ export const HIGH_LEVEL_METHODS = Object.freeze({
   'trace.stop': traceStop,
   'cookies.import': importCookies,
   'profile.migrate': migrateProfile,
+  'profile.snapshot': snapshotProfile,
+  attach,
+  'attach.tabs': attachTabs,
+  'attach.send': attachSend,
+  'attach.close': attachClose,
   open,
   doctor,
   version,

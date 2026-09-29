@@ -240,7 +240,7 @@ fn read_chromium_rows(
         .map_err(Into::into)
 }
 
-fn read_firefox_cookies(
+pub(crate) fn read_firefox_cookies(
     database: &Connection,
     domain_filter: Option<&str>,
 ) -> Result<Vec<BrowserCookie>> {

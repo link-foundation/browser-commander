@@ -79,6 +79,20 @@ export const DEFAULT_DEPENDENCIES = Object.freeze({
         'profile migrate (migrateProfile)'
       )
     ).migrateProfile(options),
+  snapshotUserDataDir: async (options) =>
+    (
+      await importOptional(
+        '../browser/attach/snapshot.js',
+        'profile snapshot (snapshotUserDataDir)'
+      )
+    ).snapshotUserDataDir(options),
+  attachUserBrowser: async (options) =>
+    (
+      await importOptional(
+        '../browser/attach/index.js',
+        'attach (attachUserBrowser)'
+      )
+    ).attachUserBrowser(options),
   measureParity: async (options) =>
     (
       await importOptional('../browser/parity.js', 'doctor (measureParity)')

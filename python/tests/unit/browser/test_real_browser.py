@@ -306,6 +306,127 @@ async def test_spawns_waits_connects_and_returns_process_metadata(
     assert result.close is not None
 
 
+async def test_migrates_a_profile_before_launch_and_seeds_migrated_cookies(
+    tmp_path: Path,
+) -> None:
+    calls: list[Any] = []
+    process = FakeProcess(calls)
+    profile = str(tmp_path / "profile")
+    migrate_options: dict[str, Any] = {}
+    connect_options: list[Any] = []
+
+    async def migrate_profile(**options: Any) -> dict[str, Any]:
+        migrate_options.update(options)
+        # Migration runs before the browser is spawned.
+        assert calls == []
+        return {
+            "source": {"browser": "chrome", "profile": "Default", "userDataDir": None},
+            "target": options["to"],
+            "migrated": {
+                "cookies": 1,
+                "bookmarks": 2,
+                "history": 0,
+                "passwords": 0,
+                "preferences": 0,
+                "extensions": 0,
+            },
+            "skipped": [],
+            "warnings": [],
+            "cookies": [{"name": "SID", "value": "migrated", "domain": ".google.com"}],
+        }
+
+    def spawn_browser(*_args: Any, **_options: Any) -> Any:
+        calls.append(("spawn",))
+        return process
+
+    async def connect(options: Any) -> Any:
+        connect_options.append(options)
+        return LaunchResult(browser=object(), page=object())
+
+    result = await launch_real_browser_with_dependencies(
+        RealBrowserOptions(
+            engine="playwright",
+            channel="chrome",
+            user_data_dir=profile,
+            seed_cookies=[{"name": "existing", "value": "keep"}],
+            migrate_from={
+                "browser": "chrome",
+                "profile": "Default",
+                "include": ["cookies", "bookmarks"],
+                "domains": ["google.com"],
+            },
+        ),
+        resolve_executable=_executable,
+        reserve_port=lambda: 9445,
+        spawn_browser=spawn_browser,
+        wait_for_endpoint=lambda **_options: "http://127.0.0.1:9445",
+        connect=connect,
+        migrate_profile=migrate_profile,
+    )
+
+    # Migration targets the Default profile directory and receives the
+    # launching channel as the target browser for key derivation.
+    assert migrate_options["to"] == str(Path(profile) / "Default")
+    assert migrate_options["target_browser"] == "chrome"
+    assert migrate_options["include"] == ["cookies", "bookmarks"]
+    assert migrate_options["domains"] == ["google.com"]
+    assert migrate_options["from_"] == {"browser": "chrome", "profile": "Default"}
+
+    # Migrated cookies are appended to any explicit seed_cookies.
+    assert connect_options[0].seed_cookies == [
+        {"name": "existing", "value": "keep"},
+        {"name": "SID", "value": "migrated", "domain": ".google.com"},
+    ]
+
+    # The session exposes the report without the bulky raw cookie list.
+    assert result.migration is not None
+    assert result.migration["migrated"]["bookmarks"] == 2
+    assert result.migration["migrated"]["cookies"] == 1
+    assert "cookies" not in result.migration
+
+
+async def test_launch_without_migrate_from_does_not_migrate(tmp_path: Path) -> None:
+    async def migrate_profile(**_options: Any) -> Any:
+        raise AssertionError("migrate_profile must not run")
+
+    result = await launch_real_browser_with_dependencies(
+        RealBrowserOptions(user_data_dir=str(tmp_path / "profile")),
+        resolve_executable=_executable,
+        reserve_port=lambda: 9446,
+        spawn_browser=lambda *_args, **_options: FakeProcess([]),
+        wait_for_endpoint=lambda **_options: "http://127.0.0.1:9446",
+        connect=_connected(),
+        migrate_profile=migrate_profile,
+    )
+    assert result.migration is None
+
+
+async def test_removes_the_temporary_profile_when_migration_fails() -> None:
+    targets: list[str] = []
+    spawned: list[Any] = []
+
+    async def migrate_profile(**options: Any) -> Any:
+        targets.append(options["to"])
+        raise RuntimeError("source profile is locked")
+
+    with pytest.raises(RuntimeError, match="source profile is locked"):
+        await launch_real_browser_with_dependencies(
+            RealBrowserOptions(migrate_from={"browser": "firefox"}),
+            resolve_executable=_executable,
+            reserve_port=lambda: 9447,
+            spawn_browser=lambda *args, **_options: spawned.append(args),
+            wait_for_endpoint=lambda **_options: "http://127.0.0.1:9447",
+            connect=_connected(),
+            migrate_profile=migrate_profile,
+        )
+
+    assert spawned == []
+    assert len(targets) == 1
+    temporary_profile = Path(targets[0]).parent
+    assert temporary_profile.name.startswith(TEMPORARY_PROFILE_PREFIX)
+    assert not temporary_profile.exists()
+
+
 async def test_retries_with_a_new_reserved_port_after_a_port_race() -> None:
     calls: list[Any] = []
     ports = [40001, 40002]

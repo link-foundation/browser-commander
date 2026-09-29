@@ -93,12 +93,13 @@ export class FakeContext {
 /**
  * Dependencies for `createDispatcher()` backed by fakes.
  *
- * @returns {{dependencies: Object, launches: Object[], connections: Object[], pages: FakePage[]}}
+ * @returns {{dependencies: Object, launches: Object[], connections: Object[], pages: FakePage[], relays: Object[]}}
  */
 export function createFakeDependencies() {
   const launches = [];
   const connections = [];
   const pages = [];
+  const relays = [];
   const newPage = () => {
     const page = new FakePage();
     pages.push(page);
@@ -161,8 +162,44 @@ export function createFakeDependencies() {
     openInUserBrowser: async (url) => ({ opened: url, command: ['open', url] }),
     migrateProfile: async (options) => ({ migrated: {}, options }),
     measureParity: async () => ({ ok: true, unlisted: [] }),
+    snapshotUserDataDir: async (options) => ({
+      source: {
+        browser: options.browser,
+        profile: options.profile ?? 'Default',
+        userDataDir: `/home/user/.config/${options.browser}`,
+      },
+      target: options.to ?? '/tmp/fake-snapshot',
+      copied: { files: 3, databases: 1 },
+      skipped: [{ item: 'SingletonLock', reason: 'lock' }],
+      warnings: [],
+    }),
+    attachUserBrowser: async (options) => {
+      const relay = {
+        options,
+        mode: 'extension',
+        extension: { id: 'abc', version: '0.20.0', userAgent: 'Chrome' },
+        differences: [{ aspect: 'debugger-infobar', description: 'infobar' }],
+        closed: false,
+        sent: [],
+        tabs: async () => [
+          { tabId: 1, url: 'https://example.com/', title: 'Example' },
+        ],
+        session: async (tabId) => ({
+          tabId,
+          send: async (method, params) => {
+            relay.sent.push({ tabId, method, params });
+            return { ok: true };
+          },
+        }),
+        close: async () => {
+          relay.closed = true;
+        },
+      };
+      relays.push(relay);
+      return relay;
+    },
   };
-  return { dependencies, launches, connections, pages };
+  return { dependencies, launches, connections, pages, relays };
 }
 
 /** A stand-in for the Playwright or Puppeteer entry object. */

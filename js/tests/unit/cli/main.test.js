@@ -221,6 +221,89 @@ describe('runCli', () => {
     });
   });
 
+  it('prints a profile snapshot report', async () => {
+    const { exitCode, document } = await cli([
+      'profile',
+      'snapshot',
+      '--from',
+      'edge',
+      '--profile',
+      'Profile 2',
+      '--to',
+      'copy',
+    ]);
+
+    assert.equal(exitCode, 0);
+    assert.equal(document.source.browser, 'edge');
+    assert.equal(document.source.profile, 'Profile 2');
+    assert.equal(document.target, path.resolve('copy'));
+    assert.equal(
+      (await cli(['profile', 'snapshot', '--to', 'copy'])).exitCode,
+      64
+    );
+  });
+
+  it('launches a snapshot with --attach snapshot', async () => {
+    const fakes = createFakeDependencies();
+    const launchBrowser = fakes.dependencies.launchBrowser;
+    fakes.dependencies.launchBrowser = async (options) => ({
+      ...(await launchBrowser(options)),
+      attach: { mode: 'snapshot', snapshot: { target: '/tmp/s' } },
+    });
+
+    const { exitCode, document, launches } = await cli(
+      ['launch', '--attach', 'snapshot', '--from', 'chrome', '--profile', 'P'],
+      { fakes }
+    );
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(launches[0].options.attach, {
+      mode: 'snapshot',
+      browser: 'chrome',
+      profile: 'P',
+    });
+    assert.equal(document.attach.mode, 'snapshot');
+    for (const argv of [
+      ['launch', '--attach', 'extension'],
+      ['launch', '--from', 'chrome'],
+      ['launch', '--attach', 'snapshot', '--user-data-dir', '/tmp/x'],
+      ['launch', '--attach', 'snapshot', '--launch', 'engine'],
+    ]) {
+      assert.equal((await cli(argv)).exitCode, 64, argv.join(' '));
+    }
+  });
+
+  it('attaches through the extension and closes the relay', async () => {
+    const { exitCode, document, relays } = await cli([
+      'attach',
+      '--mode',
+      'extension',
+      '--port',
+      '9444',
+      '--timeout',
+      '5000',
+    ]);
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(Object.keys(document), [
+      'mode',
+      'extension',
+      'tabs',
+      'differences',
+    ]);
+    assert.equal(document.mode, 'extension');
+    assert.equal(relays[0].options.port, 9444);
+    assert.equal(relays[0].options.timeoutMs, 5000);
+    assert.equal(relays[0].closed, true);
+    for (const argv of [
+      ['attach'],
+      ['attach', '--mode', 'snapshot'],
+      ['attach', '--mode', 'extension', '--port', 'x'],
+    ]) {
+      assert.equal((await cli(argv)).exitCode, 64, argv.join(' '));
+    }
+  });
+
   it('runs a script and exits 1 when a step failed', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'bc-cli-run-'));
     const script = path.join(dir, 'script.json');

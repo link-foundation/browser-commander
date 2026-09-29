@@ -16,6 +16,7 @@ pub mod connector;
 pub mod debugging_port;
 mod engine_launch;
 mod launch_executable;
+pub mod migration;
 pub mod launcher;
 pub mod media;
 pub mod navigation_ops;

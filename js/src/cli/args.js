@@ -44,7 +44,13 @@ export const COMMANDS = Object.freeze({
   version: { positionals: [], options: {} },
   launch: {
     positionals: [],
-    options: { ...BROWSER_OPTIONS, 'keep-open': FLAG },
+    options: {
+      ...BROWSER_OPTIONS,
+      'keep-open': FLAG,
+      attach: STRING,
+      from: STRING,
+      profile: STRING,
+    },
   },
   open: { positionals: ['url'], options: {} },
   goto: { positionals: ['url'], options: PAGE_OPTIONS },
@@ -77,6 +83,14 @@ export const COMMANDS = Object.freeze({
       include: STRING,
       domain: STRINGS,
     },
+  },
+  'profile snapshot': {
+    positionals: [],
+    options: { from: STRING, profile: STRING, to: STRING },
+  },
+  attach: {
+    positionals: [],
+    options: { mode: STRING, port: STRING, timeout: STRING },
   },
   doctor: { positionals: [], options: BROWSER_OPTIONS },
   run: { positionals: ['script'], options: BROWSER_OPTIONS },
@@ -181,4 +195,59 @@ export function launchParams(options) {
   return Object.fromEntries(
     Object.entries(params).filter(([, value]) => value !== undefined)
   );
+}
+
+/**
+ * The `attach` launch param of `launch --attach snapshot --from BROWSER
+ * --profile NAME`, or undefined without `--attach`.
+ *
+ * @throws {UsageError}
+ */
+export function launchAttachParams(options) {
+  if (options.attach === undefined) {
+    if (options.from !== undefined || options.profile !== undefined) {
+      throw new UsageError(
+        'launch: --from and --profile need --attach snapshot'
+      );
+    }
+    return undefined;
+  }
+  if (options.attach !== 'snapshot') {
+    throw new UsageError(
+      `launch: --attach supports "snapshot", got "${options.attach}"; use attach --mode extension or open <url> for the other modes`
+    );
+  }
+  if (options.userDataDir !== undefined) {
+    throw new UsageError(
+      'launch: --attach snapshot and --user-data-dir are mutually exclusive'
+    );
+  }
+  if (options.launch === 'engine') {
+    throw new UsageError(
+      'launch: --attach snapshot needs --launch real; an engine launch starts its own profile'
+    );
+  }
+  return Object.fromEntries(
+    Object.entries({
+      mode: 'snapshot',
+      browser: options.from,
+      profile: options.profile,
+    }).filter(([, value]) => value !== undefined)
+  );
+}
+
+/**
+ * A non-negative integer option such as `--port 9333`, or undefined.
+ *
+ * @throws {UsageError}
+ */
+export function integerOption(options, name, command) {
+  const value = options[name];
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!/^\d+$/u.test(value)) {
+    throw new UsageError(`${command}: --${name} must be an integer`);
+  }
+  return Number.parseInt(value, 10);
 }

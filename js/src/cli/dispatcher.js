@@ -36,6 +36,7 @@ export function createDispatcher({
     sessions: new SessionTable(),
     subscriptions: new Map(),
     nextSubscription: 1,
+    relay: null,
     notify,
   };
 
@@ -56,12 +57,17 @@ export function createDispatcher({
     return await METHODS[method](state, params);
   }
 
-  /** Remove every subscription and close every session. */
+  /** Remove every subscription, close every session and the relay. */
   async function close() {
     for (const subscription of [...state.subscriptions.keys()]) {
       removeSubscription(state, subscription);
     }
-    await state.sessions.closeAll();
+    const { relay } = state;
+    state.relay = null;
+    await Promise.all([
+      state.sessions.closeAll(),
+      relay?.close().catch(() => {}),
+    ]);
   }
 
   return { dispatch, close, state };

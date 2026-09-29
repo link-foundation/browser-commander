@@ -80,6 +80,16 @@ export {
 } from './browser/open-in-user-browser.js';
 export { migrateProfile, ALL_DATA_CLASSES } from './browser/migration/index.js';
 export {
+  attachUserBrowser,
+  attachViaExtension,
+  ATTACH_MODES,
+  DEFAULT_RELAY_PORT,
+  describeAttachDifferences,
+  EXTENSION_DIRECTORY,
+  RELAY_PATH,
+  snapshotUserDataDir,
+} from './browser/attach/index.js';
+export {
   launchBrowser,
   LAUNCH_MODES,
   resolveLaunchExecutable,

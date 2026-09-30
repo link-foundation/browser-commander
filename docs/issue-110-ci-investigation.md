@@ -13,6 +13,16 @@ to the native snapshot commit, `aeceb45`.
 | [Security 36710121025](https://github.com/link-foundation/browser-commander/actions/runs/36710121025)      | `security-36710121025.log`, lines 2421–2433: locked `brace-expansion` 5.0.9 has three high-severity CPU/stack-exhaustion advisories and `npm audit` exits 1.                                                                         | Updated only that locked dependency to 5.0.12. `npm audit --package-lock-only --audit-level=high` reports zero vulnerabilities; JavaScript tests and quality checks pass. |
 | [JavaScript 36714030272](https://github.com/link-foundation/browser-commander/actions/runs/36714030272)    | `js-36714030272.log`, lines 1851–1861: the security update added a second JavaScript changeset, but the release gate requires exactly one per PR. The local validator reproduced the failure.                                        | Combined both release notes in the existing patch changeset. The changeset validator and JavaScript quality checks pass.                                                  |
 
+The relay commit `4604cc8` passed 55 checks and eight expected skips, but a fresh
+[JavaScript run 36724595087](https://github.com/link-foundation/browser-commander/actions/runs/36724595087)
+failed on Windows. `js-36724595087.log`, lines 4423–4434, reports `EPERM` from
+the credential cache's exclusive lock open in the three-process coordination
+test. Windows can report this while the previous lock is pending deletion.
+The new mocked regression fails with that same error before the fix. Windows
+`EPERM` now follows the existing bounded contention retry; Unix `EPERM` and
+`EACCES` still fail immediately. A persistent Windows error is retained as the
+timeout's cause. The existing three-process integration test remains enabled.
+
 The six initial non-passing checks included dependent pipeline-status failures
 and repeated platform jobs. They did not represent six independent defects.
 Fresh checks on `44b2c55` passed the original documentation and JavaScript gates;

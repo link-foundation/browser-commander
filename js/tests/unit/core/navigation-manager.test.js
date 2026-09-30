@@ -112,7 +112,17 @@ describe('navigation manager', () => {
       const { manager } = createManagerWithNetwork({
         // Burn the whole remaining budget, the way a real idle wait does.
         idle: async (opts) => {
-          await new Promise((resolve) => setTimeout(resolve, opts.timeout));
+          // Timers truncate fractional delays and can wake before the
+          // monotonic deadline. Check elapsed time instead of assuming it.
+          const deadline = performance.now() + opts.timeout;
+          do {
+            await new Promise((resolve) =>
+              setTimeout(
+                resolve,
+                Math.max(1, Math.ceil(deadline - performance.now()))
+              )
+            );
+          } while (performance.now() < deadline);
           return false;
         },
       });

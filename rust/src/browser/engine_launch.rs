@@ -20,15 +20,23 @@ use crate::browser::browser_process::BrowserCloser;
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::launcher::{Browser, LaunchOptions, LaunchResult};
 use crate::browser::node_bridge::NodeBridgePage;
-use crate::browser::profile_directory::{create_temporary_user_data_dir, remove_user_data_dir};
+use crate::browser::profile_directory::{
+    configure_user_data_dir, prepare_user_data_dir_with_first_run,
+};
+use crate::browser::profile_directory::{
+    create_temporary_user_data_dir_with_first_run, remove_user_data_dir,
+};
+use crate::browser::webdriver::{launch_webdriver, ManagedWebDriver, WebDriverBrowser};
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::attach_downloads;
 use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
 
 /// What an engine launch has to close.
+#[derive(Clone)]
 enum EngineBrowser {
     Chromiumoxide(Arc<ChromiumoxidePage>),
     NodeBridge(Arc<NodeBridgePage>),
+    WebDriver(Arc<ManagedWebDriver>),
 }
 
 impl EngineBrowser {
@@ -36,15 +44,23 @@ impl EngineBrowser {
         match self {
             Self::Chromiumoxide(page) => page.clone(),
             Self::NodeBridge(page) => page.clone(),
+            Self::WebDriver(page) => page.clone(),
         }
     }
 
     async fn close(&self) {
         // A browser that is already gone is closed; the profile still goes.
-        let _ = match self {
-            Self::Chromiumoxide(page) => page.close().await,
-            Self::NodeBridge(page) => page.close().await,
-        };
+        match self {
+            Self::Chromiumoxide(page) => {
+                let _ = page.close().await;
+            }
+            Self::NodeBridge(page) => {
+                let _ = page.close().await;
+            }
+            Self::WebDriver(page) => {
+                let _ = page.close().await;
+            }
+        }
     }
 }
 
@@ -54,6 +70,44 @@ struct EngineCloser {
     user_data_dir: PathBuf,
     temporary_profile: bool,
     closed: tokio::sync::OnceCell<()>,
+}
+
+struct ProfileGuard {
+    path: PathBuf,
+    armed: bool,
+}
+impl Drop for ProfileGuard {
+    fn drop(&mut self) {
+        if self.armed {
+            let path = self.path.clone();
+            if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+                runtime.spawn(async move {
+                    let _ = remove_user_data_dir(&path).await;
+                });
+            } else {
+                let _ = std::fs::remove_dir_all(path);
+            }
+        }
+    }
+}
+impl Drop for EngineCloser {
+    fn drop(&mut self) {
+        if self.closed.get().is_none() {
+            let browser = self.browser.clone();
+            let path = self.user_data_dir.clone();
+            let temporary = self.temporary_profile;
+            if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+                runtime.spawn(async move {
+                    browser.close().await;
+                    if temporary {
+                        let _ = remove_user_data_dir(&path).await;
+                    }
+                });
+            } else if temporary {
+                let _ = std::fs::remove_dir_all(path);
+            }
+        }
+    }
 }
 
 #[async_trait]
@@ -74,7 +128,18 @@ impl BrowserCloser for EngineCloser {
 
 /// Launch the browser through the engine.
 pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<LaunchResult> {
-    let args = options.all_chrome_args()?;
+    let args = if options.engine == EngineType::Fantoccini
+        && options.webdriver.browser == WebDriverBrowser::Firefox
+    {
+        options
+            .args
+            .iter()
+            .chain(&options.extra_args)
+            .cloned()
+            .collect()
+    } else {
+        options.all_chrome_args()?
+    };
     let env = options.browser_env()?;
     let temporary_profile = options.user_data_dir.is_none();
     let user_data_dir = match &options.user_data_dir {
@@ -82,20 +147,70 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
             std::fs::create_dir_all(user_data_dir)?;
             user_data_dir.clone()
         }
-        None => create_temporary_user_data_dir(None)?,
+        None => create_temporary_user_data_dir_with_first_run(None, options.first_run)?,
+    };
+    let mut profile_guard = ProfileGuard {
+        path: user_data_dir.clone(),
+        armed: temporary_profile,
     };
 
-    let launched = match options.engine {
-        EngineType::Chromiumoxide => {
-            launch_chromiumoxide(options, &args, env.as_ref(), &user_data_dir).await
+    let launched = async {
+        if options.engine != EngineType::Fantoccini
+            || options.webdriver.browser == WebDriverBrowser::Chrome
+        {
+            prepare_user_data_dir_with_first_run(&user_data_dir, options.first_run)?;
+            configure_user_data_dir(
+                &user_data_dir,
+                options.default_browser_check,
+                &options.preferences,
+                &options.local_state,
+            )?;
         }
-        EngineType::Playwright | EngineType::Puppeteer => {
-            launch_node_bridge(options, &args, env.as_ref(), &user_data_dir).await
+        match options.engine {
+            EngineType::Chromiumoxide => {
+                launch_chromiumoxide(options, &args, env.as_ref(), &user_data_dir).await
+            }
+            EngineType::Playwright | EngineType::Puppeteer => {
+                launch_node_bridge(options, &args, env.as_ref(), &user_data_dir).await
+            }
+            EngineType::Fantoccini => {
+                let mut native = options.webdriver.clone();
+                native.user_data_dir = Some(user_data_dir.clone());
+                native.headless = options.headless;
+                native.sandbox = options.sandbox;
+                native.automation_parity = options.automation_parity;
+                native.default_browser_check = options.default_browser_check;
+                native.first_run = options.first_run;
+                native.local_state = options.local_state.clone();
+                let preferences = native
+                    .preferences
+                    .as_object_mut()
+                    .ok_or_else(|| anyhow::anyhow!("WebDriver preferences must be an object"))?;
+                preferences.extend(
+                    options
+                        .preferences
+                        .as_object()
+                        .ok_or_else(|| anyhow::anyhow!("preferences must be an object"))?
+                        .clone(),
+                );
+                native.args.extend(args.clone());
+                if let Some(binary) = &options.executable_path {
+                    native.browser_executable = Some(binary.clone());
+                }
+                if let Some(timeout) = options.launch_timeout {
+                    native.launch_timeout = timeout;
+                }
+                let mut driver_env = native.env.take().unwrap_or_default();
+                driver_env.extend(env.clone().unwrap_or_default());
+                native.env = (!driver_env.is_empty()).then_some(driver_env);
+                native.downloads = options.downloads.clone();
+                let browser = Arc::new(launch_webdriver(native).await?);
+                let downloads = browser.downloads().cloned();
+                Ok((EngineBrowser::WebDriver(browser), downloads))
+            }
         }
-        EngineType::Fantoccini => Err(anyhow::anyhow!(
-            "fantoccini engine launch is not yet implemented"
-        )),
-    };
+    }
+    .await;
     let (browser, downloads) = match launched {
         Ok(launched) => launched,
         Err(error) => {
@@ -128,6 +243,7 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
         temporary_profile,
         closed: tokio::sync::OnceCell::new(),
     });
+    profile_guard.armed = false;
     Ok(LaunchResult::attached(
         Browser {
             engine: options.engine,

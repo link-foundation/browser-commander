@@ -328,9 +328,19 @@ impl Deref for SnapshotLaunchResult {
     }
 }
 
-struct OwnedCopy {
-    report: SnapshotReport,
-    armed: bool,
+pub(crate) struct OwnedCopy {
+    pub(crate) report: SnapshotReport,
+    pub(crate) armed: bool,
+}
+
+pub(crate) async fn copy_owned_snapshot(source: SnapshotOptions) -> Result<OwnedCopy> {
+    tokio::task::spawn_blocking(move || {
+        snapshot_user_data_dir(&source, None).map(|report| OwnedCopy {
+            report,
+            armed: true,
+        })
+    })
+    .await?
 }
 impl Drop for OwnedCopy {
     fn drop(&mut self) {
@@ -363,13 +373,7 @@ pub async fn launch_snapshot(
     }
     let profile = source.profile.clone();
     // If this future is cancelled, dropping the task result removes the copy.
-    let mut owned = tokio::task::spawn_blocking(move || {
-        snapshot_user_data_dir(&source, None).map(|report| OwnedCopy {
-            report,
-            armed: true,
-        })
-    })
-    .await??;
+    let mut owned = copy_owned_snapshot(source).await?;
     options.user_data_dir = Some(owned.report.target.clone());
     options.profile_directory = profile.clone();
     options

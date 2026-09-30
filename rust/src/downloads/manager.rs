@@ -182,6 +182,12 @@ impl DownloadManager {
                 reason: error.to_string(),
             })?;
 
+        self.attach_filesystem().await
+    }
+
+    /// Watch the managed staging directory after a WebDriver launcher has
+    /// configured its native download preferences. Does not send CDP commands.
+    pub async fn attach_filesystem(self: &Arc<Self>) -> Result<(), DownloadError> {
         let handle = attach_filesystem_watcher(
             &self.directory,
             Arc::clone(self) as Arc<dyn DownloadSink>,

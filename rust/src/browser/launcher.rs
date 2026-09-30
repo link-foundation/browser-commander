@@ -81,6 +81,9 @@ impl std::str::FromStr for LaunchMode {
 pub struct LaunchOptions {
     /// The browser engine to use.
     pub engine: EngineType,
+    /// Native WebDriver driver selection and W3C capabilities. Common launch
+    /// settings below override their corresponding WebDriver settings.
+    pub webdriver: super::webdriver::WebDriverOptions,
     /// Who starts the browser; [`LaunchMode::Real`] by default.
     pub launch: LaunchMode,
     /// Persistent profile directory. When `None` a fresh temporary profile is
@@ -164,6 +167,7 @@ impl Default for LaunchOptions {
     fn default() -> Self {
         Self {
             engine: EngineType::Chromiumoxide,
+            webdriver: Default::default(),
             launch: LaunchMode::Real,
             user_data_dir: None,
             default_browser_check: None,
@@ -199,6 +203,9 @@ impl LaunchOptions {
     /// Set the browser automation engine.
     pub fn engine(mut self, engine: EngineType) -> Self {
         self.engine = engine;
+        if engine == EngineType::Fantoccini {
+            self.launch = LaunchMode::Engine;
+        }
         self
     }
 
@@ -613,18 +620,17 @@ impl std::fmt::Debug for LaunchResult {
 /// Either way the profile is a fresh temporary one unless `user_data_dir` is
 /// set, and [`LaunchResult::close`] closes the browser and deletes it.
 ///
-/// The `Fantoccini` engine is not yet implemented as a managed launcher; use
-/// chromiumoxide or connect to an externally-managed WebDriver session.
+/// `Fantoccini` starts chromedriver/geckodriver through command-stream with
+/// typed W3C WebDriver, optional BiDi and preference-based managed downloads.
 ///
 /// # Errors
 ///
 /// Returns an error if the options are invalid or the browser fails to
 /// launch. Invalid options are refused before anything is started.
 pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyhow::Error> {
-    if options.engine == EngineType::Fantoccini {
+    if options.engine == EngineType::Fantoccini && options.launch == LaunchMode::Real {
         return Err(anyhow::anyhow!(
-            "fantoccini engine launch is not yet implemented; \
-             connect to an existing WebDriver session or use EngineType::Chromiumoxide"
+            "fantoccini requires LaunchMode::Engine; use LaunchOptions::fantoccini()"
         ));
     }
     // Validate before anything is started or written to disk.

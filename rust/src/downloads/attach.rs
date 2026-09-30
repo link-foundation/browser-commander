@@ -20,7 +20,7 @@
 //! // handing back a manager that would never see a file.
 //! use browser_commander::downloads::supported_engine;
 //! assert!(supported_engine(EngineType::Chromiumoxide).is_ok());
-//! assert!(supported_engine(EngineType::Fantoccini).is_err());
+//! assert!(supported_engine(EngineType::Fantoccini).is_ok());
 //! ```
 
 use std::sync::Arc;
@@ -94,17 +94,12 @@ pub fn normalize_download_options(setting: DownloadSetting) -> Option<DownloadOp
 ///
 /// # Errors
 ///
-/// Returns [`DownloadError::Unsupported`] for every engine but
-/// [`EngineType::Chromiumoxide`], naming the engine and what to use instead.
+/// Chromiumoxide redirects over CDP; native Fantoccini sets browser preferences
+/// before launch and uses the same filesystem watcher. Other engines must use
+/// their corresponding native download APIs.
 pub fn supported_engine(engine: EngineType) -> Result<(), DownloadError> {
     match engine {
-        EngineType::Chromiumoxide => Ok(()),
-        EngineType::Fantoccini => Err(DownloadError::Unsupported {
-            engine: engine.to_string(),
-            reason: "WebDriver has neither download events nor a way to \
-                     redirect downloads; use EngineType::Chromiumoxide"
-                .to_string(),
-        }),
+        EngineType::Chromiumoxide | EngineType::Fantoccini => Ok(()),
         EngineType::Playwright | EngineType::Puppeteer => Err(DownloadError::Unsupported {
             engine: engine.to_string(),
             reason: "the node bridge speaks its own command protocol rather \
@@ -142,6 +137,12 @@ pub async fn attach_downloads(
         return Ok(None);
     };
     supported_engine(engine)?;
+    if engine == EngineType::Fantoccini {
+        return Err(DownloadError::Unsupported {
+            engine: engine.to_string(),
+            reason: "configure WebDriver download preferences before launch using launch_webdriver or LaunchOptions::fantoccini".into(),
+        });
+    }
 
     let manager = DownloadManager::create(options)?;
     manager.attach(transport).await?;

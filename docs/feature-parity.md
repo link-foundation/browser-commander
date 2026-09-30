@@ -63,8 +63,8 @@ Features: `trace.record`.
 | Playwright    | Supported through the official Node.js package | Bridge through Node.js  | Playwright's official language list covers JavaScript/TypeScript, Python, Java, and .NET. Browser Commander uses Node for Rust Playwright execution. |
 | Puppeteer     | Supported through the official Node.js package | Bridge through Node.js  | Puppeteer documents itself as a JavaScript library for driving Chrome/Firefox over CDP or WebDriver BiDi.                                            |
 | Chromiumoxide | Not applicable                                 | Native Rust             | Rust CDP backend.                                                                                                                                    |
-| Fantoccini    | Not applicable                                 | Engine type preserved   | Managed launch is not implemented; keep the variant for compatibility and future WebDriver support.                                                  |
-| Selenium      | Supported through `selenium-webdriver` (#104)  | Not implemented in Rust | JavaScript drives chromedriver/geckodriver over W3C WebDriver, with WebDriver BiDi for events. See [WebDriver Engine](#webdriver-engine).            |
+| Fantoccini    | Not applicable                                 | Native typed WebDriver  | Managed ChromeDriver/geckodriver through command-stream, complete Fantoccini access and optional native BiDi.                                        |
+| Selenium      | Supported through `selenium-webdriver` (#104)  | Native typed Fantoccini | JavaScript drives chromedriver/geckodriver over W3C WebDriver, with WebDriver BiDi for events. See [WebDriver Engine](#webdriver-engine).            |
 
 ## API Matrix
 
@@ -227,18 +227,18 @@ Python.
 
 Where each engine's download events come from, and what that costs:
 
-| Engine                             | Source of truth                                                        | Notes                                                                                                               |
-| ---------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| JavaScript Playwright              | Browser-wide CDP session, falling back to the context `download` event | The fallback sees automated downloads only; a download a person started needs the Browser domain.                   |
-| JavaScript Puppeteer               | Browser-wide CDP session                                               | `Browser.setDownloadBehavior` plus `downloadWillBegin`/`downloadProgress`.                                          |
-| Python Playwright                  | Browser-wide CDP session, falling back to the context `download` event | Same fallback as JavaScript.                                                                                        |
-| Python Selenium                    | Staging-directory watcher                                              | Selenium has no download events at all, so the file arriving is the only evidence; no engine progress reporting.    |
-| Rust Chromiumoxide                 | `Browser.setDownloadBehavior` plus a staging-directory watcher         | The crate's CDP transport is request/response only, so there is no event stream to listen on.                       |
-| Rust Playwright / Puppeteer bridge | Not supported                                                          | The Node bridge speaks its own command protocol rather than CDP; asking for downloads fails with that reason.       |
-| Rust Fantoccini                    | Not supported                                                          | WebDriver has neither download events nor a way to redirect downloads; asking for downloads fails with that reason. |
+| Engine                             | Source of truth                                                        | Notes                                                                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| JavaScript Playwright              | Browser-wide CDP session, falling back to the context `download` event | The fallback sees automated downloads only; a download a person started needs the Browser domain.                    |
+| JavaScript Puppeteer               | Browser-wide CDP session                                               | `Browser.setDownloadBehavior` plus `downloadWillBegin`/`downloadProgress`.                                           |
+| Python Playwright                  | Browser-wide CDP session, falling back to the context `download` event | Same fallback as JavaScript.                                                                                         |
+| Python Selenium                    | Staging-directory watcher                                              | Selenium has no download events at all, so the file arriving is the only evidence; no engine progress reporting.     |
+| Rust Chromiumoxide                 | `Browser.setDownloadBehavior` plus a staging-directory watcher         | The crate's CDP transport is request/response only, so there is no event stream to listen on.                        |
+| Rust Playwright / Puppeteer bridge | Not supported                                                          | The Node bridge speaks its own command protocol rather than CDP; asking for downloads fails with that reason.        |
+| Rust Fantoccini                    | Browser preferences and staging-directory watcher                      | Native ChromeDriver/geckodriver set download preferences before session creation. No browser progress or source URL. |
 
 A watcher-based source claims a file once its size has stopped changing and
-ignores `.crdownload`, `.tmp` and `.partial` files, so a caller never sees a
+ignores `.crdownload`, `.tmp`, `.partial` and Firefox `.part` files, so a caller never sees a
 half-written download under its final name. What it cannot report is the
 engine's own progress percentage, and it identifies a download by the file the
 browser wrote rather than by the URL it came from.
@@ -419,6 +419,10 @@ Engine types that the API coverage suite does not reach from a fresh page
 through handles, but no test checks them yet.
 
 ## WebDriver Engine
+
+Rust also supports native managed WebDriver, typed Fantoccini, optional BiDi and
+managed Chrome/Firefox downloads. See [Native Rust WebDriver](native-webdriver.md)
+for lifecycle, copied profiles, portable state and regression coverage.
 
 The JavaScript `selenium` engine (issue #104) drives a browser through
 `selenium-webdriver`, an optional peer dependency. `makeBrowserCommander()`

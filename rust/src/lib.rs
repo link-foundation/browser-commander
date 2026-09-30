@@ -63,6 +63,10 @@ pub use browser::extension_relay::{
     RelayExtension, RelayOptions, RelaySession, RelayTab,
 };
 pub use browser::parity;
+pub use browser::webdriver::{
+    launch_webdriver, launch_webdriver_snapshot, ManagedWebDriver, WebDriverBrowser,
+    WebDriverClient, WebDriverOptions, WebDriverSnapshotResult,
+};
 pub use parity::{measure_parity, measure_session_parity, MeasureParityOptions, ParityReport};
 
 // Re-export commonly used items at crate root

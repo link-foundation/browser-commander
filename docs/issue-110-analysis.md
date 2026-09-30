@@ -60,7 +60,7 @@ the browser to exit. Rust's three-engine smoke test fell from 237 seconds to
 
 The following #108 deliverables are **not implemented**: full Rust Playwright
 driver/protocol coverage, generated Rust/Python Puppeteer wrappers, native
-recording of all 12 trace facets, and managed Rust Selenium with downloads and BiDi. Existing
+recording of all 12 trace facets. Native Rust Selenium, downloads and BiDi are now implemented. Existing
 CLI access and trace readers do not satisfy these requirements.
 
 The proposed Playwright dependency also needs an integration change: upstream
@@ -98,3 +98,5 @@ exact errors and reproducing checks addressed in this continuation.
 | Run release and verify publication                                | After registration, run `gh workflow run python.yml --repo link-foundation/browser-commander` with its patch-bump input, inspect the run and verify `https://pypi.org/pypi/browser-commander/json` returns release metadata. No package exists at that endpoint yet.                                                                                                                                                             |
 | Truthful installation and badge until release                     | Remove the 404 badge, document direct source installation, and restore PyPI wording only after the package is available.                                                                                                                                                                                                                                                                                                         |
 | Actionable pipeline failure                                       | `python/scripts/explain_pypi_failure.py` and the existing workflow already classify `invalid-publisher` and emit a setup link. Retain and test that diagnostic. No long-lived API token is needed: [PyPI trusted publishing](https://docs.pypi.org/trusted-publishers/) uses GitHub OIDC.                                                                                                                                        |
+
+Native Rust WebDriver launches ChromeDriver/geckodriver through command-stream, exposes the complete typed Fantoccini client, connects optional BiDi, and redirects managed downloads through browser preferences. Real Chrome and Firefox tests cover HttpOnly cookies, localStorage, events, completed downloads and cleanup. Chrome also covers copied-profile ownership and common launcher integration. The Firefox regression excludes `.part` downloads; a separate reproducing test found that dropping a managed process after runtime shutdown left it alive, fixed by synchronous final process-group cleanup. See [Native WebDriver](native-webdriver.md).

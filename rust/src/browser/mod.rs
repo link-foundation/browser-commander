@@ -31,6 +31,7 @@ pub mod restrictions;
 pub mod snapshot;
 pub mod storage_state;
 pub mod system_browser;
+pub mod webdriver;
 
 pub use browser_cookie_cache::clear_browser_cookie_memory_cache;
 pub use browser_cookies::{read_browser_cookies, BrowserCookie, BrowserCookieReadOptions};

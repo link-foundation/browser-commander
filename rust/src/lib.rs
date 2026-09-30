@@ -58,6 +58,10 @@ pub mod interactions;
 pub mod traces;
 pub mod utilities;
 
+pub use browser::extension_relay::{
+    attach_via_extension, write_extension_directory, ExtensionRelay, RelayError, RelayEvent,
+    RelayExtension, RelayOptions, RelaySession, RelayTab,
+};
 pub use browser::parity;
 pub use parity::{measure_parity, measure_session_parity, MeasureParityOptions, ParityReport};
 

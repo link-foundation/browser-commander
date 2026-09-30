@@ -3,6 +3,9 @@ bump: minor
 ---
 
 ### Added
+- Native typed extension relay with origin and extension-ID checks, tab
+  operations, CDP sessions/events, bounded requests, cancellation cleanup and
+  the bundled companion extension; session handles implement `CdpTransport`.
 - Native typed parity measurement with a plain command-stream reference,
   the shared environment probe, command-line comparison and portable reports
   through Chromiumoxide, Playwright and Puppeteer.

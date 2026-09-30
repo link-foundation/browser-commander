@@ -189,6 +189,7 @@ dependencies = [
  "aes-gcm",
  "anyhow",
  "async-trait",
+ "async-tungstenite",
  "base64 0.23.1",
  "cbc",
  "chromiumoxide",

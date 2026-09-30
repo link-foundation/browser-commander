@@ -7,12 +7,6 @@
     "reason": "The command-script and stdio protocols accept dynamic JSON payloads by design. Their CLI entry points are untyped; callers that need compile-time engine types must use the language APIs instead."
   },
   {
-    "id": "native-extension-attach",
-    "features": ["attach.extension"],
-    "languages": ["python", "rust"],
-    "reason": "The native packages do not yet host the authenticated extension relay or install and manage its browser extension. The shared JavaScript CLI exposes the extension attach command."
-  },
-  {
     "id": "native-trace-recorder",
     "features": ["trace.record"],
     "languages": ["python", "rust"],

@@ -24,6 +24,17 @@ from browser_commander.browser.debugging_port import (
     assert_fixed_debugging_port,
     reserve_loopback_port,
 )
+from browser_commander.browser.extension_relay import (
+    ExtensionRelay,
+    RelayAddress,
+    RelayEvent,
+    RelayExtension,
+    RelayOptions,
+    RelaySession,
+    RelayTab,
+    attach_via_extension,
+    extension_directory,
+)
 from browser_commander.browser.launcher import (
     LAUNCH_MODES,
     LaunchOptions,
@@ -306,6 +317,15 @@ from browser_commander.utilities.wait import (
 )
 
 __all__ = [  # noqa: RUF022 - grouped by public API area
+    "ExtensionRelay",
+    "RelayAddress",
+    "RelayEvent",
+    "RelayExtension",
+    "RelayOptions",
+    "RelaySession",
+    "RelayTab",
+    "attach_via_extension",
+    "extension_directory",
     "SnapshotOptions",
     "launch_snapshot",
     "snapshot_user_data_dir",

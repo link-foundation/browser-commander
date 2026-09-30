@@ -15,6 +15,7 @@ pub mod chromiumoxide_adapter;
 pub mod connector;
 pub mod debugging_port;
 mod engine_launch;
+pub mod extension_relay;
 mod launch_executable;
 pub mod launcher;
 pub mod media;

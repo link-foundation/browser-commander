@@ -411,6 +411,16 @@ and Fantoccini have no such mechanism, so asking them for downloads fails with
 that reason rather than quietly doing nothing.
 `examples/managed_download.rs` runs the whole lifecycle against a real Chromium.
 
+### Native Extension Relay
+
+`attach_via_extension(RelayOptions::default())` hosts the companion extension's
+relay in Rust, without Node.js. It returns typed tabs and CDP session handles
+with bounded event subscriptions. `write_extension_directory(path)` extracts
+the bundled extension for Chrome's **Load unpacked** dialog. Configure
+`allowed_extension_ids` to restrict the accepted installed extension.
+[Native extension relay](../docs/extension-relay.md) documents startup,
+shutdown, resource limits and examples for both native packages.
+
 ### Live Profile Snapshots
 
 Copy a selected Chromium profile while its source browser stays open, then

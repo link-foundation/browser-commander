@@ -487,6 +487,16 @@ failed or cancelled download raises the failure rather than returning a path.
 Playwright listens on a browser-wide CDP session; Selenium, which has no
 download events, watches the staging directory instead.
 
+### Native Extension Relay
+
+`attach_via_extension(RelayOptions(...))` hosts the companion extension's relay
+directly in Python, without the JavaScript CLI. It exposes typed tab results,
+CDP sessions and events. Install the `extension` extra and select the bundled
+`extension_directory()` in Chrome's **Load unpacked** dialog. Configure
+`allowed_extension_ids` to restrict the accepted installed extension.
+[Native extension relay](../docs/extension-relay.md) has startup, cancellation,
+resource limits and complete Python/Rust examples.
+
 ### Live Profile Snapshots
 
 Copy a selected Chromium profile while its source browser stays open, then

@@ -66,6 +66,7 @@ url = "2.0"
 
 # Async utilities
 futures = "0.3"
+async-tungstenite = { version = "0.32", features = ["tokio-runtime"] }
 async-trait = "0.1"
 tokio-util = "0.7"
 

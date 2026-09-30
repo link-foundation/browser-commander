@@ -310,8 +310,6 @@ jobs:
             ${{ runner.os }}-cli-cargo-
       - name: Verify Chrome is present
         run: test -x "$CHROME_PATH"
-      - name: Resolve matching native WebDriver
-        run: node experiments/issue-110/resolve-webdriver.mjs >> "$GITHUB_ENV"
       - name: Transfer Rust storage state across engines
         working-directory: rust
         shell: bash
@@ -355,6 +353,8 @@ jobs:
             ${{ runner.os }}-storage-state-cargo-
       - name: Verify Chrome is present
         run: test -x "$CHROME_PATH"
+      - name: Resolve matching native WebDriver
+        run: node experiments/issue-110/resolve-webdriver.mjs >> "$GITHUB_ENV"
       - name: Run Rust snapshots and parity in all CDP engines
         working-directory: rust
         shell: bash

@@ -59,6 +59,20 @@ option compaction disables the unintended emulation. The same test covers
 all three CDP engines, a webdriver negative control and borrowed-session
 ownership; it keeps any unexplained probe differences in the report.
 
+The WebDriver commit `59fe132` produced two new failures in fresh runs:
+
+- [Rust 36734626882](https://github.com/link-foundation/browser-commander/actions/runs/36734626882):
+  `rust-36734626882.log`, lines 3260–3269 and 4088–4097, rejects an unused
+  `pid` in the Windows and macOS test builds with warnings denied. Only the
+  Linux cleanup assertion used it. The test now asserts a valid process ID
+  on every platform before its Linux-specific process cleanup check.
+- [Parity 36734626877](https://github.com/link-foundation/browser-commander/actions/runs/36734626877):
+  `parity-36734626877.log`, lines 2994–2995, reports a missing environment
+  variable in the native WebDriver integration test. The resolver had run in
+  the storage-state job instead of the snapshot job that consumes its output.
+  It now runs in the consuming job. A workflow regression assertion requires
+  every job running the native WebDriver tests to resolve its drivers first.
+
 These fixes do not complete the remaining #108 native/API requirements or
 register the #109 PyPI publisher. Their outstanding scope is recorded in the
 [requirement inventory](issue-110-analysis.md).

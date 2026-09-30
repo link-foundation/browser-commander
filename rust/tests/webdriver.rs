@@ -96,6 +96,7 @@ async fn managed_webdriver_launch_bidi_download_and_cleanup() -> anyhow::Result<
         tracing::debug!("driver launched; read BiDi tree");
         let profile = browser.user_data_dir().to_owned();
         let pid = browser.driver_pid().unwrap();
+        assert!(pid > 0);
         let bidi = browser.bidi().expect("driver advertises BiDi");
         let tree = bidi.get_tree().await?;
         assert!(!tree.contexts.is_empty());

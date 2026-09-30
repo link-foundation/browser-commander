@@ -39,6 +39,16 @@ verify the selected Profile 1, close each copied browser and verify that only
 its temporary directory was removed. CI runs these launches in a separate job
 with explicit execution budgets.
 
+The native Rust parity probe found another reproducible bridge regression:
+`compactObject` removed Puppeteer's explicit `defaultViewport: null` during
+attachment. Puppeteer's default viewport emulation then changed
+`screen.orientationType` from the reference's `landscape-primary` to
+`portrait-primary`. The browser test failed on that specific difference
+(`ci-logs/rust-puppeteer-viewport-before.log`). Preserving the null outside
+option compaction disables the unintended emulation. The same test covers
+all three CDP engines, a webdriver negative control and borrowed-session
+ownership; it keeps any unexplained probe differences in the report.
+
 These fixes do not complete the remaining #108 native/API requirements or
 register the #109 PyPI publisher. Their outstanding scope is recorded in the
 [requirement inventory](issue-110-analysis.md).

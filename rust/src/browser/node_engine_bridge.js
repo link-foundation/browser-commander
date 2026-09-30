@@ -213,15 +213,16 @@ async function connectPlaywright(params) {
 
 async function connectPuppeteer(params) {
   const puppeteer = await import("puppeteer");
-  browser = await puppeteer.default.connect(
-    compactObject({
+  browser = await puppeteer.default.connect({
+    ...compactObject({
       browserURL: params.cdpEndpoint,
       browserWSEndpoint: params.wsEndpoint,
-      defaultViewport: null,
       slowMo: params.slowMo,
       protocolTimeout: params.protocolTimeout,
     }),
-  );
+    // Null disables Puppeteer's viewport emulation and must survive compaction.
+    defaultViewport: null,
+  });
   const pages = await browser.pages();
   page = (await pickForegroundPage(pages)) ?? (await browser.newPage());
   if (params.seedCookies?.length) {
@@ -462,6 +463,21 @@ async function handleCommand(method, params) {
         el.scrollIntoView({ block: "center", inline: "center" });
       }, params.selector);
       return null;
+    case "readBrowserVersionPage": {
+      const versionPage = await (context ?? browser).newPage();
+      try {
+        await versionPage.goto("chrome://version");
+        const ready = () => document.getElementById("command_line")?.textContent;
+        if (engineName === "playwright") {
+          await versionPage.waitForFunction(ready, null, { timeout: 10000 });
+        } else {
+          await versionPage.waitForFunction(ready, { timeout: 10000 });
+        }
+        return await versionPage.evaluate(params.script);
+      } finally {
+        await versionPage.close();
+      }
+    }
     case "evaluate":
       return serializeResult(await ensurePage().evaluate(params.script));
     case "screenshot":

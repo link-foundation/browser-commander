@@ -13,12 +13,6 @@
     "reason": "The native packages do not yet host the authenticated extension relay or install and manage its browser extension. The shared JavaScript CLI exposes the extension attach command."
   },
   {
-    "id": "rust-measure-parity",
-    "features": ["parity.measure"],
-    "languages": ["rust"],
-    "reason": "The Rust package has no hand-started reference capture and comparison harness for browser fingerprint measurement."
-  },
-  {
     "id": "native-trace-recorder",
     "features": ["trace.record"],
     "languages": ["python", "rust"],

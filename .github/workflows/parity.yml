@@ -36,6 +36,7 @@ on:
       - 'rust/src/**'
       - 'rust/tests/storage_state_smoke.rs'
       - 'rust/tests/snapshot.rs'
+      - 'rust/tests/parity.rs'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
 
@@ -350,12 +351,12 @@ jobs:
             ${{ runner.os }}-storage-state-cargo-
       - name: Verify Chrome is present
         run: test -x "$CHROME_PATH"
-      - name: Launch Rust snapshot copies in all CDP engines
+      - name: Run Rust snapshots and parity in all CDP engines
         working-directory: rust
         shell: bash
         run: |
-          bash ../scripts/run-with-budget-warning.sh 600 "Rust native snapshot launches" \
-            cargo test --locked --test snapshot -- --ignored --nocapture
+          bash ../scripts/run-with-budget-warning.sh 600 "Rust native snapshots and parity" \
+            cargo test --locked --test snapshot --test parity -- --ignored --nocapture
       - name: Launch Python snapshot copies in both engines
         env:
           RUN_E2E: 'true'

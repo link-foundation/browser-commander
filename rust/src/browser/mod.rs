@@ -22,6 +22,7 @@ pub mod migration;
 pub mod navigation_ops;
 pub mod node_bridge;
 pub mod open_in_user_browser;
+pub mod parity;
 pub mod profile_directory;
 pub mod raw_cdp;
 pub mod real_browser;

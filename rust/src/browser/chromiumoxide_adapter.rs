@@ -363,6 +363,31 @@ impl EngineAdapter for ChromiumoxidePage {
         eval_value(&self.page, script.to_string()).await
     }
 
+    async fn read_browser_version_page(&self) -> Result<serde_json::Value, EngineError> {
+        let page = {
+            let browser = self.browser.lock().await;
+            browser
+                .as_ref()
+                .ok_or_else(|| EngineError::Browser("browser is closed".into()))?
+                .new_page("chrome://version")
+                .await
+                .map_err(to_engine_error)?
+        };
+        let read = tokio::time::timeout(Duration::from_secs(10), async {
+            loop {
+                let value = eval_value(&page, crate::parity::VERSION_EXPRESSION.into()).await?;
+                if !value.is_null() {
+                    return Ok::<_, EngineError>(value);
+                }
+                tokio::time::sleep(Duration::from_millis(100)).await;
+            }
+        })
+        .await
+        .map_err(|_| EngineError::Timeout("chrome://version did not render".into()));
+        let _ = page.close().await;
+        read?
+    }
+
     async fn restore_storage_state(&self, value: serde_json::Value) -> Result<(), EngineError> {
         use chromiumoxide::cdp::browser_protocol::network::CookieParam;
 

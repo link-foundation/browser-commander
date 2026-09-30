@@ -58,6 +58,9 @@ pub mod interactions;
 pub mod traces;
 pub mod utilities;
 
+pub use browser::parity;
+pub use parity::{measure_parity, measure_session_parity, MeasureParityOptions, ParityReport};
+
 // Re-export commonly used items at crate root
 pub use browser::snapshot::{
     launch_snapshot, snapshot_user_data_dir, SnapshotLaunchResult, SnapshotOptions, SnapshotReport,

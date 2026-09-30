@@ -284,6 +284,14 @@ pub trait EngineAdapter: Send + Sync {
     /// Evaluate JavaScript in the page context.
     async fn evaluate(&self, script: &str) -> Result<serde_json::Value, EngineError>;
 
+    /// Read `chrome://version` in a fresh tab without changing the current page.
+    async fn read_browser_version_page(&self) -> Result<serde_json::Value, EngineError> {
+        Err(EngineError::Browser(format!(
+            "browser version metadata is unavailable for the {} engine",
+            self.engine_type()
+        )))
+    }
+
     /// Restore portable cookies and origin-scoped localStorage before navigation.
     async fn restore_storage_state(&self, _state: serde_json::Value) -> Result<(), EngineError> {
         Err(EngineError::Browser(format!(

@@ -202,7 +202,7 @@ describe('CI execution budgets', () => {
       'parity.yml parity Fingerprint parity suite',
       'parity.yml parity WebDriver suite',
       'parity.yml snapshots Python native snapshot launches',
-      'parity.yml snapshots Rust native snapshot launches',
+      'parity.yml snapshots Rust native snapshots and parity',
       'parity.yml storage-state Rust storage state transfer',
       'python.yml test pytest suite',
       'rust.yml coverage Rust code coverage',

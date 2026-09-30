@@ -15,6 +15,9 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Each entry is "canonical copy copy...".
 assets=(
+  "js/src/parity/probe.js \
+   python/src/browser_commander/parity/probe.js \
+   rust/src/browser/parity/probe.js"
   "js/src/fingerprint/init-payload.js \
    python/src/browser_commander/fingerprint/init_payload.js \
    rust/src/fingerprint/init_payload.js"

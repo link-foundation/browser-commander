@@ -433,6 +433,30 @@ excluded and reported. Closing the browser deletes its copy. The original
 profile remains untouched. `snapshot_user_data_dir(&source, destination)`
 returns the same report without launching; callers own that returned directory.
 
+### Measure browser parity
+
+`measure_parity` compares a driven browser with the same binary started by
+hand. The environment reference has no debugger attached. Both captures load
+the same probe page; a separate reference launch reads Chrome's actual command
+line. The typed report uses the same JSON format and limitations catalogue as
+JavaScript and Python, and keeps unexplained differences in `unlisted`.
+
+```rust,no_run
+use browser_commander::{measure_parity, LaunchOptions, MeasureParityOptions};
+
+let report = measure_parity(MeasureParityOptions {
+    launch: LaunchOptions::chromiumoxide().headless(true),
+    ..Default::default()
+}).await?;
+println!("{}", serde_json::to_string_pretty(&report)?);
+```
+
+Use `measure_session_parity(&session, options)` for an existing `LaunchResult`;
+the caller retains ownership of that browser. Measurement navigates its page to
+the probe, and reads version metadata in a separate tab. In a container that
+requires disabling Chrome's sandbox, set `launch.sandbox=false` and explicitly
+include `--no-sandbox` in `reference_args` so both captures use the same setting.
+
 ### Portable Traces
 
 A trace is one versioned directory - manifest, ordered NDJSON timeline,

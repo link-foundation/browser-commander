@@ -50,6 +50,35 @@ fn bundled_engine_executable(options: &RealBrowserOptions) -> Option<PathBuf> {
             chromiumoxide::detection::DetectionOptions::default(),
         )
         .ok(),
+        EngineType::Playwright if !options.playwright_bridge => {
+            // Query the same bundled official package as the typed driver.
+            // This path does not resolve npm modules from the working directory.
+            let (bundled_node, bundled_cli) =
+                playwright_rs::server::driver::get_driver_executable().ok()?;
+            let node = options
+                .node_executable
+                .as_ref()
+                .or(options.playwright_driver.node_executable.as_ref())
+                .unwrap_or(&bundled_node);
+            let cli = options
+                .playwright_driver
+                .cli_script
+                .as_ref()
+                .unwrap_or(&bundled_cli);
+            let package = cli.parent()?.join("index.js");
+            let output = run_command_blocking(
+                &node.to_string_lossy(),
+                &[
+                    "-e",
+                    "process.stdout.write(require(process.argv[1]).chromium.executablePath())",
+                    &package.to_string_lossy(),
+                ],
+                RunCommandOptions::default(),
+            )
+            .ok()?;
+            let path = output.stdout.trim();
+            (!path.is_empty()).then(|| PathBuf::from(path))
+        }
         EngineType::Playwright | EngineType::Puppeteer => node_bundled_executable(
             options.engine,
             options.node_executable.as_deref(),

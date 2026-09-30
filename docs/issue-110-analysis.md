@@ -58,9 +58,8 @@ Rust's five-second SQLite busy handler; both now fall back without waiting for
 the browser to exit. Rust's three-engine smoke test fell from 237 seconds to
 9 seconds after this fix. CI runs native snapshot launches in a separate job.
 
-The following #108 deliverables are **not implemented**: full Rust Playwright
-driver/protocol coverage, generated Rust/Python Puppeteer wrappers, native
-recording of all 12 trace facets. Native Rust Selenium, downloads and BiDi are now implemented. Existing
+The following #108 deliverables are **not implemented**: generated Rust/Python Puppeteer wrappers and native
+recording of all 12 trace facets. Full typed Rust Playwright now uses the official driver through command-stream and covers all 320 commands, 66 events and 34 initializers in the pinned 1.63.0 schemas; see [native Playwright](native-playwright.md). Native Rust Selenium, downloads and BiDi are now implemented. Existing
 CLI access and trace readers do not satisfy these requirements.
 
 The proposed Playwright dependency also needs an integration change: upstream
@@ -69,7 +68,13 @@ constructs its own server and takes Tokio child stdin/stdout for `PipeTransport`
 Adding that dependency alone would not satisfy the command-stream process
 requirement. Browser Commander's current Rust streamed child wrapper decodes
 output as UTF-8; the official driver requires a binary-safe framed transport.
-That transport and protocol coverage tests remain implementation work.
+The implemented transport binds the driver's binary stdio to an authenticated
+loopback socket inside that same command-stream-owned Node process. The wire
+frames are unchanged, pending calls are rejected on disconnect, and dropping
+the owner kills its process group. Tests cover fragmentation, ordering and
+disconnects; real Chrome validates both launch modes, fingerprint settings,
+downloads, state transfer, snapshots and parity. Coverage is generated and
+checked against every pinned upstream command, event and initializer.
 
 Rust also exposes native `measure_parity` and `measure_session_parity`. A plain
 command-stream reference browser loads the same probe as the driven browser,

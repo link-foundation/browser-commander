@@ -73,7 +73,9 @@ async fn main() -> anyhow::Result<()> {
 
 - **Unified API** across multiple browser engines
 - **Native Rust Chromiumoxide support**
-- **Playwright and Puppeteer support through a Node.js bridge**
+- **Full typed Playwright through its bundled official driver**
+- **Native Fantoccini WebDriver and BiDi support**
+- **Puppeteer support through a Node.js bridge**
 - **Built-in navigation safety handling**
 - **Element visibility and scroll management**
 - **Click, fill, and other interaction support with verification**
@@ -110,12 +112,13 @@ append-only builder.
 
 ### Playwright and Puppeteer
 
-Rust does not have official Playwright or Puppeteer bindings. To keep the same engine names available from Rust, Browser Commander starts a local Node.js bridge and delegates operations to the official Node packages.
+Playwright uses a pinned, bundled official driver started through command-stream. The full typed client and generated protocol channels are available alongside the shared page API; see [the driver API and coverage](../docs/native-playwright.md). No Browser Commander npm CLI or globally installed Node is needed for this engine. The driver includes Node; install a browser with that driver or select an installed Chrome using `channel("chrome")` or `executable_path`.
+
+Puppeteer currently uses the Node bridge. Install its npm package and configure the directory where Node resolves it:
 
 Install the package you want Node to resolve:
 
 ```bash
-npm install playwright
 npm install puppeteer
 ```
 
@@ -126,7 +129,7 @@ use browser_commander::prelude::*;
 
 let playwright = LaunchOptions::playwright()
     .headless(true)
-    .node_working_dir("./js");
+    .channel("chrome");
 
 let puppeteer = LaunchOptions::puppeteer()
     .headless(true)
@@ -135,7 +138,7 @@ let puppeteer = LaunchOptions::puppeteer()
 
 Reuse a system-installed Chrome-family browser by selecting its channel or
 providing an explicit executable path. `channel` applies to the Playwright and
-Puppeteer bridge engines; `executable_path` also applies to Chromiumoxide:
+Puppeteer engines; `executable_path` also applies to Chromiumoxide:
 
 ```rust
 let playwright = LaunchOptions::playwright()
@@ -192,7 +195,7 @@ let options = LaunchOptions::playwright()
 
 `connect_browser()` attaches to an externally managed Chrome-family browser
 and returns the same `LaunchResult` page adapter as `launch_browser()`. Use
-Chromiumoxide natively, or the Playwright/Puppeteer Node.js bridges:
+Chromiumoxide and Playwright natively, or the Puppeteer Node.js bridge:
 
 ```rust
 use browser_commander::prelude::*;
@@ -273,7 +276,7 @@ never commit cache files, and seed only a dedicated automation profile.
 
 `launch_real_browser()` discovers and starts genuine installed Chrome, Edge,
 Brave, or Chromium with a dedicated profile, waits for its loopback CDP
-endpoint, and attaches with Chromiumoxide or the Playwright/Puppeteer bridges:
+endpoint, and attaches with Chromiumoxide, native Playwright, or the Puppeteer bridge:
 
 ```rust
 use browser_commander::prelude::*;

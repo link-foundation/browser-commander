@@ -20,6 +20,7 @@ use crate::browser::browser_process::BrowserCloser;
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::launcher::{Browser, LaunchOptions, LaunchResult};
 use crate::browser::node_bridge::NodeBridgePage;
+use crate::browser::playwright_driver::NativePlaywrightPage;
 use crate::browser::profile_directory::{
     configure_user_data_dir, prepare_user_data_dir_with_first_run,
 };
@@ -37,6 +38,7 @@ enum EngineBrowser {
     Chromiumoxide(Arc<ChromiumoxidePage>),
     NodeBridge(Arc<NodeBridgePage>),
     WebDriver(Arc<ManagedWebDriver>),
+    Playwright(Arc<NativePlaywrightPage>),
 }
 
 impl EngineBrowser {
@@ -45,6 +47,7 @@ impl EngineBrowser {
             Self::Chromiumoxide(page) => page.clone(),
             Self::NodeBridge(page) => page.clone(),
             Self::WebDriver(page) => page.clone(),
+            Self::Playwright(page) => page.clone(),
         }
     }
 
@@ -58,6 +61,9 @@ impl EngineBrowser {
                 let _ = page.close().await;
             }
             Self::WebDriver(page) => {
+                let _ = page.close().await;
+            }
+            Self::Playwright(page) => {
                 let _ = page.close().await;
             }
         }
@@ -169,6 +175,31 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
         match options.engine {
             EngineType::Chromiumoxide => {
                 launch_chromiumoxide(options, &args, env.as_ref(), &user_data_dir).await
+            }
+            EngineType::Playwright if !options.playwright_bridge => {
+                let page = Arc::new(
+                    NativePlaywrightPage::launch(options, &args, env.as_ref(), &user_data_dir)
+                        .await?,
+                );
+                let setup = async {
+                    if let Some(profile) = &options.fingerprint {
+                        apply_fingerprint(page.as_ref(), profile, ApplyOptions::default()).await?;
+                    }
+                    if let Some(scheme) = &options.color_scheme {
+                        page.set_color_scheme(Some(scheme)).await?;
+                    }
+                    attach_downloads(options.engine, page.as_ref(), options.downloads.clone())
+                        .await
+                        .map_err(anyhow::Error::from)
+                }
+                .await;
+                match setup {
+                    Ok(downloads) => Ok((EngineBrowser::Playwright(page), downloads)),
+                    Err(error) => {
+                        let _ = page.close().await;
+                        Err(error)
+                    }
+                }
             }
             EngineType::Playwright | EngineType::Puppeteer => {
                 launch_node_bridge(options, &args, env.as_ref(), &user_data_dir).await

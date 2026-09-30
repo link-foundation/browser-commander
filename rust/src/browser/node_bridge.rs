@@ -1,8 +1,8 @@
 //! Node.js CLI bridge for Playwright and Puppeteer engines.
 //!
-//! Rust does not have official Playwright or Puppeteer bindings. This adapter
-//! keeps those engine names available by delegating browser operations to the
-//! official Node.js packages over a line-delimited JSON protocol.
+//! Puppeteer uses this adapter; Playwright uses the native official driver by
+//! default and exposes this adapter only as an explicit compatibility fallback.
+//! Operations are delegated to the official npm packages over JSON lines.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

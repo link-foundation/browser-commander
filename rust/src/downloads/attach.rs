@@ -99,8 +99,8 @@ pub fn normalize_download_options(setting: DownloadSetting) -> Option<DownloadOp
 /// their corresponding native download APIs.
 pub fn supported_engine(engine: EngineType) -> Result<(), DownloadError> {
     match engine {
-        EngineType::Chromiumoxide | EngineType::Fantoccini => Ok(()),
-        EngineType::Playwright | EngineType::Puppeteer => Err(DownloadError::Unsupported {
+        EngineType::Chromiumoxide | EngineType::Fantoccini | EngineType::Playwright => Ok(()),
+        EngineType::Puppeteer => Err(DownloadError::Unsupported {
             engine: engine.to_string(),
             reason: "the node bridge speaks its own command protocol rather \
                      than CDP; use EngineType::Chromiumoxide, or manage \
@@ -220,11 +220,7 @@ mod tests {
         let temp = TempDir::new("bc-attach-unsupported");
         let transport = RecordingTransport::default();
 
-        for engine in [
-            EngineType::Fantoccini,
-            EngineType::Playwright,
-            EngineType::Puppeteer,
-        ] {
+        for engine in [EngineType::Fantoccini, EngineType::Puppeteer] {
             let error = attach_downloads(engine, &transport, options(&temp).into())
                 .await
                 .unwrap_err();

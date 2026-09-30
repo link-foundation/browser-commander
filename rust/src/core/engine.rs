@@ -17,7 +17,7 @@ pub enum EngineType {
     Chromiumoxide,
     /// WebDriver-based engine (similar to Playwright's approach)
     Fantoccini,
-    /// Playwright driven through the Node.js package as a CLI bridge.
+    /// Native typed Playwright through its command-stream-owned official driver.
     Playwright,
     /// Puppeteer driven through the Node.js package as a CLI bridge.
     Puppeteer,
@@ -207,6 +207,11 @@ pub struct PreClickState {
 /// engines, allowing the library to work with multiple backends.
 #[async_trait]
 pub trait EngineAdapter: Send + Sync {
+    /// The full typed client when this page uses the official Playwright driver.
+    fn as_playwright(&self) -> Option<&crate::browser::playwright_driver::NativePlaywrightPage> {
+        None
+    }
+
     /// Get the engine type.
     fn engine_type(&self) -> EngineType;
 

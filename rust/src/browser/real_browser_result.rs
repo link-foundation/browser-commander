@@ -46,6 +46,8 @@ pub(crate) fn connection_options(
     connection.verbose = options.verbose;
     connection.node_executable = options.node_executable.clone();
     connection.node_working_dir = options.node_working_dir.clone();
+    connection.playwright_driver = options.playwright_driver.clone();
+    connection.playwright_bridge = options.playwright_bridge;
     connection.downloads = options.downloads.clone();
     Ok(connection)
 }

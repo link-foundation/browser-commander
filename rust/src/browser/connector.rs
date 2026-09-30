@@ -13,6 +13,7 @@ use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::launcher::{Browser, LaunchResult};
 use crate::browser::media::ColorScheme;
 use crate::browser::node_bridge::NodeBridgePage;
+use crate::browser::playwright_driver::{NativePlaywrightPage, PlaywrightDriverOptions};
 use crate::browser::storage_state::{StorageState, StorageStateInput};
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::{attach_downloads, DownloadSetting};
@@ -44,6 +45,10 @@ pub struct ConnectOptions {
     pub node_executable: Option<PathBuf>,
     /// Directory where Node resolves the Playwright/Puppeteer package.
     pub node_working_dir: Option<PathBuf>,
+    /// Official Playwright driver options; the default uses its bundled driver.
+    pub playwright_driver: PlaywrightDriverOptions,
+    /// Select the npm Playwright bridge compatibility fallback explicitly.
+    pub playwright_bridge: bool,
     /// Manage the attached browser's downloads.
     ///
     /// The same setting and the same manager as
@@ -67,6 +72,8 @@ impl Default for ConnectOptions {
             verbose: false,
             node_executable: None,
             node_working_dir: None,
+            playwright_driver: Default::default(),
+            playwright_bridge: false,
             downloads: DownloadSetting::Off,
         }
     }
@@ -78,7 +85,7 @@ impl ConnectOptions {
         Self::default()
     }
 
-    /// Create Playwright bridge connection options.
+    /// Create native official-driver Playwright connection options.
     pub fn playwright() -> Self {
         Self {
             engine: EngineType::Playwright,
@@ -154,6 +161,18 @@ impl ConnectOptions {
         self
     }
 
+    /// Configure the command-stream-owned official Playwright driver.
+    pub fn playwright_driver(mut self, options: PlaywrightDriverOptions) -> Self {
+        self.playwright_driver = options;
+        self
+    }
+
+    /// Explicitly opt into the legacy npm CLI bridge instead of the typed driver.
+    pub fn playwright_bridge(mut self, enabled: bool) -> Self {
+        self.playwright_bridge = enabled;
+        self
+    }
+
     /// Manage the attached browser's downloads.
     ///
     /// # Arguments
@@ -177,8 +196,8 @@ impl ConnectOptions {
 
 /// Attach to a running Chromium-family browser over CDP.
 ///
-/// Chromiumoxide connects natively. Playwright and Puppeteer use the same
-/// official Node.js packages as [`launch_browser`](super::launcher::launch_browser).
+/// Chromiumoxide connects natively. Playwright uses its bundled official driver;
+/// Puppeteer uses the npm bridge as in [`launch_browser`](super::launcher::launch_browser).
 /// The returned page implements the crate's shared [`EngineAdapter`]
 /// API. The browser's profile and process remain externally managed.
 pub async fn connect_browser(options: ConnectOptions) -> Result<LaunchResult, anyhow::Error> {
@@ -205,7 +224,9 @@ pub(crate) fn refuse_unappliable_fingerprint(
     engine: EngineType,
     fingerprint: Option<&FingerprintProfile>,
 ) -> Result<(), anyhow::Error> {
-    if fingerprint.is_some() && engine != EngineType::Chromiumoxide {
+    if fingerprint.is_some()
+        && !matches!(engine, EngineType::Chromiumoxide | EngineType::Playwright)
+    {
         return Err(anyhow::anyhow!(
             "the {engine} engine cannot apply a fingerprint profile yet; \
              use EngineType::Chromiumoxide, or apply the profile from the \
@@ -237,8 +258,58 @@ pub(crate) async fn connect_browser_with(
         EngineType::Chromiumoxide => {
             connect_chromiumoxide(options, endpoint, settings, storage_state).await
         }
+        EngineType::Playwright if !options.playwright_bridge => {
+            let page = NativePlaywrightPage::connect(&options).await?;
+            let setup = async {
+                let mut state = storage_state.unwrap_or_else(|| StorageState {
+                    cookies: Vec::new(),
+                    origins: Vec::new(),
+                });
+                state.cookies.extend(options.seed_cookies.clone());
+                if !state.cookies.is_empty() || !state.origins.is_empty() {
+                    page.restore_storage_state(serde_json::to_value(state)?)
+                        .await?;
+                }
+                if let Some(profile) = settings.fingerprint {
+                    apply_fingerprint(&page, profile, ApplyOptions::default()).await?;
+                }
+                if let Some(scheme) = settings.color_scheme {
+                    page.set_color_scheme(Some(scheme)).await?;
+                }
+                attach_downloads(options.engine, &page, options.downloads.clone())
+                    .await
+                    .map_err(anyhow::Error::from)
+            }
+            .await;
+            let downloads = match setup {
+                Ok(value) => value,
+                Err(error) => {
+                    let _ = page.close().await;
+                    return Err(error);
+                }
+            };
+            Ok(LaunchResult::attached(
+                Browser {
+                    engine: options.engine,
+                    user_data_dir: PathBuf::new(),
+                    headless: false,
+                },
+                Arc::new(page),
+                downloads,
+            ))
+        }
         EngineType::Playwright | EngineType::Puppeteer => {
+            if settings.fingerprint.is_some() {
+                return Err(anyhow::anyhow!(
+                    "the compatibility bridge cannot apply a fingerprint profile"
+                ));
+            }
             let engine = options.engine;
+            if crate::downloads::normalize_download_options(options.downloads.clone()).is_some() {
+                return Err(anyhow::anyhow!(
+                    "the compatibility bridge cannot manage downloads"
+                ));
+            }
             let timeout = options.timeout;
             let seed_cookies = options.seed_cookies.clone();
             // Refused before the connection is made, for the same reason the
@@ -406,8 +477,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_playwright_refuses_downloads_it_cannot_manage() {
+    async fn connect_playwright_fallback_refuses_downloads_it_cannot_manage() {
         let options = ConnectOptions::playwright()
+            .playwright_bridge(true)
             .cdp_endpoint("http://127.0.0.1:9222")
             .downloads(true);
 
@@ -416,7 +488,7 @@ mod tests {
         assert!(
             error
                 .to_string()
-                .contains("managed downloads are not supported"),
+                .contains("compatibility bridge cannot manage downloads"),
             "unexpected message: {error}"
         );
     }

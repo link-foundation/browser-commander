@@ -355,12 +355,14 @@ jobs:
         run: test -x "$CHROME_PATH"
       - name: Resolve matching native WebDriver
         run: node experiments/issue-110/resolve-webdriver.mjs >> "$GITHUB_ENV"
+      - name: Check full typed Playwright protocol coverage
+        run: node scripts/generate-playwright-protocol.mjs --check
       - name: Run Rust snapshots and parity in all CDP engines
         working-directory: rust
         shell: bash
         run: |
           bash ../scripts/run-with-budget-warning.sh 600 "Rust native snapshots and parity" \
-            cargo test --locked --test snapshot --test parity --test webdriver -- --ignored --nocapture
+            cargo test --locked --test snapshot --test parity --test webdriver --test playwright_driver -- --ignored --nocapture
       - name: Launch Python snapshot copies in both engines
         env:
           RUN_E2E: 'true'

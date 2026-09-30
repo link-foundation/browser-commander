@@ -353,20 +353,19 @@ fn launch_options_carry_a_fingerprint_profile() {
 }
 
 #[tokio::test]
-async fn launch_playwright_refuses_a_fingerprint_it_cannot_apply() {
+async fn launch_playwright_fallback_refuses_a_fingerprint_it_cannot_apply() {
     // Dropping the profile silently would leave the page reporting the real
     // machine while the caller believes it is hidden.
     for launch in LAUNCH_MODES {
         let options = LaunchOptions::playwright()
+            .playwright_bridge(true)
             .headless(true)
             .launch(launch)
             .fingerprint(create_default_fingerprint_preset("windows-chrome").expect("preset"));
 
         let err = launch_browser(options).await.unwrap_err();
 
-        assert!(err
-            .to_string()
-            .contains("cannot apply a fingerprint profile"));
+        assert!(err.to_string().contains("cannot apply fingerprints"));
     }
 }
 
@@ -390,16 +389,19 @@ fn launch_options_carry_a_download_setting() {
 }
 
 #[tokio::test]
-async fn launch_playwright_refuses_downloads_it_cannot_manage() {
+async fn launch_playwright_fallback_refuses_downloads_it_cannot_manage() {
     // Accepting the setting silently would leave the caller waiting on a
     // manager watching a directory the browser never writes into.
-    let options = LaunchOptions::playwright().headless(true).downloads(true);
+    let options = LaunchOptions::playwright()
+        .playwright_bridge(true)
+        .headless(true)
+        .downloads(true);
 
     let err = launch_browser(options).await.unwrap_err();
 
     assert!(
         err.to_string()
-            .contains("managed downloads are not supported"),
+            .contains("cannot apply fingerprints or managed downloads"),
         "unexpected message: {err}"
     );
 }
@@ -411,7 +413,7 @@ async fn engine_launch_reports_missing_node_executable() {
         .headless(true)
         .node_executable("browser-commander-missing-node");
     let err = launch_browser(options).await.unwrap_err();
-    assert!(err.to_string().contains("failed to start Node.js bridge"));
+    assert!(err.to_string().contains("start official Playwright driver"));
 }
 
 #[tokio::test]

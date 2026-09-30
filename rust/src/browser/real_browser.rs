@@ -151,6 +151,10 @@ pub struct RealBrowserOptions {
     pub node_executable: Option<PathBuf>,
     /// Directory where Node resolves Playwright/Puppeteer.
     pub node_working_dir: Option<PathBuf>,
+    /// Official Playwright driver configuration for native CDP attachment.
+    pub playwright_driver: super::playwright_driver::PlaywrightDriverOptions,
+    /// Explicit npm Playwright compatibility fallback.
+    pub playwright_bridge: bool,
     /// Manage the installed browser's downloads.
     ///
     /// The same setting and the same manager as
@@ -196,6 +200,8 @@ impl Default for RealBrowserOptions {
             verbose: false,
             node_executable: None,
             node_working_dir: None,
+            playwright_driver: Default::default(),
+            playwright_bridge: false,
             downloads: DownloadSetting::Off,
         }
     }

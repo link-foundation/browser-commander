@@ -84,6 +84,10 @@ pub struct LaunchOptions {
     /// Native WebDriver driver selection and W3C capabilities. Common launch
     /// settings below override their corresponding WebDriver settings.
     pub webdriver: super::webdriver::WebDriverOptions,
+    /// Official Playwright driver paths and startup options.
+    pub playwright_driver: super::playwright_driver::PlaywrightDriverOptions,
+    /// Explicit compatibility fallback to the older npm Playwright bridge.
+    pub playwright_bridge: bool,
     /// Who starts the browser; [`LaunchMode::Real`] by default.
     pub launch: LaunchMode,
     /// Persistent profile directory. When `None` a fresh temporary profile is
@@ -168,6 +172,8 @@ impl Default for LaunchOptions {
         Self {
             engine: EngineType::Chromiumoxide,
             webdriver: Default::default(),
+            playwright_driver: Default::default(),
+            playwright_bridge: false,
             launch: LaunchMode::Real,
             user_data_dir: None,
             default_browser_check: None,
@@ -225,7 +231,7 @@ impl LaunchOptions {
         Self::default().engine(EngineType::Fantoccini)
     }
 
-    /// Create options for Playwright through the Node.js CLI bridge.
+    /// Create options for native typed Playwright through the official driver.
     pub fn playwright() -> Self {
         Self::default().engine(EngineType::Playwright)
     }
@@ -350,6 +356,21 @@ impl LaunchOptions {
     /// Set the directory where Node resolves `playwright` or `puppeteer`.
     pub fn node_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.node_working_dir = Some(dir.into());
+        self
+    }
+
+    /// Configure the command-stream-owned official Playwright driver.
+    pub fn playwright_driver(
+        mut self,
+        options: super::playwright_driver::PlaywrightDriverOptions,
+    ) -> Self {
+        self.playwright_driver = options;
+        self
+    }
+
+    /// Explicitly opt into the legacy npm CLI bridge instead of the typed driver.
+    pub fn playwright_bridge(mut self, enabled: bool) -> Self {
+        self.playwright_bridge = enabled;
         self
     }
 
@@ -484,6 +505,8 @@ impl LaunchOptions {
             verbose: self.verbose,
             node_executable: self.node_executable.clone(),
             node_working_dir: self.node_working_dir.clone(),
+            playwright_driver: self.playwright_driver.clone(),
+            playwright_bridge: self.playwright_bridge,
             downloads: self.downloads.clone(),
             ..defaults
         }
@@ -611,11 +634,10 @@ impl std::fmt::Debug for LaunchResult {
 /// `restrictions`.
 ///
 /// [`LaunchMode::Engine`] keeps the chromiumoxide-, Playwright- or
-/// Puppeteer-launched browser for CI and headless use. Playwright and
-/// Puppeteer run as a local Node.js subprocess using the official Node
-/// package as a CLI bridge; the package must be available to Node module
-/// resolution, usually by running `npm install playwright` or `npm install
-/// puppeteer` in the configured `node_working_dir`.
+/// Puppeteer-launched browser for CI and headless use. Native Playwright uses
+/// its bundled official driver through command-stream; no companion npm CLI
+/// is required. Puppeteer and the explicit `playwright_bridge` compatibility
+/// fallback resolve their npm packages from `node_working_dir`.
 ///
 /// Either way the profile is a fresh temporary one unless `user_data_dir` is
 /// set, and [`LaunchResult::close`] closes the browser and deletes it.
@@ -639,6 +661,13 @@ pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyh
         state.load()?;
     }
     refuse_unappliable_fingerprint(options.engine, options.fingerprint.as_ref())?;
+    if options.playwright_bridge
+        && options.engine == EngineType::Playwright
+        && (options.fingerprint.is_some()
+            || normalize_download_options(options.downloads.clone()).is_some())
+    {
+        return Err(anyhow::anyhow!("the npm Playwright compatibility bridge cannot apply fingerprints or managed downloads; use the native driver"));
+    }
     // The node bridge has no CDP route, so a managed download would never be
     // seen and every capture would time out.
     normalize_download_options(options.downloads.clone())

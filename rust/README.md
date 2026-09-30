@@ -411,6 +411,28 @@ and Fantoccini have no such mechanism, so asking them for downloads fails with
 that reason rather than quietly doing nothing.
 `examples/managed_download.rs` runs the whole lifecycle against a real Chromium.
 
+### Live Profile Snapshots
+
+Copy a selected Chromium profile while its source browser stays open, then
+launch the copy through Chromiumoxide, Playwright or Puppeteer:
+
+```rust
+use browser_commander::{launch_snapshot, RealBrowserOptions, SnapshotOptions};
+
+let copy = launch_snapshot(
+    SnapshotOptions { profile: "Profile 1".into(), ..Default::default() },
+    RealBrowserOptions::default(),
+).await?;
+println!("{:?}", copy.snapshot.copied);
+copy.close().await?;
+```
+
+`SnapshotOptions::user_data_dir` selects an explicit source root. SQLite
+backups retain committed WAL data; caches, locks and open-tab sessions are
+excluded and reported. Closing the browser deletes its copy. The original
+profile remains untouched. `snapshot_user_data_dir(&source, destination)`
+returns the same report without launching; callers own that returned directory.
+
 ### Portable Traces
 
 A trace is one versioned directory - manifest, ordered NDJSON timeline,

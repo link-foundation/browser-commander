@@ -78,6 +78,11 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.snapshot import (
+    SnapshotOptions,
+    launch_snapshot,
+    snapshot_user_data_dir,
+)
 from browser_commander.browser.storage_state import (
     load_storage_state,
     save_storage_state,
@@ -301,6 +306,9 @@ from browser_commander.utilities.wait import (
 )
 
 __all__ = [  # noqa: RUF022 - grouped by public API area
+    "SnapshotOptions",
+    "launch_snapshot",
+    "snapshot_user_data_dir",
     "BrowserCookieCacheOptions",
     "BrowserCookieReadOptions",
     "BrowserProfile",

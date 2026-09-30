@@ -24,7 +24,7 @@ mod history;
 mod os_crypt_keys;
 mod passwords;
 mod preferences;
-mod sqlite_snapshot;
+pub(crate) mod sqlite_snapshot;
 
 use std::path::{Path, PathBuf};
 

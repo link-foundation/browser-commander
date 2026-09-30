@@ -26,6 +26,7 @@ pub mod profile_directory;
 pub mod raw_cdp;
 pub mod real_browser;
 pub mod restrictions;
+pub mod snapshot;
 pub mod storage_state;
 pub mod system_browser;
 
@@ -66,6 +67,9 @@ pub use restrictions::{
     launch_restriction_preset, launch_restriction_presets, launch_restrictions,
     merge_feature_switches, resolve_restrictions, LaunchRestriction, ResolvedRestrictions,
     LAUNCH_RESTRICTIONS_SOURCE,
+};
+pub use snapshot::{
+    launch_snapshot, snapshot_user_data_dir, SnapshotLaunchResult, SnapshotOptions, SnapshotReport,
 };
 pub use storage_state::{
     save_storage_state, StorageEntry, StorageOrigin, StorageState, StorageStateInput,

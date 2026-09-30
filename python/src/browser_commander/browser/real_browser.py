@@ -98,6 +98,8 @@ class RealBrowserOptions:
     channel: str = "chrome"
     executable_path: str | None = None
     user_data_dir: str | None = None
+    profile_directory: str = "Default"
+    """Profile whose preferences are seeded, including snapshot Profile 1."""
     default_browser_check: bool | None = None
     """False by default; True allows the browser to ask to become the default."""
     first_run: bool = False
@@ -160,6 +162,8 @@ class RealBrowserResult(LaunchResult):
     #: The migration report (without the raw ``cookies``) when
     #: ``migrate_from`` was given.
     migration: dict[str, Any] | None = None
+    #: Read-only snapshot copy report when launched with ``launch_snapshot``.
+    snapshot: dict[str, Any] | None = None
 
 
 #: The page a real launch opens, as Puppeteer and Playwright do. Without a URL,
@@ -621,6 +625,7 @@ async def launch_real_browser_with_dependencies(
     connect: Any = connect_browser,
     reserve_port: Any = reserve_loopback_port,
     migrate_profile: Any = _default_migrate_profile,
+    owned_profile: bool = False,
 ) -> RealBrowserResult:
     """Dependency-injected implementation used by the public helper and tests."""
 
@@ -634,10 +639,10 @@ async def launch_real_browser_with_dependencies(
         )
     )
 
-    temporary_profile = not options.user_data_dir
+    temporary_profile = not options.user_data_dir or owned_profile
     user_data_dir = (
         create_temporary_user_data_dir(first_run=options.first_run)
-        if temporary_profile
+        if not options.user_data_dir
         else prepare_user_data_dir(
             str(options.user_data_dir), first_run=options.first_run
         )
@@ -658,6 +663,7 @@ async def launch_real_browser_with_dependencies(
             default_browser_check=options.default_browser_check,
             preferences=options.preferences,
             local_state=options.local_state,
+            profile_directory=options.profile_directory,
         )
     except BaseException:
         if temporary_profile:

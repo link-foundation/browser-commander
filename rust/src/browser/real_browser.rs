@@ -37,7 +37,7 @@ use crate::browser::migration::{
     migrate_profile, MigrateProfileOptions, MigrationSource, MigrationSummary,
 };
 use crate::browser::profile_directory::{
-    configure_user_data_dir, create_temporary_user_data_dir_with_first_run,
+    configure_user_data_dir_for_profile, create_temporary_user_data_dir_with_first_run,
     prepare_user_data_dir_with_first_run, remove_user_data_dir,
 };
 use crate::browser::restrictions::{merge_feature_switches, resolve_restrictions};
@@ -85,6 +85,8 @@ pub struct RealBrowserOptions {
     /// Dedicated, non-default browser profile. When `None` a fresh temporary
     /// profile is created for the launch and deleted when the browser exits.
     pub user_data_dir: Option<PathBuf>,
+    /// Profile whose Preferences are seeded before launch.
+    pub profile_directory: String,
     /// Whether to ask to become the OS default browser. Defaults to false.
     pub default_browser_check: Option<bool>,
     /// Allow the browser's first-run flow in a fresh profile.
@@ -166,6 +168,7 @@ impl Default for RealBrowserOptions {
             channel: "chrome".to_string(),
             executable_path: None,
             user_data_dir: None,
+            profile_directory: "Default".into(),
             default_browser_check: None,
             first_run: false,
             preferences: serde_json::json!({}),
@@ -591,29 +594,6 @@ fn browser_environment(options: &RealBrowserOptions) -> Result<Option<HashMap<St
     Ok((!env.is_empty() || options.env.is_some()).then_some(env))
 }
 
-pub(crate) fn connection_options(
-    options: &RealBrowserOptions,
-    endpoint: &str,
-) -> Result<ConnectOptions> {
-    let mut connection = match options.engine {
-        EngineType::Chromiumoxide => ConnectOptions::chromiumoxide(),
-        EngineType::Playwright => ConnectOptions::playwright(),
-        EngineType::Puppeteer => ConnectOptions::puppeteer(),
-        EngineType::Fantoccini => return Err(anyhow!(FANTOCCINI_OVER_CDP)),
-    };
-    connection.cdp_endpoint = Some(endpoint.to_string());
-    connection.slow_mo = options.slow_mo;
-    connection.timeout = options.timeout;
-    connection.protocol_timeout = options.protocol_timeout;
-    connection.seed_cookies = options.seed_cookies.clone();
-    connection.storage_state = options.storage_state.clone();
-    connection.verbose = options.verbose;
-    connection.node_executable = options.node_executable.clone();
-    connection.node_working_dir = options.node_working_dir.clone();
-    connection.downloads = options.downloads.clone();
-    Ok(connection)
-}
-
 /// A spawned browser and, when its stderr is captured, the watcher that sees
 /// its `DevTools listening on ...` line.
 pub(crate) struct SpawnedBrowser {
@@ -824,13 +804,12 @@ async fn spawn_on_free_port(
     }
 }
 
-/// Start the browser and attach with `connect`, returning the connection and
-/// the launch. Generic over the connection so the launcher can apply a
-/// fingerprint while attaching and tests can attach to nothing.
-pub(crate) async fn launch_real_browser_with<T, C, F>(
+/// Launch with an optional pre-created profile owned by the browser lifecycle.
+pub(crate) async fn launch_real_browser_with_owned<T, C, F>(
     options: &RealBrowserOptions,
     hooks: Arc<dyn LaunchHooks>,
     connect: C,
+    owned_profile: bool,
 ) -> Result<(T, LaunchedRealBrowser)>
 where
     C: FnOnce(ConnectOptions) -> F,
@@ -841,7 +820,7 @@ where
         state.load()?;
     }
     let executable_path = hooks.resolve_executable(options)?;
-    let temporary_profile = options.user_data_dir.is_none();
+    let temporary_profile = options.user_data_dir.is_none() || owned_profile;
     let user_data_dir = match &options.user_data_dir {
         Some(user_data_dir) => {
             prepare_user_data_dir_with_first_run(user_data_dir, options.first_run)?
@@ -881,8 +860,9 @@ where
     } else {
         (None, Vec::new())
     };
-    if let Err(error) = configure_user_data_dir(
+    if let Err(error) = configure_user_data_dir_for_profile(
         &user_data_dir,
+        &options.profile_directory,
         options.default_browser_check,
         &options.preferences,
         &options.local_state,
@@ -977,8 +957,20 @@ where
 /// browser exits; known default profiles are refused because Chrome 136 and
 /// newer ignore remote-debugging switches for them.
 pub async fn launch_real_browser(options: RealBrowserOptions) -> Result<RealBrowserLaunchResult> {
-    let (connection, launched) =
-        launch_real_browser_with(&options, Arc::new(SystemLaunchHooks), connect_browser).await?;
+    launch_real_browser_owned(options, false).await
+}
+
+pub(crate) async fn launch_real_browser_owned(
+    options: RealBrowserOptions,
+    owned_profile: bool,
+) -> Result<RealBrowserLaunchResult> {
+    let (connection, launched) = launch_real_browser_with_owned(
+        &options,
+        Arc::new(SystemLaunchHooks),
+        connect_browser,
+        owned_profile,
+    )
+    .await?;
     Ok(real_browser_result(connection, launched, options.headless))
 }
 
@@ -992,6 +984,7 @@ pub async fn launch_and_connect_real_browser(
 #[path = "real_browser_result.rs"]
 mod result;
 use result::real_browser_result;
+pub(crate) use result::{connection_options, launch_real_browser_with};
 
 #[cfg(test)]
 #[path = "real_browser_tests.rs"]

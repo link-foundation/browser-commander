@@ -59,6 +59,9 @@ pub mod traces;
 pub mod utilities;
 
 // Re-export commonly used items at crate root
+pub use browser::snapshot::{
+    launch_snapshot, snapshot_user_data_dir, SnapshotLaunchResult, SnapshotOptions, SnapshotReport,
+};
 pub use browser::{
     build_real_browser_args, clear_browser_cookie_memory_cache, connect_browser, emulate_media,
     launch_and_connect_real_browser, launch_browser, launch_real_browser, launch_restrictions,

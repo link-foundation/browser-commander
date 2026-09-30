@@ -72,6 +72,11 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.snapshot import (
+    SnapshotOptions,
+    launch_snapshot,
+    snapshot_user_data_dir,
+)
 from browser_commander.browser.storage_state import (
     load_storage_state,
     save_storage_state,
@@ -93,6 +98,7 @@ __all__ = [
     "PortRaceError",
     "RealBrowserOptions",
     "RealBrowserResult",
+    "SnapshotOptions",
     "WaitAfterActionResult",
     "assert_fixed_debugging_port",
     "browser_environment",
@@ -108,6 +114,7 @@ __all__ = [
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",
+    "launch_snapshot",
     "list_browser_profiles",
     "load_storage_state",
     "measure_parity",
@@ -126,6 +133,7 @@ __all__ = [
     "resolve_launch_executable",
     "resolve_restrictions",
     "save_storage_state",
+    "snapshot_user_data_dir",
     "validate_open_url",
     "verify_navigation",
     "wait_after_action",

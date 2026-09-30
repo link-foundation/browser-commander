@@ -19,6 +19,7 @@ import contextlib
 import shutil
 import sqlite3
 import tempfile
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import TypeVar
@@ -37,6 +38,8 @@ T = TypeVar("T")
 SNAPSHOT_PREFIX = "browser-commander-snap-"
 
 _SQLITE_SIDECARS = ("-wal", "-shm", "-journal")
+# SQLite result codes; Python 3.9/3.10 do not export the named constants.
+_SQLITE_BUSY, _SQLITE_LOCKED = 5, 6
 
 
 def _read_only_uri(path: Path) -> str:
@@ -44,10 +47,22 @@ def _read_only_uri(path: Path) -> str:
 
 
 def _backup(source_path: Path, snapshot_path: Path) -> None:
-    source = sqlite3.connect(_read_only_uri(source_path), uri=True)
+    last_progress = time.monotonic()
+
+    def progress(status: int, remaining: int, total: int) -> None:
+        nonlocal last_progress
+        if status in (_SQLITE_BUSY, _SQLITE_LOCKED):
+            if time.monotonic() - last_progress >= 1:
+                raise sqlite3.OperationalError(
+                    "live SQLite backup remained busy; using file snapshot"
+                )
+        else:
+            last_progress = time.monotonic()
+
+    source = sqlite3.connect(_read_only_uri(source_path), uri=True, timeout=0)
     try:
         with contextlib.closing(sqlite3.connect(snapshot_path)) as destination:
-            source.backup(destination)
+            source.backup(destination, pages=256, progress=progress, sleep=0.05)
     finally:
         source.close()
 

@@ -74,6 +74,7 @@ from browser_commander.exports import (
     SeleniumAdapter,
     SeleniumLocatorWrapper,
     SeleniumTextSelector,
+    SnapshotOptions,
     WaitAfterActionResult,
     WaitResult,
     all_conditions,
@@ -138,6 +139,7 @@ from browser_commander.exports import (
     launch_and_connect_real_browser,
     launch_browser,
     launch_real_browser,
+    launch_snapshot,
     list_browser_profiles,
     load_storage_state,
     locator,
@@ -176,6 +178,7 @@ from browser_commander.exports import (
     # Scroll interactions
     scroll_into_view,
     scroll_into_view_if_needed,
+    snapshot_user_data_dir,
     stable_check,
     start_process,
     # Element content
@@ -268,6 +271,7 @@ __all__ = [
     "SeleniumAdapter",
     "SeleniumLocatorWrapper",
     "SeleniumTextSelector",
+    "SnapshotOptions",
     "WaitAfterActionResult",
     "WaitResult",
     "all_conditions",
@@ -332,6 +336,7 @@ __all__ = [
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",
+    "launch_snapshot",
     "list_browser_profiles",
     "load_storage_state",
     "locator",
@@ -371,6 +376,7 @@ __all__ = [
     # Scroll interactions
     "scroll_into_view",
     "scroll_into_view_if_needed",
+    "snapshot_user_data_dir",
     "stable_check",
     "start_process",
     # Element content

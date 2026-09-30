@@ -7,12 +7,6 @@
     "reason": "The command-script and stdio protocols accept dynamic JSON payloads by design. Their CLI entry points are untyped; callers that need compile-time engine types must use the language APIs instead."
   },
   {
-    "id": "native-snapshot-attach",
-    "features": ["attach.snapshot"],
-    "languages": ["python", "rust"],
-    "reason": "The native launchers do not yet copy a live profile's SQLite databases and sidecars into a temporary profile before attaching. The shared JavaScript CLI can perform this operation when installed alongside them."
-  },
-  {
     "id": "native-extension-attach",
     "features": ["attach.extension"],
     "languages": ["python", "rust"],

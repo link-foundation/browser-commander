@@ -133,6 +133,28 @@ pub fn configure_user_data_dir(
     preferences: &Value,
     local_state: &Value,
 ) -> Result<()> {
+    configure_user_data_dir_for_profile(
+        user_data_dir,
+        "Default",
+        default_browser_check,
+        preferences,
+        local_state,
+    )
+}
+
+/// Apply preferences to a selected profile, including a snapshot's `Profile 1`.
+pub fn configure_user_data_dir_for_profile(
+    user_data_dir: &Path,
+    profile: &str,
+    default_browser_check: Option<bool>,
+    preferences: &Value,
+    local_state: &Value,
+) -> Result<()> {
+    if profile.is_empty() || matches!(profile, "." | "..") || profile.contains(['/', '\\', '\0']) {
+        return Err(anyhow!(
+            "profile must be a directory name such as Default or Profile 1"
+        ));
+    }
     let mut overrides = preferences.clone();
     if let Some(browser) = overrides.get("browser") {
         if !browser.is_object() {
@@ -151,7 +173,7 @@ pub fn configure_user_data_dir(
             .insert("check_default_browser".to_string(), json!(check));
     }
     merge_json_file(
-        &user_data_dir.join("Default").join(PREFERENCES_FILE),
+        &user_data_dir.join(profile).join(PREFERENCES_FILE),
         &json!({"browser":{"check_default_browser":false}}),
         &overrides,
     )?;

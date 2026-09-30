@@ -32,8 +32,10 @@ on:
       - 'js/bin/**'
       - 'tests/cli-contract/**'
       - 'python/src/**'
+      - 'python/tests/e2e/**'
       - 'rust/src/**'
       - 'rust/tests/storage_state_smoke.rs'
+      - 'rust/tests/snapshot.rs'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
 
@@ -312,6 +314,57 @@ jobs:
           bash ../scripts/run-with-budget-warning.sh 600 "Rust storage state transfer" \
             cargo test --locked --test storage_state_smoke -- --ignored --nocapture
 
+  snapshots:
+    name: Native snapshots (real Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-snapshots
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Install browser engines
+        working-directory: js
+        run: npm ci --ignore-scripts
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install Python test dependencies
+        run: python -m pip install -e './python[dev]'
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+        with:
+          toolchain: stable
+      - name: Cache Cargo build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-snapshots-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-snapshots-cargo-
+            ${{ runner.os }}-storage-state-cargo-
+      - name: Verify Chrome is present
+        run: test -x "$CHROME_PATH"
+      - name: Launch Rust snapshot copies in all CDP engines
+        working-directory: rust
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 600 "Rust native snapshot launches" \
+            cargo test --locked --test snapshot -- --ignored --nocapture
+      - name: Launch Python snapshot copies in both engines
+        env:
+          RUN_E2E: 'true'
+          CHROME_NO_SANDBOX: 'true'
+        shell: bash
+        run: |
+          bash scripts/run-with-budget-warning.sh 180 "Python native snapshot launches" \
+            python -m pytest python/tests/e2e/test_snapshot.py -v
+
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
@@ -329,6 +382,7 @@ jobs:
       - parity
       - cli
       - storage-state
+      - snapshots
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs
     # it exists to report. `!cancelled()` keeps it out of a superseded run,

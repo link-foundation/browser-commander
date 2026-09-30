@@ -82,6 +82,7 @@ def configure_user_data_dir(
     default_browser_check: bool | None = None,
     preferences: Mapping[str, Any] | None = None,
     local_state: Mapping[str, Any] | None = None,
+    profile_directory: str = "Default",
 ) -> None:
     """Apply launch preferences after fresh creation, migration, or snapshot."""
     if default_browser_check is not None and not isinstance(
@@ -102,8 +103,14 @@ def configure_user_data_dir(
             "check_default_browser": default_browser_check,
         }
     directory = Path(user_data_dir)
+    if (
+        not profile_directory
+        or profile_directory in {".", ".."}
+        or any(c in profile_directory for c in "/\\\0")
+    ):
+        raise ValueError("profile_directory must be a profile directory name")
     _merge_json(
-        directory / PREFERENCES_FILE,
+        directory / profile_directory / "Preferences",
         {"browser": {"check_default_browser": False}},
         overrides,
     )

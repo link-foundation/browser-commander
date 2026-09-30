@@ -487,6 +487,31 @@ failed or cancelled download raises the failure rather than returning a path.
 Playwright listens on a browser-wide CDP session; Selenium, which has no
 download events, watches the staging directory instead.
 
+### Live Profile Snapshots
+
+Copy a selected Chromium profile while its source browser stays open, then
+launch the copy through Playwright or Selenium:
+
+```python
+from browser_commander import RealBrowserOptions, SnapshotOptions, launch_snapshot
+
+copy = await launch_snapshot(
+    SnapshotOptions(browser="chrome", profile="Profile 1"),
+    RealBrowserOptions(engine="playwright"),
+)
+try:
+    await copy.page.goto("https://example.com")
+    print(copy.snapshot["copied"])
+finally:
+    await copy.close()
+```
+
+`user_data_dir` in `SnapshotOptions` selects an explicit source root. SQLite
+backups retain committed WAL data; caches, locks and open-tab sessions are
+excluded and reported. Closing the browser deletes its copy. The original
+profile remains untouched. `snapshot_user_data_dir(browser="chrome", ...)`
+returns the same report without launching; callers own that returned directory.
+
 ### Portable Traces
 
 A trace is one versioned directory - manifest, ordered NDJSON timeline,

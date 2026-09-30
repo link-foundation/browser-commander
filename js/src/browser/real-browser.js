@@ -521,6 +521,12 @@ async function runPreLaunchMigration({
   }
 }
 
+function mergeSeedCookies(seedCookies, migratedCookies) {
+  return migratedCookies.length > 0
+    ? [...(seedCookies ?? []), ...migratedCookies]
+    : seedCookies;
+}
+
 export async function launchAndConnectRealBrowserWithDependencies(
   options = {},
   dependencies = {}
@@ -640,10 +646,10 @@ export async function launchAndConnectRealBrowserWithDependencies(
 
   try {
     const connect = dependencies.connect ?? connectBrowser;
-    const seedCookies =
-      migratedCookies.length > 0
-        ? [...(connectionOptions.seedCookies ?? []), ...migratedCookies]
-        : connectionOptions.seedCookies;
+    const seedCookies = mergeSeedCookies(
+      connectionOptions.seedCookies,
+      migratedCookies
+    );
     const connection = await connect({
       engine,
       cdpEndpoint: resolvedCdpEndpoint,

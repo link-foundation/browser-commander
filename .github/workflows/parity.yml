@@ -247,13 +247,6 @@ jobs:
           }
           "$CHROME_PATH" --version
 
-      - name: Transfer Rust storage state across engines
-        working-directory: rust
-        shell: bash
-        run: |
-          bash ../scripts/run-with-budget-warning.sh 600 "Rust storage state transfer" \
-            cargo test --locked --test storage_state_smoke -- --ignored --nocapture
-
       - name: Run CLI and API coverage suites under Xvfb
         shell: bash
         run: |
@@ -279,6 +272,46 @@ jobs:
         shell: bash
         run: bash scripts/run-with-budget-warning.sh 300 "Cross-language CLI contract" node tests/cli-contract/check.mjs
 
+  # Compiling the storage-state integration test has its own budget so it
+  # cannot consume the CLI job's build and browser-test allowance.
+  storage-state:
+    name: Rust storage state (real Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-storage-state
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Install browser engines
+        working-directory: js
+        run: npm ci --ignore-scripts
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+        with:
+          toolchain: stable
+      - name: Cache Cargo build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-storage-state-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-storage-state-cargo-
+            ${{ runner.os }}-cli-cargo-
+      - name: Verify Chrome is present
+        run: test -x "$CHROME_PATH"
+      - name: Transfer Rust storage state across engines
+        working-directory: rust
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 600 "Rust storage state transfer" \
+            cargo test --locked --test storage_state_smoke -- --ignored --nocapture
+
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
@@ -295,6 +328,7 @@ jobs:
     needs:
       - parity
       - cli
+      - storage-state
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs
     # it exists to report. `!cancelled()` keeps it out of a superseded run,

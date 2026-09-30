@@ -179,7 +179,7 @@ impl ConnectOptions {
 ///
 /// Chromiumoxide connects natively. Playwright and Puppeteer use the same
 /// official Node.js packages as [`launch_browser`](super::launcher::launch_browser).
-/// The returned page implements the crate's shared [`EngineAdapter`](crate::core::EngineAdapter)
+/// The returned page implements the crate's shared [`EngineAdapter`]
 /// API. The browser's profile and process remain externally managed.
 pub async fn connect_browser(options: ConnectOptions) -> Result<LaunchResult, anyhow::Error> {
     connect_browser_with(options, AttachSettings::default()).await

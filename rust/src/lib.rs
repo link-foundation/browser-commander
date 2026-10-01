@@ -44,6 +44,7 @@
 //! - [`downloads`] - Managed, persistent downloads (manager, store, sources)
 //! - [`fingerprint`] - Fingerprint parity with a hand-started browser (profiles,
 //!   presets, automation parity)
+//! - [`puppeteer`] - Typed Puppeteer API over the JavaScript CLI's bridge
 //! - [`traces`] - Reading privacy-aware portable trace bundles
 //! - [`utilities`] - General utilities (URL handling, wait operations)
 //! - [`high_level`] - High-level DRY utilities
@@ -56,6 +57,7 @@ pub mod fingerprint;
 pub mod high_level;
 pub mod interactions;
 pub mod playwright;
+pub mod puppeteer;
 pub mod traces;
 pub mod utilities;
 

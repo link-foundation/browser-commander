@@ -4,6 +4,9 @@
 #[path = "../../../rust/src/playwright/mod.rs"]
 pub mod playwright;
 
+#[path = "../../../rust/src/puppeteer/mod.rs"]
+pub mod puppeteer;
+
 pub mod core {
     #[path = "../../../../rust/src/core/engine.rs"]
     pub mod engine;

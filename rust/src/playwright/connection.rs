@@ -222,8 +222,28 @@ impl Channel {
         P: Serialize + ?Sized,
         R: DeserializeOwned,
     {
+        self.send_with_timeout(method, params, self.connection.default_timeout())
+            .await
+    }
+
+    /// [`send`](Self::send) with its own timeout, in milliseconds (`None`
+    /// waits as long as the driver does).
+    pub async fn send_with_timeout<P, R>(
+        &self,
+        method: &str,
+        params: &P,
+        timeout_ms: Option<f64>,
+    ) -> Result<R, ProtocolError>
+    where
+        P: Serialize + ?Sized,
+        R: DeserializeOwned,
+    {
         let params = serde_json::to_value(params)?;
-        let result = match self.connection.call(&self.guid, method, params).await? {
+        let result = match self
+            .connection
+            .call_with_timeout(&self.guid, method, params, timeout_ms)
+            .await?
+        {
             // A result whose fields are all absent can arrive as no result.
             Value::Null => json!({}),
             result => result,
@@ -602,12 +622,53 @@ impl Connection {
             }
             "__dispose__" => self.dispose(&guid),
             _ => {
+                self.track_live_state(&guid, &method, &params);
                 let _ = self.inner.events.send(RawEvent {
                     guid,
                     method,
                     params,
                 });
             }
+        }
+    }
+
+    /// Keep the state the official clients track from events in the
+    /// initializer, so it reads current: a frame's `url` and `name` follow
+    /// `navigated`, and its `loadStates` follow `loadstate`.
+    fn track_live_state(&self, guid: &str, method: &str, params: &Value) {
+        let mut objects = self.lock_objects();
+        let Some(entry) = objects.get_mut(guid) else {
+            return;
+        };
+        if entry.interface != "Frame" {
+            return;
+        }
+        let Some(initializer) = entry.initializer.as_object_mut() else {
+            return;
+        };
+        match method {
+            "navigated" if params.get("error").is_none() => {
+                for key in ["url", "name"] {
+                    if let Some(value) = params.get(key) {
+                        initializer.insert(key.to_string(), value.clone());
+                    }
+                }
+            }
+            "loadstate" => {
+                let states = initializer.entry("loadStates").or_insert_with(|| json!([]));
+                let Some(states) = states.as_array_mut() else {
+                    return;
+                };
+                if let Some(added) = params.get("add") {
+                    if !states.contains(added) {
+                        states.push(added.clone());
+                    }
+                }
+                if let Some(removed) = params.get("remove") {
+                    states.retain(|state| state != removed);
+                }
+            }
+            _ => {}
         }
     }
 
@@ -697,6 +758,36 @@ mod tests {
         connection.dispatch(json!({ "guid": "context@2", "method": "__dispose__", "params": {} }));
         assert_eq!(connection.object_count(), 1);
         assert!(connection.raw_initializer("page@1").is_err());
+    }
+
+    #[tokio::test]
+    async fn frame_urls_and_load_states_follow_their_events() {
+        use crate::playwright::protocol::{Frame, LifecycleEvent};
+        let connection = offline();
+        create(
+            &connection,
+            "",
+            "Frame",
+            "frame@1",
+            json!({ "url": "about:blank", "name": "", "loadStates": ["load"] }),
+        );
+        let frame: Frame = connection.object(&Ref::new("frame@1")).unwrap();
+        let event = |method: &str, params: Value| {
+            connection.dispatch(json!({ "guid": "frame@1", "method": method, "params": params }));
+        };
+
+        event("navigated", json!({ "url": "https://a.test/", "name": "" }));
+        event("loadstate", json!({ "remove": "load" }));
+        event("loadstate", json!({ "add": "domcontentloaded" }));
+        // A failed navigation leaves the committed URL in place.
+        event(
+            "navigated",
+            json!({ "url": "https://b.test/", "name": "", "error": "net::ERR" }),
+        );
+
+        let state = frame.initializer().unwrap();
+        assert_eq!(state.url, "https://a.test/");
+        assert_eq!(state.load_states, vec![LifecycleEvent::Domcontentloaded]);
     }
 
     #[tokio::test]

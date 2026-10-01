@@ -24,3 +24,16 @@ pub mod utilities {
         }
     }
 }
+
+pub mod browser {
+    #[path = "../../../../rust/src/browser/playwright_driver_page.rs"]
+    pub mod playwright_driver_page;
+}
+
+pub mod parity {
+    pub(crate) const VERSION_EXPRESSION: &str = r#"(() => {
+  const text = id => (document.getElementById(id)?.textContent ?? '').trim();
+  if (!text('command_line')) return null;
+  return { commandLine:text('command_line'), version:text('version'), executablePath:text('executable_path') };
+})()"#;
+}

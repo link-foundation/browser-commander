@@ -73,7 +73,8 @@ async fn main() -> anyhow::Result<()> {
 
 - **Unified API** across multiple browser engines
 - **Native Rust Chromiumoxide support**
-- **Playwright and Puppeteer support through a Node.js bridge**
+- **Typed Playwright through the official driver**, with a Node.js bridge
+  fallback, and **Puppeteer through a Node.js bridge**
 - **Built-in navigation safety handling**
 - **Element visibility and scroll management**
 - **Click, fill, and other interaction support with verification**
@@ -110,7 +111,41 @@ append-only builder.
 
 ### Playwright and Puppeteer
 
-Rust does not have official Playwright or Puppeteer bindings. To keep the same engine names available from Rust, Browser Commander starts a local Node.js bridge and delegates operations to the official Node packages.
+Rust Playwright talks to Playwright's own driver, the same process the
+official Python, Java and .NET bindings use: `playwright-core/cli.js
+run-driver`, started through command-stream. Every interface, command and
+event in the driver's `protocol.yml` has a typed Rust binding in
+[`browser_commander::playwright::protocol`](src/playwright/protocol), generated
+by `scripts/generate-playwright-protocol.mjs`. `launch_browser()` and
+`connect_browser()` use it whenever they find a `playwright-core` with the same
+protocol version as the bindings (`BROWSER_COMMANDER_PLAYWRIGHT_DRIVER`, then
+`node_modules` in `node_working_dir` and its ancestors); otherwise they log why
+and fall back to the Node.js bridge. Puppeteer has no driver protocol, so it
+always runs through the bridge, which delegates operations to the official
+Node package.
+
+```rust
+use browser_commander::playwright::protocol::{
+    PageSetViewportSizeParams, PageSetViewportSizeParamsViewportSize,
+};
+use browser_commander::{PlaywrightDriverPage, PlaywrightLaunch};
+
+let page = PlaywrightDriverPage::launch(PlaywrightLaunch {
+    user_data_dir: "./profile".into(),
+    headless: true,
+    ..Default::default()
+})
+.await?;
+// The common operations go through `EngineAdapter`; the rest of Playwright is
+// one typed call away.
+let (_browser, _context, typed_page, _frame) = page.objects();
+typed_page
+    .set_viewport_size(PageSetViewportSizeParams {
+        viewport_size: PageSetViewportSizeParamsViewportSize { width: 640, height: 480 },
+    })
+    .await?;
+page.close().await?;
+```
 
 Install the package you want Node to resolve:
 
@@ -135,7 +170,7 @@ let puppeteer = LaunchOptions::puppeteer()
 
 Reuse a system-installed Chrome-family browser by selecting its channel or
 providing an explicit executable path. `channel` applies to the Playwright and
-Puppeteer bridge engines; `executable_path` also applies to Chromiumoxide:
+Puppeteer engines; `executable_path` also applies to Chromiumoxide:
 
 ```rust
 let playwright = LaunchOptions::playwright()
@@ -192,7 +227,8 @@ let options = LaunchOptions::playwright()
 
 `connect_browser()` attaches to an externally managed Chrome-family browser
 and returns the same `LaunchResult` page adapter as `launch_browser()`. Use
-Chromiumoxide natively, or the Playwright/Puppeteer Node.js bridges:
+Chromiumoxide natively, Playwright through its driver, or the Puppeteer Node.js
+bridge:
 
 ```rust
 use browser_commander::prelude::*;

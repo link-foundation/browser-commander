@@ -20,6 +20,7 @@ use crate::browser::browser_process::BrowserCloser;
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::launcher::{Browser, LaunchOptions, LaunchResult};
 use crate::browser::node_bridge::NodeBridgePage;
+use crate::browser::playwright_driver_page::{PlaywrightDriverPage, PlaywrightLaunch};
 use crate::browser::profile_directory::{
     configure_user_data_dir, prepare_user_data_dir_with_first_run,
 };
@@ -30,12 +31,14 @@ use crate::browser::webdriver::{launch_webdriver, ManagedWebDriver, WebDriverBro
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::attach_downloads;
 use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
+use crate::playwright::{DriverOptions, PlaywrightDriver};
 
 /// What an engine launch has to close.
 #[derive(Clone)]
 enum EngineBrowser {
     Chromiumoxide(Arc<ChromiumoxidePage>),
     NodeBridge(Arc<NodeBridgePage>),
+    PlaywrightDriver(Arc<PlaywrightDriverPage>),
     WebDriver(Arc<ManagedWebDriver>),
 }
 
@@ -44,6 +47,7 @@ impl EngineBrowser {
         match self {
             Self::Chromiumoxide(page) => page.clone(),
             Self::NodeBridge(page) => page.clone(),
+            Self::PlaywrightDriver(page) => page.clone(),
             Self::WebDriver(page) => page.clone(),
         }
     }
@@ -55,6 +59,9 @@ impl EngineBrowser {
                 let _ = page.close().await;
             }
             Self::NodeBridge(page) => {
+                let _ = page.close().await;
+            }
+            Self::PlaywrightDriver(page) => {
                 let _ = page.close().await;
             }
             Self::WebDriver(page) => {
@@ -170,7 +177,10 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
             EngineType::Chromiumoxide => {
                 launch_chromiumoxide(options, &args, env.as_ref(), &user_data_dir).await
             }
-            EngineType::Playwright | EngineType::Puppeteer => {
+            EngineType::Playwright => {
+                launch_playwright(options, &args, env.as_ref(), &user_data_dir).await
+            }
+            EngineType::Puppeteer => {
                 launch_node_bridge(options, &args, env.as_ref(), &user_data_dir).await
             }
             EngineType::Fantoccini => {
@@ -276,6 +286,49 @@ async fn launch_node_bridge(
     // speaks its own command protocol rather than CDP.
     let page = NodeBridgePage::launch(options, args, env, user_data_dir).await?;
     Ok((EngineBrowser::NodeBridge(Arc::new(page)), None))
+}
+
+/// Playwright through its official driver, with typed protocol calls; the
+/// Node bridge only when no matching driver is installed.
+async fn launch_playwright(
+    options: &LaunchOptions,
+    args: &[String],
+    env: Option<&HashMap<String, String>>,
+    user_data_dir: &Path,
+) -> Result<Launched> {
+    let driver = match PlaywrightDriver::launch(DriverOptions {
+        node: options.node_executable.clone(),
+        working_dir: options.node_working_dir.clone(),
+        verbose: options.verbose,
+    })
+    .await
+    {
+        Ok(driver) => driver,
+        Err(error) => {
+            tracing::info!(%error, "Playwright driver unavailable; using the Node bridge");
+            return launch_node_bridge(options, args, env, user_data_dir).await;
+        }
+    };
+    let launch = PlaywrightLaunch {
+        driver: DriverOptions::default(),
+        user_data_dir: user_data_dir.to_path_buf(),
+        headless: options.headless,
+        slow_mo: options.slow_mo,
+        args: args.to_vec(),
+        env: env.cloned(),
+        ignore_all_default_args: options.ignore_all_default_args,
+        ignore_default_args: options.all_ignored_default_args(),
+        color_scheme: options
+            .color_scheme
+            .as_ref()
+            .map(|cs| cs.as_str().to_string()),
+        sandbox: options.sandbox,
+        channel: options.channel.clone(),
+        executable_path: options.executable_path.clone(),
+        timeout: options.launch_timeout,
+    };
+    let page = PlaywrightDriverPage::launch_with(driver, launch).await?;
+    Ok((EngineBrowser::PlaywrightDriver(Arc::new(page)), None))
 }
 
 async fn launch_chromiumoxide(

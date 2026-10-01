@@ -13,11 +13,13 @@ use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
 use crate::browser::launcher::{Browser, LaunchResult};
 use crate::browser::media::ColorScheme;
 use crate::browser::node_bridge::NodeBridgePage;
+use crate::browser::playwright_driver_page::{PlaywrightConnect, PlaywrightDriverPage};
 use crate::browser::storage_state::{StorageState, StorageStateInput};
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::{attach_downloads, DownloadSetting};
 use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
 use crate::fingerprint::profile::FingerprintProfile;
+use crate::playwright::{DriverOptions, PlaywrightDriver};
 
 /// Options for attaching to a running browser over CDP.
 #[derive(Debug, Clone)]
@@ -248,7 +250,7 @@ pub(crate) async fn connect_browser_with(
                 .map(|_| crate::downloads::supported_engine(engine))
                 .transpose()
                 .map_err(|error| anyhow::anyhow!("{error}"))?;
-            let connection = NodeBridgePage::connect(options, settings.color_scheme);
+            let connection = connect_node_engine(options, endpoint, settings.color_scheme);
             let page = if let Some(timeout) = timeout {
                 tokio::time::timeout(timeout, connection)
                     .await
@@ -259,8 +261,8 @@ pub(crate) async fn connect_browser_with(
             if let Some(mut state) = storage_state {
                 state.cookies.extend(seed_cookies);
                 let value = serde_json::to_value(state)?;
-                if let Err(error) = page.restore_storage_state(value).await {
-                    let _ = page.close().await;
+                if let Err(error) = page.adapter().restore_storage_state(value).await {
+                    page.close().await;
                     return Err(error.into());
                 }
             }
@@ -270,7 +272,7 @@ pub(crate) async fn connect_browser_with(
                     user_data_dir: PathBuf::new(),
                     headless: false,
                 },
-                Arc::new(page),
+                page.into_adapter(),
                 None,
             ))
         }
@@ -278,6 +280,76 @@ pub(crate) async fn connect_browser_with(
             "fantoccini does not connect over CDP; use chromiumoxide, playwright, or puppeteer"
         )),
     }
+}
+
+/// A Playwright or Puppeteer page attached to a running browser.
+enum NodeEngine {
+    Driver(PlaywrightDriverPage),
+    Bridge(NodeBridgePage),
+}
+
+impl NodeEngine {
+    fn adapter(&self) -> &dyn EngineAdapter {
+        match self {
+            Self::Driver(page) => page,
+            Self::Bridge(page) => page,
+        }
+    }
+
+    fn into_adapter(self) -> Arc<dyn EngineAdapter> {
+        match self {
+            Self::Driver(page) => Arc::new(page),
+            Self::Bridge(page) => Arc::new(page),
+        }
+    }
+
+    async fn close(&self) {
+        match self {
+            Self::Driver(page) => {
+                let _ = page.close().await;
+            }
+            Self::Bridge(page) => {
+                let _ = page.close().await;
+            }
+        }
+    }
+}
+
+/// Playwright attaches through its official driver; Puppeteer, and
+/// Playwright without a matching driver, through the Node bridge.
+async fn connect_node_engine(
+    options: ConnectOptions,
+    endpoint: String,
+    color_scheme: Option<&ColorScheme>,
+) -> Result<NodeEngine, anyhow::Error> {
+    if options.engine == EngineType::Playwright {
+        let driver = PlaywrightDriver::launch(DriverOptions {
+            node: options.node_executable.clone(),
+            working_dir: options.node_working_dir.clone(),
+            verbose: options.verbose,
+        })
+        .await;
+        match driver {
+            Ok(driver) => {
+                let connect = PlaywrightConnect {
+                    driver: DriverOptions::default(),
+                    endpoint,
+                    slow_mo: options.slow_mo,
+                    timeout: options.timeout,
+                    seed_cookies: options.seed_cookies.clone(),
+                    color_scheme: color_scheme.map(|cs| cs.as_str().to_string()),
+                };
+                let page = PlaywrightDriverPage::connect_with(driver, connect).await?;
+                return Ok(NodeEngine::Driver(page));
+            }
+            Err(error) => {
+                tracing::info!(%error, "Playwright driver unavailable; using the Node bridge");
+            }
+        }
+    }
+    Ok(NodeEngine::Bridge(
+        NodeBridgePage::connect(options, color_scheme).await?,
+    ))
 }
 
 async fn connect_chromiumoxide(

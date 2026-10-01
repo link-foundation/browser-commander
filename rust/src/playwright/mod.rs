@@ -13,4 +13,4 @@ pub mod protocol;
 pub mod transport;
 
 pub use connection::{Channel, ChannelType, Connection, ObjectRef, ProtocolError, Ref};
-pub use driver::{DriverLocation, DriverOptions, PlaywrightDriver};
+pub use driver::{DriverLocation, DriverOptions, PlaywrightDriver, DRIVER_ENV};

@@ -9,6 +9,15 @@
       ]
     },
     {
+      "title": "Engine APIs",
+      "features": [
+        {
+          "id": "engine.playwright",
+          "title": "Drive Playwright through its typed API"
+        }
+      ]
+    },
+    {
       "title": "Profile and user browser",
       "features": [
         { "id": "migration.profile", "title": "Read-only profile migration" },

@@ -613,6 +613,17 @@ impl EngineAdapter for PlaywrightDriverPage {
             .map_err(engine_error)
     }
 
+    async fn mouse_click(&self, x: f64, y: f64) -> Result<(), EngineError> {
+        self.page
+            .mouse_click(PageMouseClickParams {
+                x,
+                y,
+                ..Default::default()
+            })
+            .await
+            .map_err(engine_error)
+    }
+
     async fn fill(&self, selector: &str, text: &str) -> Result<(), EngineError> {
         self.frame
             .fill(FrameFillParams {

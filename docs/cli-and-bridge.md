@@ -175,6 +175,12 @@ bridge returned an error as a stack string. The new one returns a JSON-RPC
 error, and engine errors keep the stack in `data.stack`. The old `sandbox`
 launch flag becomes `args` (for example `--no-sandbox`).
 
+Rust Playwright no longer needs this mapping when a matching driver is
+installed. `launch_browser()` and `connect_browser()` then talk to
+`playwright-core/cli.js run-driver` directly, through the typed protocol
+bindings in `rust/src/playwright/protocol/`. The bridge is the fallback when
+no matching driver is found, and it is still the path Rust Puppeteer takes.
+
 ## Implementation notes (JS)
 
 These details are not required by the contract. The other CLIs should follow

@@ -38,6 +38,7 @@ on:
       - 'rust/tests/snapshot.rs'
       - 'rust/tests/parity.rs'
       - 'rust/tests/webdriver*.rs'
+      - 'rust/tests/playwright_driver.rs'
       - 'rust/tests/support/**'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
@@ -360,7 +361,7 @@ jobs:
         shell: bash
         run: |
           bash ../scripts/run-with-budget-warning.sh 600 "Rust native snapshots and parity" \
-            cargo test --locked --test snapshot --test parity --test webdriver -- --ignored --nocapture
+            cargo test --locked --test snapshot --test parity --test webdriver --test playwright_driver -- --ignored --nocapture
       - name: Launch Python snapshot copies in both engines
         env:
           RUN_E2E: 'true'

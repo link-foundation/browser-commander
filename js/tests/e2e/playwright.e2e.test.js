@@ -1,3 +1,4 @@
+// feature-parity: engine.playwright@native-typed
 /**
  * E2E tests for browser-commander using Playwright engine
  *

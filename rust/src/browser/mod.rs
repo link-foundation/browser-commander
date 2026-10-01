@@ -24,6 +24,7 @@ pub mod navigation_ops;
 pub mod node_bridge;
 pub mod open_in_user_browser;
 pub mod parity;
+pub mod playwright_driver_page;
 pub mod profile_directory;
 pub mod raw_cdp;
 pub mod real_browser;
@@ -57,6 +58,7 @@ pub use node_bridge::NodeBridgePage;
 pub use open_in_user_browser::{
     build_open_command, open_in_user_browser, validate_open_url, OpenInUserBrowserResult,
 };
+pub use playwright_driver_page::{PlaywrightConnect, PlaywrightDriverPage, PlaywrightLaunch};
 pub use profile_directory::{
     create_temporary_user_data_dir, prepare_user_data_dir, remove_user_data_dir,
 };

@@ -188,3 +188,16 @@ async fn the_adapter_attaches_over_cdp() {
     let _ = chrome.wait();
     let _ = std::fs::remove_dir_all(&profile);
 }
+
+/// The launcher and connector hold these futures across `.await` in `Send`
+/// contexts, and keep the page behind `Arc<dyn EngineAdapter>`.
+#[allow(dead_code)]
+fn the_adapter_is_send_and_sync() {
+    fn send<T: Send>(_: T) {}
+    fn shared<T: Send + Sync + 'static>() {}
+    send(PlaywrightDriverPage::launch(PlaywrightLaunch::default()));
+    send(PlaywrightDriverPage::connect(PlaywrightConnect::default()));
+    shared::<PlaywrightDriverPage>();
+    let _: fn(std::sync::Arc<PlaywrightDriverPage>) -> std::sync::Arc<dyn EngineAdapter> =
+        |page| page;
+}

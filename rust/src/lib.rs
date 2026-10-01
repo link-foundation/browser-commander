@@ -80,9 +80,9 @@ pub use browser::{
     list_browser_profiles, read_browser_cookies, resolve_restrictions, save_storage_state, Browser,
     BrowserCookie, BrowserCookieReadOptions, BrowserProcess, BrowserProfile, BrowserProfileOptions,
     ChromiumoxidePage, ColorScheme, ConnectOptions, EmulateMediaOptions, LaunchMode, LaunchOptions,
-    LaunchRestriction, LaunchResult, NodeBridgePage, RealBrowserLaunchResult, RealBrowserOptions,
-    StorageEntry, StorageOrigin, StorageState, StorageStateInput, LAUNCH_MODES,
-    SUPPORTED_COOKIE_BROWSERS,
+    LaunchRestriction, LaunchResult, NodeBridgePage, PlaywrightConnect, PlaywrightDriverPage,
+    PlaywrightLaunch, RealBrowserLaunchResult, RealBrowserOptions, StorageEntry, StorageOrigin,
+    StorageState, StorageStateInput, LAUNCH_MODES, SUPPORTED_COOKIE_BROWSERS,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,

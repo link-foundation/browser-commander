@@ -11,6 +11,7 @@ from browser_commander.core.engine_adapter import (
 )
 
 
+# feature-parity: engine.playwright@native-typed
 class TestPlaywrightAdapter:
     """Tests for PlaywrightAdapter."""
 

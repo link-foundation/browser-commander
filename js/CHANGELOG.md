@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.21.2
+
+### Patch Changes
+
+- 917d611: Keep the real-browser launcher under the ESLint complexity limit, fail `npm run lint` on any warning, and record that `node-pty`'s install script (pulled in by `command-stream`) stays blocked.
+
 ## 0.21.1
 
 ### Patch Changes

@@ -85,6 +85,21 @@ async def test_start_process_streams_output_and_reports_exit() -> None:
     assert process.kill() is False
 
 
+async def test_start_process_keeps_a_character_split_across_reads() -> None:
+    # The two bytes of "é" arrive in separate reads.
+    script = (
+        "import sys, time; out = sys.stdout.buffer; "
+        "out.write(b'\\xc3'); out.flush(); time.sleep(0.3); "
+        "out.write(b'\\xa9\\n'); out.flush()"
+    )
+    process = await start_process(PYTHON, ["-c", script])
+    chunks: list[str] = []
+    process.stdout.on("data", chunks.append)
+
+    assert await process.wait() == 0
+    assert "".join(chunks) == "\u00e9\n"
+
+
 async def test_kill_terminates_a_running_process() -> None:
     process = await start_process(
         PYTHON, ["-c", "import time; time.sleep(60)"], kill_grace=0.5

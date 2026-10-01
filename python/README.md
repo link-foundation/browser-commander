@@ -525,8 +525,37 @@ returns the same report without launching; callers own that returned directory.
 ### Portable Traces
 
 A trace is one versioned directory - manifest, ordered NDJSON timeline,
-per-checkpoint DOM snapshots and the mutation batches between them - so a bundle
-recorded by a JavaScript run reads back here:
+per-checkpoint DOM snapshots and the mutation batches between them - and Python
+writes the same bundle JavaScript does:
+
+```python
+from browser_commander.traces import write_trace_viewer
+
+trace = await commander.start_trace(
+    output="/tmp/traces/checkout",
+    mode="continuous",
+    links={"output": "/tmp/traces/checkout.lino"},
+)
+await commander.goto("https://example.com/cart")
+await trace.checkpoint("cart")
+stopped = await trace.stop()
+write_trace_viewer(stopped["path"])  # viewer.html, readable offline
+```
+
+Navigations, interactions, console messages, page errors, failed requests,
+dialogs and downloads share one ordered timeline; password fields,
+`[data-private]` controls, credential headers and token query parameters are
+redacted before anything is written. To keep a
+trace only when something went wrong, wrap the work in `traced()`:
+
+```python
+from browser_commander.traces import traced
+
+async with traced(commander, output="artifacts/checkout.bc-trace"):
+    await commander.click_button("#pay")  # kept, with the viewer, only if this raises
+```
+
+A bundle recorded here or by a JavaScript run reads back the same way:
 
 ```python
 from browser_commander import diff_control_state, read_trace
@@ -540,9 +569,6 @@ for event in trace.events:
 for change in diff_control_state(trace.state(1), trace.state(2)):
     print(change.path, change.change, change.before, "->", change.after)
 ```
-
-Recording is JavaScript-only today; `docs/feature-parity.md` lists that gap
-along with the rest.
 
 ### Typed Puppeteer
 

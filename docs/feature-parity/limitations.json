@@ -9,7 +9,7 @@
   {
     "id": "native-trace-recorder",
     "features": ["trace.record"],
-    "languages": ["python", "rust"],
-    "reason": "The native engine adapters can read trace bundles but do not yet instrument navigation, DOM mutations, and network events to write them."
+    "languages": ["rust"],
+    "reason": "The native Rust engine adapters can read trace bundles but do not yet instrument navigation, DOM mutations, and network events to write them."
   }
 ]

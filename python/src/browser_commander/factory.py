@@ -230,6 +230,24 @@ class BrowserCommander:
         )
         return self.downloads
 
+    # ==================== Traces ====================
+    async def start_trace(self, **options: Any) -> Any:
+        """Start recording a portable trace bundle of this commander's page.
+
+        Args:
+            **options: ``output`` (bundle directory, required) and the other
+                options of :func:`browser_commander.traces.start_trace`
+
+        Returns:
+            The running :class:`~browser_commander.traces.TraceRecorder`
+        """
+        # Imported here so that loading the commander does not load the
+        # recorder (and its in-page assets) for runs that never trace.
+        from browser_commander.traces.recorder import start_trace
+
+        options.setdefault("log", self.log)
+        return await start_trace(self, **options)
+
     # ==================== Lifecycle ====================
     async def destroy(self) -> None:
         """Clean up all resources."""

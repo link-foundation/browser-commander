@@ -123,6 +123,30 @@ packages ship byte-identical copies of the JavaScript companion extension; the
 shared-asset gate verifies them. [Native extension relay](extension-relay.md)
 documents installation, both APIs, cancellation and bounded event streams.
 
+Python now records portable traces natively (item 3).
+`BrowserCommander.start_trace()` writes the same bundle as JavaScript:
+checkpoints, continuous DOM mutation batches that survive navigations and new
+frames, live control state, stable identities, one ordered timeline,
+redaction, size-limited partial bundles, the offline viewer and a streamed
+Links Notation export. The in-page capture functions and the viewer are not
+rewritten: `scripts/generate-trace-assets.mjs` copies them out of
+`js/src/traces/` into `assets.json`, and a JavaScript test fails when the copy
+is stale. `traced()` keeps a bundle only when the block raises, which is what
+`retain-on-failure` means without a test runner.
+
+These checks cover it:
+
+- `scripts/generate-trace-conformance.mjs` records one scenario with the
+  JavaScript recorder into `js/tests/fixtures/traces/conformance/expected/`.
+  `python/tests/unit/traces/test_conformance.py` replays it and must produce
+  the same bundle, viewer and `.lino` bytes, and redact a 21-URL corpus the
+  same way.
+- `python/tests/unit/traces/` ports the JavaScript recorder, bundle, viewer,
+  Links and redaction tests, and `test_retention.py` covers `traced()`.
+- `python/tests/e2e/test_trace_recording.py` records a real Chrome run (typing,
+  a password, a dialog, a navigation and DOM changes) and opens the viewer in
+  it, in the Browser Parity workflow.
+
 See the [CI investigation](issue-110-ci-investigation.md) for the failed runs,
 exact errors and reproducing checks addressed in this continuation.
 

@@ -46,6 +46,11 @@ class DialogManager:
         self.log = log
 
         self._handlers: list[Callable] = []
+        # Passive observers. They are told about every dialog and are never
+        # responsible for answering one, so watching dialogs - which is what a
+        # trace recorder does - cannot leave a page waiting forever for an
+        # answer nobody was going to give, nor stop the auto-dismissal.
+        self._observers: list[Callable] = []
         self._is_listening = False
 
     async def _handle_dialog(self, dialog: Any) -> None:
@@ -66,6 +71,14 @@ class DialogManager:
         self.log.debug(
             lambda: f'💬 Dialog event: type="{dialog_type}", message="{dialog_message}"'
         )
+
+        for observer in list(self._observers):
+            try:
+                result = observer(dialog)
+                if asyncio.iscoroutine(result):
+                    await result
+            except Exception:
+                self.log.debug(lambda: "⚠️  Error in dialog observer")
 
         if not self._handlers:
             self.log.debug(
@@ -134,6 +147,41 @@ class DialogManager:
             )
         except ValueError:
             pass
+
+    def observe_dialogs(self, observer: Callable) -> Callable[[], None]:
+        """Watch dialogs without taking responsibility for answering them.
+
+        Observers run before the handlers, are told about every dialog, and do
+        not count as handlers: with no handler registered a dialog is still
+        auto-dismissed, exactly as it would be without the observer.
+
+        Args:
+            observer: Sync or async callable receiving the dialog object
+
+        Returns:
+            A function that removes this observer again
+        """
+        if not callable(observer):
+            raise TypeError("Dialog observer must be callable")
+        self._observers.append(observer)
+        self.log.debug(
+            lambda: f"👁  Dialog observer registered (total: {len(self._observers)})"
+        )
+        return lambda: self.unobserve_dialogs(observer)
+
+    def unobserve_dialogs(self, observer: Callable) -> None:
+        """Remove a dialog observer.
+
+        Args:
+            observer: The observer to remove
+        """
+        try:
+            self._observers.remove(observer)
+        except ValueError:
+            return
+        self.log.debug(
+            lambda: f"👁  Dialog observer removed (remaining: {len(self._observers)})"
+        )
 
     def clear_dialog_handlers(self) -> None:
         """Remove all dialog event handlers."""

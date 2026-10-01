@@ -73,6 +73,30 @@ The WebDriver commit `59fe132` produced two new failures in fresh runs:
   It now runs in the consuming job. A workflow regression assertion requires
   every job running the native WebDriver tests to resolve its drivers first.
 
-These fixes do not complete the remaining #108 native/API requirements or
-register the #109 PyPI publisher. Their outstanding scope is recorded in the
-[requirement inventory](issue-110-analysis.md).
+The native trace work ended with three more findings, each reproduced first:
+
+- [Python 36899766114](https://github.com/link-foundation/browser-commander/actions/runs/36899766114)
+  on `ebdbb21`: `py-win-110496178516.log`, lines 596–597, shows the Windows
+  conformance test receiving `\r\n` where the JavaScript recording has `\n`.
+  Trace files were opened in text mode. They are now opened in binary mode,
+  and `test_opens_every_member_in_binary_mode` covers every bundle member.
+- CodeQL raised `js/xss-through-dom` in the generated viewer fixture. Recorded
+  URL, title, control values and event fields reached the viewer's markup
+  unescaped, so a hostile page title ran script in the viewer. `f3156c4`
+  escapes them; the viewer test that drives the script failed before it.
+  [JavaScript 36905406078](https://github.com/link-foundation/browser-commander/actions/runs/36905406078)
+  then failed (`js-changeset-36905406078.log`, line 24: two changesets), so
+  the note joined the existing changeset, and the test stopped extracting the
+  script with a regular expression that CodeQL flagged as `js/bad-tag-filter`.
+- The remaining `js/xss-through-dom` alert (#55) is the viewer's mutation
+  replay, which parses recorded HTML with `DOMParser` by design. That
+  document is inert and its serialization only becomes the `srcdoc` of the
+  stage frame, which is sandboxed without `allow-scripts`.
+  [`viewer-replay-inert.mjs`](../experiments/issue-110/viewer-replay-inert.mjs)
+  records hostile markup in the snapshot, title, URL and a replayed mutation
+  and opens the viewer in Chrome: before `f3156c4` the URL and title ran,
+  afterwards nothing runs. The alert was dismissed as a false positive with
+  that evidence.
+
+The PyPI trusted publisher for #109 still has to be registered by a PyPI
+account owner; the [requirement inventory](issue-110-analysis.md) records it.

@@ -1,0 +1,249 @@
+{
+  "description": "One continuous trace recorded against a fake page by JavaScript, Python and Rust; all three must write these bytes.",
+  "clock": { "now": 1767225600000, "monotonic": 1234.5 },
+  "engine": "playwright",
+  "options": {
+    "mode": "continuous",
+    "commanderVersion": "0.0.0-conformance",
+    "privacy": {
+      "redactPatterns": ["sk-[a-z0-9]+"],
+      "redactQueryParams": ["ticket"]
+    },
+    "limits": { "maxQueuedMutations": 100 },
+    "links": true
+  },
+  "snapshot": {
+    "html": "<!DOCTYPE html>\n<html><head><title>Start</title></head><body><form><input name=\"user\" value=\"alice\"><input type=\"checkbox\" name=\"agree\"><select name=\"plan\"><option>a</option></select></form></body></html>",
+    "truncated": false,
+    "state": {
+      "url": "https://user:pw@example.com/start?ticket=t-1&lang=en#access_token=abc&view=1",
+      "title": "Start – “quoted” 'single' \\ back",
+      "readyState": "complete",
+      "scroll": { "x": 0, "y": 12.5 },
+      "viewport": { "width": 1280, "height": 720 },
+      "activeElement": null,
+      "controls": [
+        {
+          "path": "form > input:nth-of-type(1)",
+          "tag": "input",
+          "type": "text",
+          "name": "user",
+          "id": null,
+          "focused": false,
+          "value": "alice",
+          "redacted": false
+        },
+        {
+          "path": "form > input:nth-of-type(2)",
+          "tag": "input",
+          "type": "checkbox",
+          "name": "agree",
+          "id": null,
+          "focused": false,
+          "value": "on",
+          "checked": false,
+          "redacted": false
+        },
+        {
+          "path": "form > select",
+          "tag": "select",
+          "type": null,
+          "name": "plan",
+          "id": null,
+          "focused": false,
+          "value": "a",
+          "selected": [0],
+          "redacted": false
+        }
+      ],
+      "frames": []
+    }
+  },
+  "steps": [
+    {
+      "op": "queueMutations",
+      "dropped": 2,
+      "batches": [
+        {
+          "at": 1767225600200,
+          "records": [
+            {
+              "type": "attributes",
+              "target": 4,
+              "name": "class",
+              "value": "busy"
+            }
+          ]
+        },
+        {
+          "at": 1767225600100,
+          "records": [
+            {
+              "type": "live-state",
+              "target": 2,
+              "property": "value",
+              "value": "bo"
+            },
+            {
+              "type": "childList",
+              "target": 1,
+              "added": [{ "id": 9, "html": "<p>new line</p>" }],
+              "removed": [],
+              "index": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "emit",
+      "event": "framenavigated",
+      "data": {
+        "url": "https://example.com/next?token=abc&q=a b",
+        "main": true
+      }
+    },
+    {
+      "op": "emit",
+      "event": "framenavigated",
+      "data": { "url": "https://ads.example.com/frame", "main": false }
+    },
+    {
+      "op": "emit",
+      "event": "console",
+      "data": {
+        "type": "log",
+        "text": "key sk-abc123 loaded\n\ttab \"and\" 'quotes'"
+      }
+    },
+    {
+      "op": "emit",
+      "event": "pageerror",
+      "data": {
+        "message": "boom: (unbalanced",
+        "stack": "Error: boom\n    at main.js:1:2"
+      }
+    },
+    {
+      "op": "emit",
+      "event": "requestfailed",
+      "data": {
+        "url": "https://api.example.com/v1?api_key=k&page=2",
+        "method": "POST",
+        "errorText": "net::ERR_FAILED"
+      }
+    },
+    {
+      "op": "dialog",
+      "data": { "type": "confirm", "message": "Continue? #yes" }
+    },
+    {
+      "op": "download",
+      "phase": "completed",
+      "artifact": {
+        "id": "download-1",
+        "suggestedFilename": "report final.csv",
+        "path": "/downloads/report final.csv",
+        "checksum": "sha256:00ff",
+        "bytes": 42,
+        "url": "https://files.example.com/r.csv?signature=s"
+      }
+    },
+    {
+      "op": "interaction",
+      "action": "goto",
+      "target": "https://example.com/next?code=abc"
+    },
+    {
+      "op": "interaction",
+      "action": "clickButton",
+      "target": "#go",
+      "fail": "button #go is not visible"
+    },
+    {
+      "op": "setSnapshot",
+      "snapshot": {
+        "html": "<!DOCTYPE html>\n<html><body><form><input name=\"user\" value=\"bob\"><textarea>sk-zzz9 note</textarea></form></body></html>",
+        "truncated": true,
+        "state": {
+          "url": "https://example.com/next?token=abc",
+          "title": "Next",
+          "readyState": "interactive",
+          "scroll": { "x": 0, "y": 0 },
+          "viewport": { "width": 1280, "height": 720 },
+          "activeElement": "form > textarea",
+          "controls": [
+            {
+              "path": "form > input:nth-of-type(1)",
+              "tag": "input",
+              "type": "text",
+              "name": "user",
+              "id": null,
+              "focused": false,
+              "value": "bob",
+              "redacted": false
+            },
+            {
+              "path": "form > input:nth-of-type(2)",
+              "tag": "input",
+              "type": "checkbox",
+              "name": "agree",
+              "id": null,
+              "focused": false,
+              "value": "on",
+              "checked": true,
+              "redacted": false
+            },
+            {
+              "path": "form > textarea",
+              "tag": "textarea",
+              "type": null,
+              "name": null,
+              "id": "note",
+              "focused": true,
+              "value": "sk-zzz9 note",
+              "scroll": { "x": 0, "y": 3 },
+              "redacted": false
+            }
+          ],
+          "frames": [
+            { "url": "https://ads.example.com/frame", "crossOrigin": true }
+          ]
+        }
+      }
+    },
+    { "op": "checkpoint", "name": "after click", "actor": "automation" },
+    {
+      "op": "queueMutations",
+      "dropped": 0,
+      "batches": [
+        {
+          "at": 1767225600300,
+          "records": [
+            { "type": "characterData", "target": 7, "value": "done ✓ 😀" }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "event",
+      "name": "note",
+      "data": {
+        "authorization": "Bearer xyz",
+        "detail": "uses sk-q1w2",
+        "pageUrl": "https://example.com/?session=s1",
+        "count": 3,
+        "ratio": 0.25,
+        "whole": 2.0,
+        "nested": { "list": [1, "two", null, true] }
+      }
+    },
+    {
+      "op": "checkpoint",
+      "name": "final",
+      "actor": "caller",
+      "reason": "failure"
+    },
+    { "op": "stop" }
+  ]
+}

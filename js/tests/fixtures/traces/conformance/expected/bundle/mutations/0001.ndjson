@@ -1,0 +1,2 @@
+{"traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","frameId":"main","mainFrame":true,"at":1767225600100,"records":[{"type":"live-state","target":2,"property":"value","value":"bo"},{"type":"childList","target":1,"added":[{"id":9,"html":"<p>new line</p>"}],"removed":[],"index":3}]}
+{"traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","frameId":"main","mainFrame":true,"at":1767225600200,"records":[{"type":"attributes","target":4,"name":"class","value":"busy"}]}

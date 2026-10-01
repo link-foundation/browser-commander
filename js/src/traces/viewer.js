@@ -36,7 +36,7 @@ function embed(data) {
     );
 }
 
-const VIEWER_STYLE = `
+export const VIEWER_STYLE = `
   :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
   body { margin: 0; display: grid; grid-template-columns: 22rem 1fr;
          grid-template-rows: auto 1fr; height: 100vh; }
@@ -62,7 +62,7 @@ const VIEWER_STYLE = `
   button { font: inherit; }
 `;
 
-const VIEWER_SCRIPT = String.raw`
+export const VIEWER_SCRIPT = String.raw`
 const trace = JSON.parse(document.getElementById('trace-data').textContent);
 const timeline = document.getElementById('timeline');
 const frame = document.getElementById('stage');

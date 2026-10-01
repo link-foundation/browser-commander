@@ -11,7 +11,8 @@
     "**/.changeset/**",
     "**/package-lock.json",
     "**/pnpm-lock.yaml",
-    "**/yarn.lock"
+    "**/yarn.lock",
+    "**/tests/fixtures/traces/conformance/**"
   ],
   "reporters": ["console", "html"],
   "output": "./reports/jscpd"

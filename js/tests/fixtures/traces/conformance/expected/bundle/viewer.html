@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Inert by default: no network, no captured scripts, images only from data URLs. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; frame-src 'self' data:;">
+<title>Browser Commander trace</title>
+<style>
+  :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+  body { margin: 0; display: grid; grid-template-columns: 22rem 1fr;
+         grid-template-rows: auto 1fr; height: 100vh; }
+  header { grid-column: 1 / -1; padding: 0.5rem 1rem; border-bottom: 1px solid #8884; }
+  h1 { font-size: 1rem; margin: 0 0 0.25rem; }
+  .meta { font-size: 0.75rem; opacity: 0.75; }
+  .meta.replay { opacity: 0.9; font-style: italic; }
+  aside { overflow: auto; border-right: 1px solid #8884; }
+  main { display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+  ol { list-style: none; margin: 0; padding: 0; font-size: 0.8rem; }
+  li { padding: 0.35rem 0.75rem; border-bottom: 1px solid #8882; cursor: pointer; }
+  li.selected { background: #3b82f633; }
+  li .kind { font-weight: 600; }
+  li .at { opacity: 0.6; float: right; }
+  iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+  .panel { padding: 0.5rem 1rem; border-top: 1px solid #8884; max-height: 14rem;
+           overflow: auto; font-size: 0.8rem; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { text-align: left; padding: 0.15rem 0.5rem; border-bottom: 1px solid #8882;
+           font-family: ui-monospace, monospace; font-size: 0.75rem; }
+  .controls { padding: 0.5rem 1rem; display: flex; gap: 0.5rem; align-items: center; }
+  .dropped { color: #b91c1c; }
+  button { font: inherit; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Browser Commander trace</h1>
+  <div class="meta">
+    mode continuous · outcome partial · engine playwright ·
+    3 checkpoints · 18 events ·
+    1 dropped · started 2026-01-01T00:00:00.000Z
+  </div>
+  <div class="meta replay">partial diagnostic replay: checkpoints, DOM mutations, insertion positions and removals, live control state, page and frame identities</div>
+</header>
+<aside><ol id="timeline"></ol></aside>
+<main>
+  <div class="controls">
+    <button id="play" type="button">Replay mutations</button>
+    <button id="step-forward" type="button">Step</button>
+    <button id="reset" type="button">Reset</button>
+    <span id="step"></span>
+  </div>
+  <iframe id="stage" sandbox referrerpolicy="no-referrer" title="captured page"></iframe>
+  <div class="panel" id="details"></div>
+  <div class="panel" id="diff"></div>
+</main>
+<script id="trace-data" type="application/json">{"manifest":{"schemaVersion":2,"format":"browser-commander-trace","mode":"continuous","outcome":"partial","startedAt":"2026-01-01T00:00:00.000Z","stoppedAt":"2026-01-01T00:00:00.000Z","commanderVersion":"0.0.0-conformance","engine":"playwright","browser":null,"platform":"conformance","runtime":"conformance","events":["navigation","interaction","console","pageerror","dialog","requestfailed","download"],"dom":{"html":true,"liveControlState":true,"liveState":true,"mutations":true,"openShadowRoots":true},"replay":{"checkpoints":true,"mutations":true,"childListPositions":true,"liveState":true,"identifiers":true},"privacy":{"redactSelectors":["input[type=password]","[data-private]","[data-bc-redact]"],"redactAttributes":["authorization","proxy-authorization","cookie","set-cookie","x-api-key","x-auth-token","x-csrf-token"],"redactQueryParams":["access_token","api_key","apikey","auth","code","id_token","password","refresh_token","secret","session","signature","token","ticket"],"hasCallback":false},"limits":{"maxQueuedMutations":100},"counts":{"checkpoints":3,"events":18,"mutationBatches":3},"dropped":1},"events":[{"sequence":1,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"trace.start","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-1","mode":"continuous","engine":"playwright","dom":{"html":true,"liveControlState":true,"liveState":true,"mutations":true,"openShadowRoots":true},"events":["navigation","interaction","console","pageerror","dialog","requestfailed","download"],"initialCheckpoint":true},{"sequence":2,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"checkpoint","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-1","index":1,"name":"initial","actor":"recorder","reason":"initial","url":"https://[redacted]:[redacted]@example.com/start?ticket=[redacted]&lang=en#access_token=[redacted]&view=1","truncated":false,"members":{"html":"checkpoints/0001.html","state":"checkpoints/0001.state.json","screenshot":"checkpoints/0001.png"}},{"sequence":3,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"navigation","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","phase":"framenavigated","mainFrame":true,"url":"https://example.com/next?token=[redacted]&q=a+b"},{"sequence":4,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"navigation","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","phase":"framenavigated","mainFrame":false,"url":"https://ads.example.com/frame"},{"sequence":5,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"console","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","level":"log","text":"key [redacted] loaded\n\ttab \"and\" 'quotes'"},{"sequence":6,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"pageerror","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","message":"boom: (unbalanced","stack":"Error: boom\n    at main.js:1:2"},{"sequence":7,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"requestfailed","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","url":"https://api.example.com/v1?api_key=[redacted]&page=2","method":"POST","failure":"net::ERR_FAILED"},{"sequence":8,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"dialog","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","type":"confirm","message":"Continue? #yes"},{"sequence":9,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"download","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","phase":"completed","id":"download-1","suggestedFilename":"report final.csv","path":"/downloads/report final.csv","checksum":"sha256:00ff","bytes":42,"url":"https://files.example.com/r.csv?signature=[redacted]","failure":null},{"sequence":10,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"interaction","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","actionId":"trace-1-action-1","action":"goto","target":"https://example.com/next?code=abc","durationMs":0,"ok":true},{"sequence":11,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"interaction","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","actionId":"trace-1-action-2","action":"clickButton","target":"#go","durationMs":0,"ok":false,"error":"button #go is not visible"},{"sequence":12,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"dropped","reason":"size-limit","member":"mutations","detail":"2 records over the in-page queue limit"},{"sequence":13,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"mutations","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","member":"mutations/0001.ndjson","batches":2,"checkpoint":1,"frames":1},{"sequence":14,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"checkpoint","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","index":2,"name":"after click","actor":"automation","reason":"checkpoint","url":"https://example.com/next?token=[redacted]","truncated":true,"members":{"html":"checkpoints/0002.html","state":"checkpoints/0002.state.json","screenshot":"checkpoints/0002.png"}},{"sequence":15,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"interaction","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","action":"note","actor":"caller","authorization":"[redacted]","detail":"uses [redacted]","pageUrl":"https://example.com/?session=[redacted]","count":3,"ratio":0.25,"whole":2,"nested":{"list":[1,"two",null,true]}},{"sequence":16,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"mutations","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","member":"mutations/0002.ndjson","batches":1,"checkpoint":2,"frames":1},{"sequence":17,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"checkpoint","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","index":3,"name":"final","actor":"caller","reason":"failure","url":"https://example.com/next?token=[redacted]","truncated":true,"members":{"html":"checkpoints/0003.html","state":"checkpoints/0003.state.json","screenshot":"checkpoints/0003.png"}},{"sequence":18,"at":"2026-01-01T00:00:00.000Z","monotonicMs":1235,"kind":"trace.stop","traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","discarded":false}],"checkpoints":[{"index":1,"name":"initial","actor":"recorder","reason":"initial","url":"https://[redacted]:[redacted]@example.com/start?ticket=[redacted]&lang=en#access_token=[redacted]&view=1","at":"2026-01-01T00:00:00.000Z","sequence":2,"members":{"html":"checkpoints/0001.html","state":"checkpoints/0001.state.json","screenshot":"checkpoints/0001.png"}},{"index":2,"name":"after click","actor":"automation","reason":"checkpoint","url":"https://example.com/next?token=[redacted]","at":"2026-01-01T00:00:00.000Z","sequence":14,"members":{"html":"checkpoints/0002.html","state":"checkpoints/0002.state.json","screenshot":"checkpoints/0002.png"}},{"index":3,"name":"final","actor":"caller","reason":"failure","url":"https://example.com/next?token=[redacted]","at":"2026-01-01T00:00:00.000Z","sequence":17,"members":{"html":"checkpoints/0003.html","state":"checkpoints/0003.state.json","screenshot":"checkpoints/0003.png"}}],"html":{"1":"\u003c!DOCTYPE html\u003e\n\u003chtml\u003e\u003chead\u003e\u003ctitle\u003eStart\u003c/title\u003e\u003c/head\u003e\u003cbody\u003e\u003cform\u003e\u003cinput name=\"user\" value=\"alice\"\u003e\u003cinput type=\"checkbox\" name=\"agree\"\u003e\u003cselect name=\"plan\"\u003e\u003coption\u003ea\u003c/option\u003e\u003c/select\u003e\u003c/form\u003e\u003c/body\u003e\u003c/html\u003e","2":"\u003c!DOCTYPE html\u003e\n\u003chtml\u003e\u003cbody\u003e\u003cform\u003e\u003cinput name=\"user\" value=\"bob\"\u003e\u003ctextarea\u003esk-zzz9 note\u003c/textarea\u003e\u003c/form\u003e\u003c/body\u003e\u003c/html\u003e","3":"\u003c!DOCTYPE html\u003e\n\u003chtml\u003e\u003cbody\u003e\u003cform\u003e\u003cinput name=\"user\" value=\"bob\"\u003e\u003ctextarea\u003esk-zzz9 note\u003c/textarea\u003e\u003c/form\u003e\u003c/body\u003e\u003c/html\u003e"},"state":{"1":{"url":"https://[redacted]:[redacted]@example.com/start?ticket=[redacted]&lang=en#access_token=[redacted]&view=1","title":"Start – “quoted” 'single' \\ back","readyState":"complete","scroll":{"x":0,"y":12.5},"viewport":{"width":1280,"height":720},"activeElement":null,"controls":[{"path":"form \u003e input:nth-of-type(1)","tag":"input","type":"text","name":"user","id":null,"focused":false,"value":"alice","redacted":false},{"path":"form \u003e input:nth-of-type(2)","tag":"input","type":"checkbox","name":"agree","id":null,"focused":false,"value":"on","checked":false,"redacted":false},{"path":"form \u003e select","tag":"select","type":null,"name":"plan","id":null,"focused":false,"value":"a","selected":[0],"redacted":false}],"frames":[],"name":"initial","actor":"recorder","reason":"initial"},"2":{"url":"https://example.com/next?token=[redacted]","title":"Next","readyState":"interactive","scroll":{"x":0,"y":0},"viewport":{"width":1280,"height":720},"activeElement":"form \u003e textarea","controls":[{"path":"form \u003e input:nth-of-type(1)","tag":"input","type":"text","name":"user","id":null,"focused":false,"value":"bob","redacted":false},{"path":"form \u003e input:nth-of-type(2)","tag":"input","type":"checkbox","name":"agree","id":null,"focused":false,"value":"on","checked":true,"redacted":false},{"path":"form \u003e textarea","tag":"textarea","type":null,"name":null,"id":"note","focused":true,"value":"[redacted] note","scroll":{"x":0,"y":3},"redacted":false}],"frames":[{"url":"https://ads.example.com/frame","crossOrigin":true}],"name":"after click","actor":"automation","reason":"checkpoint"},"3":{"url":"https://example.com/next?token=[redacted]","title":"Next","readyState":"interactive","scroll":{"x":0,"y":0},"viewport":{"width":1280,"height":720},"activeElement":"form \u003e textarea","controls":[{"path":"form \u003e input:nth-of-type(1)","tag":"input","type":"text","name":"user","id":null,"focused":false,"value":"bob","redacted":false},{"path":"form \u003e input:nth-of-type(2)","tag":"input","type":"checkbox","name":"agree","id":null,"focused":false,"value":"on","checked":true,"redacted":false},{"path":"form \u003e textarea","tag":"textarea","type":null,"name":null,"id":"note","focused":true,"value":"[redacted] note","scroll":{"x":0,"y":3},"redacted":false}],"frames":[{"url":"https://ads.example.com/frame","crossOrigin":true}],"name":"final","actor":"caller","reason":"failure"}},"mutations":{"1":[{"traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","frameId":"main","mainFrame":true,"at":1767225600100,"records":[{"type":"live-state","target":2,"property":"value","value":"bo"},{"type":"childList","target":1,"added":[{"id":9,"html":"\u003cp\u003enew\u2028line\u003c/p\u003e"}],"removed":[],"index":3}]},{"traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","frameId":"main","mainFrame":true,"at":1767225600200,"records":[{"type":"attributes","target":4,"name":"class","value":"busy"}]}],"2":[{"traceId":"trace-1","browserContextId":"context-1","pageId":"page-1","navigationId":"nav-2","frameId":"main","mainFrame":true,"at":1767225600300,"records":[{"type":"characterData","target":7,"value":"done ✓ 😀"}]}],"3":[]},"diffs":{"1":[],"2":[{"path":"form \u003e input:nth-of-type(1)","change":"changed","before":"alice","after":"bob"},{"path":"form \u003e input:nth-of-type(2)","change":"changed","before":false,"after":true},{"path":"form \u003e textarea","change":"added","after":"[redacted] note"},{"path":"form \u003e select","change":"removed","before":"a"}],"3":[]},"elided":[]}</script>
+<script>
+const trace = JSON.parse(document.getElementById('trace-data').textContent);
+const timeline = document.getElementById('timeline');
+const frame = document.getElementById('stage');
+const details = document.getElementById('details');
+const diffPanel = document.getElementById('diff');
+const stepLabel = document.getElementById('step');
+let selectedCheckpoint = null;
+let mutationStep = 0;
+
+function checkpointFor(event) {
+  if (event.kind === 'checkpoint') return event.index;
+  let latest = null;
+  for (const other of trace.events) {
+    if (other.sequence > event.sequence) break;
+    if (other.kind === 'checkpoint') latest = other.index;
+  }
+  return latest;
+}
+
+function renderHtml(index, html) {
+  // The captured document is handed to a sandboxed frame with no
+  // allow-scripts and no allow-forms: it is shown, never run.
+  frame.srcdoc = html == null ? '<p style="font:1rem system-ui">no HTML captured for this checkpoint</p>' : html;
+}
+
+function nodeOf(parsed, described) {
+  if (!described) return null;
+  if (described.type === 'text') {
+    return parsed.createTextNode(described.text == null ? '' : described.text);
+  }
+  if (described.type === 'element' && described.html) {
+    const holder = parsed.createElement('template');
+    holder.innerHTML = described.html;
+    return holder.content.firstChild;
+  }
+  return null;
+}
+
+function looksLike(node, described) {
+  if (!node || !described) return false;
+  if (described.type === 'text') return node.nodeType === 3;
+  if (described.type !== 'element') return false;
+  if (node.nodeType !== 1 || node.localName !== described.tag) return false;
+  return described.id ? node.id === described.id : true;
+}
+
+function childLike(parent, described) {
+  if (!described) return null;
+  // An id is identity; an index is only a hint. A node that moved is reported
+  // at the position it moved *to*, so the index alone would find the wrong one.
+  if (described.id) {
+    for (const child of parent.childNodes) {
+      if (child.nodeType === 1 && child.id === described.id) return child;
+    }
+  }
+  const at = described.index == null ? null : parent.childNodes[described.index];
+  if (looksLike(at, described)) return at;
+  for (const child of parent.childNodes) {
+    if (looksLike(child, described)) return child;
+  }
+  return null;
+}
+
+function insertAt(parent, node, index) {
+  if (!node) return false;
+  const reference = index == null ? null : parent.childNodes[index] || null;
+  parent.insertBefore(node, reference);
+  return true;
+}
+
+function applyLiveState(parsed, target, record) {
+  const value = record.after;
+  const text = value == null ? '' : String(value);
+  if (record.property === 'scroll') {
+    // A static copy of a document cannot be scrolled, so where it was
+    // scrolled to is written onto the element rather than quietly lost.
+    const element = target || parsed.documentElement;
+    const at = value || {};
+    element.setAttribute('data-bc-scroll', at.top + ',' + at.left);
+    return true;
+  }
+  if (!target) return false;
+  if (record.property === 'value') {
+    // Serialized HTML carries attributes, not properties, so what was typed
+    // is written where a re-parse will still find it.
+    if (target.localName === 'textarea' || target.hasAttribute('contenteditable')) {
+      target.textContent = text;
+    } else {
+      target.setAttribute('value', text);
+    }
+    return true;
+  }
+  if (record.property === 'checked') {
+    if (value) target.setAttribute('checked', '');
+    else target.removeAttribute('checked');
+    return true;
+  }
+  if (record.property === 'selected') {
+    const chosen = (Array.isArray(value) ? value : []).map(String);
+    for (const option of target.querySelectorAll('option')) {
+      if (chosen.indexOf(option.value) !== -1) option.setAttribute('selected', '');
+      else option.removeAttribute('selected');
+    }
+    return true;
+  }
+  if (record.property === 'focus') {
+    for (const had of parsed.querySelectorAll('[data-bc-focus]')) {
+      had.removeAttribute('data-bc-focus');
+    }
+    if (value) target.setAttribute('data-bc-focus', '');
+    return true;
+  }
+  return false;
+}
+
+function applyMutations(index, upTo) {
+  const html = trace.html[index];
+  if (html == null) return null;
+  const parsed = new DOMParser().parseFromString(html, 'text/html');
+  const batches = trace.mutations[index] || [];
+  let applied = 0;
+  let skipped = 0;
+  for (const batch of batches.slice(0, upTo)) {
+    // The stage holds one document. A batch from an iframe belongs to a
+    // different one, so it is counted rather than applied to the wrong page.
+    if (batch.mainFrame === false) { skipped += (batch.records || []).length; continue; }
+    for (const record of batch.records) {
+      const target = record.target && record.target.path
+        ? parsed.querySelector(record.target.path)
+        : null;
+      if (record.kind === 'live-state') {
+        if (applyLiveState(parsed, target, record)) applied++; else skipped++;
+      } else if (!target) {
+        skipped++;
+        continue;
+      } else if (record.kind === 'attributes' && record.attribute) {
+        if (record.after == null) target.removeAttribute(record.attribute);
+        else target.setAttribute(record.attribute, record.after);
+        applied++;
+      } else if (record.kind === 'characterData') {
+        target.textContent = record.after == null ? '' : record.after;
+        applied++;
+      } else if (record.kind === 'childList') {
+        // Where a node went is as much of the change as what it was: appending
+        // every addition to the end replays an insertion before a sibling in
+        // the wrong place, and drops removals entirely (issue #93).
+        for (const removed of record.removed || []) {
+          const node = childLike(target, removed);
+          if (node) { target.removeChild(node); applied++; } else { skipped++; }
+        }
+        const added = (record.added || []).filter(Boolean)
+          .slice().sort((a, b) => (a.index == null ? 1e9 : a.index) - (b.index == null ? 1e9 : b.index));
+        for (const entry of added) {
+          if (insertAt(target, nodeOf(parsed, entry), entry.index)) applied++;
+          else skipped++;
+        }
+      } else {
+        skipped++;
+      }
+      if (target && target.style) target.style.outline = '2px solid #f59e0b';
+    }
+  }
+  return { html: '<!DOCTYPE html>' + parsed.documentElement.outerHTML, applied, skipped };
+}
+
+function stepText(step, total, result) {
+  const base = 'batch ' + step + ' of ' + total;
+  if (!result || !result.skipped) return base;
+  return base + ' · ' + result.skipped + ' not replayable here';
+}
+
+function showCheckpoint(index) {
+  selectedCheckpoint = index;
+  mutationStep = 0;
+  renderHtml(index, trace.html[index]);
+  const state = trace.state[index];
+  const previous = trace.state[index - 1];
+  details.innerHTML = state
+    ? '<table><tr><th>url</th><td>' + state.url + '</td></tr>' +
+      '<tr><th>title</th><td>' + (state.title || '') + '</td></tr>' +
+      '<tr><th>controls</th><td>' + (state.controls || []).length + '</td></tr></table>'
+    : '<p>no state captured</p>';
+  const changes = trace.diffs[index] || [];
+  diffPanel.innerHTML = previous && changes.length
+    ? '<table><tr><th>control</th><th>before</th><th>after</th></tr>' +
+      changes.map((c) => '<tr><td>' + c.path + '</td><td>' + (c.before ?? '') +
+        '</td><td>' + (c.after ?? '') + '</td></tr>').join('') + '</table>'
+    : '<p>no control changes against the previous checkpoint</p>';
+  stepLabel.textContent = (trace.mutations[index] || []).length + ' mutation batches';
+}
+
+function select(event, element) {
+  for (const li of timeline.children) li.classList.remove('selected');
+  element.classList.add('selected');
+  const index = checkpointFor(event);
+  if (index != null && index !== selectedCheckpoint) showCheckpoint(index);
+  if (event.kind !== 'checkpoint') {
+    details.innerHTML = '<table>' + Object.entries(event)
+      .map(([k, v]) => '<tr><th>' + k + '</th><td>' + String(
+        typeof v === 'object' ? JSON.stringify(v) : v).slice(0, 400) + '</td></tr>')
+      .join('') + '</table>';
+  }
+}
+
+for (const event of trace.events) {
+  const li = document.createElement('li');
+  if (event.kind === 'dropped') li.className = 'dropped';
+  li.innerHTML = '<span class="kind"></span> <span class="at"></span><div class="what"></div>';
+  li.querySelector('.kind').textContent = event.kind;
+  li.querySelector('.at').textContent = (event.at || '').slice(11, 23);
+  li.querySelector('.what').textContent =
+    event.name || event.action || event.text || event.message || event.url || event.reason || '';
+  li.addEventListener('click', () => select(event, li));
+  timeline.append(li);
+}
+
+document.getElementById('play').addEventListener('click', async () => {
+  if (selectedCheckpoint == null) return;
+  const batches = trace.mutations[selectedCheckpoint] || [];
+  for (let step = 1; step <= batches.length; step++) {
+    const result = applyMutations(selectedCheckpoint, step);
+    if (result) frame.srcdoc = result.html;
+    stepLabel.textContent = stepText(step, batches.length, result);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+});
+
+document.getElementById('step-forward').addEventListener('click', () => {
+  if (selectedCheckpoint == null) return;
+  const batches = trace.mutations[selectedCheckpoint] || [];
+  mutationStep = Math.min(mutationStep + 1, batches.length);
+  const result = applyMutations(selectedCheckpoint, mutationStep);
+  if (result) frame.srcdoc = result.html;
+  stepLabel.textContent = stepText(mutationStep, batches.length, result);
+});
+
+document.getElementById('reset').addEventListener('click', () => {
+  if (selectedCheckpoint != null) showCheckpoint(selectedCheckpoint);
+});
+
+if (trace.checkpoints.length) showCheckpoint(trace.checkpoints[0].index);
+</script>
+</body>
+</html>

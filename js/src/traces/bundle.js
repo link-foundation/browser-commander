@@ -32,7 +32,7 @@ export const TRACE_DIRECTORY_MODE = 0o700;
 /**
  * Open a bundle for writing.
  *
- * @param {Object} options - `{output, limits, strict, now, onEvent}`
+ * @param {Object} options - `{output, limits, strict, now, monotonic, onEvent}`
  * @returns {Promise<Object>} The bundle writer
  */
 export async function openTraceBundle(options = {}) {
@@ -41,6 +41,7 @@ export async function openTraceBundle(options = {}) {
     strict = false,
     limits = {},
     now = () => Date.now(),
+    monotonic = () => performance.now(),
     onEvent = null,
   } = options;
 
@@ -119,7 +120,7 @@ export async function openTraceBundle(options = {}) {
     const record = {
       sequence: ++sequence,
       at: new Date(now()).toISOString(),
-      monotonicMs: Math.round(performance.now()),
+      monotonicMs: Math.round(monotonic()),
       ...event,
     };
     const line = `${JSON.stringify(record)}\n`;

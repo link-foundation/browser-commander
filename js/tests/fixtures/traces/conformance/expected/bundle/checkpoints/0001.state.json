@@ -1,0 +1,54 @@
+{
+  "url": "https://[redacted]:[redacted]@example.com/start?ticket=[redacted]&lang=en#access_token=[redacted]&view=1",
+  "title": "Start – “quoted” 'single' \\ back",
+  "readyState": "complete",
+  "scroll": {
+    "x": 0,
+    "y": 12.5
+  },
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "activeElement": null,
+  "controls": [
+    {
+      "path": "form > input:nth-of-type(1)",
+      "tag": "input",
+      "type": "text",
+      "name": "user",
+      "id": null,
+      "focused": false,
+      "value": "alice",
+      "redacted": false
+    },
+    {
+      "path": "form > input:nth-of-type(2)",
+      "tag": "input",
+      "type": "checkbox",
+      "name": "agree",
+      "id": null,
+      "focused": false,
+      "value": "on",
+      "checked": false,
+      "redacted": false
+    },
+    {
+      "path": "form > select",
+      "tag": "select",
+      "type": null,
+      "name": "plan",
+      "id": null,
+      "focused": false,
+      "value": "a",
+      "selected": [
+        0
+      ],
+      "redacted": false
+    }
+  ],
+  "frames": [],
+  "name": "initial",
+  "actor": "recorder",
+  "reason": "initial"
+}

@@ -7,3 +7,4 @@ package-lock.json
 .eslintcache
 CLAUDE.md
 reports
+tests/fixtures/traces/conformance/expected

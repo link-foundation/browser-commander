@@ -51,7 +51,7 @@ export function interactionTarget(argument) {
 /**
  * Subscribe to everything a running trace listens to.
  *
- * @param {Object} options - `{commander, page, eventSources, record, note, identity}`
+ * @param {Object} options - `{commander, page, eventSources, record, note, identity, now}`
  * @param {Object} [options.commander] - The commander being traced, when there
  *   is one; interactions and managed downloads are reached through it
  * @param {Object} options.page - The page being traced
@@ -61,10 +61,19 @@ export function interactionTarget(argument) {
  * @param {Object} [options.identity] - Trace identity, see `identity.js`; the
  *   navigation observer is what moves it on to the next navigation, and the
  *   interaction observer is what names an action (issue #93)
+ * @param {Function} [options.now] - Wall clock in milliseconds, for durations
  * @returns {Function[]} One detach function per attached observer
  */
 export function attachTimelineObservers(options) {
-  const { commander, page, eventSources, record, note, identity } = options;
+  const {
+    commander,
+    page,
+    eventSources,
+    record,
+    note,
+    identity,
+    now = () => Date.now(),
+  } = options;
   const detachers = [];
 
   function subscribe(source, attach) {
@@ -234,7 +243,7 @@ export function attachTimelineObservers(options) {
       }
       originals.set(name, original);
       commander[name] = async (...args) => {
-        const startedMs = Date.now();
+        const startedMs = now();
         const target = interactionTarget(args[0]);
         // Named before the call, so everything the action causes can be traced
         // back to it even when the action itself ends in an exception.
@@ -245,7 +254,7 @@ export function attachTimelineObservers(options) {
             actionId,
             action: name,
             target,
-            durationMs: Date.now() - startedMs,
+            durationMs: now() - startedMs,
             ok: true,
           });
           return result;
@@ -254,7 +263,7 @@ export function attachTimelineObservers(options) {
             actionId,
             action: name,
             target,
-            durationMs: Date.now() - startedMs,
+            durationMs: now() - startedMs,
             ok: false,
             error: error.message,
           });

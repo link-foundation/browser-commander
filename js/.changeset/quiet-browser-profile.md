@@ -7,3 +7,5 @@ Suppress Chromium's default-browser prompt through profile settings on fresh and
 Update the locked brace-expansion dependency to 5.0.12 to resolve its CPU and stack exhaustion advisories.
 
 Retry transient Windows credential-lock EPERM within the existing bounded deadline, preserving the underlying error when contention persists.
+
+Accept a `monotonic` clock in `startTrace` and use the injected `now` for interaction durations, so a trace recorded with a fixed clock is byte-for-byte reproducible; the Python and Rust recorders are checked against such a recording.

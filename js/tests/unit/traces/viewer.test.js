@@ -9,6 +9,7 @@ import { startTrace } from '../../../src/traces/recorder.js';
 import { TRACE_FILES, TRACE_MODE } from '../../../src/traces/schema.js';
 import {
   DEFAULT_MAX_INLINE_BYTES,
+  VIEWER_SCRIPT,
   renderTraceViewer,
   writeTraceViewer,
 } from '../../../src/traces/viewer.js';
@@ -114,8 +115,8 @@ describe('offline trace viewer (issue #87)', () => {
       getElementById: (id) => (elements[id] ??= element()),
       createElement: () => element(),
     };
-    const ui = viewer.match(/<script>([\s\S]*?)<\/script>/)[1];
-    vm.runInNewContext(ui, { document, JSON, String, Object });
+    assert.ok(viewer.includes(VIEWER_SCRIPT));
+    vm.runInNewContext(VIEWER_SCRIPT, { document, JSON, String, Object });
     return elements;
   };
 

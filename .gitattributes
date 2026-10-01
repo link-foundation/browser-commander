@@ -4,3 +4,9 @@ dev/log/issues/99/pulls/100/ci-logs/*.log -diff -whitespace
 dev/log/issues/99/pulls/100/ci-logs/**/*.log -diff -whitespace
 dev/log/issues/99/pulls/100/reproductions/*.log -diff -whitespace
 dev/log/issues/99/pulls/100/templates/diffs/*.patch -diff -whitespace
+# Generated bindings and the specs they come from are compared byte for byte
+# by the freshness tests, so keep them LF on every platform (Windows CI).
+rust/protocol/** text eol=lf
+rust/src/playwright/protocol/*.rs text eol=lf
+rust/src/puppeteer/api/*.rs text eol=lf
+python/src/browser_commander/puppeteer/api/*.py text eol=lf

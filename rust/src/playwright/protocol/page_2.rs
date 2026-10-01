@@ -10,6 +10,125 @@ use crate::playwright::connection::{
     Binary, Channel, ChannelType, ObjectRef, ProtocolError, ProtocolEvent, Ref,
 };
 
+/// Payload of the `Page.frameDetached` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PageFrameDetachedEventParams {
+    #[serde(rename = "frame")]
+    pub frame: Ref<Frame>,
+}
+
+/// Payload of the `Page.locatorHandlerTriggered` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PageLocatorHandlerTriggeredEventParams {
+    #[serde(rename = "uid")]
+    pub uid: i64,
+}
+
+/// Payload of the `Page.route` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PageRouteEventParams {
+    #[serde(rename = "route")]
+    pub route: Ref<Route>,
+}
+
+/// Payload of the `Page.screencastFrame` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PageScreencastFrameEventParams {
+    #[serde(rename = "frameId")]
+    pub frame_id: i64,
+    #[serde(rename = "data")]
+    pub data: Binary,
+    #[serde(rename = "timestamp")]
+    pub timestamp: f64,
+    #[serde(rename = "viewportWidth")]
+    pub viewport_width: i64,
+    #[serde(rename = "viewportHeight")]
+    pub viewport_height: i64,
+}
+
+/// Payload of the `Page.webSocketRoute` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PageWebSocketRouteEventParams {
+    #[serde(rename = "webSocketRoute")]
+    pub web_socket_route: Ref<WebSocketRoute>,
+}
+
+/// Payload of the `Page.webSocket` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PageWebSocketEventParams {
+    #[serde(rename = "webSocket")]
+    pub web_socket: Ref<WebSocket>,
+}
+
+/// Payload of the `Page.worker` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PageWorkerEventParams {
+    #[serde(rename = "worker")]
+    pub worker: Ref<Worker>,
+}
+
+/// Events a `Page` channel can emit.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PageEvent {
+    /// `Page.bindingCall`
+    BindingCall(PageBindingCallEventParams),
+    /// `Page.close`
+    Close,
+    /// `Page.crash`
+    Crash,
+    /// `Page.download`
+    Download(PageDownloadEventParams),
+    /// `Page.viewportSizeChanged`
+    ViewportSizeChanged(PageViewportSizeChangedEventParams),
+    /// `Page.fileChooser`
+    FileChooser(PageFileChooserEventParams),
+    /// `Page.frameAttached`
+    FrameAttached(PageFrameAttachedEventParams),
+    /// `Page.frameDetached`
+    FrameDetached(PageFrameDetachedEventParams),
+    /// `Page.locatorHandlerTriggered`
+    LocatorHandlerTriggered(PageLocatorHandlerTriggeredEventParams),
+    /// `Page.route`
+    Route(PageRouteEventParams),
+    /// `Page.screencastFrame`
+    ScreencastFrame(PageScreencastFrameEventParams),
+    /// `Page.webSocketRoute`
+    WebSocketRoute(PageWebSocketRouteEventParams),
+    /// `Page.webSocket`
+    WebSocket(PageWebSocketEventParams),
+    /// `Page.worker`
+    Worker(PageWorkerEventParams),
+    /// An event this binding does not know (a newer driver).
+    Unknown {
+        /// Event name.
+        method: String,
+        /// Raw event parameters.
+        params: serde_json::Value,
+    },
+}
+
+impl ProtocolEvent for PageEvent {
+    fn parse(method: &str, params: serde_json::Value) -> Result<Self, serde_json::Error> {
+        match method {
+            "bindingCall" => Ok(Self::BindingCall(serde_json::from_value(params)?)),
+            "close" => Ok(Self::Close),
+            "crash" => Ok(Self::Crash),
+            "download" => Ok(Self::Download(serde_json::from_value(params)?)),
+            "viewportSizeChanged" => Ok(Self::ViewportSizeChanged(serde_json::from_value(params)?)),
+            "fileChooser" => Ok(Self::FileChooser(serde_json::from_value(params)?)),
+            "frameAttached" => Ok(Self::FrameAttached(serde_json::from_value(params)?)),
+            "frameDetached" => Ok(Self::FrameDetached(serde_json::from_value(params)?)),
+            "locatorHandlerTriggered" => Ok(Self::LocatorHandlerTriggered(serde_json::from_value(params)?)),
+            "route" => Ok(Self::Route(serde_json::from_value(params)?)),
+            "screencastFrame" => Ok(Self::ScreencastFrame(serde_json::from_value(params)?)),
+            "webSocketRoute" => Ok(Self::WebSocketRoute(serde_json::from_value(params)?)),
+            "webSocket" => Ok(Self::WebSocket(serde_json::from_value(params)?)),
+            "worker" => Ok(Self::Worker(serde_json::from_value(params)?)),
+            _ => Ok(Self::Unknown { method: method.to_string(), params }),
+        }
+    }
+}
+
 /// Channel for the `Page` interface (`page.yml`).
 #[derive(Debug, Clone)]
 pub struct Page {

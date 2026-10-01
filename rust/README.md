@@ -79,7 +79,7 @@ async fn main() -> anyhow::Result<()> {
 - **Element visibility and scroll management**
 - **Click, fill, and other interaction support with verification**
 - **Managed downloads whose files outlive the browser**
-- **Portable trace bundles, readable from every supported language**
+- **Portable trace bundles, recorded and read the same way in every supported language**
 - **Async/await support with Tokio**
 
 ## API Reference
@@ -535,8 +535,28 @@ include `--no-sandbox` in `reference_args` so both captures use the same setting
 ### Portable Traces
 
 A trace is one versioned directory - manifest, ordered NDJSON timeline,
-per-checkpoint DOM snapshots and the mutation batches between them - so a bundle
-recorded by a JavaScript run reads back here:
+per-checkpoint DOM snapshots and the mutation batches between them. Rust records
+the same bundle JavaScript and Python do, over any engine adapter:
+
+```rust
+use std::sync::Arc;
+use browser_commander::traces::{
+    start_trace, write_trace_viewer, AdapterTracePage, TraceMode, TraceOptions,
+};
+
+let mut options = TraceOptions::new("/tmp/traces/checkout");
+options.mode = TraceMode::CONTINUOUS.into(); // DOM mutations between checkpoints
+let trace = start_trace(Arc::new(AdapterTracePage::new(page.clone())), options).await?;
+
+trace.traced("goto", Some("checkout"), page.goto("https://example.com/checkout")).await?;
+trace.checkpoint("cart loaded").await?;
+let finished = trace.stop().await?;
+write_trace_viewer(&finished.path)?; // viewer.html, opens offline
+```
+
+`record_scenario` keeps a run's bundle only when the run fails, like
+`trace: 'retain-on-failure'` in JavaScript. A bundle reads back the same
+whichever language recorded it:
 
 ```rust
 use browser_commander::traces::{diff_control_state, read_trace};
@@ -555,8 +575,9 @@ for change in diff_control_state(before.as_ref(), after.as_ref()) {
 }
 ```
 
-Recording is JavaScript-only today; `docs/feature-parity.md` lists that gap along
-with the rest.
+With chromiumoxide, Rust records page activity except downloads, and mutation
+batches from the main frame only; `docs/feature-parity.md` lists these gaps
+along with the rest.
 
 ### Truthful Click Results
 
@@ -603,7 +624,7 @@ let result: String = evaluate(&page, "document.title").await?;
 - `utilities` - General utilities (URL handling, wait operations)
 - `high_level` - High-level DRY utilities
 - `downloads` - Managed downloads that outlive the browser
-- `traces` - Reading portable trace bundles
+- `traces` - Recording, reading and exporting portable trace bundles
 
 ## Prelude
 

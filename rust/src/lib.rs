@@ -45,7 +45,8 @@
 //! - [`fingerprint`] - Fingerprint parity with a hand-started browser (profiles,
 //!   presets, automation parity)
 //! - [`puppeteer`] - Typed Puppeteer API over the JavaScript CLI's bridge
-//! - [`traces`] - Reading privacy-aware portable trace bundles
+//! - [`traces`] - Recording, reading and exporting privacy-aware portable trace
+//!   bundles
 //! - [`utilities`] - General utilities (URL handling, wait operations)
 //! - [`high_level`] - High-level DRY utilities
 
@@ -116,12 +117,17 @@ pub use fingerprint::{
 };
 
 // Reading trace bundles needs no engine, so the reader is available at the
-// crate root like any other pure helper.
+// crate root like any other pure helper; recording sits beside it.
 pub use traces::{
     diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, ParsedNdjson,
     Trace, TraceCheckpoint, TraceCheckpointReason, TraceError, TraceEvent, TraceFiles,
     TraceLiveState, TraceManifest, TraceMode, TraceMutationKind, TraceOutcome, TraceReplaySupport,
     TRACE_EVENT_SOURCES, TRACE_FORMAT, TRACE_SCHEMA_VERSION,
+};
+pub use traces::{
+    start_trace, trace_links, write_trace_links, write_trace_viewer, AdapterTracePage,
+    TraceCheckpointOptions, TraceLinksOptions, TraceOptions, TraceRecordError, TraceRecorder,
+    TraceResult, TraceStopOptions,
 };
 
 /// Prelude module for convenient imports.
@@ -181,10 +187,11 @@ pub mod prelude {
         ScrollOptions, ScrollResult,
     };
     pub use crate::traces::{
-        diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, Trace,
-        TraceCheckpoint, TraceCheckpointReason, TraceError, TraceEvent, TraceFiles, TraceLiveState,
-        TraceManifest, TraceMode, TraceMutationKind, TraceOutcome, TraceReplaySupport,
-        TRACE_SCHEMA_VERSION,
+        diff_control_state, parse_ndjson, read_trace, start_trace, write_trace_viewer,
+        AdapterTracePage, ControlChange, ControlChangeKind, Trace, TraceCheckpoint,
+        TraceCheckpointReason, TraceError, TraceEvent, TraceFiles, TraceLiveState, TraceManifest,
+        TraceMode, TraceMutationKind, TraceOptions, TraceOutcome, TraceRecorder,
+        TraceReplaySupport, TRACE_SCHEMA_VERSION,
     };
     pub use crate::utilities::{
         evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin, unfocus_address_bar,

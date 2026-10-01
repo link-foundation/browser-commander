@@ -12,12 +12,16 @@ use std::time::Duration;
 use async_trait::async_trait;
 use chromiumoxide::cdp::browser_protocol::page::PrintToPdfParams;
 use chromiumoxide::{Browser as CdpBrowser, Page as CdpPage};
+use futures::stream::BoxStream;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 
+use crate::browser::chromiumoxide_trace;
 use crate::browser::media::ColorScheme;
 use crate::browser::storage_state::{restore_script, StorageState};
-use crate::core::engine::{ElementInfo, EngineAdapter, EngineError, EngineType, PdfOptions};
+use crate::core::engine::{
+    ElementInfo, EngineAdapter, EngineError, EngineType, PdfOptions, TraceEngineEvent,
+};
 
 /// A [`EngineAdapter`] that drives a Chromium browser through
 /// `chromiumoxide`.
@@ -599,6 +603,18 @@ impl EngineAdapter for ChromiumoxidePage {
             .await
             .map_err(to_engine_error)?;
         Ok(())
+    }
+
+    async fn add_init_script(&self, script: &str) -> Result<Option<String>, EngineError> {
+        chromiumoxide_trace::add_init_script(&self.page, script).await
+    }
+
+    async fn remove_init_script(&self, identifier: &str) -> Result<(), EngineError> {
+        chromiumoxide_trace::remove_init_script(&self.page, identifier).await
+    }
+
+    async fn trace_events(&self) -> Option<BoxStream<'static, TraceEngineEvent>> {
+        chromiumoxide_trace::trace_events(&self.page).await
     }
 }
 

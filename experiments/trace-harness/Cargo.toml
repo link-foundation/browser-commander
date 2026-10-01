@@ -1,0 +1,43 @@
+# Compiles the Rust trace recorder (rust/src/traces) and the engine trait it
+# drives without chromiumoxide, whose CDP crate needs more memory than small
+# machines have. The sources are the crate's own, included by path.
+# Run with: CARGO_TARGET_DIR=/tmp/trace-harness-target CARGO_BUILD_JOBS=2 cargo test
+[package]
+name = "trace-harness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[lib]
+# Named like the real crate, so its tests compile here unchanged.
+name = "browser_commander"
+doctest = false
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+async-trait = "0.1"
+futures = "0.3"
+url = "2"
+regex = "1"
+
+[dev-dependencies]
+anyhow = "1.0"
+
+# The real crate's trace tests, compiled against the harness.
+[[test]]
+name = "trace_recorder"
+path = "../../rust/tests/trace_recorder.rs"
+
+[[test]]
+name = "trace_conformance"
+path = "../../rust/tests/trace_conformance.rs"
+
+# Type-checked only: it is #[ignore]d and the harness cannot launch Chrome.
+[[test]]
+name = "trace_record_real_browser"
+path = "../../rust/tests/trace_record_real_browser.rs"

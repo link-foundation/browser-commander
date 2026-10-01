@@ -147,6 +147,37 @@ These checks cover it:
   a password, a dialog, a navigation and DOM changes) and opens the viewer in
   it, in the Browser Parity workflow.
 
+Rust now records portable traces natively too, which completes item 3.
+`traces::start_trace` writes the same bundle as JavaScript and Python, over
+any `EngineAdapter` through `AdapterTracePage`. Like Python, it runs the
+JavaScript capture functions and viewer from `assets.json` rather than
+rewriting them. Page activity reaches the recorder through the new
+`EngineAdapter::trace_events` stream. The chromiumoxide adapter fills that
+stream from CDP navigation, console, exception, network-failure and dialog
+events, and installs the recorder's init script in every new document.
+`write_trace_viewer` and `write_trace_links` (or `TraceOptions::links` while
+recording) write the offline viewer and the Links Notation export.
+`record_scenario` keeps a bundle only when the run fails, which is what
+`retain-on-failure` means without a test runner. Two gaps remain and are
+marked in the [feature parity](feature-parity.md#portable-traces) table:
+chromiumoxide does not report downloads, and Rust drains mutation batches from
+the main frame only.
+
+These checks cover it:
+
+- `rust/tests/trace_conformance.rs` replays the conformance scenario and must
+  produce the JavaScript bundle, viewer and `.lino` bytes, and redact the URL
+  corpus the same way.
+- `rust/tests/trace_recorder.rs` covers modes, event sources, capture failures
+  and strict mode, stopping once with an error, discarding, and
+  `record_scenario`; `rust/src/browser/cdp_trace_events.rs` unit-tests the CDP
+  event translation.
+- `rust/tests/trace_record_real_browser.rs` records a real Chrome run (a
+  navigation, typing, a password, DOM changes, console output and a page error)
+  in the Browser Parity workflow.
+- `experiments/trace-harness/` compiles the trace sources and tests without
+  chromiumoxide, for machines whose memory cannot build its CDP crate.
+
 See the [CI investigation](issue-110-ci-investigation.md) for the failed runs,
 exact errors and reproducing checks addressed in this continuation.
 

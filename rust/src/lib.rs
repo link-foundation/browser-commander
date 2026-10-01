@@ -55,6 +55,7 @@ pub mod elements;
 pub mod fingerprint;
 pub mod high_level;
 pub mod interactions;
+pub mod playwright;
 pub mod traces;
 pub mod utilities;
 

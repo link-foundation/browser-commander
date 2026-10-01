@@ -393,6 +393,13 @@ impl ManagedProcess {
     }
 }
 
+/// Kill a command-stream child and every process in its group (Unix) or tree
+/// (Windows), synchronously. For owners of a raw command-stream
+/// `ProcessRunner`, such as the Playwright driver pipe.
+pub(crate) fn kill_owned_process_tree(pid: u32) {
+    process_cleanup::kill_owned_process_tree(pid);
+}
+
 impl Drop for ManagedProcess {
     fn drop(&mut self) {
         // Drop can run after its Tokio runtime has shut down. An async kill

@@ -527,6 +527,22 @@ function mergeSeedCookies(seedCookies, migratedCookies) {
     : seedCookies;
 }
 
+// Runs a launch step and, if it throws, removes the profile this launch
+// created before rethrowing. A caller-supplied profile is never removed.
+async function removingTemporaryProfileOnError(
+  { userDataDir, temporaryProfile },
+  step
+) {
+  try {
+    return await step();
+  } catch (error) {
+    if (temporaryProfile) {
+      await removeUserDataDir(userDataDir);
+    }
+    throw error;
+  }
+}
+
 export async function launchAndConnectRealBrowserWithDependencies(
   options = {},
   dependencies = {}
@@ -602,23 +618,18 @@ export async function launchAndConnectRealBrowserWithDependencies(
 
   // Migration and snapshot attach can copy a preference that enables the
   // default-browser infobar, so apply launch settings after either copy.
-  try {
-    await configureUserDataDir(userDataDir, {
+  const profile = { userDataDir, temporaryProfile };
+  await removingTemporaryProfileOnError(profile, () =>
+    configureUserDataDir(userDataDir, {
       defaultBrowserCheck,
       preferences,
       localState,
       profileDirectory: attach?.profile ?? 'Default',
-    });
-  } catch (error) {
-    if (temporaryProfile) {
-      await removeUserDataDir(userDataDir);
-    }
-    throw error;
-  }
+    })
+  );
 
-  let launched;
-  try {
-    launched = await spawnOnFreePort({
+  const launched = await removingTemporaryProfileOnError(profile, () =>
+    spawnOnFreePort({
       requestedPort: remoteDebuggingPort,
       portAttempts,
       executablePath,
@@ -628,13 +639,8 @@ export async function launchAndConnectRealBrowserWithDependencies(
       userDataDir,
       startupTimeout,
       dependencies,
-    });
-  } catch (error) {
-    if (temporaryProfile) {
-      await removeUserDataDir(userDataDir);
-    }
-    throw error;
-  }
+    })
+  );
   const { browserProcess, cdpEndpoint: resolvedCdpEndpoint } = launched;
   if (temporaryProfile) {
     // The profile goes away with the browser, also when the user closes the

@@ -126,22 +126,22 @@ async function main() {
       );
     }
 
+    // Hand the token to cargo through its own environment variable rather
+    // than `--token`: cargo deprecated the flag ("`cargo publish --token` is
+    // deprecated in favor of using `cargo login` and environment variables"),
+    // and an argv entry is visible to every process that can list ours.
+    if (token) {
+      process.env.CARGO_REGISTRY_TOKEN = token;
+    }
+
     try {
       // For multi-language repos, we need to cd into the rust directory
       // IMPORTANT: cd is a virtual command that calls process.chdir(), so we restore after
       if (needsCd({ rustRoot })) {
-        if (token) {
-          await $`cd ${rustRoot} && cargo publish --token ${token} --allow-dirty`;
-        } else {
-          await $`cd ${rustRoot} && cargo publish --allow-dirty`;
-        }
+        await $`cd ${rustRoot} && cargo publish --allow-dirty`;
         process.chdir(originalCwd);
       } else {
-        if (token) {
-          await $`cargo publish --token ${token} --allow-dirty`;
-        } else {
-          await $`cargo publish --allow-dirty`;
-        }
+        await $`cargo publish --allow-dirty`;
       }
 
       console.log(`Successfully published ${name}@${version} to crates.io`);

@@ -1,0 +1,550 @@
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	﻿2026-09-28T11:43:00.7671380Z Current runner version: '2.337.0'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7709093Z ##[group]Runner Image Provisioner
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7710458Z Hosted Compute Agent
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7711573Z Version: 20260828.587
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7712612Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7713775Z Build Date: 2026-08-28T16:44:25Z
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7715121Z Worker ID: {caa4e7fc-a2ca-43ca-aa85-382bb8108443}
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7716612Z Azure Region: eastus
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7717621Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7720298Z ##[group]Operating System
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7721327Z Ubuntu
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7722304Z 24.04.5
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7723196Z LTS
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7724086Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7725083Z ##[group]Runner Image
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7726314Z Image: ubuntu-24.04
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7727346Z Version: 20260920.314.1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7729537Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260920.314/images/ubuntu/Ubuntu2404-Readme.md
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7732295Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260920.314
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7734038Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7736194Z ##[group]GITHUB_TOKEN Permissions
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7739237Z Contents: read
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7740226Z Metadata: read
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7741158Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7744846Z Secret source: Actions
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7746673Z Cache mode: write
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.7748384Z Prepare workflow directory
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.8353915Z Prepare all required actions
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:00.8404328Z Getting action download info
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.0394519Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.2199389Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.3099356Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.4901224Z Complete job name: Fingerprint Parity (real Chrome)
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5688265Z ##[group]Run actions/checkout@v6
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5689151Z with:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5689658Z   repository: link-foundation/browser-commander
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5693750Z   token: ***
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5694176Z   ssh-strict: true
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5694616Z   ssh-user: git
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5695116Z   persist-credentials: true
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5695877Z   clean: true
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5696321Z   sparse-checkout-cone-mode: true
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5696843Z   fetch-depth: 1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5697267Z   fetch-tags: false
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5697700Z   show-progress: true
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5698140Z   lfs: false
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5698553Z   submodules: false
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5699010Z   set-safe-directory: true
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5699513Z   allow-unsafe-pr-checkout: false
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5700303Z env:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5700712Z   GIT_CONFIG_COUNT: 1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5701193Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5701802Z   GIT_CONFIG_VALUE_0: main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5702297Z   CHROME_PATH: /usr/bin/google-chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.5702822Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6799132Z Syncing repository: link-foundation/browser-commander
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6801855Z ##[group]Getting Git version info
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6803114Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6804882Z [command]/usr/bin/git version
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6897983Z git version 2.55.0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6924729Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6943216Z Temporarily overriding HOME='/home/runner/work/_temp/d2d78a2d-ec16-4377-9151-b4b1623d91b7' before making global git config changes
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6944659Z Adding repository directory to the temporary git global config as a safe directory
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.6949523Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7017101Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7021491Z ##[group]Determining repository object format
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7024216Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7025138Z ##[group]Initializing the repository
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7030555Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7147679Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7156514Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7222057Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7223429Z ##[group]Disabling automatic garbage collection
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7228150Z [command]/usr/bin/git config --local gc.auto 0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7287494Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7288899Z ##[group]Setting up auth
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7290005Z Removing SSH command configuration
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7300670Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7363645Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7857345Z Removing HTTP extra header
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7881997Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.7948512Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8275261Z Removing includeIf entries pointing to credentials config files
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8284013Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8360964Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8658451Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8723542Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8762174Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8804952Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8868255Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8909352Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8910888Z ##[group]Fetching the repository
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:01.8919504Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +25b719129bd271c555ef952e4f17643787452ffd:refs/remotes/origin/main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.4971887Z From https://github.com/link-foundation/browser-commander
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.4973416Z  * [new ref]         25b719129bd271c555ef952e4f17643787452ffd -> origin/main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.4986988Z [command]/usr/bin/git branch --list --remote origin/main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5022692Z   origin/main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5035305Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5069918Z 25b719129bd271c555ef952e4f17643787452ffd
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5079494Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5081095Z ##[group]Determining the checkout info
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5083336Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5084940Z [command]/usr/bin/git sparse-checkout disable
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5155805Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5201096Z ##[group]Checking out the ref
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.5206232Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.6617407Z Reset branch 'main'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.6622302Z branch 'main' set up to track 'origin/main'.
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.6643431Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.6703597Z [command]/usr/bin/git log -1 --format=%H
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.6741822Z 25b719129bd271c555ef952e4f17643787452ffd
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7119730Z ##[group]Run actions/setup-node@v6
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7120647Z with:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7121156Z   node-version: 24.x
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7121775Z   check-latest: false
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7132422Z   token: ***
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7132995Z   package-manager-cache: true
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7133703Z env:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7134212Z   GIT_CONFIG_COUNT: 1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7134852Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7135891Z   GIT_CONFIG_VALUE_0: main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7136597Z   CHROME_PATH: /usr/bin/google-chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.7137410Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.8785834Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:02.8788606Z ##[group]Environment details
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3007891Z node: v24.21.0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3009296Z npm: 11.19.0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3010224Z yarn: 1.22.22
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3012262Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3170104Z ##[group]Run npm ci --ignore-scripts
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3171433Z ^[[36;1mnpm ci --ignore-scripts^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3453987Z shell: /usr/bin/bash -e {0}
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3455117Z env:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3456386Z   GIT_CONFIG_COUNT: 1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3457393Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3458438Z   GIT_CONFIG_VALUE_0: main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3459433Z   CHROME_PATH: /usr/bin/google-chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:03.3460469Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.4609206Z 
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.4619213Z added 191 packages, and audited 192 packages in 4s
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.4619790Z 
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.4620251Z 42 packages are looking for funding
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.4620860Z   run `npm fund` for details
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.4625937Z 
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.4626649Z found 0 vulnerabilities
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5328926Z ##[group]Run test -x "$CHROME_PATH" || {
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5329538Z ^[[36;1mtest -x "$CHROME_PATH" || {^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5330107Z ^[[36;1m  echo "::error::no Chrome binary at $CHROME_PATH"^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5330653Z ^[[36;1m  exit 1^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5330991Z ^[[36;1m}^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5331336Z ^[[36;1m"$CHROME_PATH" --version^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5331815Z ^[[36;1mcommand -v xvfb-run >/dev/null || {^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5332504Z ^[[36;1m  echo "::error::xvfb-run is missing; the headful half needs a display"^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5333175Z ^[[36;1m  exit 1^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5333531Z ^[[36;1m}^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5414219Z shell: /usr/bin/bash -e {0}
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5414655Z env:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5414980Z   GIT_CONFIG_COUNT: 1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5415637Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5416146Z   GIT_CONFIG_VALUE_0: main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5416566Z   CHROME_PATH: /usr/bin/google-chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:07.5417077Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7440129Z Google Chrome 153.0.8010.52 
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7530221Z ##[group]Run bash ../scripts/run-with-budget-warning.sh 1200 "Fingerprint parity suite" \
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7530895Z ^[[36;1mbash ../scripts/run-with-budget-warning.sh 1200 "Fingerprint parity suite" \^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7531733Z ^[[36;1m  bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" npm run test:e2e:parity -- --reporter tap 2>&1 | tee parity.log'^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7602794Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7603662Z env:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7604044Z   GIT_CONFIG_COUNT: 1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7604451Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7604919Z   GIT_CONFIG_VALUE_0: main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7605645Z   CHROME_PATH: /usr/bin/google-chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7606081Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.7722423Z Running Fingerprint parity suite with a 1200s budget (warning at 840s).
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.9390227Z 
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.9390903Z > browser-commander@0.20.0 test:e2e:parity
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.9392297Z > node scripts/run-tests.mjs --env RUN_E2E=true tests/e2e/fingerprint-parity.e2e.test.js --reporter tap
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:08.9393207Z 
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:09.1389380Z TAP version 13
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:13.3224112Z # Subtest: E2E Tests - Fingerprint Parity (headful)
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:13.3233064Z     # Subtest: playwright is indistinguishable from a hand-started Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:13.3234630Z     ok 1 - playwright is indistinguishable from a hand-started Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:13.3235325Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:13.3236230Z       duration_ms: 1568.882812
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:13.3236684Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:13.3237616Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:14.4844347Z     # Subtest: playwright leaks navigator.webdriver once parity is turned off
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:14.4847412Z     ok 2 - playwright leaks navigator.webdriver once parity is turned off
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:14.4848101Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:14.4848497Z       duration_ms: 1160.867215
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:14.4848984Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:14.4849350Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:15.6942583Z     # Subtest: playwright presents the fingerprint profile it was launched with
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:15.6944099Z     ok 3 - playwright presents the fingerprint profile it was launched with
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:15.6945060Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:15.6946094Z       duration_ms: 1210.917503
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:15.6947042Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:15.6947640Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:16.9517382Z     # Subtest: puppeteer is indistinguishable from a hand-started Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:16.9523377Z     ok 4 - puppeteer is indistinguishable from a hand-started Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:16.9532650Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:16.9536668Z       duration_ms: 1256.86513
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:16.9537236Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:16.9537701Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:18.1370961Z     # Subtest: puppeteer leaks navigator.webdriver once parity is turned off
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:18.1380360Z     ok 5 - puppeteer leaks navigator.webdriver once parity is turned off
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:18.1401893Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:18.1402731Z       duration_ms: 1185.169453
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:18.1403453Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:18.1404060Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.2834826Z     # Subtest: puppeteer presents the fingerprint profile it was launched with
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.2836599Z     ok 6 - puppeteer presents the fingerprint profile it was launched with
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.2843805Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.2862810Z       duration_ms: 1145.908901
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.2885923Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.2887485Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.3292759Z     1..6
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.3293341Z ok 1 - E2E Tests - Fingerprint Parity (headful)
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.3293964Z   ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.3294369Z   duration_ms: 10192.300115
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.3294748Z   type: 'suite'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:19.3295055Z   ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:20.9847327Z # Subtest: E2E Tests - Fingerprint Parity (headless)
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:20.9848589Z     # Subtest: playwright is indistinguishable from a hand-started Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:20.9849540Z     ok 1 - playwright is indistinguishable from a hand-started Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:20.9850211Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:20.9850608Z       duration_ms: 1020.695971
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:20.9851101Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:20.9851475Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:22.0319194Z     # Subtest: playwright leaks navigator.webdriver once parity is turned off
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:22.0320273Z     ok 2 - playwright leaks navigator.webdriver once parity is turned off
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:22.0321468Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:22.0321882Z       duration_ms: 1046.94729
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:22.0322595Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:22.0322997Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:23.1256016Z     # Subtest: playwright presents the fingerprint profile it was launched with
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:23.1257162Z     ok 3 - playwright presents the fingerprint profile it was launched with
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:23.1257884Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:23.1260142Z       duration_ms: 1093.734997
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:23.1260634Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:23.1261000Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:24.1103462Z     # Subtest: puppeteer is indistinguishable from a hand-started Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:24.1106139Z     ok 4 - puppeteer is indistinguishable from a hand-started Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:24.1106806Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:24.1110652Z       duration_ms: 984.650593
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:24.1111042Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:24.1111260Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:25.0968351Z     # Subtest: puppeteer leaks navigator.webdriver once parity is turned off
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:25.0971994Z     ok 5 - puppeteer leaks navigator.webdriver once parity is turned off
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:25.0972619Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:25.0973006Z       duration_ms: 986.023404
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:25.0973456Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:25.0973830Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1054404Z     # Subtest: puppeteer presents the fingerprint profile it was launched with
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1055990Z     ok 6 - puppeteer presents the fingerprint profile it was launched with
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1056895Z       ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1057428Z       duration_ms: 1008.655404
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1057982Z       type: 'test'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1058469Z       ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1371085Z     1..6
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1371596Z ok 2 - E2E Tests - Fingerprint Parity (headless)
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1372276Z   ---
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1372973Z   duration_ms: 6807.902251
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1373417Z   type: 'suite'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1373793Z   ...
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1380777Z 1..2
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1381145Z # tests 12
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1386365Z # suites 2
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1386593Z # pass 12
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1386786Z # fail 0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1386980Z # cancelled 0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1387206Z # skipped 0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1387397Z # todo 0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.1387617Z # duration_ms 17094.234106
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8117141Z Fingerprint parity suite finished in 18s of its 1200s budget (exit 0).
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8163508Z ##[group]Run if grep -q '# SKIP' parity.log; then
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8163930Z ^[[36;1mif grep -q '# SKIP' parity.log; then^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8164350Z ^[[36;1m  echo "::error::the parity suite skipped a case instead of asserting it"^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8164755Z ^[[36;1m  grep '# SKIP' parity.log^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8165008Z ^[[36;1m  exit 1^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8165207Z ^[[36;1mfi^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8165809Z ^[[36;1mpassed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' parity.log | tail -1)^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8166262Z ^[[36;1mif [ "${passed:-0}" -eq 0 ]; then^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8166620Z ^[[36;1m  echo "::error::the parity suite reported no passing tests"^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8166969Z ^[[36;1m  exit 1^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8167162Z ^[[36;1mfi^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8167449Z ^[[36;1mecho "parity suite passed $passed tests against a real Chrome"^[[0m
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8230380Z shell: /usr/bin/bash -e {0}
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8230631Z env:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8230856Z   GIT_CONFIG_COUNT: 1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8231100Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8231376Z   GIT_CONFIG_VALUE_0: main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8231626Z   CHROME_PATH: /usr/bin/google-chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8231896Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8347494Z parity suite passed 12 tests against a real Chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8414719Z ##[group]Run actions/upload-artifact@v7
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8415008Z with:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8415202Z   name: parity-log
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8415686Z   path: js/parity.log
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8416148Z   retention-days: 14
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8416370Z   if-no-files-found: warn
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8416615Z   compression-level: 6
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8416828Z   overwrite: false
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8417040Z   include-hidden-files: false
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8417276Z   archive: true
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8417473Z env:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8417656Z   GIT_CONFIG_COUNT: 1
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8417881Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8418143Z   GIT_CONFIG_VALUE_0: main
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8418390Z   CHROME_PATH: /usr/bin/google-chrome
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.8418645Z ##[endgroup]
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.9810540Z With the provided path, there will be 1 file uploaded
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.9817776Z Artifact name is valid!
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:26.9818593Z Root directory input is valid!
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.1930421Z Uploading artifact: parity-log.zip
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.1986370Z Beginning upload of artifact content to blob storage
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.2551527Z Uploaded bytes 739
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.2675873Z Finished uploading artifact content to blob storage!
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.2677119Z SHA256 digest of uploaded artifact is 72ba513b232d3fc4bbd09a8794205e020a5b8b42cfcc28d03ee191ce9ce03961
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.2678036Z Finalizing artifact upload
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.5173492Z Artifact parity-log successfully finalized. Artifact ID 10968212787
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.5175102Z Artifact parity-log has been successfully uploaded! Final size is 739 bytes. Artifact ID is 10968212787
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.5178865Z Artifact download URL: https://github.com/link-foundation/browser-commander/actions/runs/36417299877/artifacts/10968212787
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.5374157Z Post job cleanup.
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.6700922Z Post job cleanup.
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.7610006Z [command]/usr/bin/git version
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.7653033Z git version 2.55.0
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.7697892Z Temporarily overriding HOME='/home/runner/work/_temp/aa5dbecc-67d2-4d87-bce1-00bedaf547d8' before making global git config changes
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.7699482Z Adding repository directory to the temporary git global config as a safe directory
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.7703476Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.7736610Z Removing SSH command configuration
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.7743674Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.7780781Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8027395Z Removing HTTP extra header
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8034654Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8082477Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8351266Z Removing includeIf entries pointing to credentials config files
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8358402Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8424263Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8425957Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8427007Z includeif.gitdir:/github/workspace/.git.path
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8427784Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8431986Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8471799Z /home/runner/work/_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8498566Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8541713Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8590597Z /home/runner/work/_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8606353Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8645346Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8680510Z /github/runner_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8697477Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8747467Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8779291Z /github/runner_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8790361Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.8831917Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.9082148Z Removing credentials config '/home/runner/work/_temp/git-credentials-2b15a259-4335-41b7-86fb-0f66bfdce419.config'
+Fingerprint Parity (real Chrome)	UNKNOWN STEP	2026-09-28T11:43:27.9238718Z Cleaning up orphan processes
+Pipeline Status	UNKNOWN STEP	﻿2026-09-28T11:43:31.9888683Z Current runner version: '2.337.0'
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9908083Z ##[group]Runner Image Provisioner
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9908643Z Hosted Compute Agent
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9909139Z Version: 20260828.587
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9909535Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9909981Z Build Date: 2026-08-28T16:44:25Z
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9910653Z Worker ID: {0e9e5730-6c21-438c-8f49-11f1c7dd8fbc}
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9911098Z Azure Region: centralus
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9911490Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9912477Z ##[group]Operating System
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9912859Z Ubuntu
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9913233Z 24.04.5
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9913558Z LTS
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9913963Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9914319Z ##[group]Runner Image
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9914695Z Image: ubuntu-24.04
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9915078Z Version: 20260920.314.1
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9915876Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260920.314/images/ubuntu/Ubuntu2404-Readme.md
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9916840Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260920.314
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9917415Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9918133Z ##[group]GITHUB_TOKEN Permissions
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9919543Z Contents: read
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9920007Z Metadata: read
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9920830Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9922287Z Secret source: Actions
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9922880Z Cache mode: write
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:31.9923475Z Prepare workflow directory
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:32.0197991Z Prepare all required actions
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:32.0231002Z Getting action download info
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:32.3109281Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:32.5820044Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.0655534Z Complete job name: Pipeline Status
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1148433Z ##[group]Run actions/checkout@v6
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1148917Z with:
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1149190Z   persist-credentials: false
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1149537Z   repository: link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1153131Z   token: ***
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1153402Z   ssh-strict: true
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1153669Z   ssh-user: git
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1153927Z   clean: true
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1154198Z   sparse-checkout-cone-mode: true
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1154518Z   fetch-depth: 1
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1154783Z   fetch-tags: false
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1155090Z   show-progress: true
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1155365Z   lfs: false
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1155635Z   submodules: false
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1155925Z   set-safe-directory: true
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1156239Z   allow-unsafe-pr-checkout: false
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1156674Z env:
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1156924Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1157218Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1157615Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1157922Z   CHROME_PATH: /usr/bin/google-chrome
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1158255Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1874148Z Syncing repository: link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1876164Z ##[group]Getting Git version info
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1876993Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1878087Z [command]/usr/bin/git version
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1958117Z git version 2.55.0
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1966697Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1980296Z Temporarily overriding HOME='/home/runner/work/_temp/d9b6addb-7695-436b-b99c-a0a6fa8333f9' before making global git config changes
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1981839Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.1985717Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2048192Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2062847Z ##[group]Determining repository object format
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2067901Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2068750Z ##[group]Initializing the repository
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2069633Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2468414Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2477471Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2655023Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2655587Z ##[group]Disabling automatic garbage collection
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2657868Z [command]/usr/bin/git config --local gc.auto 0
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2743445Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2744401Z ##[group]Setting up auth
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2745183Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2749767Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.2782109Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.3106760Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.3112027Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.3142924Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.3319689Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.3325036Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.3356030Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.3546605Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.4044299Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.4080603Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.5252184Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.5761821Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.5887571Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.5888667Z ##[group]Fetching the repository
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:33.5894268Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +25b719129bd271c555ef952e4f17643787452ffd:refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9586433Z From https://github.com/link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9586948Z  * [new ref]         25b719129bd271c555ef952e4f17643787452ffd -> origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9593516Z [command]/usr/bin/git branch --list --remote origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9622432Z   origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9629828Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9652846Z 25b719129bd271c555ef952e4f17643787452ffd
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9656636Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9657140Z ##[group]Determining the checkout info
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9657725Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:34.9661176Z [command]/usr/bin/git sparse-checkout disable
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.0321374Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.0354335Z ##[group]Checking out the ref
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.0357907Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1407089Z Reset branch 'main'
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1409999Z branch 'main' set up to track 'origin/main'.
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1426186Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1468620Z [command]/usr/bin/git log -1 --format=%H
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1494448Z 25b719129bd271c555ef952e4f17643787452ffd
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1503484Z ##[group]Removing auth
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1503881Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1510792Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1539259Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1732747Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1736897Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1769363Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1951964Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1954435Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1982207Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1982819Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1983230Z includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1983993Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.1990067Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2012466Z /home/runner/work/_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2020522Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2052762Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2077591Z /home/runner/work/_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2085015Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2117140Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2141593Z /github/runner_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2150298Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2181863Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2202991Z /github/runner_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2208021Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2238280Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2415202Z Removing credentials config '/home/runner/work/_temp/git-credentials-86418eff-be79-4fd0-b3bd-4141ff46db88.config'
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2423858Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2613591Z ##[group]Run actions/setup-node@v6
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2613841Z with:
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2614019Z   node-version: 24.x
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2614201Z   check-latest: false
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2616030Z   token: ***
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2616199Z   package-manager-cache: true
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2616392Z env:
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2616548Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2616743Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2616958Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2617153Z   CHROME_PATH: /usr/bin/google-chrome
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.2617364Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.3661161Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.3664917Z ##[group]Environment details
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.6995008Z node: v24.21.0
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.6995288Z npm: 11.19.0
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.6995526Z yarn: 1.22.22
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.6996134Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7199018Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7199295Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7456924Z shell: /usr/bin/bash -e {0}
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7457111Z env:
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7457249Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7457404Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7457595Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7457765Z   CHROME_PATH: /usr/bin/google-chrome
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7457997Z   NEEDS_JSON: {
+Pipeline Status	UNKNOWN STEP	  "parity": {
+Pipeline Status	UNKNOWN STEP	    "result": "success",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  }
+Pipeline Status	UNKNOWN STEP	}
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7458225Z   IS_MAIN: false
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7458375Z   RUN_SHA: 25b719129bd271c555ef952e4f17643787452ffd
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.7458556Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.8011645Z Failed jobs:    <none>
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.8011932Z Cancelled jobs: <none>
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.8012174Z All required jobs succeeded or were legitimately skipped.
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.8456068Z Post job cleanup.
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:35.9449136Z Post job cleanup.
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0047809Z [command]/usr/bin/git version
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0084222Z git version 2.55.0
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0121971Z Temporarily overriding HOME='/home/runner/work/_temp/ae8339c9-7b0c-4b59-9f3c-e53f2b55fa0f' before making global git config changes
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0123532Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0124636Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0148852Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0154313Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0193811Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0401511Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0406545Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0441737Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0641472Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0648652Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0682212Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-09-28T11:43:36.0995210Z Cleaning up orphan processes

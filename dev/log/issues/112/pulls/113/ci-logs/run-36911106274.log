@@ -1,0 +1,1035 @@
+Lint Repository Scripts	UNKNOWN STEP	﻿2026-10-01T19:00:46.5544060Z Current runner version: '2.337.0'
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5569479Z ##[group]Runner Image Provisioner
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5570418Z Hosted Compute Agent
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5571087Z Version: 20260901.588
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5571751Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5572581Z Build Date: 2026-09-01T19:56:44Z
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5573296Z Worker ID: {8559b4d2-8519-42a9-a112-a9eeca3498ce}
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5574050Z Azure Region: eastus2
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5574707Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5576517Z ##[group]Operating System
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5577315Z Ubuntu
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5577872Z 24.04.5
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5578442Z LTS
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5579036Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5579608Z ##[group]Runner Image
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5580261Z Image: ubuntu-24.04
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5580848Z Version: 20260927.320.1
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5582220Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5583797Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260927.320
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5584839Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5585999Z ##[group]GITHUB_TOKEN Permissions
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5589337Z Contents: read
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5590198Z Metadata: read
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5590994Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5593492Z Secret source: Actions
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5594426Z Cache mode: write
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5595523Z Prepare workflow directory
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.5979439Z Prepare all required actions
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.6027770Z Getting action download info
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.8695906Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:46.9677288Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.1509006Z Complete job name: Lint Repository Scripts
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2241964Z ##[group]Run actions/checkout@v6
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2242827Z with:
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2243332Z   repository: link-foundation/browser-commander
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2247501Z   token: ***
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2247948Z   ssh-strict: true
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2248406Z   ssh-user: git
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2248869Z   persist-credentials: true
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2249370Z   clean: true
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2249829Z   sparse-checkout-cone-mode: true
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2250359Z   fetch-depth: 1
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2250799Z   fetch-tags: false
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2251250Z   show-progress: true
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2251699Z   lfs: false
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2252112Z   submodules: false
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2252563Z   set-safe-directory: true
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2253064Z   allow-unsafe-pr-checkout: false
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2253780Z env:
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2254203Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2254680Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2255245Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.2255725Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3301281Z Syncing repository: link-foundation/browser-commander
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3303625Z ##[group]Getting Git version info
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3304884Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3306803Z [command]/usr/bin/git version
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3372463Z git version 2.55.0
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3395789Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3411511Z Temporarily overriding HOME='/home/runner/work/_temp/96a4c285-0cc4-4ea6-a0ac-89b896e14a7b' before making global git config changes
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3413581Z Adding repository directory to the temporary git global config as a safe directory
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3418258Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3472223Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3474940Z ##[group]Determining repository object format
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3477291Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3478818Z ##[group]Initializing the repository
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3488852Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3567924Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3579024Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3624331Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3625620Z ##[group]Disabling automatic garbage collection
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3628400Z [command]/usr/bin/git config --local gc.auto 0
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3663325Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3664493Z ##[group]Setting up auth
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3665577Z Removing SSH command configuration
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3672953Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.3708715Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4050742Z Removing HTTP extra header
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4068140Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4106460Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4351459Z Removing includeIf entries pointing to credentials config files
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4359487Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4399695Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4645885Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4688963Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4726342Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4767123Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4828141Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4860715Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4861503Z ##[group]Fetching the repository
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:47.4868554Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6764d1fad9822fe55ec132e38bec7681f4e16541:refs/remotes/origin/main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0762563Z From https://github.com/link-foundation/browser-commander
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0764538Z  * [new ref]         6764d1fad9822fe55ec132e38bec7681f4e16541 -> origin/main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0773169Z [command]/usr/bin/git branch --list --remote origin/main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0807626Z   origin/main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0818029Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0848880Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0859077Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0860314Z ##[group]Determining the checkout info
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0861633Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0862459Z [command]/usr/bin/git sparse-checkout disable
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0914691Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0950265Z ##[group]Checking out the ref
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.0953099Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.2735527Z Reset branch 'main'
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.2738081Z branch 'main' set up to track 'origin/main'.
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.2758460Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.2808224Z [command]/usr/bin/git log -1 --format=%H
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.2838797Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3203745Z ##[group]Run actions/setup-node@v6
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3204943Z with:
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3205856Z   node-version: 24.x
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3207165Z   check-latest: false
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3215611Z   token: ***
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3216714Z   package-manager-cache: true
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3217823Z env:
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3218740Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3219798Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3220968Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.3221964Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.4690365Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.4693409Z ##[group]Environment details
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8187833Z node: v24.21.0
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8188349Z npm: 11.19.0
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8188633Z yarn: 1.22.22
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8189288Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8330181Z ##[group]Run npm ci --ignore-scripts
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8330631Z ^[[36;1mnpm ci --ignore-scripts^[[0m
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8578667Z shell: /usr/bin/bash -e {0}
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8579028Z env:
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8579259Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8579533Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8579848Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:48.8580107Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.6723680Z 
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.6731304Z added 215 packages, and audited 216 packages in 8s
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.6732520Z 
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.6733134Z 43 packages are looking for funding
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.6733872Z   run `npm fund` for details
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.6735042Z 
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.6735438Z found 0 vulnerabilities
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.7373556Z ##[group]Run node js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.7374630Z ^[[36;1mnode js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts^[[0m
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.7471158Z shell: /usr/bin/bash -e {0}
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.7471589Z env:
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.7471906Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.7472301Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.7472766Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:56.7473135Z ##[endgroup]
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:58.8815128Z Post job cleanup.
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.0181514Z Post job cleanup.
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1103564Z [command]/usr/bin/git version
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1144876Z git version 2.55.0
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1183499Z Temporarily overriding HOME='/home/runner/work/_temp/3dbf02a7-a807-4862-9dcf-8c54bc38edbd' before making global git config changes
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1185135Z Adding repository directory to the temporary git global config as a safe directory
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1189946Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1223036Z Removing SSH command configuration
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1230426Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1268521Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1534829Z Removing HTTP extra header
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1536664Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1594825Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1865864Z Removing includeIf entries pointing to credentials config files
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1875387Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1909705Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1911294Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1912605Z includeif.gitdir:/github/workspace/.git.path
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1913779Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1922377Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1949977Z /home/runner/work/_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.1963015Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2010916Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2040645Z /home/runner/work/_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2051871Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2091528Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2123810Z /github/runner_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2132777Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2187943Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2215124Z /github/runner_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2224460Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2267314Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2512141Z Removing credentials config '/home/runner/work/_temp/git-credentials-6928290b-6e61-4cb0-bfbe-6406cb57ee16.config'
+Lint Repository Scripts	UNKNOWN STEP	2026-10-01T19:00:59.2665286Z Cleaning up orphan processes
+Secrets Scan	UNKNOWN STEP	﻿2026-10-01T19:00:40.3266246Z Current runner version: '2.337.0'
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3285616Z ##[group]Runner Image Provisioner
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3286423Z Hosted Compute Agent
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3286965Z Version: 20260901.588
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3287522Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3288157Z Build Date: 2026-09-01T19:56:44Z
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3288756Z Worker ID: {638c7866-06bc-44cf-bd69-2d5d845831fe}
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3289393Z Azure Region: centralus
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3289864Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3291232Z ##[group]Operating System
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3291758Z Ubuntu
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3292270Z 24.04.5
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3292693Z LTS
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3293108Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3294159Z ##[group]Runner Image
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3294679Z Image: ubuntu-24.04
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3295154Z Version: 20260927.320.1
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3296322Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3297708Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260927.320
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3298603Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3299601Z ##[group]GITHUB_TOKEN Permissions
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3301363Z Contents: read
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3301851Z Metadata: read
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3302325Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3304253Z Secret source: Actions
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3305095Z Cache mode: write
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.3305663Z Prepare workflow directory
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.4448249Z Prepare all required actions
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.4488786Z Getting action download info
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:40.7335455Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.0837483Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.4772245Z Complete job name: Secrets Scan
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5519254Z ##[group]Run actions/checkout@v6
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5520018Z with:
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5520803Z   repository: link-foundation/browser-commander
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5524983Z   token: ***
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5525456Z   ssh-strict: true
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5525918Z   ssh-user: git
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5526387Z   persist-credentials: true
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5526884Z   clean: true
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5527416Z   sparse-checkout-cone-mode: true
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5527960Z   fetch-depth: 1
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5528398Z   fetch-tags: false
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5528862Z   show-progress: true
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5529313Z   lfs: false
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5529744Z   submodules: false
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5530217Z   set-safe-directory: true
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5530714Z   allow-unsafe-pr-checkout: false
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5531426Z env:
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5531847Z   GIT_CONFIG_COUNT: 1
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5532389Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5533033Z   GIT_CONFIG_VALUE_0: main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.5533773Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6386574Z Syncing repository: link-foundation/browser-commander
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6388565Z ##[group]Getting Git version info
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6389357Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6390418Z [command]/usr/bin/git version
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6438111Z git version 2.55.0
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6454341Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6466440Z Temporarily overriding HOME='/home/runner/work/_temp/0c9f6220-299f-4d5a-ae06-aedfbd7b3d3a' before making global git config changes
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6472153Z Adding repository directory to the temporary git global config as a safe directory
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6474360Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6508995Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6517729Z ##[group]Determining repository object format
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6519228Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6520573Z ##[group]Initializing the repository
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6523926Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6593763Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6601540Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6637824Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6639055Z ##[group]Disabling automatic garbage collection
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6641356Z [command]/usr/bin/git config --local gc.auto 0
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6665815Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6667173Z ##[group]Setting up auth
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6668121Z Removing SSH command configuration
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6671763Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6699085Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6970156Z Removing HTTP extra header
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.6976132Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7002401Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7167669Z Removing includeIf entries pointing to credentials config files
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7174079Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7199043Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7357538Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7385611Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7410483Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7435983Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7465813Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7487085Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7487959Z ##[group]Fetching the repository
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:41.7493003Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6764d1fad9822fe55ec132e38bec7681f4e16541:refs/remotes/origin/main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6662241Z From https://github.com/link-foundation/browser-commander
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6663688Z  * [new ref]         6764d1fad9822fe55ec132e38bec7681f4e16541 -> origin/main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6672627Z [command]/usr/bin/git branch --list --remote origin/main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6695578Z   origin/main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6702021Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6721853Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6724311Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6725434Z ##[group]Determining the checkout info
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6726617Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6729213Z [command]/usr/bin/git sparse-checkout disable
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6767631Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6790142Z ##[group]Checking out the ref
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.6792461Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8150696Z Reset branch 'main'
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8154877Z branch 'main' set up to track 'origin/main'.
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8165127Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8198133Z [command]/usr/bin/git log -1 --format=%H
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8217676Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8540259Z ##[group]Run actions/setup-node@v6
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8541434Z with:
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8542627Z   node-version: 24.x
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8543740Z   check-latest: false
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8552943Z   token: ***
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8554061Z   package-manager-cache: true
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8555131Z env:
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8555974Z   GIT_CONFIG_COUNT: 1
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8556992Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8558132Z   GIT_CONFIG_VALUE_0: main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.8559082Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.9735958Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:42.9744379Z ##[group]Environment details
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.2999198Z node: v24.21.0
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3000295Z npm: 11.19.0
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3001094Z yarn: 1.22.22
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3002893Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3138331Z ##[group]Run npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3141596Z ^[[36;1mnpx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"^[[0m
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3304500Z shell: /usr/bin/bash -e {0}
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3305487Z env:
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3306222Z   GIT_CONFIG_COUNT: 1
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3307207Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3308271Z   GIT_CONFIG_VALUE_0: main
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:43.3309239Z ##[endgroup]
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:47.9242107Z Post job cleanup.
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.0379117Z Post job cleanup.
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1101374Z [command]/usr/bin/git version
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1121575Z git version 2.55.0
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1153346Z Temporarily overriding HOME='/home/runner/work/_temp/d3cd5847-333d-4aff-bbd6-8d4e8725d160' before making global git config changes
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1154849Z Adding repository directory to the temporary git global config as a safe directory
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1159080Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1182783Z Removing SSH command configuration
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1188001Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1214542Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1386036Z Removing HTTP extra header
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1390598Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1417502Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1595461Z Removing includeIf entries pointing to credentials config files
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1597201Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1612384Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1614044Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1615036Z includeif.gitdir:/github/workspace/.git.path
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1616026Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1638966Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1645567Z /home/runner/work/_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1654457Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1685561Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1704244Z /home/runner/work/_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1713460Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1741097Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1756881Z /github/runner_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1764052Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1789064Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1805446Z /github/runner_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1812934Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.1842985Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.2037917Z Removing credentials config '/home/runner/work/_temp/git-credentials-dc1f5a48-0415-4b11-9c0e-831989468681.config'
+Secrets Scan	UNKNOWN STEP	2026-10-01T19:00:48.2162322Z Cleaning up orphan processes
+Validate Documentation	UNKNOWN STEP	﻿2026-10-01T19:00:39.8602089Z Current runner version: '2.337.0'
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8637553Z ##[group]Runner Image Provisioner
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8639125Z Hosted Compute Agent
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8640142Z Version: 20260901.588
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8641173Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8642571Z Build Date: 2026-09-01T19:56:44Z
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8644046Z Worker ID: {901b4aa0-6fb0-4309-8330-7cc8796a3f3c}
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8645548Z Azure Region: eastus
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8646597Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8648941Z ##[group]Operating System
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8650213Z Ubuntu
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8651161Z 24.04.5
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8652214Z LTS
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8653437Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8654417Z ##[group]Runner Image
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8655658Z Image: ubuntu-24.04
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8656723Z Version: 20260927.320.1
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8659046Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8661902Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260927.320
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8664000Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8666043Z ##[group]GITHUB_TOKEN Permissions
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8669134Z Contents: read
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8670153Z Metadata: read
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8671280Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8674441Z Secret source: Actions
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8676043Z Cache mode: write
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.8677851Z Prepare workflow directory
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.9240430Z Prepare all required actions
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:39.9311236Z Getting action download info
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.1639949Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.3765391Z Complete job name: Validate Documentation
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4535316Z ##[group]Run actions/checkout@v6
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4536189Z with:
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4536702Z   repository: link-foundation/browser-commander
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4540475Z   token: ***
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4541004Z   ssh-strict: true
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4541456Z   ssh-user: git
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4542025Z   persist-credentials: true
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4542525Z   clean: true
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4542987Z   sparse-checkout-cone-mode: true
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4543706Z   fetch-depth: 1
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4544158Z   fetch-tags: false
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4544613Z   show-progress: true
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4545065Z   lfs: false
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4545486Z   submodules: false
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4545937Z   set-safe-directory: true
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4546448Z   allow-unsafe-pr-checkout: false
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4547227Z env:
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4547648Z   GIT_CONFIG_COUNT: 1
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4548141Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4548743Z   GIT_CONFIG_VALUE_0: main
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.4549233Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5550403Z Syncing repository: link-foundation/browser-commander
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5553052Z ##[group]Getting Git version info
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5554646Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5556650Z [command]/usr/bin/git version
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5643290Z git version 2.55.0
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5667539Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5688736Z Temporarily overriding HOME='/home/runner/work/_temp/5d36fe21-aea3-4ab4-a700-a712ba11fb3d' before making global git config changes
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5691073Z Adding repository directory to the temporary git global config as a safe directory
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5696312Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5754035Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5757519Z ##[group]Determining repository object format
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5759657Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5760926Z ##[group]Initializing the repository
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5764609Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5901085Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5914326Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5968919Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5970247Z ##[group]Disabling automatic garbage collection
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.5974488Z [command]/usr/bin/git config --local gc.auto 0
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6007479Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6008826Z ##[group]Setting up auth
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6009809Z Removing SSH command configuration
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6016738Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6060760Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6481945Z Removing HTTP extra header
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6489175Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6527196Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6751371Z Removing includeIf entries pointing to credentials config files
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6758851Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.6796660Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.7098036Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.7102071Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.7138469Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.7181351Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.7225624Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.7267775Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.7269270Z ##[group]Fetching the repository
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:40.7273471Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6764d1fad9822fe55ec132e38bec7681f4e16541:refs/remotes/origin/main
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4159494Z From https://github.com/link-foundation/browser-commander
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4160549Z  * [new ref]         6764d1fad9822fe55ec132e38bec7681f4e16541 -> origin/main
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4168456Z [command]/usr/bin/git branch --list --remote origin/main
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4200279Z   origin/main
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4210254Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4235666Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4239477Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4240031Z ##[group]Determining the checkout info
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4240807Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4245399Z [command]/usr/bin/git sparse-checkout disable
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4298968Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4329626Z ##[group]Checking out the ref
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.4333471Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6058478Z Reset branch 'main'
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6063462Z branch 'main' set up to track 'origin/main'.
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6080986Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6129564Z [command]/usr/bin/git log -1 --format=%H
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6158811Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6382149Z ##[group]Run bash scripts/check-required-docs.sh
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6382700Z ^[[36;1mbash scripts/check-required-docs.sh^[[0m
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6666798Z shell: /usr/bin/bash -e {0}
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6667270Z env:
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6667640Z   GIT_CONFIG_COUNT: 1
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6668050Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6668505Z   GIT_CONFIG_VALUE_0: main
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6668887Z ##[endgroup]
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.6791687Z Checking required documentation in ....
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.7080463Z All required documents and sections are present.
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.7225827Z Post job cleanup.
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8175333Z [command]/usr/bin/git version
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8221759Z git version 2.55.0
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8271303Z Temporarily overriding HOME='/home/runner/work/_temp/8db43088-9e0c-477d-b87b-c206bb258cf2' before making global git config changes
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8273762Z Adding repository directory to the temporary git global config as a safe directory
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8278919Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8322215Z Removing SSH command configuration
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8332171Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8369808Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8630227Z Removing HTTP extra header
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8637178Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8676148Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8939399Z Removing includeIf entries pointing to credentials config files
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8947340Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8980641Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8982107Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8983480Z includeif.gitdir:/github/workspace/.git.path
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8984571Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.8990990Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9017553Z /home/runner/work/_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9030991Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9079494Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9109939Z /home/runner/work/_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9122685Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9167325Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9199264Z /github/runner_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9210309Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9251433Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9277936Z /github/runner_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9288024Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9327266Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9559983Z Removing credentials config '/home/runner/work/_temp/git-credentials-f83ca1c4-5872-4385-b2c7-8964e3121122.config'
+Validate Documentation	UNKNOWN STEP	2026-10-01T19:00:41.9703913Z Cleaning up orphan processes
+Check File Line Limits	UNKNOWN STEP	﻿2026-10-01T19:00:39.8286232Z Current runner version: '2.337.0'
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8319996Z ##[group]Runner Image Provisioner
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8321197Z Hosted Compute Agent
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8322069Z Version: 20260901.588
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8322947Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8323931Z Build Date: 2026-09-01T19:56:44Z
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8324984Z Worker ID: {7ca0cc38-b39c-4eeb-99f9-1c4e846ea697}
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8326047Z Azure Region: northcentralus
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8327153Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8329061Z ##[group]Operating System
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8329923Z Ubuntu
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8330751Z 24.04.5
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8331416Z LTS
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8332129Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8332890Z ##[group]Runner Image
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8333710Z Image: ubuntu-24.04
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8334552Z Version: 20260927.320.1
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8336287Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8338667Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260927.320
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8339962Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8341581Z ##[group]GITHUB_TOKEN Permissions
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8344251Z Contents: read
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8345081Z Metadata: read
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8345833Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8348731Z Secret source: Actions
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8350120Z Cache mode: write
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8351030Z Prepare workflow directory
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8796309Z Prepare all required actions
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:39.8867607Z Getting action download info
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.1491153Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3211228Z Complete job name: Check File Line Limits
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3880392Z ##[group]Run actions/checkout@v6
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3881259Z with:
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3881837Z   repository: link-foundation/browser-commander
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3885762Z   token: ***
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3886263Z   ssh-strict: true
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3887096Z   ssh-user: git
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3887819Z   persist-credentials: true
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3888376Z   clean: true
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3888914Z   sparse-checkout-cone-mode: true
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3889505Z   fetch-depth: 1
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3889999Z   fetch-tags: false
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3890569Z   show-progress: true
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3891117Z   lfs: false
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3891617Z   submodules: false
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3892189Z   set-safe-directory: true
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3892755Z   allow-unsafe-pr-checkout: false
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3893605Z env:
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3894083Z   GIT_CONFIG_COUNT: 1
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3894638Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3895367Z   GIT_CONFIG_VALUE_0: main
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.3895934Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.4870352Z Syncing repository: link-foundation/browser-commander
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.4872319Z ##[group]Getting Git version info
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.4873179Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.4875005Z [command]/usr/bin/git version
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.4973378Z git version 2.55.0
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.4999433Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5017586Z Temporarily overriding HOME='/home/runner/work/_temp/2157c0ac-e780-4507-8559-f6da50ca4593' before making global git config changes
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5027827Z Adding repository directory to the temporary git global config as a safe directory
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5036458Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5079146Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5082887Z ##[group]Determining repository object format
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5085091Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5090856Z ##[group]Initializing the repository
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5091839Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5184288Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5193765Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5251942Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5252857Z ##[group]Disabling automatic garbage collection
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5258076Z [command]/usr/bin/git config --local gc.auto 0
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5289661Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5290676Z ##[group]Setting up auth
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5291457Z Removing SSH command configuration
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5298860Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5330955Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5682312Z Removing HTTP extra header
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5690416Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5726034Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5920050Z Removing includeIf entries pointing to credentials config files
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5926475Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.5955983Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.6143616Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.6179472Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.6210446Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.6244516Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.6278349Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.6305856Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.6307087Z ##[group]Fetching the repository
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:40.6314001Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6764d1fad9822fe55ec132e38bec7681f4e16541:refs/remotes/origin/main
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6888043Z From https://github.com/link-foundation/browser-commander
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6890267Z  * [new ref]         6764d1fad9822fe55ec132e38bec7681f4e16541 -> origin/main
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6894203Z [command]/usr/bin/git branch --list --remote origin/main
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6919885Z   origin/main
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6928174Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6948195Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6953046Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6955363Z ##[group]Determining the checkout info
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6958175Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.6959839Z [command]/usr/bin/git sparse-checkout disable
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.7011258Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.7041246Z ##[group]Checking out the ref
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.7044392Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.8669212Z Reset branch 'main'
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.8673792Z branch 'main' set up to track 'origin/main'.
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.8687018Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.8726955Z [command]/usr/bin/git log -1 --format=%H
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.8750332Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9007458Z ##[group]Run bash scripts/check-file-line-limits.sh
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9009491Z ^[[36;1mbash scripts/check-file-line-limits.sh^[[0m
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9216002Z shell: /usr/bin/bash -e {0}
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9217579Z env:
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9219080Z   GIT_CONFIG_COUNT: 1
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9220373Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9221850Z   GIT_CONFIG_VALUE_0: main
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9223133Z ##[endgroup]
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:41.9341065Z Checking tracked source, documentation and workflow files against the 1500 line limit...
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.8288992Z 
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.8289888Z All checked files are within the 1500 line limit!
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.8444538Z Post job cleanup.
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9277932Z [command]/usr/bin/git version
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9317701Z git version 2.55.0
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9355279Z Temporarily overriding HOME='/home/runner/work/_temp/e1e6501f-879d-4e16-9b30-b3ba4ed7b85e' before making global git config changes
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9357532Z Adding repository directory to the temporary git global config as a safe directory
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9366453Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9390091Z Removing SSH command configuration
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9397164Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9432074Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9640897Z Removing HTTP extra header
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9646438Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9682970Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9903063Z Removing includeIf entries pointing to credentials config files
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9904024Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9932578Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9935329Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9937836Z includeif.gitdir:/github/workspace/.git.path
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9940995Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9944367Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9963862Z /home/runner/work/_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:43.9976075Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0012802Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0034003Z /home/runner/work/_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0043694Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0078845Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0099216Z /github/runner_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0108051Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0140992Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0161422Z /github/runner_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0170267Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0206977Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0425395Z Removing credentials config '/home/runner/work/_temp/git-credentials-eb33b857-bda9-47b0-b3ef-b17163dfc22f.config'
+Check File Line Limits	UNKNOWN STEP	2026-10-01T19:00:44.0561775Z Cleaning up orphan processes
+Check Shared Fingerprint Assets	UNKNOWN STEP	﻿2026-10-01T19:00:40.7001772Z Current runner version: '2.337.0'
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7028100Z ##[group]Runner Image Provisioner
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7028936Z Hosted Compute Agent
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7029645Z Version: 20260901.588
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7030530Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7031394Z Build Date: 2026-09-01T19:56:44Z
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7032084Z Worker ID: {7e6e26fb-39f3-4827-914b-7280890bf332}
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7032779Z Azure Region: westus
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7033465Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7034964Z ##[group]Operating System
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7035660Z Ubuntu
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7036192Z 24.04.5
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7036690Z LTS
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7037244Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7037861Z ##[group]Runner Image
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7038536Z Image: ubuntu-24.04
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7039120Z Version: 20260927.320.1
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7040599Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7042245Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260927.320
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7043245Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7044337Z ##[group]GITHUB_TOKEN Permissions
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7046298Z Contents: read
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7046967Z Metadata: read
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7047524Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7050062Z Secret source: Actions
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7051264Z Cache mode: write
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7052062Z Prepare workflow directory
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7517462Z Prepare all required actions
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:40.7566778Z Getting action download info
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.1915855Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.4275983Z Complete job name: Check Shared Fingerprint Assets
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5039331Z ##[group]Run actions/checkout@v6
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5040243Z with:
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5040973Z   repository: link-foundation/browser-commander
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5045304Z   token: ***
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5045745Z   ssh-strict: true
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5046195Z   ssh-user: git
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5046642Z   persist-credentials: true
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5047131Z   clean: true
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5047578Z   sparse-checkout-cone-mode: true
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5048111Z   fetch-depth: 1
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5048555Z   fetch-tags: false
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5049010Z   show-progress: true
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5049468Z   lfs: false
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5049882Z   submodules: false
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5050489Z   set-safe-directory: true
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5051016Z   allow-unsafe-pr-checkout: false
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5051819Z env:
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5052241Z   GIT_CONFIG_COUNT: 1
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5052725Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5053324Z   GIT_CONFIG_VALUE_0: main
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.5053809Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6101312Z Syncing repository: link-foundation/browser-commander
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6103351Z ##[group]Getting Git version info
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6104258Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6105450Z [command]/usr/bin/git version
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6188198Z git version 2.55.0
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6213176Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6241910Z Temporarily overriding HOME='/home/runner/work/_temp/9727d439-1325-4c75-81d4-1d6756e93fda' before making global git config changes
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6244572Z Adding repository directory to the temporary git global config as a safe directory
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6249497Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6307538Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6311412Z ##[group]Determining repository object format
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6313773Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6315012Z ##[group]Initializing the repository
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6318391Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6430039Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6441212Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6489192Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6490734Z ##[group]Disabling automatic garbage collection
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6494454Z [command]/usr/bin/git config --local gc.auto 0
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6557534Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6558885Z ##[group]Setting up auth
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6560045Z Removing SSH command configuration
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6568579Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6607935Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6959471Z Removing HTTP extra header
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.6967904Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7009182Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7269191Z Removing includeIf entries pointing to credentials config files
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7275962Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7317519Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7583764Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7631706Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7670566Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7721883Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7762729Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7790006Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7791726Z ##[group]Fetching the repository
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:41.7799205Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6764d1fad9822fe55ec132e38bec7681f4e16541:refs/remotes/origin/main
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.8966473Z From https://github.com/link-foundation/browser-commander
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.8968535Z  * [new ref]         6764d1fad9822fe55ec132e38bec7681f4e16541 -> origin/main
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.8991883Z [command]/usr/bin/git branch --list --remote origin/main
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9011859Z   origin/main
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9022674Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9050121Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9062007Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9062817Z ##[group]Determining the checkout info
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9063705Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9065970Z [command]/usr/bin/git sparse-checkout disable
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9127204Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9197517Z ##[group]Checking out the ref
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:42.9199855Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.0942455Z Reset branch 'main'
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.0943462Z branch 'main' set up to track 'origin/main'.
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.0956690Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1005557Z [command]/usr/bin/git log -1 --format=%H
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1034815Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1292941Z ##[group]Run bash scripts/check-shared-fingerprint-assets.sh
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1294858Z ^[[36;1mbash scripts/check-shared-fingerprint-assets.sh^[[0m
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1584358Z shell: /usr/bin/bash -e {0}
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1585460Z env:
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1586215Z   GIT_CONFIG_COUNT: 1
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1587174Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1588322Z   GIT_CONFIG_VALUE_0: main
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1589312Z ##[endgroup]
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1746441Z Checking the copies of js/extension/manifest.json...
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1765925Z ok: python/src/browser_commander/browser/extension_assets/manifest.json
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1777305Z ok: rust/src/browser/extension_relay/extension_assets/manifest.json
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1779866Z Checking the copies of js/extension/background.js...
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1789523Z ok: python/src/browser_commander/browser/extension_assets/background.js
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1800918Z ok: rust/src/browser/extension_relay/extension_assets/background.js
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1803502Z Checking the copies of js/extension/relay-handler.js...
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1814110Z ok: python/src/browser_commander/browser/extension_assets/relay-handler.js
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1825158Z ok: rust/src/browser/extension_relay/extension_assets/relay-handler.js
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1827692Z Checking the copies of js/src/parity/probe.js...
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1837286Z ok: python/src/browser_commander/parity/probe.js
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1848701Z ok: rust/src/browser/parity/probe.js
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1851001Z Checking the copies of js/src/fingerprint/init-payload.js...
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1861476Z ok: python/src/browser_commander/fingerprint/init_payload.js
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1873634Z ok: rust/src/fingerprint/init_payload.js
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1875799Z Checking the copies of js/src/fingerprint/limitations.json...
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1886438Z ok: python/src/browser_commander/fingerprint/limitations.json
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1897574Z ok: rust/src/fingerprint/limitations.json
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1899837Z Checking the copies of js/src/browser/launch-restrictions.json...
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1911146Z ok: python/src/browser_commander/browser/launch-restrictions.json
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1922383Z ok: rust/src/browser/launch-restrictions.json
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.1923753Z All shared fingerprint asset copies are identical.
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.2184545Z Post job cleanup.
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3181511Z [command]/usr/bin/git version
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3226527Z git version 2.55.0
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3272109Z Temporarily overriding HOME='/home/runner/work/_temp/d1d86894-73cd-45a5-bd6e-74062853c391' before making global git config changes
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3276861Z Adding repository directory to the temporary git global config as a safe directory
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3281183Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3329061Z Removing SSH command configuration
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3338203Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3375818Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3635733Z Removing HTTP extra header
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3642087Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3683020Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3947780Z Removing includeIf entries pointing to credentials config files
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3955277Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.3998314Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4001899Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4004112Z includeif.gitdir:/github/workspace/.git.path
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4005489Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4012740Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4042078Z /home/runner/work/_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4058012Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4105202Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4138667Z /home/runner/work/_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4153077Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4194523Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4237412Z /github/runner_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4256947Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4296782Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4324524Z /github/runner_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4336504Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4383669Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4618848Z Removing credentials config '/home/runner/work/_temp/git-credentials-1392dc49-3838-4bee-a6e0-3e8495658fcb.config'
+Check Shared Fingerprint Assets	UNKNOWN STEP	2026-10-01T19:00:43.4798443Z Cleaning up orphan processes
+Pipeline Status	UNKNOWN STEP	﻿2026-10-01T19:01:03.7823717Z Current runner version: '2.337.0'
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7849318Z ##[group]Runner Image Provisioner
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7850180Z Hosted Compute Agent
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7850855Z Version: 20260901.588
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7851582Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7852380Z Build Date: 2026-09-01T19:56:44Z
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7853367Z Worker ID: {6e877a0a-1de4-4dd3-b46e-0f051890765f}
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7854462Z Azure Region: eastus2
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7855533Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7857913Z ##[group]Operating System
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7858839Z Ubuntu
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7859559Z 24.04.5
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7860110Z LTS
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7860633Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7861331Z ##[group]Runner Image
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7862021Z Image: ubuntu-24.04
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7862668Z Version: 20260927.320.1
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7863990Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7866039Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260927.320
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7867067Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7868275Z ##[group]GITHUB_TOKEN Permissions
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7870660Z Contents: read
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7871415Z Metadata: read
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7872003Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7874153Z Secret source: Actions
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7875419Z Cache mode: write
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.7876912Z Prepare workflow directory
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.8263176Z Prepare all required actions
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:03.8311884Z Getting action download info
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.0866886Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.1888576Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.3754422Z Complete job name: Pipeline Status
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4510980Z ##[group]Run actions/checkout@v6
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4512092Z with:
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4512559Z   persist-credentials: false
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4513148Z   repository: link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4517262Z   token: ***
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4517725Z   ssh-strict: true
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4518182Z   ssh-user: git
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4518629Z   clean: true
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4519094Z   sparse-checkout-cone-mode: true
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4519629Z   fetch-depth: 1
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4520075Z   fetch-tags: false
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4520535Z   show-progress: true
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4521002Z   lfs: false
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4521424Z   submodules: false
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4521887Z   set-safe-directory: true
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4522412Z   allow-unsafe-pr-checkout: false
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4523246Z env:
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4523665Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4524171Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4524799Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.4525487Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5545161Z Syncing repository: link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5548088Z ##[group]Getting Git version info
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5549333Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5551126Z [command]/usr/bin/git version
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5592996Z git version 2.55.0
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5617159Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5631883Z Temporarily overriding HOME='/home/runner/work/_temp/f21e3f49-04af-49ba-9064-99a4384f9355' before making global git config changes
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5633516Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5647345Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5691021Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5717086Z ##[group]Determining repository object format
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5718942Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5720676Z ##[group]Initializing the repository
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5722123Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5801237Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5812057Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5860128Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5861444Z ##[group]Disabling automatic garbage collection
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5863901Z [command]/usr/bin/git config --local gc.auto 0
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5901470Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5902620Z ##[group]Setting up auth
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5903480Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5916433Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.5949103Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.6324386Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.6332107Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.6374256Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.6629041Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.6636479Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.6676703Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.6924620Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.6969534Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.7008823Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.7048985Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.7094256Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.7127383Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.7128648Z ##[group]Fetching the repository
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:04.7137102Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6764d1fad9822fe55ec132e38bec7681f4e16541:refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2115817Z From https://github.com/link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2117432Z  * [new ref]         6764d1fad9822fe55ec132e38bec7681f4e16541 -> origin/main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2136564Z [command]/usr/bin/git branch --list --remote origin/main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2165665Z   origin/main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2190711Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2210642Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2225129Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2226538Z ##[group]Determining the checkout info
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2227896Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2228697Z [command]/usr/bin/git sparse-checkout disable
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2290199Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2326594Z ##[group]Checking out the ref
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.2331037Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4122478Z Reset branch 'main'
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4129210Z branch 'main' set up to track 'origin/main'.
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4147674Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4199483Z [command]/usr/bin/git log -1 --format=%H
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4229369Z 6764d1fad9822fe55ec132e38bec7681f4e16541
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4239253Z ##[group]Removing auth
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4240119Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4245868Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4286942Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4535097Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4541479Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4583804Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4831936Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4835695Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4868820Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4873231Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4877259Z includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4880252Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4887678Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4911004Z /home/runner/work/_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4923465Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4963320Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.4993620Z /home/runner/work/_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5006209Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5075509Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5117438Z /github/runner_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5126891Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5160939Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5187874Z /github/runner_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5195934Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5233284Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5472684Z Removing credentials config '/home/runner/work/_temp/git-credentials-569fd098-7623-4283-a5d9-ce56fb50e6b4.config'
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5481290Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5916907Z ##[group]Run actions/setup-node@v6
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5918065Z with:
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5918906Z   node-version: 24.x
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5919854Z   check-latest: false
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5928497Z   token: ***
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5929436Z   package-manager-cache: true
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5930504Z env:
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5931339Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5932360Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5933531Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.5934530Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.7394377Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:05.7398106Z ##[group]Environment details
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1201090Z node: v24.21.0
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1202141Z npm: 11.19.0
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1202936Z yarn: 1.22.22
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1204817Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1397343Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1398552Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1661020Z shell: /usr/bin/bash -e {0}
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1661995Z env:
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1662836Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1663720Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1664670Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1667103Z   NEEDS_JSON: {
+Pipeline Status	UNKNOWN STEP	  "secrets-scan": {
+Pipeline Status	UNKNOWN STEP	    "result": "success",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  },
+Pipeline Status	UNKNOWN STEP	  "version-check": {
+Pipeline Status	UNKNOWN STEP	    "result": "skipped",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  },
+Pipeline Status	UNKNOWN STEP	  "file-line-limits": {
+Pipeline Status	UNKNOWN STEP	    "result": "success",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  },
+Pipeline Status	UNKNOWN STEP	  "shared-fingerprint-assets": {
+Pipeline Status	UNKNOWN STEP	    "result": "success",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  },
+Pipeline Status	UNKNOWN STEP	  "validate-docs": {
+Pipeline Status	UNKNOWN STEP	    "result": "success",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  },
+Pipeline Status	UNKNOWN STEP	  "repo-scripts-lint": {
+Pipeline Status	UNKNOWN STEP	    "result": "success",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  }
+Pipeline Status	UNKNOWN STEP	}
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1669374Z   IS_MAIN: true
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1670366Z   RUN_SHA: 6764d1fad9822fe55ec132e38bec7681f4e16541
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.1671320Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.2444228Z Failed jobs:    <none>
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.2445701Z Cancelled jobs: <none>
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.2446821Z All required jobs succeeded or were legitimately skipped.
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.2599006Z Post job cleanup.
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.4068302Z Post job cleanup.
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.4994322Z [command]/usr/bin/git version
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5038625Z git version 2.55.0
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5081074Z Temporarily overriding HOME='/home/runner/work/_temp/de86dca0-b434-4f08-9de1-0945be8cb451' before making global git config changes
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5083099Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5088479Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5130201Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5139368Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5180499Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5446581Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5452867Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5493252Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5758005Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5764520Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.5807680Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-10-01T19:01:06.6260696Z Cleaning up orphan processes

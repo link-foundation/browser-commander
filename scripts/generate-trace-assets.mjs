@@ -30,6 +30,17 @@ export const TRACE_ASSET_TARGETS = Object.freeze([
   'rust/src/traces/assets.json',
 ]);
 
+/**
+ * A function's source as written, with LF line endings.
+ *
+ * `Function.prototype.toString()` returns the text of the file, so a Windows
+ * checkout with CRLF endings would otherwise produce different assets.
+ *
+ * @param {Function} fn - The in-page function
+ * @returns {string} Its source
+ */
+const sourceOf = (fn) => fn.toString().replace(/\r\n/gu, '\n');
+
 const traces = (file) =>
   import(pathToFileURL(path.join(ROOT, 'js/src/traces', file)).href);
 
@@ -47,10 +58,10 @@ export async function renderTraceAssets() {
     recorderGlobal: capture.RECORDER_GLOBAL,
     redacted: redaction.REDACTED,
     capture: {
-      captureSnapshot: capture.captureSnapshotInPage.toString(),
-      installMutationRecorder: capture.installMutationRecorderInPage.toString(),
-      drainMutations: capture.drainMutationsInPage.toString(),
-      stopMutationRecorder: capture.stopMutationRecorderInPage.toString(),
+      captureSnapshot: sourceOf(capture.captureSnapshotInPage),
+      installMutationRecorder: sourceOf(capture.installMutationRecorderInPage),
+      drainMutations: sourceOf(capture.drainMutationsInPage),
+      stopMutationRecorder: sourceOf(capture.stopMutationRecorderInPage),
     },
     viewer: {
       style: viewer.VIEWER_STYLE,

@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import vm from 'node:vm';
 
 import { readTrace } from '../../../src/traces/reader.js';
 import { startTrace } from '../../../src/traces/recorder.js';
@@ -83,6 +84,42 @@ describe('offline trace viewer (issue #87)', () => {
     );
 
   /**
+   * Run the viewer's own script against a minimal stand-in for its document.
+   *
+   * @param {string} viewer - The rendered viewer document
+   * @returns {Object} The stand-in elements, by id
+   */
+  const runViewerScript = (viewer) => {
+    const element = () => {
+      const node = {
+        innerHTML: '',
+        textContent: '',
+        children: [],
+        listeners: {},
+        parts: {},
+        classList: { add() {}, remove() {} },
+        addEventListener: (type, listener) => {
+          node.listeners[type] = listener;
+        },
+        append: (child) => node.children.push(child),
+        querySelector: (selector) => (node.parts[selector] ??= element()),
+      };
+      return node;
+    };
+    const elements = { 'trace-data': element() };
+    elements['trace-data'].textContent = viewer.match(
+      /<script id="trace-data" type="application\/json">([\s\S]*?)<\/script>/
+    )[1];
+    const document = {
+      getElementById: (id) => (elements[id] ??= element()),
+      createElement: () => element(),
+    };
+    const ui = viewer.match(/<script>([\s\S]*?)<\/script>/)[1];
+    vm.runInNewContext(ui, { document, JSON, String, Object });
+    return elements;
+  };
+
+  /**
    * Render the viewer for a bundle recorded from one snapshot.
    *
    * @param {Object} [snapshot] - A snapshot from `makeSnapshot()`
@@ -149,6 +186,46 @@ describe('offline trace viewer (issue #87)', () => {
       assert.ok(!viewer.includes('</script><script>'));
       // The markup is still there, escaped, so a reviewer can read it.
       assert.ok(viewer.includes('\\u003cimg src=x onerror=alert(1)\\u003e'));
+    });
+
+    it('should show recorded text as text, never as the viewer’s own markup', async () => {
+      // The URL, the title, a control's value and an error message are all
+      // whatever the recorded page made them. The viewer's policy allows
+      // inline handlers for its own script, so markup reaching innerHTML
+      // would run in the reviewer's viewer.
+      const payload = '<img src=x onerror=alert(1)>';
+      const { trace, page } = await beginTrace('hostile', {
+        pageOptions: {
+          snapshot: makeSnapshot({ state: { url: payload, title: payload } }),
+        },
+      });
+      await trace.checkpoint('before');
+      page.setSnapshot(
+        makeSnapshot({
+          state: {
+            url: payload,
+            title: payload,
+            controls: [{ path: payload, tag: 'input', value: payload }],
+          },
+        })
+      );
+      await trace.checkpoint('after');
+      const stopped = await trace.stop({ error: new Error(payload) });
+
+      const ui = runViewerScript(
+        await renderTraceViewer(await readTrace(stopped.path))
+      );
+      const shown = [];
+      for (const li of ui.timeline.children) {
+        li.listeners.click();
+        shown.push(ui.details.innerHTML, ui.diff.innerHTML);
+      }
+
+      for (const html of shown) {
+        assert.ok(!html.includes('<img'), `markup reached the viewer: ${html}`);
+      }
+      // The text is still shown, escaped, so a reviewer can read it.
+      assert.ok(shown.some((html) => html.includes('&#60;img src=x')));
     });
 
     it('should escape the line separators a JavaScript parser treats as newlines', async () => {

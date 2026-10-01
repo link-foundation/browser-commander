@@ -72,6 +72,13 @@ const stepLabel = document.getElementById('step');
 let selectedCheckpoint = null;
 let mutationStep = 0;
 
+// Everything in the trace is what the recorded page made it, and the policy
+// allows inline handlers for this script, so recorded text is escaped before
+// it is put into the viewer's markup.
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => '&#' + c.charCodeAt(0) + ';');
+}
+
 function checkpointFor(event) {
   if (event.kind === 'checkpoint') return event.index;
   let latest = null;
@@ -241,15 +248,16 @@ function showCheckpoint(index) {
   const state = trace.state[index];
   const previous = trace.state[index - 1];
   details.innerHTML = state
-    ? '<table><tr><th>url</th><td>' + state.url + '</td></tr>' +
-      '<tr><th>title</th><td>' + (state.title || '') + '</td></tr>' +
+    ? '<table><tr><th>url</th><td>' + escapeHtml(state.url) + '</td></tr>' +
+      '<tr><th>title</th><td>' + escapeHtml(state.title || '') + '</td></tr>' +
       '<tr><th>controls</th><td>' + (state.controls || []).length + '</td></tr></table>'
     : '<p>no state captured</p>';
   const changes = trace.diffs[index] || [];
   diffPanel.innerHTML = previous && changes.length
     ? '<table><tr><th>control</th><th>before</th><th>after</th></tr>' +
-      changes.map((c) => '<tr><td>' + c.path + '</td><td>' + (c.before ?? '') +
-        '</td><td>' + (c.after ?? '') + '</td></tr>').join('') + '</table>'
+      changes.map((c) => '<tr><td>' + escapeHtml(c.path) + '</td><td>' +
+        escapeHtml(c.before ?? '') + '</td><td>' + escapeHtml(c.after ?? '') +
+        '</td></tr>').join('') + '</table>'
     : '<p>no control changes against the previous checkpoint</p>';
   stepLabel.textContent = (trace.mutations[index] || []).length + ' mutation batches';
 }
@@ -261,8 +269,8 @@ function select(event, element) {
   if (index != null && index !== selectedCheckpoint) showCheckpoint(index);
   if (event.kind !== 'checkpoint') {
     details.innerHTML = '<table>' + Object.entries(event)
-      .map(([k, v]) => '<tr><th>' + k + '</th><td>' + String(
-        typeof v === 'object' ? JSON.stringify(v) : v).slice(0, 400) + '</td></tr>')
+      .map(([k, v]) => '<tr><th>' + escapeHtml(k) + '</th><td>' + escapeHtml(String(
+        typeof v === 'object' ? JSON.stringify(v) : v).slice(0, 400)) + '</td></tr>')
       .join('') + '</table>';
   }
 }

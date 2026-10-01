@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,7 @@ from browser_commander.traces import (
     TraceOutcome,
     create_manifest,
     open_trace_bundle,
+    write_trace_links,
 )
 from browser_commander.traces.bundle import TRACE_FILE_MODE, TraceBundle
 
@@ -120,6 +122,37 @@ def test_keeps_a_trace_readable_for_its_owner_only(tmp_path: Path) -> None:
     for member in (TraceFiles.MANIFEST, TraceFiles.EVENTS, "checkpoints/0001.html"):
         assert Path(bundle.root, member).stat().st_mode & 0o777 == TRACE_FILE_MODE
     assert Path(bundle.root).stat().st_mode & 0o777 == 0o700
+
+
+def test_opens_every_member_in_binary_mode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Windows writes "\n" as "\r\n" through a descriptor opened without
+    # O_BINARY, so a bundle recorded there differed from every other
+    # recorder's. The flag is 0 elsewhere; a stand-in bit shows it is passed.
+    binary = 1 << 30
+    real_open = os.open
+    opened: dict[str, int] = {}
+
+    def recording_open(path: Any, flags: int, *args: Any) -> int:
+        opened[Path(path).name] = flags
+        return real_open(path, flags & ~binary, *args)
+
+    monkeypatch.setattr(os, "O_BINARY", binary, raising=False)
+    monkeypatch.setattr(os, "open", recording_open)
+    bundle = _open(tmp_path)
+    bundle.append_event({"kind": TraceEvent.CHECKPOINT})
+    bundle.write_checkpoint(1, html="<html>\n</html>")
+    bundle.close(create_manifest(mode=TraceMode.CHECKPOINTS))
+    write_trace_links(bundle.root, tmp_path / "run.lino")
+
+    assert set(opened) >= {
+        TraceFiles.EVENTS,
+        TraceFiles.MANIFEST,
+        "0001.html",
+        "run.lino",
+    }
+    assert all(flags & binary for flags in opened.values()), opened
 
 
 def test_stores_one_resource_once(tmp_path: Path) -> None:

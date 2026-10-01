@@ -91,11 +91,19 @@ def make_directories(path: Path) -> None:
             directory.mkdir(mode=TRACE_DIRECTORY_MODE)
 
 
+def open_private_file(path: str | os.PathLike[str], flags: int) -> int:
+    """Open a descriptor for a file readable by its owner only.
+
+    Windows opens a descriptor in text mode unless told otherwise, and then
+    writes every ``\n`` as ``\r\n``: a bundle would no longer be the bytes
+    every other recorder writes.
+    """
+    return os.open(path, flags | getattr(os, "O_BINARY", 0), TRACE_FILE_MODE)
+
+
 def write_private_file(path: Path, data: bytes) -> None:
     """Write a file readable by its owner only."""
-    descriptor = os.open(
-        str(path), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, TRACE_FILE_MODE
-    )
+    descriptor = open_private_file(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
     with os.fdopen(descriptor, "wb") as handle:
         handle.write(data)
 
@@ -143,10 +151,8 @@ class TraceBundle:
         self.max_event_bytes = _limit(limits, "maxEventBytes", self.max_resource_bytes)
 
         make_directories(Path(self.root))
-        self._events = os.open(
-            Path(self.root, TraceFiles.EVENTS),
-            os.O_WRONLY | os.O_APPEND | os.O_CREAT,
-            TRACE_FILE_MODE,
+        self._events = open_private_file(
+            Path(self.root, TraceFiles.EVENTS), os.O_WRONLY | os.O_APPEND | os.O_CREAT
         )
         self._closed = False
         self._written = 0

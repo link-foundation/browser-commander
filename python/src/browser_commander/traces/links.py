@@ -19,7 +19,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-from .bundle import TRACE_FILE_MODE
+from .bundle import open_private_file
 from .jsonfmt import UNDEFINED, coalesce, dumps, is_missing, js_entries, js_truthy
 from .reader import Trace, read_trace
 from .schema import TraceEvent
@@ -674,7 +674,7 @@ def write_trace_links(
     file = resolve_links_output(output)
     links = trace_links(trace, include)
     Path(file).parent.mkdir(parents=True, exist_ok=True)
-    handle = os.open(file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, TRACE_FILE_MODE)
+    handle = open_private_file(file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
     try:
         _write_text(handle, format_trace_links(links))
     finally:
@@ -703,8 +703,8 @@ class TraceLinksSink:
         self._sections = chosen_sections(list(include) if include is not None else None)
         self.problems: list[dict[str, Any]] = []
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
-        self._handle = os.open(
-            self.path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, TRACE_FILE_MODE
+        self._handle = open_private_file(
+            self.path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC
         )
         self._closed = False
         if "trace" in self._sections:

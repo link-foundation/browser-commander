@@ -50,7 +50,7 @@ const RUST_KEYWORDS = new Set(
     'for if impl in let loop match mod move mut pub ref return self static ' +
     'struct super trait true type unsafe use where while abstract become box ' +
     'do final macro override priv typeof unsized virtual yield try gen'
-  ).split(' '),
+  ).split(' ')
 );
 const PRIMITIVES = {
   string: 'String',
@@ -146,8 +146,8 @@ class Generator {
     this.definitions = definitions;
     this.interfaces = new Set(
       Object.keys(definitions).filter(
-        (name) => definitions[name].type === 'interface',
-      ),
+        (name) => definitions[name].type === 'interface'
+      )
     );
     // unit name -> array of item blocks (arrays of lines)
     this.units = new Map();
@@ -158,7 +158,9 @@ class Generator {
 
   emit(name, lines) {
     if (this.emittedNames.has(name)) {
-      throw new Error(`Generated type ${name} would be emitted twice (first: ${this.firstUnit.get(name)}, now: ${this.currentUnit})`);
+      throw new Error(
+        `Generated type ${name} would be emitted twice (first: ${this.firstUnit.get(name)}, now: ${this.currentUnit})`
+      );
     }
     this.emittedNames.add(name);
     (this.firstUnit ??= new Map()).set(name, this.currentUnit);
@@ -228,18 +230,22 @@ class Generator {
           throw new Error(`${name}.${key} names unknown mixin ${type}`);
         }
         let ident = rustIdent(type);
-        while (used.has(ident)) ident = `${ident}_mixin`;
+        while (used.has(ident)) {
+          ident = `${ident}_mixin`;
+        }
         used.add(ident);
         fields.push(
           `    /// Properties of the \`${type}\` mixin.`,
           '    #[serde(flatten)]',
-          `    pub ${ident}: ${type},`,
+          `    pub ${ident}: ${type},`
         );
         continue;
       }
       const resolved = this.resolve(type, `${name}${pascalCase(key)}`);
       let ident = rustIdent(key);
-      while (used.has(ident)) ident = `${ident}_`;
+      while (used.has(ident)) {
+        ident = `${ident}_`;
+      }
       used.add(ident);
       fields.push(`    #[serde(rename = ${rustString(key)}`);
       if (resolved.optional) {
@@ -265,9 +271,13 @@ class Generator {
     const variants = [];
     literals.forEach((literal, index) => {
       let variant = variantName(literal);
-      while (used.has(variant)) variant = `${variant}V`;
+      while (used.has(variant)) {
+        variant = `${variant}V`;
+      }
       used.add(variant);
-      if (index === 0) variants.push('    #[default]');
+      if (index === 0) {
+        variants.push('    #[default]');
+      }
       variants.push(`    #[serde(rename = ${rustString(literal)})]`);
       variants.push(`    ${variant},`);
     });
@@ -286,11 +296,13 @@ class Generator {
     const inherited = definition.extends
       ? this.members(definition.extends, kind)
       : [];
-    const own = Object.entries(definition[kind] ?? {}).map(([member, spec]) => ({
-      owner: name,
-      name: member,
-      spec: spec ?? {},
-    }));
+    const own = Object.entries(definition[kind] ?? {}).map(
+      ([member, spec]) => ({
+        owner: name,
+        name: member,
+        spec: spec ?? {},
+      })
+    );
     const ownNames = new Set(own.map((member) => member.name));
     return [
       ...inherited.filter((member) => !ownNames.has(member.name)),
@@ -324,9 +336,11 @@ class Generator {
     }
     for (const [event, spec] of Object.entries(definition.events ?? {})) {
       if (this.hasEntries(spec?.parameters)) {
-        this.emitStruct(`${name}${pascalCase(event)}EventParams`, spec.parameters, [
-          `/// Payload of the \`${name}.${event}\` event.`,
-        ]);
+        this.emitStruct(
+          `${name}${pascalCase(event)}EventParams`,
+          spec.parameters,
+          [`/// Payload of the \`${name}.${event}\` event.`]
+        );
       }
     }
 
@@ -344,12 +358,12 @@ class Generator {
       if (this.hasEntries(event.spec.parameters)) {
         eventLines.push(`    ${variant}(${payload}),`);
         parseArms.push(
-          `            ${rustString(event.name)} => Ok(Self::${variant}(serde_json::from_value(params)?)),`,
+          `            ${rustString(event.name)} => Ok(Self::${variant}(serde_json::from_value(params)?)),`
         );
       } else {
         eventLines.push(`    ${variant},`);
         parseArms.push(
-          `            ${rustString(event.name)} => Ok(Self::${variant}),`,
+          `            ${rustString(event.name)} => Ok(Self::${variant}),`
         );
       }
     }
@@ -370,12 +384,12 @@ class Generator {
       '            _ => Ok(Self::Unknown { method: method.to_string(), params }),',
       '        }',
       '    }',
-      '}',
+      '}'
     );
     this.emit(`${name}Event`, eventLines);
 
     const subtypes = Object.keys(this.definitions).filter((other) =>
-      this.isSubtype(other, name),
+      this.isSubtype(other, name)
     );
     const methods = [];
     for (const command of this.members(name, 'commands')) {
@@ -391,14 +405,14 @@ class Generator {
       methods.push(
         '',
         `    /// \`${command.owner}.${command.name}\`${flags.length ? ` (${flags.join(', ')})` : ''}.`,
-        `    pub async fn ${ident}(&self${hasParams ? `, params: ${base}Params` : ''}) -> Result<${result}, ProtocolError> {`,
+        `    pub async fn ${ident}(&self${hasParams ? `, params: ${base}Params` : ''}) -> Result<${result}, ProtocolError> {`
       );
       const params = hasParams ? '&params' : '&serde_json::json!({})';
       methods.push(
         hasResult
           ? `        self.channel.send(${rustString(command.name)}, ${params}).await`
           : `        self.channel.send_no_result(${rustString(command.name)}, ${params}).await`,
-        '    }',
+        '    }'
       );
     }
     this.emit(name, [
@@ -435,7 +449,9 @@ class Generator {
   isSubtype(candidate, ancestor) {
     let current = candidate;
     while (current) {
-      if (current === ancestor) return true;
+      if (current === ancestor) {
+        return true;
+      }
       current = this.definitions[current]?.extends;
     }
     return false;
@@ -454,7 +470,10 @@ class Generator {
           this.emitEnum(name, definition.literals ?? [], [
             `/// \`${name}\` enum from \`${definition.file}\`.`,
           ]);
-        } else if (definition.type === 'object' || definition.type === 'mixin') {
+        } else if (
+          definition.type === 'object' ||
+          definition.type === 'mixin'
+        ) {
           this.emitStruct(name, definition.properties ?? {}, [
             `/// \`${name}\` ${definition.type} from \`${definition.file}\`.`,
           ]);
@@ -487,25 +506,31 @@ class Generator {
       let part = 1;
       let current = [];
       const flush = () => {
-        if (!current.length) return;
+        if (!current.length) {
+          return;
+        }
         const module = part === 1 ? unit : `${unit}_${part}`;
         modules.push(module);
-        files.set(`${module}.rs`, [...preamble, ...current].join('\n') + '\n');
+        files.set(`${module}.rs`, `${[...preamble, ...current].join('\n')}\n`);
         part += 1;
         current = [];
       };
       for (const item of items) {
         const projected = preamble.length + current.length + item.length + 1;
-        if (current.length && projected > MAX_FILE_LINES) flush();
+        if (current.length && projected > MAX_FILE_LINES) {
+          flush();
+        }
         current.push(...item, '');
       }
-      if (current.length) current.pop();
+      if (current.length) {
+        current.pop();
+      }
       flush();
     }
     const commandCount = Object.values(this.definitions).reduce(
       (total, definition) =>
         total + Object.keys(definition.commands ?? {}).length,
-      0,
+      0
     );
     files.set(
       'mod.rs',
@@ -525,7 +550,7 @@ class Generator {
         '',
         ...modules.map((module) => `pub use ${module}::*;`),
         '',
-      ].join('\n'),
+      ].join('\n')
     );
     return files;
   }
@@ -534,7 +559,7 @@ class Generator {
 /** Generate the protocol module files as a Map of file name -> contents. */
 export function generateProtocol(
   definitions = loadSpec(),
-  version = readFileSync(path.join(SPEC_DIR, 'VERSION'), 'utf8').trim(),
+  version = readFileSync(path.join(SPEC_DIR, 'VERSION'), 'utf8').trim()
 ) {
   const generator = new Generator(definitions);
   generator.version = version;
@@ -551,26 +576,34 @@ function main(argv) {
     const problems = [];
     for (const [file, contents] of files) {
       const target = path.join(OUT_DIR, file);
-      if (!existsSync(target)) problems.push(`missing ${file}`);
-      else if (readFileSync(target, 'utf8') !== contents)
+      if (!existsSync(target)) {
+        problems.push(`missing ${file}`);
+      } else if (readFileSync(target, 'utf8') !== contents) {
         problems.push(`stale ${file}`);
+      }
     }
     for (const file of existing) {
-      if (!files.has(file)) problems.push(`unexpected ${file}`);
+      if (!files.has(file)) {
+        problems.push(`unexpected ${file}`);
+      }
     }
     if (problems.length) {
       console.error(
         `Playwright protocol bindings are out of date (${problems.join(', ')}).\n` +
-          'Run: node scripts/generate-playwright-protocol.mjs',
+          'Run: node scripts/generate-playwright-protocol.mjs'
       );
       process.exit(1);
     }
-    console.log(`Playwright protocol bindings are up to date (${files.size} files).`);
+    console.log(
+      `Playwright protocol bindings are up to date (${files.size} files).`
+    );
     return;
   }
   mkdirSync(OUT_DIR, { recursive: true });
   for (const file of existing) {
-    if (!files.has(file)) rmSync(path.join(OUT_DIR, file));
+    if (!files.has(file)) {
+      rmSync(path.join(OUT_DIR, file));
+    }
   }
   for (const [file, contents] of files) {
     writeFileSync(path.join(OUT_DIR, file), contents);

@@ -60,14 +60,24 @@ async fn typed_puppeteer_over_the_bridge() {
         assert_eq!(text, json!("héllo"));
         assert!(page.query_selector("#missing").await.unwrap().is_none());
 
-        let png = page.screenshot(Some(json!({ "type": "png" }))).await.unwrap();
-        let png = Vec::<u8>::from_wire(&client, png).unwrap();
-        assert!(png.starts_with(b"\x89PNG"), "{:?}", &png[..8.min(png.len())]);
-
-        let mut subscription = page.remote().subscribe("console").await.unwrap();
-        page.evaluate(JsFunction::source("() => console.log('from the page')"), &[])
+        let png = page
+            .screenshot(Some(json!({ "type": "png" })))
             .await
             .unwrap();
+        let png = Vec::<u8>::from_wire(&client, png).unwrap();
+        assert!(
+            png.starts_with(b"\x89PNG"),
+            "{:?}",
+            &png[..8.min(png.len())]
+        );
+
+        let mut subscription = page.remote().subscribe("console").await.unwrap();
+        page.evaluate(
+            JsFunction::source("() => console.log('from the page')"),
+            &[],
+        )
+        .await
+        .unwrap();
         let args = tokio::time::timeout(Duration::from_secs(10), subscription.next())
             .await
             .expect("a console event")

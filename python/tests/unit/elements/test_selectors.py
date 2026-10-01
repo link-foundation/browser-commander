@@ -33,7 +33,7 @@ class TestQuerySelector:
         mock_locator = MagicMock()
         mock_inner = MagicMock()
         mock_inner.count = AsyncMock(return_value=1)
-        mock_locator.first.return_value = mock_inner
+        mock_locator.first = mock_inner
         page.locator = MagicMock(return_value=mock_locator)
 
         el = await query_selector(page=page, engine="playwright", selector="button")
@@ -44,7 +44,7 @@ class TestQuerySelector:
         mock_locator = MagicMock()
         mock_inner = MagicMock()
         mock_inner.count = AsyncMock(return_value=0)
-        mock_locator.first.return_value = mock_inner
+        mock_locator.first = mock_inner
         page.locator = MagicMock(return_value=mock_locator)
 
         el = await query_selector(page=page, engine="playwright", selector="button")
@@ -57,7 +57,7 @@ class TestQuerySelector:
         mock_inner.count = AsyncMock(
             side_effect=Exception("Execution context was destroyed")
         )
-        mock_locator.first.return_value = mock_inner
+        mock_locator.first = mock_inner
         page.locator = MagicMock(return_value=mock_locator)
 
         el = await query_selector(page=page, engine="playwright", selector="button")

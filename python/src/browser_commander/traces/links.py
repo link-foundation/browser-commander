@@ -275,7 +275,7 @@ def timeline_link(event: Mapping[str, Any]) -> Link:
         _field("frame", _get(event, "frameId")),
         _field(
             "actor",
-            coalesce(_get(event, "actor"), _IMPLIED_ACTOR.get(event.get("kind"))),
+            coalesce(_get(event, "actor"), _IMPLIED_ACTOR.get(str(event.get("kind")))),
         ),
         _field("action", coalesce(_get(event, "action"), _get(event, "phase"))),
         _field(

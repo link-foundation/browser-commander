@@ -531,9 +531,9 @@ class TraceRecorder:
 
         for detach in reversed(self._detachers):
             try:
-                result = detach()
-                if hasattr(result, "__await__"):
-                    await result
+                detached = detach()
+                if hasattr(detached, "__await__"):
+                    await detached
             except Exception as detach_error:
                 self.note(f"could not detach a listener: {error_message(detach_error)}")
         self._detachers = []

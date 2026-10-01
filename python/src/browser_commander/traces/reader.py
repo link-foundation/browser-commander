@@ -10,6 +10,7 @@ same bundle answers the same questions in either language.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -207,7 +208,7 @@ def _rebuild_manifest(events: list[dict[str, Any]]) -> dict[str, Any]:
     )
 
 
-def read_trace(bundle_path: str | Path) -> Trace:
+def read_trace(bundle_path: str | os.PathLike[str]) -> Trace:
     """Open a trace bundle.
 
     Args:

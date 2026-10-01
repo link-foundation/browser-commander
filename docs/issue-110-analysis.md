@@ -22,11 +22,12 @@ below does **not** imply the implementation is complete.
 
 ## #108: native and typed cross-language parity
 
-The generated [feature matrix](feature-parity.md) currently tests 14 shared
-features. Its explicit limitations and manual “Not implemented” or
-“Not supported” cells show that the full parity requirement remains open. The
-following is the implementation plan for **every** numbered requirement in
-[#108](https://github.com/link-foundation/browser-commander/issues/108).
+The generated [feature matrix](feature-parity.md) now has one documented gap:
+the CLI script and stdio bridge are untyped by design, so callers who need
+types use the language APIs. The table below gives the plan for **every**
+numbered requirement in
+[#108](https://github.com/link-foundation/browser-commander/issues/108), and
+the section after it shows how each was delivered and which tests check it.
 
 | Requirement                                                                                                     | Existing path and proposed solution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Test/gate                                                                                                                                                                                                                                                                     |
 | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

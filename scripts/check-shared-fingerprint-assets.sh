@@ -15,6 +15,18 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Each entry is "canonical copy copy...".
 assets=(
+  "js/extension/manifest.json \
+   python/src/browser_commander/browser/extension_assets/manifest.json \
+   rust/src/browser/extension_relay/extension_assets/manifest.json"
+  "js/extension/background.js \
+   python/src/browser_commander/browser/extension_assets/background.js \
+   rust/src/browser/extension_relay/extension_assets/background.js"
+  "js/extension/relay-handler.js \
+   python/src/browser_commander/browser/extension_assets/relay-handler.js \
+   rust/src/browser/extension_relay/extension_assets/relay-handler.js"
+  "js/src/parity/probe.js \
+   python/src/browser_commander/parity/probe.js \
+   rust/src/browser/parity/probe.js"
   "js/src/fingerprint/init-payload.js \
    python/src/browser_commander/fingerprint/init_payload.js \
    rust/src/fingerprint/init_payload.js"

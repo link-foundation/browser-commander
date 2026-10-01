@@ -45,7 +45,7 @@ async def query_selector(
 
     try:
         if engine == "playwright":
-            locator = create_playwright_locator(page, selector).first()
+            locator = create_playwright_locator(page, selector).first
             count = await locator.count()
             return locator if count > 0 else None
         else:

@@ -162,13 +162,21 @@ async function wait(milliseconds) {
 
 async function acquireCredentialLock(lockPath, cachedPath, options) {
   const startedAt = options.now();
+  let contention;
   while (options.now() - startedAt <= LOCK_WAIT_MILLISECONDS) {
     try {
       return await open(lockPath, 'wx', 0o600);
     } catch (error) {
-      if (error.code !== 'EEXIST') {
+      // Windows can report EPERM while another process's unlinked lock is
+      // still pending deletion. Retry within the same bounded lock deadline.
+      // Preserve the original error if it proves to be permanent.
+      if (
+        error.code !== 'EEXIST' &&
+        !(options.platform === 'win32' && error.code === 'EPERM')
+      ) {
         throw error;
       }
+      contention = error;
       const cached = await readFreshJson(
         cachedPath,
         options.ttlSeconds,
@@ -184,7 +192,9 @@ async function acquireCredentialLock(lockPath, cachedPath, options) {
       await wait(50);
     }
   }
-  throw new Error('timed out waiting for another cookie credential reader');
+  throw new Error('timed out waiting for another cookie credential reader', {
+    cause: contention,
+  });
 }
 
 async function loadOrCreateCredential({
@@ -194,6 +204,7 @@ async function loadOrCreateCredential({
   create,
   now,
   metadata,
+  platform = process.platform,
 }) {
   if (!cache.enabled) {
     return { key: Buffer.from(await create()), savedAt: now() / 1000 };
@@ -214,6 +225,7 @@ async function loadOrCreateCredential({
     now,
     refresh,
     ttlSeconds: cache.ttlSeconds,
+    platform,
   });
   if (acquired.cached) {
     return {

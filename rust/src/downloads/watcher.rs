@@ -39,7 +39,7 @@ use crate::downloads::DownloadError;
 pub const DEFAULT_POLL_INTERVAL: Duration = Duration::from_millis(250);
 
 /// Suffixes Chromium uses while a file is still being written.
-pub const IN_PROGRESS_SUFFIXES: [&str; 3] = ["crdownload", "tmp", "partial"];
+pub const IN_PROGRESS_SUFFIXES: [&str; 4] = ["crdownload", "tmp", "partial", "part"];
 
 /// A finished download found in the staging directory.
 #[derive(Debug, Clone, PartialEq, Eq)]

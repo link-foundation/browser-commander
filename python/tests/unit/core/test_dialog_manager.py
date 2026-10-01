@@ -308,6 +308,98 @@ class TestAutoDismiss:
         assert second_called
 
 
+class TestObserveDialogs:
+    """Tests for passive dialog observers (issue #108)."""
+
+    def test_raises_when_observer_not_callable(self) -> None:
+        manager = DialogManager(
+            page=create_mock_playwright_page(),
+            engine="playwright",
+            log=create_mock_logger(),
+        )
+
+        with pytest.raises(TypeError, match="Dialog observer must be callable"):
+            manager.observe_dialogs("not callable")  # type: ignore[arg-type]
+
+    @pytest.mark.asyncio
+    async def test_observer_does_not_stop_auto_dismissal(self) -> None:
+        """Watching a dialog is not answering it."""
+        page = create_mock_playwright_page()
+        manager = DialogManager(
+            page=page, engine="playwright", log=create_mock_logger()
+        )
+        manager.start_listening()
+        seen: list[str] = []
+
+        async def observer(dialog: MagicMock) -> None:
+            seen.append(dialog.message)
+
+        manager.observe_dialogs(observer)
+        dialog = create_mock_dialog(message="watched")
+        page.emit("dialog", dialog)
+        await asyncio.sleep(0.01)
+
+        assert seen == ["watched"]
+        dialog.dismiss.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_observers_run_before_handlers(self) -> None:
+        page = create_mock_playwright_page()
+        manager = DialogManager(
+            page=page, engine="playwright", log=create_mock_logger()
+        )
+        manager.start_listening()
+        order: list[str] = []
+
+        def handler(dialog: MagicMock) -> None:
+            order.append("handler")
+
+        manager.on_dialog(handler)
+        manager.observe_dialogs(lambda _dialog: order.append("observer"))
+        dialog = create_mock_dialog()
+        page.emit("dialog", dialog)
+        await asyncio.sleep(0.01)
+
+        assert order == ["observer", "handler"]
+        # A handler was registered, so answering the dialog is its business.
+        dialog.dismiss.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_failing_observer_does_not_block_the_dialog(self) -> None:
+        page = create_mock_playwright_page()
+        manager = DialogManager(
+            page=page, engine="playwright", log=create_mock_logger()
+        )
+        manager.start_listening()
+
+        def observer(dialog: MagicMock) -> None:
+            raise RuntimeError("observer failed")
+
+        manager.observe_dialogs(observer)
+        dialog = create_mock_dialog()
+        page.emit("dialog", dialog)
+        await asyncio.sleep(0.01)
+
+        dialog.dismiss.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_returned_function_removes_the_observer(self) -> None:
+        page = create_mock_playwright_page()
+        manager = DialogManager(
+            page=page, engine="playwright", log=create_mock_logger()
+        )
+        manager.start_listening()
+        seen: list[str] = []
+
+        remove = manager.observe_dialogs(lambda dialog: seen.append(dialog.message))
+        remove()
+        remove()
+        page.emit("dialog", create_mock_dialog(message="unseen"))
+        await asyncio.sleep(0.01)
+
+        assert seen == []
+
+
 class TestIntegrationWithBrowserCommander:
     """Integration tests with BrowserCommander."""
 

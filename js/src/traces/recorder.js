@@ -110,6 +110,7 @@ export async function startTrace(options = {}) {
     commanderVersion = null,
     log = commander?.log,
     now = () => Date.now(),
+    monotonic,
   } = options;
 
   if (!page) {
@@ -150,6 +151,7 @@ export async function startTrace(options = {}) {
     limits,
     strict,
     now,
+    monotonic,
     onEvent: (event) => linksSink?.event(event),
   });
   const startedAt = new Date(now()).toISOString();
@@ -323,6 +325,7 @@ export async function startTrace(options = {}) {
     record,
     note,
     identity,
+    now,
   });
 
   // Registered before the first record, so a navigation that starts in the same

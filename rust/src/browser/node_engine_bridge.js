@@ -213,15 +213,16 @@ async function connectPlaywright(params) {
 
 async function connectPuppeteer(params) {
   const puppeteer = await import("puppeteer");
-  browser = await puppeteer.default.connect(
-    compactObject({
+  browser = await puppeteer.default.connect({
+    ...compactObject({
       browserURL: params.cdpEndpoint,
       browserWSEndpoint: params.wsEndpoint,
-      defaultViewport: null,
       slowMo: params.slowMo,
       protocolTimeout: params.protocolTimeout,
     }),
-  );
+    // Null disables Puppeteer's viewport emulation and must survive compaction.
+    defaultViewport: null,
+  });
   const pages = await browser.pages();
   page = (await pickForegroundPage(pages)) ?? (await browser.newPage());
   if (params.seedCookies?.length) {
@@ -240,6 +241,55 @@ async function applyColorScheme(colorScheme) {
         : [{ name: "prefers-color-scheme", value: colorScheme }],
     );
   }
+}
+
+function restoreOriginLocalStorage(origins) {
+  const entry = origins.find(
+    (item) => item.origin === globalThis.location.origin,
+  );
+  if (!entry) return;
+  for (const item of entry.localStorage) {
+    globalThis.localStorage.setItem(item.name, item.value);
+  }
+}
+
+async function restoreStorageState(state) {
+  const cookies = state.cookies ?? [];
+  const origins = state.origins ?? [];
+  if (engineName === "playwright") {
+    if (cookies.length) await context.addCookies(cookies);
+    if (origins.length) {
+      await context.addInitScript(restoreOriginLocalStorage, origins);
+      await Promise.all(
+        context.pages().map((current) =>
+          current.evaluate(restoreOriginLocalStorage, origins),
+        ),
+      );
+    }
+  } else {
+    if (cookies.length) await page.setCookie(...cookies);
+    if (origins.length) {
+      await page.evaluateOnNewDocument(restoreOriginLocalStorage, origins);
+      await page.evaluate(restoreOriginLocalStorage, origins);
+    }
+  }
+}
+
+async function exportStorageState() {
+  if (engineName === "playwright") return context.storageState();
+  const cookies = await page.cookies();
+  const origin = new URL(page.url()).origin;
+  const origins = [];
+  if (origin !== "null") {
+    const localStorage = await page.evaluate(() =>
+      Array.from({ length: globalThis.localStorage.length }, (_, index) => {
+        const name = globalThis.localStorage.key(index);
+        return { name, value: globalThis.localStorage.getItem(name) };
+      }),
+    );
+    origins.push({ origin, localStorage });
+  }
+  return { cookies, origins };
 }
 
 async function handleLaunch(params) {
@@ -298,6 +348,11 @@ async function handleCommand(method, params) {
       return await handleLaunch(params);
     case "connect":
       return await handleConnect(params);
+    case "restoreStorageState":
+      await restoreStorageState(params.state);
+      return null;
+    case "exportStorageState":
+      return await exportStorageState();
     case "close":
       if (browser) {
         await browser.close();
@@ -408,6 +463,21 @@ async function handleCommand(method, params) {
         el.scrollIntoView({ block: "center", inline: "center" });
       }, params.selector);
       return null;
+    case "readBrowserVersionPage": {
+      const versionPage = await (context ?? browser).newPage();
+      try {
+        await versionPage.goto("chrome://version");
+        const ready = () => document.getElementById("command_line")?.textContent;
+        if (engineName === "playwright") {
+          await versionPage.waitForFunction(ready, null, { timeout: 10000 });
+        } else {
+          await versionPage.waitForFunction(ready, { timeout: 10000 });
+        }
+        return await versionPage.evaluate(params.script);
+      } finally {
+        await versionPage.close();
+      }
+    }
     case "evaluate":
       return serializeResult(await ensurePage().evaluate(params.script));
     case "screenshot":

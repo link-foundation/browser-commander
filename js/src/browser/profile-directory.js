@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -14,6 +14,7 @@ export const FIRST_RUN_SENTINEL = 'First Run';
 
 /** Chrome's profile-wide settings file, next to the profile directories. */
 export const LOCAL_STATE_FILE = 'Local State';
+export const PREFERENCES_FILE = path.join('Default', 'Preferences');
 
 /**
  * Local State written into a brand-new user data directory.
@@ -51,11 +52,111 @@ export const TEMPORARY_PROFILE_PREFIX = 'browser-commander-profile-';
  * @param {string} userDataDir
  * @returns {Promise<string>} The same directory
  */
-export async function prepareUserDataDir(userDataDir) {
+function assertObject(value, name) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new TypeError(`${name} must be a JSON object`);
+  }
+}
+
+function deepMerge(target, source) {
+  for (const [key, value] of Object.entries(source)) {
+    if (['__proto__', 'prototype', 'constructor'].includes(key)) {
+      throw new TypeError(`profile setting key ${key} is not allowed`);
+    }
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      target[key] = deepMerge(
+        target[key] &&
+          typeof target[key] === 'object' &&
+          !Array.isArray(target[key])
+          ? target[key]
+          : {},
+        value
+      );
+    } else {
+      target[key] = value;
+    }
+  }
+  return target;
+}
+
+async function mergeJsonFile(file, defaults, overrides) {
+  let current = {};
+  try {
+    current = JSON.parse(await readFile(file, 'utf8'));
+    assertObject(current, file);
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+  const merged = deepMerge(deepMerge(current, defaults), overrides);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, JSON.stringify(merged));
+}
+
+/** Merge launch settings into a fresh, migrated, or snapshotted profile. */
+export async function configureUserDataDir(
+  userDataDir,
+  {
+    defaultBrowserCheck,
+    preferences = {},
+    localState = {},
+    profileDirectory = 'Default',
+  } = {}
+) {
+  assertObject(preferences, 'preferences');
+  assertObject(localState, 'localState');
+  if (
+    defaultBrowserCheck !== undefined &&
+    typeof defaultBrowserCheck !== 'boolean'
+  ) {
+    throw new TypeError('defaultBrowserCheck must be a boolean');
+  }
+  if (
+    typeof profileDirectory !== 'string' ||
+    !profileDirectory ||
+    path.basename(profileDirectory) !== profileDirectory ||
+    profileDirectory === '.' ||
+    profileDirectory === '..'
+  ) {
+    throw new TypeError('profileDirectory must be one profile directory name');
+  }
+  const profilePreferences = deepMerge(
+    { browser: { check_default_browser: false } },
+    preferences
+  );
+  assertObject(profilePreferences.browser, 'preferences.browser');
+  if (defaultBrowserCheck !== undefined) {
+    profilePreferences.browser.check_default_browser = defaultBrowserCheck;
+  }
+  await mergeJsonFile(
+    path.join(userDataDir, profileDirectory, 'Preferences'),
+    {},
+    profilePreferences
+  );
+  const check = profilePreferences.browser?.check_default_browser === true;
+  await mergeJsonFile(
+    path.join(userDataDir, LOCAL_STATE_FILE),
+    {
+      browser: {
+        default_browser_infobar_declined_count: check ? 0 : 5,
+        default_browser_declined_count: check ? 0 : 5,
+      },
+    },
+    localState
+  );
+}
+
+export async function prepareUserDataDir(userDataDir, options = {}) {
+  if (options.firstRun !== undefined && typeof options.firstRun !== 'boolean') {
+    throw new TypeError('firstRun must be a boolean');
+  }
   await mkdir(userDataDir, { recursive: true });
-  await writeFile(path.join(userDataDir, FIRST_RUN_SENTINEL), '', {
-    flag: 'a',
-  });
+  if (options.firstRun !== true) {
+    await writeFile(path.join(userDataDir, FIRST_RUN_SENTINEL), '', {
+      flag: 'a',
+    });
+  }
   try {
     await writeFile(
       path.join(userDataDir, LOCAL_STATE_FILE),
@@ -67,6 +168,7 @@ export async function prepareUserDataDir(userDataDir) {
       throw error;
     }
   }
+  await configureUserDataDir(userDataDir, options);
   return userDataDir;
 }
 
@@ -79,11 +181,12 @@ export async function prepareUserDataDir(userDataDir) {
  */
 export async function createTemporaryUserDataDir({
   parent = os.tmpdir(),
+  ...options
 } = {}) {
   const userDataDir = await mkdtemp(
     path.join(parent, TEMPORARY_PROFILE_PREFIX)
   );
-  return await prepareUserDataDir(userDataDir);
+  return await prepareUserDataDir(userDataDir, options);
 }
 
 /**

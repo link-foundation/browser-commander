@@ -1,4 +1,4 @@
-// feature-parity: attach.snapshot
+// feature-parity: attach.snapshot@native-typed
 import assert from 'node:assert';
 import { createHash } from 'node:crypto';
 import {
@@ -151,9 +151,16 @@ describe('snapshotUserDataDir', () => {
     assert.equal(report.target, to);
     assert.deepEqual(report.warnings, []);
     assert.equal(report.copied.databases, 1);
+    const localState = JSON.parse(
+      await readFile(path.join(to, 'Local State'), 'utf8')
+    );
+    assert.deepEqual(localState.os_crypt, { key: 'k' });
+    assert.equal(localState.browser.default_browser_infobar_declined_count, 5);
+    assert.equal(localState.browser.default_browser_declined_count, 5);
     assert.equal(
-      await readFile(path.join(to, 'Local State'), 'utf8'),
-      JSON.stringify({ os_crypt: { key: 'k' } })
+      (await readProfileJson(path.join(to, 'Default'), 'Preferences')).browser
+        .check_default_browser,
+      false
     );
     assert.deepEqual(
       await readProfileJson(path.join(to, 'Default'), 'Bookmarks'),
@@ -258,7 +265,10 @@ describe('snapshotUserDataDir', () => {
 
         const copy = path.join(to, 'Default', 'History');
         // One self-contained file: the committed WAL content is folded in.
-        assert.deepEqual(await readdir(path.join(to, 'Default')), ['History']);
+        assert.deepEqual(await readdir(path.join(to, 'Default')), [
+          'History',
+          'Preferences',
+        ]);
         assert.equal(report.copied.databases, 1);
         assert.equal(countRows(copy), 6);
         const database = new BetterSqlite3(copy, { readonly: true });
@@ -335,6 +345,15 @@ describe('snapshotUserDataDir', () => {
     try {
       assert.equal(report.source.profile, 'Profile 1');
       await stat(path.join(report.target, 'Profile 1', 'Preferences'));
+      assert.equal(
+        (
+          await readProfileJson(
+            path.join(report.target, 'Profile 1'),
+            'Preferences'
+          )
+        ).browser.check_default_browser,
+        false
+      );
       await assert.rejects(stat(path.join(report.target, 'Default')), {
         code: 'ENOENT',
       });

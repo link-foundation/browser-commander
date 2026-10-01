@@ -1,0 +1,86 @@
+[
+  {
+    "url": "https://example.com/path?token=abc&keep=1",
+    "redacted": "https://example.com/path?token=[redacted]&keep=1"
+  },
+  {
+    "url": "https://EXAMPLE.com:443/a/../b/./c?Token=x#frag",
+    "redacted": "https://example.com/b/c?Token=[redacted]#frag"
+  },
+  {
+    "url": "http://example.com",
+    "redacted": "http://example.com/"
+  },
+  {
+    "url": "https://name:pw@example.com/?q=1",
+    "redacted": "https://[redacted]:[redacted]@example.com/?q=1"
+  },
+  {
+    "url": "https://user@example.com/x",
+    "redacted": "https://[redacted]@example.com/x"
+  },
+  {
+    "url": "https://example.com/?a=1&a=2&code=zz&b=hello%20world",
+    "redacted": "https://example.com/?a=1&a=2&code=[redacted]&b=hello+world"
+  },
+  {
+    "url": "https://example.com/?q=a b&secret=s",
+    "redacted": "https://example.com/?q=a+b&secret=[redacted]"
+  },
+  {
+    "url": "https://example.com/?q=a+b&secret=s",
+    "redacted": "https://example.com/?q=a+b&secret=[redacted]"
+  },
+  {
+    "url": "https://example.com/?q=a%2Bb&session=1&x=~!*()'",
+    "redacted": "https://example.com/?q=a%2Bb&session=[redacted]&x=%7E%21*%28%29%27"
+  },
+  {
+    "url": "https://example.com/cb#access_token=t&state=s",
+    "redacted": "https://example.com/cb#access_token=[redacted]&state=s"
+  },
+  {
+    "url": "https://example.com/cb#plain-fragment",
+    "redacted": "https://example.com/cb#plain-fragment"
+  },
+  {
+    "url": "https://example.com/p a th/ü?x=ü&password=p",
+    "redacted": "https://example.com/p%20a%20th/%C3%BC?x=%C3%BC&password=[redacted]"
+  },
+  {
+    "url": "https://example.com/?keep=1",
+    "redacted": "https://example.com/?keep=1"
+  },
+  {
+    "url": "https://example.com/?token",
+    "redacted": "https://example.com/?token=[redacted]"
+  },
+  {
+    "url": "https://example.com/?=token&token=",
+    "redacted": "https://example.com/?=token&token=[redacted]"
+  },
+  {
+    "url": "http://example.com:8080/?api_key=1",
+    "redacted": "http://example.com:8080/?api_key=[redacted]"
+  },
+  {
+    "url": "about:blank",
+    "redacted": "about:blank"
+  },
+  {
+    "url": "data:text/html,<p>hi</p>",
+    "redacted": "data:text/html,<p>hi</p>"
+  },
+  {
+    "url": "/relative/path?token=abc",
+    "redacted": "/relative/path?token=abc"
+  },
+  {
+    "url": "not a url",
+    "redacted": "not a url"
+  },
+  {
+    "url": "",
+    "redacted": ""
+  }
+]

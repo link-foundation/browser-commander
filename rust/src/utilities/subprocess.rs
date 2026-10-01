@@ -19,6 +19,8 @@ use std::time::Duration;
 
 use command_stream::{OutputChunk, StreamingRunner};
 use tokio::sync::{mpsc, watch};
+#[path = "process_cleanup.rs"]
+mod process_cleanup;
 
 /// Milliseconds between the polite signal and `SIGKILL` when a process started
 /// by [`start_process`] is stopped, matching the JavaScript `killGrace` default.
@@ -391,11 +393,25 @@ impl ManagedProcess {
     }
 }
 
+/// Kill a command-stream child and every process in its group (Unix) or tree
+/// (Windows), synchronously. For owners of a raw command-stream
+/// `ProcessRunner`, such as the Playwright driver pipe.
+pub(crate) fn kill_owned_process_tree(pid: u32) {
+    process_cleanup::kill_owned_process_tree(pid);
+}
+
 impl Drop for ManagedProcess {
     fn drop(&mut self) {
-        // Matches the JavaScript cleanup: an abandoned handle must not leave the
-        // process running. command-stream's pump task performs the kill.
-        self.kill();
+        // Drop can run after its Tokio runtime has shut down. An async kill
+        // request alone can then never reach command-stream's pump. Explicit
+        // close/kill keeps the grace period; final abandoned ownership is killed
+        // synchronously so browser and driver children cannot escape.
+        if self.is_running() {
+            if let Some(pid) = self.pid {
+                process_cleanup::kill_owned_process_tree(pid);
+            }
+            self.kill();
+        }
     }
 }
 

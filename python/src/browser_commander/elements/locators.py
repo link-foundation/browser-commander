@@ -111,8 +111,9 @@ async def wait_for_locator_or_element(
     try:
         if engine == "playwright":
             locator = await get_locator_or_element(page, engine, selector)
-            # Use .first() to handle multiple matches (Playwright strict mode)
-            first_locator = locator.first()
+            # `first` handles multiple matches (Playwright strict mode). It is
+            # a property in Python Playwright, not a method as in JavaScript.
+            first_locator = locator.first
             await first_locator.wait_for(state="visible", timeout=timeout)
             return first_locator
         else:

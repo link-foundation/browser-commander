@@ -240,7 +240,7 @@ async def perform_fill(
             adapter = create_engine_adapter(page, engine)
 
         if simulate_typing:
-            await adapter.type(locator_or_element, text)
+            await adapter.type_text(locator_or_element, text)
         else:
             await adapter.fill(locator_or_element, text)
 

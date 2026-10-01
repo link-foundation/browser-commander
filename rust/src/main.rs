@@ -114,13 +114,13 @@ async fn main() -> ExitCode {
 mod tests {
     use super::*;
 
-    // feature-parity: cli.version
+    // feature-parity: cli.version@native-typed
     #[tokio::test]
     async fn version_is_native() {
         assert_eq!(run_cli(&["version".to_string()]).await.unwrap(), 0);
     }
 
-    // feature-parity: cli.script cli.serve
+    // feature-parity: cli.script@untyped-via-cli cli.serve@untyped-via-cli
     #[test]
     fn stdio_bridge_streams_and_scripts_collect() {
         assert!(is_streaming_command(&[

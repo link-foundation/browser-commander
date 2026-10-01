@@ -19,6 +19,17 @@ from browser_commander.browser.debugging_port import (
     assert_fixed_debugging_port,
     reserve_loopback_port,
 )
+from browser_commander.browser.extension_relay import (
+    ExtensionRelay,
+    RelayAddress,
+    RelayEvent,
+    RelayExtension,
+    RelayOptions,
+    RelaySession,
+    RelayTab,
+    attach_via_extension,
+    extension_directory,
+)
 from browser_commander.browser.launcher import (
     LAUNCH_MODES,
     LaunchOptions,
@@ -72,6 +83,15 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.snapshot import (
+    SnapshotOptions,
+    launch_snapshot,
+    snapshot_user_data_dir,
+)
+from browser_commander.browser.storage_state import (
+    load_storage_state,
+    save_storage_state,
+)
 
 __all__ = [
     "ALL_DATA_CLASSES",
@@ -82,6 +102,7 @@ __all__ = [
     "BrowserCookieReadOptions",
     "BrowserProfile",
     "ConnectOptions",
+    "ExtensionRelay",
     "GotoResult",
     "LaunchOptions",
     "LaunchResult",
@@ -89,8 +110,16 @@ __all__ = [
     "PortRaceError",
     "RealBrowserOptions",
     "RealBrowserResult",
+    "RelayAddress",
+    "RelayEvent",
+    "RelayExtension",
+    "RelayOptions",
+    "RelaySession",
+    "RelayTab",
+    "SnapshotOptions",
     "WaitAfterActionResult",
     "assert_fixed_debugging_port",
+    "attach_via_extension",
     "browser_environment",
     "build_open_command",
     "build_real_browser_args",
@@ -100,11 +129,14 @@ __all__ = [
     "create_temporary_user_data_dir",
     "default_navigation_verification",
     "emulate_media",
+    "extension_directory",
     "goto",
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",
+    "launch_snapshot",
     "list_browser_profiles",
+    "load_storage_state",
     "measure_parity",
     "merge_feature_switches",
     "migrate_profile",
@@ -120,6 +152,8 @@ __all__ = [
     "reserve_loopback_port",
     "resolve_launch_executable",
     "resolve_restrictions",
+    "save_storage_state",
+    "snapshot_user_data_dir",
     "validate_open_url",
     "verify_navigation",
     "wait_after_action",

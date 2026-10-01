@@ -53,6 +53,37 @@ async def test_connects_playwright_and_seeds_cookies() -> None:
 
 
 @pytest.mark.asyncio
+async def test_connects_playwright_with_portable_storage_state() -> None:
+    page = MagicMock()
+    page.evaluate = AsyncMock()
+    context = MagicMock()
+    context.pages = [page]
+    context.add_cookies = AsyncMock()
+    context.add_init_script = AsyncMock()
+    browser = MagicMock(contexts=[context])
+    chromium = MagicMock()
+    chromium.connect_over_cdp = AsyncMock(return_value=browser)
+    state = {
+        "cookies": [{"name": "sid", "value": "saved", "domain": "example.test"}],
+        "origins": [
+            {
+                "origin": "https://example.test",
+                "localStorage": [{"name": "theme", "value": "dark"}],
+            }
+        ],
+    }
+
+    await connect_browser_with_dependencies(
+        ConnectOptions(cdp_endpoint="http://127.0.0.1:9222", storage_state=state),
+        start_playwright=AsyncMock(return_value=MagicMock(chromium=chromium)),
+    )
+
+    context.add_cookies.assert_awaited_once_with(state["cookies"])
+    context.add_init_script.assert_awaited_once()
+    page.evaluate.assert_awaited()
+
+
+@pytest.mark.asyncio
 async def test_connects_selenium_and_seeds_cookies_over_cdp() -> None:
     driver = MagicMock()
     create_selenium = MagicMock(return_value=driver)

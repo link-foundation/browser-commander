@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
+import os
+import signal
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -81,6 +85,21 @@ async def test_start_process_streams_output_and_reports_exit() -> None:
     assert process.kill() is False
 
 
+async def test_start_process_keeps_a_character_split_across_reads() -> None:
+    # The two bytes of "é" arrive in separate reads.
+    script = (
+        "import sys, time; out = sys.stdout.buffer; "
+        "out.write(b'\\xc3'); out.flush(); time.sleep(0.3); "
+        "out.write(b'\\xa9\\n'); out.flush()"
+    )
+    process = await start_process(PYTHON, ["-c", script])
+    chunks: list[str] = []
+    process.stdout.on("data", chunks.append)
+
+    assert await process.wait() == 0
+    assert "".join(chunks) == "\u00e9\n"
+
+
 async def test_kill_terminates_a_running_process() -> None:
     process = await start_process(
         PYTHON, ["-c", "import time; time.sleep(60)"], kill_grace=0.5
@@ -102,3 +121,33 @@ def test_output_channel_keeps_output_until_the_first_listener() -> None:
     channel.off("data", received.append)
     channel.emit("ignored")
     assert received == ["early ", "late"]
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="uses /proc")
+async def test_cancelling_run_command_reaps_its_child(tmp_path: Path) -> None:
+    """Cancelling an awaited command must not leave a detached child alive."""
+    pid_file = tmp_path / "pid"
+    task = asyncio.create_task(
+        run_command(
+            PYTHON,
+            [
+                "-c",
+                "import os, pathlib, sys, time; pathlib.Path(sys.argv[1]).write_text(str(os.getpid())); time.sleep(60)",
+                str(pid_file),
+            ],
+        )
+    )
+    for _ in range(100):
+        if pid_file.exists():
+            break
+        await asyncio.sleep(0.01)
+    assert pid_file.exists()
+    pid = int(pid_file.read_text())
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    try:
+        assert not Path(f"/proc/{pid}").exists()
+    finally:
+        if Path(f"/proc/{pid}").exists():
+            os.kill(pid, signal.SIGKILL)

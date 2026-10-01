@@ -11,10 +11,13 @@ mod browser_cookies;
 pub mod browser_process;
 mod browser_profiles;
 pub mod cdp_endpoint;
+mod cdp_trace_events;
 pub mod chromiumoxide_adapter;
+mod chromiumoxide_trace;
 pub mod connector;
 pub mod debugging_port;
 mod engine_launch;
+pub mod extension_relay;
 mod launch_executable;
 pub mod launcher;
 pub mod media;
@@ -22,11 +25,16 @@ pub mod migration;
 pub mod navigation_ops;
 pub mod node_bridge;
 pub mod open_in_user_browser;
+pub mod parity;
+pub mod playwright_driver_page;
 pub mod profile_directory;
 pub mod raw_cdp;
 pub mod real_browser;
 pub mod restrictions;
+pub mod snapshot;
+pub mod storage_state;
 pub mod system_browser;
+pub mod webdriver;
 
 pub use browser_cookie_cache::clear_browser_cookie_memory_cache;
 pub use browser_cookies::{read_browser_cookies, BrowserCookie, BrowserCookieReadOptions};
@@ -52,6 +60,7 @@ pub use node_bridge::NodeBridgePage;
 pub use open_in_user_browser::{
     build_open_command, open_in_user_browser, validate_open_url, OpenInUserBrowserResult,
 };
+pub use playwright_driver_page::{PlaywrightConnect, PlaywrightDriverPage, PlaywrightLaunch};
 pub use profile_directory::{
     create_temporary_user_data_dir, prepare_user_data_dir, remove_user_data_dir,
 };
@@ -65,6 +74,12 @@ pub use restrictions::{
     launch_restriction_preset, launch_restriction_presets, launch_restrictions,
     merge_feature_switches, resolve_restrictions, LaunchRestriction, ResolvedRestrictions,
     LAUNCH_RESTRICTIONS_SOURCE,
+};
+pub use snapshot::{
+    launch_snapshot, snapshot_user_data_dir, SnapshotLaunchResult, SnapshotOptions, SnapshotReport,
+};
+pub use storage_state::{
+    save_storage_state, StorageEntry, StorageOrigin, StorageState, StorageStateInput,
 };
 pub use system_browser::{
     assert_dedicated_user_data_dir, default_real_browser_user_data_dir,

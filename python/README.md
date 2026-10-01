@@ -4,19 +4,23 @@ A universal browser automation library for Python that supports both Playwright 
 
 ## Installation
 
+The first PyPI release is pending trusted publisher registration. Until the
+[PyPI project](https://pypi.org/project/browser-commander/) is available,
+install directly from this repository:
+
 ```bash
-pip install browser-commander
+pip install "git+https://github.com/link-foundation/browser-commander.git#subdirectory=python"
 ```
 
 You'll also need either Playwright or Selenium:
 
 ```bash
 # With Playwright
-pip install browser-commander[playwright]
+pip install playwright
 playwright install chromium
 
 # Or with Selenium
-pip install browser-commander[selenium]
+pip install selenium
 ```
 
 ## Core Concept: Page State Machine
@@ -160,6 +164,27 @@ Switches the library used to add, such as `--password-store=basic`, are opt-in
 `restrictions` (`restrictions=["legacy-defaults"]` restores the old set).
 `launch="engine"` keeps the engine launcher, and `ignore_default_args=True`
 omits that launcher's own defaults.
+
+Pass Playwright-compatible `storage_state` as a JSON file path or object to
+restore cookies and origin-scoped localStorage before navigation. The option
+works with `launch_browser()`, `launch_real_browser()`, and `connect_browser()`
+for both Playwright and Selenium:
+
+```python
+from browser_commander import LaunchOptions, launch_browser, save_storage_state
+
+result = await launch_browser(
+    LaunchOptions(engine="playwright", storage_state="./session-state.json")
+)
+# After navigating and signing in, save the session for a later launch.
+await save_storage_state(
+    "playwright", result.browser, result.page, "./session-state.json"
+)
+```
+
+Selenium saves cookies and localStorage for the current page origin. Playwright
+saves all origins available to its browser context. Treat saved state as a
+secret because cookies may contain login credentials.
 
 ### connect_browser(options)
 
@@ -462,11 +487,75 @@ failed or cancelled download raises the failure rather than returning a path.
 Playwright listens on a browser-wide CDP session; Selenium, which has no
 download events, watches the staging directory instead.
 
+### Native Extension Relay
+
+`attach_via_extension(RelayOptions(...))` hosts the companion extension's relay
+directly in Python, without the JavaScript CLI. It exposes typed tab results,
+CDP sessions and events. Install the `extension` extra and select the bundled
+`extension_directory()` in Chrome's **Load unpacked** dialog. Configure
+`allowed_extension_ids` to restrict the accepted installed extension.
+[Native extension relay](../docs/extension-relay.md) has startup, cancellation,
+resource limits and complete Python/Rust examples.
+
+### Live Profile Snapshots
+
+Copy a selected Chromium profile while its source browser stays open, then
+launch the copy through Playwright or Selenium:
+
+```python
+from browser_commander import RealBrowserOptions, SnapshotOptions, launch_snapshot
+
+copy = await launch_snapshot(
+    SnapshotOptions(browser="chrome", profile="Profile 1"),
+    RealBrowserOptions(engine="playwright"),
+)
+try:
+    await copy.page.goto("https://example.com")
+    print(copy.snapshot["copied"])
+finally:
+    await copy.close()
+```
+
+`user_data_dir` in `SnapshotOptions` selects an explicit source root. SQLite
+backups retain committed WAL data; caches, locks and open-tab sessions are
+excluded and reported. Closing the browser deletes its copy. The original
+profile remains untouched. `snapshot_user_data_dir(browser="chrome", ...)`
+returns the same report without launching; callers own that returned directory.
+
 ### Portable Traces
 
 A trace is one versioned directory - manifest, ordered NDJSON timeline,
-per-checkpoint DOM snapshots and the mutation batches between them - so a bundle
-recorded by a JavaScript run reads back here:
+per-checkpoint DOM snapshots and the mutation batches between them - and Python
+writes the same bundle JavaScript does:
+
+```python
+from browser_commander.traces import write_trace_viewer
+
+trace = await commander.start_trace(
+    output="/tmp/traces/checkout",
+    mode="continuous",
+    links={"output": "/tmp/traces/checkout.lino"},
+)
+await commander.goto("https://example.com/cart")
+await trace.checkpoint("cart")
+stopped = await trace.stop()
+write_trace_viewer(stopped["path"])  # viewer.html, readable offline
+```
+
+Navigations, interactions, console messages, page errors, failed requests,
+dialogs and downloads share one ordered timeline; password fields,
+`[data-private]` controls, credential headers and token query parameters are
+redacted before anything is written. To keep a
+trace only when something went wrong, wrap the work in `traced()`:
+
+```python
+from browser_commander.traces import traced
+
+async with traced(commander, output="artifacts/checkout.bc-trace"):
+    await commander.click_button("#pay")  # kept, with the viewer, only if this raises
+```
+
+A bundle recorded here or by a JavaScript run reads back the same way:
 
 ```python
 from browser_commander import diff_control_state, read_trace
@@ -481,8 +570,32 @@ for change in diff_control_state(trace.state(1), trace.state(2)):
     print(change.path, change.change, change.before, "->", change.after)
 ```
 
-Recording is JavaScript-only today; `docs/feature-parity.md` lists that gap
-along with the rest.
+### Typed Puppeteer
+
+Puppeteer exists only for Node.js, so `browser_commander.puppeteer` drives it
+through the JavaScript CLI's `serve --stdio` bridge. Every Puppeteer class and
+interface has a Python class in the same hierarchy, with an `async def` for
+every method and getter, generated by `scripts/generate-puppeteer-bindings.mjs`
+from the `lib/types.d.ts` that puppeteer-core ships:
+
+```python
+from browser_commander.puppeteer import JsFunction, PuppeteerBridge
+
+async with await PuppeteerBridge.launch() as bridge:
+    browser = await (await bridge.puppeteer()).launch({"headless": True})
+    page = await browser.new_page()
+    await page.goto("https://example.com")
+    print(await page.title())
+    print(await page.evaluate(JsFunction("(a, b) => a + b"), 1, 2))
+    console = await page.subscribe("console")
+    await browser.close()
+```
+
+Results come back as their Python types: handles as `Page`, `ElementHandle`
+and so on, binary data as `bytes`. Errors are `BridgeError`, whose `is_timeout`
+matches Puppeteer's `TimeoutError`. The bridge needs Node.js, the JavaScript
+CLI (`BROWSER_COMMANDER_JS_CLI`, or the `browser-commander` npm package in
+`node_modules`) and `puppeteer-core` or `puppeteer` where Node resolves it.
 
 ### Truthful Click Results
 

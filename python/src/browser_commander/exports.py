@@ -24,6 +24,17 @@ from browser_commander.browser.debugging_port import (
     assert_fixed_debugging_port,
     reserve_loopback_port,
 )
+from browser_commander.browser.extension_relay import (
+    ExtensionRelay,
+    RelayAddress,
+    RelayEvent,
+    RelayExtension,
+    RelayOptions,
+    RelaySession,
+    RelayTab,
+    attach_via_extension,
+    extension_directory,
+)
 from browser_commander.browser.launcher import (
     LAUNCH_MODES,
     LaunchOptions,
@@ -77,6 +88,15 @@ from browser_commander.browser.restrictions import (
     browser_environment,
     merge_feature_switches,
     resolve_restrictions,
+)
+from browser_commander.browser.snapshot import (
+    SnapshotOptions,
+    launch_snapshot,
+    snapshot_user_data_dir,
+)
+from browser_commander.browser.storage_state import (
+    load_storage_state,
+    save_storage_state,
 )
 from browser_commander.core.constants import CHROME_ARGS, TIMING
 
@@ -297,6 +317,18 @@ from browser_commander.utilities.wait import (
 )
 
 __all__ = [  # noqa: RUF022 - grouped by public API area
+    "ExtensionRelay",
+    "RelayAddress",
+    "RelayEvent",
+    "RelayExtension",
+    "RelayOptions",
+    "RelaySession",
+    "RelayTab",
+    "attach_via_extension",
+    "extension_directory",
+    "SnapshotOptions",
+    "launch_snapshot",
+    "snapshot_user_data_dir",
     "BrowserCookieCacheOptions",
     "BrowserCookieReadOptions",
     "BrowserProfile",
@@ -407,6 +439,7 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",
+    "load_storage_state",
     "list_browser_profiles",
     "locator",
     "log_element_info",
@@ -500,6 +533,7 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "browser_environment",
     "merge_feature_switches",
     "resolve_restrictions",
+    "save_storage_state",
     "create_temporary_user_data_dir",
     "prepare_user_data_dir",
     "remove_user_data_dir",

@@ -9,6 +9,19 @@
       ]
     },
     {
+      "title": "Engine APIs",
+      "features": [
+        {
+          "id": "engine.playwright",
+          "title": "Drive Playwright through its typed API"
+        },
+        {
+          "id": "engine.puppeteer",
+          "title": "Drive Puppeteer through its typed API"
+        }
+      ]
+    },
+    {
       "title": "Profile and user browser",
       "features": [
         { "id": "migration.profile", "title": "Read-only profile migration" },
@@ -24,6 +37,15 @@
         {
           "id": "attach.open",
           "title": "Open in the user browser without automation"
+        }
+      ]
+    },
+    {
+      "title": "Portable session state",
+      "features": [
+        {
+          "id": "storage.portable",
+          "title": "Save and restore cookie and localStorage state"
         }
       ]
     },

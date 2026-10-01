@@ -1,0 +1,24 @@
+# Compiles the Rust Playwright driver client (rust/src/playwright) without
+# chromiumoxide, whose CDP crate needs more memory than small machines have.
+# Run with: CARGO_TARGET_DIR=/tmp/pw-harness-target cargo test
+[package]
+name = "playwright-harness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+tracing = "0.1"
+async-trait = "0.1"
+base64 = "0.23"
+command-stream = "1.1"
+libc = "0.2"
+
+[dev-dependencies]
+anyhow = "1.0"

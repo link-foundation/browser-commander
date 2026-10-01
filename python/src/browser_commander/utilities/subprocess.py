@@ -26,6 +26,7 @@ between, so arguments are never re-split or expanded.
 from __future__ import annotations
 
 import asyncio
+import codecs
 import contextlib
 import os
 import subprocess
@@ -138,7 +139,21 @@ async def run_command(
         env=_environment(env),
         cwd=None if cwd is None else os.fspath(cwd),
     )
-    stdout, stderr = await process.communicate(_encode(input))
+    try:
+        stdout, stderr = await process.communicate(_encode(input))
+    except asyncio.CancelledError:
+        # Cancelling the awaiting task does not stop the child. Reap it before
+        # propagating cancellation so a command cannot outlive its caller.
+        if process.returncode is None:
+            with contextlib.suppress(ProcessLookupError):
+                process.terminate()
+            try:
+                await asyncio.wait_for(process.wait(), timeout=2)
+            except asyncio.TimeoutError:
+                with contextlib.suppress(ProcessLookupError):
+                    process.kill()
+                await process.wait()
+        raise
     result = CommandResult(
         stdout=_decode(stdout),
         stderr=_decode(stderr),
@@ -266,14 +281,19 @@ class ManagedProcess:
     ) -> None:
         if stream is None:
             return
+        # Incremental, so a character split across two reads stays intact.
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         while True:
             try:
                 data = await stream.read(_READ_CHUNK_SIZE)
             except (OSError, ValueError):
-                return
+                data = b""
+            chunk = decoder.decode(data, final=not data)
             if not data:
+                if chunk:
+                    with contextlib.suppress(Exception):
+                        channel.emit(chunk)
                 return
-            chunk = _decode(data)
             if self._forward_output:
                 with contextlib.suppress(Exception):
                     mirror.write(chunk)

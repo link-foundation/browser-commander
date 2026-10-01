@@ -34,6 +34,10 @@ const LAUNCH_PASSTHROUGH = Object.freeze([
   'env',
   'startupTimeout',
   'attach',
+  'preferences',
+  'localState',
+  'defaultBrowserCheck',
+  'firstRun',
 ]);
 
 /** Validate an engine name, defaulting to Playwright. */

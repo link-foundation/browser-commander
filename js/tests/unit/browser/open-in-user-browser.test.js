@@ -1,4 +1,4 @@
-// feature-parity: attach.open
+// feature-parity: attach.open@native-typed
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 

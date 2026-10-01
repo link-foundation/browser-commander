@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use super::*;
 use crate::browser::browser_process::fake::FakeProcess;
-use crate::browser::profile_directory::FIRST_RUN_SENTINEL;
+use crate::browser::profile_directory::{create_temporary_user_data_dir, FIRST_RUN_SENTINEL};
 use crate::fingerprint::automation_parity::disables_automation_controlled;
 
 const DEDICATED: &str = "/tmp/browser-commander-dedicated";
@@ -365,7 +365,7 @@ async fn spawns_waits_connects_and_returns_process_metadata() {
 
 #[tokio::test]
 async fn migrates_bookmarks_into_the_profile_before_launch() {
-    // feature-parity: migration.launch
+    // feature-parity: migration.launch@native-typed
     let source = create_temporary_user_data_dir(None).unwrap();
     let source_profile = source.join("Default");
     std::fs::create_dir_all(&source_profile).unwrap();

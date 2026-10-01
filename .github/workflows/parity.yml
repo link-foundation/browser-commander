@@ -32,7 +32,15 @@ on:
       - 'js/bin/**'
       - 'tests/cli-contract/**'
       - 'python/src/**'
+      - 'python/tests/e2e/**'
       - 'rust/src/**'
+      - 'rust/tests/storage_state_smoke.rs'
+      - 'rust/tests/snapshot.rs'
+      - 'rust/tests/parity.rs'
+      - 'rust/tests/webdriver*.rs'
+      - 'rust/tests/playwright_driver.rs'
+      - 'rust/tests/puppeteer_bridge.rs'
+      - 'rust/tests/support/**'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
 
@@ -133,6 +141,13 @@ jobs:
             exit 1
           fi
           echo "parity suite passed $passed tests against a real Chrome"
+
+      - name: Verify native browser window has no default-browser infobar
+        working-directory: .
+        run: |
+          python -m pip install mss pillow
+          PYTHONPATH=python/src xvfb-run -a --server-args="-screen 0 1360x900x24" \
+            python experiments/issue-110/capture-infobar.py
 
       - name: Run WebDriver suite under Xvfb
         # The selenium engine drives the same Chrome through chromedriver
@@ -264,6 +279,103 @@ jobs:
         shell: bash
         run: bash scripts/run-with-budget-warning.sh 300 "Cross-language CLI contract" node tests/cli-contract/check.mjs
 
+  # Compiling the storage-state integration test has its own budget so it
+  # cannot consume the CLI job's build and browser-test allowance.
+  storage-state:
+    name: Rust storage state (real Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-storage-state
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Install browser engines
+        working-directory: js
+        run: npm ci --ignore-scripts
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+        with:
+          toolchain: stable
+      - name: Cache Cargo build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-storage-state-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-storage-state-cargo-
+            ${{ runner.os }}-cli-cargo-
+      - name: Verify Chrome is present
+        run: test -x "$CHROME_PATH"
+      - name: Transfer Rust storage state across engines
+        working-directory: rust
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 600 "Rust storage state transfer" \
+            cargo test --locked --test storage_state_smoke -- --ignored --nocapture
+
+  snapshots:
+    name: Native snapshots (real Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-snapshots
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Install browser engines
+        working-directory: js
+        run: npm ci --ignore-scripts
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install Python test dependencies
+        run: python -m pip install -e './python[dev]'
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+        with:
+          toolchain: stable
+      - name: Cache Cargo build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-snapshots-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-snapshots-cargo-
+            ${{ runner.os }}-storage-state-cargo-
+      - name: Verify Chrome is present
+        run: test -x "$CHROME_PATH"
+      - name: Resolve matching native WebDriver
+        run: node experiments/issue-110/resolve-webdriver.mjs >> "$GITHUB_ENV"
+      - name: Run Rust snapshots and parity in all CDP engines
+        working-directory: rust
+        env:
+          # Only the Puppeteer bridge test reads it: it launches Chrome through
+          # the JavaScript CLI's serve --stdio rather than a Rust launcher.
+          CHROME_NO_SANDBOX: 'true'
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 600 "Rust native snapshots and parity" \
+            cargo test --locked --test snapshot --test parity --test webdriver --test playwright_driver --test puppeteer_bridge --test trace_record_real_browser -- --ignored --nocapture
+      - name: Launch Python snapshot copies and record a Python trace
+        env:
+          RUN_E2E: 'true'
+          CHROME_NO_SANDBOX: 'true'
+        shell: bash
+        run: |
+          bash scripts/run-with-budget-warning.sh 180 "Python native snapshot launches" \
+            python -m pytest python/tests/e2e/test_snapshot.py python/tests/e2e/test_puppeteer_bridge.py python/tests/e2e/test_trace_recording.py -v
+
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
@@ -280,6 +392,8 @@ jobs:
     needs:
       - parity
       - cli
+      - storage-state
+      - snapshots
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs
     # it exists to report. `!cancelled()` keeps it out of a superseded run,

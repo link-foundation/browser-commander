@@ -73,12 +73,13 @@ async fn main() -> anyhow::Result<()> {
 
 - **Unified API** across multiple browser engines
 - **Native Rust Chromiumoxide support**
-- **Playwright and Puppeteer support through a Node.js bridge**
+- **Typed Playwright through the official driver**, with a Node.js bridge
+  fallback, and **Puppeteer through a Node.js bridge**
 - **Built-in navigation safety handling**
 - **Element visibility and scroll management**
 - **Click, fill, and other interaction support with verification**
 - **Managed downloads whose files outlive the browser**
-- **Portable trace bundles, readable from every supported language**
+- **Portable trace bundles, recorded and read the same way in every supported language**
 - **Async/await support with Tokio**
 
 ## API Reference
@@ -110,7 +111,70 @@ append-only builder.
 
 ### Playwright and Puppeteer
 
-Rust does not have official Playwright or Puppeteer bindings. To keep the same engine names available from Rust, Browser Commander starts a local Node.js bridge and delegates operations to the official Node packages.
+Rust Playwright talks to Playwright's own driver, the same process the
+official Python, Java and .NET bindings use: `playwright-core/cli.js
+run-driver`, started through command-stream. Every interface, command and
+event in the driver's `protocol.yml` has a typed Rust binding in
+[`browser_commander::playwright::protocol`](src/playwright/protocol), generated
+by `scripts/generate-playwright-protocol.mjs`. `launch_browser()` and
+`connect_browser()` use it whenever they find a `playwright-core` with the same
+protocol version as the bindings (`BROWSER_COMMANDER_PLAYWRIGHT_DRIVER`, then
+`node_modules` in `node_working_dir` and its ancestors); otherwise they log why
+and fall back to the Node.js bridge. Puppeteer has no driver protocol, so it
+always runs through the bridge, which delegates operations to the official
+Node package.
+
+The whole Puppeteer API is typed as well.
+[`browser_commander::puppeteer`](src/puppeteer) starts the JavaScript CLI's
+`serve --stdio` bridge and has one struct for every Puppeteer class and
+interface, with an `async fn` for every method and getter, inherited ones
+included. `scripts/generate-puppeteer-bindings.mjs` generates them from the
+`lib/types.d.ts` that puppeteer-core ships
+([`protocol/puppeteer/api.json`](protocol/puppeteer/api.json)):
+
+```rust
+use browser_commander::puppeteer::{BridgeOptions, JsFunction, PuppeteerBridge};
+use serde_json::json;
+
+let bridge = PuppeteerBridge::launch(BridgeOptions::default()).await?;
+let browser = bridge.puppeteer().await?.launch(Some(json!({ "headless": true }))).await?;
+let page = browser.new_page(None).await?;
+page.goto("https://example.com", None).await?;
+let title: String = page.title().await?;
+let sum = page.evaluate(JsFunction::source("(a, b) => a + b"), &[json!(1), json!(2)]).await?;
+let mut console = page.remote().subscribe("console").await?;
+browser.close().await?;
+bridge.close().await;
+```
+
+Puppeteer's option objects stay `serde_json::Value`; results, handles and
+errors are typed (`BridgeError::is_timeout()` matches Puppeteer's
+`TimeoutError`). The bridge needs Node.js, the JavaScript CLI
+(`BROWSER_COMMANDER_JS_CLI`, or the `browser-commander` npm package in
+`node_modules`) and `puppeteer-core` or `puppeteer` where Node resolves it.
+
+```rust
+use browser_commander::playwright::protocol::{
+    PageSetViewportSizeParams, PageSetViewportSizeParamsViewportSize,
+};
+use browser_commander::{PlaywrightDriverPage, PlaywrightLaunch};
+
+let page = PlaywrightDriverPage::launch(PlaywrightLaunch {
+    user_data_dir: "./profile".into(),
+    headless: true,
+    ..Default::default()
+})
+.await?;
+// The common operations go through `EngineAdapter`; the rest of Playwright is
+// one typed call away.
+let (_browser, _context, typed_page, _frame) = page.objects();
+typed_page
+    .set_viewport_size(PageSetViewportSizeParams {
+        viewport_size: PageSetViewportSizeParamsViewportSize { width: 640, height: 480 },
+    })
+    .await?;
+page.close().await?;
+```
 
 Install the package you want Node to resolve:
 
@@ -135,7 +199,7 @@ let puppeteer = LaunchOptions::puppeteer()
 
 Reuse a system-installed Chrome-family browser by selecting its channel or
 providing an explicit executable path. `channel` applies to the Playwright and
-Puppeteer bridge engines; `executable_path` also applies to Chromiumoxide:
+Puppeteer engines; `executable_path` also applies to Chromiumoxide:
 
 ```rust
 let playwright = LaunchOptions::playwright()
@@ -147,6 +211,36 @@ let chromiumoxide = LaunchOptions::chromiumoxide()
     .executable_path("/usr/bin/google-chrome")
     .headless(true);
 ```
+
+### Portable session state
+
+Export cookies and the current page origin's localStorage in Playwright's
+`cookies`/`origins` format. The same JSON file can be restored by the
+Chromiumoxide, Playwright, and Puppeteer engines before the first caller
+navigation, in either real or engine launch mode:
+
+```rust
+use browser_commander::{launch_browser, save_storage_state, LaunchOptions};
+use std::path::Path;
+
+let first = launch_browser(LaunchOptions::chromiumoxide().headless(true)).await?;
+first.page.goto("https://example.com").await?;
+save_storage_state(first.page.as_ref(), Some(Path::new("session.json"))).await?;
+first.close().await?;
+
+let next = launch_browser(
+    LaunchOptions::playwright()
+        .headless(true)
+        .storage_state(Path::new("session.json")),
+).await?;
+next.page.goto("https://example.com").await?;
+```
+
+`ConnectOptions::storage_state(...)` restores the same format when attaching
+to a running browser. `save_storage_state(page, None)` returns a typed
+`StorageState` without writing a file. Chromiumoxide and Puppeteer capture
+localStorage for the current page origin; Playwright captures every visited
+origin in its context.
 
 You can also set a custom Node executable:
 
@@ -162,7 +256,8 @@ let options = LaunchOptions::playwright()
 
 `connect_browser()` attaches to an externally managed Chrome-family browser
 and returns the same `LaunchResult` page adapter as `launch_browser()`. Use
-Chromiumoxide natively, or the Playwright/Puppeteer Node.js bridges:
+Chromiumoxide natively, Playwright through its driver, or the Puppeteer Node.js
+bridge:
 
 ```rust
 use browser_commander::prelude::*;
@@ -381,11 +476,87 @@ and Fantoccini have no such mechanism, so asking them for downloads fails with
 that reason rather than quietly doing nothing.
 `examples/managed_download.rs` runs the whole lifecycle against a real Chromium.
 
+### Native Extension Relay
+
+`attach_via_extension(RelayOptions::default())` hosts the companion extension's
+relay in Rust, without Node.js. It returns typed tabs and CDP session handles
+with bounded event subscriptions. `write_extension_directory(path)` extracts
+the bundled extension for Chrome's **Load unpacked** dialog. Configure
+`allowed_extension_ids` to restrict the accepted installed extension.
+[Native extension relay](../docs/extension-relay.md) documents startup,
+shutdown, resource limits and examples for both native packages.
+
+### Live Profile Snapshots
+
+Copy a selected Chromium profile while its source browser stays open, then
+launch the copy through Chromiumoxide, Playwright or Puppeteer:
+
+```rust
+use browser_commander::{launch_snapshot, RealBrowserOptions, SnapshotOptions};
+
+let copy = launch_snapshot(
+    SnapshotOptions { profile: "Profile 1".into(), ..Default::default() },
+    RealBrowserOptions::default(),
+).await?;
+println!("{:?}", copy.snapshot.copied);
+copy.close().await?;
+```
+
+`SnapshotOptions::user_data_dir` selects an explicit source root. SQLite
+backups retain committed WAL data; caches, locks and open-tab sessions are
+excluded and reported. Closing the browser deletes its copy. The original
+profile remains untouched. `snapshot_user_data_dir(&source, destination)`
+returns the same report without launching; callers own that returned directory.
+
+### Measure browser parity
+
+`measure_parity` compares a driven browser with the same binary started by
+hand. The environment reference has no debugger attached. Both captures load
+the same probe page; a separate reference launch reads Chrome's actual command
+line. The typed report uses the same JSON format and limitations catalogue as
+JavaScript and Python, and keeps unexplained differences in `unlisted`.
+
+```rust,no_run
+use browser_commander::{measure_parity, LaunchOptions, MeasureParityOptions};
+
+let report = measure_parity(MeasureParityOptions {
+    launch: LaunchOptions::chromiumoxide().headless(true),
+    ..Default::default()
+}).await?;
+println!("{}", serde_json::to_string_pretty(&report)?);
+```
+
+Use `measure_session_parity(&session, options)` for an existing `LaunchResult`;
+the caller retains ownership of that browser. Measurement navigates its page to
+the probe, and reads version metadata in a separate tab. In a container that
+requires disabling Chrome's sandbox, set `launch.sandbox=false` and explicitly
+include `--no-sandbox` in `reference_args` so both captures use the same setting.
+
 ### Portable Traces
 
 A trace is one versioned directory - manifest, ordered NDJSON timeline,
-per-checkpoint DOM snapshots and the mutation batches between them - so a bundle
-recorded by a JavaScript run reads back here:
+per-checkpoint DOM snapshots and the mutation batches between them. Rust records
+the same bundle JavaScript and Python do, over any engine adapter:
+
+```rust
+use std::sync::Arc;
+use browser_commander::traces::{
+    start_trace, write_trace_viewer, AdapterTracePage, TraceMode, TraceOptions,
+};
+
+let mut options = TraceOptions::new("/tmp/traces/checkout");
+options.mode = TraceMode::CONTINUOUS.into(); // DOM mutations between checkpoints
+let trace = start_trace(Arc::new(AdapterTracePage::new(page.clone())), options).await?;
+
+trace.traced("goto", Some("checkout"), page.goto("https://example.com/checkout")).await?;
+trace.checkpoint("cart loaded").await?;
+let finished = trace.stop().await?;
+write_trace_viewer(&finished.path)?; // viewer.html, opens offline
+```
+
+`record_scenario` keeps a run's bundle only when the run fails, like
+`trace: 'retain-on-failure'` in JavaScript. A bundle reads back the same
+whichever language recorded it:
 
 ```rust
 use browser_commander::traces::{diff_control_state, read_trace};
@@ -404,8 +575,9 @@ for change in diff_control_state(before.as_ref(), after.as_ref()) {
 }
 ```
 
-Recording is JavaScript-only today; `docs/feature-parity.md` lists that gap along
-with the rest.
+With chromiumoxide, Rust records page activity except downloads, and mutation
+batches from the main frame only; `docs/feature-parity.md` lists these gaps
+along with the rest.
 
 ### Truthful Click Results
 
@@ -452,7 +624,7 @@ let result: String = evaluate(&page, "document.title").await?;
 - `utilities` - General utilities (URL handling, wait operations)
 - `high_level` - High-level DRY utilities
 - `downloads` - Managed downloads that outlive the browser
-- `traces` - Reading portable trace bundles
+- `traces` - Recording, reading and exporting portable trace bundles
 
 ## Prelude
 

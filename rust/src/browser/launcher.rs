@@ -11,6 +11,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
+use serde_json::Value;
+
 use crate::browser::browser_process::{BrowserCloser, BrowserProcess};
 use crate::browser::connector::{
     connect_browser_with, refuse_unappliable_fingerprint, AttachSettings,
@@ -20,6 +22,7 @@ use crate::browser::launch_executable::DefaultLaunchHooks;
 use crate::browser::media::ColorScheme;
 use crate::browser::real_browser::{launch_real_browser_with, RealBrowserOptions};
 use crate::browser::restrictions::{merge_feature_switches, resolve_restrictions};
+use crate::browser::storage_state::StorageStateInput;
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::{normalize_download_options, supported_engine};
 use crate::downloads::{DownloadManager, DownloadSetting};
@@ -78,11 +81,24 @@ impl std::str::FromStr for LaunchMode {
 pub struct LaunchOptions {
     /// The browser engine to use.
     pub engine: EngineType,
+    /// Native WebDriver driver selection and W3C capabilities. Common launch
+    /// settings below override their corresponding WebDriver settings.
+    pub webdriver: super::webdriver::WebDriverOptions,
     /// Who starts the browser; [`LaunchMode::Real`] by default.
     pub launch: LaunchMode,
     /// Persistent profile directory. When `None` a fresh temporary profile is
     /// created for the launch and deleted by [`LaunchResult::close`].
     pub user_data_dir: Option<PathBuf>,
+    /// Allow the disposable browser to ask to become the system default.
+    pub default_browser_check: Option<bool>,
+    /// Allow first-run UI in a fresh profile.
+    pub first_run: bool,
+    /// Preferences merged into Default/Preferences before launch.
+    pub preferences: Value,
+    /// Preferences merged into Local State before launch.
+    pub local_state: Value,
+    /// Playwright-compatible cookie and localStorage state to restore.
+    pub storage_state: Option<StorageStateInput>,
     /// Run in headless mode.
     pub headless: bool,
     /// Slow down operations by this many milliseconds (default 0).
@@ -151,8 +167,14 @@ impl Default for LaunchOptions {
     fn default() -> Self {
         Self {
             engine: EngineType::Chromiumoxide,
+            webdriver: Default::default(),
             launch: LaunchMode::Real,
             user_data_dir: None,
+            default_browser_check: None,
+            first_run: false,
+            preferences: serde_json::json!({}),
+            local_state: serde_json::json!({}),
+            storage_state: None,
             headless: false,
             slow_mo: 0,
             verbose: false,
@@ -181,6 +203,15 @@ impl LaunchOptions {
     /// Set the browser automation engine.
     pub fn engine(mut self, engine: EngineType) -> Self {
         self.engine = engine;
+        if engine == EngineType::Fantoccini {
+            self.launch = LaunchMode::Engine;
+        }
+        self
+    }
+
+    /// Restore portable session state before the first caller navigation.
+    pub fn storage_state(mut self, state: impl Into<StorageStateInput>) -> Self {
+        self.storage_state = Some(state.into());
         self
     }
 
@@ -436,6 +467,11 @@ impl LaunchOptions {
             channel: self.channel.clone().unwrap_or(defaults.channel.clone()),
             executable_path: self.executable_path.clone(),
             user_data_dir: self.user_data_dir.clone(),
+            default_browser_check: self.default_browser_check,
+            first_run: self.first_run,
+            preferences: self.preferences.clone(),
+            local_state: self.local_state.clone(),
+            storage_state: self.storage_state.clone(),
             remote_debugging_port: self.remote_debugging_port,
             headless: self.headless,
             restrictions: self.restrictions.clone(),
@@ -584,22 +620,24 @@ impl std::fmt::Debug for LaunchResult {
 /// Either way the profile is a fresh temporary one unless `user_data_dir` is
 /// set, and [`LaunchResult::close`] closes the browser and deletes it.
 ///
-/// The `Fantoccini` engine is not yet implemented as a managed launcher; use
-/// chromiumoxide or connect to an externally-managed WebDriver session.
+/// `Fantoccini` starts chromedriver/geckodriver through command-stream with
+/// typed W3C WebDriver, optional BiDi and preference-based managed downloads.
 ///
 /// # Errors
 ///
 /// Returns an error if the options are invalid or the browser fails to
 /// launch. Invalid options are refused before anything is started.
 pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyhow::Error> {
-    if options.engine == EngineType::Fantoccini {
+    if options.engine == EngineType::Fantoccini && options.launch == LaunchMode::Real {
         return Err(anyhow::anyhow!(
-            "fantoccini engine launch is not yet implemented; \
-             connect to an existing WebDriver session or use EngineType::Chromiumoxide"
+            "fantoccini requires LaunchMode::Engine; use LaunchOptions::fantoccini()"
         ));
     }
     // Validate before anything is started or written to disk.
     options.all_chrome_args()?;
+    if let Some(state) = &options.storage_state {
+        state.load()?;
+    }
     refuse_unappliable_fingerprint(options.engine, options.fingerprint.as_ref())?;
     // The node bridge has no CDP route, so a managed download would never be
     // seen and every capture would time out.

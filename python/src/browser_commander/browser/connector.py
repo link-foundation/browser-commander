@@ -10,6 +10,10 @@ from typing import Any
 from urllib.parse import urlparse
 
 from browser_commander.browser.launcher import LaunchResult
+from browser_commander.browser.storage_state import (
+    StorageStateInput,
+    restore_storage_state,
+)
 from browser_commander.core.engine_detection import EngineType
 from browser_commander.downloads.attach import attach_downloads
 
@@ -25,6 +29,7 @@ class ConnectOptions:
     timeout: int | None = None
     headers: dict[str, str] | None = None
     seed_cookies: list[dict[str, Any]] = field(default_factory=list)
+    storage_state: StorageStateInput = None
     verbose: bool = False
     downloads: bool | Mapping[str, Any] | None = None
     """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
@@ -113,6 +118,7 @@ async def _connect_playwright(
             raise RuntimeError(msg)
         context = browser.contexts[0]
         page = await pick_foreground_page(context.pages) or await context.new_page()
+        await restore_storage_state("playwright", context, page, options.storage_state)
         if options.seed_cookies:
             await context.add_cookies(options.seed_cookies)
     except BaseException:
@@ -164,6 +170,7 @@ async def _connect_selenium(
     chrome_options = Options()
     chrome_options.debugger_address = _debugger_address(endpoint)
     browser = create_selenium(chrome_options)
+    await restore_storage_state("selenium", browser, browser, options.storage_state)
     for cookie in options.seed_cookies:
         browser.execute_cdp_cmd("Network.setCookie", cookie)
     return LaunchResult(browser=browser, page=browser)

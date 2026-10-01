@@ -201,6 +201,9 @@ describe('CI execution budgets', () => {
       'parity.yml cli Rust CLI build',
       'parity.yml parity Fingerprint parity suite',
       'parity.yml parity WebDriver suite',
+      'parity.yml snapshots Python native snapshot launches',
+      'parity.yml snapshots Rust native snapshots and parity',
+      'parity.yml storage-state Rust storage state transfer',
       'python.yml test pytest suite',
       'rust.yml coverage Rust code coverage',
       'rust.yml test Rust doc tests',
@@ -245,6 +248,26 @@ describe('CI execution budgets', () => {
 });
 
 describe('pipeline status gate', () => {
+  it('resolves WebDriver executables in the job that runs native WebDriver tests', () => {
+    const workflow = readWorkflow('parity.yml');
+    const jobs = listWorkflowJobs(workflow).filter((job) =>
+      getJobBlock(workflow, job).includes('--test webdriver')
+    );
+    assert.ok(
+      jobs.length > 0,
+      'native WebDriver integration tests are missing'
+    );
+    for (const job of jobs) {
+      const block = getJobBlock(workflow, job);
+      const resolver = block.indexOf('resolve-webdriver.mjs');
+      const test = block.indexOf('--test webdriver');
+      assert.ok(
+        resolver >= 0 && resolver < test,
+        `${job}: resolve WebDriver before running its native tests`
+      );
+    }
+  });
+
   it('is present in every workflow and needs every other job', () => {
     for (const { fileName, text } of WORKFLOWS) {
       const jobs = listWorkflowJobs(text);

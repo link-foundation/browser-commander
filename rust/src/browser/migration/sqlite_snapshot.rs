@@ -54,15 +54,21 @@ fn copy_database_files(source_path: &Path, dir: &Path) -> Result<PathBuf> {
 }
 
 fn open_read_only(path: &Path) -> rusqlite::Result<Connection> {
-    Connection::open_with_flags(
+    let connection = Connection::open_with_flags(
         path,
         OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
-    )
+    )?;
+    // A live browser can hold this lock for its entire lifetime. Let the
+    // existing file-and-sidecar fallback handle it instead of waiting five
+    // seconds for every database in the profile.
+    connection.busy_timeout(std::time::Duration::ZERO)?;
+    Ok(connection)
 }
 
 /// Write a consistent snapshot of `source_path` to `snapshot_path`, falling
 /// back to a plain file copy when the source cannot be opened or backed up.
 fn snapshot_into(source_path: &Path, dir: &Path) -> Result<PathBuf> {
+    tracing::debug!(source = %source_path.display(), "Backing up live SQLite database");
     let snapshot_path = dir.join(file_name(source_path)?);
     let backed_up = open_read_only(source_path).and_then(|source| {
         // `backup` opens the destination itself; the source stays read-only.

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 2,
+  "format": "browser-commander-trace",
+  "mode": "continuous",
+  "outcome": "partial",
+  "startedAt": "2026-01-01T00:00:00.000Z",
+  "stoppedAt": "2026-01-01T00:00:00.000Z",
+  "commanderVersion": "0.0.0-conformance",
+  "engine": "playwright",
+  "browser": null,
+  "platform": "conformance",
+  "runtime": "conformance",
+  "events": [
+    "navigation",
+    "interaction",
+    "console",
+    "pageerror",
+    "dialog",
+    "requestfailed",
+    "download"
+  ],
+  "dom": {
+    "html": true,
+    "liveControlState": true,
+    "liveState": true,
+    "mutations": true,
+    "openShadowRoots": true
+  },
+  "replay": {
+    "checkpoints": true,
+    "mutations": true,
+    "childListPositions": true,
+    "liveState": true,
+    "identifiers": true
+  },
+  "privacy": {
+    "redactSelectors": [
+      "input[type=password]",
+      "[data-private]",
+      "[data-bc-redact]"
+    ],
+    "redactAttributes": [
+      "authorization",
+      "proxy-authorization",
+      "cookie",
+      "set-cookie",
+      "x-api-key",
+      "x-auth-token",
+      "x-csrf-token"
+    ],
+    "redactQueryParams": [
+      "access_token",
+      "api_key",
+      "apikey",
+      "auth",
+      "code",
+      "id_token",
+      "password",
+      "refresh_token",
+      "secret",
+      "session",
+      "signature",
+      "token",
+      "ticket"
+    ],
+    "hasCallback": false
+  },
+  "limits": {
+    "maxQueuedMutations": 100
+  },
+  "counts": {
+    "checkpoints": 3,
+    "events": 18,
+    "mutationBatches": 3
+  },
+  "dropped": 1
+}

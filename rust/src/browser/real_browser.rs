@@ -32,14 +32,16 @@ use crate::browser::connector::{connect_browser, ConnectOptions};
 use crate::browser::debugging_port::{
     assert_fixed_debugging_port, reserve_loopback_port, DevToolsOutputWatcher, PortRaceError,
 };
-use crate::browser::launcher::{Browser, LaunchResult};
+use crate::browser::launcher::Browser;
 use crate::browser::migration::{
     migrate_profile, MigrateProfileOptions, MigrationSource, MigrationSummary,
 };
 use crate::browser::profile_directory::{
-    create_temporary_user_data_dir, prepare_user_data_dir, remove_user_data_dir,
+    configure_user_data_dir_for_profile, create_temporary_user_data_dir_with_first_run,
+    prepare_user_data_dir_with_first_run, remove_user_data_dir,
 };
 use crate::browser::restrictions::{merge_feature_switches, resolve_restrictions};
+use crate::browser::storage_state::StorageStateInput;
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::{DownloadManager, DownloadSetting};
 use crate::fingerprint::automation_parity::{
@@ -83,6 +85,18 @@ pub struct RealBrowserOptions {
     /// Dedicated, non-default browser profile. When `None` a fresh temporary
     /// profile is created for the launch and deleted when the browser exits.
     pub user_data_dir: Option<PathBuf>,
+    /// Profile whose Preferences are seeded before launch.
+    pub profile_directory: String,
+    /// Whether to ask to become the OS default browser. Defaults to false.
+    pub default_browser_check: Option<bool>,
+    /// Allow the browser's first-run flow in a fresh profile.
+    pub first_run: bool,
+    /// JSON object deep-merged into Default/Preferences before launch.
+    pub preferences: Value,
+    /// JSON object deep-merged into Local State before launch.
+    pub local_state: Value,
+    /// Playwright-compatible cookie and localStorage state to restore.
+    pub storage_state: Option<StorageStateInput>,
     /// Fixed loopback CDP port. When `None` a free port is reserved (and a
     /// lost port race retried). Zero is refused: it makes Chrome enable
     /// `AutomationControlled`.
@@ -154,6 +168,12 @@ impl Default for RealBrowserOptions {
             channel: "chrome".to_string(),
             executable_path: None,
             user_data_dir: None,
+            profile_directory: "Default".into(),
+            default_browser_check: None,
+            first_run: false,
+            preferences: serde_json::json!({}),
+            local_state: serde_json::json!({}),
+            storage_state: None,
             remote_debugging_port: None,
             port_attempts: DEFAULT_PORT_ATTEMPTS,
             headless: false,
@@ -220,7 +240,11 @@ impl RealBrowserOptions {
         self.user_data_dir = Some(user_data_dir.into());
         self
     }
-
+    /// Restore portable cookies and origin-scoped localStorage after connecting.
+    pub fn storage_state(mut self, state: impl Into<StorageStateInput>) -> Self {
+        self.storage_state = Some(state.into());
+        self
+    }
     /// Use a fixed loopback CDP port instead of a reserved one. Zero is
     /// refused at launch.
     pub fn remote_debugging_port(mut self, port: u16) -> Self {
@@ -403,9 +427,9 @@ impl RealBrowserOptions {
 
 /// Browser/page handles plus metadata for the spawned installed browser.
 pub struct RealBrowserLaunchResult {
-    /// Browser metadata matching [`LaunchResult`].
+    /// Browser metadata matching [`crate::browser::launcher::LaunchResult`].
     pub browser: Browser,
-    /// Shared engine adapter matching [`LaunchResult`].
+    /// Shared engine adapter matching [`crate::browser::launcher::LaunchResult`].
     pub page: Arc<dyn EngineAdapter>,
     /// Resolved loopback DevTools endpoint.
     pub cdp_endpoint: String,
@@ -568,28 +592,6 @@ fn browser_environment(options: &RealBrowserOptions) -> Result<Option<HashMap<St
         );
     }
     Ok((!env.is_empty() || options.env.is_some()).then_some(env))
-}
-
-pub(crate) fn connection_options(
-    options: &RealBrowserOptions,
-    endpoint: &str,
-) -> Result<ConnectOptions> {
-    let mut connection = match options.engine {
-        EngineType::Chromiumoxide => ConnectOptions::chromiumoxide(),
-        EngineType::Playwright => ConnectOptions::playwright(),
-        EngineType::Puppeteer => ConnectOptions::puppeteer(),
-        EngineType::Fantoccini => return Err(anyhow!(FANTOCCINI_OVER_CDP)),
-    };
-    connection.cdp_endpoint = Some(endpoint.to_string());
-    connection.slow_mo = options.slow_mo;
-    connection.timeout = options.timeout;
-    connection.protocol_timeout = options.protocol_timeout;
-    connection.seed_cookies = options.seed_cookies.clone();
-    connection.verbose = options.verbose;
-    connection.node_executable = options.node_executable.clone();
-    connection.node_working_dir = options.node_working_dir.clone();
-    connection.downloads = options.downloads.clone();
-    Ok(connection)
 }
 
 /// A spawned browser and, when its stderr is captured, the watcher that sees
@@ -802,24 +804,28 @@ async fn spawn_on_free_port(
     }
 }
 
-/// Start the browser and attach with `connect`, returning the connection and
-/// the launch. Generic over the connection so the launcher can apply a
-/// fingerprint while attaching and tests can attach to nothing.
-pub(crate) async fn launch_real_browser_with<T, C, F>(
+/// Launch with an optional pre-created profile owned by the browser lifecycle.
+pub(crate) async fn launch_real_browser_with_owned<T, C, F>(
     options: &RealBrowserOptions,
     hooks: Arc<dyn LaunchHooks>,
     connect: C,
+    owned_profile: bool,
 ) -> Result<(T, LaunchedRealBrowser)>
 where
     C: FnOnce(ConnectOptions) -> F,
     F: Future<Output = Result<T>>,
 {
     validate_launch_request(options)?;
+    if let Some(state) = &options.storage_state {
+        state.load()?;
+    }
     let executable_path = hooks.resolve_executable(options)?;
-    let temporary_profile = options.user_data_dir.is_none();
+    let temporary_profile = options.user_data_dir.is_none() || owned_profile;
     let user_data_dir = match &options.user_data_dir {
-        Some(user_data_dir) => prepare_user_data_dir(user_data_dir)?,
-        None => create_temporary_user_data_dir(None)?,
+        Some(user_data_dir) => {
+            prepare_user_data_dir_with_first_run(user_data_dir, options.first_run)?
+        }
+        None => create_temporary_user_data_dir_with_first_run(None, options.first_run)?,
     };
     let (migration, migrated_cookies) = if let Some(source) = options.migrate_from.clone() {
         let target = user_data_dir.join("Default");
@@ -854,6 +860,18 @@ where
     } else {
         (None, Vec::new())
     };
+    if let Err(error) = configure_user_data_dir_for_profile(
+        &user_data_dir,
+        &options.profile_directory,
+        options.default_browser_check,
+        &options.preferences,
+        &options.local_state,
+    ) {
+        if temporary_profile {
+            let _ = remove_user_data_dir(&user_data_dir).await;
+        }
+        return Err(error);
+    }
     let env = browser_environment(options)?;
 
     let spawned = match spawn_on_free_port(
@@ -939,38 +957,21 @@ where
 /// browser exits; known default profiles are refused because Chrome 136 and
 /// newer ignore remote-debugging switches for them.
 pub async fn launch_real_browser(options: RealBrowserOptions) -> Result<RealBrowserLaunchResult> {
-    let (connection, launched) =
-        launch_real_browser_with(&options, Arc::new(SystemLaunchHooks), connect_browser).await?;
-    Ok(real_browser_result(connection, launched, options.headless))
+    launch_real_browser_owned(options, false).await
 }
 
-pub(crate) fn real_browser_result(
-    connection: LaunchResult,
-    launched: LaunchedRealBrowser,
-    headless: bool,
-) -> RealBrowserLaunchResult {
-    let LaunchResult {
-        mut browser,
-        page,
-        downloads,
-        ..
-    } = connection;
-    browser.user_data_dir = launched.user_data_dir.clone();
-    browser.headless = headless;
-    RealBrowserLaunchResult {
-        browser,
-        page,
-        cdp_endpoint: launched.cdp_endpoint,
-        remote_debugging_port: launched.remote_debugging_port,
-        executable_path: launched.executable_path,
-        user_data_dir: launched.user_data_dir,
-        temporary_profile: launched.temporary_profile,
-        args: launched.args,
-        browser_process: launched.browser_process,
-        downloads,
-        migration: launched.migration,
-        closer: launched.closer,
-    }
+pub(crate) async fn launch_real_browser_owned(
+    options: RealBrowserOptions,
+    owned_profile: bool,
+) -> Result<RealBrowserLaunchResult> {
+    let (connection, launched) = launch_real_browser_with_owned(
+        &options,
+        Arc::new(SystemLaunchHooks),
+        connect_browser,
+        owned_profile,
+    )
+    .await?;
+    Ok(real_browser_result(connection, launched, options.headless))
 }
 
 /// Descriptive alias for [`launch_real_browser`].
@@ -979,6 +980,11 @@ pub async fn launch_and_connect_real_browser(
 ) -> Result<RealBrowserLaunchResult> {
     launch_real_browser(options).await
 }
+
+#[path = "real_browser_result.rs"]
+mod result;
+use result::real_browser_result;
+pub(crate) use result::{connection_options, launch_real_browser_with};
 
 #[cfg(test)]
 #[path = "real_browser_tests.rs"]

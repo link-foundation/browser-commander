@@ -44,7 +44,9 @@
 //! - [`downloads`] - Managed, persistent downloads (manager, store, sources)
 //! - [`fingerprint`] - Fingerprint parity with a hand-started browser (profiles,
 //!   presets, automation parity)
-//! - [`traces`] - Reading privacy-aware portable trace bundles
+//! - [`puppeteer`] - Typed Puppeteer API over the JavaScript CLI's bridge
+//! - [`traces`] - Recording, reading and exporting privacy-aware portable trace
+//!   bundles
 //! - [`utilities`] - General utilities (URL handling, wait operations)
 //! - [`high_level`] - High-level DRY utilities
 
@@ -55,18 +57,35 @@ pub mod elements;
 pub mod fingerprint;
 pub mod high_level;
 pub mod interactions;
+pub mod playwright;
+pub mod puppeteer;
 pub mod traces;
 pub mod utilities;
 
+pub use browser::extension_relay::{
+    attach_via_extension, write_extension_directory, ExtensionRelay, RelayError, RelayEvent,
+    RelayExtension, RelayOptions, RelaySession, RelayTab,
+};
+pub use browser::parity;
+pub use browser::webdriver::{
+    launch_webdriver, launch_webdriver_snapshot, ManagedWebDriver, WebDriverBrowser,
+    WebDriverClient, WebDriverOptions, WebDriverSnapshotResult,
+};
+pub use parity::{measure_parity, measure_session_parity, MeasureParityOptions, ParityReport};
+
 // Re-export commonly used items at crate root
+pub use browser::snapshot::{
+    launch_snapshot, snapshot_user_data_dir, SnapshotLaunchResult, SnapshotOptions, SnapshotReport,
+};
 pub use browser::{
     build_real_browser_args, clear_browser_cookie_memory_cache, connect_browser, emulate_media,
     launch_and_connect_real_browser, launch_browser, launch_real_browser, launch_restrictions,
-    list_browser_profiles, read_browser_cookies, resolve_restrictions, Browser, BrowserCookie,
-    BrowserCookieReadOptions, BrowserProcess, BrowserProfile, BrowserProfileOptions,
+    list_browser_profiles, read_browser_cookies, resolve_restrictions, save_storage_state, Browser,
+    BrowserCookie, BrowserCookieReadOptions, BrowserProcess, BrowserProfile, BrowserProfileOptions,
     ChromiumoxidePage, ColorScheme, ConnectOptions, EmulateMediaOptions, LaunchMode, LaunchOptions,
-    LaunchRestriction, LaunchResult, NodeBridgePage, RealBrowserLaunchResult, RealBrowserOptions,
-    LAUNCH_MODES, SUPPORTED_COOKIE_BROWSERS,
+    LaunchRestriction, LaunchResult, NodeBridgePage, PlaywrightConnect, PlaywrightDriverPage,
+    PlaywrightLaunch, RealBrowserLaunchResult, RealBrowserOptions, StorageEntry, StorageOrigin,
+    StorageState, StorageStateInput, LAUNCH_MODES, SUPPORTED_COOKIE_BROWSERS,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
@@ -98,12 +117,17 @@ pub use fingerprint::{
 };
 
 // Reading trace bundles needs no engine, so the reader is available at the
-// crate root like any other pure helper.
+// crate root like any other pure helper; recording sits beside it.
 pub use traces::{
     diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, ParsedNdjson,
     Trace, TraceCheckpoint, TraceCheckpointReason, TraceError, TraceEvent, TraceFiles,
     TraceLiveState, TraceManifest, TraceMode, TraceMutationKind, TraceOutcome, TraceReplaySupport,
     TRACE_EVENT_SOURCES, TRACE_FORMAT, TRACE_SCHEMA_VERSION,
+};
+pub use traces::{
+    start_trace, trace_links, write_trace_links, write_trace_viewer, AdapterTracePage,
+    TraceCheckpointOptions, TraceLinksOptions, TraceOptions, TraceRecordError, TraceRecorder,
+    TraceResult, TraceStopOptions,
 };
 
 /// Prelude module for convenient imports.
@@ -163,10 +187,11 @@ pub mod prelude {
         ScrollOptions, ScrollResult,
     };
     pub use crate::traces::{
-        diff_control_state, parse_ndjson, read_trace, ControlChange, ControlChangeKind, Trace,
-        TraceCheckpoint, TraceCheckpointReason, TraceError, TraceEvent, TraceFiles, TraceLiveState,
-        TraceManifest, TraceMode, TraceMutationKind, TraceOutcome, TraceReplaySupport,
-        TRACE_SCHEMA_VERSION,
+        diff_control_state, parse_ndjson, read_trace, start_trace, write_trace_viewer,
+        AdapterTracePage, ControlChange, ControlChangeKind, Trace, TraceCheckpoint,
+        TraceCheckpointReason, TraceError, TraceEvent, TraceFiles, TraceLiveState, TraceManifest,
+        TraceMode, TraceMutationKind, TraceOptions, TraceOutcome, TraceRecorder,
+        TraceReplaySupport, TRACE_SCHEMA_VERSION,
     };
     pub use crate::utilities::{
         evaluate, get_domain, get_url, parse_url, safe_evaluate, same_origin, unfocus_address_bar,

@@ -31,7 +31,7 @@ from browser_commander.fingerprint.automation_parity import (
 )
 from browser_commander.utilities.subprocess import OutputChannel
 
-# feature-parity: migration.launch
+# feature-parity: migration.launch@native-typed
 DEDICATED = "/tmp/browser-commander-dedicated"
 
 

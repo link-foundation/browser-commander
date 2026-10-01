@@ -4,6 +4,7 @@
 //! browser automation engines.
 
 use async_trait::async_trait;
+use futures::stream::BoxStream;
 
 use crate::interactions::click_result::{ClickEffect, Evidence};
 use serde::{Deserialize, Serialize};
@@ -201,6 +202,71 @@ pub struct PreClickState {
     pub is_connected: bool,
 }
 
+/// Something the browser did that a trace records (issue #108).
+///
+/// Engines that can report page activity hand these to a recorder through
+/// [`EngineAdapter::trace_events`]; each maps to one `js/src/traces/observers.js`
+/// record.
+#[derive(Debug, Clone, PartialEq)]
+pub enum TraceEngineEvent {
+    /// A frame committed a navigation.
+    Navigated {
+        /// Whether it was the top-level frame.
+        main_frame: bool,
+        /// The URL it navigated to.
+        url: String,
+    },
+    /// The page wrote to its console.
+    Console {
+        /// `log`, `warning`, `error`, ...
+        level: String,
+        /// The message text.
+        text: String,
+    },
+    /// An uncaught exception.
+    PageError {
+        /// The error message.
+        message: String,
+        /// The stack, when the engine reports one.
+        stack: Option<String>,
+    },
+    /// A request failed.
+    RequestFailed {
+        /// The request URL.
+        url: String,
+        /// The request method.
+        method: String,
+        /// Why it failed.
+        error_text: Option<String>,
+    },
+    /// A dialog opened.
+    Dialog {
+        /// `alert`, `confirm`, `prompt` or `beforeunload`.
+        dialog_type: String,
+        /// The dialog message.
+        message: String,
+    },
+    /// A download changed state.
+    Download {
+        /// `started`, `completed`, `failed`, ...
+        phase: String,
+        /// The engine's identifier for the download.
+        id: Option<String>,
+        /// The file name the page suggested.
+        suggested_filename: Option<String>,
+        /// Where it was saved.
+        path: Option<String>,
+        /// A checksum of the saved file.
+        checksum: Option<String>,
+        /// Bytes saved.
+        bytes: Option<u64>,
+        /// The download URL.
+        url: Option<String>,
+        /// Why it failed.
+        failure: Option<String>,
+    },
+}
+
 /// Trait for browser engine adapters.
 ///
 /// This trait provides a unified interface for different browser automation
@@ -284,6 +350,30 @@ pub trait EngineAdapter: Send + Sync {
     /// Evaluate JavaScript in the page context.
     async fn evaluate(&self, script: &str) -> Result<serde_json::Value, EngineError>;
 
+    /// Read `chrome://version` in a fresh tab without changing the current page.
+    async fn read_browser_version_page(&self) -> Result<serde_json::Value, EngineError> {
+        Err(EngineError::Browser(format!(
+            "browser version metadata is unavailable for the {} engine",
+            self.engine_type()
+        )))
+    }
+
+    /// Restore portable cookies and origin-scoped localStorage before navigation.
+    async fn restore_storage_state(&self, _state: serde_json::Value) -> Result<(), EngineError> {
+        Err(EngineError::Browser(format!(
+            "portable storage state is unavailable for the {} engine",
+            self.engine_type()
+        )))
+    }
+
+    /// Export portable cookies and the current page's localStorage.
+    async fn export_storage_state(&self) -> Result<serde_json::Value, EngineError> {
+        Err(EngineError::Browser(format!(
+            "portable storage state is unavailable for the {} engine",
+            self.engine_type()
+        )))
+    }
+
     /// Take a screenshot.
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError>;
 
@@ -316,6 +406,28 @@ pub trait EngineAdapter: Send + Sync {
 
     /// Release a held key at the page level.
     async fn keyboard_up(&self, key: &str) -> Result<(), EngineError>;
+
+    // =========================================================================
+    // Trace recording (issue #108)
+    // =========================================================================
+
+    /// Run `script` in every document the page loads from now on; an
+    /// identifier for [`EngineAdapter::remove_init_script`], or `None` when the
+    /// engine cannot (the default).
+    async fn add_init_script(&self, _script: &str) -> Result<Option<String>, EngineError> {
+        Ok(None)
+    }
+
+    /// Stop running a script added with [`EngineAdapter::add_init_script`].
+    async fn remove_init_script(&self, _identifier: &str) -> Result<(), EngineError> {
+        Ok(())
+    }
+
+    /// A stream of page activity for a trace recorder, or `None` when the
+    /// engine does not report any (the default).
+    async fn trace_events(&self) -> Option<BoxStream<'static, TraceEngineEvent>> {
+        None
+    }
 }
 
 #[cfg(test)]

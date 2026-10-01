@@ -1,0 +1,60 @@
+{
+  "url": "https://example.com/next?token=[redacted]",
+  "title": "Next",
+  "readyState": "interactive",
+  "scroll": {
+    "x": 0,
+    "y": 0
+  },
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "activeElement": "form > textarea",
+  "controls": [
+    {
+      "path": "form > input:nth-of-type(1)",
+      "tag": "input",
+      "type": "text",
+      "name": "user",
+      "id": null,
+      "focused": false,
+      "value": "bob",
+      "redacted": false
+    },
+    {
+      "path": "form > input:nth-of-type(2)",
+      "tag": "input",
+      "type": "checkbox",
+      "name": "agree",
+      "id": null,
+      "focused": false,
+      "value": "on",
+      "checked": true,
+      "redacted": false
+    },
+    {
+      "path": "form > textarea",
+      "tag": "textarea",
+      "type": null,
+      "name": null,
+      "id": "note",
+      "focused": true,
+      "value": "[redacted] note",
+      "scroll": {
+        "x": 0,
+        "y": 3
+      },
+      "redacted": false
+    }
+  ],
+  "frames": [
+    {
+      "url": "https://ads.example.com/frame",
+      "crossOrigin": true
+    }
+  ],
+  "name": "final",
+  "actor": "caller",
+  "reason": "failure"
+}

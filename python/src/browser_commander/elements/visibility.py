@@ -80,9 +80,7 @@ async def is_enabled(
         if engine == "playwright":
             # For Playwright, use locator API
             locator = (
-                page.locator(selector).first()
-                if isinstance(selector, str)
-                else selector
+                page.locator(selector).first if isinstance(selector, str) else selector
             )
 
             # Check disabled state via JavaScript

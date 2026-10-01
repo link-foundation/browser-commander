@@ -321,10 +321,12 @@ fn get_user_data_dir_creates_default() {
 }
 
 #[tokio::test]
-async fn launch_fantoccini_is_unimplemented() {
-    let options = LaunchOptions::fantoccini();
+async fn launch_fantoccini_owns_a_native_driver() {
+    let mut options = LaunchOptions::fantoccini();
+    options.webdriver.driver_executable =
+        Some("/nonexistent/browser-commander/chromedriver".into());
     let err = launch_browser(options).await.unwrap_err();
-    assert!(err.to_string().contains("fantoccini"));
+    assert!(err.to_string().contains("start WebDriver"), "{err}");
 }
 
 #[tokio::test]

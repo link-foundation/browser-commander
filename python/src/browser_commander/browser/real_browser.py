@@ -32,6 +32,7 @@ from browser_commander.browser.debugging_port import (
 )
 from browser_commander.browser.launcher import LaunchResult
 from browser_commander.browser.profile_directory import (
+    configure_user_data_dir,
     create_temporary_user_data_dir,
     prepare_user_data_dir,
     remove_user_data_dir,
@@ -42,6 +43,7 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.storage_state import StorageStateInput
 from browser_commander.browser.system_browser import (
     _CHANNEL_EXECUTABLE_NAMES,
     CHANNEL_EXECUTABLE_NAMES,
@@ -96,6 +98,16 @@ class RealBrowserOptions:
     channel: str = "chrome"
     executable_path: str | None = None
     user_data_dir: str | None = None
+    profile_directory: str = "Default"
+    """Profile whose preferences are seeded, including snapshot Profile 1."""
+    default_browser_check: bool | None = None
+    """False by default; True allows the browser to ask to become the default."""
+    first_run: bool = False
+    """True allows the browser's first-run flow in a fresh profile."""
+    preferences: Mapping[str, Any] | None = None
+    """Deep-merged into Default/Preferences before launch."""
+    local_state: Mapping[str, Any] | None = None
+    """Deep-merged into Local State before launch."""
     """Persistent dedicated profile. When omitted a fresh temporary profile is
     created and deleted on close (and when the browser exits)."""
     remote_debugging_port: int | None = None
@@ -126,6 +138,7 @@ class RealBrowserOptions:
     timeout: int | None = None
     headers: dict[str, str] | None = None
     seed_cookies: list[dict[str, Any]] = field(default_factory=list)
+    storage_state: StorageStateInput = None
     verbose: bool = False
     downloads: bool | Mapping[str, Any] | None = None
     """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
@@ -149,6 +162,8 @@ class RealBrowserResult(LaunchResult):
     #: The migration report (without the raw ``cookies``) when
     #: ``migrate_from`` was given.
     migration: dict[str, Any] | None = None
+    #: Read-only snapshot copy report when launched with ``launch_snapshot``.
+    snapshot: dict[str, Any] | None = None
 
 
 #: The page a real launch opens, as Puppeteer and Playwright do. Without a URL,
@@ -610,6 +625,7 @@ async def launch_real_browser_with_dependencies(
     connect: Any = connect_browser,
     reserve_port: Any = reserve_loopback_port,
     migrate_profile: Any = _default_migrate_profile,
+    owned_profile: bool = False,
 ) -> RealBrowserResult:
     """Dependency-injected implementation used by the public helper and tests."""
 
@@ -623,11 +639,13 @@ async def launch_real_browser_with_dependencies(
         )
     )
 
-    temporary_profile = not options.user_data_dir
+    temporary_profile = not options.user_data_dir or owned_profile
     user_data_dir = (
-        create_temporary_user_data_dir()
-        if temporary_profile
-        else prepare_user_data_dir(str(options.user_data_dir))
+        create_temporary_user_data_dir(first_run=options.first_run)
+        if not options.user_data_dir
+        else prepare_user_data_dir(
+            str(options.user_data_dir), first_run=options.first_run
+        )
     )
     child_env = browser_environment(options.restrictions, options.env)
 
@@ -637,6 +655,20 @@ async def launch_real_browser_with_dependencies(
         temporary_profile=temporary_profile,
         migrate=migrate_profile,
     )
+
+    # A migrated profile may have opted into the default-browser prompt.
+    try:
+        configure_user_data_dir(
+            user_data_dir,
+            default_browser_check=options.default_browser_check,
+            preferences=options.preferences,
+            local_state=options.local_state,
+            profile_directory=options.profile_directory,
+        )
+    except BaseException:
+        if temporary_profile:
+            await _remove_profile(user_data_dir)
+        raise
 
     try:
         launched = await _spawn_on_free_port(
@@ -679,6 +711,7 @@ async def launch_real_browser_with_dependencies(
                     seed_cookies=[*options.seed_cookies, *migrated_cookies]
                     if migrated_cookies
                     else options.seed_cookies,
+                    storage_state=options.storage_state,
                     verbose=options.verbose,
                     downloads=options.downloads,
                 )

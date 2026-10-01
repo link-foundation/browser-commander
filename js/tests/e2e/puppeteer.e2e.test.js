@@ -1,3 +1,4 @@
+// feature-parity: engine.puppeteer@native-typed
 /**
  * E2E tests for browser-commander using Puppeteer engine
  *

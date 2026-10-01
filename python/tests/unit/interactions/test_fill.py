@@ -224,7 +224,7 @@ class TestPerformFill:
             nonlocal type_called
             type_called = True
 
-        adapter.type = mock_type
+        adapter.type_text = mock_type
         adapter.get_input_value = AsyncMock(return_value="test text")
 
         result = await perform_fill(
@@ -272,7 +272,7 @@ class TestPerformFill:
         page = create_mock_playwright_page()
         log = create_mock_logger()
         adapter = MagicMock()
-        adapter.type = AsyncMock(
+        adapter.type_text = AsyncMock(
             side_effect=Exception("Execution context was destroyed")
         )
 

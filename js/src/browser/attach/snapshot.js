@@ -155,9 +155,9 @@ function isInside(child, parent) {
   );
 }
 
-async function prepareTarget(to, sourceRoot) {
+async function prepareTarget(to, sourceRoot, profile) {
   if (!to) {
-    return await createTemporaryUserDataDir();
+    return await createTemporaryUserDataDir({ profileDirectory: profile });
   }
   if (isInside(to, sourceRoot)) {
     throw new Error(
@@ -328,7 +328,7 @@ export async function snapshotUserDataDir({
     );
   }
 
-  const target = await prepareTarget(to, sourceRoot);
+  const target = await prepareTarget(to, sourceRoot, profile);
   try {
     return await copyProfile({
       sourceRoot,
@@ -361,7 +361,7 @@ async function copyProfile({ sourceRoot, profile, target, source }) {
     });
   }
   await copier.copyDirectory(profile);
-  await prepareUserDataDir(target);
+  await prepareUserDataDir(target, { profileDirectory: profile });
   await markExitedCleanly(path.join(target, profile));
 
   return {

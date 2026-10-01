@@ -146,3 +146,5 @@ describe('browser storage state', () => {
     assert.deepEqual(JSON.parse(await readFile(filePath, 'utf8')), state);
   });
 });
+
+// feature-parity: storage.portable@native-typed

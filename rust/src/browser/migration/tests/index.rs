@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-// feature-parity: migration.profile
+// feature-parity: migration.profile@native-typed
 
 use serde_json::json;
 

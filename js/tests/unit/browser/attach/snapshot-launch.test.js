@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
@@ -192,6 +192,15 @@ describe('snapshot attach launch option', () => {
     ]);
 
     await access(result.userDataDir);
+    assert.equal(
+      JSON.parse(
+        await readFile(
+          path.join(result.userDataDir, 'Profile 1', 'Preferences'),
+          'utf8'
+        )
+      ).browser.check_default_browser,
+      false
+    );
     browserProcess.exit(0);
     await new Promise((resolve) => setTimeout(resolve, 50));
     await assert.rejects(access(result.userDataDir), { code: 'ENOENT' });

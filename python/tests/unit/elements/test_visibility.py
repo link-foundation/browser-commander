@@ -83,7 +83,7 @@ class TestIsEnabled:
         page = create_mock_playwright_page()
         mock_locator = MagicMock()
         mock_locator.evaluate = AsyncMock(return_value=False)  # not disabled
-        mock_locator.first = MagicMock(return_value=mock_locator)
+        mock_locator.first = mock_locator
         page.locator = MagicMock(return_value=mock_locator)
 
         result = await is_enabled(
@@ -98,7 +98,7 @@ class TestIsEnabled:
         page = create_mock_playwright_page()
         mock_locator = MagicMock()
         mock_locator.evaluate = AsyncMock(return_value=True)  # disabled
-        mock_locator.first = MagicMock(return_value=mock_locator)
+        mock_locator.first = mock_locator
         page.locator = MagicMock(return_value=mock_locator)
 
         result = await is_enabled(
@@ -115,7 +115,7 @@ class TestIsEnabled:
         mock_locator.evaluate = AsyncMock(
             side_effect=Exception("Execution context was destroyed")
         )
-        mock_locator.first = MagicMock(return_value=mock_locator)
+        mock_locator.first = mock_locator
         page.locator = MagicMock(return_value=mock_locator)
 
         result = await is_enabled(

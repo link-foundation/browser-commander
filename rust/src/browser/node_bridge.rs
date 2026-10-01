@@ -439,6 +439,24 @@ impl EngineAdapter for NodeBridgePage {
         self.request("evaluate", json!({ "script": script })).await
     }
 
+    async fn read_browser_version_page(&self) -> Result<Value, EngineError> {
+        self.request(
+            "readBrowserVersionPage",
+            json!({ "script": crate::parity::VERSION_EXPRESSION }),
+        )
+        .await
+    }
+
+    async fn restore_storage_state(&self, state: Value) -> Result<(), EngineError> {
+        self.request("restoreStorageState", json!({ "state": state }))
+            .await?;
+        Ok(())
+    }
+
+    async fn export_storage_state(&self) -> Result<Value, EngineError> {
+        self.request("exportStorageState", json!({})).await
+    }
+
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {
         decode_base64(self.string_request("screenshot", json!({})).await?)
     }

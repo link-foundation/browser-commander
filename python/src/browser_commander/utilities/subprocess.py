@@ -26,6 +26,7 @@ between, so arguments are never re-split or expanded.
 from __future__ import annotations
 
 import asyncio
+import codecs
 import contextlib
 import os
 import subprocess
@@ -280,14 +281,19 @@ class ManagedProcess:
     ) -> None:
         if stream is None:
             return
+        # Incremental, so a character split across two reads stays intact.
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         while True:
             try:
                 data = await stream.read(_READ_CHUNK_SIZE)
             except (OSError, ValueError):
-                return
+                data = b""
+            chunk = decoder.decode(data, final=not data)
             if not data:
+                if chunk:
+                    with contextlib.suppress(Exception):
+                        channel.emit(chunk)
                 return
-            chunk = _decode(data)
             if self._forward_output:
                 with contextlib.suppress(Exception):
                     mirror.write(chunk)

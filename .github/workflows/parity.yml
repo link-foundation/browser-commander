@@ -39,6 +39,7 @@ on:
       - 'rust/tests/parity.rs'
       - 'rust/tests/webdriver*.rs'
       - 'rust/tests/playwright_driver.rs'
+      - 'rust/tests/puppeteer_bridge.rs'
       - 'rust/tests/support/**'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
@@ -358,10 +359,14 @@ jobs:
         run: node experiments/issue-110/resolve-webdriver.mjs >> "$GITHUB_ENV"
       - name: Run Rust snapshots and parity in all CDP engines
         working-directory: rust
+        env:
+          # Only the Puppeteer bridge test reads it: it launches Chrome through
+          # the JavaScript CLI's serve --stdio rather than a Rust launcher.
+          CHROME_NO_SANDBOX: 'true'
         shell: bash
         run: |
           bash ../scripts/run-with-budget-warning.sh 600 "Rust native snapshots and parity" \
-            cargo test --locked --test snapshot --test parity --test webdriver --test playwright_driver -- --ignored --nocapture
+            cargo test --locked --test snapshot --test parity --test webdriver --test playwright_driver --test puppeteer_bridge -- --ignored --nocapture
       - name: Launch Python snapshot copies in both engines
         env:
           RUN_E2E: 'true'
@@ -369,7 +374,7 @@ jobs:
         shell: bash
         run: |
           bash scripts/run-with-budget-warning.sh 180 "Python native snapshot launches" \
-            python -m pytest python/tests/e2e/test_snapshot.py -v
+            python -m pytest python/tests/e2e/test_snapshot.py python/tests/e2e/test_puppeteer_bridge.py -v
 
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran

@@ -124,6 +124,35 @@ and fall back to the Node.js bridge. Puppeteer has no driver protocol, so it
 always runs through the bridge, which delegates operations to the official
 Node package.
 
+The whole Puppeteer API is typed as well.
+[`browser_commander::puppeteer`](src/puppeteer) starts the JavaScript CLI's
+`serve --stdio` bridge and has one struct for every Puppeteer class and
+interface, with an `async fn` for every method and getter, inherited ones
+included. `scripts/generate-puppeteer-bindings.mjs` generates them from the
+`lib/types.d.ts` that puppeteer-core ships
+([`protocol/puppeteer/api.json`](protocol/puppeteer/api.json)):
+
+```rust
+use browser_commander::puppeteer::{BridgeOptions, JsFunction, PuppeteerBridge};
+use serde_json::json;
+
+let bridge = PuppeteerBridge::launch(BridgeOptions::default()).await?;
+let browser = bridge.puppeteer().await?.launch(Some(json!({ "headless": true }))).await?;
+let page = browser.new_page(None).await?;
+page.goto("https://example.com", None).await?;
+let title: String = page.title().await?;
+let sum = page.evaluate(JsFunction::source("(a, b) => a + b"), &[json!(1), json!(2)]).await?;
+let mut console = page.remote().subscribe("console").await?;
+browser.close().await?;
+bridge.close().await;
+```
+
+Puppeteer's option objects stay `serde_json::Value`; results, handles and
+errors are typed (`BridgeError::is_timeout()` matches Puppeteer's
+`TimeoutError`). The bridge needs Node.js, the JavaScript CLI
+(`BROWSER_COMMANDER_JS_CLI`, or the `browser-commander` npm package in
+`node_modules`) and `puppeteer-core` or `puppeteer` where Node resolves it.
+
 ```rust
 use browser_commander::playwright::protocol::{
     PageSetViewportSizeParams, PageSetViewportSizeParamsViewportSize,

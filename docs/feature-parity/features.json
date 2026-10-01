@@ -14,6 +14,10 @@
         {
           "id": "engine.playwright",
           "title": "Drive Playwright through its typed API"
+        },
+        {
+          "id": "engine.puppeteer",
+          "title": "Drive Puppeteer through its typed API"
         }
       ]
     },

@@ -22,7 +22,7 @@ below does **not** imply the implementation is complete.
 
 ## #108: native and typed cross-language parity
 
-The generated [feature matrix](feature-parity.md) currently tests 11 shared
+The generated [feature matrix](feature-parity.md) currently tests 14 shared
 features. Its explicit limitations and manual “Not implemented” or
 “Not supported” cells show that the full parity requirement remains open. The
 following is the implementation plan for **every** numbered requirement in
@@ -80,10 +80,32 @@ These checks cover it:
   driver-or-bridge selection against real Chrome in the Browser Parity
   workflow.
 
-The following #108 deliverables are **not implemented**: generated Rust/Python
-Puppeteer wrappers and native recording of all 12 trace facets. Native Rust
-Selenium, downloads and BiDi are now implemented. Existing CLI access and trace
-readers do not satisfy these requirements.
+Rust and Python Puppeteer are now typed over the bridge.
+`scripts/puppeteer-api.mjs` reads puppeteer-core's `lib/types.d.ts` with the
+TypeScript compiler API into `rust/protocol/puppeteer/api.json`: 46 public
+classes and interfaces with their own and inherited methods and getters, and a
+wire kind for each parameter and result. `scripts/generate-puppeteer-bindings.mjs`
+generates `rust/src/puppeteer/api/` and
+`python/src/browser_commander/puppeteer/api/` from it. Each Puppeteer type
+becomes a Rust struct or Python class over a bridge handle. Each member becomes
+an `async` method that encodes its arguments, decodes the result into the
+declared type and wraps a handle in the class of its runtime type. The bridge
+clients (`rust/src/puppeteer/bridge.rs`,
+`python/src/browser_commander/puppeteer/bridge.py`) own the `serve --stdio`
+process and deliver events, including one emitted in the same chunk as the
+subscribe response.
+
+These checks cover it:
+
+- `js/tests/unit/puppeteer-bindings-coverage.test.js` fails when the bindings
+  are stale, when the manifest disagrees with the installed puppeteer-core, or
+  when any method declared in `lib/types.d.ts` lacks a typed Rust or Python
+  entry point.
+- Unit tests against a fake server check encoding, decoding, errors, events
+  and shutdown in both languages.
+- `rust/tests/puppeteer_bridge.rs` and
+  `python/tests/e2e/test_puppeteer_bridge.py` drive real Chrome through the
+  typed API in the Browser Parity workflow.
 
 Rust also exposes native `measure_parity` and `measure_session_parity`. A plain
 command-stream reference browser loads the same probe as the driven browser,

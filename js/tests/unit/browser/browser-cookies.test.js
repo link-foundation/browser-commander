@@ -37,7 +37,7 @@ import {
   listBrowserProfiles as publicListBrowserProfiles,
   readBrowserCookies as publicReadBrowserCookies,
 } from '../../../src/index.js';
-import { writeFirefoxCookies } from '../../helpers/migration-fixtures.js';
+import { writeFirefoxProfile } from '../../helpers/migration-fixtures.js';
 
 const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600;
 const execFile = promisify(execFileCallback);
@@ -134,16 +134,7 @@ async function createChromiumProfile({ homeDir, rows, profile = 'Default' }) {
 }
 
 async function createFirefoxProfile({ homeDir, rows }) {
-  const root = path.join(homeDir, '.mozilla', 'firefox');
-  const profileName = 'fixture.default-release';
-  const profilePath = path.join(root, profileName);
-  await mkdir(profilePath, { recursive: true });
-  await writeFile(
-    path.join(root, 'profiles.ini'),
-    `[Profile0]\nName=default-release\nIsRelative=1\nPath=${profileName}\nDefault=1\n`
-  );
-  const cookiePath = await writeFirefoxCookies(profilePath, rows);
-  return { cookiePath, profilePath, root };
+  return { profilePath: await writeFirefoxProfile(homeDir, rows) };
 }
 
 describe('installed browser cookie import', () => {

@@ -21,7 +21,11 @@ const registry = JSON.parse(
   readFileSync(new URL('./browser-sources.json', import.meta.url), 'utf8')
 );
 
-/** @type {ReadonlyArray<object>} Every known browser, in catalogue order. */
+/**
+ * Every known browser, in catalogue order.
+ *
+ * @type {ReadonlyArray<object>}
+ */
 export const BROWSER_SOURCES = Object.freeze(
   registry.browsers.map((browser) => Object.freeze(browser))
 );
@@ -63,13 +67,7 @@ export function findBrowserSource(name) {
  * @returns {string}
  */
 export function normalizeBrowserId(name) {
-  const source = findBrowserSource(name);
-  if (!source) {
-    throw new Error(
-      `Unsupported browser: ${name}. Expected one of ${BROWSER_IDS.join(', ')}`
-    );
-  }
-  return source.id;
+  return normalizeBrowserSource(name).id;
 }
 
 /** The family ('chromium' or 'firefox') of a browser name. */
@@ -129,7 +127,10 @@ function expandTemplate(template, variables, pathApi) {
  * Canary on Linux).
  *
  * @param {string} name
- * @param {{platform?: string, homeDir?: string, environment?: object}} [options]
+ * @param {Object} [options]
+ * @param {string} [options.platform=process.platform]
+ * @param {string} [options.homeDir=os.homedir()]
+ * @param {Object} [options.environment=process.env]
  * @returns {string[]}
  */
 export function resolveBrowserRoots(

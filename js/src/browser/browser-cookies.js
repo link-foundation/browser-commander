@@ -394,7 +394,9 @@ function countCookiesByDomain(database, family, domains) {
  * @param {string} [options.platform=process.platform]
  * @param {string} [options.homeDir=os.homedir()]
  * @param {Object} [options.environment=process.env]
- * @returns {Promise<Array<{browser,profile,path,isDefault,cookies,byDomain,error?}>>}
+ * @returns {Promise<Array<Object>>} One entry per profile:
+ *   `{browser, profile, path, isDefault, cookies, byDomain}`, plus `error`
+ *   when the database could not be read
  */
 export async function listCookieSources({
   domains,

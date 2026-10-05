@@ -124,6 +124,15 @@ export async function findCookieDatabase(browser, profilePath, platform) {
   return null;
 }
 
+/** Default profile first, then by name. */
+function sortProfiles(profiles) {
+  return profiles.sort(
+    (left, right) =>
+      Number(right.isDefault) - Number(left.isDefault) ||
+      left.name.localeCompare(right.name)
+  );
+}
+
 async function listChromiumProfiles(browser, root, platform) {
   if (!(await pathExists(root))) {
     return [];
@@ -180,11 +189,7 @@ async function listChromiumProfiles(browser, root, platform) {
         (names.size === 1 && name === 'Default'),
     });
   }
-  return profiles.sort(
-    (left, right) =>
-      Number(right.isDefault) - Number(left.isDefault) ||
-      left.name.localeCompare(right.name)
-  );
+  return sortProfiles(profiles);
 }
 
 function parseIni(text) {
@@ -257,11 +262,7 @@ async function listFirefoxProfiles(browser, root, platform) {
       isDefault: section.Default === '1',
     });
   }
-  return profiles.sort(
-    (left, right) =>
-      Number(right.isDefault) - Number(left.isDefault) ||
-      left.name.localeCompare(right.name)
-  );
+  return sortProfiles(profiles);
 }
 
 async function listProfilesForBrowser(browser, platform, homeDir, environment) {

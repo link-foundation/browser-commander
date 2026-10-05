@@ -8,7 +8,7 @@
  */
 
 import assert from 'node:assert';
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import BetterSqlite3 from 'better-sqlite3';
@@ -146,6 +146,35 @@ export async function writeFirefoxCookies(profileDir, rows) {
   }
   database.close();
   return cookiePath;
+}
+
+/**
+ * Write a Linux Firefox-family install under `home` with one default profile,
+ * listed in `profiles.ini`, whose `cookies.sqlite` holds `rows`.
+ *
+ * @param {string} home - Home directory the install lives under
+ * @param {Array<Object>} rows - Cookie rows, as for `writeFirefoxCookies`
+ * @param {Object} [options]
+ * @param {string} [options.root='.mozilla/firefox'] - Install root, relative
+ *   to `home` (a fork such as LibreWolf uses its own)
+ * @param {string} [options.name='default-release'] - Profile name
+ * @returns {Promise<string>} The profile directory
+ */
+export async function writeFirefoxProfile(
+  home,
+  rows,
+  { root = '.mozilla/firefox', name = 'default-release' } = {}
+) {
+  const rootPath = path.join(home, ...root.split('/'));
+  const profileName = `xyz.${name}`;
+  const profilePath = path.join(rootPath, profileName);
+  await mkdir(profilePath, { recursive: true });
+  await writeFile(
+    path.join(rootPath, 'profiles.ini'),
+    `[Profile0]\nName=${name}\nIsRelative=1\nPath=${profileName}\nDefault=1\n`
+  );
+  await writeFirefoxCookies(profilePath, rows);
+  return profilePath;
 }
 
 /**

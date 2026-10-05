@@ -1,26 +1,17 @@
 import assert from 'node:assert';
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
-import os from 'node:os';
+import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
 import { readBrowserCookiesWithDependencies } from '../../../src/browser/browser-cookies.js';
 import { writeFirefoxCookies } from '../../helpers/migration-fixtures.js';
+import { useTempDirectories } from '../../helpers/temp-directory.js';
 
-let temporaryDirectory;
-
-afterEach(async () => {
-  if (temporaryDirectory) {
-    await rm(temporaryDirectory, { recursive: true, force: true });
-    temporaryDirectory = undefined;
-  }
-});
+const makeDirectory = useTempDirectories();
 
 describe('readBrowserCookies honours an explicit profileDir', () => {
   it('reads cookies from the given directory, not the default profile root', async () => {
-    temporaryDirectory = await mkdtemp(
-      path.join(os.tmpdir(), 'bc-profiledir-')
-    );
+    const temporaryDirectory = await makeDirectory('bc-profiledir-');
     // A custom userDataDir that is NOT under the default profile root.
     const customProfile = path.join(temporaryDirectory, 'custom', 'profile');
     await mkdir(customProfile, { recursive: true });

@@ -7,7 +7,7 @@ import os
 import sqlite3
 import sys
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,9 +37,11 @@ from browser_commander.browser.browser_profiles import (
     BrowserProfile,
     find_cookie_database,
     list_browser_profiles,
-    normalize_cookie_browser,
     resolve_browser_profile,
+    resolve_source_browser,
 )
+from browser_commander.browser.browser_sources import browser_family
+from browser_commander.browser.default_browser import RunCommand
 
 CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600
 
@@ -58,6 +60,7 @@ class BrowserCookieReadOptions:
 
     browser: str
     profile: str | None = None
+    profile_dir: str | Path | None = None
     domain_filter: str | None = None
     cache: BrowserCookieCacheOptions | Literal[False] | None = None
     ttl_minutes: float | None = None
@@ -177,7 +180,7 @@ def _chromium_key_for_prefix(prefix: bytes, context: dict) -> bytes:
 
         def create_windows_key() -> bytes:
             return context["read_windows_encryption_key"](
-                local_state_path=context["profile"].path.parent / "Local State",
+                local_state_path=context["profile_path"].parent / "Local State",
                 environment=context["environment"],
                 decrypt_dpapi=context["decrypt_windows_dpapi"],
             )
@@ -289,7 +292,7 @@ def _read_uncached_cookies(
     # connection as a context manager leaked a handle per read and produced
     # "ResourceWarning: unclosed database" in every CI test run.
     with closing(_open_cookie_database(cookie_path)) as database:
-        if browser == "firefox":
+        if browser_family(browser) == "firefox":
             return _map_firefox_rows(_read_firefox_rows(database, domain_filter))
         database_version = _read_database_version(database)
         return _map_chromium_rows(
@@ -304,6 +307,7 @@ def read_browser_cookies_with_dependencies(
     home_dir: Path | None = None,
     environment: Mapping[str, str] | None = None,
     now: Callable[[], float] = time.time,
+    run_command: RunCommand | None = None,
     read_safe_storage_password=read_safe_storage_password,
     read_windows_encryption_key=read_windows_encryption_key,
     decrypt_windows_dpapi=decrypt_windows_dpapi,
@@ -311,26 +315,38 @@ def read_browser_cookies_with_dependencies(
     """Read installed-browser cookies with injectable platform dependencies."""
     if not isinstance(options, BrowserCookieReadOptions):
         raise TypeError("options must be a BrowserCookieReadOptions instance")
-    browser = normalize_cookie_browser(options.browser)
     home_dir = home_dir or Path.home()
     environment = os.environ if environment is None else environment
-    profile = resolve_browser_profile(
-        browser,
-        options.profile,
+    browser = resolve_source_browser(
+        options.browser,
         platform=platform,
-        home_dir=home_dir,
         environment=environment,
+        run_command=run_command,
     )
-    cookie_path = find_cookie_database(browser, profile.path)
+    # A caller that already resolved the profile directory (for example a
+    # migration honouring a custom ``user_data_dir``) passes it as
+    # ``profile_dir``, so the reader does not re-resolve the default profile.
+    if options.profile_dir is not None:
+        profile_path = Path(options.profile_dir)
+    else:
+        profile_path = resolve_browser_profile(
+            browser,
+            options.profile,
+            platform=platform,
+            home_dir=home_dir,
+            environment=environment,
+            run_command=run_command,
+        ).path
+    cookie_path = find_cookie_database(browser, profile_path)
     if cookie_path is None:
-        raise FileNotFoundError(f"No cookie database exists in {profile.path}")
+        raise FileNotFoundError(f"No cookie database exists in {profile_path}")
     cache: NormalizedCookieCache = normalize_cookie_cache(
         options.cache, home_dir, options.ttl_minutes
     )
     identity = json.dumps(
         {
             "browser": browser,
-            "profile": str(profile.path),
+            "profile": str(profile_path),
             "domain_filter": options.domain_filter,
             "ignore_decryption_errors": options.ignore_decryption_errors,
         },
@@ -355,7 +371,7 @@ def read_browser_cookies_with_dependencies(
             "ignore_decryption_errors": options.ignore_decryption_errors,
             "now": now,
             "platform": platform,
-            "profile": profile,
+            "profile_path": profile_path,
             "read_safe_storage_password": read_safe_storage_password,
             "read_windows_encryption_key": read_windows_encryption_key,
             "refresh": options.refresh,
@@ -370,13 +386,117 @@ def read_browser_cookies(options: BrowserCookieReadOptions) -> list[dict]:
     return read_browser_cookies_with_dependencies(options)
 
 
+@dataclass(frozen=True)
+class CookieSource:
+    """A profile that holds cookies, with counts only, never values.
+
+    ``cookies`` is the total row count; ``by_domain`` maps each requested
+    domain to its matching count (``None`` when no domain filter was given).
+    ``error`` is set instead of counts when the database could not be opened.
+    """
+
+    browser: str
+    profile: str
+    path: Path
+    is_default: bool
+    cookies: int | None = None
+    by_domain: dict[str, int] | None = None
+    error: str | None = None
+
+
+def _count_for(
+    database: sqlite3.Connection, table: str, column: str, domain: str | None
+) -> int:
+    where, parameters = _domain_query(column, domain)
+    row = database.execute(
+        f"SELECT COUNT(*) AS n FROM {table}{where}", parameters
+    ).fetchone()
+    return int(row["n"]) if row else 0
+
+
+def _count_cookies_by_domain(
+    database: sqlite3.Connection, family: str, domains: Sequence[str] | None
+) -> tuple[int, dict[str, int] | None]:
+    """Count cookies by domain without ever reading a cookie value.
+
+    Only host names and row counts are touched, so this is safe to expose for
+    a "which browser holds cookies for this domain" listing.
+    """
+    column = "host" if family == "firefox" else "host_key"
+    table = "moz_cookies" if family == "firefox" else "cookies"
+    total = _count_for(database, table, column, None)
+    if not domains:
+        return total, None
+    by_domain = {
+        domain: _count_for(database, table, column, domain) for domain in domains
+    }
+    return total, by_domain
+
+
+def list_cookie_sources(
+    *,
+    domains: Sequence[str] | None = None,
+    platform: str = sys.platform,
+    home_dir: Path | None = None,
+    environment: Mapping[str, str] | None = None,
+) -> list[CookieSource]:
+    """List installed browser profiles that hold cookies, with counts only.
+
+    Per-domain counts are included when ``domains`` is given, and profiles that
+    match none of them are skipped. Cookie values are never read or returned,
+    this is the data behind the ``cookies sources`` command.
+    """
+    home_dir = home_dir or Path.home()
+    environment = os.environ if environment is None else environment
+    profiles = list_browser_profiles(
+        platform=platform, home_dir=home_dir, environment=environment
+    )
+    sources: list[CookieSource] = []
+    for profile in profiles:
+        cookie_path = find_cookie_database(profile.browser, profile.path)
+        if cookie_path is None:
+            continue
+        family = browser_family(profile.browser)
+        try:
+            with closing(_open_cookie_database(cookie_path)) as database:
+                total, by_domain = _count_cookies_by_domain(database, family, domains)
+        except (sqlite3.Error, RuntimeError) as error:
+            sources.append(
+                CookieSource(
+                    browser=profile.browser,
+                    profile=profile.name,
+                    path=profile.path,
+                    is_default=profile.is_default,
+                    error=str(error),
+                )
+            )
+            continue
+        # When filtering by domain, skip profiles that hold none of them.
+        matched = sum(by_domain.values()) if by_domain is not None else total
+        if domains and matched == 0:
+            continue
+        sources.append(
+            CookieSource(
+                browser=profile.browser,
+                profile=profile.name,
+                path=profile.path,
+                is_default=profile.is_default,
+                cookies=total,
+                by_domain=by_domain,
+            )
+        )
+    return sources
+
+
 __all__ = [
     "BrowserCookieCacheOptions",
     "BrowserCookieReadOptions",
     "BrowserProfile",
+    "CookieSource",
     "clear_browser_cookie_memory_cache",
     "decrypt_chromium_cookie",
     "list_browser_profiles",
+    "list_cookie_sources",
     "read_browser_cookies",
     "read_browser_cookies_with_dependencies",
 ]

@@ -23,9 +23,10 @@ from typing import Any
 
 from browser_commander.browser.browser_profiles import (
     browser_profile_root,
-    normalize_cookie_browser,
     resolve_browser_profile,
+    resolve_source_browser,
 )
+from browser_commander.browser.browser_sources import browser_family
 from browser_commander.browser.migration.bookmarks import migrate_bookmarks
 from browser_commander.browser.migration.cookies import migrate_cookies
 from browser_commander.browser.migration.extensions import migrate_extensions
@@ -57,8 +58,6 @@ ALL_DATA_CLASSES = (
     "extensions",
 )
 
-_CHROMIUM_BROWSERS = frozenset({"chrome", "chromium", "brave", "edge"})
-
 _TARGET_KEY_UNAVAILABLE_DETAIL = (
     "A target encryption key was not available (on Windows the launcher must "
     "generate one and write it into the target Local State); passwords were "
@@ -82,13 +81,15 @@ def _resolve_source_profile_dir(
     if user_data_dir:
         # A Chromium profile lives in a named subdirectory; for Firefox the
         # user data dir already is the profile.
-        if browser in _CHROMIUM_BROWSERS:
+        if browser_family(browser) == "chromium":
             return Path(user_data_dir) / profile
         return Path(user_data_dir)
-    if browser in _CHROMIUM_BROWSERS:
+    if browser_family(browser) == "chromium":
         root = browser_profile_root(
             browser, platform=platform, home_dir=home_dir, environment=environment
         )
+        if root is None:
+            raise FileNotFoundError(f"{browser} has no profile directory on {platform}")
         return root / profile
     return resolve_browser_profile(
         browser,
@@ -130,7 +131,7 @@ def _resolve_password_keys(
             local_state_path=local_state_path_for_profile(source_profile_dir),
             environment=environment,
         )
-        if browser in _CHROMIUM_BROWSERS
+        if browser_family(browser) == "chromium"
         else None
     )
     return {
@@ -165,11 +166,13 @@ def migrate_profile_sync(
     env: Mapping[str, str] = os.environ if environment is None else environment
     target_dir = Path(to)
 
-    browser = normalize_cookie_browser(str(from_["browser"]))
+    browser = resolve_source_browser(
+        str(from_["browser"]), platform=platform, environment=env
+    )
     profile_value = from_.get("profile")
     profile = "Default" if profile_value is None else str(profile_value)
     user_data_dir = from_.get("user_data_dir", from_.get("userDataDir"))
-    is_firefox = browser == "firefox"
+    is_firefox = browser_family(browser) == "firefox"
     source_profile_dir = _resolve_source_profile_dir(
         browser=browser,
         profile=profile,

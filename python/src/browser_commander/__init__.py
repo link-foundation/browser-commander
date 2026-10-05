@@ -44,6 +44,7 @@ from browser_commander.exports import (
     ClickVerificationResult,
     CommandError,
     ConnectOptions,
+    CookieSource,
     Deadline,
     # Engine adapter
     EngineAdapter,
@@ -150,6 +151,7 @@ from browser_commander.exports import (
     launch_real_browser,
     launch_snapshot,
     list_browser_profiles,
+    list_cookie_sources,
     load_storage_state,
     locator,
     log_element_info,
@@ -250,6 +252,7 @@ __all__ = [
     "ClickVerificationResult",
     "CommandError",
     "ConnectOptions",
+    "CookieSource",
     "Deadline",
     # Engine adapter
     "EngineAdapter",
@@ -356,6 +359,7 @@ __all__ = [
     "launch_real_browser",
     "launch_snapshot",
     "list_browser_profiles",
+    "list_cookie_sources",
     "load_storage_state",
     "locator",
     "log_element_info",

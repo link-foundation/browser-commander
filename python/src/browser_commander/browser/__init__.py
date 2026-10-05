@@ -6,7 +6,9 @@ from browser_commander.browser.browser_cookies import (
     BrowserCookieCacheOptions,
     BrowserCookieReadOptions,
     BrowserProfile,
+    CookieSource,
     list_browser_profiles,
+    list_cookie_sources,
     read_browser_cookies,
 )
 from browser_commander.browser.connector import (
@@ -102,6 +104,7 @@ __all__ = [
     "BrowserCookieReadOptions",
     "BrowserProfile",
     "ConnectOptions",
+    "CookieSource",
     "ExtensionRelay",
     "GotoResult",
     "LaunchOptions",
@@ -136,6 +139,7 @@ __all__ = [
     "launch_real_browser",
     "launch_snapshot",
     "list_browser_profiles",
+    "list_cookie_sources",
     "load_storage_state",
     "measure_parity",
     "merge_feature_switches",

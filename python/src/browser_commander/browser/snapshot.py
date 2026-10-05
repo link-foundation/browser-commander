@@ -102,11 +102,12 @@ def snapshot_user_data_dir(
     if browser == "firefox":
         raise ValueError("snapshot attach requires a Chromium-family browser")
     validate_profile_name(profile)
-    source = (
-        Path(user_data_dir)
-        if user_data_dir is not None
-        else browser_profile_root(browser)
-    )
+    if user_data_dir is not None:
+        source: Path | None = Path(user_data_dir)
+    else:
+        source = browser_profile_root(browser)
+    if source is None:
+        raise ValueError(f"{browser} has no known profile directory on this platform")
     source_profile = source / profile
     if source_profile.is_symlink() or not source_profile.is_dir():
         raise ValueError(f"No {browser} profile {profile} found at {source_profile}")

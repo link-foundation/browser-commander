@@ -11,7 +11,9 @@ from browser_commander.browser.browser_cookies import (
     BrowserCookieCacheOptions,
     BrowserCookieReadOptions,
     BrowserProfile,
+    CookieSource,
     list_browser_profiles,
+    list_cookie_sources,
     read_browser_cookies,
 )
 from browser_commander.browser.connector import (
@@ -332,6 +334,7 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "BrowserCookieCacheOptions",
     "BrowserCookieReadOptions",
     "BrowserProfile",
+    "CookieSource",
     # Core utilities
     "AUTOMATION_CONTROLLED_OFF_ARG",
     "AUTOMATION_CONTROLLED_TRIGGERS",
@@ -441,6 +444,7 @@ __all__ = [  # noqa: RUF022 - grouped by public API area
     "launch_real_browser",
     "load_storage_state",
     "list_browser_profiles",
+    "list_cookie_sources",
     "locator",
     "log_element_info",
     "make_url_condition",

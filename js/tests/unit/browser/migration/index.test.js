@@ -67,7 +67,7 @@ describe('migrateProfile', () => {
     assert.equal(report.migrated.cookies, 1);
     assert.equal(report.migrated.bookmarks, 1);
     assert.equal(report.migrated.passwords, 1);
-    // Firefox history cannot be migrated into Chrome's schema.
+    // This bookmark-only fixture has no Firefox visit table.
     assert.equal(report.migrated.history, 0);
     assert.equal(report.migrated.preferences, 0);
     assert.equal(report.migrated.extensions, 0);

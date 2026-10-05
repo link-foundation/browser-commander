@@ -25,8 +25,8 @@ import {
  *   them over CDP.
  * - **bookmarks:** read from `places.sqlite` (`moz_bookmarks` + `moz_places`)
  *   and converted to Chrome's `Bookmarks` JSON.
- * - **history:** counted from `places.sqlite` and reported; it is not written,
- *   because Chrome's `History` schema is incompatible with Firefox's.
+ * - **history:** translated from `moz_historyvisits` into Chrome's `History`,
+ *   preserving individual visit dates and reporting untranslated metadata.
  * - **passwords:** decrypted from `logins.json` with the NSS key in `key4.db`
  *   and re-encrypted into a Chrome `Login Data`. When a primary password is set
  *   and not supplied, they are reported as `primary-password-set`.

@@ -95,7 +95,7 @@ fn migrates_a_firefox_source_and_returns_the_documented_report_shape() {
     assert_eq!(report.migrated.cookies, 1);
     assert_eq!(report.migrated.bookmarks, 1);
     assert_eq!(report.migrated.passwords, 1);
-    // Firefox history cannot be migrated into Chrome's schema.
+    // This bookmark-only fixture has no Firefox visit table.
     assert_eq!(report.migrated.history, 0);
     assert_eq!(report.migrated.preferences, 0);
     assert_eq!(report.migrated.extensions, 0);

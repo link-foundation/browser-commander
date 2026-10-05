@@ -12,7 +12,7 @@ that all requirements of issue #122 have shipped.
 | chromium      | chromium      | seed        | copy        | snapshot    | rekey       | copy        | copy        | unsupported  | unsupported | unsupported    | unsupported | consent/unsupported | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | non-exportable |
 | chromium      | firefox       | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
 | chromium      | webkit        | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
-| firefox       | chromium      | seed        | translate   | unsupported | NSS/rekey   | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | consent/unsupported | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | non-exportable |
+| firefox       | chromium      | seed        | translate   | translate   | NSS/rekey   | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | consent/unsupported | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | non-exportable |
 | firefox       | firefox       | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
 | firefox       | webkit        | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
 | safari        | chromium      | seed        | translate   | translate   | CSV/rekey   | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | consent/unsupported | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | non-exportable |
@@ -52,6 +52,15 @@ before writing, and encrypts values for the target. Supply `passwordCsv` in JS,
 ```sh
 browser-commander profile migrate --from safari --include bookmarks,history,passwords --password-csv ./export.csv --domain github.com --to ./profile/Default
 ```
+
+Firefox history joins `moz_historyvisits` with `moz_places`, preserves individual
+microsecond visit dates, and applies the same exact domain filter before writing
+Chromium history. Bookmarks with no visit are not counted as history. Missing
+visit tables return `source-format-unsupported` without creating a target;
+malformed URLs or dates return per-visit `invalid-history-url` or
+`invalid-history-timestamp` entries while valid visits continue to import.
+`firefox-history-metadata-not-translated` reports that transition types,
+referring visits and sync metadata were omitted.
 
 Use Safari or the Passwords app's Export Passwords command to create the CSV.
 The importer never directly extracts iCloud Keychain passwords. Missing CSV
@@ -100,6 +109,8 @@ the passkey itself.
 Validation uses synthetic plist, SQLite, binarycookies and CSV fixtures in all
 three native libraries. Linux Chromium runtime acceptance verifies imported
 Safari bookmarks and filtered history visits survive opening the profile.
+Firefox history acceptance also verifies all three matching fixture visits and
+their exact microsecond timestamps survive opening and closing Chromium.
 No macOS Safari/STP or Windows browser acceptance has been run in this Linux
 workspace. Firefox/WebKit target acceptance cannot be run until those writers
 are implemented. Password encryption is verified by fixture decryption; real

@@ -49,7 +49,7 @@
       "chromium": [
         "seed",
         "translate",
-        "unsupported",
+        "translate",
         "NSS/rekey",
         "unsupported",
         "unsupported",

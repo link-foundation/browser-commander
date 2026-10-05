@@ -42,8 +42,8 @@ from browser_commander.browser.migration.firefox import (
     migrate_firefox_bookmarks,
     migrate_firefox_passwords,
     read_firefox_cookies,
-    report_firefox_history,
 )
+from browser_commander.browser.migration.firefox_history import migrate_firefox_history
 from browser_commander.browser.migration.fs_utils import PathLike
 from browser_commander.browser.migration.history import migrate_history
 from browser_commander.browser.migration.os_crypt_keys import (
@@ -340,7 +340,11 @@ def migrate_profile_sync(
         _merge_report(
             report,
             "history",
-            report_firefox_history(profile_dir=source_profile_dir)
+            migrate_firefox_history(
+                profile_dir=source_profile_dir,
+                target_profile_dir=target_dir,
+                domains=domains,
+            )
             if is_firefox
             else migrate_history(
                 source_profile_dir=source_profile_dir,

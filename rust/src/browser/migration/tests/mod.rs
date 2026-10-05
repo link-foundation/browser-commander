@@ -10,6 +10,7 @@ mod cookies;
 mod data_classes;
 mod extensions;
 mod firefox;
+mod firefox_history;
 mod firefox_nss;
 mod history;
 mod index;

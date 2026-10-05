@@ -263,6 +263,13 @@ Selecting `paymentCards` alone returns `payment-card-consent-required` without
 reading card stores. Consent currently still returns an unsupported report;
 it does not establish a payment-card writer.
 
+Firefox `history` imports translate each Places visit to Chromium and preserve
+microsecond timestamps. `--domain` filters exact hosts and their subdomains;
+bookmark-only URLs are excluded. Invalid URLs/dates have individual skipped
+entries, and a warning identifies transition/referrer/sync metadata that was
+not translated. A missing visit table returns `source-format-unsupported`
+before writing history.
+
 Passkey selection returns `passkey-not-exportable` entries for iCloud Keychain,
 Google Password Manager and Windows Hello: browser profile copies cannot export
 their private keys. Provider-authorized transfer is separate. Sign in once with

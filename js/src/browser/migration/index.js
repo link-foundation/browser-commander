@@ -24,8 +24,8 @@ import {
   migrateFirefoxBookmarks,
   migrateFirefoxPasswords,
   readFirefoxCookies,
-  reportFirefoxHistory,
 } from './firefox.js';
+import { migrateFirefoxHistory } from './firefox-history.js';
 import { migrateHistory } from './history.js';
 import { migratePasswords } from './passwords.js';
 import { migratePreferences } from './preferences.js';
@@ -304,7 +304,11 @@ export async function migrateProfile({
       report,
       'history',
       isFirefox
-        ? await reportFirefoxHistory({ profileDir: sourceProfileDir })
+        ? await migrateFirefoxHistory({
+            profileDir: sourceProfileDir,
+            targetProfileDir: to,
+            domains,
+          })
         : await migrateHistory({
             sourceProfileDir,
             targetProfileDir: to,

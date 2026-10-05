@@ -21,6 +21,7 @@ mod extensions;
 mod firefox;
 mod firefox_bookmarks;
 mod firefox_der;
+mod firefox_history;
 mod firefox_nss;
 mod fs_utils;
 mod history;
@@ -791,7 +792,7 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
 
     if selected("history") {
         let outcome = if is_firefox {
-            firefox::report_firefox_history(&source_profile_dir)?
+            firefox_history::migrate_firefox_history(&source_profile_dir, target, &options.domains)?
         } else {
             history::migrate_history_filtered(&source_profile_dir, target, &options.domains)?
         };

@@ -146,9 +146,20 @@ Unsupported platform capabilities must be explicit in the report and matrix.
   in Rust. Their native binary/XML parsers avoid introducing another decoder.
 - [csv-parse](https://csv.js.org/parse/) handles quoted multiline/BOM input in JS;
   Python's csv module and Rust's csv crate provide the corresponding native parsers.
-- Candidate LevelDB/structured-clone components: classic-level (JS), plyvel
-  (Python), rusty-leveldb (Rust), Chromium/WebKit/Mozilla format code as primary
-  references. LevelDB alone cannot decode V8/WebKit/SpiderMonkey values.
+- Candidate LevelDB components:
+  [classic-level](https://github.com/Level/classic-level) provides snapshot
+  reads and bounded iterators in JS;
+  [Plyvel](https://plyvel.readthedocs.io/en/latest/api.html) exposes snapshots
+  and context-managed iteration in Python;
+  [rusty-leveldb](https://docs.rs/rusty-leveldb/latest/rusty_leveldb/struct.DB.html)
+  provides snapshot reads in Rust but is not concurrent. These are candidates
+  for controlled disposable snapshots, not permission to open or repair a live
+  user's LevelDB directory. Browser-specific V8/WebKit/SpiderMonkey structured
+  values still need compatible format decoders and target acceptance tests.
+- [Puppeteer BiDi support](https://pptr.dev/webdriver-bidi) already launches
+  Firefox with BiDi by default. Its documented unsupported CDP-only features
+  require family-specific reporting. Python/Rust can reuse their native
+  WebDriver/BiDi engines; shared options alone do not implement vendor routing.
 - [Firefox Places architecture](https://firefox-source-docs.mozilla.org/browser/places/architecture-overview.html)
   documents `places.sqlite` and the attached `favicons.sqlite` store. The
   [bookmark API](https://firefox-source-docs.mozilla.org/browser/places/Bookmarks.html)
@@ -204,6 +215,12 @@ parent and every child remain incomplete; no closing keywords are appropriate.
   unreadable source ciphertext and vacuum deleted pages. Cookie readers retain
   their existing public substring-filter contract; migration filters the final
   cookie set exactly.
+- Firefox history now translates individual `moz_historyvisits`, rather than
+  counting bookmark-only Places rows as visits. Native fixtures preserve exact
+  microsecond timestamps, title/URL data, domain isolation and source bytes.
+  Missing schemas and invalid per-visit data have explicit skipped reasons;
+  transition, referring-visit and sync metadata have a loss warning. This does
+  not implement requirement 118.4's Firefox target writer.
 - Cookie source discovery and default/auto selection use the same exact host
   and subdomain rule for Chromium, Firefox and Safari. Lookalike hosts and SQL
   wildcard characters cannot select a profile whose cookies migration excludes;
@@ -295,6 +312,10 @@ by this existing behavior and retained regression coverage.
   explains why copying the main database and sidecars sequentially is unsafe.
 - [SQLite online backup API](https://www.sqlite.org/backup.html) provides the
   consistent snapshot mechanism already available in the three SQLite libraries.
+- [Mozilla Places schema](https://searchfox.org/firefox-main/source/toolkit/components/places/nsPlacesTables.h)
+  and [History implementation](https://searchfox.org/firefox-main/source/toolkit/components/places/History.sys.mjs)
+  define the visit/URL join and microsecond dates used by the native Firefox
+  source history translator.
 - [Chromium history database schema](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/components/history/core/browser/history_database.cc)
   supplies version/compatibility metadata for the translated Safari history.
 - [Chromium annotation schema](https://chromium.googlesource.com/chromium/src/+/main/components/history/core/browser/visit_annotations_database.cc)

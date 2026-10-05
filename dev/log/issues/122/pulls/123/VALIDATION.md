@@ -88,17 +88,30 @@ The duplication baseline refresh replaces one fingerprint for the expanded
 repeated JSON capability declarations; it accepts no new implementation clone.
 The native package helpers are also verified in npm and Python wheel contents.
 
+Firefox history regressions first returned zero visits in each native language
+for a Places database with four real visits. The shared
+`tests/fixtures/firefox-history.sql` now verifies three exact-domain visits or
+four unfiltered visits, excluding bookmark-only URLs. Tests preserve exact
+microsecond timestamps beyond JavaScript's safe Number range, nullable titles,
+source bytes and native Chromium layout. Missing visit tables leave the target
+absent. Five malformed/overflowing date cases and three invalid URL cases have
+individual skipped reasons while valid visits import. Before the URL guard,
+Python raised TypeError, Rust returned a null-column error, and JS omitted the
+row silently. The existing portable SQLite precision helper preserves BigInt
+values across Node's SQLite and better-sqlite3 implementations. Logs are retained
+at `/tmp/issue-122-firefox-history-{before,url-before}-*.log`.
+
 ## Local checks
 
 | Check                                                             | Result                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | JS `npm run check`                                                | ESLint, Prettier and no new duplication clones pass                                   |
-| JS `npm test`                                                     | 1,570 pass, zero skipped                                                              |
-| Python Ruff check/format and `mypy src`                           | Pass; 170 source files type checked                                                   |
-| Python `pytest`                                                   | 1,162 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
+| JS `npm test`                                                     | 1,575 pass, zero skipped                                                              |
+| Python Ruff check/format and `mypy src`                           | Pass; 171 source files type checked                                                   |
+| Python `pytest`                                                   | 1,173 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
 | Rust format, Clippy all targets/all features with warnings denied | Pass                                                                                  |
-| Rust `cargo test --locked`                                        | 719 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
-| Rust `cargo test --locked --all-features`                         | 719 pass, zero failures; 15 existing browser tests ignored                            |
+| Rust `cargo test --locked`                                        | 723 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
+| Rust `cargo test --locked --all-features`                         | 723 pass, zero failures; 15 existing browser tests ignored                            |
 | Full-repository Secretlint and root JavaScript lint               | Pass                                                                                  |
 | Shared asset byte comparison                                      | Catalogue, history schema and capability declarations identical in all three packages |
 | Generated browser/migration matrix freshness                      | Pass                                                                                  |
@@ -185,6 +198,11 @@ All ten workflows and aggregate CodeQL also passed on
 Those runs started at 16:37:36–37 UTC with the exact head SHA. The subsequent
 18-class schema requires its own CI verification after pushing.
 
+All ten workflows and aggregate CodeQL also passed on
+`941a20fe779f84cab720d866e39b14cfba2a884f`, committed at 17:10:58 UTC.
+Those runs started at 17:11:06 UTC with the exact head SHA. Subsequent Firefox
+history and main synchronization require their own fresh CI verification.
+
 ## Real runtime acceptance and remaining limits
 
 ```sh
@@ -194,7 +212,11 @@ BROWSER_COMMANDER_CHROMIUM_EXECUTABLE=/home/box/.cache/ms-playwright/chromium-12
 
 The installed Linux Chromium retains both translated Safari bookmark URLs,
 including a reading-list URL, and both matching history visits after opening and
-closing the persistent profile. Password fixture decryption verifies target-key
+closing the persistent profile. The Firefox acceptance experiment,
+`experiments/issue-122/firefox_history_acceptance.mjs`, verifies that the same
+runtime retains all three domain-matching Firefox visits with exact microsecond
+timestamps after opening/closing the persistent profile. Source bytes remain
+unchanged. Password fixture decryption verifies target-key
 encryption; it does not establish real browser password-store acceptance.
 macOS Safari/STP and Windows runtime acceptance have not been run here.
 

@@ -12,3 +12,4 @@ bump: minor
 - Safari profile-catalogue errors retained alongside readable profiles and cookie sources, including domain-filtered listings.
 - Login Data note/security associations and origin statistics filtered, retained notes re-encrypted with target keys, copied sync state reset, and unknown metadata omitted with warnings during domain-filtered imports.
 - All 18 data-class selections and zero-count unsupported reports, separate boolean payment-card consent, and provider-specific passkey/certificate export limitations without accessing protected stores.
+- Firefox history translated to Chromium with exact microsecond visit dates, domain filtering, immutable snapshots and per-visit malformed-data reports.

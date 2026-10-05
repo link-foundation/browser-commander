@@ -13,3 +13,5 @@ Keep Safari profile-catalogue errors alongside readable profiles and cookie sour
 Filter associated Login Data notes, security records and origin statistics; re-encrypt retained notes with the target key. Reset copied sync state and report unknown metadata omitted during domain-filtered imports.
 
 Recognize all 18 migration data classes with explicit unsupported reports. Add separate payment-card consent across native APIs, pre-launch migration, CLI and command streams, plus provider-specific passkey and certificate export limitations without accessing protected stores.
+
+Translate Firefox history to Chromium with exact microsecond visit dates, domain filtering, immutable snapshots and per-visit malformed-data reports.

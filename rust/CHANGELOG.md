@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- changelog-insert-here -->
+## [0.15.0] - 2026-10-05
+
+### Added
+
+- A shared, data-driven catalogue of importable browsers
+  (`browser-sources.json`, byte-identical across the JavaScript, Python and
+  Rust packages) covering Chrome and its Beta/Dev/Canary channels, Edge
+  channels, Brave variants, Chromium, Opera and Opera GX, Vivaldi, Arc, Yandex,
+  and Firefox with its LibreWolf, Waterfox, Zen, Floorp, Developer Edition and
+  Nightly forks. It records each browser's per-platform profile roots, Chromium
+  Safe Storage identity, and operating-system default identifiers.
+- Resolution of the operating-system default web browser (macOS LaunchServices,
+  Linux `xdg-settings`/`xdg-mime`, Windows `UserChoice` ProgId) to a catalogue
+  id, so `default`/`auto` imports follow whichever browser a person actually
+  uses.
+- Profile discovery and migration classify a browser's engine family from the
+  catalogue, so every catalogued Chromium variant and Firefox fork is
+  recognised, and reading cookies honours a custom user-data directory.
+- Listing of the browsers and profiles that hold cookies — optionally for
+  specific domains — as names and counts only, never values.
+- `migrate_profile` accepts `default`/`auto` as the source browser; scoped to
+  `domains`, it falls back from a default browser that holds no cookies for
+  them to the installed profile holding the most, and reports which one with a
+  `default-browser-fallback` warning (`resolve_import_source`,
+  `MigrateProfileOptions::environment`/`run_command`). Migrating from Opera or
+  Opera GX now reads their single profile from the user data directory itself.
+
 ## [0.14.1] - 2026-10-01
 
 ### Fixed

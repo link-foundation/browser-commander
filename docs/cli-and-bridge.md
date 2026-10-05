@@ -241,6 +241,24 @@ The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):
 }
 ```
 
+With `--from default` (or `auto`) and `--domain`, a default browser that holds
+no cookies for those domains is not a dead end: the migration reads the
+installed profile holding the most of them instead (only names and counts are
+checked first, as `cookies sources` does), names it in `source`, and adds a
+warning such as:
+
+```json
+{
+  "type": "source",
+  "item": "librewolf",
+  "reason": "default-browser-fallback",
+  "detail": "The default browser (firefox) holds no cookies for github.com; imported from librewolf instead."
+}
+```
+
+The reason is `default-browser-unknown` when the default browser itself could
+not be determined.
+
 The parity report (`doctor`, `measureParity()`):
 
 ```json

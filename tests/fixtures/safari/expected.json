@@ -1,0 +1,42 @@
+[
+  {
+    "name": "sid",
+    "value": "fixture-token",
+    "domain": ".github.com",
+    "path": "/",
+    "expires": 1900000000,
+    "secure": true,
+    "httpOnly": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "theme",
+    "value": "café",
+    "domain": "github.com",
+    "path": "/settings",
+    "expires": 1900000100,
+    "secure": false,
+    "httpOnly": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "other",
+    "value": "synthetic-only",
+    "domain": "other.test",
+    "path": "/",
+    "expires": 1900000200,
+    "secure": true,
+    "httpOnly": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "old",
+    "value": "",
+    "domain": "expired.test",
+    "path": "/",
+    "expires": 978307200,
+    "secure": false,
+    "httpOnly": true,
+    "sameSite": "Lax"
+  }
+]

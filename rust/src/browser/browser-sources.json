@@ -394,6 +394,36 @@
         "darwin": ["org.floorp.Floorp"],
         "linux": ["floorp.desktop"]
       }
+    },
+    {
+      "id": "safari",
+      "family": "safari",
+      "aliases": ["apple-safari"],
+      "singleProfile": true,
+      "roots": {
+        "darwin": [
+          "{home}/Library/Containers/com.apple.Safari/Data/Library",
+          "{home}/Library"
+        ]
+      },
+      "default": {
+        "darwin": ["com.apple.safari"]
+      }
+    },
+    {
+      "id": "safari-technology-preview",
+      "family": "safari",
+      "aliases": ["safari-tp", "safari-preview"],
+      "singleProfile": true,
+      "roots": {
+        "darwin": [
+          "{home}/Library/Containers/com.apple.SafariTechnologyPreview/Data/Library",
+          "{home}/Library/Safari Technology Preview"
+        ]
+      },
+      "default": {
+        "darwin": ["com.apple.safaritechnologypreview"]
+      }
     }
   ]
 }

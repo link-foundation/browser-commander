@@ -109,9 +109,14 @@ pub fn list_cookie_sources(
             continue;
         };
         let family = browser_family(&profile.browser)?;
-        match open_cookie_database(&cookie_path)
-            .and_then(|database| count_cookies_by_domain(&database, family, domains))
-        {
+        let counts = if family == "safari" {
+            super::safari_cookies::read_safari_cookie_file(&cookie_path, environment)
+                .and_then(|data| super::safari_cookies::count_safari_cookies(&data, domains))
+        } else {
+            open_cookie_database(&cookie_path)
+                .and_then(|database| count_cookies_by_domain(&database, family, domains))
+        };
+        match counts {
             Ok((total, by_domain)) => {
                 // When filtering by domain, skip profiles that hold none.
                 let matched = by_domain
@@ -198,15 +203,27 @@ pub fn resolve_import_source(
         }
     };
     let system_default = resolve_default_browser(platform, environment, runner)?;
-    let holders: Vec<CookieSourceListing> =
-        list_cookie_sources(domains, platform, home_dir, environment)?
-            .into_iter()
-            .filter(|source| source.error.is_none())
-            .collect();
+    let listed_sources = list_cookie_sources(domains, platform, home_dir, environment)?;
+    let unreadable_default = listed_sources
+        .iter()
+        .find(|source| Some(source.browser.as_str()) == system_default && source.error.is_some())
+        .and_then(|source| source.error.clone());
+    let holders: Vec<CookieSourceListing> = listed_sources
+        .into_iter()
+        .filter(|source| source.error.is_none())
+        .collect();
     let from_default: Vec<&CookieSourceListing> = holders
         .iter()
         .filter(|source| Some(source.browser.as_str()) == system_default)
         .collect();
+    if from_default.is_empty() {
+        if let Some(error) = unreadable_default {
+            return Err(anyhow!(
+                "Could not inspect the default browser ({}): {error}",
+                system_default.unwrap_or("unknown")
+            ));
+        }
+    }
     let candidates = if from_default.is_empty() {
         holders.iter().collect()
     } else {

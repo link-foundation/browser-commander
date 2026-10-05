@@ -640,6 +640,31 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
         }
     }
 
+    if browser_family(&browser)? == "safari" {
+        for data_class in ALL_DATA_CLASSES
+            .iter()
+            .filter(|name| **name != "cookies" && selected(name))
+        {
+            let (reason, detail) = if *data_class == "passwords" {
+                ("safari-password-export-required", "Safari passwords live in the Keychain. Export Passwords from Safari or the Passwords app to CSV; CSV import is tracked separately and is not supported yet.")
+            } else {
+                ("safari-class-not-supported", "Safari currently supports cookie import only; this data class has not been translated.")
+            };
+            report
+                .skipped
+                .push(MigrationEntry::new(*data_class, &browser, reason).with_detail(detail));
+        }
+        if !report.cookies.is_empty() {
+            report.warnings.push(
+                MigrationEntry::new("cookies", &browser, "safari-samesite-unavailable")
+                    .with_detail(
+                        "Cookies.binarycookies does not store SameSite; imported cookies use Lax.",
+                    ),
+            );
+        }
+        return Ok(report);
+    }
+
     if selected("bookmarks") {
         let outcome = if is_firefox {
             firefox::migrate_firefox_bookmarks(&source_profile_dir, target)?

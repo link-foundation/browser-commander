@@ -28,6 +28,7 @@ from browser_commander.browser.default_browser import (
     RunCommand,
     resolve_default_browser,
 )
+from browser_commander.browser.safari_cookies import find_safari_cookie_file
 
 #: Every browser profile discovery can read from, from the shared catalogue.
 SUPPORTED_COOKIE_BROWSERS = BROWSER_IDS
@@ -122,6 +123,8 @@ def browser_profile_root(
 
 def find_cookie_database(browser: str, profile_path: Path) -> Path | None:
     """Find the cookie database inside a specific browser profile."""
+    if browser_family(browser) == "safari":
+        return find_safari_cookie_file(profile_path)
     if browser_family(browser) == "firefox":
         candidate = profile_path / "cookies.sqlite"
         return candidate if candidate.is_file() else None
@@ -262,6 +265,10 @@ def _list_profiles_for_browser(
     for root in _resolve_roots(
         browser, platform=platform, home_dir=home_dir, environment=environment
     ):
+        if family == "safari":
+            if find_safari_cookie_file(root) is not None:
+                return [BrowserProfile(browser, "Default", "Default", root, True)]
+            continue
         if family == "firefox":
             profiles.extend(_list_firefox_profiles(browser, root))
         else:

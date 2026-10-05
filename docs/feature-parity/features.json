@@ -58,6 +58,10 @@
         {
           "id": "sources.default-domain-fallback",
           "title": "Import a domain from whichever installed browser holds it"
+        },
+        {
+          "id": "sources.safari-cookies",
+          "title": "Safari and Technology Preview cookie import and discovery"
         }
       ]
     },

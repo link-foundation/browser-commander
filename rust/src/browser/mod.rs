@@ -34,6 +34,7 @@ pub mod profile_directory;
 pub mod raw_cdp;
 pub mod real_browser;
 pub mod restrictions;
+mod safari_cookies;
 pub mod snapshot;
 pub mod storage_state;
 pub mod system_browser;

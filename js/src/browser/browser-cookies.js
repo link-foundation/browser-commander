@@ -33,6 +33,11 @@ import {
   resolveSourceBrowser,
 } from './browser-profiles.js';
 import { resolveDefaultBrowser } from './default-browser.js';
+import {
+  countSafariCookies,
+  parseSafariCookies,
+  readSafariCookieFile,
+} from './safari-cookies.js';
 
 const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600n;
 const MICROSECONDS_PER_SECOND = 1_000_000n;
@@ -319,6 +324,14 @@ export async function readBrowserCookiesWithDependencies(
     return cachedCookies;
   }
 
+  if (browserFamily(browser) === 'safari') {
+    const cookies = parseSafariCookies(
+      await readSafariCookieFile(cookiePath, { environment }),
+      options.domainFilter
+    );
+    await writeCookieResultCache({ cache, identity, cookies, now });
+    return cookies;
+  }
   const database = await openCookieDatabase(cookiePath);
   let cookies;
   try {
@@ -426,8 +439,15 @@ export async function listCookieSources({
     let error;
     let database;
     try {
-      database = await openCookieDatabase(cookiePath);
-      counts = countCookiesByDomain(database, family, domains);
+      if (family === 'safari') {
+        counts = countSafariCookies(
+          await readSafariCookieFile(cookiePath, { environment }),
+          domains
+        );
+      } else {
+        database = await openCookieDatabase(cookiePath);
+        counts = countCookiesByDomain(database, family, domains);
+      }
     } catch (openError) {
       error = openError.message;
     } finally {
@@ -514,12 +534,24 @@ export async function resolveImportSource({
     environment,
     runCommand,
   });
-  const holders = (
-    await listCookieSources({ domains, platform, homeDir, environment })
-  ).filter((source) => !source.error);
+  const listedSources = await listCookieSources({
+    domains,
+    platform,
+    homeDir,
+    environment,
+  });
+  const holders = listedSources.filter((source) => !source.error);
   const fromDefault = holders.filter(
     (source) => source.browser === systemDefault
   );
+  const unreadableDefault = listedSources.find(
+    (source) => source.browser === systemDefault && source.error
+  );
+  if (fromDefault.length === 0 && unreadableDefault) {
+    throw new Error(
+      `Could not inspect the default browser (${systemDefault}): ${unreadableDefault.error}`
+    );
+  }
   const candidates = fromDefault.length > 0 ? fromDefault : holders;
   if (candidates.length === 0) {
     if (!systemDefault) {

@@ -1,5 +1,6 @@
 // feature-parity: sources.catalogue@native-typed
 import assert from 'node:assert';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import {
@@ -60,6 +61,8 @@ describe('browser-sources catalogue', () => {
     assert.equal(browserFamily('librewolf'), 'firefox');
   });
 
+  // POSIX targets join with the host separator, so a Windows host running
+  // these Linux/macOS cases yields backslashes, like every other path here.
   it('expands per-platform roots with the home directory', () => {
     assert.deepEqual(
       resolveBrowserRoots('chrome', {
@@ -67,14 +70,14 @@ describe('browser-sources catalogue', () => {
         homeDir: '/home/me',
         environment: {},
       }),
-      ['/home/me/.config/google-chrome']
+      [path.join('/home/me', '.config', 'google-chrome')]
     );
     assert.deepEqual(
       resolveBrowserRoots('firefox', {
         platform: 'darwin',
         homeDir: '/Users/me',
       }),
-      ['/Users/me/Library/Application Support/Firefox']
+      [path.join('/Users/me', 'Library', 'Application Support', 'Firefox')]
     );
   });
 
@@ -85,7 +88,7 @@ describe('browser-sources catalogue', () => {
         homeDir: '/home/me',
         environment: { XDG_CONFIG_HOME: '/cfg' },
       }),
-      ['/cfg/chromium']
+      [path.join('/cfg', 'chromium')]
     );
   });
 

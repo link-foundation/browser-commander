@@ -44,7 +44,9 @@ describe('generate-browser-support', () => {
   });
 
   it('keeps the committed README in sync with the catalogue', () => {
-    const readme = fs.readFileSync(repoPath('README.md'), 'utf8');
+    const readme = fs
+      .readFileSync(repoPath('README.md'), 'utf8')
+      .replaceAll('\r\n', '\n');
     const begin = readme.indexOf(BEGIN_MARKER);
     const end = readme.indexOf(END_MARKER);
     assert.ok(begin !== -1 && end > begin, 'README is missing the markers');

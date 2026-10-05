@@ -101,7 +101,9 @@ function replaceBetweenMarkers(document, table) {
 function main() {
   const options = parseArguments(process.argv.slice(2));
   const documentPath = path.join(options.root, DOCUMENT);
-  const current = readFileSync(documentPath, 'utf8');
+  // Git may check Markdown out with CRLF on Windows. Compare logical content
+  // using the LF endings the renderer emits, avoiding false drift.
+  const current = readFileSync(documentPath, 'utf8').replaceAll('\r\n', '\n');
   const table = renderBrowserSupport(readCatalogue(options.root));
   const next = replaceBetweenMarkers(current, table);
   if (options.check) {

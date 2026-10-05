@@ -539,11 +539,18 @@ pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec
             .context("cached cookies have an invalid shape");
     }
 
-    let database = open_cookie_database(&cookie_path)?;
-    let cookies = if browser_family(browser)? == "firefox" {
-        read_firefox_cookies(&database, options.domain_filter.as_deref())?
+    let cookies = if browser_family(browser)? == "safari" {
+        super::safari_cookies::parse_safari_cookies(
+            &super::safari_cookies::read_safari_cookie_file(&cookie_path, &options.environment)?,
+            options.domain_filter.as_deref(),
+        )?
     } else {
-        read_chromium_cookies(&database, &profile_path, &options, &cache)?
+        let database = open_cookie_database(&cookie_path)?;
+        if browser_family(browser)? == "firefox" {
+            read_firefox_cookies(&database, options.domain_filter.as_deref())?
+        } else {
+            read_chromium_cookies(&database, &profile_path, &options, &cache)?
+        }
     };
     let serialized = cookies
         .iter()

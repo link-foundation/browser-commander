@@ -189,6 +189,9 @@ pub(crate) fn browser_profile_root_in(
 }
 
 pub(crate) fn find_cookie_database(browser: &str, profile_path: &Path) -> Option<PathBuf> {
+    if browser_family(browser).ok() == Some("safari") {
+        return super::safari_cookies::find_safari_cookie_file(profile_path);
+    }
     if browser_family(browser)
         .map(|family| family == "firefox")
         .unwrap_or(false)
@@ -387,6 +390,18 @@ fn list_profiles_for_browser(
     let family = browser_family(browser)?;
     let mut profiles = Vec::new();
     for root in roots {
+        if family == "safari" {
+            if super::safari_cookies::find_safari_cookie_file(&root).is_some() {
+                return Ok(vec![BrowserProfile {
+                    browser: browser.into(),
+                    name: "Default".into(),
+                    display_name: "Default".into(),
+                    path: root,
+                    is_default: true,
+                }]);
+            }
+            continue;
+        }
         if family == "firefox" {
             profiles.extend(list_firefox_profiles(browser, &root));
         } else {

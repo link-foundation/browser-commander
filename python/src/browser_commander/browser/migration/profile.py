@@ -237,6 +237,35 @@ def migrate_profile_sync(
             report["skipped"].extend(fragment["skipped"])
             report["warnings"].extend(fragment["warnings"])
 
+    if browser_family(browser) == "safari":
+        for type_ in ALL_DATA_CLASSES:
+            if type_ == "cookies" or type_ not in selected:
+                continue
+            report["skipped"].append(
+                {
+                    "type": type_,
+                    "item": browser,
+                    "reason": "safari-password-export-required"
+                    if type_ == "passwords"
+                    else "safari-class-not-supported",
+                    "detail": (
+                        "Safari passwords live in the Keychain. Export Passwords from Safari or the Passwords app to CSV; CSV import is tracked separately and is not supported yet."
+                        if type_ == "passwords"
+                        else "Safari currently supports cookie import only; this data class has not been translated."
+                    ),
+                }
+            )
+        if report["cookies"]:
+            report["warnings"].append(
+                {
+                    "type": "cookies",
+                    "item": browser,
+                    "reason": "safari-samesite-unavailable",
+                    "detail": "Cookies.binarycookies does not store SameSite; imported cookies use Lax.",
+                }
+            )
+        return report
+
     if "bookmarks" in selected:
         _merge_report(
             report,

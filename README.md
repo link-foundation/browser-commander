@@ -46,31 +46,63 @@ reports which one with a `default-browser-fallback` warning.
 
 <!-- browser-support:generated:begin -->
 
-| Browser           | Family   | macOS | Windows | Linux |
-| ----------------- | -------- | ----- | ------- | ----- |
-| chrome            | Chromium | Yes   | Yes     | Yes   |
-| chrome-beta       | Chromium | Yes   | Yes     | Yes   |
-| chrome-dev        | Chromium | Yes   | Yes     | Yes   |
-| chrome-canary     | Chromium | Yes   | Yes     | —     |
-| chromium          | Chromium | Yes   | Yes     | Yes   |
-| edge              | Chromium | Yes   | Yes     | Yes   |
-| edge-beta         | Chromium | Yes   | Yes     | Yes   |
-| edge-dev          | Chromium | Yes   | Yes     | Yes   |
-| brave             | Chromium | Yes   | Yes     | Yes   |
-| vivaldi           | Chromium | Yes   | Yes     | Yes   |
-| opera             | Chromium | Yes   | Yes     | Yes   |
-| opera-gx          | Chromium | Yes   | Yes     | Yes   |
-| yandex            | Chromium | Yes   | Yes     | Yes   |
-| arc               | Chromium | Yes   | Yes     | —     |
-| firefox           | Firefox  | Yes   | Yes     | Yes   |
-| firefox-developer | Firefox  | Yes   | Yes     | Yes   |
-| firefox-nightly   | Firefox  | Yes   | Yes     | Yes   |
-| librewolf         | Firefox  | Yes   | Yes     | Yes   |
-| waterfox          | Firefox  | Yes   | Yes     | Yes   |
-| zen               | Firefox  | Yes   | Yes     | Yes   |
-| floorp            | Firefox  | Yes   | Yes     | Yes   |
+| Browser                   | Family   | macOS | Windows | Linux |
+| ------------------------- | -------- | ----- | ------- | ----- |
+| chrome                    | Chromium | Yes   | Yes     | Yes   |
+| chrome-beta               | Chromium | Yes   | Yes     | Yes   |
+| chrome-dev                | Chromium | Yes   | Yes     | Yes   |
+| chrome-canary             | Chromium | Yes   | Yes     | —     |
+| chromium                  | Chromium | Yes   | Yes     | Yes   |
+| edge                      | Chromium | Yes   | Yes     | Yes   |
+| edge-beta                 | Chromium | Yes   | Yes     | Yes   |
+| edge-dev                  | Chromium | Yes   | Yes     | Yes   |
+| brave                     | Chromium | Yes   | Yes     | Yes   |
+| vivaldi                   | Chromium | Yes   | Yes     | Yes   |
+| opera                     | Chromium | Yes   | Yes     | Yes   |
+| opera-gx                  | Chromium | Yes   | Yes     | Yes   |
+| yandex                    | Chromium | Yes   | Yes     | Yes   |
+| arc                       | Chromium | Yes   | Yes     | —     |
+| firefox                   | Firefox  | Yes   | Yes     | Yes   |
+| firefox-developer         | Firefox  | Yes   | Yes     | Yes   |
+| firefox-nightly           | Firefox  | Yes   | Yes     | Yes   |
+| librewolf                 | Firefox  | Yes   | Yes     | Yes   |
+| waterfox                  | Firefox  | Yes   | Yes     | Yes   |
+| zen                       | Firefox  | Yes   | Yes     | Yes   |
+| floorp                    | Firefox  | Yes   | Yes     | Yes   |
+| safari                    | Safari   | Yes   | —       | —     |
+| safari-technology-preview | Safari   | Yes   | —       | —     |
 
 <!-- browser-support:generated:end -->
+
+Safari and Safari Technology Preview are **cookie-only sources** on macOS.
+They read the conventional container `Cookies.binarycookies`, falling back to
+the legacy store. Import supports the existing Chromium target; the table above
+describes source availability, not full-profile or target-engine support.
+Named Safari profiles and newer WebsiteDataStore layouts are tracked in
+[#117](https://github.com/link-foundation/browser-commander/issues/117).
+
+```sh
+browser-commander cookies sources --domain github.com
+browser-commander profile migrate --from safari --include cookies --domain github.com --to ./imported-profile
+```
+
+An installed Safari system default also works with `--from default` or `auto`.
+Cookie values are unencrypted in this format; source listings decode only domain
+strings and return counts, while import decodes values. Cookie flags and Cocoa
+expiry timestamps are preserved. The format has no SameSite attribute, so imported
+cookies use `Lax` and the migration report warns `safari-samesite-unavailable`.
+Unsupported Safari classes are reported as skipped, including passwords with
+`safari-password-export-required`: use Safari or the Passwords app's Export
+Passwords to CSV; CSV import is still tracked in #117. Protected cookie paths
+produce Full Disk Access guidance identifying the terminal/app running Browser
+Commander and linking to the macOS privacy settings.
+
+The remaining requirements of [#114](https://github.com/link-foundation/browser-commander/issues/114)
+are tracked explicitly: [Safari non-cookie stores and modern profiles (#117)](https://github.com/link-foundation/browser-commander/issues/117),
+[Firefox/WebKit targets and full clones (#118)](https://github.com/link-foundation/browser-commander/issues/118),
+[additional data classes (#119)](https://github.com/link-foundation/browser-commander/issues/119),
+and [platform diagnostics and the source × target × class matrix (#120)](https://github.com/link-foundation/browser-commander/issues/120).
+Import remains opt-in; a fresh, clean profile remains the default.
 
 ## Core Concept: Page State Machine
 

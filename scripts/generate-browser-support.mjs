@@ -36,6 +36,7 @@ const PLATFORMS = [
 const FAMILY_TITLES = new Map([
   ['chromium', 'Chromium'],
   ['firefox', 'Firefox'],
+  ['safari', 'Safari'],
 ]);
 
 function parseArguments(argv) {

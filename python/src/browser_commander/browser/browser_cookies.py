@@ -46,6 +46,11 @@ from browser_commander.browser.default_browser import (
     RunCommand,
     resolve_default_browser,
 )
+from browser_commander.browser.safari_cookies import (
+    count_safari_cookies,
+    parse_safari_cookies,
+    read_safari_cookie_file,
+)
 
 CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600
 
@@ -295,6 +300,11 @@ def _read_uncached_cookies(
     # back the transaction, it does not close the connection. Using the bare
     # connection as a context manager leaked a handle per read and produced
     # "ResourceWarning: unclosed database" in every CI test run.
+    if browser_family(browser) == "safari":
+        return parse_safari_cookies(
+            read_safari_cookie_file(cookie_path, environment=context["environment"]),
+            domain_filter,
+        )
     with closing(_open_cookie_database(cookie_path)) as database:
         if browser_family(browser) == "firefox":
             return _map_firefox_rows(_read_firefox_rows(database, domain_filter))
@@ -462,9 +472,17 @@ def list_cookie_sources(
             continue
         family = browser_family(profile.browser)
         try:
-            with closing(_open_cookie_database(cookie_path)) as database:
-                total, by_domain = _count_cookies_by_domain(database, family, domains)
-        except (sqlite3.Error, RuntimeError) as error:
+            if family == "safari":
+                total, by_domain = count_safari_cookies(
+                    read_safari_cookie_file(cookie_path, environment=environment),
+                    domains,
+                )
+            else:
+                with closing(_open_cookie_database(cookie_path)) as database:
+                    total, by_domain = _count_cookies_by_domain(
+                        database, family, domains
+                    )
+        except (sqlite3.Error, RuntimeError, OSError, ValueError) as error:
             sources.append(
                 CookieSource(
                     browser=profile.browser,
@@ -539,17 +557,23 @@ def resolve_import_source(
     system_default = resolve_default_browser(
         platform=platform, environment=environment, run_command=run_command
     )
-    holders = [
-        source
-        for source in list_cookie_sources(
-            domains=domains,
-            platform=platform,
-            home_dir=home_dir,
-            environment=environment,
-        )
-        if source.error is None
-    ]
+    listed_sources = list_cookie_sources(
+        domains=domains, platform=platform, home_dir=home_dir, environment=environment
+    )
+    holders = [source for source in listed_sources if source.error is None]
     from_default = [source for source in holders if source.browser == system_default]
+    unreadable_default = next(
+        (
+            source
+            for source in listed_sources
+            if source.browser == system_default and source.error
+        ),
+        None,
+    )
+    if not from_default and unreadable_default:
+        raise RuntimeError(
+            f"Could not inspect the default browser ({system_default}): {unreadable_default.error}"
+        )
     candidates = from_default or holders
     if not candidates:
         if not system_default:

@@ -220,6 +220,22 @@ them so that the outputs stay identical.
 
 ## Reports
 
+Safari sources (`safari`, `safari-technology-preview`, alias `safari-tp`) support
+cookies through the same CLI and JSON-RPC methods as other sources. For example,
+`profile migrate --from safari --include cookies --domain github.com --to ./profile`
+or `profile.migrate` with `{"from":"safari","include":["cookies"],"domains":["github.com"],"to":"./profile"}`.
+Targets remain Chromium. A custom `userDataDir` can point at a directory containing
+`Cookies/Cookies.binarycookies` or directly at the cookie-store directory.
+Unsupported selected Safari classes are skipped with a reason; passwords require
+an explicit Safari/Passwords CSV export, with CSV import tracked in
+[#117](https://github.com/link-foundation/browser-commander/issues/117).
+The format lacks SameSite, so imported cookies use `Lax` and the report includes
+`safari-samesite-unavailable`. Discovery decodes only hosts and counts, never names
+or values. File-level access errors are retained in `cookies.sources` entries;
+EPERM/EACCES explains which application needs Full Disk Access. A scoped
+default/auto import reports an unreadable default source instead of treating it
+as empty and silently choosing a different browser.
+
 The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):
 
 ```json

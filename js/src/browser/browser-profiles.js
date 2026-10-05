@@ -10,6 +10,7 @@ import {
   resolveBrowserRoots,
 } from './browser-sources.js';
 import { resolveDefaultBrowser } from './default-browser.js';
+import { findSafariCookieFile } from './safari-cookies.js';
 
 /**
  * Keywords that select the operating-system default browser instead of a named
@@ -112,6 +113,9 @@ function chromiumCookiePaths(profilePath, pathApi = path) {
 
 export async function findCookieDatabase(browser, profilePath, platform) {
   const pathApi = platformPath(platform ?? process.platform);
+  if (browserFamily(browser) === 'safari') {
+    return findSafariCookieFile(profilePath);
+  }
   if (browserFamily(browser) === 'firefox') {
     const candidate = pathApi.join(profilePath, 'cookies.sqlite');
     return (await pathExists(candidate)) ? candidate : null;
@@ -274,6 +278,20 @@ async function listProfilesForBrowser(browser, platform, homeDir, environment) {
   const family = browserFamily(browser);
   const profiles = [];
   for (const root of roots) {
+    if (family === 'safari') {
+      if (await findSafariCookieFile(root)) {
+        return [
+          {
+            browser,
+            name: 'Default',
+            displayName: 'Default',
+            path: root,
+            isDefault: true,
+          },
+        ];
+      }
+      continue;
+    }
     profiles.push(
       ...(family === 'firefox'
         ? await listFirefoxProfiles(browser, root, platform)

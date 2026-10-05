@@ -114,6 +114,34 @@ function mergeReport(report, className, fragment) {
   report.warnings.push(...(fragment.warnings ?? []));
 }
 
+function reportSafariClasses(report, selected) {
+  for (const type of ALL_DATA_CLASSES.filter(
+    (name) => name !== 'cookies' && selected.has(name)
+  )) {
+    report.skipped.push({
+      type,
+      item: report.source.browser,
+      reason:
+        type === 'passwords'
+          ? 'safari-password-export-required'
+          : 'safari-class-not-supported',
+      detail:
+        type === 'passwords'
+          ? 'Safari passwords live in the Keychain. Export Passwords from Safari or the Passwords app to CSV; CSV import is tracked separately and is not supported yet.'
+          : 'Safari currently supports cookie import only; this data class has not been translated.',
+    });
+  }
+  if (report.cookies.length > 0) {
+    report.warnings.push({
+      type: 'cookies',
+      item: report.source.browser,
+      reason: 'safari-samesite-unavailable',
+      detail:
+        'Cookies.binarycookies does not store SameSite; imported cookies use Lax.',
+    });
+  }
+}
+
 async function resolvePasswordKeys({
   keys,
   browser,
@@ -232,6 +260,11 @@ export async function migrateProfile({
       report.skipped.push(...fragment.skipped);
       report.warnings.push(...fragment.warnings);
     }
+  }
+
+  if (browserFamily(browser) === 'safari') {
+    reportSafariClasses(report, selected);
+    return report;
   }
 
   if (selected.has('bookmarks')) {

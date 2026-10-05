@@ -9,6 +9,7 @@ are pinned here.
 
 from __future__ import annotations
 
+import runpy
 import sys
 from pathlib import Path
 
@@ -21,6 +22,18 @@ import audit_dependencies  # noqa: E402
 from audit_dependencies import project_install_target  # noqa: E402
 
 PROJECT_ROOT = SCRIPTS_DIR.parent
+
+
+def test_manifest_parser_without_standard_library_tomllib(monkeypatch) -> None:
+    """Python 3.9 and 3.10 use the compatible TOML parser during collection."""
+    monkeypatch.setitem(sys.modules, "tomli", audit_dependencies.tomllib)
+    monkeypatch.setitem(sys.modules, "tomllib", None)
+    monkeypatch.setattr(sys, "version_info", (3, 9, 25, "final", 0))
+    namespace = runpy.run_path(str(SCRIPTS_DIR / "audit_dependencies.py"))
+
+    assert namespace["project_install_target"](PROJECT_ROOT) == (
+        ".[all,dev,extension,playwright,selenium]"
+    )
 
 
 def test_install_target_covers_every_declared_extra() -> None:

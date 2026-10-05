@@ -357,6 +357,107 @@ export function readBrowserCookies(options) {
   return readBrowserCookiesWithDependencies(options);
 }
 
+/**
+ * Count cookies in a database by domain, without ever reading a cookie value.
+ * Only host names and row counts are touched, so this is safe to expose for a
+ * "which browser holds cookies for this domain" listing.
+ */
+function countCookiesByDomain(database, family, domains) {
+  const column = family === 'firefox' ? 'host' : 'host_key';
+  const table = family === 'firefox' ? 'moz_cookies' : 'cookies';
+  const countFor = (filter) => {
+    const query = filter
+      ? `SELECT COUNT(*) AS n FROM ${table} WHERE ${column} LIKE ?`
+      : `SELECT COUNT(*) AS n FROM ${table}`;
+    const statement = database.prepare(query);
+    const row = filter ? statement.get(`%${filter}%`) : statement.get();
+    return Number(row?.n ?? 0);
+  };
+  const total = countFor(null);
+  if (!Array.isArray(domains) || domains.length === 0) {
+    return { total, byDomain: null };
+  }
+  const byDomain = {};
+  for (const domain of domains) {
+    byDomain[domain] = countFor(domain);
+  }
+  return { total, byDomain };
+}
+
+/**
+ * List the installed browser profiles that hold cookies, with per-domain
+ * counts when `domains` is given. Values are never read or returned — this is
+ * the data behind the `cookies sources` command.
+ *
+ * @param {Object} [options]
+ * @param {string[]} [options.domains] - Restrict and count by these domains
+ * @param {string} [options.platform=process.platform]
+ * @param {string} [options.homeDir=os.homedir()]
+ * @param {Object} [options.environment=process.env]
+ * @returns {Promise<Array<{browser,profile,path,isDefault,cookies,byDomain,error?}>>}
+ */
+export async function listCookieSources({
+  domains,
+  platform = process.platform,
+  homeDir = os.homedir(),
+  environment = process.env,
+} = {}) {
+  const profiles = await listBrowserProfiles({
+    platform,
+    homeDir,
+    environment,
+  });
+  const sources = [];
+  for (const profile of profiles) {
+    const cookiePath = await findCookieDatabase(
+      profile.browser,
+      profile.path,
+      platform
+    );
+    if (!cookiePath) {
+      continue;
+    }
+    const family = browserFamily(profile.browser);
+    let counts;
+    let error;
+    let database;
+    try {
+      database = await openCookieDatabase(cookiePath);
+      counts = countCookiesByDomain(database, family, domains);
+    } catch (openError) {
+      error = openError.message;
+    } finally {
+      database?.close();
+    }
+    if (error) {
+      sources.push({
+        browser: profile.browser,
+        profile: profile.name,
+        path: profile.path,
+        isDefault: profile.isDefault,
+        error,
+      });
+      continue;
+    }
+    // When filtering by domain, skip profiles that hold none of them.
+    const matchedCount = counts.byDomain
+      ? Object.values(counts.byDomain).reduce((sum, n) => sum + n, 0)
+      : counts.total;
+    if (Array.isArray(domains) && domains.length > 0 && matchedCount === 0) {
+      continue;
+    }
+    sources.push({
+      browser: profile.browser,
+      profile: profile.name,
+      path: profile.path,
+      isDefault: profile.isDefault,
+      cookies: counts.total,
+      byDomain: counts.byDomain,
+    });
+  }
+  return sources;
+}
+
 export {
   clearBrowserCookieMemoryCache,
   decryptChromiumCookie,

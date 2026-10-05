@@ -215,6 +215,24 @@ function snapshotProfile(state, params) {
   });
 }
 
+/** List browsers/profiles holding cookies, with optional per-domain counts. */
+async function cookieSources(state, params) {
+  const domains = params.domains;
+  if (domains !== undefined && !Array.isArray(domains)) {
+    throw invalidParams('domains must be an array of strings');
+  }
+  return { sources: await state.dependencies.listCookieSources({ domains }) };
+}
+
+/** List the installed browser profiles (never cookie values). */
+async function profileSources(state, params) {
+  return {
+    profiles: await state.dependencies.listBrowserProfiles({
+      browser: params.browser,
+    }),
+  };
+}
+
 function relayOf(state) {
   if (!state.relay) {
     throw invalidParams('No extension is attached; call attach first');
@@ -304,8 +322,10 @@ export const HIGH_LEVEL_METHODS = Object.freeze({
   'trace.start': traceStart,
   'trace.stop': traceStop,
   'cookies.import': importCookies,
+  'cookies.sources': cookieSources,
   'profile.migrate': migrateProfile,
   'profile.snapshot': snapshotProfile,
+  'profile.sources': profileSources,
   attach,
   'attach.tabs': attachTabs,
   'attach.send': attachSend,

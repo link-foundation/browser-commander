@@ -256,6 +256,33 @@ describe('runCli', () => {
     assert.deepEqual(document.options.domains, ['a.test']);
   });
 
+  it('lists cookie sources with per-domain counts', async () => {
+    const { exitCode, document } = await cli([
+      'cookies',
+      'sources',
+      '--domain',
+      'example.com',
+    ]);
+
+    assert.equal(exitCode, 0);
+    assert.equal(document.sources[0].browser, 'chrome');
+    assert.equal(document.sources[0].cookies, 7);
+    assert.deepEqual(document.sources[0].byDomain, { 'example.com': 1 });
+  });
+
+  it('lists installed profiles for profile sources', async () => {
+    const { exitCode, document } = await cli([
+      'profile',
+      'sources',
+      '--browser',
+      'firefox',
+    ]);
+
+    assert.equal(exitCode, 0);
+    assert.equal(document.profiles[0].browser, 'firefox');
+    assert.equal(document.profiles[0].isDefault, true);
+  });
+
   it('prints a profile snapshot report', async () => {
     const { exitCode, document } = await cli([
       'profile',

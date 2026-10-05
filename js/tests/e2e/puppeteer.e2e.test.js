@@ -347,7 +347,7 @@ describe('E2E Tests - Puppeteer Engine', { skip: !process.env.RUN_E2E }, () => {
 
       // Scroll to specific item
       await commander.scrollIntoView({
-        selector: '[data-testid="scroll-item-15"]',
+        locatorOrElement: await page.$('[data-testid="scroll-item-15"]'),
       });
       await commander.wait({ ms: 500 });
 

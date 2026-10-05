@@ -1,6 +1,6 @@
 // feature-parity: migration.profile@native-typed
 import assert from 'node:assert';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
@@ -14,6 +14,8 @@ import {
   writeFirefoxCookies,
   writeFirefoxLogins,
   writeFirefoxPlaces,
+  writeFirefoxProfile,
+  writeProfileJson,
 } from '../../../helpers/migration-fixtures.js';
 import { useTempDirectories } from '../../../helpers/temp-directory.js';
 
@@ -113,5 +115,64 @@ describe('migrateProfile', () => {
       )
     );
     assert.equal(report.warnings[0].reason, 'target-key-unavailable');
+  });
+
+  it('imports a domain from whichever installed browser holds it', async () => {
+    const homeDir = await makeTempDir();
+    const target = await makeTempDir();
+    await writeFirefoxProfile(homeDir, [
+      { name: 'a', value: '1', host: '.other.test' },
+    ]);
+    await writeFirefoxProfile(
+      homeDir,
+      [{ name: 'session', value: 's', host: '.github.com' }],
+      { root: '.librewolf', name: 'default' }
+    );
+
+    const report = await migrateProfile({
+      from: { browser: 'default' },
+      to: target,
+      include: ['cookies'],
+      domains: ['github.com'],
+      platform: 'linux',
+      homeDir,
+      environment: {},
+      runCommand: async () => 'firefox.desktop\n',
+    });
+
+    assert.equal(report.source.browser, 'librewolf');
+    assert.equal(report.source.profile, 'default');
+    assert.equal(report.migrated.cookies, 1);
+    assert.deepEqual(
+      report.warnings.map(({ reason }) => reason),
+      ['default-browser-fallback']
+    );
+  });
+
+  it('reads a single-profile Chromium browser (Opera) from its root', async () => {
+    const homeDir = await makeTempDir();
+    const target = await makeTempDir();
+    const root = path.join(homeDir, '.config', 'opera');
+    await mkdir(root, { recursive: true });
+    await writeProfileJson(root, 'Bookmarks', {
+      roots: {
+        bookmark_bar: {
+          type: 'folder',
+          children: [{ type: 'url', name: 'A', url: 'https://a.example/' }],
+        },
+      },
+    });
+
+    const report = await migrateProfile({
+      from: { browser: 'opera' },
+      to: target,
+      include: ['bookmarks'],
+      platform: 'linux',
+      homeDir,
+      environment: {},
+    });
+
+    assert.equal(report.migrated.bookmarks, 1);
+    assert.deepEqual(report.skipped, []);
   });
 });

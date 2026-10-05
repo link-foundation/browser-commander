@@ -1,11 +1,11 @@
 import path from 'node:path';
 import os from 'node:os';
 
-import { browserFamily } from '../browser-sources.js';
+import { resolveImportSource } from '../browser-cookies.js';
+import { browserFamily, isSingleProfileBrowser } from '../browser-sources.js';
 import {
   browserProfileRoot,
   resolveBrowserProfile,
-  resolveSourceBrowser,
 } from '../browser-profiles.js';
 import { migrateBookmarks } from './bookmarks.js';
 import { migrateCookies } from './cookies.js';
@@ -80,13 +80,15 @@ async function resolveSourceProfileDir({
   homeDir,
   environment,
 }) {
+  // A Chromium profile lives in a named subdirectory of the user data dir,
+  // except in single-profile browsers (Opera) that keep it in the root; for
+  // Firefox the userDataDir already points at the profile.
+  const nestsProfiles =
+    isChromiumBrowser(browser) && !isSingleProfileBrowser(browser);
   if (userDataDir) {
-    // For Chromium a profile lives in a named subdirectory; for Firefox the
-    // userDataDir already points at the profile.
-    if (isChromiumBrowser(browser)) {
-      return path.join(userDataDir, profile ?? 'Default');
-    }
-    return userDataDir;
+    return nestsProfiles
+      ? path.join(userDataDir, profile ?? 'Default')
+      : userDataDir;
   }
   if (isChromiumBrowser(browser)) {
     const root = browserProfileRoot(browser, {
@@ -94,7 +96,7 @@ async function resolveSourceProfileDir({
       homeDir,
       environment,
     });
-    return path.join(root, profile ?? 'Default');
+    return nestsProfiles ? path.join(root, profile ?? 'Default') : root;
   }
   const resolved = await resolveBrowserProfile({
     browser,
@@ -175,12 +177,18 @@ export async function migrateProfile({
   if (!to) {
     throw new TypeError('migrateProfile requires a target directory (to)');
   }
-  const browser = await resolveSourceBrowser(from.browser, {
+  // An explicit userDataDir names the source, so only an installed-browser
+  // import is steered towards the profile holding the requested domains.
+  const source = await resolveImportSource({
+    browser: from.browser,
+    domains: from.userDataDir ? undefined : domains,
     platform,
+    homeDir,
     environment,
     runCommand,
   });
-  const profile = from.profile ?? 'Default';
+  const { browser } = source;
+  const profile = from.profile ?? source.profile ?? 'Default';
   const isFirefox = isFirefoxBrowser(browser);
   const sourceProfileDir = await resolveSourceProfileDir({
     browser,
@@ -199,6 +207,9 @@ export async function migrateProfile({
     warnings: [],
     cookies: [],
   };
+  if (source.warning) {
+    report.warnings.push(source.warning);
+  }
 
   if (selected.has('cookies')) {
     if (isFirefox) {

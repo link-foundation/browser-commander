@@ -39,7 +39,10 @@ which the Python and Rust packages ship byte-identical, so the table below
 describes every language at once. The matrix is generated from that catalogue
 by `scripts/generate-browser-support.mjs` and checked in CI; add a browser to
 the JSON and regenerate to change it. `browser: 'default'` (or `'auto'`)
-resolves the operating-system default browser to one of these ids.
+resolves the operating-system default browser to one of these ids. When a
+migration is scoped to `domains` and the default browser holds no cookies for
+them, it imports from the installed profile that holds the most instead and
+reports which one with a `default-browser-fallback` warning.
 
 <!-- browser-support:generated:begin -->
 

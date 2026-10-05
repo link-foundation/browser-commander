@@ -27,10 +27,12 @@ import {
 import { browserFamily } from './browser-sources.js';
 import {
   findCookieDatabase,
+  isDefaultBrowserKeyword,
   listBrowserProfiles,
   resolveBrowserProfile,
   resolveSourceBrowser,
 } from './browser-profiles.js';
+import { resolveDefaultBrowser } from './default-browser.js';
 
 const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600n;
 const MICROSECONDS_PER_SECOND = 1_000_000n;
@@ -458,6 +460,95 @@ export async function listCookieSources({
     });
   }
   return sources;
+}
+
+function matchedCookies(source) {
+  return Object.values(source.byDomain ?? {}).reduce((sum, n) => sum + n, 0);
+}
+
+/**
+ * Pick the source browser for an import. A `default`/`auto` request scoped to
+ * `domains` uses the system default browser when it holds cookies for them
+ * and otherwise falls back to the installed browser profile holding the most,
+ * so "import my github.com sign-in" works whichever browser has it. Only
+ * names and counts are read (see `listCookieSources`), never cookie values.
+ *
+ * @param {Object} options
+ * @param {string} options.browser - Catalogue id, `default` or `auto`
+ * @param {string[]} [options.domains]
+ * @param {string} [options.platform=process.platform]
+ * @param {string} [options.homeDir=os.homedir()]
+ * @param {Object} [options.environment=process.env]
+ * @param {Function} [options.runCommand] - Injected for default-browser lookup
+ * @returns {Promise<Object>} `{browser, profile, warning}`: `profile` is the
+ *   profile holding the cookies (when one was chosen) and `warning` is a
+ *   migration-report warning explaining a fallback away from the system
+ *   default (reason `default-browser-fallback` or `default-browser-unknown`),
+ *   or `null`
+ */
+export async function resolveImportSource({
+  browser,
+  domains,
+  platform = process.platform,
+  homeDir = os.homedir(),
+  environment = process.env,
+  runCommand,
+}) {
+  if (
+    !isDefaultBrowserKeyword(browser) ||
+    !Array.isArray(domains) ||
+    domains.length === 0
+  ) {
+    return {
+      browser: await resolveSourceBrowser(browser, {
+        platform,
+        environment,
+        runCommand,
+      }),
+      profile: undefined,
+      warning: null,
+    };
+  }
+  const systemDefault = await resolveDefaultBrowser({
+    platform,
+    environment,
+    runCommand,
+  });
+  const holders = (
+    await listCookieSources({ domains, platform, homeDir, environment })
+  ).filter((source) => !source.error);
+  const fromDefault = holders.filter(
+    (source) => source.browser === systemDefault
+  );
+  const candidates = fromDefault.length > 0 ? fromDefault : holders;
+  if (candidates.length === 0) {
+    if (!systemDefault) {
+      throw new Error(
+        `Could not determine the system default browser, and no installed browser holds cookies for ${domains.join(', ')}.`
+      );
+    }
+    return { browser: systemDefault, profile: undefined, warning: null };
+  }
+  // The first profile with the most matching cookies; listing order breaks
+  // ties, so a browser's default profile wins over its others.
+  const best = candidates.reduce((chosen, source) =>
+    matchedCookies(source) > matchedCookies(chosen) ? source : chosen
+  );
+  let warning = null;
+  if (best.browser !== systemDefault) {
+    const reason = systemDefault
+      ? `The default browser (${systemDefault}) holds no cookies for`
+      : 'Could not determine the default browser to read cookies for';
+    warning = {
+      type: 'source',
+      item: best.browser,
+      reason: systemDefault
+        ? 'default-browser-fallback'
+        : 'default-browser-unknown',
+      detail: `${reason} ${domains.join(', ')}; imported from ${best.browser} instead.`,
+    };
+  }
+  return { browser: best.browser, profile: best.profile, warning };
 }
 
 export {

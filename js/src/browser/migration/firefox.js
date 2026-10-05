@@ -4,7 +4,7 @@ import { matchesDomains } from './domains.js';
 import { profileFileIfPresent } from './fs-utils.js';
 
 import { openSqliteDatabase } from '../browser-cookie-database.js';
-import { mapFirefoxCookieRows } from '../browser-cookies.js';
+import { mapFirefoxCookieRows, readFirefoxRows } from '../browser-cookies.js';
 import { readDatabaseSnapshot } from './sqlite-snapshot.js';
 import { encryptChromiumValue } from './chromium-crypto.js';
 import { firefoxBookmarksToChrome } from './firefox-bookmarks.js';
@@ -103,12 +103,7 @@ export async function readFirefoxCookies({ profileDir, domains }) {
   return readDatabaseSnapshot({
     sourcePath: cookiePath,
     read: (db) => {
-      const rows = db
-        .prepare(
-          `SELECT name, value, host, path, expiry, isSecure, isHttpOnly, sameSite
-             FROM moz_cookies ORDER BY host, name, path`
-        )
-        .all();
+      const rows = readFirefoxRows(db);
       // The installed-browser cookie reader owns the row → cookie mapping, so
       // a migrated cookie and an imported one always have the same shape.
       return mapFirefoxCookieRows(

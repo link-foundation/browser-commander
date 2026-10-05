@@ -103,15 +103,29 @@ at `/tmp/issue-122-firefox-history-{before,url-before}-*.log`.
 
 ## Local checks
 
+Upstream Firefox cookie schema review identified another reproduced source bug.
+The shared `tests/fixtures/firefox-cookie-expiry.sql` is exercised through both
+installed-profile reading and migration, at schema versions 0, 15, 16 and 17.
+Before normalization, the modern-version cases returned `2000000001999` as
+Unix seconds rather than `2000000001`. Native regressions verify conversion,
+legacy seconds, nonpositive session markers, domain exclusion and source bytes.
+Before/after logs are retained at `/tmp/issue-122-firefox-expiry-*.log`.
+
+The branch also incorporates main's native Selenium changes and dependency
+updates from PR #125, preserving the new Safari parsing dependencies and
+Firefox history translator. The first local Rust compilation was killed while
+building parallel debug targets; subsequent builds use one compiler job and
+disabled debug information, as the earlier local checks did.
+
 | Check                                                             | Result                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | JS `npm run check`                                                | ESLint, Prettier and no new duplication clones pass                                   |
-| JS `npm test`                                                     | 1,575 pass, zero skipped                                                              |
-| Python Ruff check/format and `mypy src`                           | Pass; 171 source files type checked                                                   |
-| Python `pytest`                                                   | 1,173 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
+| JS `npm test`                                                     | 1,587 pass; one Puppeteer manifest-version check skipped                              |
+| Python Ruff check/format and `mypy src`                           | Pass; 172 source files type checked                                                   |
+| Python `pytest`                                                   | 1,191 pass; twelve real-browser tests gated by `RUN_E2E`                               |
 | Rust format, Clippy all targets/all features with warnings denied | Pass                                                                                  |
-| Rust `cargo test --locked`                                        | 723 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
-| Rust `cargo test --locked --all-features`                         | 723 pass, zero failures; 15 existing browser tests ignored                            |
+| Rust `cargo test --locked`                                        | 726 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
+| Rust `cargo test --locked --all-features`                         | 726 pass, zero failures; 15 existing browser tests ignored                            |
 | Full-repository Secretlint and root JavaScript lint               | Pass                                                                                  |
 | Shared asset byte comparison                                      | Catalogue, history schema and capability declarations identical in all three packages |
 | Generated browser/migration matrix freshness                      | Pass                                                                                  |
@@ -121,6 +135,10 @@ at `/tmp/issue-122-firefox-history-{before,url-before}-*.log`.
 
 Rust builds run serially with debug information disabled to keep compiler memory
 bounded in this workspace. The CI-equivalent all-features test also passes.
+Main updates puppeteer-core to 25.12.0 while its API manifest records 25.10.0;
+the existing manifest-versus-installed-package test therefore skips. Generated
+bindings remain consistent with the checked-in manifest. The Python skip count
+includes main's four new engine-matrix acceptance tests.
 Large local logs are saved under `/tmp/issue-122-*`; downloaded failed
 workflow logs go under `ci-logs/`. PR status records CI results against the actual
 pushed SHA rather than the original prepared-branch runs.

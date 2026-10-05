@@ -29,7 +29,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from browser_commander.browser.browser_cookies import _map_firefox_rows
+from browser_commander.browser.browser_cookies import (
+    _map_firefox_rows,
+    _read_firefox_rows,
+)
 from browser_commander.browser.migration.chromium_crypto import encrypt_chromium_value
 from browser_commander.browser.migration.firefox_bookmarks import (
     firefox_bookmarks_to_chrome,
@@ -148,10 +151,7 @@ def read_firefox_cookies(
     wanted = list(domains or [])
 
     def read(database: sqlite3.Connection) -> list[dict[str, Any]]:
-        rows = database.execute(
-            """SELECT name, value, host, path, expiry, isSecure, isHttpOnly, sameSite
-             FROM moz_cookies ORDER BY host, name, path"""
-        ).fetchall()
+        rows = _read_firefox_rows(database, None)
         if wanted:
             rows = [row for row in rows if matches_domains(row["host"] or "", wanted)]
         return _map_firefox_rows(rows)

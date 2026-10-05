@@ -39,7 +39,7 @@ Unsupported platform capabilities must be explicit in the report and matrix.
 | ------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------- |
 | 122.1  | Read every listed issue and every comment; implement all five                 | Preserve issue snapshots and trace each row to native code and tests                              | Partial     |
 | 122.2  | Single PR, no follow-up deferrals                                             | All work on issue-122-35d45f7a9d0c / PR #123                                                      | Partial     |
-| 122.3  | Close parent and each child with separate keywords                            | Include Fixes #122, #117, #118, #119, #120, #121, each on its own line when complete              | Pending     |
+| 122.3  | Close parent and each child with separate keywords                            | Include Fixes #122, #117, #118, #119, #120, #121, each on its own line in the draft description    | Implemented |
 | 122.4  | Describe already resolved/non-reproducible requirements                       | Distinguish existing Safari cookies and catalogue entries from new work                           | Partial     |
 | 117.1  | Safari and STP Bookmarks.plist, binary and XML                                | Use native plist parsers; normalize folders, leaves and reading-list entries                      | Implemented |
 | 117.2  | Translate bookmark hierarchy to every supported target                        | Canonical bookmark tree, Chromium JSON / Firefox places writer; WebKit explicit unsupported       | Partial     |
@@ -146,6 +146,13 @@ Unsupported platform capabilities must be explicit in the report and matrix.
   in Rust. Their native binary/XML parsers avoid introducing another decoder.
 - [csv-parse](https://csv.js.org/parse/) handles quoted multiline/BOM input in JS;
   Python's csv module and Rust's csv crate provide the corresponding native parsers.
+- [Google dfindexeddb](https://github.com/google/dfindexeddb) is an experimental
+  Python decoder for Chromium, Firefox and Safari IndexedDB/LevelDB, including
+  associated blobs. It supports only a subset of key/value types. Candidate use:
+  a Python adapter and fixture oracle for matching native JS/Rust decoders;
+  report each unsupported encoding instead of claiming a complete import.
+  [fake-indexeddb](https://github.com/dumbmatter/fakeIndexedDB) can test JS target
+  transactions and schema creation; real engine acceptance remains necessary.
 - Candidate LevelDB components:
   [classic-level](https://github.com/Level/classic-level) provides snapshot
   reads and bounded iterators in JS;
@@ -165,6 +172,11 @@ Unsupported platform capabilities must be explicit in the report and matrix.
   [bookmark API](https://firefox-source-docs.mozilla.org/browser/places/Bookmarks.html)
   specifies folder GUIDs, item ordering and timestamps. Target writers need
   these invariants and runtime acceptance rather than renamed Chromium files.
+- [Mozilla preference recovery](https://raw.githubusercontent.com/mozilla-firefox/firefox/main/browser/components/backup/resources/PreferencesBackupResource.sys.mjs)
+  demonstrates another same-engine clone constraint: search-engine verification
+  hashes depend on the profile directory name. Recovery recomputes hashes only
+  when they verified against the original profile. A search adapter must retain
+  this distinction, and parse prefs.js as data rather than execute it.
 - [Mozilla NSS](https://github.com/mozilla/nss) supplies Firefox's native
   cryptographic component. A target password writer needs target-profile NSS
   initialization and encryption, with source/target key separation and primary
@@ -180,6 +192,17 @@ Unsupported platform capabilities must be explicit in the report and matrix.
   cross-language parity and cannot establish target browser acceptance.
 
 ## Validation and reporting rules
+
+For storage requirements 117.7, 118.8 and 119.1–119.3, compare two candidates:
+native format decoders on consistent disposable snapshots, or browser-native
+export/import from an isolated snapshot using the existing controlled engines.
+The canonical representation must preserve origin/partition identity, database
+versions, object-store keys/indexes and external blobs. Domain discovery reads
+identities/counts before values. Start fixtures with primitive strings, then
+cover typed arrays, BigInt, cyclic objects and blobs; unsupported types receive
+individual reasons. For every accepted type, verify browser reads after restart,
+source digests and matching native reports. A successful decode alone does not
+demonstrate an accepted target write.
 
 The [validation record](VALIDATION.md) documents minimum reproductions, all local
 checks, real Chromium acceptance and the remaining runtime/scope limits.
@@ -202,7 +225,9 @@ because a skipped reason or feature marker exists.
 
 All requirement IDs above were compared with the existing catalogue, native
 readers, migration dispatch, launch paths and CLI/command-stream schemas. The
-parent and every child remain incomplete; no closing keywords are appropriate.
+parent and every child remain incomplete. The draft description retains the
+required closing references; draft status prevents merge before acceptance
+criteria are fulfilled.
 
 - Safari now has binary/XML bookmark readers, folder/reading-list translation,
   visit-preserving History.db translation, explicit CSV parsing and target-key
@@ -221,6 +246,10 @@ parent and every child remain incomplete; no closing keywords are appropriate.
   Missing schemas and invalid per-visit data have explicit skipped reasons;
   transition, referring-visit and sync metadata have a loss warning. This does
   not implement requirement 118.4's Firefox target writer.
+- Upstream Firefox schema research reproduced milliseconds being returned as
+  seconds for cookie database versions 16 and 17. Installed readers and migration
+  now share schema-aware expiry normalization in each language; fixtures cover
+  legacy versions, session markers, domain filters and unchanged source bytes.
 - Cookie source discovery and default/auto selection use the same exact host
   and subdomain rule for Chromium, Firefox and Safari. Lookalike hosts and SQL
   wildcard characters cannot select a profile whose cookies migration excludes;
@@ -316,6 +345,10 @@ by this existing behavior and retained regression coverage.
   and [History implementation](https://searchfox.org/firefox-main/source/toolkit/components/places/History.sys.mjs)
   define the visit/URL join and microsecond dates used by the native Firefox
   source history translator.
+- [Mozilla cookie database migrations](https://raw.githubusercontent.com/mozilla-firefox/firefox/main/netwerk/cookie/CookiePersistentStorage.cpp)
+  explicitly multiply expiry by 1,000 when upgrading schema 15 to 16; current
+  schema 17 retains milliseconds. The importer converts according to
+  `PRAGMA user_version`, rather than guessing units from the value's magnitude.
 - [Chromium history database schema](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/components/history/core/browser/history_database.cc)
   supplies version/compatibility metadata for the translated Safari history.
 - [Chromium annotation schema](https://chromium.googlesource.com/chromium/src/+/main/components/history/core/browser/visit_annotations_database.cc)

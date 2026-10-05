@@ -78,10 +78,16 @@ function readDatabaseVersion(database) {
   }
 }
 
-function readFirefoxRows(database, domainFilter) {
+// Firefox schema 16 changed expiry from Unix seconds to milliseconds. Normalize
+// in SQLite before mapping so both installed reading and migration use seconds.
+export function readFirefoxRows(database, domainFilter) {
+  const version = Number(
+    database.prepare('PRAGMA user_version').get()?.user_version ?? 0
+  );
+  const expiry = version >= 16 ? 'expiry / 1000 AS expiry' : 'expiry';
   return queryRows(
     database,
-    `SELECT name, value, host, path, expiry, isSecure, isHttpOnly, sameSite
+    `SELECT name, value, host, path, ${expiry}, isSecure, isHttpOnly, sameSite
        FROM moz_cookies
       ${domainFilter ? 'WHERE host LIKE ?' : ''}
       ORDER BY host, name, path`,

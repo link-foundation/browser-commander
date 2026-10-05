@@ -112,9 +112,13 @@ def _domain_query(column: str, domain_filter: str | None) -> tuple[str, tuple]:
 def _read_firefox_rows(
     database: sqlite3.Connection, domain_filter: str | None
 ) -> list[sqlite3.Row]:
+    # Firefox schema 16 changed Unix expiry seconds to milliseconds. Keep the
+    # public cookie shape in seconds for installed reading and migration alike.
+    version = database.execute("PRAGMA user_version").fetchone()[0]
+    expiry = "expiry / 1000 AS expiry" if version >= 16 else "expiry"
     where, parameters = _domain_query("host", domain_filter)
     return database.execute(
-        "SELECT name, value, host, path, expiry, isSecure, isHttpOnly, sameSite "
+        f"SELECT name, value, host, path, {expiry}, isSecure, isHttpOnly, sameSite "
         f"FROM moz_cookies{where} ORDER BY host, name, path",
         parameters,
     ).fetchall()

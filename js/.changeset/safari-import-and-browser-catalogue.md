@@ -15,3 +15,5 @@ Filter associated Login Data notes, security records and origin statistics; re-e
 Recognize all 18 migration data classes with explicit unsupported reports. Add separate payment-card consent across native APIs, pre-launch migration, CLI and command streams, plus provider-specific passkey and certificate export limitations without accessing protected stores.
 
 Translate Firefox history to Chromium with exact microsecond visit dates, domain filtering, immutable snapshots and per-visit malformed-data reports.
+
+Normalize Firefox schema 16+ cookie expiry from milliseconds to seconds in both installed-profile reading and migration, preserving legacy schemas and session markers.

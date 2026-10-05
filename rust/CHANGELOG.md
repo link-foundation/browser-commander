@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- changelog-insert-here -->
+## [0.16.0] - 2026-10-05
+
+### Added
+
+- Safari and Safari Technology Preview cookie import with installed/default/custom
+  discovery, domain counts without decoding values, validated binarycookies decoding
+  and Full Disk Access diagnostics. Native options and reports match JS and Python.
+  Unsupported Safari classes and unavailable SameSite are reported explicitly.
+  Remaining profile import requirements are tracked in issues #117–#120.
+
 ## [0.15.0] - 2026-10-05
 
 ### Added

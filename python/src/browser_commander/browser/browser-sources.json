@@ -1,0 +1,399 @@
+{
+  "comment": [
+    "Catalogue of installed browsers Browser Commander can import from (issue",
+    "#114). Each entry says where a browser keeps its profiles on every",
+    "platform, how its Chromium Safe Storage key is named, and how the OS",
+    "records it as the default browser, so profile discovery, cookie",
+    "decryption and `browser: 'default'` resolution are all data-driven and",
+    "identical across JavaScript, Python and Rust.",
+    "",
+    "Root templates use these placeholders, expanded per platform:",
+    "  {home}          the user home directory",
+    "  {appSupport}    {home}/Library/Application Support (darwin only)",
+    "  {localAppData}  %LOCALAPPDATA% (win32 only)",
+    "  {appData}       %APPDATA% / roaming (win32 only)",
+    "  {config}        {home}/.config (linux only)",
+    "A browser with \"singleProfile\": true keeps its data in the root itself",
+    "(one profile named \"Default\"); otherwise the root holds Chromium profile",
+    "subdirectories (Default, Profile 1, ...) or a Firefox profiles.ini.",
+    "",
+    "This file is shared, not translated: Python and Rust ship byte-identical",
+    "copies, checked by scripts/check-shared-fingerprint-assets.sh."
+  ],
+  "browsers": [
+    {
+      "id": "chrome",
+      "family": "chromium",
+      "aliases": ["google-chrome", "google chrome"],
+      "roots": {
+        "darwin": ["{appSupport}/Google/Chrome"],
+        "win32": ["{localAppData}/Google/Chrome/User Data"],
+        "linux": ["{config}/google-chrome"]
+      },
+      "safeStorage": {
+        "service": "Chrome Safe Storage",
+        "application": "chrome",
+        "folder": "Chrome Keys"
+      },
+      "default": {
+        "darwin": ["com.google.chrome"],
+        "linux": ["google-chrome.desktop", "google-chrome-stable.desktop"],
+        "win32": ["ChromeHTML"]
+      }
+    },
+    {
+      "id": "chrome-beta",
+      "family": "chromium",
+      "aliases": ["google-chrome-beta"],
+      "roots": {
+        "darwin": ["{appSupport}/Google/Chrome Beta"],
+        "win32": ["{localAppData}/Google/Chrome Beta/User Data"],
+        "linux": ["{config}/google-chrome-beta"]
+      },
+      "safeStorage": {
+        "service": "Chrome Safe Storage",
+        "application": "google-chrome-beta",
+        "folder": "Chrome Keys"
+      },
+      "default": {
+        "darwin": ["com.google.chrome.beta"],
+        "linux": ["google-chrome-beta.desktop"],
+        "win32": ["ChromeBHTML"]
+      }
+    },
+    {
+      "id": "chrome-dev",
+      "family": "chromium",
+      "aliases": ["google-chrome-dev", "google-chrome-unstable"],
+      "roots": {
+        "darwin": ["{appSupport}/Google/Chrome Dev"],
+        "win32": ["{localAppData}/Google/Chrome Dev/User Data"],
+        "linux": ["{config}/google-chrome-unstable"]
+      },
+      "safeStorage": {
+        "service": "Chrome Safe Storage",
+        "application": "google-chrome-unstable",
+        "folder": "Chrome Keys"
+      },
+      "default": {
+        "darwin": ["com.google.chrome.dev"],
+        "linux": ["google-chrome-unstable.desktop"],
+        "win32": ["ChromeDHTML"]
+      }
+    },
+    {
+      "id": "chrome-canary",
+      "family": "chromium",
+      "aliases": ["google-chrome-canary"],
+      "roots": {
+        "darwin": ["{appSupport}/Google/Chrome Canary"],
+        "win32": ["{localAppData}/Google/Chrome SxS/User Data"]
+      },
+      "safeStorage": {
+        "service": "Chrome Safe Storage",
+        "application": "chrome",
+        "folder": "Chrome Keys"
+      },
+      "default": {
+        "darwin": ["com.google.chrome.canary"],
+        "win32": ["ChromeSSHTM"]
+      }
+    },
+    {
+      "id": "chromium",
+      "family": "chromium",
+      "aliases": [],
+      "roots": {
+        "darwin": ["{appSupport}/Chromium"],
+        "win32": ["{localAppData}/Chromium/User Data"],
+        "linux": ["{config}/chromium"]
+      },
+      "safeStorage": {
+        "service": "Chromium Safe Storage",
+        "application": "chromium",
+        "folder": "Chromium Keys"
+      },
+      "default": {
+        "darwin": ["org.chromium.chromium"],
+        "linux": ["chromium.desktop", "chromium-browser.desktop"]
+      }
+    },
+    {
+      "id": "edge",
+      "family": "chromium",
+      "aliases": ["msedge", "microsoft-edge"],
+      "roots": {
+        "darwin": ["{appSupport}/Microsoft Edge"],
+        "win32": ["{localAppData}/Microsoft/Edge/User Data"],
+        "linux": ["{config}/microsoft-edge"]
+      },
+      "safeStorage": {
+        "service": "Microsoft Edge Safe Storage",
+        "application": "microsoft-edge",
+        "folder": "Microsoft Edge Keys"
+      },
+      "default": {
+        "darwin": ["com.microsoft.edgemac"],
+        "linux": ["microsoft-edge.desktop"],
+        "win32": ["MSEdgeHTM"]
+      }
+    },
+    {
+      "id": "edge-beta",
+      "family": "chromium",
+      "aliases": ["microsoft-edge-beta"],
+      "roots": {
+        "darwin": ["{appSupport}/Microsoft Edge Beta"],
+        "win32": ["{localAppData}/Microsoft/Edge Beta/User Data"],
+        "linux": ["{config}/microsoft-edge-beta"]
+      },
+      "safeStorage": {
+        "service": "Microsoft Edge Safe Storage",
+        "application": "microsoft-edge-beta",
+        "folder": "Microsoft Edge Keys"
+      },
+      "default": {
+        "darwin": ["com.microsoft.edgemac.beta"],
+        "linux": ["microsoft-edge-beta.desktop"]
+      }
+    },
+    {
+      "id": "edge-dev",
+      "family": "chromium",
+      "aliases": ["microsoft-edge-dev"],
+      "roots": {
+        "darwin": ["{appSupport}/Microsoft Edge Dev"],
+        "win32": ["{localAppData}/Microsoft/Edge Dev/User Data"],
+        "linux": ["{config}/microsoft-edge-dev"]
+      },
+      "safeStorage": {
+        "service": "Microsoft Edge Safe Storage",
+        "application": "microsoft-edge-dev",
+        "folder": "Microsoft Edge Keys"
+      },
+      "default": {
+        "darwin": ["com.microsoft.edgemac.dev"],
+        "linux": ["microsoft-edge-dev.desktop"]
+      }
+    },
+    {
+      "id": "brave",
+      "family": "chromium",
+      "aliases": ["brave-browser"],
+      "roots": {
+        "darwin": ["{appSupport}/BraveSoftware/Brave-Browser"],
+        "win32": ["{localAppData}/BraveSoftware/Brave-Browser/User Data"],
+        "linux": ["{config}/BraveSoftware/Brave-Browser"]
+      },
+      "safeStorage": {
+        "service": "Brave Safe Storage",
+        "application": "brave",
+        "folder": "Brave Keys"
+      },
+      "default": {
+        "darwin": ["com.brave.browser"],
+        "linux": ["brave-browser.desktop", "brave.desktop"],
+        "win32": ["BraveHTML"]
+      }
+    },
+    {
+      "id": "vivaldi",
+      "family": "chromium",
+      "aliases": [],
+      "roots": {
+        "darwin": ["{appSupport}/Vivaldi"],
+        "win32": ["{localAppData}/Vivaldi/User Data"],
+        "linux": ["{config}/vivaldi"]
+      },
+      "safeStorage": {
+        "service": "Vivaldi Safe Storage",
+        "application": "vivaldi",
+        "folder": "Vivaldi Keys"
+      },
+      "default": {
+        "darwin": ["com.vivaldi.vivaldi"],
+        "linux": ["vivaldi.desktop", "vivaldi-stable.desktop"],
+        "win32": ["VivaldiHTM"]
+      }
+    },
+    {
+      "id": "opera",
+      "family": "chromium",
+      "aliases": [],
+      "singleProfile": true,
+      "roots": {
+        "darwin": ["{appSupport}/com.operasoftware.Opera"],
+        "win32": ["{appData}/Opera Software/Opera Stable"],
+        "linux": ["{config}/opera"]
+      },
+      "safeStorage": {
+        "service": "Opera Safe Storage",
+        "application": "opera",
+        "folder": "Opera Keys"
+      },
+      "default": {
+        "darwin": ["com.operasoftware.opera"],
+        "linux": ["opera.desktop", "opera_opera.desktop"],
+        "win32": ["OperaStable"]
+      }
+    },
+    {
+      "id": "opera-gx",
+      "family": "chromium",
+      "aliases": ["operagx"],
+      "singleProfile": true,
+      "roots": {
+        "darwin": ["{appSupport}/com.operasoftware.OperaGX"],
+        "win32": ["{appData}/Opera Software/Opera GX Stable"],
+        "linux": ["{config}/opera-gx"]
+      },
+      "safeStorage": {
+        "service": "Opera Safe Storage",
+        "application": "opera-gx",
+        "folder": "Opera Keys"
+      },
+      "default": {
+        "darwin": ["com.operasoftware.operagx"],
+        "win32": ["OperaGXStable"]
+      }
+    },
+    {
+      "id": "yandex",
+      "family": "chromium",
+      "aliases": ["yandex-browser", "yandexbrowser"],
+      "roots": {
+        "darwin": ["{appSupport}/Yandex/YandexBrowser"],
+        "win32": ["{localAppData}/Yandex/YandexBrowser/User Data"],
+        "linux": ["{config}/yandex-browser"]
+      },
+      "safeStorage": {
+        "service": "Yandex Safe Storage",
+        "application": "yandex-browser",
+        "folder": "Yandex Keys"
+      },
+      "default": {
+        "darwin": ["ru.yandex.desktop.yandex-browser"],
+        "linux": ["yandex-browser.desktop"],
+        "win32": ["YandexHTML"]
+      }
+    },
+    {
+      "id": "arc",
+      "family": "chromium",
+      "aliases": [],
+      "roots": {
+        "darwin": ["{appSupport}/Arc/User Data"],
+        "win32": [
+          "{localAppData}/Packages/TheBrowserCompany.Arc_ttt1ap7aakyb4/LocalCache/Local/Arc/User Data"
+        ]
+      },
+      "safeStorage": {
+        "service": "Arc Safe Storage",
+        "application": "arc",
+        "folder": "Arc Keys"
+      },
+      "default": {
+        "darwin": ["company.thebrowser.browser"],
+        "win32": ["ArcHTML"]
+      }
+    },
+    {
+      "id": "firefox",
+      "family": "firefox",
+      "aliases": ["mozilla-firefox"],
+      "roots": {
+        "darwin": ["{appSupport}/Firefox"],
+        "win32": ["{appData}/Mozilla/Firefox"],
+        "linux": ["{home}/.mozilla/firefox"]
+      },
+      "default": {
+        "darwin": ["org.mozilla.firefox"],
+        "linux": ["firefox.desktop", "firefox-esr.desktop"],
+        "win32": ["FirefoxHTML", "FirefoxURL"]
+      }
+    },
+    {
+      "id": "firefox-developer",
+      "family": "firefox",
+      "aliases": ["firefox-dev", "firefox-developer-edition"],
+      "roots": {
+        "darwin": ["{appSupport}/Firefox"],
+        "win32": ["{appData}/Mozilla/Firefox"],
+        "linux": ["{home}/.mozilla/firefox"]
+      },
+      "default": {
+        "darwin": ["org.mozilla.firefoxdeveloperedition"]
+      }
+    },
+    {
+      "id": "firefox-nightly",
+      "family": "firefox",
+      "aliases": ["nightly"],
+      "roots": {
+        "darwin": ["{appSupport}/Firefox"],
+        "win32": ["{appData}/Mozilla/Firefox"],
+        "linux": ["{home}/.mozilla/firefox"]
+      },
+      "default": {
+        "darwin": ["org.mozilla.nightly"],
+        "linux": ["firefox-nightly.desktop"]
+      }
+    },
+    {
+      "id": "librewolf",
+      "family": "firefox",
+      "aliases": [],
+      "roots": {
+        "darwin": ["{appSupport}/LibreWolf"],
+        "win32": ["{appData}/librewolf"],
+        "linux": ["{home}/.librewolf"]
+      },
+      "default": {
+        "darwin": ["io.gitlab.librewolf-community"],
+        "linux": ["librewolf.desktop"]
+      }
+    },
+    {
+      "id": "waterfox",
+      "family": "firefox",
+      "aliases": [],
+      "roots": {
+        "darwin": ["{appSupport}/Waterfox"],
+        "win32": ["{appData}/Waterfox"],
+        "linux": ["{home}/.waterfox"]
+      },
+      "default": {
+        "darwin": ["net.waterfox.waterfox"],
+        "linux": ["waterfox.desktop"]
+      }
+    },
+    {
+      "id": "zen",
+      "family": "firefox",
+      "aliases": ["zen-browser"],
+      "roots": {
+        "darwin": ["{appSupport}/zen"],
+        "win32": ["{appData}/zen"],
+        "linux": ["{home}/.zen"]
+      },
+      "default": {
+        "darwin": ["app.zen-browser.zen"],
+        "linux": ["zen.desktop", "zen-browser.desktop"]
+      }
+    },
+    {
+      "id": "floorp",
+      "family": "firefox",
+      "aliases": [],
+      "roots": {
+        "darwin": ["{appSupport}/Floorp"],
+        "win32": ["{appData}/Floorp"],
+        "linux": ["{home}/.floorp"]
+      },
+      "default": {
+        "darwin": ["org.floorp.Floorp"],
+        "linux": ["floorp.desktop"]
+      }
+    }
+  ]
+}

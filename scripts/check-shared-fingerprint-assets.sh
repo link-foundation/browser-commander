@@ -36,6 +36,9 @@ assets=(
   "js/src/browser/launch-restrictions.json \
    python/src/browser_commander/browser/launch-restrictions.json \
    rust/src/browser/launch-restrictions.json"
+  "js/src/browser/browser-sources.json \
+   python/src/browser_commander/browser/browser-sources.json \
+   rust/src/browser/browser-sources.json"
 )
 
 cd "$repo_root"

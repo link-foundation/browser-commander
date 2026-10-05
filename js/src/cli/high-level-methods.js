@@ -191,12 +191,18 @@ async function importCookies(state, params) {
 }
 
 function migrateProfile(state, params) {
+  // The CLI passes the source browser flat (`--from`, `--profile`,
+  // `--user-data-dir`); migrateProfile expects them grouped under `from`.
   return state.dependencies.migrateProfile({
-    from: params.from,
-    profile: params.profile,
+    from: {
+      browser: requireString(params, 'from'),
+      profile: params.profile,
+      userDataDir: params.userDataDir,
+    },
     to: params.to,
     include: params.include,
     domains: params.domains,
+    targetBrowser: params.targetBrowser,
   });
 }
 

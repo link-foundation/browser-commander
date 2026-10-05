@@ -210,6 +210,8 @@ async function profileMigrate(parsed, io) {
     await dispatchOnce(io, 'profile.migrate', {
       from: requireOption(options, 'from', 'profile migrate'),
       profile: options.profile,
+      userDataDir: options.userDataDir,
+      targetBrowser: options.targetBrowser,
       to: options.to,
       include: options.include
         ?.split(',')

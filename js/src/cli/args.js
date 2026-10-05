@@ -83,6 +83,8 @@ export const COMMANDS = Object.freeze({
     options: {
       from: STRING,
       profile: STRING,
+      'user-data-dir': STRING,
+      'target-browser': STRING,
       to: STRING,
       include: STRING,
       domain: STRINGS,

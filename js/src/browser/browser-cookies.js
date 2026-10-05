@@ -24,6 +24,7 @@ import {
   openSqliteDatabase,
   preserveIntegerPrecision,
 } from './browser-cookie-database.js';
+import { browserFamily } from './browser-sources.js';
 import {
   findCookieDatabase,
   listBrowserProfiles,
@@ -275,17 +276,24 @@ export async function readBrowserCookiesWithDependencies(
     environment,
     runCommand,
   });
-  const profile = await resolveBrowserProfile({
-    browser,
-    profile: options.profile,
-    platform,
-    homeDir,
-    environment,
-    runCommand,
-  });
-  const cookiePath = await findCookieDatabase(browser, profile.path, platform);
+  // A caller that already resolved the profile directory (for example a
+  // migration honouring a custom `userDataDir`) passes it as `profileDir`, so
+  // the reader does not re-resolve the default profile location.
+  const profilePath = options.profileDir
+    ? options.profileDir
+    : (
+        await resolveBrowserProfile({
+          browser,
+          profile: options.profile,
+          platform,
+          homeDir,
+          environment,
+          runCommand,
+        })
+      ).path;
+  const cookiePath = await findCookieDatabase(browser, profilePath, platform);
   if (!cookiePath) {
-    throw new Error(`No cookie database exists in ${profile.path}`);
+    throw new Error(`No cookie database exists in ${profilePath}`);
   }
   const cache = normalizeCookieCache(
     options.cache,
@@ -294,7 +302,7 @@ export async function readBrowserCookiesWithDependencies(
   );
   const identity = JSON.stringify({
     browser,
-    profile: profile.path,
+    profile: profilePath,
     domainFilter: options.domainFilter ?? null,
     ignoreDecryptionErrors: options.ignoreDecryptionErrors === true,
   });
@@ -312,7 +320,7 @@ export async function readBrowserCookiesWithDependencies(
   const database = await openCookieDatabase(cookiePath);
   let cookies;
   try {
-    if (browser === 'firefox') {
+    if (browserFamily(browser) === 'firefox') {
       cookies = mapFirefoxCookieRows(
         readFirefoxRows(database, options.domainFilter)
       );
@@ -329,7 +337,7 @@ export async function readBrowserCookiesWithDependencies(
         ignoreDecryptionErrors: options.ignoreDecryptionErrors === true,
         now,
         platform,
-        profile,
+        profile: { path: profilePath },
         readSafeStoragePassword:
           dependencies.readSafeStoragePassword ?? readSafeStoragePassword,
         readWindowsEncryptionKey:

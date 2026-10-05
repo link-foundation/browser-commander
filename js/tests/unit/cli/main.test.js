@@ -249,11 +249,11 @@ describe('runCli', () => {
       'a.test',
     ]);
 
-    assert.deepEqual(document.options, {
-      from: 'chrome',
-      include: ['cookies', 'bookmarks'],
-      domains: ['a.test'],
-    });
+    // The source browser is grouped under `from` so migrateProfile receives
+    // `from.browser` (a flat string here was a bug that threw).
+    assert.equal(document.options.from.browser, 'chrome');
+    assert.deepEqual(document.options.include, ['cookies', 'bookmarks']);
+    assert.deepEqual(document.options.domains, ['a.test']);
   });
 
   it('prints a profile snapshot report', async () => {

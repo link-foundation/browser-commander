@@ -335,6 +335,32 @@ def write_firefox_cookies(profile_dir: Path, rows: Iterable[Mapping[str, Any]]) 
     return cookie_path
 
 
+def write_firefox_profile(
+    home: Path,
+    rows: Iterable[Mapping[str, Any]],
+    *,
+    root: str = ".mozilla/firefox",
+    name: str = "default-release",
+) -> Path:
+    """Write a Linux Firefox-family install under ``home`` with one profile.
+
+    The profile is listed as the default in ``profiles.ini`` and its
+    ``cookies.sqlite`` holds ``rows``. ``root`` is the install root relative to
+    ``home`` (a fork such as LibreWolf uses its own); returns the profile dir.
+    """
+
+    root_path = home.joinpath(*root.split("/"))
+    profile_name = f"xyz.{name}"
+    profile_path = root_path / profile_name
+    profile_path.mkdir(parents=True)
+    (root_path / "profiles.ini").write_text(
+        f"[Profile0]\nName={name}\nIsRelative=1\nPath={profile_name}\nDefault=1\n",
+        encoding="utf-8",
+    )
+    write_firefox_cookies(profile_path, rows)
+    return profile_path
+
+
 def write_firefox_places(profile_dir: Path, *, with_menu_bookmark: bool = True) -> Path:
     """Write a Firefox ``places.sqlite`` with a toolbar and a menu bookmark.
 

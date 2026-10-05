@@ -36,12 +36,16 @@ from browser_commander.browser.browser_cookie_crypto import (
 from browser_commander.browser.browser_profiles import (
     BrowserProfile,
     find_cookie_database,
+    is_default_browser_keyword,
     list_browser_profiles,
     resolve_browser_profile,
     resolve_source_browser,
 )
 from browser_commander.browser.browser_sources import browser_family
-from browser_commander.browser.default_browser import RunCommand
+from browser_commander.browser.default_browser import (
+    RunCommand,
+    resolve_default_browser,
+)
 
 CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600
 
@@ -488,15 +492,108 @@ def list_cookie_sources(
     return sources
 
 
+@dataclass(frozen=True)
+class ImportSource:
+    """The browser an import reads from, as chosen by :func:`resolve_import_source`.
+
+    ``profile`` is the profile holding the requested cookies (``None`` when no
+    profile was chosen) and ``warning`` is a migration-report warning that
+    explains a fallback away from the system default, or ``None``.
+    """
+
+    browser: str
+    profile: str | None = None
+    warning: dict[str, str] | None = None
+
+
+def _matched_cookies(source: CookieSource) -> int:
+    return sum((source.by_domain or {}).values())
+
+
+def resolve_import_source(
+    browser: str,
+    *,
+    domains: Sequence[str] | None = None,
+    platform: str = sys.platform,
+    home_dir: Path | None = None,
+    environment: Mapping[str, str] | None = None,
+    run_command: RunCommand | None = None,
+) -> ImportSource:
+    """Pick the source browser for an import.
+
+    A ``default``/``auto`` request scoped to ``domains`` uses the system default
+    browser when it holds cookies for them and otherwise falls back to the
+    installed browser profile holding the most, so "import my github.com
+    sign-in" works whichever browser has it. Only names and counts are read
+    (see :func:`list_cookie_sources`), never cookie values.
+    """
+    if not is_default_browser_keyword(browser) or not domains:
+        return ImportSource(
+            browser=resolve_source_browser(
+                browser,
+                platform=platform,
+                environment=environment,
+                run_command=run_command,
+            )
+        )
+    system_default = resolve_default_browser(
+        platform=platform, environment=environment, run_command=run_command
+    )
+    holders = [
+        source
+        for source in list_cookie_sources(
+            domains=domains,
+            platform=platform,
+            home_dir=home_dir,
+            environment=environment,
+        )
+        if source.error is None
+    ]
+    from_default = [source for source in holders if source.browser == system_default]
+    candidates = from_default or holders
+    if not candidates:
+        if not system_default:
+            raise ValueError(
+                "Could not determine the system default browser, and no "
+                f"installed browser holds cookies for {', '.join(domains)}."
+            )
+        return ImportSource(browser=system_default)
+    # The first profile with the most matching cookies; listing order breaks
+    # ties, so a browser's default profile wins over its others.
+    best = candidates[0]
+    for source in candidates[1:]:
+        if _matched_cookies(source) > _matched_cookies(best):
+            best = source
+    warning = None
+    if best.browser != system_default:
+        reason = (
+            f"The default browser ({system_default}) holds no cookies for"
+            if system_default
+            else "Could not determine the default browser to read cookies for"
+        )
+        warning = {
+            "type": "source",
+            "item": best.browser,
+            "reason": "default-browser-fallback"
+            if system_default
+            else "default-browser-unknown",
+            "detail": f"{reason} {', '.join(domains)}; "
+            f"imported from {best.browser} instead.",
+        }
+    return ImportSource(browser=best.browser, profile=best.profile, warning=warning)
+
+
 __all__ = [
     "BrowserCookieCacheOptions",
     "BrowserCookieReadOptions",
     "BrowserProfile",
     "CookieSource",
+    "ImportSource",
     "clear_browser_cookie_memory_cache",
     "decrypt_chromium_cookie",
     "list_browser_profiles",
     "list_cookie_sources",
     "read_browser_cookies",
     "read_browser_cookies_with_dependencies",
+    "resolve_import_source",
 ]

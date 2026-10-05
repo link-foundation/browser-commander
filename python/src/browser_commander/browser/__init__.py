@@ -7,9 +7,11 @@ from browser_commander.browser.browser_cookies import (
     BrowserCookieReadOptions,
     BrowserProfile,
     CookieSource,
+    ImportSource,
     list_browser_profiles,
     list_cookie_sources,
     read_browser_cookies,
+    resolve_import_source,
 )
 from browser_commander.browser.connector import (
     ConnectOptions,
@@ -107,6 +109,7 @@ __all__ = [
     "CookieSource",
     "ExtensionRelay",
     "GotoResult",
+    "ImportSource",
     "LaunchOptions",
     "LaunchResult",
     "NavigationVerificationResult",
@@ -154,6 +157,7 @@ __all__ = [
     "read_browser_version_page",
     "remove_user_data_dir",
     "reserve_loopback_port",
+    "resolve_import_source",
     "resolve_launch_executable",
     "resolve_restrictions",
     "save_storage_state",

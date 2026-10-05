@@ -36,6 +36,7 @@ use crate::browser::browser_profiles::{
     browser_profile_root, current_platform, normalize_cookie_browser, normalize_platform,
     resolve_browser_profile, BrowserProfileOptions,
 };
+use crate::browser::browser_sources::browser_family;
 
 pub use cookies::{CookieReader, DBSC_BOUND_COOKIE_NAMES};
 pub use firefox_nss::PrimaryPasswordError;
@@ -53,8 +54,6 @@ pub const ALL_DATA_CLASSES: [&str; 6] = [
     "preferences",
     "extensions",
 ];
-
-const CHROMIUM_BROWSERS: [&str; 4] = ["chrome", "chromium", "brave", "edge"];
 
 const TARGET_KEY_UNAVAILABLE_DETAIL: &str = "A target encryption key was not available (on Windows the launcher must generate one and write it into the target Local State); passwords were not migrated.";
 
@@ -394,7 +393,15 @@ impl MigrateProfileOptions {
 }
 
 fn is_chromium(browser: &str) -> bool {
-    CHROMIUM_BROWSERS.contains(&browser)
+    browser_family(browser)
+        .map(|family| family == "chromium")
+        .unwrap_or(false)
+}
+
+fn is_firefox_browser(browser: &str) -> bool {
+    browser_family(browser)
+        .map(|family| family == "firefox")
+        .unwrap_or(false)
 }
 
 fn resolve_source_profile_dir(
@@ -463,7 +470,7 @@ fn migrate_passwords_class(
     source_profile_dir: &Path,
     report: &mut MigrationReport,
 ) -> Result<()> {
-    let is_firefox = browser == "firefox";
+    let is_firefox = is_firefox_browser(browser);
     let target_browser = options.target_browser.clone().unwrap_or_else(|| {
         if is_firefox {
             "chrome".into()
@@ -541,7 +548,7 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
         .profile
         .clone()
         .unwrap_or_else(|| "Default".to_string());
-    let is_firefox = browser == "firefox";
+    let is_firefox = is_firefox_browser(browser);
     let source_profile_dir = resolve_source_profile_dir(&browser, &profile, &options)?;
     let selected = |name: &str| options.include.iter().any(|entry| entry == name);
     let mut report = MigrationReport {

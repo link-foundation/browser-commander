@@ -78,14 +78,20 @@ pub use browser::snapshot::{
     launch_snapshot, snapshot_user_data_dir, SnapshotLaunchResult, SnapshotOptions, SnapshotReport,
 };
 pub use browser::{
-    build_real_browser_args, clear_browser_cookie_memory_cache, connect_browser, emulate_media,
-    launch_and_connect_real_browser, launch_browser, launch_real_browser, launch_restrictions,
-    list_browser_profiles, read_browser_cookies, resolve_restrictions, save_storage_state, Browser,
-    BrowserCookie, BrowserCookieReadOptions, BrowserProcess, BrowserProfile, BrowserProfileOptions,
-    ChromiumoxidePage, ColorScheme, ConnectOptions, EmulateMediaOptions, LaunchMode, LaunchOptions,
-    LaunchRestriction, LaunchResult, NodeBridgePage, PlaywrightConnect, PlaywrightDriverPage,
-    PlaywrightLaunch, RealBrowserLaunchResult, RealBrowserOptions, StorageEntry, StorageOrigin,
-    StorageState, StorageStateInput, LAUNCH_MODES, SUPPORTED_COOKIE_BROWSERS,
+    browser_family, browser_for_identifier, browser_ids, browser_sources, build_real_browser_args,
+    clear_browser_cookie_memory_cache, connect_browser, default_browser_identifiers,
+    default_run_command, emulate_media, find_browser_source, is_default_browser_keyword,
+    is_single_profile_browser, launch_and_connect_real_browser, launch_browser,
+    launch_real_browser, launch_restrictions, list_browser_profiles, list_cookie_sources,
+    normalize_browser_id, parse_mac_launch_services_handler, parse_windows_prog_id,
+    read_browser_cookies, resolve_browser_roots, resolve_default_browser, resolve_restrictions,
+    resolve_source_browser, safe_storage_identity, save_storage_state, Browser, BrowserCookie,
+    BrowserCookieReadOptions, BrowserProcess, BrowserProfile, BrowserProfileOptions, BrowserSource,
+    ChromiumoxidePage, ColorScheme, ConnectOptions, CookieSourceListing, EmulateMediaOptions,
+    Environment, LaunchMode, LaunchOptions, LaunchRestriction, LaunchResult, NodeBridgePage,
+    PlaywrightConnect, PlaywrightDriverPage, PlaywrightLaunch, RealBrowserLaunchResult,
+    RealBrowserOptions, RunCommand, SafeStorageIdentity, StorageEntry, StorageOrigin, StorageState,
+    StorageStateInput, LAUNCH_MODES, SUPPORTED_COOKIE_BROWSERS,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,

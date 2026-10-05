@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use super::browser_profiles::{browser_profile_root, current_platform, normalize_cookie_browser};
+use super::browser_sources::browser_family;
 use super::migration::sqlite_snapshot::with_database_snapshot;
 use super::profile_directory::{
     configure_user_data_dir_for_profile, create_temporary_user_data_dir, prepare_user_data_dir,
@@ -222,7 +223,7 @@ pub fn snapshot_user_data_dir(
     to: Option<&Path>,
 ) -> Result<SnapshotReport> {
     let browser = normalize_cookie_browser(&options.browser)?;
-    if browser == "firefox" {
+    if browser_family(browser)? == "firefox" {
         return Err(anyhow!(
             "snapshot attach requires a Chromium-family browser"
         ));

@@ -548,7 +548,7 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
         .profile
         .clone()
         .unwrap_or_else(|| "Default".to_string());
-    let is_firefox = is_firefox_browser(browser);
+    let is_firefox = is_firefox_browser(&browser);
     let source_profile_dir = resolve_source_profile_dir(&browser, &profile, &options)?;
     let selected = |name: &str| options.include.iter().any(|entry| entry == name);
     let mut report = MigrationReport {

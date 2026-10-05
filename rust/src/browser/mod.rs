@@ -40,8 +40,8 @@ pub mod webdriver;
 
 pub use browser_cookie_cache::clear_browser_cookie_memory_cache;
 pub use browser_cookies::{
-    list_cookie_sources, read_browser_cookies, BrowserCookie, BrowserCookieReadOptions,
-    CookieSourceListing,
+    list_cookie_sources, read_browser_cookies, resolve_import_source, BrowserCookie,
+    BrowserCookieReadOptions, CookieSourceListing, ImportSource,
 };
 pub use browser_process::BrowserProcess;
 pub use browser_profiles::{

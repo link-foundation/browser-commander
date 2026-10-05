@@ -54,6 +54,10 @@
         {
           "id": "sources.cookie-listing",
           "title": "List browsers and profiles holding cookies for a domain"
+        },
+        {
+          "id": "sources.default-domain-fallback",
+          "title": "Import a domain from whichever installed browser holds it"
         }
       ]
     },

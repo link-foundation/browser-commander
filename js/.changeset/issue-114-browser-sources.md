@@ -24,3 +24,8 @@ Add a shared catalogue of importable browsers and resolve the system default
   `cookies.sources`/`profile.sources` JSON-RPC methods) report which browsers
   and profiles hold cookies — optionally for specific `--domain`s — as names
   and counts only, never values.
+- A `default`/`auto` migration scoped to `domains` falls back from a default
+  browser that holds no cookies for them to the installed profile holding the
+  most, and reports which one with a `default-browser-fallback` warning
+  (`resolveImportSource`). Migrating from Opera or Opera GX now reads their
+  single profile from the user data directory itself.

@@ -20,3 +20,9 @@ bump: minor
   recognised, and reading cookies honours a custom user-data directory.
 - Listing of the browsers and profiles that hold cookies — optionally for
   specific domains — as names and counts only, never values.
+- `migrate_profile` accepts `default`/`auto` as the source browser; scoped to
+  `domains`, it falls back from a default browser that holds no cookies for
+  them to the installed profile holding the most, and reports which one with a
+  `default-browser-fallback` warning (`resolve_import_source`,
+  `MigrateProfileOptions::environment`/`run_command`). Migrating from Opera or
+  Opera GX now reads their single profile from the user data directory itself.

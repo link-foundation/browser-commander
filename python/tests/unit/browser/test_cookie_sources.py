@@ -66,6 +66,7 @@ def test_counts_per_domain_and_omits_profiles_that_hold_none(tmp_path: Path) -> 
     assert none == []
 
 
+# feature-parity: sources.default-domain-fallback@native-typed
 _GITHUB_COOKIE = [{"name": "a", "value": "1", "host": ".github.com"}]
 _OTHER_COOKIE = [{"name": "b", "value": "2", "host": ".other.test"}]
 

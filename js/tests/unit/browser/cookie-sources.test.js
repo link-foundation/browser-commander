@@ -60,6 +60,7 @@ describe('listCookieSources', () => {
 });
 
 describe('resolveImportSource', () => {
+  // feature-parity: sources.default-domain-fallback@native-typed
   const firefoxIsDefault = async () => 'firefox.desktop\n';
   const githubCookie = [{ name: 'a', value: '1', host: '.github.com' }];
   const otherCookie = [{ name: 'b', value: '2', host: '.other.test' }];

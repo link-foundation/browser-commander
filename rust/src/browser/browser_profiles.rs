@@ -171,9 +171,18 @@ pub(crate) fn browser_profile_root(
     platform: &str,
     home_dir: &Path,
 ) -> Result<PathBuf> {
+    browser_profile_root_in(browser, platform, home_dir, &current_environment())
+}
+
+/// [`browser_profile_root`] with an explicit environment for the root templates.
+pub(crate) fn browser_profile_root_in(
+    browser: &str,
+    platform: &str,
+    home_dir: &Path,
+    environment: &Environment,
+) -> Result<PathBuf> {
     let browser = normalize_browser_id(browser)?;
-    let environment = current_environment();
-    resolve_browser_roots(browser, platform, &home_dir.to_string_lossy(), &environment)?
+    resolve_browser_roots(browser, platform, &home_dir.to_string_lossy(), environment)?
         .into_iter()
         .next()
         .ok_or_else(|| anyhow!("{browser} has no profile root on {platform}"))

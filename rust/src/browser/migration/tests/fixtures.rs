@@ -125,6 +125,27 @@ pub(crate) fn write_firefox_cookies(profile_dir: &Path, rows: &[FirefoxCookieRow
     }
 }
 
+/// Write a Linux Firefox-family install under `home` at `root` with one
+/// default profile whose `cookies.sqlite` holds `rows`; returns the profile.
+pub(crate) fn write_firefox_profile(
+    home: &Path,
+    rows: &[FirefoxCookieRow<'_>],
+    root: &str,
+    name: &str,
+) -> PathBuf {
+    let root = home.join(root);
+    let profile_name = format!("xyz.{name}");
+    let profile_path = root.join(&profile_name);
+    fs::create_dir_all(&profile_path).expect("create Firefox profile");
+    fs::write(
+        root.join("profiles.ini"),
+        format!("[Profile0]\nName={name}\nIsRelative=1\nPath={profile_name}\nDefault=1\n"),
+    )
+    .expect("write profiles.ini");
+    write_firefox_cookies(&profile_path, rows);
+    profile_path
+}
+
 /// Write a Firefox `places.sqlite` with a toolbar bookmark and, unless
 /// `with_menu_bookmark` is false, a bookmarks-menu one.
 pub(crate) fn write_firefox_places(profile_dir: &Path, with_menu_bookmark: bool) {

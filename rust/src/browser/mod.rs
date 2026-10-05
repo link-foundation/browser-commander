@@ -7,6 +7,7 @@
 mod browser_cookie_cache;
 mod browser_cookie_credentials;
 mod browser_cookie_crypto;
+mod browser_cookie_sources;
 mod browser_cookies;
 pub mod browser_process;
 mod browser_profiles;
@@ -39,10 +40,10 @@ pub mod system_browser;
 pub mod webdriver;
 
 pub use browser_cookie_cache::clear_browser_cookie_memory_cache;
-pub use browser_cookies::{
-    list_cookie_sources, read_browser_cookies, resolve_import_source, BrowserCookie,
-    BrowserCookieReadOptions, CookieSourceListing, ImportSource,
+pub use browser_cookie_sources::{
+    list_cookie_sources, resolve_import_source, CookieSourceListing, ImportSource,
 };
+pub use browser_cookies::{read_browser_cookies, BrowserCookie, BrowserCookieReadOptions};
 pub use browser_process::BrowserProcess;
 pub use browser_profiles::{
     is_default_browser_keyword, list_browser_profiles, resolve_source_browser, BrowserProfile,

@@ -31,7 +31,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::browser::browser_cookies::{resolve_import_source, BrowserCookie};
+use crate::browser::browser_cookie_sources::resolve_import_source;
+use crate::browser::browser_cookies::BrowserCookie;
 use crate::browser::browser_profiles::{
     browser_profile_root_in, current_platform, normalize_platform, resolve_browser_profile,
     BrowserProfileOptions,

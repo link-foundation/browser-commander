@@ -606,6 +606,53 @@ async def test_removes_the_temporary_profile_when_the_browser_exits() -> None:
     assert not Path(result.user_data_dir).exists()
 
 
+async def test_close_waits_for_the_profile_cleanup_started_on_exit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import threading
+
+    from browser_commander.browser import real_browser
+
+    started, release, finished = (threading.Event() for _ in range(3))
+    removals: list[str] = []
+    original_remove = real_browser._remove_quietly
+
+    def remove(directory: str) -> None:
+        removals.append(directory)
+        if len(removals) == 1:
+            started.set()
+            assert release.wait(3), "test did not release the cleanup worker"
+            original_remove(directory)
+            finished.set()
+
+    monkeypatch.setattr(real_browser, "_remove_quietly", remove)
+    process = FakeProcess([])
+    result = await launch_real_browser_with_dependencies(
+        RealBrowserOptions(close_timeout=50),
+        resolve_executable=_executable,
+        reserve_port=lambda: 40008,
+        spawn_browser=lambda *_args, **_options: process,
+        wait_for_endpoint=lambda **_options: "http://127.0.0.1:40008",
+        connect=_connected(),
+    )
+    process.exit(0)
+    closing = None
+    try:
+        assert await asyncio.to_thread(started.wait, 1)
+        assert result.close is not None
+        closing = asyncio.create_task(result.close())
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(asyncio.shield(closing), timeout=0.1)
+        assert len(removals) == 1
+    finally:
+        release.set()
+        if closing is not None:
+            await closing
+        assert await asyncio.to_thread(finished.wait, 1)
+    assert result.user_data_dir is not None
+    assert not Path(result.user_data_dir).exists()
+
+
 async def test_passes_restriction_environment_to_the_browser_only(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -2,6 +2,9 @@
 
 A universal browser automation library for Python that supports both Playwright and Selenium with a unified API. The key focus is on **stoppable page triggers** - ensuring automation logic is properly mounted/unmounted during page navigation.
 
+See [engine support and native/CLI defaults](../docs/engine-support.md) for the
+cross-language API matrix and Selenium examples.
+
 ## Installation
 
 The first PyPI release is pending trusted publisher registration. Until the

@@ -27,6 +27,7 @@ Frame:
 
     evalOnSelector:
       title: Evaluate
+      subtitle: '{selector}'
       parameters:
         selector: string
         strict: boolean?
@@ -41,6 +42,7 @@ Frame:
 
     evalOnSelectorAll:
       title: Evaluate
+      subtitle: '{selector}'
       parameters:
         selector: string
         expression: string
@@ -54,6 +56,8 @@ Frame:
 
     addScriptTag:
       title: Add script tag
+      renderParams:
+      - url
       parameters:
         url: string?
         content: string?
@@ -66,6 +70,8 @@ Frame:
 
     addStyleTag:
       title: Add style tag
+      renderParams:
+      - url
       parameters:
         url: string?
         content: string?
@@ -77,6 +83,7 @@ Frame:
 
     ariaSnapshot:
       title: Aria snapshot
+      subtitle: '{selector}'
       group: getter
       parameters:
         mode:
@@ -90,8 +97,25 @@ Frame:
       returns:
         snapshot: string
 
+    ariaSnapshotJSON:
+      title: Aria snapshot JSON
+      subtitle: '{selector}'
+      group: getter
+      parameters:
+        mode:
+          type: enum?
+          literals:
+            - ai
+            - default
+        selector: string?
+        depth: int?
+        boxes: boolean?
+      returns:
+        snapshot: json
+
     blur:
       title: Blur
+      subtitle: '{selector}'
       parameters:
         selector: string
         strict: boolean?
@@ -102,6 +126,9 @@ Frame:
 
     check:
       title: Check
+      subtitle: '{selector}'
+      renderParams:
+      - position
       parameters:
         selector: string
         strict: boolean?
@@ -122,6 +149,12 @@ Frame:
 
     click:
       title: Click
+      subtitle: '{selector}'
+      renderParams:
+      - button
+      - clickCount
+      - modifiers
+      - position
       parameters:
         selector: string
         strict: boolean?
@@ -170,6 +203,9 @@ Frame:
 
     dragAndDrop:
       title: Drag and drop
+      renderParams:
+      - source:selector
+      - target:selector
       parameters:
         source: string
         target: string
@@ -193,6 +229,7 @@ Frame:
 
     drop:
       title: Drop files or data onto an element
+      subtitle: '{selector}'
       parameters:
         selector: string
         strict: boolean?
@@ -228,6 +265,11 @@ Frame:
 
     dblclick:
       title: Double click
+      subtitle: '{selector}'
+      renderParams:
+      - button
+      - modifiers
+      - position
       parameters:
         selector: string
         strict: boolean?
@@ -266,6 +308,9 @@ Frame:
 
     dispatchEvent:
       title: Dispatch "{type}"
+      subtitle: '{selector}'
+      renderParams:
+      - type
       parameters:
         selector: string
         strict: boolean?
@@ -302,6 +347,9 @@ Frame:
 
     fill:
       title: Fill "{value}"
+      subtitle: '{selector}'
+      renderParams:
+      - value
       parameters:
         selector: string
         strict: boolean?
@@ -316,6 +364,7 @@ Frame:
 
     focus:
       title: Focus
+      subtitle: '{selector}'
       parameters:
         selector: string
         strict: boolean?
@@ -350,6 +399,7 @@ Frame:
 
     getAttribute:
       title: Get attribute "{name}"
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -362,7 +412,10 @@ Frame:
         pause: true
 
     goto:
-      title: Navigate to "{url}"
+      title: Navigate
+      subtitle: '{url}'
+      renderParams:
+      - url
       parameters:
         url: string
         waitUntil: LifecycleEvent?
@@ -376,6 +429,10 @@ Frame:
 
     hover:
       title: Hover
+      subtitle: '{selector}'
+      renderParams:
+      - modifiers
+      - position
       parameters:
         selector: string
         strict: boolean?
@@ -406,6 +463,7 @@ Frame:
 
     innerHTML:
       title: Get HTML
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -418,6 +476,7 @@ Frame:
 
     innerText:
       title: Get inner text
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -430,6 +489,7 @@ Frame:
 
     inputValue:
       title: Get input value
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -442,6 +502,7 @@ Frame:
 
     isChecked:
       title: Is checked
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -454,6 +515,7 @@ Frame:
 
     isDisabled:
       title: Is disabled
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -466,6 +528,7 @@ Frame:
 
     isEnabled:
       title: Is enabled
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -478,6 +541,7 @@ Frame:
 
     isHidden:
       title: Is hidden
+      subtitle: '{selector}'
       group: getter
       parameters:
         # Note: compared to other isFoo methods, isHidden is a one-shot operation without a timeout.
@@ -491,6 +555,7 @@ Frame:
 
     isVisible:
       title: Is visible
+      subtitle: '{selector}'
       group: getter
       parameters:
         # Note: compared to other isFoo methods, isVisible is a one-shot operation without a timeout.
@@ -504,6 +569,7 @@ Frame:
 
     isEditable:
       title: Is editable
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -516,6 +582,9 @@ Frame:
 
     press:
       title: Press "{key}"
+      subtitle: '{selector}'
+      renderParams:
+      - key
       parameters:
         selector: string
         strict: boolean?
@@ -531,6 +600,7 @@ Frame:
 
     querySelector:
       title: Query selector
+      subtitle: '{selector}'
       parameters:
         selector: string
         strict: boolean?
@@ -541,6 +611,7 @@ Frame:
 
     querySelectorAll:
       title: Query selector all
+      subtitle: '{selector}'
       parameters:
         selector: string
       returns:
@@ -552,6 +623,7 @@ Frame:
 
     queryCount:
       title: Query count
+      subtitle: '{selector}'
       parameters:
         selector: string
       returns:
@@ -562,6 +634,9 @@ Frame:
 
     selectOption:
       title: Select option
+      subtitle: '{selector}'
+      renderParams:
+      - options
       parameters:
         selector: string
         strict: boolean?
@@ -600,6 +675,9 @@ Frame:
 
     setInputFiles:
       title: Set input files
+      subtitle: '{selector}'
+      renderParams:
+      - files=localPaths
       parameters:
         selector: string
         strict: boolean?
@@ -629,6 +707,10 @@ Frame:
 
     tap:
       title: Tap
+      subtitle: '{selector}'
+      renderParams:
+      - modifiers
+      - position
       parameters:
         selector: string
         strict: boolean?
@@ -659,6 +741,7 @@ Frame:
 
     textContent:
       title: Get text content
+      subtitle: '{selector}'
       group: getter
       parameters:
         selector: string
@@ -677,6 +760,9 @@ Frame:
 
     type:
       title: Type "{text}"
+      subtitle: '{selector}'
+      renderParams:
+      - text
       parameters:
         selector: string
         strict: boolean?
@@ -691,6 +777,9 @@ Frame:
 
     uncheck:
       title: Uncheck
+      subtitle: '{selector}'
+      renderParams:
+      - position
       parameters:
         selector: string
         strict: boolean?
@@ -711,6 +800,8 @@ Frame:
 
     waitForTimeout:
       title: Wait for timeout
+      renderParams:
+      - timeout=waitTimeout
       parameters:
         waitTimeout: float
       flags:
@@ -718,6 +809,7 @@ Frame:
 
     waitForFunction:
       title: Wait for function
+      subtitle: '{selector}'
       parameters:
         expression: string
         isFunction: boolean?
@@ -736,6 +828,9 @@ Frame:
 
     waitForSelector:
       title: Wait for selector
+      subtitle: '{selector}'
+      renderParams:
+      - state
       parameters:
         selector: string
         strict: boolean?
@@ -754,6 +849,7 @@ Frame:
 
     expect:
       title: Expect "{expression}"
+      subtitle: '{selector}'
       parameters:
         selector: string?
         expression: string

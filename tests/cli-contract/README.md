@@ -38,6 +38,9 @@ standard input. It also exports `normalizeRunOutput(document)` for tests.
 
 ## Where it runs
 
-`js/tests/e2e/cli.e2e.test.js` runs the script through the JavaScript CLI for
-both Playwright and Puppeteer, against a real Chrome. CI runs it in the `cli`
-job of `.github/workflows/parity.yml`.
+`node tests/cli-contract/check.mjs` runs the script against real Chrome for
+all nine JavaScript/Python/Rust and Playwright/Puppeteer/Selenium combinations.
+It also checks generic engine handles, native Selenium drivers, and engine
+constructors. Set `CHROME_PATH` and `BROWSER_COMMANDER_PYTHON` when needed;
+`BROWSER_COMMANDER_LANGUAGES=javascript,python` selects a subset for local checks.
+CI runs the complete matrix in the `cli` job of `.github/workflows/parity.yml`.

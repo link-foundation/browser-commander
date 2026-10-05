@@ -75,12 +75,16 @@ async function withPageSession(parsed, io, work, { skipUrl = false } = {}) {
   const { options } = parsed;
   const dispatcher = createDispatcher({ dependencies: io.dependencies });
   try {
-    const opened = options.cdpEndpoint
-      ? await dispatcher.dispatch('session.connect', {
-          cdpEndpoint: options.cdpEndpoint,
-          engine: options.engine,
-        })
-      : await dispatcher.dispatch('session.launch', launchParams(options));
+    const opened =
+      options.cdpEndpoint || options.serverUrl
+        ? await dispatcher.dispatch('session.connect', {
+            cdpEndpoint: options.cdpEndpoint,
+            engine: options.engine,
+            ...(options.serverUrl ? { serverUrl: options.serverUrl } : {}),
+            ...(options.driverPath ? { driverPath: options.driverPath } : {}),
+            ...(options.bidi !== undefined ? { bidi: options.bidi } : {}),
+          })
+        : await dispatcher.dispatch('session.launch', launchParams(options));
     if (options.url && !skipUrl) {
       await dispatcher.dispatch('page.goto', {
         session: opened.session,

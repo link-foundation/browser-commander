@@ -276,7 +276,7 @@ describe('dispatcher: high-level methods', () => {
     await assert.rejects(dispatcher.dispatch('nope'), { code: -32601 });
     await assert.rejects(dispatcher.dispatch('version', []), { code: -32602 });
     await assert.rejects(
-      dispatcher.dispatch('session.launch', { engine: 'selenium' }),
+      dispatcher.dispatch('session.launch', { engine: 'unknown' }),
       { code: -32602 }
     );
     await assert.rejects(
@@ -355,7 +355,7 @@ describe('dispatcher: generic handle methods', () => {
       'launched with puppeteer'
     );
     await assert.rejects(
-      dispatcher.dispatch('handle.root', { name: 'selenium' }),
+      dispatcher.dispatch('handle.root', { name: 'unknown' }),
       { code: -32602 }
     );
   });

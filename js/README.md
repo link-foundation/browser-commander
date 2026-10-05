@@ -1,6 +1,9 @@
 # Browser Commander
 
-A universal browser automation library for JavaScript/TypeScript that supports both Playwright and Puppeteer with a unified API. The key focus is on **stoppable page triggers** - ensuring automation logic is properly mounted/unmounted during page navigation.
+A universal browser automation library for JavaScript/TypeScript that supports Playwright, Puppeteer, and Selenium with a unified API. The key focus is on **stoppable page triggers** - ensuring automation logic is properly mounted/unmounted during page navigation.
+
+See [engine support and native/CLI defaults](../docs/engine-support.md) for the
+cross-language API matrix and Selenium examples.
 
 ## Installation
 
@@ -222,7 +225,7 @@ await saveStorageState(page, './gmail-state.json');
 `browser-commander/tests` adds browser fixtures and scheduling helpers on top of
 [`test-anywhere`](https://github.com/link-foundation/test-anywhere). It keeps
 tests portable across Node.js, Bun, and Deno while running the same browser
-scenario against Playwright and Puppeteer.
+scenario against Playwright, Puppeteer, and Selenium.
 
 ```javascript
 import { assert, browserTest } from 'browser-commander/tests';
@@ -466,6 +469,12 @@ console.log(session.migration.migrated, session.migration.skipped);
 ```
 
 ### launchWebDriver(options) / connectWebDriver(options)
+
+The same engine is available through `launchBrowser({engine: 'selenium'})` and
+`connectBrowser({engine: 'selenium', serverUrl, capabilities})`. The common
+launcher defaults to a real Chrome attachment; `launch: 'engine'` enables
+ChromeDriver/GeckoDriver-managed Chrome or Firefox launches. Both return a common
+page facade plus a raw `driver` and `close()`.
 
 The `selenium` engine drives Chrome or Firefox over W3C WebDriver through
 `selenium-webdriver` (an optional peer dependency). `launchWebDriver()` finds a
@@ -1035,7 +1044,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"version"}' | npx browser-commander serve
 
 The other commands are `open`, `click`, `screenshot`, `pdf`, `trace start|stop|view`, `cookies import`, `profile migrate` and `doctor`. Use the `=` form for values that start with `--`, for example `--arg=--lang=de`.
 
-`serve --stdio` exposes the high-level methods (`session.launch`, `page.goto`, …). It also exposes generic handle methods (`handle.root`, `handle.call`, `handle.get`, `handle.describe`, `events.subscribe`, …), which reach every public Playwright and Puppeteer method. The Rust and Python ports use this bridge for the engines they do not implement natively.
+`serve --stdio` exposes the high-level methods (`session.launch`, `page.goto`, …). It also exposes generic handle methods (`handle.root`, `handle.call`, `handle.get`, `handle.describe`, `events.subscribe`, …), which reach public Playwright, Puppeteer, and Selenium methods and constructors. The Rust and Python ports use this bridge for the engines they do not implement natively.
 
 For raw Chrome DevTools Protocol access from JavaScript, `createCdpSession(page)` (or `commander.createCdpSession()`) returns the same `send`/`on`/`once`/`off`/`detach` surface for Playwright and Puppeteer pages.
 

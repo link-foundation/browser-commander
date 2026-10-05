@@ -37,14 +37,27 @@ async function launchSession(state, params) {
 }
 
 async function connectSession(state, params) {
-  const cdpEndpoint = requireString(params, 'cdpEndpoint');
   const engine = resolveEngine(params.engine);
+  const endpoint =
+    engine === 'selenium' && params.serverUrl !== undefined
+      ? {
+          serverUrl: requireString(params, 'serverUrl'),
+          capabilities: params.capabilities,
+        }
+      : { cdpEndpoint: requireString(params, 'cdpEndpoint') };
   const connected = await state.dependencies.connectBrowser({
     engine,
-    cdpEndpoint,
+    ...endpoint,
+    ...(params.driverPath ? { driverPath: params.driverPath } : {}),
+    ...(params.bidi !== undefined ? { bidi: params.bidi } : {}),
   });
   const session = state.sessions.add(sessionFromConnect(engine, connected));
-  return { session, cdpEndpoint };
+  return {
+    session,
+    ...(endpoint.serverUrl
+      ? { serverUrl: endpoint.serverUrl }
+      : { cdpEndpoint: endpoint.cdpEndpoint }),
+  };
 }
 
 async function closeSession(state, params) {
@@ -70,6 +83,10 @@ async function fill(state, params) {
   const { engine, page } = sessionOf(state, params);
   if (engine === 'playwright') {
     await page.fill(selector, value);
+  } else if (engine === 'selenium') {
+    const element = await page.waitForSelector(selector, { visible: true });
+    await element.clear();
+    await element.sendKeys(value);
   } else {
     await page.locator(selector).fill(value);
   }

@@ -10,6 +10,30 @@ use crate::playwright::connection::{
     Binary, Channel, ChannelType, ObjectRef, ProtocolError, ProtocolEvent, Ref,
 };
 
+/// Parameters of `Frame.uncheck` (Uncheck).
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct FrameUncheckParams {
+    #[serde(rename = "selector")]
+    pub selector: String,
+    #[serde(rename = "strict", default, skip_serializing_if = "Option::is_none")]
+    pub strict: Option<bool>,
+    #[serde(rename = "force", default, skip_serializing_if = "Option::is_none")]
+    pub force: Option<bool>,
+    #[serde(rename = "scroll", default, skip_serializing_if = "Option::is_none")]
+    pub scroll: Option<FrameUncheckParamsScroll>,
+    #[serde(rename = "position", default, skip_serializing_if = "Option::is_none")]
+    pub position: Option<Point>,
+    #[serde(rename = "trial", default, skip_serializing_if = "Option::is_none")]
+    pub trial: Option<bool>,
+}
+
+/// Parameters of `Frame.waitForTimeout` (Wait for timeout).
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct FrameWaitForTimeoutParams {
+    #[serde(rename = "waitTimeout")]
+    pub wait_timeout: f64,
+}
+
 /// Parameters of `Frame.waitForFunction` (Wait for function).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct FrameWaitForFunctionParams {
@@ -203,6 +227,11 @@ impl Frame {
         self.channel.send("ariaSnapshot", &params).await
     }
 
+    /// `Frame.ariaSnapshotJSON` ("Aria snapshot JSON").
+    pub async fn aria_snapshot_json(&self, params: FrameAriaSnapshotJSONParams) -> Result<FrameAriaSnapshotJSONResult, ProtocolError> {
+        self.channel.send("ariaSnapshotJSON", &params).await
+    }
+
     /// `Frame.blur` ("Blur").
     pub async fn blur(&self, params: FrameBlurParams) -> Result<(), ProtocolError> {
         self.channel.send_no_result("blur", &params).await
@@ -288,7 +317,7 @@ impl Frame {
         self.channel.send("getAttribute", &params).await
     }
 
-    /// `Frame.goto` ("Navigate to "{url}"").
+    /// `Frame.goto` ("Navigate").
     pub async fn goto(&self, params: FrameGotoParams) -> Result<FrameGotoResult, ProtocolError> {
         self.channel.send("goto", &params).await
     }

@@ -19,10 +19,14 @@ pub struct TracingInitializer {}
 pub struct TracingTracingStartParams {
     #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(rename = "snapshots", default, skip_serializing_if = "Option::is_none")]
-    pub snapshots: Option<bool>,
-    #[serde(rename = "screenshots", default, skip_serializing_if = "Option::is_none")]
-    pub screenshots: Option<bool>,
+    #[serde(rename = "snapshotDom", default, skip_serializing_if = "Option::is_none")]
+    pub snapshot_dom: Option<bool>,
+    #[serde(rename = "snapshotAria", default, skip_serializing_if = "Option::is_none")]
+    pub snapshot_aria: Option<bool>,
+    #[serde(rename = "snapshotScreen", default, skip_serializing_if = "Option::is_none")]
+    pub snapshot_screen: Option<bool>,
+    #[serde(rename = "screencast", default, skip_serializing_if = "Option::is_none")]
+    pub screencast: Option<bool>,
     #[serde(rename = "live", default, skip_serializing_if = "Option::is_none")]
     pub live: Option<bool>,
 }

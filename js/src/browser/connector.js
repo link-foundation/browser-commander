@@ -1,8 +1,10 @@
 import { attachDownloads } from '../downloads/attach.js';
+import { connectWebDriver, launchWebDriver } from './webdriver.js';
 import {
   loadStorageState,
   restorePlaywrightStorageState,
   restorePuppeteerStorageState,
+  restoreWebDriverStorageState,
 } from './storage-state.js';
 
 /**
@@ -11,9 +13,9 @@ import {
  * @param {string} engine
  */
 export function assertSupportedEngine(engine) {
-  if (!['playwright', 'puppeteer'].includes(engine)) {
+  if (!['playwright', 'puppeteer', 'selenium'].includes(engine)) {
     throw new Error(
-      `Invalid engine: ${engine}. Expected 'playwright' or 'puppeteer'`
+      `Invalid engine: ${engine}. Expected 'playwright', 'puppeteer' or 'selenium'`
     );
   }
 }
@@ -26,6 +28,28 @@ function validateConnectionOptions({ engine, cdpEndpoint, wsEndpoint }) {
       'connectBrowser requires exactly one of cdpEndpoint or wsEndpoint'
     );
   }
+}
+
+async function connectSelenium(options, dependencies) {
+  if (Boolean(options.serverUrl) === Boolean(options.cdpEndpoint)) {
+    throw new Error(
+      'selenium requires exactly one of serverUrl or cdpEndpoint'
+    );
+  }
+  if (options.wsEndpoint) {
+    throw new Error('selenium requires an HTTP cdpEndpoint or serverUrl');
+  }
+  const connected = options.serverUrl
+    ? await (dependencies.connectWebDriver ?? connectWebDriver)(options)
+    : await (dependencies.launchWebDriver ?? launchWebDriver)({
+        ...options,
+        debuggerAddress: new URL(options.cdpEndpoint).host,
+      });
+  return {
+    ...connected,
+    browser: connected.driver,
+    disconnect: connected.close,
+  };
 }
 
 function addDefinedOptions(options, values) {
@@ -135,10 +159,12 @@ async function connectPuppeteer({ options, loadPuppeteer, storageState }) {
 }
 
 /**
- * Attach to an already-running Chromium-family browser over CDP.
+ * Attach over CDP or create a native session on a WebDriver server.
  *
  * @param {Object} options - Connection options
- * @param {'playwright'|'puppeteer'} [options.engine='playwright'] - Automation engine
+ * @param {'playwright'|'puppeteer'|'selenium'} [options.engine='playwright'] - Automation engine
+ * @param {string} [options.serverUrl] - Selenium Grid or WebDriver server URL
+ * @param {Object} [options.capabilities] - Native WebDriver capabilities
  * @param {string} [options.cdpEndpoint] - HTTP DevTools endpoint, such as http://127.0.0.1:9222
  * @param {string} [options.wsEndpoint] - DevTools browser WebSocket endpoint
  * @param {number} [options.slowMo] - Delay engine operations by this many milliseconds
@@ -171,6 +197,22 @@ export async function connectBrowserWithDependencies(
     verbose: false,
     ...options,
   };
+  if (normalizedOptions.engine === 'selenium') {
+    assertSupportedEngine(normalizedOptions.engine);
+    const storageState = await prepareStorageState(normalizedOptions);
+    const result = await connectSelenium(normalizedOptions, dependencies);
+    try {
+      await restoreWebDriverStorageState({ page: result.page, storageState });
+      const downloads = await attachDownloads({
+        ...normalizedOptions,
+        ...result,
+      });
+      return { ...result, downloads };
+    } catch (error) {
+      await result.close();
+      throw error;
+    }
+  }
   validateConnectionOptions(normalizedOptions);
 
   const storageState = await prepareStorageState(normalizedOptions);

@@ -7,7 +7,7 @@ JSON-RPC mode that lets any language or shell script drive any engine. This
 document is the contract the three implementations follow; the cross-language
 CLI tests (`tests/cli-contract/`) run the same command script through each CLI
 and compare the results. The Python and Rust CLIs use the companion npm package
-for the generic Playwright/Puppeteer dispatcher: install it alongside the
+for the generic Playwright/Puppeteer/Selenium dispatcher: install it alongside the
 Python package or Rust binary, or set `BROWSER_COMMANDER_JS_CLI` to its bin
 script. `BROWSER_COMMANDER_NODE` selects the Node executable.
 
@@ -109,15 +109,16 @@ implements them directly; the Rust and Python CLIs forward them to the JS CLI
 (`browser-commander serve --stdio`, started through command-stream in Rust and
 the `browser_commander.utilities.subprocess` wrapper in Python).
 
-| Method               | Params                                               | Result                                                                                  |
-| -------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `handle.root`        | `name`: `playwright`, `puppeteer`, or `session:<id>` | `{"$handle","type"}`; for a session, `{"browser","context","page"}` handles             |
-| `handle.call`        | `handle`, `method`, `args`                           | the encoded return value (promises are awaited)                                         |
-| `handle.get`         | `handle`, `property`                                 | the encoded property value                                                              |
-| `handle.dispose`     | `handle`                                             | `{"disposed": true}`                                                                    |
-| `handle.describe`    | `handle`                                             | `{"type","methods":[...]}`: every callable member on the object and its prototype chain |
-| `events.subscribe`   | `handle`, `event`                                    | `{"subscription"}`; then `events.emit` notifications `{"subscription","args"}`          |
-| `events.unsubscribe` | `subscription`                                       | `{"unsubscribed": true}`                                                                |
+| Method               | Params                                                           | Result                                                                                                    |
+| -------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `handle.root`        | `name`: `playwright`, `puppeteer`, `selenium`, or `session:<id>` | `{"$handle","type"}`; session roots include `browser`, `context`, `page`, and Selenium's `driver` handles |
+| `handle.call`        | `handle`, `method`, `args`                                       | the encoded return value (promises are awaited)                                                           |
+| `handle.get`         | `handle`, `property`                                             | the encoded property value                                                                                |
+| `handle.construct`   | `handle`, `args?`                                                | New engine instance, encoded as a handle                                                                  |
+| `handle.dispose`     | `handle`                                                         | `{"disposed": true}`                                                                                      |
+| `handle.describe`    | `handle`                                                         | `{"type","methods":[...]}`: every callable member on the object and its prototype chain                   |
+| `events.subscribe`   | `handle`, `event`                                                | `{"subscription"}`; then `events.emit` notifications `{"subscription","args"}`                            |
+| `events.unsubscribe` | `subscription`                                                   | `{"unsubscribed": true}`                                                                                  |
 
 **Value encoding.** JSON values pass through unchanged. Everything else is
 tagged:
@@ -361,3 +362,20 @@ The parity report (`doctor`, `measureParity()`):
   "ok": true
 }
 ```
+
+## Selenium engine
+
+All three language CLIs accept `--engine selenium`. JavaScript launches its
+native WebDriver through the common launcher; Python and Rust opt into that
+shared dispatcher when invoking CLI commands. Native library launches continue
+using their language's integrations. `--driver-path` selects ChromeDriver or
+GeckoDriver, `--bidi` requests WebDriver BiDi, and `--server-url` attaches to an
+existing driver/Grid instead of starting one. JSON-RPC `session.connect` accepts
+`engine: "selenium"`, `serverUrl`, and `capabilities`, or a Chrome `cdpEndpoint`.
+
+`handle.root {"name":"selenium"}` exposes `selenium-webdriver`. Session roots
+include `driver`, which exposes the full native API, and `page`, which exposes
+the common facade. Constructors are obtained with `handle.get` and invoked with
+`handle.construct {"handle": constructorHandle, "args": []}`. `page.fill` clears
+and fills a native WebElement. See [engine support](engine-support.md) for
+browser and protocol limitations.

@@ -49,16 +49,6 @@ pub struct ElectronLaunchParamsGeolocation {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct ElectronLaunchParamsHttpCredentials {
-    #[serde(rename = "username")]
-    pub username: String,
-    #[serde(rename = "password")]
-    pub password: String,
-    #[serde(rename = "origin", default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<String>,
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ElectronLaunchParamsRecordVideoSize {
     #[serde(rename = "width")]
     pub width: i64,
@@ -107,7 +97,7 @@ pub struct ElectronLaunchParams {
     #[serde(rename = "geolocation", default, skip_serializing_if = "Option::is_none")]
     pub geolocation: Option<ElectronLaunchParamsGeolocation>,
     #[serde(rename = "httpCredentials", default, skip_serializing_if = "Option::is_none")]
-    pub http_credentials: Option<ElectronLaunchParamsHttpCredentials>,
+    pub http_credentials: Option<Vec<HttpCredentials>>,
     #[serde(rename = "ignoreHTTPSErrors", default, skip_serializing_if = "Option::is_none")]
     pub ignore_https_errors: Option<bool>,
     #[serde(rename = "locale", default, skip_serializing_if = "Option::is_none")]

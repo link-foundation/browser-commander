@@ -694,8 +694,9 @@ class BrowserCommander:
     async def pdf(self, **options: Any) -> bytes:
         """Generate a PDF of the current page.
 
-        Only supported by Playwright (Chromium). Raises NotImplementedError
-        for Selenium.
+        Uses Playwright's Chromium API or Selenium's native Print Page command.
+        Selenium rejects header/footer templates and CSS page-size preferences,
+        which its print protocol cannot express.
 
         Args:
             **options: PDF generation options forwarded to the underlying engine.

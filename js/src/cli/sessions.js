@@ -14,7 +14,7 @@ export const BROWSER_CHANNELS = Object.freeze({
   chromium: 'chromium',
 });
 
-const ENGINES = Object.freeze(['playwright', 'puppeteer']);
+const ENGINES = Object.freeze(['playwright', 'puppeteer', 'selenium']);
 
 /**
  * Launch options that are forwarded to `launchBrowser()` as they are, so the
@@ -38,6 +38,8 @@ const LAUNCH_PASSTHROUGH = Object.freeze([
   'localState',
   'defaultBrowserCheck',
   'firstRun',
+  'driverPath',
+  'bidi',
 ]);
 
 /** Validate an engine name, defaulting to Playwright. */
@@ -85,13 +87,17 @@ export function buildLaunchOptions(params = {}) {
     engine: resolveEngine(params.engine),
     headless: params.headless === true,
   };
-  const channel = resolveChannel(params.browser);
+  const channel =
+    options.engine === 'selenium' ? undefined : resolveChannel(params.browser);
   const defined = {
     launch: params.launch,
     executablePath: params.executablePath,
     userDataDir: params.userDataDir,
     restrictions: params.restrictions,
     channel,
+    ...(options.engine === 'selenium' && params.browser !== undefined
+      ? { browser: params.browser }
+      : {}),
   };
   for (const name of LAUNCH_PASSTHROUGH) {
     defined[name] ??= params[name];
@@ -121,6 +127,7 @@ export function sessionFromLaunch(engine, launched) {
       : handle,
     context: playwright ? handle : (handle?.defaultBrowserContext?.() ?? null),
     page: launched.page,
+    driver: launched.driver ?? (engine === 'selenium' ? handle : null),
     args: launched.args ?? [],
     close: () => launched.close(),
     connected: false,
@@ -141,10 +148,15 @@ export function sessionFromConnect(engine, connected) {
       ? (page?.context?.() ?? null)
       : (browser?.defaultBrowserContext?.() ?? null),
     page,
+    driver: connected.driver ?? null,
     // Playwright's close() on a connectOverCDP browser disconnects;
     // Puppeteer's close() would quit the browser, disconnect() does not.
     close: async () => {
       await connected.downloads?.dispose?.();
+      if (engine === 'selenium') {
+        await connected.close();
+        return;
+      }
       await (playwright ? browser.close() : browser.disconnect());
     },
     connected: true,

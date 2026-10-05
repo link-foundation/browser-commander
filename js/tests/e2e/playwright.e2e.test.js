@@ -9,6 +9,7 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
+import { CHROME_LAUNCH_OPTIONS } from '../helpers/e2e-browser.js';
 
 // Dynamic import for playwright since it may not be installed
 let playwright;
@@ -25,23 +26,16 @@ describe(
     const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
 
     before(async () => {
-      try {
-        playwright = await import('playwright');
-        const module = await import('../../src/index.js');
-        createCommander = module.createCommander;
-
-        browser = await playwright.chromium.launch({
-          headless: process.env.HEADLESS !== 'false',
-        });
-        const context = await browser.newContext();
-        page = await context.newPage();
-        commander = createCommander({ page, verbose: true });
-      } catch (error) {
-        console.log(
-          'Skipping E2E tests - playwright not available or test app not running'
-        );
-        console.log('Error:', error.message);
-      }
+      playwright = await import('playwright');
+      const module = await import('../../src/index.js');
+      createCommander = module.createCommander;
+      browser = await playwright.chromium.launch({
+        headless: process.env.HEADLESS !== 'false',
+        ...CHROME_LAUNCH_OPTIONS,
+      });
+      const context = await browser.newContext();
+      page = await context.newPage();
+      commander = createCommander({ page, verbose: true });
     });
 
     after(async () => {

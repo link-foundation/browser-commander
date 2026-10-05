@@ -13,6 +13,7 @@ import asyncio
 import contextlib
 import inspect
 import json
+import logging
 import os
 from collections.abc import Awaitable, Mapping
 from dataclasses import dataclass, field
@@ -59,6 +60,8 @@ from browser_commander.fingerprint.automation_parity import (
     detect_automation_controlled_triggers,
 )
 from browser_commander.utilities.subprocess import ManagedProcess, start_process
+
+_LOG = logging.getLogger(__name__)
 
 __all__ = [
     "CHANNEL_EXECUTABLE_NAMES",
@@ -398,12 +401,16 @@ async def _wait_for_exit(process: Any, timeout_ms: float) -> bool:
 
 
 def _remove_quietly(user_data_dir: str) -> None:
-    with contextlib.suppress(OSError):
+    try:
         remove_user_data_dir(user_data_dir)
+    except OSError:
+        _LOG.debug("Could not remove browser profile %s", user_data_dir, exc_info=True)
 
 
 async def _remove_profile(user_data_dir: str) -> None:
+    _LOG.debug("Removing temporary browser profile %s", user_data_dir)
     await asyncio.to_thread(_remove_quietly, user_data_dir)
+    _LOG.debug("Temporary browser profile cleanup finished: %s", user_data_dir)
 
 
 async def _request_browser_close(
@@ -432,9 +439,9 @@ def _create_closer(
     engine: str,
     browser: Any,
     browser_process: Any,
-    user_data_dir: str,
     temporary_profile: bool,
     close_timeout: int,
+    cleanup_profile: Callable[[], Awaitable[None]],
 ) -> Callable[..., Awaitable[None]]:
     original_close = getattr(browser, "close", None) if browser is not None else None
     closing: asyncio.Future[None] | None = None
@@ -450,7 +457,7 @@ def _create_closer(
             _kill(browser_process)
             await _wait_for_exit(browser_process, close_timeout)
         if temporary_profile:
-            await _remove_profile(user_data_dir)
+            await cleanup_profile()
 
     async def close(*_args: Any, **_kwargs: Any) -> None:
         nonlocal closing
@@ -699,17 +706,28 @@ async def launch_real_browser_with_dependencies(
             await _remove_profile(user_data_dir)
         raise
     browser_process = launched.browser_process
+    profile_cleanup: asyncio.Future[None] | None = None
+
+    def schedule_profile_cleanup() -> asyncio.Future[None]:
+        nonlocal profile_cleanup
+        if profile_cleanup is None:
+            profile_cleanup = asyncio.ensure_future(_remove_profile(user_data_dir))
+        return profile_cleanup
+
+    async def cleanup_profile() -> None:
+        await asyncio.shield(schedule_profile_cleanup())
+
     once = getattr(browser_process, "once", None)
     if temporary_profile and callable(once):
         # The profile goes away with the browser, also when the user closes the
         # window instead of the caller calling close().
         def remove_on_exit(_code: Any = None) -> None:
             try:
-                loop = asyncio.get_running_loop()
+                asyncio.get_running_loop()
             except RuntimeError:
                 _remove_quietly(user_data_dir)
                 return
-            loop.run_in_executor(None, _remove_quietly, user_data_dir)
+            schedule_profile_cleanup()
 
         once("exit", remove_on_exit)
 
@@ -735,15 +753,15 @@ async def launch_real_browser_with_dependencies(
             engine=options.engine,
             browser=connection.browser,
             browser_process=browser_process,
-            user_data_dir=user_data_dir,
             temporary_profile=temporary_profile,
             close_timeout=options.close_timeout,
+            cleanup_profile=cleanup_profile,
         )
     except BaseException:
         _kill(browser_process)
         await _wait_for_exit(browser_process, options.close_timeout)
         if temporary_profile:
-            await _remove_profile(user_data_dir)
+            await cleanup_profile()
         raise
 
     return RealBrowserResult(

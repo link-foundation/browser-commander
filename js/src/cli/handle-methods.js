@@ -9,7 +9,7 @@
 import { decodeValue, describeObject, encodeValue } from './handles.js';
 import { invalidParams, requireString } from './rpc-error.js';
 
-const ENGINE_ROOTS = Object.freeze(['playwright', 'puppeteer']);
+const ENGINE_ROOTS = Object.freeze(['playwright', 'puppeteer', 'selenium']);
 
 function targetOf(state, params) {
   const handle = params.handle;
@@ -36,11 +36,14 @@ async function root(state, params) {
       browser: handleOrNull(state, session.browser),
       context: handleOrNull(state, session.context),
       page: handleOrNull(state, session.page),
+      ...(session.engine === 'selenium'
+        ? { driver: handleOrNull(state, session.driver) }
+        : {}),
     };
   }
   if (!ENGINE_ROOTS.includes(name)) {
     throw invalidParams(
-      `Unknown root "${name}"; expected playwright, puppeteer or session:<id>`
+      `Unknown root "${name}"; expected playwright, puppeteer, selenium or session:<id>`
     );
   }
   const module = await state.dependencies.loadEngine(name);
@@ -69,6 +72,19 @@ async function get(state, params) {
     value instanceof Promise ? await value : value,
     state.handles
   );
+}
+
+/** Instantiate an engine constructor obtained through `handle.get`. */
+function construct(state, params) {
+  const target = targetOf(state, params);
+  const args = params.args ?? [];
+  if (typeof target !== 'function' || !Array.isArray(args)) {
+    throw invalidParams(
+      'handle.construct requires a constructor handle and an args array'
+    );
+  }
+  const result = Reflect.construct(target, decodeValue(args, state.handles));
+  return encodeValue(result, state.handles);
 }
 
 function dispose(state, params) {
@@ -129,6 +145,7 @@ export const HANDLE_METHODS = Object.freeze({
   'handle.root': root,
   'handle.call': call,
   'handle.get': get,
+  'handle.construct': construct,
   'handle.dispose': dispose,
   'handle.describe': describe,
   'events.subscribe': subscribe,

@@ -260,6 +260,10 @@ async function waitForExit(browserProcess, timeout) {
 }
 
 async function requestBrowserClose({ engine, browser, originalClose }) {
+  if (engine === 'selenium') {
+    await originalClose();
+    return;
+  }
   if (engine === 'puppeteer') {
     // A connected Puppeteer Browser sends Browser.close and waits for it.
     await originalClose.call(browser);
@@ -279,8 +283,9 @@ function createCloser({
   userDataDir,
   temporaryProfile,
   closeTimeout,
+  closeConnection,
 }) {
-  const originalClose = browser?.close;
+  const originalClose = closeConnection ?? browser?.close;
   let closing;
   const close = () => {
     closing ??= (async () => {
@@ -299,7 +304,7 @@ function createCloser({
     })();
     return closing;
   };
-  if (browser && originalClose) {
+  if (browser && originalClose && engine !== 'selenium') {
     // `browser.close()` means "close the browser" for every caller, so it
     // shuts the spawned process down and deletes a temporary profile too.
     browser.close = close;
@@ -682,6 +687,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       userDataDir,
       temporaryProfile,
       closeTimeout,
+      closeConnection: engine === 'selenium' ? connection.close : undefined,
     });
     return {
       ...connection,

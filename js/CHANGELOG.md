@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.24.0
+
+### Minor Changes
+
+- 31d2387: Support Selenium through the common launch, connection, CLI, and browser-test
+  APIs, including raw WebDriver handles and generic engine constructors. Refresh
+  all direct dependencies and generated engine APIs to the latest stable releases.
+
 ## 0.23.0
 
 ### Minor Changes

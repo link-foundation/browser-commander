@@ -120,7 +120,7 @@ mod tests {
         assert_eq!(run_cli(&["version".to_string()]).await.unwrap(), 0);
     }
 
-    // feature-parity: cli.script@untyped-via-cli cli.serve@untyped-via-cli
+    // feature-parity: cli.script@untyped-via-cli cli.serve@untyped-via-cli engines.cli-matrix@untyped-via-cli
     #[test]
     fn stdio_bridge_streams_and_scripts_collect() {
         assert!(is_streaming_command(&[

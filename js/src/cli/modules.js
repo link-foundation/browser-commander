@@ -70,7 +70,11 @@ export const DEFAULT_DEPENDENCIES = Object.freeze({
     (await import('../browser/browser-profiles.js')).listBrowserProfiles(
       options
     ),
-  loadEngine: (name) => importOptional(name, `The ${name} engine`),
+  loadEngine: (name) =>
+    importOptional(
+      name === 'selenium' ? 'selenium-webdriver' : name,
+      `The ${name} engine`
+    ),
   openInUserBrowser: async (url) =>
     (
       await importOptional(

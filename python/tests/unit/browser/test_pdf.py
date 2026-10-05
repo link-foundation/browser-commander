@@ -51,13 +51,13 @@ class TestPdfFunction:
         }
 
     @pytest.mark.asyncio
-    async def test_selenium_raises_not_implemented(self) -> None:
-        """pdf() should raise NotImplementedError for Selenium engine."""
+    async def test_selenium_prints_natively(self) -> None:
+        """pdf() should decode the native WebDriver Print Page response."""
         mock_driver = MagicMock()
         mock_driver.current_url = "https://example.com"
 
-        with pytest.raises(NotImplementedError, match="does not support PDF"):
-            await pdf(mock_driver, "selenium")
+        mock_driver.print_page.return_value = "JVBERi0xLjQ="
+        assert await pdf(mock_driver, "selenium") == b"%PDF-1.4"
 
 
 class TestPlaywrightAdapterPdf:
@@ -90,12 +90,12 @@ class TestPlaywrightAdapterPdf:
 
 
 class TestSeleniumAdapterPdf:
-    """Tests for SeleniumAdapter.pdf() - should raise NotImplementedError."""
+    """Tests for native SeleniumAdapter.pdf()."""
 
     @pytest.mark.asyncio
-    async def test_raises_not_implemented(self) -> None:
-        """SeleniumAdapter.pdf() should raise NotImplementedError."""
+    async def test_prints_natively(self) -> None:
+        """SeleniumAdapter.pdf() should return native PDF bytes."""
         mock_driver = MagicMock()
         adapter = SeleniumAdapter(mock_driver)
-        with pytest.raises(NotImplementedError, match="does not support PDF"):
-            await adapter.pdf(format="A4")
+        mock_driver.print_page.return_value = "JVBERi0xLjQ="
+        assert await adapter.pdf(format="A4") == b"%PDF-1.4"

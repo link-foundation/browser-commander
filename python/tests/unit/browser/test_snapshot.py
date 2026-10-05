@@ -1,5 +1,7 @@
 """A live profile copy must retain committed WAL data without changing its source."""
 
+from __future__ import annotations
+
 import contextlib
 import json
 import sqlite3

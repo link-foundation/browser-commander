@@ -17,7 +17,7 @@ pub struct APIRequestContextInitializer {
     pub tracing: Ref<Tracing>,
 }
 
-/// Parameters of `APIRequestContext.fetch` ({method} "{url}").
+/// Parameters of `APIRequestContext.fetch` ({method}).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct APIRequestContextFetchParams {
     #[serde(rename = "url")]
@@ -48,7 +48,7 @@ pub struct APIRequestContextFetchParams {
     pub max_retries: Option<i64>,
 }
 
-/// Result of `APIRequestContext.fetch` ({method} "{url}").
+/// Result of `APIRequestContext.fetch` ({method}).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct APIRequestContextFetchResult {
     #[serde(rename = "response")]
@@ -88,6 +88,8 @@ pub struct APIRequestContextFetchLogResult {
 pub struct APIRequestContextStorageStateParams {
     #[serde(rename = "indexedDB", default, skip_serializing_if = "Option::is_none")]
     pub indexed_db: Option<bool>,
+    #[serde(rename = "opfs", default, skip_serializing_if = "Option::is_none")]
+    pub opfs: Option<bool>,
 }
 
 /// Result of `APIRequestContext.storageState` (Get storage state).
@@ -158,7 +160,7 @@ impl ChannelType for APIRequestContext {
 }
 
 impl APIRequestContext {
-    /// `APIRequestContext.fetch` ("{method} "{url}"").
+    /// `APIRequestContext.fetch` ("{method}").
     pub async fn fetch(&self, params: APIRequestContextFetchParams) -> Result<APIRequestContextFetchResult, ProtocolError> {
         self.channel.send("fetch", &params).await
     }

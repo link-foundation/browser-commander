@@ -1,3 +1,4 @@
+// feature-parity: sources.default-browser@native-typed
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 

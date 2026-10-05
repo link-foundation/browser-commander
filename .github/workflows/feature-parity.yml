@@ -11,6 +11,9 @@ on:
       - 'rust/src/**'
       - 'rust/tests/**'
       - 'scripts/generate-feature-parity.mjs'
+      - 'README.md'
+      - 'js/src/browser/browser-sources.json'
+      - 'scripts/generate-browser-support.mjs'
       - '.github/workflows/feature-parity.yml'
   pull_request:
     types: [opened, synchronize, reopened]
@@ -22,6 +25,9 @@ on:
       - 'rust/src/**'
       - 'rust/tests/**'
       - 'scripts/generate-feature-parity.mjs'
+      - 'README.md'
+      - 'js/src/browser/browser-sources.json'
+      - 'scripts/generate-browser-support.mjs'
       - '.github/workflows/feature-parity.yml'
   workflow_dispatch:
 
@@ -47,6 +53,8 @@ jobs:
           node-version: '24.x'
       - name: Reject missing or stale parity claims
         run: node scripts/generate-feature-parity.mjs --check
+      - name: Reject a stale importable-browser matrix
+        run: node scripts/generate-browser-support.mjs --check
 
   pipeline-status:
     name: Pipeline Status

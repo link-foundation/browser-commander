@@ -41,6 +41,23 @@
       ]
     },
     {
+      "title": "Browser source discovery",
+      "features": [
+        {
+          "id": "sources.catalogue",
+          "title": "Shared catalogue of importable browsers"
+        },
+        {
+          "id": "sources.default-browser",
+          "title": "Resolve the operating-system default browser"
+        },
+        {
+          "id": "sources.cookie-listing",
+          "title": "List browsers and profiles holding cookies for a domain"
+        }
+      ]
+    },
+    {
       "title": "Portable session state",
       "features": [
         {

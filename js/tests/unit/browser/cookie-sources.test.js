@@ -1,3 +1,4 @@
+// feature-parity: sources.cookie-listing@native-typed
 import assert from 'node:assert';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';

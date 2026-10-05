@@ -29,7 +29,7 @@ def test_password_metadata_is_filtered_and_notes_use_target_key(tmp_path, domain
             (
                 Path(__file__).resolve().parents[5]
                 / "tests/fixtures/password-domain-isolation.sql"
-            ).read_text()
+            ).read_text(encoding="utf-8")
         )
         db.execute(
             "UPDATE logins SET password_value=? WHERE id IN (7,8)",
@@ -111,7 +111,7 @@ def test_history_domain_isolation_preserves_matching_visits(tmp_path):
             (
                 Path(__file__).resolve().parents[5]
                 / "tests/fixtures/history-domain-isolation.sql"
-            ).read_text()
+            ).read_text(encoding="utf-8")
         )
     migrate_history(
         source_profile_dir=source, target_profile_dir=target, domains=["github.com"]

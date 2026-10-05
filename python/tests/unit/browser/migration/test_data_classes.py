@@ -11,7 +11,7 @@ CLASSES = json.loads(
     (
         Path(__file__).resolve().parents[5]
         / "tests/fixtures/migration-data-classes.json"
-    ).read_text()
+    ).read_text(encoding="utf-8")
 )
 
 

@@ -9,7 +9,7 @@ from browser_commander.browser.migration import migrate_profile
 
 SCHEMA = (
     Path(__file__).resolve().parents[5] / "tests/fixtures/firefox-history.sql"
-).read_text()
+).read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize("domains", [[], ["GITHUB.COM."]])

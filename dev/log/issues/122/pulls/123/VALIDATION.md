@@ -44,6 +44,15 @@ JS, Python and Rust. They establish this synthetic source case; they do not
 claim installed Yandex or Windows/macOS runtime acceptance. The Ya Passman
 password-format limitation remains separately reported.
 
+Final review reproduced another regression in all three native orchestrators:
+when a Yandex profile held both `Ya Passman Data` and a supported `Login Data`,
+the new diagnostic returned early and skipped the supported passwords as well.
+Native regressions first returned zero instead of one. Dispatch now continues
+for the separate supported store, verifies target-key password decryption and
+unchanged source bytes, and retains the specific unsupported-store report.
+Profiles with only Ya Passman Data still return before credential lookup.
+Before/after logs are retained at `/tmp/issue-122-yandex-coexisting-*.log`.
+
 The complete Python test run also exposed an existing cancellation-fixture race:
 the first run reported `ValueError: invalid literal for int() with base 10: ''` at
 `tests/unit/utilities/test_subprocess.py:145`, where an empty PID was read after
@@ -69,6 +78,17 @@ confidential flags preserved, explicit sync/unknown-table warnings, removed
 copied bytes after vacuum and unchanged source bytes. The unfiltered variant
 preserves both sites' records and unknown metadata while re-keying both notes.
 Before/after logs are retained at `/tmp/issue-122-password-metadata-*.log`.
+
+Upstream History review also found derived cluster labels, keywords and
+duplicate-visit metadata beyond the visit links. The shared
+`tests/fixtures/history-opaque-metadata.sql` first reproduced retained clusters
+in every native implementation after filtering to `github.com`. The fixture
+includes a mixed-domain cluster and a quoted unknown table name. Filtered
+imports now omit records without a safe domain association and report each
+nonempty table as `unsupported-history-metadata`. Unfiltered imports retain
+them. Native tests verify retained URLs and version metadata, removed marker
+bytes after vacuum, named warnings and unchanged source bytes. Logs are retained
+at `/tmp/issue-122-history-metadata-{before,after}-*.log`.
 
 All three orchestrators first rejected the twelve additional data-class names.
 The shared `tests/fixtures/migration-data-classes.json` now verifies the complete
@@ -120,12 +140,12 @@ disabled debug information, as the earlier local checks did.
 | Check                                                             | Result                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | JS `npm run check`                                                | ESLint, Prettier and no new duplication clones pass                                   |
-| JS `npm test`                                                     | 1,587 pass; one Puppeteer manifest-version check skipped                              |
+| JS `npm test`                                                     | 1,590 pass; one Puppeteer manifest-version check skipped                              |
 | Python Ruff check/format and `mypy src`                           | Pass; 172 source files type checked                                                   |
-| Python `pytest`                                                   | 1,191 pass; twelve real-browser tests gated by `RUN_E2E`                               |
+| Python `pytest`                                                   | 1,194 pass; twelve real-browser tests gated by `RUN_E2E`                               |
 | Rust format, Clippy all targets/all features with warnings denied | Pass                                                                                  |
-| Rust `cargo test --locked`                                        | 726 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
-| Rust `cargo test --locked --all-features`                         | 726 pass, zero failures; 15 existing browser tests ignored                            |
+| Rust `cargo test --locked`                                        | 729 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
+| Rust `cargo test --locked --all-features`                         | 729 pass, zero failures; 15 existing browser tests ignored                            |
 | Full-repository Secretlint and root JavaScript lint               | Pass                                                                                  |
 | Shared asset byte comparison                                      | Catalogue, history schema and capability declarations identical in all three packages |
 | Generated browser/migration matrix freshness                      | Pass                                                                                  |
@@ -221,6 +241,28 @@ All ten workflows and aggregate CodeQL also passed on
 Those runs started at 17:11:06 UTC with the exact head SHA. Subsequent Firefox
 history and main synchronization require their own fresh CI verification.
 
+Head `9f5cada0ced0f1beb0451e18ad787feeb5984cbc` was committed at 18:25:56 UTC;
+all ten workflows started at 18:26:03 UTC with that SHA. The
+[Python Windows job](https://github.com/link-foundation/browser-commander/actions/runs/37355906039)
+failed two Firefox history cases. The downloaded log
+`ci-logs/python-37355906039.log:2056` (also line 2115) records a Unicode title
+misdecoded by the fixture loader's platform-default text encoding. A local
+non-UTF-8 locale run reproduced a collection-time UnicodeDecodeError before
+the fix. Every newly added migration text-fixture loader now names UTF-8; all
+20 relevant history/domain-isolation/data-class cases pass with UTF-8 mode off:
+
+```sh
+cd python
+LC_ALL=C PYTHONUTF8=0 PYTHONCOERCECLOCALE=0 python3 -m pytest \
+  tests/unit/browser/migration/test_firefox_history.py \
+  tests/unit/browser/migration/test_domain_isolation.py \
+  tests/unit/browser/migration/test_data_classes.py -q
+```
+
+The test preserves the expected Unicode title; it does not relax the assertion
+or change migration's database decoding. The final corrected head requires its
+own Windows CI confirmation.
+
 ## Real runtime acceptance and remaining limits
 
 ```sh
@@ -234,7 +276,12 @@ closing the persistent profile. The Firefox acceptance experiment,
 `experiments/issue-122/firefox_history_acceptance.mjs`, verifies that the same
 runtime retains all three domain-matching Firefox visits with exact microsecond
 timestamps after opening/closing the persistent profile. Source bytes remain
-unchanged. Password fixture decryption verifies target-key
+unchanged. The additional
+`experiments/issue-122/chromium_history_metadata_acceptance.mjs` creates a
+synthetic profile with the installed Chromium's actual History schema, seeds
+selected/excluded visits and derived metadata, and verifies that the selected
+visit survives restart after metadata omissions. Warnings name the emptied
+tables and source bytes remain unchanged. Password fixture decryption verifies target-key
 encryption; it does not establish real browser password-store acceptance.
 macOS Safari/STP and Windows runtime acceptance have not been run here.
 
@@ -242,5 +289,5 @@ Firefox/WebKit target writers, whole-profile migration, the additional storage
 classes and automatic installed-browser protocol routing remain unimplemented.
 Complete protected-root aggregation and discovery of domains across every
 implemented site store also remain unresolved. The native matrix declares these
-limits. PR #123 remains draft and contains no issue-closing keywords while those
-requirements are incomplete.
+limits. PR #123 retains the parent's required closing-reference block and
+remains draft while those requirements are incomplete.

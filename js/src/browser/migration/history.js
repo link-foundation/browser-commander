@@ -6,7 +6,7 @@ import { withDatabaseSnapshot } from './sqlite-snapshot.js';
 import { matchesDomains } from './domains.js';
 import { openSqliteDatabase } from '../browser-cookie-database.js';
 
-async function filterHistory(targetPath, domains) {
+async function filterHistory(targetPath, domains, warnings) {
   if (!domains?.length) {
     return;
   }
@@ -41,7 +41,6 @@ async function filterHistory(targetPath, domains) {
           ['visit_source', 'id'],
           ['content_annotations', 'visit_id'],
           ['context_annotations', 'visit_id'],
-          ['clusters_and_visits', 'visit_id'],
         ]) {
           if (tables.has(table)) {
             db.exec(
@@ -65,9 +64,59 @@ async function filterHistory(targetPath, domains) {
         }
       }
     }
+    omitUnfilteredMetadata(db, tables, warnings);
     db.exec('VACUUM');
   } finally {
     db.close();
+  }
+}
+
+function omitUnfilteredMetadata(db, tables, warnings) {
+  const filtered = new Set([
+    'urls',
+    'downloads',
+    'top_sites',
+    'meta',
+    'sqlite_sequence',
+  ]);
+  if (tables.has('urls')) {
+    for (const table of ['visits', 'segments', 'keyword_search_terms']) {
+      filtered.add(table);
+    }
+    if (tables.has('visits')) {
+      for (const table of [
+        'visit_source',
+        'content_annotations',
+        'context_annotations',
+      ]) {
+        filtered.add(table);
+      }
+    }
+    if (tables.has('segments')) {
+      filtered.add('segment_usage');
+    }
+  }
+  if (tables.has('downloads')) {
+    filtered.add('downloads_url_chains');
+    filtered.add('downloads_slices');
+  }
+  // Cluster labels and keywords can describe excluded visits even when a
+  // cluster also contains selected visits. Unknown schemas have no safe join.
+  for (const table of [...tables].sort()) {
+    if (filtered.has(table)) {
+      continue;
+    }
+    const identifier = `"${table.replaceAll('"', '""')}"`;
+    const count = db.prepare(`SELECT COUNT(*) AS c FROM ${identifier}`).get().c;
+    db.exec(`DELETE FROM ${identifier}`);
+    if (count > 0) {
+      warnings.push({
+        type: 'history',
+        item: table,
+        reason: 'unsupported-history-metadata',
+        detail: `${count} copied metadata rows removed`,
+      });
+    }
   }
 }
 
@@ -121,13 +170,13 @@ function filterDownloads(db, tables, domains) {
  * already guarantees a point-in-time consistent copy.
  */
 
-function snapshotInto({ sourcePath, targetPath, domains }) {
+function snapshotInto({ sourcePath, targetPath, domains, warnings }) {
   return withDatabaseSnapshot({
     sourcePath,
     read: async (snapshotPath) => {
       const { copyFile } = await import('node:fs/promises');
       await copyFile(snapshotPath, targetPath);
-      await filterHistory(targetPath, domains);
+      await filterHistory(targetPath, domains, warnings);
       // Best-effort URL count for the report.
       try {
         const { openSqliteDatabase } =
@@ -171,6 +220,7 @@ export async function migrateHistory({
       sourcePath: historySource,
       targetPath: path.join(targetProfileDir, 'History'),
       domains,
+      warnings,
     });
     urlCount = count ?? 0;
     migratedDatabases += 1;
@@ -188,6 +238,7 @@ export async function migrateHistory({
       sourcePath: topSitesSource,
       targetPath: path.join(targetProfileDir, 'Top Sites'),
       domains,
+      warnings,
     });
     migratedDatabases += 1;
   }

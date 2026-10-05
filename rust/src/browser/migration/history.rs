@@ -22,7 +22,11 @@ use super::fs_utils::path_exists;
 use super::sqlite_snapshot::with_database_snapshot;
 use super::{ClassOutcome, MigrationEntry};
 
-fn filter_history(path: &Path, domains: &[String]) -> Result<()> {
+fn filter_history(
+    path: &Path,
+    domains: &[String],
+    warnings: &mut Vec<MigrationEntry>,
+) -> Result<()> {
     if domains.is_empty() {
         return Ok(());
     }
@@ -60,7 +64,6 @@ fn filter_history(path: &Path, domains: &[String]) -> Result<()> {
                 ("visit_source", "id"),
                 ("content_annotations", "visit_id"),
                 ("context_annotations", "visit_id"),
-                ("clusters_and_visits", "visit_id"),
             ] {
                 if tables.contains(table) {
                     database.execute(
@@ -91,7 +94,53 @@ fn filter_history(path: &Path, domains: &[String]) -> Result<()> {
             }
         }
     }
+    omit_unfiltered_metadata(&database, &tables, warnings)?;
     database.execute_batch("VACUUM")?;
+    Ok(())
+}
+
+fn omit_unfiltered_metadata(
+    database: &Connection,
+    tables: &std::collections::HashSet<String>,
+    warnings: &mut Vec<MigrationEntry>,
+) -> Result<()> {
+    let mut filtered: std::collections::HashSet<&str> =
+        ["urls", "downloads", "top_sites", "meta", "sqlite_sequence"]
+            .into_iter()
+            .collect();
+    if tables.contains("urls") {
+        filtered.extend(["visits", "segments", "keyword_search_terms"]);
+        if tables.contains("visits") {
+            filtered.extend(["visit_source", "content_annotations", "context_annotations"]);
+        }
+        if tables.contains("segments") {
+            filtered.insert("segment_usage");
+        }
+    }
+    if tables.contains("downloads") {
+        filtered.extend(["downloads_url_chains", "downloads_slices"]);
+    }
+    // A mixed-domain cluster can describe excluded visits. Unknown metadata
+    // schemas have no safe association with the selected domains either.
+    let mut names: Vec<_> = tables.iter().collect();
+    names.sort();
+    for table in names {
+        if filtered.contains(table.as_str()) {
+            continue;
+        }
+        let identifier = format!("\"{}\"", table.replace('"', "\"\""));
+        let count: i64 =
+            database.query_row(&format!("SELECT COUNT(*) FROM {identifier}"), [], |row| {
+                row.get(0)
+            })?;
+        database.execute(&format!("DELETE FROM {identifier}"), [])?;
+        if count > 0 {
+            warnings.push(
+                MigrationEntry::new("history", table, "unsupported-history-metadata")
+                    .with_detail(format!("{count} copied metadata rows removed")),
+            );
+        }
+    }
     Ok(())
 }
 
@@ -165,11 +214,12 @@ fn snapshot_into(
     source_path: &Path,
     target_path: &Path,
     domains: &[String],
+    warnings: &mut Vec<MigrationEntry>,
 ) -> Result<Option<u64>> {
     with_database_snapshot(source_path, |snapshot_path| {
         fs::copy(snapshot_path, target_path)
             .with_context(|| format!("Could not write {}", target_path.display()))?;
-        filter_history(target_path, domains)?;
+        filter_history(target_path, domains, warnings)?;
         Ok(count_urls(target_path))
     })
 }
@@ -200,6 +250,7 @@ pub(crate) fn migrate_history_filtered(
             &history_source,
             &target_profile_dir.join("History"),
             domains,
+            &mut outcome.warnings,
         )?
         .unwrap_or(0);
         migrated_databases += 1;
@@ -215,6 +266,7 @@ pub(crate) fn migrate_history_filtered(
             &top_sites_source,
             &target_profile_dir.join("Top Sites"),
             domains,
+            &mut outcome.warnings,
         )?;
         migrated_databases += 1;
     }

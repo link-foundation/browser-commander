@@ -77,6 +77,10 @@ roots and source/target overlap before writing. Host filters match a whole
 hostname or its subdomains, so `github.com` never matches `notgithub.com`.
 Chromium history filtering removes unrelated visits, annotations, segment
 usage and download chains, including redirects through unselected sites.
+Derived cluster labels, keywords, duplicate-visit records and unknown History
+tables cannot be safely associated with selected domains. Filtered imports
+empty these tables and report `unsupported-history-metadata` for each nonempty
+table; unfiltered imports preserve them.
 Skipped undecryptable passwords are removed from the target. Target database
 copies are vacuumed to remove deleted pages. Sources remain read-only.
 SQLite stores use online backup, including committed WAL records. If a lock
@@ -89,6 +93,8 @@ Opera keys use a `Local State` beside its single-profile store before the
 parent-directory fallback. Yandex `Ya Passman Data` returns
 `yandex-passman-encryption-unsupported`: its extra encryption layer may require
 a master password and cannot be treated as ordinary Chromium Login Data.
+If the profile also contains supported `Login Data`, those passwords continue
+to import and the unsupported store retains its separate diagnostic.
 DuckDuckGo is detection-only and is rejected as a migration source.
 Every native credential reader resolves its Safe Storage service from the shared
 catalogue, including browser aliases. macOS Keychain failures name the requested

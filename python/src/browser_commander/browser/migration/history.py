@@ -21,7 +21,9 @@ from .domains import matches_domains
 __all__ = ["migrate_history"]
 
 
-def _snapshot_into(source_path: Path, target_path: Path, domains=None) -> int | None:
+def _snapshot_into(
+    source_path: Path, target_path: Path, domains, warnings
+) -> int | None:
     """Copy a snapshot of ``source_path`` to ``target_path``; count its URLs."""
 
     def copy(snapshot_path: Path) -> int | None:
@@ -54,7 +56,6 @@ def _snapshot_into(source_path: Path, target_path: Path, domains=None) -> int | 
                             ("visit_source", "id"),
                             ("content_annotations", "visit_id"),
                             ("context_annotations", "visit_id"),
-                            ("clusters_and_visits", "visit_id"),
                         ]:
                             if table in tables:
                                 db.execute(
@@ -69,6 +70,7 @@ def _snapshot_into(source_path: Path, target_path: Path, domains=None) -> int | 
                     for (url,) in db.execute("SELECT url FROM top_sites").fetchall():
                         if not matches_domains(url, domains):
                             db.execute("DELETE FROM top_sites WHERE url=?", (url,))
+                _omit_unfiltered_metadata(db, tables, warnings)
                 db.commit()
                 db.execute("VACUUM")
         try:
@@ -84,6 +86,35 @@ def _snapshot_into(source_path: Path, target_path: Path, domains=None) -> int | 
         return int(row[0] if row and row[0] is not None else 0)
 
     return with_database_snapshot(source_path, copy)
+
+
+def _omit_unfiltered_metadata(db, tables, warnings):
+    filtered = {"urls", "downloads", "top_sites", "meta", "sqlite_sequence"}
+    if "urls" in tables:
+        filtered.update({"visits", "segments", "keyword_search_terms"})
+        if "visits" in tables:
+            filtered.update(
+                {"visit_source", "content_annotations", "context_annotations"}
+            )
+        if "segments" in tables:
+            filtered.add("segment_usage")
+    if "downloads" in tables:
+        filtered.update({"downloads_url_chains", "downloads_slices"})
+    # Derived cluster text may describe excluded visits, including in a mixed
+    # cluster. Unknown metadata cannot be safely joined to selected domains.
+    for table in sorted(tables - filtered):
+        identifier = '"' + table.replace('"', '""') + '"'
+        count = db.execute(f"SELECT COUNT(*) FROM {identifier}").fetchone()[0]
+        db.execute(f"DELETE FROM {identifier}")
+        if count:
+            warnings.append(
+                {
+                    "type": "history",
+                    "item": table,
+                    "reason": "unsupported-history-metadata",
+                    "detail": f"{count} copied metadata rows removed",
+                }
+            )
 
 
 def _filter_downloads(db, tables, domains):
@@ -137,7 +168,7 @@ def migrate_history(
     migrated_databases = 0
     history_source = source / "History"
     if history_source.exists():
-        count = _snapshot_into(history_source, target / "History", domains)
+        count = _snapshot_into(history_source, target / "History", domains, warnings)
         url_count = count or 0
         migrated_databases += 1
     else:
@@ -147,7 +178,7 @@ def migrate_history(
 
     top_sites_source = source / "Top Sites"
     if top_sites_source.exists():
-        _snapshot_into(top_sites_source, target / "Top Sites", domains)
+        _snapshot_into(top_sites_source, target / "Top Sites", domains, warnings)
         migrated_databases += 1
 
     if url_count > 0:

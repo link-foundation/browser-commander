@@ -19,3 +19,5 @@ Translate Firefox history to Chromium with exact microsecond visit dates, domain
 Normalize Firefox schema 16+ cookie expiry from milliseconds to seconds in both installed-profile reading and migration, preserving legacy schemas and session markers.
 
 Preserve supported Yandex Login Data imports when an unsupported Ya Passman Data store is present, retaining separate encryption diagnostics.
+
+Omit derived cluster labels, keywords, duplicate-visit records and unknown History metadata with named warnings during domain-filtered imports; preserve them during unfiltered imports.

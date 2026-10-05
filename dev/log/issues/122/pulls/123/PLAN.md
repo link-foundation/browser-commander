@@ -85,7 +85,7 @@ Unsupported platform capabilities must be explicit in the report and matrix.
 | 119.11 | Client certificates where OS allows                                           | Exportable certificate stores only; explicit OS/hardware limitations                              | Pending     |
 | 119.12 | Explicit passkey skipped reasons                                              | Name iCloud Keychain, Google Password Manager and Windows Hello                                   | Implemented |
 | 119.13 | Persistent-profile passkey workaround documentation                           | Sign in once with the platform passkey and retain the session                                     | Implemented |
-| 119.14 | Domains on cookies/storage/passwords/history/permissions                      | Central host matching; prune login-linked metadata, per-origin stats and opaque sync state; re-key notes | Partial     |
+| 119.14 | Domains on cookies/storage/passwords/history/permissions                      | Exact hosts; prune linked login/history records, omit derived/unknown metadata with warnings; re-key notes | Partial     |
 | 119.15 | Every selected class has count or skipped reason                              | Validate unknown classes; never manufacture migrated counts                                       | Implemented |
 | 119.16 | Warnings on lossy translation                                                 | Report discarded fields/unsupported value encodings                                               | Partial     |
 | 119.17 | Family fixtures, consent, immutability, native parity                         | Add minimum reproductions and round-trip assertions                                               | Partial     |
@@ -113,7 +113,7 @@ Unsupported platform capabilities must be explicit in the report and matrix.
 | 121.10 | 360 Secure/Extreme, QQ, Sogou sources                                         | Add Windows catalogue roots and fixture layouts                                                   | Implemented |
 | 121.11 | DuckDuckGo and Tor at least detection/readable import                         | Separate detection-only from supported store families                                             | Partial     |
 | 121.12 | Safari support and mobile exclusions                                          | Safari family; document Samsung Internet/UC mobile outside desktop scope                          | Implemented |
-| 121.13 | Yandex Ya Passman Data supported or specific skipped reason                   | Detect custom meta/local_encryptor_data; explicit encryption/master-password limitation           | Implemented |
+| 121.13 | Yandex Ya Passman Data supported or specific skipped reason                   | Report custom encryption; preserve supported Login Data import when both stores exist            | Implemented |
 | 121.14 | Yandex Cookies fixture                                                        | Native Chromium cookie fixture using Yandex identity                                              | Implemented |
 | 121.15 | Opera single profile and Roaming/Local State keys all OSes                    | Resolve Local State beside profile first, with documented fallback                                | Implemented |
 | 121.16 | Preserve Opera messengers/VPN by default                                      | No new restrictive flags; test catalogue launches inherit existing neutral args                   | Partial     |
@@ -240,6 +240,12 @@ criteria are fulfilled.
   unreadable source ciphertext and vacuum deleted pages. Cookie readers retain
   their existing public substring-filter contract; migration filters the final
   cookie set exactly.
+- Domain-filtered Chromium History copies also reset cluster labels, keywords,
+  duplicate-visit associations and unknown tables with named omission warnings.
+  A cluster containing selected visits can still describe excluded visits, so
+  retaining its label is unsafe. Unfiltered imports preserve these records;
+  the shared native fixture checks quoted table names, schema versions, retained
+  URLs, removed sensitive bytes and immutable sources.
 - Firefox history now translates individual `moz_historyvisits`, rather than
   counting bookmark-only Places rows as visits. Native fixtures preserve exact
   microsecond timestamps, title/URL data, domain isolation and source bytes.
@@ -353,7 +359,9 @@ by this existing behavior and retained regression coverage.
   supplies version/compatibility metadata for the translated Safari history.
 - [Chromium annotation schema](https://chromium.googlesource.com/chromium/src/+/main/components/history/core/browser/visit_annotations_database.cc)
   and [history fixture](https://chromium.googlesource.com/chromium/src/+/refs/tags/142.0.7444.56/components/test/data/history/history.49.sql)
-  informed annotation/download cleanup tests.
+  informed annotation/download cleanup tests. Cluster labels/raw labels,
+  keywords and duplicate-visit records require separate cleanup; filtering
+  only the visit-link table leaves their text and identifiers copied.
 - [Chromium Login Data schema](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/components/password_manager/core/browser/password_store/login_database.cc)
   defines parent-ID associations and sync metadata beyond `logins`;
   [password notes](https://raw.githubusercontent.com/chromium/chromium/main/components/password_manager/core/browser/password_store/password_notes_table.cc)

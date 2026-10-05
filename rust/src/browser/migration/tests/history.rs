@@ -132,3 +132,76 @@ fn filters_unrelated_urls_and_visits_without_writing_to_the_source() {
         );
     }
 }
+
+fn check_opaque_history_metadata(domains: &[String]) {
+    let source = TempDir::new("bc-opaque-history-");
+    let target = TempDir::new("bc-opaque-history-");
+    let source_path = source.path().join("History");
+    let database = rusqlite::Connection::open(&source_path).unwrap();
+    database
+        .execute_batch(include_str!(
+            "../../../../../tests/fixtures/history-opaque-metadata.sql"
+        ))
+        .unwrap();
+    drop(database);
+    let before = std::fs::read(&source_path).unwrap();
+    let report =
+        super::super::history::migrate_history_filtered(source.path(), target.path(), domains)
+            .unwrap();
+    assert_eq!(report.migrated, 1);
+    let target_path = target.path().join("History");
+    let database = rusqlite::Connection::open(&target_path).unwrap();
+    for (table, unfiltered_count) in [
+        ("clusters", 2),
+        ("clusters_and_visits", 3),
+        ("cluster_keywords", 2),
+        ("cluster_visit_duplicates", 2),
+        ("future \"history\" metadata", 1),
+    ] {
+        let identifier = format!("\"{}\"", table.replace('"', "\"\""));
+        let count = database
+            .query_row(&format!("SELECT count(*) FROM {identifier}"), [], |row| {
+                row.get::<_, i64>(0)
+            })
+            .unwrap();
+        let expected = if !domains.is_empty() {
+            0
+        } else {
+            unfiltered_count
+        };
+        assert_eq!(count, expected, "{table}");
+        let warning = report
+            .warnings
+            .iter()
+            .any(|entry| entry.item == table && entry.reason == "unsupported-history-metadata");
+        assert_eq!(warning, !domains.is_empty(), "{table}");
+    }
+    let url_count: i64 = database
+        .query_row("SELECT count(*) FROM urls", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(url_count, if domains.is_empty() { 2 } else { 1 });
+    let version: i64 = database
+        .query_row("SELECT value FROM meta WHERE key='version'", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert_eq!(version, 70);
+    drop(database);
+    let bytes = std::fs::read(&target_path).unwrap();
+    let marker = b"unrelated-history-marker";
+    assert_eq!(
+        bytes.windows(marker.len()).any(|window| window == marker),
+        domains.is_empty()
+    );
+    assert_eq!(std::fs::read(source_path).unwrap(), before);
+}
+
+#[test]
+fn omits_opaque_history_metadata_with_domain_selection() {
+    check_opaque_history_metadata(&["github.com".into()]);
+}
+
+#[test]
+fn preserves_opaque_history_metadata_without_domain_selection() {
+    check_opaque_history_metadata(&[]);
+}

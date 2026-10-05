@@ -80,10 +80,9 @@ fn verify_expiry(migration: bool) -> anyhow::Result<()> {
                 } else {
                     -1
                 };
-                assert_eq!(
-                    cookie.expires, expected,
-                    "schema {version}, cookie {}",
-                    cookie.name
+                assert!(
+                    cookie.expires == expected,
+                    "expiry normalization failed for schema {version}"
                 );
             }
             assert_eq!(fs::read(file)?, before);

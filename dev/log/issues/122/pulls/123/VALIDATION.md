@@ -263,6 +263,20 @@ The test preserves the expected Unicode title; it does not relax the assertion
 or change migration's database decoding. The final corrected head requires its
 own Windows CI confirmation.
 
+The aggregate CodeQL check also failed on this head even though the Security
+workflow's analysis jobs succeeded. Its
+[new Rust alert](https://github.com/link-foundation/browser-commander/pull/123#discussion_r4187427395)
+identified `rust/tests/firefox_cookie_expiry.rs:86`, where an assertion's custom
+failure message printed a cookie name from the migration report. The fixture
+uses synthetic cookies and selects only the cookies class. The assertion now
+compares expiry without formatting any returned cookie fields; a failing case
+still names its schema version. Both public read-path regressions pass with
+default and all features, and Clippy passes with warnings denied. The downloaded
+`ci-logs/security-37355905924.log:6115` records successful CodeQL upload, while
+`ci-logs/codeql-9f5cada-check.json` preserves the failing aggregate result. The
+corrected head requires a fresh aggregate CodeQL check, not just successful
+workflow jobs.
+
 ## Real runtime acceptance and remaining limits
 
 ```sh

@@ -7,15 +7,18 @@
 mod browser_cookie_cache;
 mod browser_cookie_credentials;
 mod browser_cookie_crypto;
+mod browser_cookie_sources;
 mod browser_cookies;
 pub mod browser_process;
 mod browser_profiles;
+mod browser_sources;
 pub mod cdp_endpoint;
 mod cdp_trace_events;
 pub mod chromiumoxide_adapter;
 mod chromiumoxide_trace;
 pub mod connector;
 pub mod debugging_port;
+mod default_browser;
 mod engine_launch;
 pub mod extension_relay;
 mod launch_executable;
@@ -37,10 +40,19 @@ pub mod system_browser;
 pub mod webdriver;
 
 pub use browser_cookie_cache::clear_browser_cookie_memory_cache;
+pub use browser_cookie_sources::{
+    list_cookie_sources, resolve_import_source, CookieSourceListing, ImportSource,
+};
 pub use browser_cookies::{read_browser_cookies, BrowserCookie, BrowserCookieReadOptions};
 pub use browser_process::BrowserProcess;
 pub use browser_profiles::{
-    list_browser_profiles, BrowserProfile, BrowserProfileOptions, SUPPORTED_COOKIE_BROWSERS,
+    is_default_browser_keyword, list_browser_profiles, resolve_source_browser, BrowserProfile,
+    BrowserProfileOptions, SUPPORTED_COOKIE_BROWSERS,
+};
+pub use browser_sources::{
+    browser_family, browser_ids, browser_sources, default_browser_identifiers, find_browser_source,
+    is_single_profile_browser, normalize_browser_id, resolve_browser_roots, safe_storage_identity,
+    BrowserSource, Environment, SafeStorageIdentity,
 };
 pub use cdp_endpoint::{
     fetch_cdp_version, read_dev_tools_active_port, wait_for_cdp_endpoint, CdpEndpointRequest,
@@ -48,6 +60,10 @@ pub use cdp_endpoint::{
 pub use chromiumoxide_adapter::ChromiumoxidePage;
 pub use connector::{connect_browser, ConnectOptions};
 pub use debugging_port::{assert_fixed_debugging_port, reserve_loopback_port, PortRaceError};
+pub use default_browser::{
+    browser_for_identifier, default_run_command, parse_mac_launch_services_handler,
+    parse_windows_prog_id, resolve_default_browser, RunCommand,
+};
 pub use launcher::{
     launch_browser, Browser, LaunchMode, LaunchOptions, LaunchResult, LAUNCH_MODES,
 };

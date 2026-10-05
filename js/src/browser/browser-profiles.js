@@ -2,28 +2,74 @@ import { access, readdir, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-export const SUPPORTED_COOKIE_BROWSERS = [
-  'chrome',
-  'edge',
-  'brave',
-  'chromium',
-  'firefox',
-];
+import {
+  BROWSER_IDS,
+  browserFamily,
+  isSingleProfileBrowser,
+  normalizeBrowserId,
+  resolveBrowserRoots,
+} from './browser-sources.js';
+import { resolveDefaultBrowser } from './default-browser.js';
+
+/**
+ * Keywords that select the operating-system default browser instead of a named
+ * one, so `browser: 'default'` (or `'auto'`) imports from whatever a person
+ * actually uses. Importing stays opt-in: callers pass this explicitly.
+ */
+const DEFAULT_BROWSER_KEYWORDS = new Set(['default', 'auto']);
+
+/** Whether `browser` asks for the system default rather than a named browser. */
+export function isDefaultBrowserKeyword(browser) {
+  return (
+    typeof browser === 'string' &&
+    DEFAULT_BROWSER_KEYWORDS.has(browser.trim().toLowerCase())
+  );
+}
+
+/**
+ * Resolve a requested browser to a canonical catalogue id, expanding the
+ * `default`/`auto` keywords to the system default browser. Named browsers are
+ * normalized through the catalogue as before.
+ */
+export async function resolveSourceBrowser(
+  browser,
+  { platform = process.platform, environment = process.env, runCommand } = {}
+) {
+  if (!isDefaultBrowserKeyword(browser)) {
+    return normalizeCookieBrowser(browser);
+  }
+  const resolved = await resolveDefaultBrowser({
+    platform,
+    environment,
+    runCommand,
+  });
+  if (!resolved) {
+    throw new Error(
+      'Could not determine the system default browser; pass an explicit browser instead of "default".'
+    );
+  }
+  return resolved;
+}
+
+/**
+ * Every browser profile discovery can read from. Driven by the shared
+ * `browser-sources.json` catalogue, so adding a browser there adds it here.
+ */
+export const SUPPORTED_COOKIE_BROWSERS = BROWSER_IDS;
 
 function platformPath(platform) {
   return platform === 'win32' ? path.win32 : path;
 }
 
+/** Resolve a browser name (id or alias) to its canonical id. */
 export function normalizeCookieBrowser(browser) {
-  const normalized = browser === 'msedge' ? 'edge' : browser;
-  if (!SUPPORTED_COOKIE_BROWSERS.includes(normalized)) {
-    throw new Error(
-      `Unsupported browser: ${browser}. Expected one of ${SUPPORTED_COOKIE_BROWSERS.join(', ')}`
-    );
-  }
-  return normalized;
+  return normalizeBrowserId(browser);
 }
 
+/**
+ * The primary profile root a browser uses on a platform, or `undefined` when
+ * the browser does not run there.
+ */
 export function browserProfileRoot(
   browser,
   {
@@ -32,46 +78,12 @@ export function browserProfileRoot(
     environment = process.env,
   } = {}
 ) {
-  const normalizedBrowser = normalizeCookieBrowser(browser);
-  const pathApi = platformPath(platform);
-  if (platform === 'darwin') {
-    const support = pathApi.join(homeDir, 'Library', 'Application Support');
-    const roots = {
-      brave: pathApi.join(support, 'BraveSoftware', 'Brave-Browser'),
-      chrome: pathApi.join(support, 'Google', 'Chrome'),
-      chromium: pathApi.join(support, 'Chromium'),
-      edge: pathApi.join(support, 'Microsoft Edge'),
-      firefox: pathApi.join(support, 'Firefox'),
-    };
-    return roots[normalizedBrowser];
-  }
-  if (platform === 'win32') {
-    const localAppData =
-      environment.LOCALAPPDATA ?? pathApi.join(homeDir, 'AppData', 'Local');
-    const roamingAppData =
-      environment.APPDATA ?? pathApi.join(homeDir, 'AppData', 'Roaming');
-    const roots = {
-      brave: pathApi.join(
-        localAppData,
-        'BraveSoftware',
-        'Brave-Browser',
-        'User Data'
-      ),
-      chrome: pathApi.join(localAppData, 'Google', 'Chrome', 'User Data'),
-      chromium: pathApi.join(localAppData, 'Chromium', 'User Data'),
-      edge: pathApi.join(localAppData, 'Microsoft', 'Edge', 'User Data'),
-      firefox: pathApi.join(roamingAppData, 'Mozilla', 'Firefox'),
-    };
-    return roots[normalizedBrowser];
-  }
-  const roots = {
-    brave: pathApi.join(homeDir, '.config', 'BraveSoftware', 'Brave-Browser'),
-    chrome: pathApi.join(homeDir, '.config', 'google-chrome'),
-    chromium: pathApi.join(homeDir, '.config', 'chromium'),
-    edge: pathApi.join(homeDir, '.config', 'microsoft-edge'),
-    firefox: pathApi.join(homeDir, '.mozilla', 'firefox'),
-  };
-  return roots[normalizedBrowser];
+  const [root] = resolveBrowserRoots(browser, {
+    platform,
+    homeDir,
+    environment,
+  });
+  return root;
 }
 
 async function pathExists(filePath) {
@@ -100,7 +112,7 @@ function chromiumCookiePaths(profilePath, pathApi = path) {
 
 export async function findCookieDatabase(browser, profilePath, platform) {
   const pathApi = platformPath(platform ?? process.platform);
-  if (normalizeCookieBrowser(browser) === 'firefox') {
+  if (browserFamily(browser) === 'firefox') {
     const candidate = pathApi.join(profilePath, 'cookies.sqlite');
     return (await pathExists(candidate)) ? candidate : null;
   }
@@ -112,11 +124,38 @@ export async function findCookieDatabase(browser, profilePath, platform) {
   return null;
 }
 
+/** Default profile first, then by name. */
+function sortProfiles(profiles) {
+  return profiles.sort(
+    (left, right) =>
+      Number(right.isDefault) - Number(left.isDefault) ||
+      left.name.localeCompare(right.name)
+  );
+}
+
 async function listChromiumProfiles(browser, root, platform) {
   if (!(await pathExists(root))) {
     return [];
   }
   const pathApi = platformPath(platform);
+
+  // Opera-style browsers keep one profile in the root itself rather than in
+  // Default/Profile N subdirectories.
+  if (isSingleProfileBrowser(browser)) {
+    if (!(await findCookieDatabase(browser, root, platform))) {
+      return [];
+    }
+    return [
+      {
+        browser,
+        name: 'Default',
+        displayName: 'Default',
+        path: root,
+        isDefault: true,
+      },
+    ];
+  }
+
   const localState = await readJson(pathApi.join(root, 'Local State'));
   const infoCache = localState.profile?.info_cache ?? {};
   const names = new Set(Object.keys(infoCache));
@@ -150,11 +189,7 @@ async function listChromiumProfiles(browser, root, platform) {
         (names.size === 1 && name === 'Default'),
     });
   }
-  return profiles.sort(
-    (left, right) =>
-      Number(right.isDefault) - Number(left.isDefault) ||
-      left.name.localeCompare(right.name)
-  );
+  return sortProfiles(profiles);
 }
 
 function parseIni(text) {
@@ -176,7 +211,7 @@ function parseIni(text) {
   return sections;
 }
 
-async function listFirefoxProfiles(root, platform) {
+async function listFirefoxProfiles(browser, root, platform) {
   if (!(await pathExists(root))) {
     return [];
   }
@@ -215,23 +250,37 @@ async function listFirefoxProfiles(root, platform) {
       section.IsRelative === '0'
         ? section.Path
         : pathApi.resolve(relativeRoot, section.Path);
-    if (!(await findCookieDatabase('firefox', profilePath, platform))) {
+    if (!(await findCookieDatabase(browser, profilePath, platform))) {
       continue;
     }
     const displayName = section.Name ?? pathApi.basename(profilePath);
     profiles.push({
-      browser: 'firefox',
+      browser,
       name: displayName,
       displayName,
       path: profilePath,
       isDefault: section.Default === '1',
     });
   }
-  return profiles.sort(
-    (left, right) =>
-      Number(right.isDefault) - Number(left.isDefault) ||
-      left.name.localeCompare(right.name)
-  );
+  return sortProfiles(profiles);
+}
+
+async function listProfilesForBrowser(browser, platform, homeDir, environment) {
+  const roots = resolveBrowserRoots(browser, {
+    platform,
+    homeDir,
+    environment,
+  });
+  const family = browserFamily(browser);
+  const profiles = [];
+  for (const root of roots) {
+    profiles.push(
+      ...(family === 'firefox'
+        ? await listFirefoxProfiles(browser, root, platform)
+        : await listChromiumProfiles(browser, root, platform))
+    );
+  }
+  return profiles;
 }
 
 /** Discover cookie-bearing profiles from installed browsers. */
@@ -240,28 +289,45 @@ export async function listBrowserProfiles({
   platform = process.platform,
   homeDir = os.homedir(),
   environment = process.env,
+  runCommand,
 } = {}) {
   const browsers = browser
-    ? [normalizeCookieBrowser(browser)]
-    : SUPPORTED_COOKIE_BROWSERS;
+    ? [
+        await resolveSourceBrowser(browser, {
+          platform,
+          environment,
+          runCommand,
+        }),
+      ]
+    : BROWSER_IDS;
   const profiles = [];
+  // Several Firefox channels (firefox, firefox-developer, firefox-nightly)
+  // share one profile root, so a catalogue-wide scan would otherwise report
+  // the same profile under each id. Keep the first (canonical) browser.
+  const seen = new Set();
   for (const candidate of browsers) {
-    const root = browserProfileRoot(candidate, {
+    for (const profile of await listProfilesForBrowser(
+      candidate,
       platform,
       homeDir,
-      environment,
-    });
-    profiles.push(
-      ...(candidate === 'firefox'
-        ? await listFirefoxProfiles(root, platform)
-        : await listChromiumProfiles(candidate, root, platform))
-    );
+      environment
+    )) {
+      if (seen.has(profile.path)) {
+        continue;
+      }
+      seen.add(profile.path);
+      profiles.push(profile);
+    }
   }
   return profiles;
 }
 
 export async function resolveBrowserProfile(options) {
-  const browser = normalizeCookieBrowser(options.browser);
+  const browser = await resolveSourceBrowser(options.browser, {
+    platform: options.platform,
+    environment: options.environment,
+    runCommand: options.runCommand,
+  });
   const profiles = await listBrowserProfiles({ ...options, browser });
   const requested = options.profile;
   const selected = requested

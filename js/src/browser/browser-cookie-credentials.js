@@ -1,29 +1,20 @@
 import { readFile } from 'node:fs/promises';
 
 import { runCommand as runSubprocess } from '../utilities/subprocess.js';
+import { safeStorageIdentity } from './browser-sources.js';
 
-const SAFE_STORAGE = {
-  brave: {
-    application: 'brave',
-    folder: 'Brave Keys',
-    service: 'Brave Safe Storage',
-  },
-  chrome: {
-    application: 'chrome',
-    folder: 'Chrome Keys',
-    service: 'Chrome Safe Storage',
-  },
-  chromium: {
-    application: 'chromium',
-    folder: 'Chromium Keys',
-    service: 'Chromium Safe Storage',
-  },
-  edge: {
-    application: 'microsoft-edge',
-    folder: 'Microsoft Edge Keys',
-    service: 'Microsoft Edge Safe Storage',
-  },
-};
+/**
+ * The Chromium Safe Storage identity for a browser, from the shared
+ * `browser-sources.json` catalogue. Firefox-family browsers return
+ * `undefined` because they do not use OSCrypt.
+ */
+function safeStorageFor(browser) {
+  try {
+    return safeStorageIdentity(browser);
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Run a credential tool (`security`, `secret-tool`, `kwallet-query`,
@@ -35,7 +26,7 @@ async function runCredentialCommand(command, args, environment) {
 }
 
 async function readLinuxSafeStoragePassword(browser, environment, runCommand) {
-  const identity = SAFE_STORAGE[browser];
+  const identity = safeStorageFor(browser);
   try {
     const password = await runCommand(
       'secret-tool',
@@ -72,7 +63,7 @@ export async function readSafeStoragePassword({
   environment = process.env,
   runCredentialCommand: runCommand = runCredentialCommand,
 }) {
-  const identity = SAFE_STORAGE[browser];
+  const identity = safeStorageFor(browser);
   if (!identity) {
     throw new Error(`No Safe Storage identity is known for ${browser}`);
   }

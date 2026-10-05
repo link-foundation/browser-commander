@@ -21,11 +21,16 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+from browser_commander.browser.browser_cookies import resolve_import_source
 from browser_commander.browser.browser_profiles import (
     browser_profile_root,
-    normalize_cookie_browser,
     resolve_browser_profile,
 )
+from browser_commander.browser.browser_sources import (
+    browser_family,
+    is_single_profile_browser,
+)
+from browser_commander.browser.default_browser import RunCommand
 from browser_commander.browser.migration.bookmarks import migrate_bookmarks
 from browser_commander.browser.migration.cookies import migrate_cookies
 from browser_commander.browser.migration.extensions import migrate_extensions
@@ -57,8 +62,6 @@ ALL_DATA_CLASSES = (
     "extensions",
 )
 
-_CHROMIUM_BROWSERS = frozenset({"chrome", "chromium", "brave", "edge"})
-
 _TARGET_KEY_UNAVAILABLE_DETAIL = (
     "A target encryption key was not available (on Windows the launcher must "
     "generate one and write it into the target Local State); passwords were "
@@ -79,17 +82,20 @@ def _resolve_source_profile_dir(
     home_dir: Path,
     environment: Mapping[str, str],
 ) -> Path:
+    # A Chromium profile lives in a named subdirectory of the user data dir,
+    # except in single-profile browsers (Opera) that keep it in the root; for
+    # Firefox the user data dir already is the profile.
+    is_chromium = browser_family(browser) == "chromium"
+    nests_profiles = is_chromium and not is_single_profile_browser(browser)
     if user_data_dir:
-        # A Chromium profile lives in a named subdirectory; for Firefox the
-        # user data dir already is the profile.
-        if browser in _CHROMIUM_BROWSERS:
-            return Path(user_data_dir) / profile
-        return Path(user_data_dir)
-    if browser in _CHROMIUM_BROWSERS:
+        return Path(user_data_dir) / profile if nests_profiles else Path(user_data_dir)
+    if is_chromium:
         root = browser_profile_root(
             browser, platform=platform, home_dir=home_dir, environment=environment
         )
-        return root / profile
+        if root is None:
+            raise FileNotFoundError(f"{browser} has no profile directory on {platform}")
+        return root / profile if nests_profiles else root
     return resolve_browser_profile(
         browser,
         profile,
@@ -130,7 +136,7 @@ def _resolve_password_keys(
             local_state_path=local_state_path_for_profile(source_profile_dir),
             environment=environment,
         )
-        if browser in _CHROMIUM_BROWSERS
+        if browser_family(browser) == "chromium"
         else None
     )
     return {
@@ -151,6 +157,7 @@ def migrate_profile_sync(
     keys: Mapping[str, Any] | None = None,
     home_dir: PathLike | None = None,
     environment: Mapping[str, str] | None = None,
+    run_command: RunCommand | None = None,
 ) -> dict[str, Any]:
     """Synchronous :func:`migrate_profile`; see it for the arguments."""
 
@@ -165,11 +172,23 @@ def migrate_profile_sync(
     env: Mapping[str, str] = os.environ if environment is None else environment
     target_dir = Path(to)
 
-    browser = normalize_cookie_browser(str(from_["browser"]))
-    profile_value = from_.get("profile")
-    profile = "Default" if profile_value is None else str(profile_value)
     user_data_dir = from_.get("user_data_dir", from_.get("userDataDir"))
-    is_firefox = browser == "firefox"
+    # An explicit user data dir names the source, so only an installed-browser
+    # import is steered towards the profile holding the requested domains.
+    source = resolve_import_source(
+        str(from_["browser"]),
+        domains=None if user_data_dir else domains,
+        platform=platform,
+        home_dir=home,
+        environment=env,
+        run_command=run_command,
+    )
+    browser = source.browser
+    profile_value = from_.get("profile")
+    if profile_value is None:
+        profile_value = source.profile
+    profile = "Default" if profile_value is None else str(profile_value)
+    is_firefox = browser_family(browser) == "firefox"
     source_profile_dir = _resolve_source_profile_dir(
         browser=browser,
         profile=profile,
@@ -191,6 +210,8 @@ def migrate_profile_sync(
         "warnings": [],
         "cookies": [],
     }
+    if source.warning is not None:
+        report["warnings"].append(source.warning)
 
     if "cookies" in selected:
         if is_firefox:
@@ -327,6 +348,7 @@ async def migrate_profile(
     keys: Mapping[str, Any] | None = None,
     home_dir: PathLike | None = None,
     environment: Mapping[str, str] | None = None,
+    run_command: RunCommand | None = None,
 ) -> dict[str, Any]:
     """Migrate a browser profile into a dedicated target profile directory.
 
@@ -344,6 +366,11 @@ async def migrate_profile(
             "resolve_source_key", "primary_password"}``.
         home_dir: Home directory for profile discovery.
         environment: Environment for profile discovery and keyring lookups.
+        run_command: Injected command runner for the default-browser lookup.
+            With ``from_["browser"]`` ``default``/``auto`` and ``domains``, an
+            import falls back from a default browser holding none of them to
+            the installed profile holding the most, adding a
+            ``default-browser-fallback`` warning.
 
     Returns:
         ``{"source": {"browser", "profile", "userDataDir"}, "target": str,
@@ -365,4 +392,5 @@ async def migrate_profile(
         keys=keys,
         home_dir=home_dir,
         environment=environment,
+        run_command=run_command,
     )

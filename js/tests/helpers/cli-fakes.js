@@ -158,6 +158,27 @@ export function createFakeDependencies() {
       { name: 'sid', value: '1', domain: `.${domainFilter}`, path: '/' },
       { name: 'bad', value: '2', domain: `.${domainFilter}`, path: '/' },
     ],
+    listCookieSources: async ({ domains } = {}) => [
+      {
+        browser: 'chrome',
+        profile: 'Default',
+        path: '/home/user/.config/google-chrome/Default',
+        isDefault: true,
+        cookies: 7,
+        byDomain: domains
+          ? Object.fromEntries(domains.map((d) => [d, 1]))
+          : null,
+      },
+    ],
+    listBrowserProfiles: async ({ browser } = {}) => [
+      {
+        browser: browser ?? 'chrome',
+        name: 'Default',
+        displayName: 'Default',
+        path: `/home/user/.config/${browser ?? 'google-chrome'}/Default`,
+        isDefault: true,
+      },
+    ],
     loadEngine: async (name) => ({ default: new FakeEngine(name) }),
     openInUserBrowser: async (url) => ({ opened: url, command: ['open', url] }),
     migrateProfile: async (options) => ({ migrated: {}, options }),

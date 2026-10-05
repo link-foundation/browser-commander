@@ -226,7 +226,7 @@ jobs:
         run: python -m pip install -e ./python
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
         with:
           toolchain: stable
 
@@ -296,7 +296,7 @@ jobs:
       - name: Install browser engines
         working-directory: js
         run: npm ci --ignore-scripts
-      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
         with:
           toolchain: stable
       - name: Cache Cargo build
@@ -339,7 +339,7 @@ jobs:
           python-version: '3.13'
       - name: Install Python test dependencies
         run: python -m pip install -e './python[dev]'
-      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # v1
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
         with:
           toolchain: stable
       - name: Cache Cargo build

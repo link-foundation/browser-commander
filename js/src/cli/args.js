@@ -78,11 +78,17 @@ export const COMMANDS = Object.freeze({
       domain: STRINGS,
     },
   },
+  'cookies sources': {
+    positionals: [],
+    options: { domain: STRINGS },
+  },
   'profile migrate': {
     positionals: [],
     options: {
       from: STRING,
       profile: STRING,
+      'user-data-dir': STRING,
+      'target-browser': STRING,
       to: STRING,
       include: STRING,
       domain: STRINGS,
@@ -91,6 +97,10 @@ export const COMMANDS = Object.freeze({
   'profile snapshot': {
     positionals: [],
     options: { from: STRING, profile: STRING, to: STRING },
+  },
+  'profile sources': {
+    positionals: [],
+    options: { browser: STRING },
   },
   attach: {
     positionals: [],

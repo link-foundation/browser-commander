@@ -118,6 +118,11 @@ pub(crate) fn migrate_cookies(
         if let Some(profile) = source.profile {
             options = options.profile(profile);
         }
+        // Pass the already-resolved profile directory (honouring a custom
+        // userDataDir) so the reader does not re-resolve the default location.
+        if let Some(profile_dir) = source.source_profile_dir {
+            options = options.profile_dir(profile_dir);
+        }
         if let Some(domain) = domain_filter {
             options = options.domain_filter(domain);
         }

@@ -31,6 +31,47 @@ cookie import for Chrome, Edge, Brave, Chromium, and Firefox. Cookie values are
 returned in the automation-engine shape and cached locally with owner-only
 permissions so platform credential stores are touched at most once per TTL.
 
+## Importable Browser Sources
+
+Imports read from a shared, data-driven catalogue
+([`js/src/browser/browser-sources.json`](js/src/browser/browser-sources.json)),
+which the Python and Rust packages ship byte-identical, so the table below
+describes every language at once. The matrix is generated from that catalogue
+by `scripts/generate-browser-support.mjs` and checked in CI; add a browser to
+the JSON and regenerate to change it. `browser: 'default'` (or `'auto'`)
+resolves the operating-system default browser to one of these ids. When a
+migration is scoped to `domains` and the default browser holds no cookies for
+them, it imports from the installed profile that holds the most instead and
+reports which one with a `default-browser-fallback` warning.
+
+<!-- browser-support:generated:begin -->
+
+| Browser           | Family   | macOS | Windows | Linux |
+| ----------------- | -------- | ----- | ------- | ----- |
+| chrome            | Chromium | Yes   | Yes     | Yes   |
+| chrome-beta       | Chromium | Yes   | Yes     | Yes   |
+| chrome-dev        | Chromium | Yes   | Yes     | Yes   |
+| chrome-canary     | Chromium | Yes   | Yes     | —     |
+| chromium          | Chromium | Yes   | Yes     | Yes   |
+| edge              | Chromium | Yes   | Yes     | Yes   |
+| edge-beta         | Chromium | Yes   | Yes     | Yes   |
+| edge-dev          | Chromium | Yes   | Yes     | Yes   |
+| brave             | Chromium | Yes   | Yes     | Yes   |
+| vivaldi           | Chromium | Yes   | Yes     | Yes   |
+| opera             | Chromium | Yes   | Yes     | Yes   |
+| opera-gx          | Chromium | Yes   | Yes     | Yes   |
+| yandex            | Chromium | Yes   | Yes     | Yes   |
+| arc               | Chromium | Yes   | Yes     | —     |
+| firefox           | Firefox  | Yes   | Yes     | Yes   |
+| firefox-developer | Firefox  | Yes   | Yes     | Yes   |
+| firefox-nightly   | Firefox  | Yes   | Yes     | Yes   |
+| librewolf         | Firefox  | Yes   | Yes     | Yes   |
+| waterfox          | Firefox  | Yes   | Yes     | Yes   |
+| zen               | Firefox  | Yes   | Yes     | Yes   |
+| floorp            | Firefox  | Yes   | Yes     | Yes   |
+
+<!-- browser-support:generated:end -->
+
 ## Core Concept: Page State Machine
 
 Browser Commander manages the browser as a state machine with two states:

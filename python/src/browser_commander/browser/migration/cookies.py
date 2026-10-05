@@ -75,6 +75,7 @@ def read_source_cookies(
     *,
     browser: str,
     profile: str | None = None,
+    profile_dir: PathLike | None = None,
     domain_filter: str | None = None,
     ignore_decryption_errors: bool = True,
     platform: str | None = None,
@@ -90,6 +91,7 @@ def read_source_cookies(
         BrowserCookieReadOptions(
             browser=browser,
             profile=profile,
+            profile_dir=None if profile_dir is None else Path(profile_dir),
             domain_filter=domain_filter,
             ignore_decryption_errors=ignore_decryption_errors,
         ),
@@ -130,6 +132,10 @@ def migrate_cookies(
         batch = read_cookies(
             browser=browser,
             profile=profile,
+            # Read from the exact directory the migration resolved (which
+            # honours a custom ``user_data_dir``) instead of re-resolving the
+            # default profile.
+            profile_dir=source_profile_dir,
             domain_filter=domain_filter,
             ignore_decryption_errors=True,
             **dict(reader_options or {}),

@@ -64,6 +64,12 @@ export const DEFAULT_DEPENDENCIES = Object.freeze({
   writeTraceViewer,
   readBrowserCookies: async (options) =>
     (await import('../browser/browser-cookies.js')).readBrowserCookies(options),
+  listCookieSources: async (options) =>
+    (await import('../browser/browser-cookies.js')).listCookieSources(options),
+  listBrowserProfiles: async (options) =>
+    (await import('../browser/browser-profiles.js')).listBrowserProfiles(
+      options
+    ),
   loadEngine: (name) => importOptional(name, `The ${name} engine`),
   openInUserBrowser: async (url) =>
     (

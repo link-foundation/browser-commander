@@ -1,9 +1,10 @@
 import path from 'node:path';
 import os from 'node:os';
 
+import { resolveImportSource } from '../browser-cookies.js';
+import { browserFamily, isSingleProfileBrowser } from '../browser-sources.js';
 import {
   browserProfileRoot,
-  normalizeCookieBrowser,
   resolveBrowserProfile,
 } from '../browser-profiles.js';
 import { migrateBookmarks } from './bookmarks.js';
@@ -48,7 +49,17 @@ export const ALL_DATA_CLASSES = Object.freeze([
   'extensions',
 ]);
 
-const CHROMIUM_BROWSERS = new Set(['chrome', 'chromium', 'brave', 'edge']);
+// Classification is driven by the shared catalogue so every Chromium variant
+// (vivaldi, opera, arc, the chrome/edge channels, …) and every Firefox fork
+// (librewolf, waterfox, zen, floorp, the firefox channels, …) is handled the
+// same way as its canonical engine, not just the original four browsers.
+function isChromiumBrowser(browser) {
+  return browserFamily(browser) === 'chromium';
+}
+
+function isFirefoxBrowser(browser) {
+  return browserFamily(browser) === 'firefox';
+}
 
 function emptyMigrated() {
   return {
@@ -69,21 +80,23 @@ async function resolveSourceProfileDir({
   homeDir,
   environment,
 }) {
+  // A Chromium profile lives in a named subdirectory of the user data dir,
+  // except in single-profile browsers (Opera) that keep it in the root; for
+  // Firefox the userDataDir already points at the profile.
+  const nestsProfiles =
+    isChromiumBrowser(browser) && !isSingleProfileBrowser(browser);
   if (userDataDir) {
-    // For Chromium a profile lives in a named subdirectory; for Firefox the
-    // userDataDir already points at the profile.
-    if (CHROMIUM_BROWSERS.has(browser)) {
-      return path.join(userDataDir, profile ?? 'Default');
-    }
-    return userDataDir;
+    return nestsProfiles
+      ? path.join(userDataDir, profile ?? 'Default')
+      : userDataDir;
   }
-  if (CHROMIUM_BROWSERS.has(browser)) {
+  if (isChromiumBrowser(browser)) {
     const root = browserProfileRoot(browser, {
       platform,
       homeDir,
       environment,
     });
-    return path.join(root, profile ?? 'Default');
+    return nestsProfiles ? path.join(root, profile ?? 'Default') : root;
   }
   const resolved = await resolveBrowserProfile({
     browser,
@@ -120,7 +133,7 @@ async function resolvePasswordKeys({
     platform,
     environment,
   });
-  const resolveSourceKey = CHROMIUM_BROWSERS.has(browser)
+  const resolveSourceKey = isChromiumBrowser(browser)
     ? createSourceKeyResolver({
         browser,
         platform,
@@ -156,6 +169,7 @@ export async function migrateProfile({
   keys,
   homeDir = os.homedir(),
   environment = process.env,
+  runCommand,
 }) {
   if (!from?.browser) {
     throw new TypeError('migrateProfile requires from.browser');
@@ -163,9 +177,19 @@ export async function migrateProfile({
   if (!to) {
     throw new TypeError('migrateProfile requires a target directory (to)');
   }
-  const browser = normalizeCookieBrowser(from.browser);
-  const profile = from.profile ?? 'Default';
-  const isFirefox = browser === 'firefox';
+  // An explicit userDataDir names the source, so only an installed-browser
+  // import is steered towards the profile holding the requested domains.
+  const source = await resolveImportSource({
+    browser: from.browser,
+    domains: from.userDataDir ? undefined : domains,
+    platform,
+    homeDir,
+    environment,
+    runCommand,
+  });
+  const { browser } = source;
+  const profile = from.profile ?? source.profile ?? 'Default';
+  const isFirefox = isFirefoxBrowser(browser);
   const sourceProfileDir = await resolveSourceProfileDir({
     browser,
     profile,
@@ -183,6 +207,9 @@ export async function migrateProfile({
     warnings: [],
     cookies: [],
   };
+  if (source.warning) {
+    report.warnings.push(source.warning);
+  }
 
   if (selected.has('cookies')) {
     if (isFirefox) {

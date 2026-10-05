@@ -12,9 +12,11 @@ use super::super::{
 };
 use super::fixtures::{
     cookie, read_migrated_logins, write_firefox_cookies, write_firefox_logins,
-    write_firefox_places, FirefoxCookieRow, LoginEntry, TempDir,
+    write_firefox_places, write_firefox_profile, write_profile_json, FirefoxCookieRow, LoginEntry,
+    TempDir,
 };
 use crate::browser::browser_cookie_crypto::derive_chromium_cookie_key;
+use crate::browser::browser_sources::Environment;
 
 fn firefox_source(dir: &std::path::Path) -> MigrationSource {
     MigrationSource::new("firefox").user_data_dir(dir)
@@ -186,4 +188,87 @@ fn serialises_entries_with_the_javascript_field_names() {
     );
     let entry = entry.with_detail("why");
     assert_eq!(serde_json::to_value(&entry).unwrap()["detail"], "why");
+}
+
+#[test]
+fn imports_a_domain_from_whichever_installed_browser_holds_it() {
+    let home = TempDir::new("bc-orch-");
+    let target = TempDir::new("bc-orch-");
+    write_firefox_profile(
+        home.path(),
+        &[FirefoxCookieRow {
+            name: "a",
+            value: "1",
+            host: ".other.test",
+            secure: false,
+        }],
+        ".mozilla/firefox",
+        "default-release",
+    );
+    write_firefox_profile(
+        home.path(),
+        &[FirefoxCookieRow {
+            name: "session",
+            value: "s",
+            host: ".github.com",
+            secure: false,
+        }],
+        ".librewolf",
+        "default",
+    );
+
+    let report = migrate_profile(
+        MigrateProfileOptions::new(MigrationSource::new("default"), target.path())
+            .include(["cookies"])
+            .domains(["github.com"])
+            .platform("linux")
+            .home_dir(home.path())
+            .environment(Environment::new())
+            .run_command(Arc::new(|_: &str, _: &[&str], _: &Environment| {
+                Ok("firefox.desktop\n".to_string())
+            })),
+    )
+    .unwrap();
+
+    assert_eq!(report.source.browser, "librewolf");
+    assert_eq!(report.source.profile, "default");
+    assert_eq!(report.migrated.cookies, 1);
+    let reasons: Vec<&str> = report
+        .warnings
+        .iter()
+        .map(|warning| warning.reason.as_str())
+        .collect();
+    assert_eq!(reasons, ["default-browser-fallback"]);
+}
+
+#[test]
+fn reads_a_single_profile_chromium_browser_opera_from_its_root() {
+    let home = TempDir::new("bc-orch-");
+    let target = TempDir::new("bc-orch-");
+    let root = home.path().join(".config").join("opera");
+    std::fs::create_dir_all(&root).unwrap();
+    write_profile_json(
+        &root,
+        "Bookmarks",
+        &json!({
+            "roots": {
+                "bookmark_bar": {
+                    "type": "folder",
+                    "children": [{ "type": "url", "name": "A", "url": "https://a.example/" }],
+                },
+            },
+        }),
+    );
+
+    let report = migrate_profile(
+        MigrateProfileOptions::new(MigrationSource::new("opera"), target.path())
+            .include(["bookmarks"])
+            .platform("linux")
+            .home_dir(home.path())
+            .environment(Environment::new()),
+    )
+    .unwrap();
+
+    assert_eq!(report.migrated.bookmarks, 1);
+    assert!(report.skipped.is_empty());
 }

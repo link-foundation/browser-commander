@@ -191,12 +191,18 @@ async function importCookies(state, params) {
 }
 
 function migrateProfile(state, params) {
+  // The CLI passes the source browser flat (`--from`, `--profile`,
+  // `--user-data-dir`); migrateProfile expects them grouped under `from`.
   return state.dependencies.migrateProfile({
-    from: params.from,
-    profile: params.profile,
+    from: {
+      browser: requireString(params, 'from'),
+      profile: params.profile,
+      userDataDir: params.userDataDir,
+    },
     to: params.to,
     include: params.include,
     domains: params.domains,
+    targetBrowser: params.targetBrowser,
   });
 }
 
@@ -207,6 +213,24 @@ function snapshotProfile(state, params) {
     userDataDir: params.userDataDir,
     to: params.to,
   });
+}
+
+/** List browsers/profiles holding cookies, with optional per-domain counts. */
+async function cookieSources(state, params) {
+  const domains = params.domains;
+  if (domains !== undefined && !Array.isArray(domains)) {
+    throw invalidParams('domains must be an array of strings');
+  }
+  return { sources: await state.dependencies.listCookieSources({ domains }) };
+}
+
+/** List the installed browser profiles (never cookie values). */
+async function profileSources(state, params) {
+  return {
+    profiles: await state.dependencies.listBrowserProfiles({
+      browser: params.browser,
+    }),
+  };
 }
 
 function relayOf(state) {
@@ -298,8 +322,10 @@ export const HIGH_LEVEL_METHODS = Object.freeze({
   'trace.start': traceStart,
   'trace.stop': traceStop,
   'cookies.import': importCookies,
+  'cookies.sources': cookieSources,
   'profile.migrate': migrateProfile,
   'profile.snapshot': snapshotProfile,
+  'profile.sources': profileSources,
   attach,
   'attach.tabs': attachTabs,
   'attach.send': attachSend,

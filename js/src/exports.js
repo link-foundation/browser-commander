@@ -60,8 +60,12 @@ export {
 export { connectBrowser } from './browser/connector.js';
 export {
   listBrowserProfiles,
+  listCookieSources,
   readBrowserCookies,
+  resolveImportSource,
 } from './browser/browser-cookies.js';
+export { resolveDefaultBrowser } from './browser/default-browser.js';
+export { BROWSER_IDS, findBrowserSource } from './browser/browser-sources.js';
 export {
   launchAndConnectRealBrowser,
   launchRealBrowser,

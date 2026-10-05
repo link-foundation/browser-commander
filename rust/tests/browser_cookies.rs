@@ -5,6 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use aes::Aes128;
 use browser_commander::{
     list_browser_profiles, read_browser_cookies, BrowserCookieReadOptions, BrowserProfileOptions,
+    Environment,
 };
 use cbc::cipher::{block_padding::Pkcs7, BlockModeEncrypt, KeyIvInit};
 use pbkdf2::pbkdf2_hmac;
@@ -16,6 +17,8 @@ const CHROME_EPOCH_OFFSET_SECONDS: i64 = 11_644_473_600;
 
 type Aes128CbcEncryptor = cbc::Encryptor<Aes128>;
 
+// The fixtures pass an empty environment: GitHub's Linux runners set
+// XDG_CONFIG_HOME, which would otherwise move Chrome's root out of the fixture home.
 #[test]
 fn discovers_and_reads_installed_browser_cookie_profiles() -> anyhow::Result<()> {
     let temporary_directory = TempDir::new("browser-cookies")?;
@@ -26,7 +29,8 @@ fn discovers_and_reads_installed_browser_cookie_profiles() -> anyhow::Result<()>
     let profiles = list_browser_profiles(
         BrowserProfileOptions::default()
             .home_dir(temporary_directory.path())
-            .platform("linux"),
+            .platform("linux")
+            .environment(Environment::new()),
     )?;
     assert_eq!(profiles.len(), 2);
     assert_eq!(profiles[0].browser, "chrome");
@@ -40,6 +44,7 @@ fn discovers_and_reads_installed_browser_cookie_profiles() -> anyhow::Result<()>
         BrowserCookieReadOptions::new("chrome")
             .home_dir(temporary_directory.path())
             .platform("linux")
+            .environment(Environment::new())
             .domain_filter("example.com")
             .cache(false),
     )?;
@@ -57,6 +62,7 @@ fn discovers_and_reads_installed_browser_cookie_profiles() -> anyhow::Result<()>
         BrowserCookieReadOptions::new("firefox")
             .home_dir(temporary_directory.path())
             .platform("linux")
+            .environment(Environment::new())
             .cache(false),
     )?;
     assert_eq!(firefox_cookies.len(), 1);
@@ -83,6 +89,7 @@ fn partial_result_cache_is_not_reused_for_strict_import() -> anyhow::Result<()> 
         BrowserCookieReadOptions::new("chrome")
             .home_dir(temporary_directory.path())
             .platform("linux")
+            .environment(Environment::new())
             .cache_dir(&cache_dir)
             .ignore_decryption_errors(true),
     )?;
@@ -92,6 +99,7 @@ fn partial_result_cache_is_not_reused_for_strict_import() -> anyhow::Result<()> 
         BrowserCookieReadOptions::new("chrome")
             .home_dir(temporary_directory.path())
             .platform("linux")
+            .environment(Environment::new())
             .cache_dir(cache_dir),
     );
     assert!(strict

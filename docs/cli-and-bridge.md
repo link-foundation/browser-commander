@@ -38,7 +38,9 @@ script. `BROWSER_COMMANDER_NODE` selects the Node executable.
 | `trace stop`              | `--out DIR`                                                                                                                                                                            | Writes the stop marker `DIR/.stop`. `{"trace": DIR, "stopRequested": true}`                                                                                                                                                                   |
 | `trace view <dir>`        | `--out FILE`                                                                                                                                                                           | Renders the static viewer. `{"viewer": FILE}`                                                                                                                                                                                                 |
 | `cookies import`          | `--from BROWSER`, `--profile NAME`, `--domain D` (repeatable), page options                                                                                                            | `{"imported": n, "skipped": [...]}`                                                                                                                                                                                                           |
-| `profile migrate`         | `--from BROWSER`, `--profile NAME`, `--to DIR`, `--include LIST` (comma separated), `--domain D`                                                                                       | the migration report (see below)                                                                                                                                                                                                              |
+| `cookies sources`         | `--domain D` (repeatable)                                                                                                                                                              | Lists the browsers and profiles that hold cookies, with cookie counts (and per-domain counts when `--domain` is given). Names and counts only, never values. `{"sources": [{"browser","profile","path","isDefault","cookies","byDomain"}]}`   |
+| `profile migrate`         | `--from BROWSER` (also `default`/`auto`), `--profile NAME`, `--user-data-dir DIR`, `--target-browser BROWSER`, `--to DIR`, `--include LIST` (comma separated), `--domain D`            | the migration report (see below)                                                                                                                                                                                                              |
+| `profile sources`         | `--browser BROWSER` (also `default`/`auto`)                                                                                                                                            | Lists the installed browser profiles (never cookie values). `{"profiles": [{"browser","name","displayName","path","isDefault"}]}`                                                                                                             |
 | `doctor`                  | `--browser`, `--executable-path`, `--engine`, `--headless`                                                                                                                             | the `measureParity()` report (see below)                                                                                                                                                                                                      |
 | `run <script.json>`       |                                                                                                                                                                                        | Runs a command script. `{"results": [...]}`                                                                                                                                                                                                   |
 | `serve --stdio`           |                                                                                                                                                                                        | JSON-RPC 2.0 on stdin/stdout, one message per line                                                                                                                                                                                            |
@@ -87,7 +89,9 @@ companion JavaScript dispatcher.
 | `page.pdf`                   | `session`, `path?`                                                                         | as `page.screenshot`                                                               |
 | `trace.start` / `trace.stop` | `session`, `out`                                                                           | `{"trace"}`                                                                        |
 | `cookies.import`             | `session`, `from`, `profile`, `domains`                                                    | `{"imported","skipped"}`                                                           |
-| `profile.migrate`            | `from`, `profile`, `to`, `include`, `domains`                                              | migration report                                                                   |
+| `cookies.sources`            | `domains?`                                                                                 | `{"sources":[...]}` (names and counts only, never values)                          |
+| `profile.migrate`            | `from`, `profile`, `userDataDir`, `targetBrowser`, `to`, `include`, `domains`              | migration report                                                                   |
+| `profile.sources`            | `browser?`                                                                                 | `{"profiles":[...]}`                                                               |
 | `open`                       | `url`                                                                                      | `{"opened"}`                                                                       |
 | `doctor`                     | as the command                                                                             | parity report                                                                      |
 | `version`                    |                                                                                            | as the command                                                                     |
@@ -236,6 +240,24 @@ The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):
   "warnings": []
 }
 ```
+
+With `--from default` (or `auto`) and `--domain`, a default browser that holds
+no cookies for those domains is not a dead end: the migration reads the
+installed profile holding the most of them instead (only names and counts are
+checked first, as `cookies sources` does), names it in `source`, and adds a
+warning such as:
+
+```json
+{
+  "type": "source",
+  "item": "librewolf",
+  "reason": "default-browser-fallback",
+  "detail": "The default browser (firefox) holds no cookies for github.com; imported from librewolf instead."
+}
+```
+
+The reason is `default-browser-unknown` when the default browser itself could
+not be determined.
 
 The parity report (`doctor`, `measureParity()`):
 

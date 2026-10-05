@@ -210,12 +210,37 @@ async function profileMigrate(parsed, io) {
     await dispatchOnce(io, 'profile.migrate', {
       from: requireOption(options, 'from', 'profile migrate'),
       profile: options.profile,
+      userDataDir: options.userDataDir,
+      targetBrowser: options.targetBrowser,
       to: options.to,
       include: options.include
         ?.split(',')
         .map((item) => item.trim())
         .filter(Boolean),
       domains: options.domain,
+    })
+  );
+}
+
+/**
+ * List the installed browser profiles that hold cookies (names and counts
+ * only, never values), optionally filtered and counted by `--domain`.
+ */
+async function cookieSources(parsed, io) {
+  const { options } = parsed;
+  return done(
+    await dispatchOnce(io, 'cookies.sources', {
+      domains: options.domain,
+    })
+  );
+}
+
+/** List installed browser profiles, optionally for one `--browser`. */
+async function profileSources(parsed, io) {
+  const { options } = parsed;
+  return done(
+    await dispatchOnce(io, 'profile.sources', {
+      browser: options.browser,
     })
   );
 }
@@ -323,8 +348,10 @@ export const COMMAND_HANDLERS = Object.freeze({
     profile: options.profile,
     domains: options.domain,
   })),
+  'cookies sources': cookieSources,
   'profile migrate': profileMigrate,
   'profile snapshot': profileSnapshot,
+  'profile sources': profileSources,
   attach,
   doctor,
   run,

@@ -24,12 +24,15 @@ import {
   openSqliteDatabase,
   preserveIntegerPrecision,
 } from './browser-cookie-database.js';
+import { browserFamily } from './browser-sources.js';
 import {
   findCookieDatabase,
+  isDefaultBrowserKeyword,
   listBrowserProfiles,
-  normalizeCookieBrowser,
   resolveBrowserProfile,
+  resolveSourceBrowser,
 } from './browser-profiles.js';
+import { resolveDefaultBrowser } from './default-browser.js';
 
 const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600n;
 const MICROSECONDS_PER_SECOND = 1_000_000n;
@@ -266,20 +269,33 @@ export async function readBrowserCookiesWithDependencies(
   if (!options || typeof options !== 'object') {
     throw new TypeError('readBrowserCookies requires an options object');
   }
-  const browser = normalizeCookieBrowser(options.browser);
   const platform = dependencies.platform ?? process.platform;
   const homeDir = dependencies.homeDir ?? os.homedir();
   const environment = dependencies.environment ?? process.env;
-  const profile = await resolveBrowserProfile({
-    browser,
-    profile: options.profile,
+  const runCommand = dependencies.runCommand;
+  const browser = await resolveSourceBrowser(options.browser, {
     platform,
-    homeDir,
     environment,
+    runCommand,
   });
-  const cookiePath = await findCookieDatabase(browser, profile.path, platform);
+  // A caller that already resolved the profile directory (for example a
+  // migration honouring a custom `userDataDir`) passes it as `profileDir`, so
+  // the reader does not re-resolve the default profile location.
+  const profilePath = options.profileDir
+    ? options.profileDir
+    : (
+        await resolveBrowserProfile({
+          browser,
+          profile: options.profile,
+          platform,
+          homeDir,
+          environment,
+          runCommand,
+        })
+      ).path;
+  const cookiePath = await findCookieDatabase(browser, profilePath, platform);
   if (!cookiePath) {
-    throw new Error(`No cookie database exists in ${profile.path}`);
+    throw new Error(`No cookie database exists in ${profilePath}`);
   }
   const cache = normalizeCookieCache(
     options.cache,
@@ -288,7 +304,7 @@ export async function readBrowserCookiesWithDependencies(
   );
   const identity = JSON.stringify({
     browser,
-    profile: profile.path,
+    profile: profilePath,
     domainFilter: options.domainFilter ?? null,
     ignoreDecryptionErrors: options.ignoreDecryptionErrors === true,
   });
@@ -306,7 +322,7 @@ export async function readBrowserCookiesWithDependencies(
   const database = await openCookieDatabase(cookiePath);
   let cookies;
   try {
-    if (browser === 'firefox') {
+    if (browserFamily(browser) === 'firefox') {
       cookies = mapFirefoxCookieRows(
         readFirefoxRows(database, options.domainFilter)
       );
@@ -323,7 +339,7 @@ export async function readBrowserCookiesWithDependencies(
         ignoreDecryptionErrors: options.ignoreDecryptionErrors === true,
         now,
         platform,
-        profile,
+        profile: { path: profilePath },
         readSafeStoragePassword:
           dependencies.readSafeStoragePassword ?? readSafeStoragePassword,
         readWindowsEncryptionKey:
@@ -341,6 +357,198 @@ export async function readBrowserCookiesWithDependencies(
 /** Read cookies from an installed Chrome, Edge, Brave, Chromium, or Firefox. */
 export function readBrowserCookies(options) {
   return readBrowserCookiesWithDependencies(options);
+}
+
+/**
+ * Count cookies in a database by domain, without ever reading a cookie value.
+ * Only host names and row counts are touched, so this is safe to expose for a
+ * "which browser holds cookies for this domain" listing.
+ */
+function countCookiesByDomain(database, family, domains) {
+  const column = family === 'firefox' ? 'host' : 'host_key';
+  const table = family === 'firefox' ? 'moz_cookies' : 'cookies';
+  const countFor = (filter) => {
+    const query = filter
+      ? `SELECT COUNT(*) AS n FROM ${table} WHERE ${column} LIKE ?`
+      : `SELECT COUNT(*) AS n FROM ${table}`;
+    const statement = database.prepare(query);
+    const row = filter ? statement.get(`%${filter}%`) : statement.get();
+    return Number(row?.n ?? 0);
+  };
+  const total = countFor(null);
+  if (!Array.isArray(domains) || domains.length === 0) {
+    return { total, byDomain: null };
+  }
+  const byDomain = {};
+  for (const domain of domains) {
+    byDomain[domain] = countFor(domain);
+  }
+  return { total, byDomain };
+}
+
+/**
+ * List the installed browser profiles that hold cookies, with per-domain
+ * counts when `domains` is given. Values are never read or returned — this is
+ * the data behind the `cookies sources` command.
+ *
+ * @param {Object} [options]
+ * @param {string[]} [options.domains] - Restrict and count by these domains
+ * @param {string} [options.platform=process.platform]
+ * @param {string} [options.homeDir=os.homedir()]
+ * @param {Object} [options.environment=process.env]
+ * @returns {Promise<Array<Object>>} One entry per profile:
+ *   `{browser, profile, path, isDefault, cookies, byDomain}`, plus `error`
+ *   when the database could not be read
+ */
+export async function listCookieSources({
+  domains,
+  platform = process.platform,
+  homeDir = os.homedir(),
+  environment = process.env,
+} = {}) {
+  const profiles = await listBrowserProfiles({
+    platform,
+    homeDir,
+    environment,
+  });
+  const sources = [];
+  for (const profile of profiles) {
+    const cookiePath = await findCookieDatabase(
+      profile.browser,
+      profile.path,
+      platform
+    );
+    if (!cookiePath) {
+      continue;
+    }
+    const family = browserFamily(profile.browser);
+    let counts;
+    let error;
+    let database;
+    try {
+      database = await openCookieDatabase(cookiePath);
+      counts = countCookiesByDomain(database, family, domains);
+    } catch (openError) {
+      error = openError.message;
+    } finally {
+      database?.close();
+    }
+    if (error) {
+      sources.push({
+        browser: profile.browser,
+        profile: profile.name,
+        path: profile.path,
+        isDefault: profile.isDefault,
+        error,
+      });
+      continue;
+    }
+    // When filtering by domain, skip profiles that hold none of them.
+    const matchedCount = counts.byDomain
+      ? Object.values(counts.byDomain).reduce((sum, n) => sum + n, 0)
+      : counts.total;
+    if (Array.isArray(domains) && domains.length > 0 && matchedCount === 0) {
+      continue;
+    }
+    sources.push({
+      browser: profile.browser,
+      profile: profile.name,
+      path: profile.path,
+      isDefault: profile.isDefault,
+      cookies: counts.total,
+      byDomain: counts.byDomain,
+    });
+  }
+  return sources;
+}
+
+function matchedCookies(source) {
+  return Object.values(source.byDomain ?? {}).reduce((sum, n) => sum + n, 0);
+}
+
+/**
+ * Pick the source browser for an import. A `default`/`auto` request scoped to
+ * `domains` uses the system default browser when it holds cookies for them
+ * and otherwise falls back to the installed browser profile holding the most,
+ * so "import my github.com sign-in" works whichever browser has it. Only
+ * names and counts are read (see `listCookieSources`), never cookie values.
+ *
+ * @param {Object} options
+ * @param {string} options.browser - Catalogue id, `default` or `auto`
+ * @param {string[]} [options.domains]
+ * @param {string} [options.platform=process.platform]
+ * @param {string} [options.homeDir=os.homedir()]
+ * @param {Object} [options.environment=process.env]
+ * @param {Function} [options.runCommand] - Injected for default-browser lookup
+ * @returns {Promise<Object>} `{browser, profile, warning}`: `profile` is the
+ *   profile holding the cookies (when one was chosen) and `warning` is a
+ *   migration-report warning explaining a fallback away from the system
+ *   default (reason `default-browser-fallback` or `default-browser-unknown`),
+ *   or `null`
+ */
+export async function resolveImportSource({
+  browser,
+  domains,
+  platform = process.platform,
+  homeDir = os.homedir(),
+  environment = process.env,
+  runCommand,
+}) {
+  if (
+    !isDefaultBrowserKeyword(browser) ||
+    !Array.isArray(domains) ||
+    domains.length === 0
+  ) {
+    return {
+      browser: await resolveSourceBrowser(browser, {
+        platform,
+        environment,
+        runCommand,
+      }),
+      profile: undefined,
+      warning: null,
+    };
+  }
+  const systemDefault = await resolveDefaultBrowser({
+    platform,
+    environment,
+    runCommand,
+  });
+  const holders = (
+    await listCookieSources({ domains, platform, homeDir, environment })
+  ).filter((source) => !source.error);
+  const fromDefault = holders.filter(
+    (source) => source.browser === systemDefault
+  );
+  const candidates = fromDefault.length > 0 ? fromDefault : holders;
+  if (candidates.length === 0) {
+    if (!systemDefault) {
+      throw new Error(
+        `Could not determine the system default browser, and no installed browser holds cookies for ${domains.join(', ')}.`
+      );
+    }
+    return { browser: systemDefault, profile: undefined, warning: null };
+  }
+  // The first profile with the most matching cookies; listing order breaks
+  // ties, so a browser's default profile wins over its others.
+  const best = candidates.reduce((chosen, source) =>
+    matchedCookies(source) > matchedCookies(chosen) ? source : chosen
+  );
+  let warning = null;
+  if (best.browser !== systemDefault) {
+    const reason = systemDefault
+      ? `The default browser (${systemDefault}) holds no cookies for`
+      : 'Could not determine the default browser to read cookies for';
+    warning = {
+      type: 'source',
+      item: best.browser,
+      reason: systemDefault
+        ? 'default-browser-fallback'
+        : 'default-browser-unknown',
+      detail: `${reason} ${domains.join(', ')}; imported from ${best.browser} instead.`,
+    };
+  }
+  return { browser: best.browser, profile: best.profile, warning };
 }
 
 export {

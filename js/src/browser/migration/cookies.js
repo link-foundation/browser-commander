@@ -116,6 +116,9 @@ export async function migrateCookies({
     const batch = await readCookies({
       browser,
       profile,
+      // Read from the exact directory the migration resolved (which honours a
+      // custom `userDataDir`) instead of re-resolving the default profile.
+      profileDir: sourceProfileDir,
       domainFilter: domainFilter ?? undefined,
       ignoreDecryptionErrors: true,
       ...readerOptions,

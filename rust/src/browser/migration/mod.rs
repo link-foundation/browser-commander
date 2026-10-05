@@ -31,11 +31,16 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
+use crate::browser::browser_cookie_sources::resolve_import_source;
 use crate::browser::browser_cookies::BrowserCookie;
 use crate::browser::browser_profiles::{
-    browser_profile_root, current_platform, normalize_cookie_browser, normalize_platform,
-    resolve_browser_profile, BrowserProfileOptions,
+    browser_profile_root_in, current_platform, normalize_platform, resolve_browser_profile,
+    BrowserProfileOptions,
 };
+use crate::browser::browser_sources::{
+    browser_family, current_environment, is_single_profile_browser, Environment,
+};
+use crate::browser::default_browser::RunCommand;
 
 pub use cookies::{CookieReader, DBSC_BOUND_COOKIE_NAMES};
 pub use firefox_nss::PrimaryPasswordError;
@@ -53,8 +58,6 @@ pub const ALL_DATA_CLASSES: [&str; 6] = [
     "preferences",
     "extensions",
 ];
-
-const CHROMIUM_BROWSERS: [&str; 4] = ["chrome", "chromium", "brave", "edge"];
 
 const TARGET_KEY_UNAVAILABLE_DETAIL: &str = "A target encryption key was not available (on Windows the launcher must generate one and write it into the target Local State); passwords were not migrated.";
 
@@ -290,6 +293,13 @@ pub struct MigrateProfileOptions {
     pub keystore: KeystoreHooks,
     /// Installed-browser cookie reader for Chromium sources.
     pub read_cookies: CookieReader,
+    /// Environment used to expand profile-root templates.
+    pub environment: Environment,
+    /// Command runner for the default-browser lookup. With `from.browser`
+    /// `default`/`auto` and `domains`, an import falls back from a default
+    /// browser holding none of them to the installed profile holding the most,
+    /// adding a `default-browser-fallback` warning.
+    pub run_command: Option<RunCommand>,
 }
 
 impl std::fmt::Debug for MigrateProfileOptions {
@@ -325,6 +335,8 @@ impl MigrateProfileOptions {
             home_dir: dirs::home_dir().unwrap_or_else(|| PathBuf::from(".")),
             keystore: KeystoreHooks::default(),
             read_cookies: cookies::default_cookie_reader(),
+            environment: current_environment(),
+            run_command: None,
         }
     }
 
@@ -391,10 +403,32 @@ impl MigrateProfileOptions {
         self.read_cookies = read_cookies;
         self
     }
+
+    /// Override the environment used to expand profile-root templates.
+    #[must_use]
+    pub fn environment(mut self, environment: Environment) -> Self {
+        self.environment = environment;
+        self
+    }
+
+    /// Inject the default-browser lookup's command runner.
+    #[must_use]
+    pub fn run_command(mut self, run_command: RunCommand) -> Self {
+        self.run_command = Some(run_command);
+        self
+    }
 }
 
 fn is_chromium(browser: &str) -> bool {
-    CHROMIUM_BROWSERS.contains(&browser)
+    browser_family(browser)
+        .map(|family| family == "chromium")
+        .unwrap_or(false)
+}
+
+fn is_firefox_browser(browser: &str) -> bool {
+    browser_family(browser)
+        .map(|family| family == "firefox")
+        .unwrap_or(false)
 }
 
 fn resolve_source_profile_dir(
@@ -402,23 +436,32 @@ fn resolve_source_profile_dir(
     profile: &str,
     options: &MigrateProfileOptions,
 ) -> Result<PathBuf> {
-    if let Some(user_data_dir) = &options.from.user_data_dir {
-        // For Chromium a profile lives in a named subdirectory; for Firefox the
-        // user data directory already points at the profile.
-        return Ok(if is_chromium(browser) {
-            user_data_dir.join(profile)
+    // A Chromium profile lives in a named subdirectory of the user data dir,
+    // except in single-profile browsers (Opera) that keep it in the root; for
+    // Firefox the user data directory already points at the profile.
+    let nests_profiles = is_chromium(browser) && !is_single_profile_browser(browser)?;
+    let in_root = |root: PathBuf| {
+        if nests_profiles {
+            root.join(profile)
         } else {
-            user_data_dir.clone()
-        });
+            root
+        }
+    };
+    if let Some(user_data_dir) = &options.from.user_data_dir {
+        return Ok(in_root(user_data_dir.clone()));
     }
     if is_chromium(browser) {
-        return Ok(
-            browser_profile_root(browser, &options.platform, &options.home_dir)?.join(profile),
-        );
+        return Ok(in_root(browser_profile_root_in(
+            browser,
+            &options.platform,
+            &options.home_dir,
+            &options.environment,
+        )?));
     }
     let profile_options = BrowserProfileOptions::default()
         .home_dir(&options.home_dir)
-        .platform(&options.platform);
+        .platform(&options.platform)
+        .environment(options.environment.clone());
     Ok(resolve_browser_profile(browser, Some(profile), &profile_options)?.path)
 }
 
@@ -463,7 +506,7 @@ fn migrate_passwords_class(
     source_profile_dir: &Path,
     report: &mut MigrationReport,
 ) -> Result<()> {
-    let is_firefox = browser == "firefox";
+    let is_firefox = is_firefox_browser(browser);
     let target_browser = options.target_browser.clone().unwrap_or_else(|| {
         if is_firefox {
             "chrome".into()
@@ -535,13 +578,29 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
     if options.to.as_os_str().is_empty() {
         return Err(anyhow!("migrate_profile requires a target directory (to)"));
     }
-    let browser = normalize_cookie_browser(&options.from.browser)?.to_string();
+    // An explicit user data dir names the source, so only an installed-browser
+    // import is steered towards the profile holding the requested domains.
+    let no_domains: &[String] = &[];
+    let source = resolve_import_source(
+        &options.from.browser,
+        if options.from.user_data_dir.is_some() {
+            no_domains
+        } else {
+            &options.domains
+        },
+        &options.platform,
+        &options.home_dir,
+        &options.environment,
+        options.run_command.as_ref(),
+    )?;
+    let browser = source.browser;
     let profile = options
         .from
         .profile
         .clone()
+        .or(source.profile)
         .unwrap_or_else(|| "Default".to_string());
-    let is_firefox = browser == "firefox";
+    let is_firefox = is_firefox_browser(&browser);
     let source_profile_dir = resolve_source_profile_dir(&browser, &profile, &options)?;
     let selected = |name: &str| options.include.iter().any(|entry| entry == name);
     let mut report = MigrationReport {
@@ -553,7 +612,7 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
         target: options.to.clone(),
         migrated: MigratedCounts::default(),
         skipped: Vec::new(),
-        warnings: Vec::new(),
+        warnings: source.warning.into_iter().collect(),
         cookies: Vec::new(),
     };
     let target = options.to.as_path();

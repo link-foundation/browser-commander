@@ -1,12 +1,15 @@
 //! Import cookies from installed Chrome-family and Firefox profiles.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
 use rusqlite::{params, Connection, OpenFlags};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
+
+use super::browser_sources::{browser_family, Environment};
+use super::default_browser::RunCommand;
 
 use super::browser_cookie_cache::{
     get_cached_credential, normalize_cookie_cache, read_cookie_result_cache,
@@ -20,8 +23,7 @@ use super::browser_cookie_crypto::{
     derive_chromium_cookie_key, firefox_same_site,
 };
 use super::browser_profiles::{
-    find_cookie_database, normalize_cookie_browser, resolve_browser_profile, BrowserProfile,
-    BrowserProfileOptions,
+    find_cookie_database, resolve_browser_profile, resolve_source_browser, BrowserProfileOptions,
 };
 
 const CHROME_EPOCH_OFFSET_SECONDS: i64 = 11_644_473_600;
@@ -49,12 +51,16 @@ pub struct BrowserCookie {
 }
 
 /// Options for [`read_browser_cookies`].
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BrowserCookieReadOptions {
-    /// Installed browser name.
+    /// Installed browser name, or `default`/`auto` for the system default.
     pub browser: String,
     /// Optional on-disk or display profile name.
     pub profile: Option<String>,
+    /// Explicit profile directory. When set, the reader uses it directly
+    /// instead of resolving the default profile location (for example a
+    /// migration honouring a custom `userDataDir`).
+    pub profile_dir: Option<PathBuf>,
     /// Optional domain substring used by the SQLite query.
     pub domain_filter: Option<String>,
     /// Enable the owner-only decrypted-result and derived-key cache.
@@ -71,6 +77,32 @@ pub struct BrowserCookieReadOptions {
     pub home_dir: PathBuf,
     /// Platform convention (`linux`, `darwin`, or `win32`).
     pub platform: String,
+    /// Environment used to expand profile-root templates (`%APPDATA%`, ...).
+    pub environment: Environment,
+    /// Command runner used to resolve the system default browser, injectable
+    /// for deterministic tests. `None` uses a real subprocess.
+    pub run_command: Option<RunCommand>,
+}
+
+impl std::fmt::Debug for BrowserCookieReadOptions {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("BrowserCookieReadOptions")
+            .field("browser", &self.browser)
+            .field("profile", &self.profile)
+            .field("profile_dir", &self.profile_dir)
+            .field("domain_filter", &self.domain_filter)
+            .field("cache", &self.cache)
+            .field("cache_dir", &self.cache_dir)
+            .field("ttl_minutes", &self.ttl_minutes)
+            .field("refresh", &self.refresh)
+            .field("ignore_decryption_errors", &self.ignore_decryption_errors)
+            .field("home_dir", &self.home_dir)
+            .field("platform", &self.platform)
+            .field("environment", &self.environment)
+            .field("run_command", &self.run_command.as_ref().map(|_| "<fn>"))
+            .finish()
+    }
 }
 
 impl BrowserCookieReadOptions {
@@ -79,6 +111,7 @@ impl BrowserCookieReadOptions {
         Self {
             browser: browser.into(),
             profile: None,
+            profile_dir: None,
             domain_filter: None,
             cache: true,
             cache_dir: None,
@@ -87,12 +120,33 @@ impl BrowserCookieReadOptions {
             ignore_decryption_errors: false,
             home_dir: dirs::home_dir().unwrap_or_else(|| PathBuf::from(".")),
             platform: super::browser_profiles::current_platform().to_string(),
+            environment: super::browser_sources::current_environment(),
+            run_command: None,
         }
     }
 
     /// Select a named installed-browser profile.
     pub fn profile(mut self, profile: impl Into<String>) -> Self {
         self.profile = Some(profile.into());
+        self
+    }
+
+    /// Read from an explicit profile directory instead of resolving the
+    /// default profile location for the browser.
+    pub fn profile_dir(mut self, profile_dir: impl Into<PathBuf>) -> Self {
+        self.profile_dir = Some(profile_dir.into());
+        self
+    }
+
+    /// Override the environment used when expanding profile-root templates.
+    pub fn environment(mut self, environment: Environment) -> Self {
+        self.environment = environment;
+        self
+    }
+
+    /// Inject the command runner used to resolve the system default browser.
+    pub fn run_command(mut self, run_command: RunCommand) -> Self {
+        self.run_command = Some(run_command);
         self
     }
 
@@ -185,7 +239,7 @@ impl OperationKeyCache {
     }
 }
 
-fn open_cookie_database(path: &std::path::Path) -> Result<Connection> {
+pub(crate) fn open_cookie_database(path: &std::path::Path) -> Result<Connection> {
     Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)
         .with_context(|| format!("Could not open browser cookie database: {}", path.display()))
 }
@@ -291,7 +345,7 @@ fn chromium_key_for_prefix(
     prefix: &[u8],
     browser: &str,
     platform: &str,
-    profile: &BrowserProfile,
+    profile_path: &Path,
     refresh: bool,
     state: &mut CookieDecryptionState<'_>,
 ) -> Result<Vec<u8>> {
@@ -327,10 +381,9 @@ fn chromium_key_for_prefix(
                 credential_metadata(browser, platform, "dpapi"),
                 || {
                     read_windows_encryption_key(
-                        &profile
-                            .path
+                        &profile_path
                             .parent()
-                            .unwrap_or(&profile.path)
+                            .unwrap_or(profile_path)
                             .join("Local State"),
                     )
                 },
@@ -355,7 +408,7 @@ fn decrypt_chromium_row(
     database_version: i64,
     browser: &str,
     platform: &str,
-    profile: &BrowserProfile,
+    profile_path: &Path,
     refresh: bool,
     state: &mut CookieDecryptionState<'_>,
 ) -> Result<BrowserCookie> {
@@ -375,7 +428,8 @@ fn decrypt_chromium_row(
                 database_version,
             )?
         } else {
-            let key = chromium_key_for_prefix(prefix, browser, platform, profile, refresh, state)?;
+            let key =
+                chromium_key_for_prefix(prefix, browser, platform, profile_path, refresh, state)?;
             decrypt_chromium_cookie(
                 &row.encrypted_value,
                 &row.host,
@@ -403,7 +457,7 @@ fn decrypt_chromium_row(
 
 fn read_chromium_cookies(
     database: &Connection,
-    profile: &BrowserProfile,
+    profile_path: &Path,
     options: &BrowserCookieReadOptions,
     cache: &NormalizedCookieCache,
 ) -> Result<Vec<BrowserCookie>> {
@@ -421,7 +475,7 @@ fn read_chromium_cookies(
             version,
             &options.browser,
             &options.platform,
-            profile,
+            profile_path,
             options.refresh,
             &mut state,
         ) {
@@ -439,15 +493,32 @@ fn read_chromium_cookies(
 
 /// Read cookies from an installed Chrome, Edge, Brave, Chromium, or Firefox profile.
 pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec<BrowserCookie>> {
-    options.browser = normalize_cookie_browser(&options.browser)?.to_string();
-    let discovery = BrowserProfileOptions::default()
-        .browser(&options.browser)
-        .home_dir(&options.home_dir)
-        .platform(&options.platform);
-    let profile =
-        resolve_browser_profile(&options.browser, options.profile.as_deref(), &discovery)?;
-    let cookie_path = find_cookie_database(&options.browser, &profile.path)
-        .ok_or_else(|| anyhow!("No cookie database exists in {}", profile.path.display()))?;
+    let browser = resolve_source_browser(
+        &options.browser,
+        &options.platform,
+        &options.environment,
+        options.run_command.as_ref(),
+    )?;
+    options.browser = browser.to_string();
+    // A caller that already resolved the profile directory (for example a
+    // migration honouring a custom `userDataDir`) passes it as `profile_dir`,
+    // so the reader does not re-resolve the default profile location.
+    let profile_path = match &options.profile_dir {
+        Some(directory) => directory.clone(),
+        None => {
+            let mut discovery = BrowserProfileOptions::default()
+                .browser(browser)
+                .home_dir(&options.home_dir)
+                .platform(&options.platform)
+                .environment(options.environment.clone());
+            if let Some(run_command) = options.run_command.clone() {
+                discovery = discovery.run_command(run_command);
+            }
+            resolve_browser_profile(browser, options.profile.as_deref(), &discovery)?.path
+        }
+    };
+    let cookie_path = find_cookie_database(browser, &profile_path)
+        .ok_or_else(|| anyhow!("No cookie database exists in {}", profile_path.display()))?;
     let cache = normalize_cookie_cache(
         options.cache,
         options.cache_dir.as_deref(),
@@ -456,7 +527,7 @@ pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec
     )?;
     let identity = serde_json::to_string(&json!({
         "browser": options.browser,
-        "profile": profile.path,
+        "profile": profile_path,
         "domainFilter": options.domain_filter,
         "ignoreDecryptionErrors": options.ignore_decryption_errors,
     }))?;
@@ -469,10 +540,10 @@ pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec
     }
 
     let database = open_cookie_database(&cookie_path)?;
-    let cookies = if options.browser == "firefox" {
+    let cookies = if browser_family(browser)? == "firefox" {
         read_firefox_cookies(&database, options.domain_filter.as_deref())?
     } else {
-        read_chromium_cookies(&database, &profile, &options, &cache)?
+        read_chromium_cookies(&database, &profile_path, &options, &cache)?
     };
     let serialized = cookies
         .iter()
@@ -485,6 +556,40 @@ pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::browser::browser_cookie_sources::tests::{
+        write_firefox_cookies, FirefoxCookie, TempDir,
+    };
+    use std::fs;
+
+    #[test]
+    fn honours_an_explicit_profile_dir_over_the_default_profile_root() {
+        let temp = TempDir::new("bc-profiledir-");
+        // A custom userDataDir that is NOT under the default profile root.
+        let custom_profile = temp.path().join("custom").join("profile");
+        write_firefox_cookies(
+            &custom_profile,
+            &[FirefoxCookie {
+                name: "sid",
+                value: "abc",
+                host: ".example.com",
+            }],
+        );
+        // An empty home ensures a reader that ignored profile_dir finds nothing.
+        let empty_home = temp.path().join("empty-home");
+        fs::create_dir_all(&empty_home).expect("empty home");
+
+        let cookies = read_browser_cookies(
+            BrowserCookieReadOptions::new("firefox")
+                .profile_dir(&custom_profile)
+                .platform("linux")
+                .home_dir(&empty_home)
+                .cache(false),
+        )
+        .unwrap();
+        assert_eq!(cookies.len(), 1);
+        assert_eq!(cookies[0].name, "sid");
+        assert_eq!(cookies[0].domain, ".example.com");
+    }
 
     #[test]
     fn operation_key_cache_reads_a_refreshed_credential_once() -> Result<()> {

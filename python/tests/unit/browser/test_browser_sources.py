@@ -63,9 +63,9 @@ def test_classifies_browser_families() -> None:
 
 
 def test_expands_per_platform_roots_with_the_home_directory() -> None:
-    assert resolve_browser_roots("chrome", platform="linux", home_dir="/home/me") == [
-        "/home/me/.config/google-chrome"
-    ]
+    assert resolve_browser_roots(
+        "chrome", platform="linux", home_dir="/home/me", environment={}
+    ) == ["/home/me/.config/google-chrome"]
     assert resolve_browser_roots(
         "firefox", platform="darwin", home_dir="/Users/me"
     ) == ["/Users/me/Library/Application Support/Firefox"]

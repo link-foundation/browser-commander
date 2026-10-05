@@ -44,7 +44,9 @@ def test_reads_an_opera_single_profile_layout_from_the_root_itself(
     cookie_path.parent.mkdir(parents=True)
     cookie_path.write_bytes(b"SQLite format 3\x00")
 
-    profiles = list_browser_profiles("opera", platform="linux", home_dir=tmp_path)
+    profiles = list_browser_profiles(
+        "opera", platform="linux", home_dir=tmp_path, environment={}
+    )
 
     assert profiles == [
         BrowserProfile(

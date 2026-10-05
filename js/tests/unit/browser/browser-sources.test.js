@@ -62,7 +62,11 @@ describe('browser-sources catalogue', () => {
 
   it('expands per-platform roots with the home directory', () => {
     assert.deepEqual(
-      resolveBrowserRoots('chrome', { platform: 'linux', homeDir: '/home/me' }),
+      resolveBrowserRoots('chrome', {
+        platform: 'linux',
+        homeDir: '/home/me',
+        environment: {},
+      }),
       ['/home/me/.config/google-chrome']
     );
     assert.deepEqual(

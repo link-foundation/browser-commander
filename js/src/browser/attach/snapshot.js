@@ -10,13 +10,11 @@ import {
 import os from 'node:os';
 import path from 'node:path';
 
-import BetterSqlite3 from 'better-sqlite3';
-
+import { browserFamily } from '../browser-sources.js';
 import {
   browserProfileRoot,
   normalizeCookieBrowser,
 } from '../browser-profiles.js';
-import { pathExists } from '../migration/fs-utils.js';
 import { withDatabaseSnapshot } from '../migration/sqlite-snapshot.js';
 import {
   createTemporaryUserDataDir,
@@ -171,28 +169,6 @@ async function prepareTarget(to, sourceRoot, profile) {
   return to;
 }
 
-/**
- * Copy a database snapshot to its place in the target. The Online Backup API
- * snapshot is a single self-contained file; the locked-file fallback is a copy
- * with its `-wal`/`-journal` sidecars, which is folded into one file with
- * another backup (of the temporary copy, never of the source).
- */
-async function copyDatabase(snapshotPath, destination) {
-  const hasSidecar =
-    (await pathExists(`${snapshotPath}-wal`)) ||
-    (await pathExists(`${snapshotPath}-journal`));
-  if (!hasSidecar) {
-    await copyFile(snapshotPath, destination);
-    return;
-  }
-  const database = new BetterSqlite3(snapshotPath, { fileMustExist: true });
-  try {
-    await database.backup(destination);
-  } finally {
-    database.close();
-  }
-}
-
 /** Copy the directory tree below one entry, recording the outcome. */
 class SnapshotCopier {
   constructor(sourceRoot, target) {
@@ -213,7 +189,7 @@ class SnapshotCopier {
       if (await isSqliteFile(source)) {
         await withDatabaseSnapshot({
           sourcePath: source,
-          read: (snapshotPath) => copyDatabase(snapshotPath, destination),
+          read: (snapshotPath) => copyFile(snapshotPath, destination),
         });
         this.copied.databases += 1;
       } else {
@@ -311,9 +287,9 @@ export async function snapshotUserDataDir({
     throw new TypeError('snapshotUserDataDir requires a browser');
   }
   const normalizedBrowser = normalizeCookieBrowser(browser);
-  if (normalizedBrowser === 'firefox') {
+  if (browserFamily(normalizedBrowser) !== 'chromium') {
     throw new Error(
-      'A profile snapshot is only supported for Chromium-family browsers (chrome, chromium, edge, brave): Firefox cannot be driven over CDP by this launcher'
+      'A profile snapshot is only supported for Chromium-family browsers; this launcher uses CDP'
     );
   }
   assertProfileName(profile);

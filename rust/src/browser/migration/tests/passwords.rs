@@ -6,7 +6,7 @@ use std::sync::Arc;
 use rusqlite::{params, Connection};
 
 use super::super::chromium_crypto::encrypt_chromium_value;
-use super::super::passwords::{migrate_passwords, PasswordKeys};
+use super::super::passwords::{migrate_passwords, migrate_passwords_filtered, PasswordKeys};
 use super::super::{ClassOutcome, SourceKeyResolver};
 use super::fixtures::{
     assert_nothing_migrated, assert_source_unchanged, read_migrated_logins, TempDir,
@@ -17,6 +17,51 @@ struct LoginRow {
     origin_url: &'static str,
     username: &'static str,
     password_value: Vec<u8>,
+}
+
+#[test]
+fn filters_domains_and_removes_undecryptable_ciphertext_from_target() {
+    let source = TempDir::new("bc-password-domain-");
+    let target = TempDir::new("bc-password-domain-");
+    let key = derive_chromium_cookie_key("source", "linux").unwrap();
+    write_login_data(
+        source.path(),
+        &[
+            encrypted_login("https://github.com", "selected", "secret", &key, "v11"),
+            LoginRow {
+                origin_url: "https://notgithub.com",
+                username: "unrelated",
+                password_value: b"v20unreadable".to_vec(),
+            },
+            LoginRow {
+                origin_url: "https://locked.github.com",
+                username: "locked",
+                password_value: b"v20unreadable".to_vec(),
+            },
+        ],
+    );
+    let source_key = key.clone();
+    let resolver: SourceKeyResolver = Arc::new(move |_| Ok(source_key.clone()));
+    let report = assert_source_unchanged(&source.path().join("Login Data"), || {
+        migrate_passwords_filtered(
+            source.path(),
+            target.path(),
+            &PasswordKeys {
+                platform: "linux",
+                resolve_source_key: &resolver,
+                target_key: &key,
+                target_prefix: Some("v11"),
+            },
+            &["github.com".into()],
+        )
+        .unwrap()
+    });
+    assert_eq!(report.migrated, 1);
+    assert_eq!(read_migrated_logins(target.path(), &key).len(), 1);
+    let bytes = std::fs::read(target.path().join("Login Data")).unwrap();
+    assert!(!bytes
+        .windows(b"v20unreadable".len())
+        .any(|part| part == b"v20unreadable"));
 }
 
 fn write_login_data(dir: &Path, rows: &[LoginRow]) {

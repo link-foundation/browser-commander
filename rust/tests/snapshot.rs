@@ -124,12 +124,18 @@ async fn locked_database_snapshot_does_not_wait_for_browser_exit() -> anyhow::Re
     )?;
     let elapsed = started.elapsed();
     lock.join().unwrap();
-    let copied = Connection::open(report.target.join("Default/History"))?;
-    let count: i64 = copied.query_row("SELECT count(*) FROM visits", [], |r| r.get(0))?;
-    drop(copied);
+    assert_eq!(report.copied.databases, 0);
+    assert!(!report.target.join("Default/History").exists());
+    assert!(report
+        .skipped
+        .iter()
+        .any(|entry| entry.item == "Default/History"
+            && entry.reason == "unreadable"
+            && entry.detail.as_deref().is_some_and(|detail| detail
+                .contains("Consistent SQLite snapshot unavailable")
+                && detail.contains("close the source browser"))));
     remove_user_data_dir(&report.target).await?;
     remove_user_data_dir(&source).await?;
-    assert_eq!(count, 1);
     assert!(
         elapsed < Duration::from_secs(3),
         "snapshot waited {elapsed:?} for the browser lock"

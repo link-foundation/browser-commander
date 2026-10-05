@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { mkdir, symlink } from 'node:fs/promises';
+import path from 'node:path';
+import { useTempDirectories } from '../../helpers/temp-directory.js';
 import {
   BROWSER_SOURCES,
   resolveBrowserRoots,
@@ -9,7 +12,27 @@ import {
   CHANNEL_EXECUTABLE_NAMES,
 } from '../../../src/browser/system-browser.js';
 
+const temporary = useTempDirectories('bc-catalogue-protection-');
+
 describe('catalogue launch and protection (#121)', () => {
+  it('protects a new profile beneath a symlink to a default root', async () => {
+    const homeDir = await temporary();
+    const options = { homeDir, environment: {} };
+    const root = resolveBrowserRoots('chrome', options)[0];
+    await mkdir(root, { recursive: true });
+    const alias = path.join(homeDir, 'profile-alias');
+    await symlink(
+      root,
+      alias,
+      process.platform === 'win32' ? 'junction' : 'dir'
+    );
+    assert.throws(
+      () =>
+        assertDedicatedUserDataDir(path.join(alias, 'new-profile'), options),
+      /dedicated.*default profile/
+    );
+  });
+
   it('offers launch names for every supported Chromium source and alias', () => {
     for (const browser of BROWSER_SOURCES.filter(
       (entry) => entry.family === 'chromium'

@@ -97,6 +97,21 @@ describe('migrateProfile', () => {
     await assert.rejects(() => readFile(path.join(target, 'Login Data')));
   });
 
+  it('reports unsupported Firefox preferences and extensions explicitly', async () => {
+    const report = await migrateProfile({
+      from: { browser: 'firefox', userDataDir: await makeTempDir() },
+      to: await makeTempDir(),
+      include: ['preferences', 'extensions'],
+    });
+    assert.deepEqual(
+      report.skipped.map(({ type, reason }) => [type, reason]),
+      [
+        ['preferences', 'firefox-class-not-supported'],
+        ['extensions', 'firefox-class-not-supported'],
+      ]
+    );
+  });
+
   it('skips passwords with a warning when no target key is available on Windows', async () => {
     const source = await makeTempDir();
     const target = await makeTempDir();

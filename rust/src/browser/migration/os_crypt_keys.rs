@@ -141,10 +141,4 @@ pub(crate) fn resolve_target_key(
     ))
 }
 
-/// The `Local State` path next to a profile directory.
-pub(crate) fn local_state_path_for_profile(profile_dir: &Path) -> PathBuf {
-    profile_dir
-        .parent()
-        .unwrap_or_else(|| Path::new(""))
-        .join("Local State")
-}
+pub(crate) use crate::browser::browser_profile_files::local_state_path_for_profile;

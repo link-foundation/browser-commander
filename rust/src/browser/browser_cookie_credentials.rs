@@ -8,39 +8,12 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use serde_json::Value;
 
+use super::browser_sources::{safe_storage_identity as catalogue_identity, SafeStorageIdentity};
 use crate::utilities::subprocess::{run_command_blocking, CommandError, RunCommandOptions};
 
-struct SafeStorageIdentity {
-    application: &'static str,
-    folder: &'static str,
-    service: &'static str,
-}
-
-fn safe_storage_identity(browser: &str) -> Result<SafeStorageIdentity> {
-    let identity = match browser {
-        "brave" => SafeStorageIdentity {
-            application: "brave",
-            folder: "Brave Keys",
-            service: "Brave Safe Storage",
-        },
-        "chrome" => SafeStorageIdentity {
-            application: "chrome",
-            folder: "Chrome Keys",
-            service: "Chrome Safe Storage",
-        },
-        "chromium" => SafeStorageIdentity {
-            application: "chromium",
-            folder: "Chromium Keys",
-            service: "Chromium Safe Storage",
-        },
-        "edge" => SafeStorageIdentity {
-            application: "microsoft-edge",
-            folder: "Microsoft Edge Keys",
-            service: "Microsoft Edge Safe Storage",
-        },
-        _ => return Err(anyhow!("No Safe Storage identity is known for {browser}")),
-    };
-    Ok(identity)
+fn safe_storage_identity(browser: &str) -> Result<&'static SafeStorageIdentity> {
+    catalogue_identity(browser)?
+        .ok_or_else(|| anyhow!("No Safe Storage identity is known for {browser}"))
 }
 
 /// Run a credential tool through command-stream (issue #104) with exact argv
@@ -56,28 +29,44 @@ fn run_credential_command(command: &str, arguments: &[&str]) -> Result<String> {
 }
 
 pub(crate) fn read_safe_storage_password(browser: &str, platform: &str) -> Result<String> {
+    read_safe_storage_password_with_runner(browser, platform, run_credential_command)
+}
+
+fn read_safe_storage_password_with_runner(
+    browser: &str,
+    platform: &str,
+    run: impl Fn(&str, &[&str]) -> Result<String>,
+) -> Result<String> {
     let identity = safe_storage_identity(browser)?;
     if platform == "darwin" {
-        let password = run_credential_command(
+        let password = run(
             "security",
-            &["find-generic-password", "-w", "-s", identity.service],
-        )?;
-        return (!password.is_empty())
-            .then_some(password)
-            .ok_or_else(|| anyhow!("{} returned an empty password", identity.service));
+            &["find-generic-password", "-w", "-s", &identity.service],
+        )
+        .and_then(|password| {
+            if password.is_empty() {
+                Err(anyhow!("{} returned an empty password", identity.service))
+            } else {
+                Ok(password)
+            }
+        });
+        return password.with_context(|| format!(
+            "Could not read {} from macOS Keychain. Unlock the login Keychain and allow the app running Browser Commander to access this item, then retry with refresh=true.",
+            identity.service
+        ));
     }
     if platform == "linux" {
-        if let Ok(password) = run_credential_command(
+        if let Ok(password) = run(
             "secret-tool",
-            &["lookup", "application", identity.application],
+            &["lookup", "application", &identity.application],
         ) {
             if !password.is_empty() {
                 return Ok(password);
             }
         }
-        if let Ok(password) = run_credential_command(
+        if let Ok(password) = run(
             "kwallet-query",
-            &["-r", identity.service, "-f", identity.folder, "kdewallet"],
+            &["-r", &identity.service, "-f", &identity.folder, "kdewallet"],
         ) {
             if !password.is_empty() {
                 return Ok(password);
@@ -140,6 +129,61 @@ pub(crate) fn read_windows_encryption_key(local_state_path: &Path) -> Result<Vec
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn credential_reader_identity_matches_every_catalogue_browser() {
+        for browser in super::super::browser_sources::browser_sources() {
+            let Some(expected) = &browser.safe_storage else {
+                continue;
+            };
+            for name in std::iter::once(&browser.id).chain(browser.aliases.iter()) {
+                let actual = safe_storage_identity(name).unwrap();
+                assert_eq!(actual.service, expected.service);
+                assert_eq!(actual.application, expected.application);
+                assert_eq!(actual.folder, expected.folder);
+                let password =
+                    read_safe_storage_password_with_runner(name, "darwin", |command, arguments| {
+                        assert_eq!(command, "security");
+                        assert_eq!(
+                            arguments,
+                            [
+                                "find-generic-password",
+                                "-w",
+                                "-s",
+                                expected.service.as_str()
+                            ]
+                        );
+                        Ok("synthetic-password".into())
+                    })
+                    .unwrap();
+                assert_eq!(password, "synthetic-password");
+            }
+        }
+    }
+
+    #[test]
+    fn keychain_errors_identify_item_and_supported_retry() {
+        for denied in [true, false] {
+            let error = read_safe_storage_password_with_runner("chrome", "darwin", |_, _| {
+                if denied {
+                    Err(anyhow!("security exited with code 36"))
+                } else {
+                    Ok(String::new())
+                }
+            })
+            .unwrap_err();
+            let detail = error.to_string();
+            for expected in [
+                "Chrome Safe Storage",
+                "Keychain",
+                "allow",
+                "retry",
+                "refresh=true",
+            ] {
+                assert!(detail.contains(expected), "{detail}");
+            }
+        }
+    }
 
     #[test]
     fn kwallet_identity_uses_chromium_product_casing() {

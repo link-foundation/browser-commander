@@ -39,6 +39,12 @@ assets=(
   "js/src/browser/browser-sources.json \
    python/src/browser_commander/browser/browser-sources.json \
    rust/src/browser/browser-sources.json"
+  "js/src/browser/migration/chromium-history.sql \
+   python/src/browser_commander/browser/migration/chromium-history.sql \
+   rust/src/browser/migration/chromium-history.sql"
+  "js/src/browser/migration/capabilities.json \
+   python/src/browser_commander/browser/migration/capabilities.json \
+   rust/src/browser/migration/capabilities.json"
 )
 
 cd "$repo_root"

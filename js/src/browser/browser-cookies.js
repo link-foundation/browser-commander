@@ -1,4 +1,4 @@
-import path from 'node:path';
+import { localStatePathForProfile } from './browser-profile-files.js';
 import os from 'node:os';
 
 import {
@@ -168,10 +168,7 @@ function chromiumKeyForPrefix(context, prefix) {
           },
           create: () =>
             context.readWindowsEncryptionKey({
-              localStatePath: path.join(
-                path.dirname(context.profile.path),
-                'Local State'
-              ),
+              localStatePath: localStatePathForProfile(context.profile.path),
               environment: context.environment,
               decryptDpapi: context.decryptWindowsDpapi,
             }),

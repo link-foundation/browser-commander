@@ -11,6 +11,7 @@ import {
 } from './browser-sources.js';
 import { resolveDefaultBrowser } from './default-browser.js';
 import { findSafariCookieFile } from './safari-cookies.js';
+import { listSafariProfiles } from './safari-profiles.js';
 
 /**
  * Keywords that select the operating-system default browser instead of a named
@@ -279,16 +280,9 @@ async function listProfilesForBrowser(browser, platform, homeDir, environment) {
   const profiles = [];
   for (const root of roots) {
     if (family === 'safari') {
-      if (await findSafariCookieFile(root)) {
-        return [
-          {
-            browser,
-            name: 'Default',
-            displayName: 'Default',
-            path: root,
-            isDefault: true,
-          },
-        ];
+      const safariProfiles = await listSafariProfiles(browser, root);
+      if (safariProfiles.length) {
+        return safariProfiles;
       }
       continue;
     }

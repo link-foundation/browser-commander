@@ -10,6 +10,18 @@ use crate::fingerprint::automation_parity::disables_automation_controlled;
 
 const DEDICATED: &str = "/tmp/browser-commander-dedicated";
 
+#[test]
+fn cdp_validation_rejects_other_protocols() {
+    for channel in ["firefox", "librewolf", "safari", "duckduckgo"] {
+        let options = RealBrowserOptions {
+            channel: channel.into(),
+            ..Default::default()
+        };
+        let error = validate_launch_request(&options).unwrap_err();
+        assert!(error.to_string().contains("does not support CDP"));
+    }
+}
+
 fn dedicated(port: u16) -> RealBrowserOptions {
     RealBrowserOptions::default()
         .user_data_dir(DEDICATED)

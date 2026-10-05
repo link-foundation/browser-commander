@@ -33,6 +33,7 @@ from browser_commander.browser.browser_cookie_crypto import (
     derive_chromium_cookie_key,
     firefox_same_site,
 )
+from browser_commander.browser.browser_profile_files import local_state_path_for_profile
 from browser_commander.browser.browser_profiles import (
     BrowserProfile,
     find_cookie_database,
@@ -189,7 +190,7 @@ def _chromium_key_for_prefix(prefix: bytes, context: dict) -> bytes:
 
         def create_windows_key() -> bytes:
             return context["read_windows_encryption_key"](
-                local_state_path=context["profile_path"].parent / "Local State",
+                local_state_path=local_state_path_for_profile(context["profile_path"]),
                 environment=context["environment"],
                 decrypt_dpapi=context["decrypt_windows_dpapi"],
             )

@@ -49,6 +49,11 @@ from browser_commander.browser.migration.os_crypt_keys import (
 )
 from browser_commander.browser.migration.passwords import migrate_passwords
 from browser_commander.browser.migration.preferences import migrate_preferences
+from browser_commander.browser.migration.safari_import import migrate_safari_class
+from browser_commander.browser.migration.validation import (
+    validate_migration_options,
+    validate_migration_paths,
+)
 
 __all__ = ["ALL_DATA_CLASSES", "migrate_profile", "migrate_profile_sync"]
 
@@ -158,6 +163,7 @@ def migrate_profile_sync(
     home_dir: PathLike | None = None,
     environment: Mapping[str, str] | None = None,
     run_command: RunCommand | None = None,
+    password_csv: PathLike | None = None,
 ) -> dict[str, Any]:
     """Synchronous :func:`migrate_profile`; see it for the arguments."""
 
@@ -171,6 +177,17 @@ def migrate_profile_sync(
     home = Path.home() if home_dir is None else Path(home_dir)
     env: Mapping[str, str] = os.environ if environment is None else environment
     target_dir = Path(to)
+    include = tuple(include)
+    validate_migration_options(
+        include=include,
+        domains=domains,
+        target_browser=target_browser,
+        to=target_dir,
+        platform=platform,
+        home_dir=home,
+        environment=env,
+        classes=ALL_DATA_CLASSES,
+    )
 
     user_data_dir = from_.get("user_data_dir", from_.get("userDataDir"))
     # An explicit user data dir names the source, so only an installed-browser
@@ -184,6 +201,10 @@ def migrate_profile_sync(
         run_command=run_command,
     )
     browser = source.browser
+    if browser_family(browser) not in ("chromium", "firefox", "safari"):
+        raise ValueError(
+            f"Browser {browser} supports detection only; its profile format is not supported for migration"
+        )
     profile_value = from_.get("profile")
     if profile_value is None:
         profile_value = source.profile
@@ -198,6 +219,7 @@ def migrate_profile_sync(
         environment=env,
     )
     selected = set(include)
+    validate_migration_paths(source_profile_dir, target_dir)
     report: dict[str, Any] = {
         "source": {
             "browser": browser,
@@ -238,23 +260,42 @@ def migrate_profile_sync(
             report["warnings"].extend(fragment["warnings"])
 
     if browser_family(browser) == "safari":
-        for type_ in ALL_DATA_CLASSES:
-            if type_ == "cookies" or type_ not in selected:
-                continue
-            report["skipped"].append(
-                {
-                    "type": type_,
-                    "item": browser,
-                    "reason": "safari-password-export-required"
-                    if type_ == "passwords"
-                    else "safari-class-not-supported",
-                    "detail": (
-                        "Safari passwords live in the Keychain. Export Passwords from Safari or the Passwords app to CSV; CSV import is tracked separately and is not supported yet."
-                        if type_ == "passwords"
-                        else "Safari currently supports cookie import only; this data class has not been translated."
-                    ),
-                }
+        password_keys = (
+            _resolve_password_keys(
+                keys=keys,
+                browser=browser,
+                target_browser=target_browser or "chrome",
+                platform=platform,
+                source_profile_dir=source_profile_dir,
+                environment=env,
             )
+            if "passwords" in selected and password_csv
+            else None
+        )
+        for type_ in ALL_DATA_CLASSES:
+            if type_ != "cookies" and type_ in selected:
+                _merge_report(
+                    report,
+                    type_,
+                    migrate_safari_class(
+                        type_=type_,
+                        profile_dir=source_profile_dir,
+                        target_profile_dir=target_dir,
+                        domains=domains,
+                        password_csv=Path(password_csv) if password_csv else None,
+                        password_keys=password_keys,
+                        platform=platform,
+                        legacy_dir=None
+                        if user_data_dir or source_profile_dir.parent.name == "Profiles"
+                        else home
+                        / "Library"
+                        / (
+                            "Safari"
+                            if browser == "safari"
+                            else "Safari Technology Preview"
+                        ),
+                    ),
+                )
         if report["cookies"]:
             report["warnings"].append(
                 {
@@ -286,7 +327,9 @@ def migrate_profile_sync(
             report_firefox_history(profile_dir=source_profile_dir)
             if is_firefox
             else migrate_history(
-                source_profile_dir=source_profile_dir, target_profile_dir=target_dir
+                source_profile_dir=source_profile_dir,
+                target_profile_dir=target_dir,
+                domains=domains,
             ),
         )
 
@@ -308,7 +351,29 @@ def migrate_profile_sync(
             ),
         )
 
+    if is_firefox:
+        for data_class in ("preferences", "extensions"):
+            if data_class in selected:
+                report["skipped"].append(
+                    {
+                        "type": data_class,
+                        "item": str(source_profile_dir),
+                        "reason": "firefox-class-not-supported",
+                        "detail": "Firefox preferences and extensions cannot be copied into a Chromium profile.",
+                    }
+                )
+
     if "passwords" in selected:
+        if browser == "yandex" and (source_profile_dir / "Ya Passman Data").exists():
+            report["skipped"].append(
+                {
+                    "type": "passwords",
+                    "item": "Ya Passman Data",
+                    "reason": "yandex-passman-encryption-unsupported",
+                    "detail": "Ya Passman Data uses local_encryptor_data and may require a Yandex master password; this extra encryption layer is not supported. Export passwords to a supported format instead.",
+                }
+            )
+            return report
         password_keys = _resolve_password_keys(
             keys=keys,
             browser=browser,
@@ -347,6 +412,7 @@ def migrate_profile_sync(
                     primary_password=(
                         b"" if primary_password is None else primary_password
                     ),
+                    domains=domains,
                 ),
             )
         else:
@@ -378,6 +444,7 @@ async def migrate_profile(
     home_dir: PathLike | None = None,
     environment: Mapping[str, str] | None = None,
     run_command: RunCommand | None = None,
+    password_csv: PathLike | None = None,
 ) -> dict[str, Any]:
     """Migrate a browser profile into a dedicated target profile directory.
 
@@ -422,4 +489,5 @@ async def migrate_profile(
         home_dir=home_dir,
         environment=environment,
         run_command=run_command,
+        password_csv=password_csv,
     )

@@ -381,10 +381,7 @@ fn chromium_key_for_prefix(
                 credential_metadata(browser, platform, "dpapi"),
                 || {
                     read_windows_encryption_key(
-                        &profile_path
-                            .parent()
-                            .unwrap_or(profile_path)
-                            .join("Local State"),
+                        &super::browser_profile_files::local_state_path_for_profile(profile_path),
                     )
                 },
             )

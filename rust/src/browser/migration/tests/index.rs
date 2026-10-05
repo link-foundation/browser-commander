@@ -128,6 +128,29 @@ fn honours_the_include_filter() {
 }
 
 #[test]
+fn reports_unsupported_firefox_classes() {
+    let source = TempDir::new("bc-unsupported-firefox-");
+    let target = TempDir::new("bc-unsupported-firefox-");
+    let report = migrate_profile(
+        MigrateProfileOptions::new(firefox_source(source.path()), target.path())
+            .include(["preferences", "extensions"]),
+    )
+    .unwrap();
+    let entries: Vec<_> = report
+        .skipped
+        .iter()
+        .map(|entry| (entry.data_class.as_str(), entry.reason.as_str()))
+        .collect();
+    assert_eq!(
+        entries,
+        [
+            ("preferences", "firefox-class-not-supported"),
+            ("extensions", "firefox-class-not-supported"),
+        ]
+    );
+}
+
+#[test]
 fn skips_passwords_with_a_warning_when_no_target_key_is_available_on_windows() {
     let source = TempDir::new("bc-orch-");
     let target = TempDir::new("bc-orch-");

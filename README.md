@@ -80,14 +80,56 @@ reports which one with a `default-browser-fallback` warning.
 | tor                       | Firefox   | Yes   | Yes     | Yes   |
 | edge-canary               | Chromium  | Yes   | Yes     | —     |
 
+| Browser                   | macOS control      | Windows control | Linux control   | Source         | Protect roots |
+| ------------------------- | ------------------ | --------------- | --------------- | -------------- | ------------- |
+| chrome                    | CDP                | CDP             | CDP             | chromium       | Yes           |
+| chrome-beta               | CDP                | CDP             | CDP             | chromium       | Yes           |
+| chrome-dev                | CDP                | CDP             | CDP             | chromium       | Yes           |
+| chrome-canary             | CDP                | CDP             | —               | chromium       | Yes           |
+| chromium                  | CDP                | CDP             | CDP             | chromium       | Yes           |
+| edge                      | CDP                | CDP             | CDP             | chromium       | Yes           |
+| edge-beta                 | CDP                | CDP             | CDP             | chromium       | Yes           |
+| edge-dev                  | CDP                | CDP             | CDP             | chromium       | Yes           |
+| brave                     | CDP                | CDP             | CDP             | chromium       | Yes           |
+| vivaldi                   | CDP                | CDP             | CDP             | chromium       | Yes           |
+| opera                     | CDP                | CDP             | CDP             | chromium       | Yes           |
+| opera-gx                  | CDP                | CDP             | CDP             | chromium       | Yes           |
+| yandex                    | CDP                | CDP             | CDP             | chromium       | Yes           |
+| arc                       | CDP                | CDP             | —               | chromium       | Yes           |
+| firefox                   | WebDriver setup    | WebDriver setup | WebDriver setup | firefox        | Yes           |
+| firefox-developer         | WebDriver setup    | WebDriver setup | WebDriver setup | firefox        | Yes           |
+| firefox-nightly           | WebDriver setup    | WebDriver setup | WebDriver setup | firefox        | Yes           |
+| librewolf                 | WebDriver setup    | WebDriver setup | WebDriver setup | firefox        | Yes           |
+| waterfox                  | WebDriver setup    | WebDriver setup | WebDriver setup | firefox        | Yes           |
+| zen                       | WebDriver setup    | WebDriver setup | WebDriver setup | firefox        | Yes           |
+| floorp                    | WebDriver setup    | WebDriver setup | WebDriver setup | firefox        | Yes           |
+| safari                    | safaridriver setup | —               | —               | safari         | Yes           |
+| safari-technology-preview | safaridriver setup | —               | —               | safari         | Yes           |
+| whale                     | CDP                | CDP             | CDP             | chromium       | Yes           |
+| 360se                     | —                  | CDP             | —               | chromium       | Yes           |
+| 360chrome                 | —                  | CDP             | —               | chromium       | Yes           |
+| qq                        | —                  | CDP             | —               | chromium       | Yes           |
+| sogou                     | —                  | CDP             | —               | chromium       | Yes           |
+| duckduckgo                | unsupported        | unsupported     | —               | detection only | Yes           |
+| tor                       | WebDriver setup    | WebDriver setup | WebDriver setup | firefox        | Yes           |
+| edge-canary               | CDP                | CDP             | —               | chromium       | Yes           |
+
 <!-- browser-support:generated:end -->
 
-Safari and Safari Technology Preview are **cookie-only sources** on macOS.
+The first table records source-root availability; the second records control
+routes and profile protection. Firefox forks require explicit WebDriver setup;
+Safari requires safaridriver and Remote Automation. Catalogue discovery does
+not route these browsers through the Chromium `launchRealBrowser` CDP launcher.
+DuckDuckGo has detection and protection entries only, with no import writer.
+
+Safari and Safari Technology Preview are **migration sources** on macOS.
 They read the conventional container `Cookies.binarycookies`, falling back to
 the legacy store. Import supports the existing Chromium target; the table above
 describes source availability, not full-profile or target-engine support.
-Named Safari profiles and newer WebsiteDataStore layouts are tracked in
-[#117](https://github.com/link-foundation/browser-commander/issues/117).
+Native imports translate bookmarks and history and encrypt explicitly supplied
+Safari/Passwords CSV exports for Chromium targets. Discovery recognizes named
+Safari profiles and prefers modern WebKit cookie-store paths. See the generated
+[source × target × class matrix](docs/profile-migration.md) for exact limits.
 
 ```sh
 browser-commander cookies sources --domain github.com
@@ -101,7 +143,7 @@ expiry timestamps are preserved. The format has no SameSite attribute, so import
 cookies use `Lax` and the migration report warns `safari-samesite-unavailable`.
 Unsupported Safari classes are reported as skipped, including passwords with
 `safari-password-export-required`: use Safari or the Passwords app's Export
-Passwords to CSV; CSV import is still tracked in #117. Protected cookie paths
+Passwords to CSV, then pass `--password-csv ./export.csv`. Protected Safari paths
 produce Full Disk Access guidance identifying the terminal/app running Browser
 Commander and linking to the macOS privacy settings.
 

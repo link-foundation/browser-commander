@@ -227,8 +227,10 @@ or `profile.migrate` with `{"from":"safari","include":["cookies"],"domains":["gi
 Targets remain Chromium. A custom `userDataDir` can point at a directory containing
 `Cookies/Cookies.binarycookies` or directly at the cookie-store directory.
 Unsupported selected Safari classes are skipped with a reason; passwords require
-an explicit Safari/Passwords CSV export, with CSV import tracked in
-[#117](https://github.com/link-foundation/browser-commander/issues/117).
+an explicit Safari/Passwords CSV export supplied with `--password-csv` or
+the `passwordCsv` JSON-RPC parameter. Bookmarks and history are translated;
+named Safari profiles and modern WebKit cookie-store paths are discovered.
+See the generated [migration matrix](profile-migration.md) for target/class limits.
 The format lacks SameSite, so imported cookies use `Lax` and the report includes
 `safari-samesite-unavailable`. Discovery decodes only hosts and counts, never names
 or values. File-level access errors are retained in `cookies.sources` entries;

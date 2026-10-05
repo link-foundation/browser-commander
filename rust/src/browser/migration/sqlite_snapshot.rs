@@ -2,20 +2,10 @@
 //! while the source browser is running, without ever writing to the source.
 //! Mirrors `js/src/browser/migration/sqlite-snapshot.js`.
 //!
-//! Chrome keeps these databases open in WAL mode and, on Windows, holds a share
-//! lock that stops another process from opening the file at all. Two techniques
-//! cover both cases:
-//!
-//! 1. The SQLite Online Backup API (`rusqlite`'s `backup` feature), which copies
-//!    a transactionally consistent snapshot even while the source is being
-//!    written (<https://www.sqlite.org/backup.html>). The source is opened
-//!    read-only, so nothing is written back.
-//! 2. When the source cannot be opened at all (a Windows exclusive lock), the
-//!    file and its `-wal`/`-shm`/`-journal` sidecars are copied to a temporary
-//!    directory and the copy is read instead. Copying the sidecars keeps the
-//!    committed-but-not-checkpointed pages, so the copy is consistent.
+//! SQLite online backup includes committed WAL data without writing to the
+//! source (<https://www.sqlite.org/backup.html>). Exclusive/sharing locks return
+//! snapshot guidance. A sequential copy of live files cannot ensure consistency.
 
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
@@ -24,7 +14,6 @@ use rusqlite::{Connection, OpenFlags};
 use super::fs_utils::{make_temp_dir, path_exists, remove_dir_quietly};
 
 const SNAPSHOT_PREFIX: &str = "browser-commander-snap-";
-const SQLITE_SIDECARS: [&str; 3] = ["-wal", "-shm", "-journal"];
 
 fn file_name(source_path: &Path) -> Result<&std::ffi::OsStr> {
     source_path
@@ -32,41 +21,18 @@ fn file_name(source_path: &Path) -> Result<&std::ffi::OsStr> {
         .ok_or_else(|| anyhow!("{} has no file name", source_path.display()))
 }
 
-fn with_suffix(path: &Path, suffix: &str) -> PathBuf {
-    let mut name = path.as_os_str().to_os_string();
-    name.push(suffix);
-    PathBuf::from(name)
-}
-
-/// Copy a SQLite file and its sidecars into `dir`.
-fn copy_database_files(source_path: &Path, dir: &Path) -> Result<PathBuf> {
-    let snapshot_path = dir.join(file_name(source_path)?);
-    fs::copy(source_path, &snapshot_path)
-        .with_context(|| format!("Could not copy {}", source_path.display()))?;
-    for suffix in SQLITE_SIDECARS {
-        let sidecar = with_suffix(source_path, suffix);
-        if path_exists(&sidecar) {
-            fs::copy(&sidecar, with_suffix(&snapshot_path, suffix))
-                .with_context(|| format!("Could not copy {}", sidecar.display()))?;
-        }
-    }
-    Ok(snapshot_path)
-}
-
 fn open_read_only(path: &Path) -> rusqlite::Result<Connection> {
     let connection = Connection::open_with_flags(
         path,
         OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
     )?;
-    // A live browser can hold this lock for its entire lifetime. Let the
-    // existing file-and-sidecar fallback handle it instead of waiting five
-    // seconds for every database in the profile.
+    // A live browser can hold this lock for its entire lifetime; return
+    // actionable guidance immediately instead of waiting for each database.
     connection.busy_timeout(std::time::Duration::ZERO)?;
     Ok(connection)
 }
 
-/// Write a consistent snapshot of `source_path` to `snapshot_path`, falling
-/// back to a plain file copy when the source cannot be opened or backed up.
+/// Write a consistent snapshot or return guidance without copying live files.
 fn snapshot_into(source_path: &Path, dir: &Path) -> Result<PathBuf> {
     tracing::debug!(source = %source_path.display(), "Backing up live SQLite database");
     let snapshot_path = dir.join(file_name(source_path)?);
@@ -74,15 +40,11 @@ fn snapshot_into(source_path: &Path, dir: &Path) -> Result<PathBuf> {
         // `backup` opens the destination itself; the source stays read-only.
         source.backup(rusqlite::MAIN_DB, &snapshot_path, None)
     });
-    match backed_up {
-        Ok(()) => Ok(snapshot_path),
-        Err(_) => {
-            // The source is locked exclusively (Windows); copy the file and its
-            // sidecars, then read that copy.
-            let _ = fs::remove_file(&snapshot_path);
-            copy_database_files(source_path, dir)
-        }
-    }
+    backed_up.with_context(|| format!(
+        "Consistent SQLite snapshot unavailable for {}; close the source browser and retry, or supply a consistent read-only snapshot.",
+        source_path.display()
+    ))?;
+    Ok(snapshot_path)
 }
 
 /// Produce a consistent, read-only snapshot copy of a live Chromium database in

@@ -115,7 +115,26 @@ def count_safari_cookies(
 
 
 def find_safari_cookie_file(profile_dir: Path) -> Path | None:
+    named = (
+        profile_dir.parent.name == "Profiles"
+        and profile_dir.parent.parent.name == "Safari"
+    )
+    root = profile_dir.parents[2] if named else profile_dir
+    modern = (
+        [
+            root
+            / "WebKit/WebsiteDataStore"
+            / profile_dir.name.lower()
+            / "Cookies/Cookies.binarycookies"
+        ]
+        if named
+        else [
+            root / "WebKit/WebsiteData/Default/Cookies/Cookies.binarycookies",
+            root / "WebKit/WebsiteDataStore/Default/Cookies/Cookies.binarycookies",
+        ]
+    )
     for candidate in (
+        *modern,
         profile_dir / "Cookies/Cookies.binarycookies",
         profile_dir / "Cookies.binarycookies",
     ):

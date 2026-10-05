@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "classes": [
+    "cookies",
+    "bookmarks",
+    "history",
+    "passwords",
+    "preferences",
+    "extensions"
+  ],
+  "sourceFamilies": ["chromium", "firefox", "safari"],
+  "targetFamilies": ["chromium", "firefox", "webkit"],
+  "imports": {
+    "chromium": {
+      "chromium": ["seed", "copy", "snapshot", "rekey", "copy", "copy"]
+    },
+    "firefox": {
+      "chromium": [
+        "seed",
+        "translate",
+        "unsupported",
+        "NSS/rekey",
+        "unsupported",
+        "unsupported"
+      ]
+    },
+    "safari": {
+      "chromium": [
+        "seed",
+        "translate",
+        "translate",
+        "CSV/rekey",
+        "unsupported",
+        "unsupported"
+      ]
+    }
+  },
+  "wholeProfileMigration": {
+    "chromium": "not implemented",
+    "firefox": "not implemented",
+    "webkit": "not implemented"
+  },
+  "pendingClasses": [
+    "localStorage",
+    "indexedDB",
+    "sessionStorage",
+    "autofill",
+    "searchEngines",
+    "siteSettings",
+    "openTabs",
+    "downloads",
+    "readingList",
+    "clientCertificates",
+    "passkeys"
+  ],
+  "installedBrowserLaunch": {
+    "chromium": "CDP",
+    "firefox": "explicit WebDriver setup",
+    "safari": "explicit safaridriver setup",
+    "detection": "unsupported"
+  }
+}

@@ -391,14 +391,9 @@ fn list_profiles_for_browser(
     let mut profiles = Vec::new();
     for root in roots {
         if family == "safari" {
-            if super::safari_cookies::find_safari_cookie_file(&root).is_some() {
-                return Ok(vec![BrowserProfile {
-                    browser: browser.into(),
-                    name: "Default".into(),
-                    display_name: "Default".into(),
-                    path: root,
-                    is_default: true,
-                }]);
+            let safari_profiles = super::safari_profiles::list_safari_profiles(browser, &root)?;
+            if !safari_profiles.is_empty() {
+                return Ok(safari_profiles);
             }
             continue;
         }

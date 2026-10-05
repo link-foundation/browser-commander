@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { matchesDomains } from './domains.js';
 import { profileFileIfPresent } from './fs-utils.js';
 
 import { openSqliteDatabase } from '../browser-cookie-database.js';
@@ -111,11 +112,7 @@ export async function readFirefoxCookies({ profileDir, domains }) {
       // The installed-browser cookie reader owns the row → cookie mapping, so
       // a migrated cookie and an imported one always have the same shape.
       return mapFirefoxCookieRows(
-        rows.filter((row) =>
-          Array.isArray(domains) && domains.length > 0
-            ? domains.some((domain) => (row.host ?? '').includes(domain))
-            : true
-        )
+        rows.filter((row) => matchesDomains(row.host ?? '', domains))
       );
     },
   });
@@ -228,6 +225,7 @@ export async function migrateFirefoxPasswords({
   targetKey,
   targetPrefix = platform === 'win32' ? 'v10' : 'v11',
   primaryPassword = Buffer.alloc(0),
+  domains,
 }) {
   const loginsPath = await profileFileIfPresent(profileDir, 'logins.json');
   const key4Path = await profileFileIfPresent(profileDir, 'key4.db');
@@ -271,6 +269,9 @@ export async function migrateFirefoxPasswords({
   const decrypted = [];
   const skipped = [];
   for (const login of logins) {
+    if (!matchesDomains(login.hostname ?? '', domains)) {
+      continue;
+    }
     try {
       decrypted.push({
         origin: login.hostname,
@@ -287,6 +288,33 @@ export async function migrateFirefoxPasswords({
     }
   }
 
+  const migrated = await writeChromiumPasswords({
+    entries: decrypted,
+    targetProfileDir,
+    platform,
+    targetKey,
+    targetPrefix,
+  });
+
+  const warnings = [];
+  if (migrated > 0) {
+    warnings.push({
+      type: 'passwords',
+      item: 'Login Data',
+      reason: 'reencrypted-for-chrome',
+      detail: `${migrated} Firefox logins were decrypted and re-encrypted into a Chrome Login Data; Chrome may re-key the store on first launch.`,
+    });
+  }
+  return { migrated, skipped, warnings };
+}
+
+export async function writeChromiumPasswords({
+  entries,
+  targetProfileDir,
+  platform,
+  targetKey,
+  targetPrefix,
+}) {
   await mkdir(targetProfileDir, { recursive: true });
   const targetPath = path.join(targetProfileDir, 'Login Data');
   const db = await openSqliteDatabase(targetPath);
@@ -301,7 +329,7 @@ export async function migrateFirefoxPasswords({
          date_last_used, date_password_modified
        ) VALUES (?, ?, '', ?, '', ?, '', ?, 0, 0, 0, 0, 0, 0, 0)`
     );
-    for (const entry of decrypted) {
+    for (const entry of entries) {
       const encrypted = encryptChromiumValue({
         plaintext: entry.password,
         key: targetKey,
@@ -321,14 +349,5 @@ export async function migrateFirefoxPasswords({
     db.close();
   }
 
-  const warnings = [];
-  if (migrated > 0) {
-    warnings.push({
-      type: 'passwords',
-      item: 'Login Data',
-      reason: 'reencrypted-for-chrome',
-      detail: `${migrated} Firefox logins were decrypted and re-encrypted into a Chrome Login Data; Chrome may re-key the store on first launch.`,
-    });
-  }
-  return { migrated, skipped, warnings };
+  return migrated;
 }

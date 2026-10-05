@@ -28,6 +28,7 @@ from browser_commander.browser.browser_cookie_credentials import (
     read_windows_encryption_key as default_read_windows_encryption_key,
 )
 from browser_commander.browser.browser_cookie_crypto import derive_chromium_cookie_key
+from browser_commander.browser.browser_profile_files import local_state_path_for_profile
 from browser_commander.browser.migration.fs_utils import PathLike
 
 __all__ = [
@@ -116,9 +117,3 @@ def resolve_target_key(
         "use create_windows_profile_key"
     )
     raise ValueError(msg)
-
-
-def local_state_path_for_profile(profile_dir: PathLike) -> Path:
-    """Return the ``Local State`` file next to a Chromium profile directory."""
-
-    return Path(profile_dir).parent / "Local State"

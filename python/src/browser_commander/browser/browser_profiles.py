@@ -29,6 +29,7 @@ from browser_commander.browser.default_browser import (
     resolve_default_browser,
 )
 from browser_commander.browser.safari_cookies import find_safari_cookie_file
+from browser_commander.browser.safari_profiles import list_safari_profiles
 
 #: Every browser profile discovery can read from, from the shared catalogue.
 SUPPORTED_COOKIE_BROWSERS = BROWSER_IDS
@@ -266,8 +267,9 @@ def _list_profiles_for_browser(
         browser, platform=platform, home_dir=home_dir, environment=environment
     ):
         if family == "safari":
-            if find_safari_cookie_file(root) is not None:
-                return [BrowserProfile(browser, "Default", "Default", root, True)]
+            safari_profiles = list_safari_profiles(browser, root)
+            if safari_profiles:
+                return safari_profiles
             continue
         if family == "firefox":
             profiles.extend(_list_firefox_profiles(browser, root))

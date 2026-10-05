@@ -1,4 +1,4 @@
-import { copyFile, mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { pathExists } from './fs-utils.js';
@@ -11,48 +11,11 @@ import { openSqliteDatabase } from '../browser-cookie-database.js';
  * Read a Chromium SQLite database (History, Top Sites, Login Data, Web Data)
  * while the source browser is running, without ever writing to the source.
  *
- * Chrome keeps these databases open in WAL mode and, on Windows, holds a share
- * lock that stops another process from opening the file at all. Two techniques
- * cover both cases:
- *
- * 1. The SQLite Online Backup API (`better-sqlite3`'s `.backup()`), which
- *    copies a transactionally consistent snapshot even while the source is
- *    being written. This is the same mechanism `browser-cookie-database.js`
- *    relies on for a stable read, and SQLite documents it as the correct way
- *    to snapshot a live database
- *    (https://www.sqlite.org/backup.html).
- * 2. When the source cannot be opened at all (a Windows exclusive lock), the
- *    file and its `-wal`/`-journal` sidecars are copied to a temporary
- *    directory and the copy is opened instead. Copying the sidecars keeps the
- *    committed-but-not-checkpointed pages, so the copy is consistent.
- *
- * Both paths open the source with `readOnly`, so nothing is written back.
+ * SQLite online backup includes committed WAL data without writing to the
+ * source. If a sharing/exclusive lock prevents backup, callers receive guidance
+ * to close the browser or supply a consistent snapshot. A sequential copy of a
+ * live database and its sidecars cannot guarantee consistency.
  */
-
-const SQLITE_SIDECARS = ['-wal', '-shm', '-journal'];
-
-/**
- * Copy a SQLite file and its sidecars into a temporary directory.
- *
- * @param {string} sourcePath
- * @returns {Promise<{snapshotPath: string, cleanup: function(): Promise<void>}>}
- */
-async function copyDatabaseFiles(sourcePath) {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'browser-commander-snap-'));
-  const base = path.basename(sourcePath);
-  const snapshotPath = path.join(dir, base);
-  await copyFile(sourcePath, snapshotPath);
-  for (const suffix of SQLITE_SIDECARS) {
-    const sidecar = `${sourcePath}${suffix}`;
-    if (await pathExists(sidecar)) {
-      await copyFile(sidecar, `${snapshotPath}${suffix}`);
-    }
-  }
-  return {
-    snapshotPath,
-    cleanup: () => rm(dir, { recursive: true, force: true, maxRetries: 3 }),
-  };
-}
 
 /**
  * Produce a consistent, read-only snapshot copy of a live Chromium database in
@@ -74,7 +37,6 @@ export async function withDatabaseSnapshot({ sourcePath, read }) {
   const cleanupDir = () =>
     rm(dir, { recursive: true, force: true, maxRetries: 3 });
 
-  let copyFallback;
   try {
     // The backup API needs to open the source. It opens read-only, so nothing
     // is written to the user's real database.
@@ -83,31 +45,35 @@ export async function withDatabaseSnapshot({ sourcePath, read }) {
       source = new BetterSqlite3(sourcePath, {
         readonly: true,
         fileMustExist: true,
+        timeout: 1000,
       });
-    } catch {
-      source = null;
+      // Detect an exclusive lock before better-sqlite3's initial zero-page
+      // transfer can mistake SQLITE_BUSY for an empty completed backup.
+      source.pragma('schema_version');
+      let remaining = Infinity;
+      let lastProgress = Date.now();
+      await source.backup(snapshotPath, {
+        progress: ({ remainingPages }) => {
+          if (remainingPages < remaining) {
+            lastProgress = Date.now();
+          } else if (Date.now() - lastProgress >= 1000) {
+            throw new Error('SQLite backup made no progress');
+          }
+          remaining = remainingPages;
+          return 256;
+        },
+      });
+    } catch (cause) {
+      throw new Error(
+        `Consistent SQLite snapshot unavailable for ${sourcePath}; close the source browser and retry, or supply a consistent read-only snapshot. ${cause.message}`,
+        { cause }
+      );
+    } finally {
+      source?.close();
     }
-    if (source) {
-      try {
-        await source.backup(snapshotPath);
-      } finally {
-        source.close();
-      }
-    } else {
-      // The source is locked exclusively (Windows); fall back to copying the
-      // file and its sidecars, then read that copy.
-      await cleanupDir();
-      copyFallback = await copyDatabaseFiles(sourcePath);
-    }
-
-    const readPath = copyFallback?.snapshotPath ?? snapshotPath;
-    return await read(readPath);
+    return await read(snapshotPath);
   } finally {
-    if (copyFallback) {
-      await copyFallback.cleanup();
-    } else {
-      await cleanupDir();
-    }
+    await cleanupDir();
   }
 }
 

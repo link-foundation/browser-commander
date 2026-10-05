@@ -203,6 +203,21 @@ describe('launchAndConnectRealBrowser', () => {
     }
   });
 
+  it('rejects non-CDP catalogue browsers before resolving or spawning them', async () => {
+    for (const channel of ['firefox', 'librewolf', 'safari', 'duckduckgo']) {
+      await assert.rejects(
+        launchAndConnectRealBrowserWithDependencies(
+          { channel },
+          {
+            resolveExecutable: () =>
+              assert.fail('non-CDP executable resolution reached'),
+          }
+        ),
+        /does not support CDP/u
+      );
+    }
+  });
+
   it('spawns, waits, connects, and returns process metadata', async () => {
     temporaryDirectory = await makeDedicatedProfile();
     const calls = [];
@@ -285,6 +300,7 @@ describe('launchAndConnectRealBrowser', () => {
           profile: 'Default',
           include: ['cookies', 'bookmarks'],
           domains: ['google.com'],
+          passwordCsv: '/tmp/safari-export.csv',
         },
       },
       {
@@ -330,6 +346,7 @@ describe('launchAndConnectRealBrowser', () => {
     assert.equal(migrateOptions.targetBrowser, 'chrome');
     assert.deepEqual(migrateOptions.include, ['cookies', 'bookmarks']);
     assert.deepEqual(migrateOptions.domains, ['google.com']);
+    assert.equal(migrateOptions.passwordCsv, '/tmp/safari-export.csv');
     assert.deepEqual(migrateOptions.from, {
       browser: 'chrome',
       profile: 'Default',

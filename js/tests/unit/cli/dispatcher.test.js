@@ -182,8 +182,10 @@ describe('dispatcher: high-level methods', () => {
     const migrated = await dispatch('profile.migrate', {
       from: 'chrome',
       include: ['cookies'],
+      passwordCsv: '/tmp/export.csv',
     });
     assert.deepEqual(migrated.options.include, ['cookies']);
+    assert.equal(migrated.options.passwordCsv, '/tmp/export.csv');
     assert.deepEqual(await dispatch('doctor', {}), { ok: true, unlisted: [] });
     assert.equal((await dispatch('version')).language, 'js');
   });

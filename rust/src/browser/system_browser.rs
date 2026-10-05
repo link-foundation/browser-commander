@@ -3,6 +3,7 @@
 //! Mirrors `js/src/browser/system-browser.js`. Split out of `real_browser`
 //! so the launcher itself stays small.
 
+use super::browser_profile_files::physical_path;
 use super::browser_profiles::current_platform;
 use super::browser_sources::{
     browser_sources, current_environment, find_browser_source, resolve_browser_executables,
@@ -55,38 +56,29 @@ pub fn known_default_user_data_dirs() -> Vec<PathBuf> {
         .collect()
 }
 
-fn normalize_for_comparison(path: &Path) -> PathBuf {
-    let normalized = std::fs::canonicalize(path).unwrap_or_else(|_| {
-        if path.is_absolute() {
-            path.to_path_buf()
-        } else {
-            std::env::current_dir()
-                .unwrap_or_else(|_| PathBuf::from("."))
-                .join(path)
-        }
-    });
+fn normalize_for_comparison(path: &Path) -> Result<PathBuf, anyhow::Error> {
+    let normalized = physical_path(path)?;
 
     #[cfg(target_os = "windows")]
     {
-        return PathBuf::from(normalized.to_string_lossy().to_lowercase());
+        Ok(PathBuf::from(normalized.to_string_lossy().to_lowercase()))
     }
 
     #[cfg(not(target_os = "windows"))]
     {
-        normalized
+        Ok(normalized)
     }
 }
 
 /// Ensure Chrome is not asked to expose a known default profile over CDP.
 pub fn assert_dedicated_user_data_dir(user_data_dir: &Path) -> Result<(), anyhow::Error> {
-    let requested = normalize_for_comparison(user_data_dir);
-    if known_default_user_data_dirs()
-        .iter()
-        .any(|default| requested.starts_with(normalize_for_comparison(default)))
-    {
-        return Err(anyhow::anyhow!(
-            "launch_real_browser requires a dedicated user_data_dir, not a browser default profile"
-        ));
+    let requested = normalize_for_comparison(user_data_dir)?;
+    for default in known_default_user_data_dirs() {
+        if requested.starts_with(normalize_for_comparison(&default)?) {
+            return Err(anyhow::anyhow!(
+                "launch_real_browser requires a dedicated user_data_dir, not a browser default profile"
+            ));
+        }
     }
     Ok(())
 }
@@ -134,7 +126,7 @@ pub fn resolve_browser_executable(
     executable_path: Option<&Path>,
 ) -> Result<PathBuf, anyhow::Error> {
     let candidates = if let Some(executable_path) = executable_path {
-        vec![normalize_for_comparison(executable_path)]
+        vec![normalize_for_comparison(executable_path)?]
     } else {
         browser_install_candidates(channel)?
     };
@@ -161,6 +153,21 @@ pub fn resolve_browser_executable(
 mod tests {
     use super::*;
     use crate::browser::browser_sources::Environment;
+
+    #[cfg(unix)]
+    #[test]
+    fn normalizes_new_profiles_beneath_symlinks() {
+        let root = crate::browser::create_temporary_user_data_dir(None).unwrap();
+        let actual = root.join("default-profile");
+        std::fs::create_dir(&actual).unwrap();
+        let alias = root.join("profile-alias");
+        std::os::unix::fs::symlink(&actual, &alias).unwrap();
+        assert_eq!(
+            normalize_for_comparison(&alias.join("new-profile")).unwrap(),
+            actual.canonicalize().unwrap().join("new-profile")
+        );
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn rejects_the_current_platform_default_profiles() {

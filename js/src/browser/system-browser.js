@@ -1,4 +1,5 @@
-import { constants, realpathSync } from 'node:fs';
+import { constants } from 'node:fs';
+import { physicalPath } from './browser-profile-files.js';
 import {
   BROWSER_SOURCES,
   resolveBrowserRoots,
@@ -63,11 +64,7 @@ export function assertDedicatedUserDataDir(userDataDir, platformOptions = {}) {
   const normalize = (value) => {
     let resolved = pathApi.resolve(value).replace(/[\\/]+$/, '');
     if (platform === process.platform) {
-      try {
-        resolved = realpathSync(resolved);
-      } catch {
-        /* Path may not exist yet. */
-      }
+      resolved = physicalPath(resolved);
     }
     return platform === 'win32' ? resolved.toLowerCase() : resolved;
   };

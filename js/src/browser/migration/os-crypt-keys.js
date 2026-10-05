@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { deriveChromiumCookieKey } from '../browser-cookie-crypto.js';
 import {
   decryptWindowsDpapi,
@@ -101,6 +99,4 @@ export async function resolveTargetKey({
 }
 
 /** Convenience: the Local State path next to a profile directory. */
-export function localStatePathForProfile(profileDir) {
-  return path.join(path.dirname(profileDir), 'Local State');
-}
+export { localStatePathForProfile } from '../browser-profile-files.js';

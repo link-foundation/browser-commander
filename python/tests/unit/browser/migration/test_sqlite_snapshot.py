@@ -1,4 +1,4 @@
-"""Live SQLite backups must fall back instead of waiting forever on locks."""
+"""Live SQLite backup failures must not become unverified file copies."""
 
 import contextlib
 import sqlite3
@@ -6,10 +6,14 @@ import time
 from pathlib import Path
 from threading import Timer
 
+import pytest
+
 from browser_commander.browser.migration.sqlite_snapshot import read_database_snapshot
 
 
-def test_exclusive_lock_falls_back_without_waiting_for_writer(tmp_path: Path) -> None:
+def test_exclusive_lock_reports_snapshot_guidance_without_waiting(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "History"
     with contextlib.closing(sqlite3.connect(source, check_same_thread=False)) as writer:
         writer.execute("create table visits(url text)")
@@ -22,13 +26,30 @@ def test_exclusive_lock_falls_back_without_waiting_for_writer(tmp_path: Path) ->
         release.start()
         try:
             started = time.monotonic()
-            rows = read_database_snapshot(
-                source, lambda db: db.execute("select url from visits").fetchall()
-            )
+            with pytest.raises(
+                sqlite3.OperationalError,
+                match=r"Consistent SQLite snapshot unavailable.*close the source browser",
+            ):
+                read_database_snapshot(
+                    source, lambda db: db.execute("select url from visits").fetchall()
+                )
             elapsed = time.monotonic() - started
-            assert [row[0] for row in rows] == ["committed"]
             assert elapsed < 3, f"backup waited {elapsed:.2f}s for the source writer"
         finally:
             release.cancel()
             release.join()
             writer.rollback()
+
+
+def test_snapshot_includes_committed_wal_with_open_writer(tmp_path: Path) -> None:
+    source = tmp_path / "History"
+    with contextlib.closing(sqlite3.connect(source)) as writer:
+        writer.execute("pragma journal_mode=WAL")
+        writer.execute("create table visits(url text)")
+        writer.execute("insert into visits values ('committed WAL value')")
+        writer.commit()
+        rows = read_database_snapshot(
+            source,
+            lambda database: database.execute("select url from visits").fetchall(),
+        )
+        assert [row[0] for row in rows] == ["committed WAL value"]

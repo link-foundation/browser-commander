@@ -75,6 +75,7 @@ def migrate_passwords(
     resolve_source_key: Callable[[str], bytes] | None = None,
     target_key: bytes | None = None,
     target_prefix: str | None = None,
+    domains=None,
 ) -> dict[str, Any]:
     """Copy ``Login Data`` and re-encrypt its passwords for the target.
 
@@ -121,14 +122,21 @@ def migrate_passwords(
                 "SELECT rowid AS rowid, origin_url, password_value FROM logins"
             ).fetchall()
             for rowid, origin_url, password_value in rows:
+                from .domains import matches_domains
+
+                if not matches_domains(origin_url or "", domains):
+                    database.execute("DELETE FROM logins WHERE rowid = ?", (rowid,))
+                    continue
                 encrypted_value = _to_bytes(password_value)
                 if not encrypted_value:
                     continue
                 prefix = encrypted_value[:3].decode("ascii", errors="replace")
                 if prefix == "v20":
+                    database.execute("DELETE FROM logins WHERE rowid = ?", (rowid,))
                     skipped.append(_skip(origin_url, "app-bound-v20"))
                     continue
                 if prefix not in ("v10", "v11"):
+                    database.execute("DELETE FROM logins WHERE rowid = ?", (rowid,))
                     skipped.append(_skip(origin_url, "unsupported-encryption"))
                     continue
                 try:
@@ -140,6 +148,7 @@ def migrate_passwords(
                         key=resolve_source_key(prefix),
                     )
                 except Exception as error:
+                    database.execute("DELETE FROM logins WHERE rowid = ?", (rowid,))
                     skipped.append(_skip(origin_url, "decrypt-failed", str(error)))
                     continue
                 reencrypted = encrypt_chromium_value(
@@ -154,6 +163,7 @@ def migrate_passwords(
                 )
                 migrated += 1
             database.commit()
+            database.execute("VACUUM")
         return {"migrated": migrated, "skipped": skipped, "warnings": []}
 
     return with_database_snapshot(source_path, rewrite)

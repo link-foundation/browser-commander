@@ -6,6 +6,7 @@ import { decryptChromiumCookie } from '../browser-cookie-crypto.js';
 import { openSqliteDatabase } from '../browser-cookie-database.js';
 import { withDatabaseSnapshot } from './sqlite-snapshot.js';
 import { encryptChromiumValue } from './chromium-crypto.js';
+import { matchesDomains } from './domains.js';
 
 /**
  * Saved-password migration.
@@ -69,6 +70,7 @@ export async function migratePasswords({
   resolveSourceKey,
   targetKey,
   targetPrefix = platform === 'win32' ? 'v10' : 'v11',
+  domains,
 }) {
   const sourcePath = path.join(sourceProfileDir, 'Login Data');
   if (!(await pathExists(sourcePath))) {
@@ -112,26 +114,32 @@ export async function migratePasswords({
         const update = db.prepare(
           'UPDATE logins SET password_value = ? WHERE rowid = ?'
         );
+        const remove = db.prepare('DELETE FROM logins WHERE rowid = ?');
+        const skip = (row, reason, detail) => {
+          remove.run(row.rowid);
+          skipped.push({
+            type: 'passwords',
+            item: row.origin_url ?? '(unknown)',
+            reason,
+            ...(detail ? { detail } : {}),
+          });
+        };
         for (const row of rows) {
+          if (!matchesDomains(row.origin_url ?? '', domains)) {
+            remove.run(row.rowid);
+            continue;
+          }
           const encryptedValue = toBuffer(row.password_value);
           if (encryptedValue.length === 0) {
             continue;
           }
           const prefix = encryptedValue.subarray(0, 3).toString('ascii');
           if (prefix === 'v20') {
-            skipped.push({
-              type: 'passwords',
-              item: row.origin_url ?? '(unknown)',
-              reason: 'app-bound-v20',
-            });
+            skip(row, 'app-bound-v20');
             continue;
           }
           if (prefix !== 'v10' && prefix !== 'v11') {
-            skipped.push({
-              type: 'passwords',
-              item: row.origin_url ?? '(unknown)',
-              reason: 'unsupported-encryption',
-            });
+            skip(row, 'unsupported-encryption');
             continue;
           }
           let plaintext;
@@ -145,12 +153,7 @@ export async function migratePasswords({
               key,
             });
           } catch (error) {
-            skipped.push({
-              type: 'passwords',
-              item: row.origin_url ?? '(unknown)',
-              reason: 'decrypt-failed',
-              detail: error.message,
-            });
+            skip(row, 'decrypt-failed', error.message);
             continue;
           }
           const reencrypted = encryptChromiumValue({
@@ -162,6 +165,7 @@ export async function migratePasswords({
           update.run(reencrypted, row.rowid);
           migrated += 1;
         }
+        db.exec('VACUUM');
       } finally {
         db.close();
       }

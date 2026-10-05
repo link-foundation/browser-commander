@@ -13,27 +13,13 @@ from pathlib import Path
 
 from browser_commander.utilities.subprocess import CommandError, run_command_sync
 
+from .browser_sources import BROWSER_SOURCES, safe_storage_identity
+
 SAFE_STORAGE = {
-    "brave": {
-        "application": "brave",
-        "folder": "Brave Keys",
-        "service": "Brave Safe Storage",
-    },
-    "chrome": {
-        "application": "chrome",
-        "folder": "Chrome Keys",
-        "service": "Chrome Safe Storage",
-    },
-    "chromium": {
-        "application": "chromium",
-        "folder": "Chromium Keys",
-        "service": "Chromium Safe Storage",
-    },
-    "edge": {
-        "application": "microsoft-edge",
-        "folder": "Microsoft Edge Keys",
-        "service": "Microsoft Edge Safe Storage",
-    },
+    name: browser["safeStorage"]
+    for browser in BROWSER_SOURCES
+    if browser.get("safeStorage")
+    for name in [browser["id"], *browser.get("aliases", [])]
 }
 
 
@@ -43,9 +29,8 @@ def _run_credential_command(command: list[str], environment: Mapping[str, str]) 
 
 
 def _read_linux_safe_storage_password(
-    browser: str, environment: Mapping[str, str]
+    identity: Mapping[str, str], environment: Mapping[str, str]
 ) -> str:
-    identity = SAFE_STORAGE[browser]
     try:
         password = _run_credential_command(
             ["secret-tool", "lookup", "application", identity["application"]],
@@ -85,25 +70,29 @@ def read_safe_storage_password(
 ) -> str:
     """Read a Chromium Safe Storage password from the OS credential store."""
     environment = os.environ if environment is None else environment
-    identity = SAFE_STORAGE.get(browser)
+    try:
+        identity = safe_storage_identity(browser)
+    except ValueError:
+        identity = None
     if identity is None:
         raise ValueError(f"No Safe Storage identity is known for {browser}")
     if platform == "darwin":
-        password = _run_credential_command(
-            [
-                "security",
-                "find-generic-password",
-                "-w",
-                "-s",
-                identity["service"],
-            ],
-            environment,
-        )
-        if not password:
-            raise RuntimeError(f"{identity['service']} returned an empty password")
-        return password
+        try:
+            password = _run_credential_command(
+                ["security", "find-generic-password", "-w", "-s", identity["service"]],
+                environment,
+            )
+            if not password:
+                raise RuntimeError(f"{identity['service']} returned an empty password")
+            return password
+        except (OSError, CommandError, RuntimeError) as error:
+            raise RuntimeError(
+                f"Could not read {identity['service']} from macOS Keychain. "
+                "Unlock the login Keychain and allow the app running Browser Commander "
+                "to access this item, then retry with refresh=true."
+            ) from error
     if platform == "linux":
-        return _read_linux_safe_storage_password(browser, environment)
+        return _read_linux_safe_storage_password(identity, environment)
     raise ValueError(f"Safe Storage passwords are not used on {platform}")
 
 

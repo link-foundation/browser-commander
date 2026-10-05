@@ -64,7 +64,11 @@ struct LoginRow {
     password_value: Vec<u8>,
 }
 
-fn reencrypt_logins(database: &Connection, keys: &PasswordKeys<'_>) -> Result<ClassOutcome> {
+fn reencrypt_logins(
+    database: &Connection,
+    keys: &PasswordKeys<'_>,
+    domains: &[String],
+) -> Result<ClassOutcome> {
     let rows = {
         let mut statement =
             database.prepare("SELECT rowid, origin_url, password_value FROM logins")?;
@@ -84,6 +88,11 @@ fn reencrypt_logins(database: &Connection, keys: &PasswordKeys<'_>) -> Result<Cl
     });
     let mut outcome = ClassOutcome::default();
     for row in rows {
+        if !super::domains::matches_domains(row.origin_url.as_deref().unwrap_or_default(), domains)
+        {
+            database.execute("DELETE FROM logins WHERE rowid=?", [row.rowid])?;
+            continue;
+        }
         if row.password_value.is_empty() {
             continue;
         }
@@ -92,12 +101,14 @@ fn reencrypt_logins(database: &Connection, keys: &PasswordKeys<'_>) -> Result<Cl
             String::from_utf8_lossy(&row.password_value[..row.password_value.len().min(3)])
                 .into_owned();
         if prefix == "v20" {
+            database.execute("DELETE FROM logins WHERE rowid=?", [row.rowid])?;
             outcome
                 .skipped
                 .push(MigrationEntry::new("passwords", item, "app-bound-v20"));
             continue;
         }
         if prefix != "v10" && prefix != "v11" {
+            database.execute("DELETE FROM logins WHERE rowid=?", [row.rowid])?;
             outcome.skipped.push(MigrationEntry::new(
                 "passwords",
                 item,
@@ -117,6 +128,7 @@ fn reencrypt_logins(database: &Connection, keys: &PasswordKeys<'_>) -> Result<Cl
         let plaintext = match decrypted {
             Ok(plaintext) => plaintext,
             Err(error) => {
+                database.execute("DELETE FROM logins WHERE rowid=?", [row.rowid])?;
                 outcome.skipped.push(
                     MigrationEntry::new("passwords", item, "decrypt-failed")
                         .with_detail(format!("{error:#}")),
@@ -140,10 +152,20 @@ fn reencrypt_logins(database: &Connection, keys: &PasswordKeys<'_>) -> Result<Cl
 }
 
 /// Migrate saved passwords into the target profile's `Login Data`.
+#[cfg(test)]
 pub(crate) fn migrate_passwords(
     source_profile_dir: &Path,
     target_profile_dir: &Path,
     keys: &PasswordKeys<'_>,
+) -> Result<ClassOutcome> {
+    migrate_passwords_filtered(source_profile_dir, target_profile_dir, keys, &[])
+}
+
+pub(crate) fn migrate_passwords_filtered(
+    source_profile_dir: &Path,
+    target_profile_dir: &Path,
+    keys: &PasswordKeys<'_>,
+    domains: &[String],
 ) -> Result<ClassOutcome> {
     let source_path = source_profile_dir.join("Login Data");
     if !path_exists(&source_path) {
@@ -168,6 +190,8 @@ pub(crate) fn migrate_passwords(
             .with_context(|| format!("Could not write {}", target_path.display()))?;
         let database = Connection::open(&target_path)
             .with_context(|| format!("Could not open {}", target_path.display()))?;
-        reencrypt_logins(&database, keys)
+        let outcome = reencrypt_logins(&database, keys, domains)?;
+        database.execute_batch("VACUUM")?;
+        Ok(outcome)
     })
 }

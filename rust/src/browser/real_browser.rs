@@ -145,6 +145,8 @@ pub struct RealBrowserOptions {
     pub migrate_include: Option<Vec<String>>,
     /// Host filters for migrated cookies.
     pub migrate_domains: Vec<String>,
+    /// Explicit Safari/Passwords CSV export to import before launching.
+    pub migrate_password_csv: Option<PathBuf>,
     /// Enable browser and connector logging; the browser's output is mirrored.
     pub verbose: bool,
     /// Node.js executable for Playwright/Puppeteer bridge engines.
@@ -193,6 +195,7 @@ impl Default for RealBrowserOptions {
             migrate_from: None,
             migrate_include: None,
             migrate_domains: Vec::new(),
+            migrate_password_csv: None,
             verbose: false,
             node_executable: None,
             node_working_dir: None,
@@ -562,6 +565,14 @@ pub fn build_real_browser_args(options: &RealBrowserOptions) -> Result<Vec<Strin
 }
 
 fn validate_launch_request(options: &RealBrowserOptions) -> Result<()> {
+    if crate::browser::browser_sources::find_browser_source(&options.channel)
+        .is_some_and(|source| source.family != "chromium")
+    {
+        return Err(anyhow!(
+            "{} does not support CDP; use its documented WebDriver setup when available",
+            options.channel
+        ));
+    }
     if options.engine == EngineType::Fantoccini {
         return Err(anyhow!(FANTOCCINI_OVER_CDP));
     }
@@ -835,6 +846,7 @@ where
             migrate_options.include = include.clone();
         }
         migrate_options.domains = options.migrate_domains.clone();
+        migrate_options.password_csv = options.migrate_password_csv.clone();
         let result = tokio::task::spawn_blocking(move || migrate_profile(migrate_options)).await;
         let report = match result {
             Ok(Ok(report)) => report,

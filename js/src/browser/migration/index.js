@@ -7,7 +7,13 @@ import {
   browserProfileRoot,
   resolveBrowserProfile,
 } from '../browser-profiles.js';
+import { migrateSafariClass } from './safari-import.js';
+import {
+  validateMigrationOptions,
+  validateMigrationPaths,
+} from './validation.js';
 import { migrateBookmarks } from './bookmarks.js';
+import { pathExists } from './fs-utils.js';
 import { migrateCookies } from './cookies.js';
 import { migrateExtensions } from './extensions.js';
 import {
@@ -114,34 +120,6 @@ function mergeReport(report, className, fragment) {
   report.warnings.push(...(fragment.warnings ?? []));
 }
 
-function reportSafariClasses(report, selected) {
-  for (const type of ALL_DATA_CLASSES.filter(
-    (name) => name !== 'cookies' && selected.has(name)
-  )) {
-    report.skipped.push({
-      type,
-      item: report.source.browser,
-      reason:
-        type === 'passwords'
-          ? 'safari-password-export-required'
-          : 'safari-class-not-supported',
-      detail:
-        type === 'passwords'
-          ? 'Safari passwords live in the Keychain. Export Passwords from Safari or the Passwords app to CSV; CSV import is tracked separately and is not supported yet.'
-          : 'Safari currently supports cookie import only; this data class has not been translated.',
-    });
-  }
-  if (report.cookies.length > 0) {
-    report.warnings.push({
-      type: 'cookies',
-      item: report.source.browser,
-      reason: 'safari-samesite-unavailable',
-      detail:
-        'Cookies.binarycookies does not store SameSite; imported cookies use Lax.',
-    });
-  }
-}
-
 async function resolvePasswordKeys({
   keys,
   browser,
@@ -198,6 +176,7 @@ export async function migrateProfile({
   homeDir = os.homedir(),
   environment = process.env,
   runCommand,
+  passwordCsv,
 }) {
   if (!from?.browser) {
     throw new TypeError('migrateProfile requires from.browser');
@@ -205,6 +184,16 @@ export async function migrateProfile({
   if (!to) {
     throw new TypeError('migrateProfile requires a target directory (to)');
   }
+  validateMigrationOptions({
+    include,
+    domains,
+    targetBrowser,
+    to,
+    platform,
+    homeDir,
+    environment,
+    classes: ALL_DATA_CLASSES,
+  });
   // An explicit userDataDir names the source, so only an installed-browser
   // import is steered towards the profile holding the requested domains.
   const source = await resolveImportSource({
@@ -216,6 +205,11 @@ export async function migrateProfile({
     runCommand,
   });
   const { browser } = source;
+  if (!['chromium', 'firefox', 'safari'].includes(browserFamily(browser))) {
+    throw new TypeError(
+      `Browser ${browser} supports detection only; its profile format is not supported for migration`
+    );
+  }
   const profile = from.profile ?? source.profile ?? 'Default';
   const isFirefox = isFirefoxBrowser(browser);
   const sourceProfileDir = await resolveSourceProfileDir({
@@ -227,6 +221,7 @@ export async function migrateProfile({
     environment,
   });
   const selected = new Set(include);
+  validateMigrationPaths(sourceProfileDir, to);
   const report = {
     source: { browser, profile, userDataDir: from.userDataDir ?? null },
     target: to,
@@ -263,8 +258,21 @@ export async function migrateProfile({
   }
 
   if (browserFamily(browser) === 'safari') {
-    reportSafariClasses(report, selected);
-    return report;
+    return migrateSafariProfile({
+      selected,
+      passwordCsv,
+      keys,
+      browser,
+      targetBrowser,
+      platform,
+      sourceProfileDir,
+      environment,
+      from,
+      to,
+      domains,
+      homeDir,
+      report,
+    });
   }
 
   if (selected.has('bookmarks')) {
@@ -292,6 +300,7 @@ export async function migrateProfile({
         : await migrateHistory({
             sourceProfileDir,
             targetProfileDir: to,
+            domains,
           })
     );
   }
@@ -312,56 +321,176 @@ export async function migrateProfile({
     );
   }
 
-  if (selected.has('passwords')) {
-    const passwordKeys = await resolvePasswordKeys({
-      keys,
-      browser,
-      targetBrowser: targetBrowser ?? (isFirefox ? 'chrome' : browser),
-      platform,
-      sourceProfileDir,
-      environment,
-    });
-    if (!passwordKeys?.targetKey) {
-      report.skipped.push({
-        type: 'passwords',
-        item: 'Login Data',
-        reason: 'target-key-unavailable',
-      });
-      report.warnings.push({
-        type: 'passwords',
-        item: 'Login Data',
-        reason: 'target-key-unavailable',
-        detail:
-          'A target encryption key was not available (on Windows the launcher must generate one and write it into the target Local State); passwords were not migrated.',
-      });
-    } else if (isFirefox) {
-      mergeReport(
-        report,
-        'passwords',
-        await migrateFirefoxPasswords({
-          profileDir: sourceProfileDir,
-          targetProfileDir: to,
-          platform,
-          targetKey: passwordKeys.targetKey,
-          targetPrefix: passwordKeys.targetPrefix,
-          primaryPassword: passwordKeys.primaryPassword,
-        })
-      );
-    } else {
-      mergeReport(
-        report,
-        'passwords',
-        await migratePasswords({
-          sourceProfileDir,
-          targetProfileDir: to,
-          platform,
-          resolveSourceKey: passwordKeys.resolveSourceKey,
-          targetKey: passwordKeys.targetKey,
-          targetPrefix: passwordKeys.targetPrefix,
-        })
-      );
+  if (isFirefox) {
+    for (const type of ['preferences', 'extensions']) {
+      if (selected.has(type)) {
+        report.skipped.push({
+          type,
+          item: sourceProfileDir,
+          reason: 'firefox-class-not-supported',
+          detail:
+            'Firefox preferences and extensions cannot be copied into a Chromium profile.',
+        });
+      }
     }
   }
 
+  if (selected.has('passwords')) {
+    await migratePasswordClass(report, {
+      keys,
+      browser,
+      targetBrowser,
+      platform,
+      sourceProfileDir,
+      environment,
+      to,
+      isFirefox,
+      domains,
+    });
+  }
+
   return report;
+}
+
+async function migrateSafariProfile({
+  report,
+  browser,
+  domains,
+  environment,
+  from,
+  homeDir,
+  keys,
+  passwordCsv,
+  platform,
+  selected,
+  sourceProfileDir,
+  targetBrowser,
+  to,
+}) {
+  const passwordKeys =
+    selected.has('passwords') && passwordCsv
+      ? await resolvePasswordKeys({
+          keys,
+          browser,
+          targetBrowser: targetBrowser ?? 'chrome',
+          platform,
+          sourceProfileDir,
+          environment,
+        })
+      : null;
+  for (const type of ALL_DATA_CLASSES.filter(
+    (type) => type !== 'cookies' && selected.has(type)
+  )) {
+    mergeReport(
+      report,
+      type,
+      await migrateSafariClass({
+        type,
+        profileDir: sourceProfileDir,
+        targetProfileDir: to,
+        domains,
+        passwordCsv,
+        passwordKeys,
+        platform,
+        legacyDir:
+          from.userDataDir ||
+          path.basename(path.dirname(sourceProfileDir)) === 'Profiles'
+            ? undefined
+            : path.join(
+                homeDir,
+                'Library',
+                browser === 'safari' ? 'Safari' : 'Safari Technology Preview'
+              ),
+      })
+    );
+  }
+  if (report.cookies.length) {
+    report.warnings.push({
+      type: 'cookies',
+      item: browser,
+      reason: 'safari-samesite-unavailable',
+      detail:
+        'Cookies.binarycookies does not store SameSite; imported cookies use Lax.',
+    });
+  }
+  return report;
+}
+
+async function migratePasswordClass(
+  report,
+  {
+    browser,
+    domains,
+    environment,
+    isFirefox,
+    keys,
+    platform,
+    sourceProfileDir,
+    targetBrowser,
+    to,
+  }
+) {
+  if (
+    browser === 'yandex' &&
+    (await pathExists(path.join(sourceProfileDir, 'Ya Passman Data')))
+  ) {
+    report.skipped.push({
+      type: 'passwords',
+      item: 'Ya Passman Data',
+      reason: 'yandex-passman-encryption-unsupported',
+      detail:
+        'Ya Passman Data uses local_encryptor_data and may require a Yandex master password; this extra encryption layer is not supported. Export passwords to a supported format instead.',
+    });
+    return report;
+  }
+  const passwordKeys = await resolvePasswordKeys({
+    keys,
+    browser,
+    targetBrowser: targetBrowser ?? (isFirefox ? 'chrome' : browser),
+    platform,
+    sourceProfileDir,
+    environment,
+  });
+  if (!passwordKeys?.targetKey) {
+    report.skipped.push({
+      type: 'passwords',
+      item: 'Login Data',
+      reason: 'target-key-unavailable',
+    });
+    report.warnings.push({
+      type: 'passwords',
+      item: 'Login Data',
+      reason: 'target-key-unavailable',
+      detail:
+        'A target encryption key was not available (on Windows the launcher must generate one and write it into the target Local State); passwords were not migrated.',
+    });
+  } else if (isFirefox) {
+    mergeReport(
+      report,
+      'passwords',
+      await migrateFirefoxPasswords({
+        profileDir: sourceProfileDir,
+        targetProfileDir: to,
+        platform,
+        targetKey: passwordKeys.targetKey,
+        targetPrefix: passwordKeys.targetPrefix,
+        primaryPassword: passwordKeys.primaryPassword,
+        domains,
+      })
+    );
+  } else {
+    mergeReport(
+      report,
+      'passwords',
+      await migratePasswords({
+        sourceProfileDir,
+        targetProfileDir: to,
+        platform,
+        resolveSourceKey: passwordKeys.resolveSourceKey,
+        targetKey: passwordKeys.targetKey,
+        targetPrefix: passwordKeys.targetPrefix,
+        domains,
+      })
+    );
+  }
 }

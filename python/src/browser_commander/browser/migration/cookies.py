@@ -145,7 +145,13 @@ def migrate_cookies(
             # Later batches win, but the first position is kept, as with a
             # JavaScript Map.
             seen[key] = cookie
-    cookies = list(seen.values())
+    from .domains import matches_domains
+
+    cookies = [
+        cookie
+        for cookie in seen.values()
+        if matches_domains(cookie.get("domain", ""), domains)
+    ]
 
     skipped = [
         {

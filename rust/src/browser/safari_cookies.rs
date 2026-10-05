@@ -143,10 +143,42 @@ fn protected(error: &io::Error) -> bool {
 }
 
 pub(crate) fn find_safari_cookie_file(profile_dir: &Path) -> Option<PathBuf> {
-    for candidate in [
+    let named = profile_dir
+        .parent()
+        .and_then(Path::file_name)
+        .is_some_and(|name| name == "Profiles")
+        && profile_dir
+            .parent()
+            .and_then(Path::parent)
+            .and_then(Path::file_name)
+            .is_some_and(|name| name == "Safari");
+    let mut candidates = if named {
+        let root = profile_dir
+            .parent()
+            .and_then(Path::parent)
+            .and_then(Path::parent)
+            .unwrap();
+        vec![root
+            .join("WebKit/WebsiteDataStore")
+            .join(
+                profile_dir
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_lowercase(),
+            )
+            .join("Cookies/Cookies.binarycookies")]
+    } else {
+        vec![
+            profile_dir.join("WebKit/WebsiteData/Default/Cookies/Cookies.binarycookies"),
+            profile_dir.join("WebKit/WebsiteDataStore/Default/Cookies/Cookies.binarycookies"),
+        ]
+    };
+    candidates.extend([
         profile_dir.join("Cookies/Cookies.binarycookies"),
         profile_dir.join("Cookies.binarycookies"),
-    ] {
+    ]);
+    for candidate in candidates {
         match fs::metadata(&candidate) {
             Ok(metadata) if metadata.is_file() => return Some(candidate),
             Err(error) if protected(&error) => return Some(candidate),

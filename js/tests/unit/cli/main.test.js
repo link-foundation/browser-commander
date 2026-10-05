@@ -247,6 +247,8 @@ describe('runCli', () => {
       'cookies, bookmarks',
       '--domain',
       'a.test',
+      '--password-csv',
+      '/tmp/export.csv',
     ]);
 
     // The source browser is grouped under `from` so migrateProfile receives
@@ -254,6 +256,7 @@ describe('runCli', () => {
     assert.equal(document.options.from.browser, 'chrome');
     assert.deepEqual(document.options.include, ['cookies', 'bookmarks']);
     assert.deepEqual(document.options.domains, ['a.test']);
+    assert.equal(document.options.passwordCsv, '/tmp/export.csv');
   });
 
   it('lists cookie sources with per-domain counts', async () => {

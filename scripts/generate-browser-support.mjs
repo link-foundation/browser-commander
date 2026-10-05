@@ -86,6 +86,41 @@ export function renderBrowserSupport(browsers) {
   return [line(headers), divider, ...rows.map(line)].join('\n');
 }
 
+/** Installed control routes, separate from source-root availability above. */
+export function renderBrowserControls(browsers) {
+  const headers = [
+    'Browser',
+    ...PLATFORMS.map((platform) => `${platform.title} control`),
+    'Source',
+    'Protect roots',
+  ];
+  const routes = {
+    chromium: 'CDP',
+    firefox: 'WebDriver setup',
+    safari: 'safaridriver setup',
+  };
+  const rows = browsers.map((browser) => [
+    browser.id,
+    ...PLATFORMS.map((platform) =>
+      (browser.roots?.[platform.id] ?? []).length
+        ? (routes[browser.family] ?? 'unsupported')
+        : '—'
+    ),
+    browser.family === 'detection' ? 'detection only' : browser.family,
+    'Yes',
+  ]);
+  const widths = headers.map((header, column) =>
+    Math.max(header.length, 3, ...rows.map((row) => row[column].length))
+  );
+  const line = (cells) =>
+    `| ${cells.map((cell, column) => cell.padEnd(widths[column])).join(' | ')} |`;
+  return [
+    line(headers),
+    line(widths.map((width) => '-'.repeat(width))),
+    ...rows.map(line),
+  ].join('\n');
+}
+
 function replaceBetweenMarkers(document, table) {
   const begin = document.indexOf(BEGIN_MARKER);
   const end = document.indexOf(END_MARKER);
@@ -105,7 +140,8 @@ function main() {
   // Git may check Markdown out with CRLF on Windows. Compare logical content
   // using the LF endings the renderer emits, avoiding false drift.
   const current = readFileSync(documentPath, 'utf8').replaceAll('\r\n', '\n');
-  const table = renderBrowserSupport(readCatalogue(options.root));
+  const browsers = readCatalogue(options.root);
+  const table = `${renderBrowserSupport(browsers)}\n\n${renderBrowserControls(browsers)}`;
   const next = replaceBetweenMarkers(current, table);
   if (options.check) {
     if (next !== current) {

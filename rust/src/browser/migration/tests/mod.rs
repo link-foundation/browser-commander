@@ -15,4 +15,5 @@ mod index;
 mod os_crypt_keys;
 mod passwords;
 mod preferences;
+mod safari;
 mod sqlite_snapshot;

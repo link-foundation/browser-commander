@@ -3,9 +3,18 @@
     {
       "title": "Command protocol",
       "features": [
-        { "id": "cli.version", "title": "Native CLI version" },
-        { "id": "cli.script", "title": "Run a command script" },
-        { "id": "cli.serve", "title": "Serve JSON-RPC over stdio" }
+        {
+          "id": "cli.version",
+          "title": "Native CLI version"
+        },
+        {
+          "id": "cli.script",
+          "title": "Run a command script"
+        },
+        {
+          "id": "cli.serve",
+          "title": "Serve JSON-RPC over stdio"
+        }
       ]
     },
     {
@@ -18,18 +27,32 @@
         {
           "id": "engine.puppeteer",
           "title": "Drive Puppeteer through its typed API"
+        },
+        {
+          "id": "engines.webdriver",
+          "title": "Drive Selenium / WebDriver through the native API"
+        },
+        {
+          "id": "engines.cli-matrix",
+          "title": "Drive Playwright, Puppeteer, and Selenium through the CLI"
         }
       ]
     },
     {
       "title": "Profile and user browser",
       "features": [
-        { "id": "migration.profile", "title": "Read-only profile migration" },
+        {
+          "id": "migration.profile",
+          "title": "Read-only profile migration"
+        },
         {
           "id": "migration.launch",
           "title": "Migrate before real browser launch"
         },
-        { "id": "attach.snapshot", "title": "Attach to a profile snapshot" },
+        {
+          "id": "attach.snapshot",
+          "title": "Attach to a profile snapshot"
+        },
         {
           "id": "attach.extension",
           "title": "Attach through a browser extension"
@@ -81,8 +104,14 @@
           "id": "parity.measure",
           "title": "Measure against a hand-started browser"
         },
-        { "id": "trace.record", "title": "Record a portable trace" },
-        { "id": "trace.read", "title": "Read a portable trace" }
+        {
+          "id": "trace.record",
+          "title": "Record a portable trace"
+        },
+        {
+          "id": "trace.read",
+          "title": "Read a portable trace"
+        }
       ]
     }
   ]

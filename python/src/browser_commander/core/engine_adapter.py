@@ -12,11 +12,22 @@ Benefits:
 
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from typing import Any
 
 from browser_commander.core.constants import TIMING
 from browser_commander.core.engine_detection import EngineType
+
+
+def _is_javascript_function(script: str) -> bool:
+    """Distinguish common callable probes from legacy WebDriver script bodies."""
+    return bool(
+        re.match(
+            r"^\s*(?:async\s+)?(?:function\b|(?:\([^)]*\)|[\w$]+)\s*=>)",
+            script,
+        )
+    )
 
 
 class EngineAdapter(ABC):
@@ -572,13 +583,17 @@ class SeleniumAdapter(EngineAdapter):
         *args: Any,
     ) -> Any:
         """Evaluate JavaScript on element."""
-        # Wrap the script to work with Selenium's execute_script
-        wrapped_script = f"return (function(el, ...args) {{ {script} }})(arguments[0], ...Array.from(arguments).slice(1))"
+        # Common probes are Playwright function sources. Invoke them instead
+        # of treating the arrow expression as a body that returns nothing.
+        if _is_javascript_function(script):
+            wrapped_script = f"return ({script})(...arguments)"
+        else:
+            wrapped_script = f"return (function(el, ...args) {{ {script} }})(arguments[0], ...Array.from(arguments).slice(1))"
         return self.page.execute_script(wrapped_script, locator_or_element, *args)
 
     async def get_text_content(self, locator_or_element: Any) -> str | None:
         """Get element text content."""
-        return locator_or_element.text
+        return locator_or_element.get_property("textContent")
 
     async def get_input_value(self, locator_or_element: Any) -> str:
         """Get input value."""
@@ -698,7 +713,10 @@ class SeleniumAdapter(EngineAdapter):
 
     async def evaluate_on_page(self, script: str, *args: Any) -> Any:
         """Evaluate JavaScript in page context."""
-        wrapped_script = f"return (function(...args) {{ {script} }})(...arguments)"
+        if _is_javascript_function(script):
+            wrapped_script = f"return ({script})(...arguments)"
+        else:
+            wrapped_script = f"return (function(...args) {{ {script} }})(...arguments)"
         return self.page.execute_script(wrapped_script, *args)
 
     def get_url(self) -> str:
@@ -713,6 +731,12 @@ class SeleniumAdapter(EngineAdapter):
         """Navigate to URL."""
         self.page.set_page_load_timeout(timeout / 1000)
         self.page.get(url)
+
+    async def pdf(self, **options: Any) -> bytes:
+        """Generate a PDF with the native WebDriver Print Page command."""
+        from browser_commander.browser.webdriver_pdf import webdriver_pdf
+
+        return webdriver_pdf(self.page, options)
 
 
 def create_engine_adapter(page: Any, engine: EngineType) -> EngineAdapter:

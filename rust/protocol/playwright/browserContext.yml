@@ -136,11 +136,8 @@ BrowserContext:
       group: configuration
       parameters:
         httpCredentials:
-          type: object?
-          properties:
-            username: string
-            password: string
-            origin: string?
+          type: array?
+          items: HttpCredentials
 
     setNetworkInterceptionPatterns:
       title: Route requests
@@ -172,6 +169,8 @@ BrowserContext:
 
     setOffline:
       title: Set offline mode
+      renderParams:
+      - offline
       parameters:
         offline: boolean
 
@@ -180,6 +179,7 @@ BrowserContext:
       group: configuration
       parameters:
         indexedDB: boolean?
+        opfs: boolean?
         credentials: boolean?
       returns:
         cookies:
@@ -276,6 +276,7 @@ BrowserContext:
           literals:
           - console
           - dialog
+          - dialogClosed
           - request
           - response
           - requestFinished
@@ -369,6 +370,10 @@ BrowserContext:
     close:
 
     dialog:
+      parameters:
+        dialog: Dialog
+
+    dialogClosed:
       parameters:
         dialog: Dialog
 

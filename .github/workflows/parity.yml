@@ -161,7 +161,7 @@ jobs:
         shell: bash
         run: |
           bash ../scripts/run-with-budget-warning.sh 300 "WebDriver suite" \
-            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" npm run test:e2e:webdriver -- --reporter tap 2>&1 | tee webdriver.log'
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/webdriver.e2e.test.js tests/e2e/engine-matrix.e2e.test.js 2>&1 | tee webdriver.log'
 
       - name: Fail on a WebDriver suite that asserted nothing
         # The runner has no Firefox, so the Firefox half is the only skip
@@ -374,7 +374,7 @@ jobs:
         shell: bash
         run: |
           bash scripts/run-with-budget-warning.sh 180 "Python native snapshot launches" \
-            python -m pytest python/tests/e2e/test_snapshot.py python/tests/e2e/test_puppeteer_bridge.py python/tests/e2e/test_trace_recording.py -v
+            python -m pytest python/tests/e2e/test_snapshot.py python/tests/e2e/test_puppeteer_bridge.py python/tests/e2e/test_trace_recording.py python/tests/e2e/test_engine_matrix.py -v
 
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran

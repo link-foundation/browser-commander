@@ -2,6 +2,9 @@
 
 A Rust library for universal browser automation that provides a unified API for different browser automation engines. The key focus is on **stoppable page triggers** - ensuring automation logic is properly mounted/unmounted during page navigation.
 
+See [engine support and native/CLI defaults](../docs/engine-support.md) for the
+cross-language API matrix and Selenium examples.
+
 ## Installation
 
 Add this to your `Cargo.toml`:

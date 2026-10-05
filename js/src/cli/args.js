@@ -31,12 +31,15 @@ const BROWSER_OPTIONS = Object.freeze({
   'local-state': STRINGS,
   'default-browser-check': FLAG,
   'first-run': FLAG,
+  'driver-path': STRING,
+  bidi: FLAG,
 });
 
 /** Options accepted by every page command. */
 const PAGE_OPTIONS = Object.freeze({
   ...BROWSER_OPTIONS,
   'cdp-endpoint': STRING,
+  'server-url': STRING,
   url: STRING,
 });
 
@@ -248,6 +251,8 @@ export function launchParams(options) {
     localState: settings(options.localState, '--local-state'),
     defaultBrowserCheck: options.defaultBrowserCheck,
     firstRun: options.firstRun,
+    driverPath: options.driverPath,
+    bidi: options.bidi,
   };
   return Object.fromEntries(
     Object.entries(params).filter(([, value]) => value !== undefined)

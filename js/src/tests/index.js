@@ -57,6 +57,7 @@ export {
 export const SUPPORTED_BROWSER_TEST_ENGINES = Object.freeze([
   'playwright',
   'puppeteer',
+  'selenium',
 ]);
 
 export const DEFAULT_TIMINGS_FILENAME = '.browser-commander-test-timings.json';

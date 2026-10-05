@@ -165,21 +165,11 @@ pub struct BrowserContextSetGeolocationParams {
     pub geolocation: Option<BrowserContextSetGeolocationParamsGeolocation>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct BrowserContextSetHTTPCredentialsParamsHttpCredentials {
-    #[serde(rename = "username")]
-    pub username: String,
-    #[serde(rename = "password")]
-    pub password: String,
-    #[serde(rename = "origin", default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<String>,
-}
-
 /// Parameters of `BrowserContext.setHTTPCredentials` (Set HTTP credentials).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct BrowserContextSetHTTPCredentialsParams {
     #[serde(rename = "httpCredentials", default, skip_serializing_if = "Option::is_none")]
-    pub http_credentials: Option<BrowserContextSetHTTPCredentialsParamsHttpCredentials>,
+    pub http_credentials: Option<Vec<HttpCredentials>>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -232,6 +222,8 @@ pub struct BrowserContextSetOfflineParams {
 pub struct BrowserContextStorageStateParams {
     #[serde(rename = "indexedDB", default, skip_serializing_if = "Option::is_none")]
     pub indexed_db: Option<bool>,
+    #[serde(rename = "opfs", default, skip_serializing_if = "Option::is_none")]
+    pub opfs: Option<bool>,
     #[serde(rename = "credentials", default, skip_serializing_if = "Option::is_none")]
     pub credentials: Option<bool>,
 }
@@ -360,6 +352,8 @@ pub enum BrowserContextUpdateSubscriptionParamsEvent {
     Console,
     #[serde(rename = "dialog")]
     Dialog,
+    #[serde(rename = "dialogClosed")]
+    DialogClosed,
     #[serde(rename = "request")]
     Request,
     #[serde(rename = "response")]
@@ -504,6 +498,13 @@ pub struct BrowserContextDialogEventParams {
     pub dialog: Ref<Dialog>,
 }
 
+/// Payload of the `BrowserContext.dialogClosed` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct BrowserContextDialogClosedEventParams {
+    #[serde(rename = "dialog")]
+    pub dialog: Ref<Dialog>,
+}
+
 /// Payload of the `BrowserContext.page` event.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct BrowserContextPageEventParams {
@@ -632,6 +633,8 @@ pub enum BrowserContextEvent {
     Close,
     /// `BrowserContext.dialog`
     Dialog(BrowserContextDialogEventParams),
+    /// `BrowserContext.dialogClosed`
+    DialogClosed(BrowserContextDialogClosedEventParams),
     /// `BrowserContext.page`
     Page(BrowserContextPageEventParams),
     /// `BrowserContext.pageError`
@@ -668,6 +671,7 @@ impl ProtocolEvent for BrowserContextEvent {
             "console" => Ok(Self::Console(serde_json::from_value(params)?)),
             "close" => Ok(Self::Close),
             "dialog" => Ok(Self::Dialog(serde_json::from_value(params)?)),
+            "dialogClosed" => Ok(Self::DialogClosed(serde_json::from_value(params)?)),
             "page" => Ok(Self::Page(serde_json::from_value(params)?)),
             "pageError" => Ok(Self::PageError(serde_json::from_value(params)?)),
             "route" => Ok(Self::Route(serde_json::from_value(params)?)),

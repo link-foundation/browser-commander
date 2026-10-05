@@ -9,6 +9,7 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
+import { CHROME_LAUNCH_OPTIONS } from '../helpers/e2e-browser.js';
 
 // Dynamic import for puppeteer since it may not be installed
 let puppeteer;
@@ -22,22 +23,15 @@ describe('E2E Tests - Puppeteer Engine', { skip: !process.env.RUN_E2E }, () => {
   const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
 
   before(async () => {
-    try {
-      puppeteer = await import('puppeteer');
-      const module = await import('../../src/index.js');
-      createCommander = module.createCommander;
-
-      browser = await puppeteer.default.launch({
-        headless: process.env.HEADLESS !== 'false' ? 'new' : false,
-      });
-      page = await browser.newPage();
-      commander = createCommander({ page, verbose: true });
-    } catch (error) {
-      console.log(
-        'Skipping E2E tests - puppeteer not available or test app not running'
-      );
-      console.log('Error:', error.message);
-    }
+    puppeteer = await import('puppeteer');
+    const module = await import('../../src/index.js');
+    createCommander = module.createCommander;
+    browser = await puppeteer.default.launch({
+      headless: process.env.HEADLESS !== 'false',
+      ...CHROME_LAUNCH_OPTIONS,
+    });
+    page = await browser.newPage();
+    commander = createCommander({ page, verbose: true });
   });
 
   after(async () => {
@@ -352,7 +346,9 @@ describe('E2E Tests - Puppeteer Engine', { skip: !process.env.RUN_E2E }, () => {
       }
 
       // Scroll to specific item
-      await commander.scroll({ selector: '[data-testid="scroll-item-15"]' });
+      await commander.scrollIntoView({
+        locatorOrElement: await page.$('[data-testid="scroll-item-15"]'),
+      });
       await commander.wait({ ms: 500 });
 
       // Target should be visible

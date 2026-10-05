@@ -47,27 +47,6 @@ pub struct PlaywrightNewRequestParamsClientCertificates {
     pub pfx: Option<Binary>,
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum PlaywrightNewRequestParamsHttpCredentialsSend {
-    #[default]
-    #[serde(rename = "always")]
-    Always,
-    #[serde(rename = "unauthorized")]
-    Unauthorized,
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct PlaywrightNewRequestParamsHttpCredentials {
-    #[serde(rename = "username")]
-    pub username: String,
-    #[serde(rename = "password")]
-    pub password: String,
-    #[serde(rename = "origin", default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<String>,
-    #[serde(rename = "send", default, skip_serializing_if = "Option::is_none")]
-    pub send: Option<PlaywrightNewRequestParamsHttpCredentialsSend>,
-}
-
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PlaywrightNewRequestParamsProxy {
     #[serde(rename = "server")]
@@ -106,7 +85,7 @@ pub struct PlaywrightNewRequestParams {
     #[serde(rename = "maxRedirects", default, skip_serializing_if = "Option::is_none")]
     pub max_redirects: Option<i64>,
     #[serde(rename = "httpCredentials", default, skip_serializing_if = "Option::is_none")]
-    pub http_credentials: Option<PlaywrightNewRequestParamsHttpCredentials>,
+    pub http_credentials: Option<Vec<HttpCredentials>>,
     #[serde(rename = "proxy", default, skip_serializing_if = "Option::is_none")]
     pub proxy: Option<PlaywrightNewRequestParamsProxy>,
     #[serde(rename = "storageState", default, skip_serializing_if = "Option::is_none")]

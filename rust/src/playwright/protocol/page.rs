@@ -768,6 +768,8 @@ pub enum PageUpdateSubscriptionParamsEvent {
     Console,
     #[serde(rename = "dialog")]
     Dialog,
+    #[serde(rename = "dialogClosed")]
+    DialogClosed,
     #[serde(rename = "fileChooser")]
     FileChooser,
     #[serde(rename = "request")]
@@ -938,12 +940,5 @@ pub struct PageFileChooserEventParams {
     pub element: Ref<ElementHandle>,
     #[serde(rename = "isMultiple")]
     pub is_multiple: bool,
-}
-
-/// Payload of the `Page.frameAttached` event.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct PageFrameAttachedEventParams {
-    #[serde(rename = "frame")]
-    pub frame: Ref<Frame>,
 }
 

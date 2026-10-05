@@ -1,5 +1,8 @@
 [build-system]
-requires = ["hatchling"]
+requires = [
+    "hatchling>=1.32.4; python_version >= '3.10'",
+    "hatchling>=1.27.0; python_version < '3.10'",
+]
 build-backend = "hatchling.build"
 
 [project]
@@ -32,29 +35,52 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["cryptography>=42.0.0"]
+dependencies = ["cryptography>=50.0.2"]
 
 [project.scripts]
 browser-commander = "browser_commander.cli:main"
 
 [project.optional-dependencies]
-playwright = ["playwright>=1.40.0"]
-selenium = ["selenium>=4.15.0"]
-extension = ["websockets>=14,<16"]
-all = ["playwright>=1.40.0", "selenium>=4.15.0", "websockets>=14,<16"]
+playwright = [
+    "playwright>=1.63.0; python_version >= '3.10'",
+    "playwright>=1.60.0; python_version < '3.10'",
+]
+selenium = [
+    "selenium>=4.50.0; python_version >= '3.10'",
+    "selenium>=4.36.0; python_version < '3.10'",
+]
+extension = [
+    "websockets>=17.2; python_version >= '3.11'",
+    "websockets>=15.0.1; python_version < '3.11'",
+]
+all = [
+    "playwright>=1.63.0; python_version >= '3.10'",
+    "playwright>=1.60.0; python_version < '3.10'",
+    "selenium>=4.50.0; python_version >= '3.10'",
+    "selenium>=4.36.0; python_version < '3.10'",
+    "websockets>=17.2; python_version >= '3.11'",
+    "websockets>=15.0.1; python_version < '3.11'",
+]
 dev = [
-    "ruff>=0.8.0",
-    # mypy 2.x no longer supports type-checking Python 3.9, which this package supports.
-    "mypy>=1.13.0,<2.0",
-    "pytest>=8.3.0",
-    "pytest-asyncio>=0.24.0",
-    "pytest-cov>=6.0.0",
-    "pre-commit>=4.0.0",
-    "scriv[toml]>=1.5.0",
-    # For testing, include both browser drivers
-    "playwright>=1.40.0",
-    "selenium>=4.15.0",
-    "websockets>=14,<16",
+    "tomli>=2.4.1; python_version < '3.11'",
+    "ruff>=0.16.10",
+    "mypy>=2.4.0; python_version >= '3.10'",
+    "mypy>=1.19.1; python_version < '3.10'",
+    "pytest>=9.1.1; python_version >= '3.10'",
+    "pytest>=8.4.2; python_version < '3.10'",
+    "pytest-asyncio>=1.4.0; python_version >= '3.10'",
+    "pytest-asyncio>=1.2.0; python_version < '3.10'",
+    "pytest-cov>=7.1.0",
+    "pre-commit>=4.6.2; python_version >= '3.10'",
+    "pre-commit>=4.3.0; python_version < '3.10'",
+    "scriv[toml]>=1.8.0; python_version >= '3.10'",
+    "scriv[toml]>=1.7.0; python_version < '3.10'",
+    "playwright>=1.63.0; python_version >= '3.10'",
+    "playwright>=1.60.0; python_version < '3.10'",
+    "selenium>=4.50.0; python_version >= '3.10'",
+    "selenium>=4.36.0; python_version < '3.10'",
+    "websockets>=17.2; python_version >= '3.11'",
+    "websockets>=15.0.1; python_version < '3.11'",
 ]
 
 [project.urls]
@@ -108,7 +134,7 @@ ignore = [
 known-first-party = ["browser_commander"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 # Relaxed strictness for initial release, will tighten over time
 strict = false
 warn_return_any = false

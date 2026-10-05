@@ -5,5 +5,12 @@
     "languages": ["javascript", "python", "rust"],
     "tier": "untyped-via-cli",
     "reason": "The command-script and stdio protocols accept dynamic JSON payloads by design. Their CLI entry points are untyped; callers that need compile-time engine types must use the language APIs instead."
+  },
+  {
+    "id": "dynamic-cross-engine-cli",
+    "features": ["engines.cli-matrix"],
+    "languages": ["python", "rust"],
+    "tier": "untyped-via-cli",
+    "reason": "The optional shared CLI accepts dynamic JSON and forwards all three engines to the JavaScript command server. Native library launches remain the default; the CLI needs Node.js and the selected JavaScript engine package."
   }
 ]

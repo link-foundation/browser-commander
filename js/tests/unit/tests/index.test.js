@@ -26,12 +26,13 @@ describe('browser-commander/tests', () => {
     assert.deepStrictEqual(normalizeBrowserTestEngines(), [
       'playwright',
       'puppeteer',
+      'selenium',
     ]);
     assert.deepStrictEqual(normalizeBrowserTestEngines('Playwright'), [
       'playwright',
     ]);
     assert.throws(
-      () => normalizeBrowserTestEngines('selenium'),
+      () => normalizeBrowserTestEngines('unknown'),
       /Unsupported browser test engine/
     );
   });

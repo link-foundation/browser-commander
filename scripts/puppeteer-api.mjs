@@ -40,7 +40,32 @@ const TRANSPARENT = new Set([
 const HANDLE_ALIASES = { HandleFor: 'JSHandle', HandleOr: 'JSHandle' };
 
 function ts() {
-  return require('typescript');
+  return require('typescript/unstable/ast');
+}
+
+/** Parse declarations with TypeScript 7's native compiler and virtual files. */
+function parseDeclarations(source) {
+  const { API } = require('typescript/unstable/sync');
+  const { createVirtualFileSystem } = require('typescript/unstable/fs');
+  const cwd = path.join(ROOT, 'experiments', 'puppeteer-api-virtual');
+  const config = path.join(cwd, 'tsconfig.json');
+  const declaration = path.join(cwd, 'types.d.ts');
+  const api = new API({
+    cwd,
+    fs: createVirtualFileSystem({
+      [config]: JSON.stringify({
+        files: ['types.d.ts'],
+        compilerOptions: { noLib: true },
+      }),
+      [declaration]: source,
+    }),
+  });
+  try {
+    const snapshot = api.updateSnapshot({ openProjects: [config] });
+    return snapshot.getProject(config).program.getSourceFile(declaration);
+  } finally {
+    api.close();
+  }
 }
 
 function hasModifier(node, kind) {
@@ -426,12 +451,7 @@ function enumKind(declaration) {
  */
 export function extractPuppeteerApi(source) {
   const t = ts();
-  const sourceFile = t.createSourceFile(
-    'types.d.ts',
-    source,
-    t.ScriptTarget.Latest,
-    true
-  );
+  const sourceFile = parseDeclarations(source);
   const declarations = sourceFile.statements.filter(
     (statement) =>
       (t.isClassDeclaration(statement) ||

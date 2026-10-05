@@ -3,12 +3,12 @@
 
 //! Typed Playwright protocol bindings generated from the vendored spec.
 //!
-//! 34 interfaces and 318 commands. Every interface is a
+//! 34 interfaces and 320 commands. Every interface is a
 //! channel type with one `async fn` per command; see
 //! [`crate::playwright::connection`] for the runtime they run on.
 
 /// Playwright release the vendored protocol spec was taken from.
-pub const PROTOCOL_VERSION: &str = "1.62.1";
+pub const PROTOCOL_VERSION: &str = "1.63.0";
 
 mod android;
 mod android_device;

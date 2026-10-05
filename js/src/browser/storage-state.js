@@ -30,6 +30,33 @@ function restoreOriginLocalStorage(origins) {
   }
 }
 
+/** Restore classic WebDriver cookies; origin preload scripts require BiDi. */
+export async function restoreWebDriverStorageState({ page, storageState }) {
+  if (!storageState) {
+    return;
+  }
+  const origins = storageState.origins ?? [];
+  if (origins.length) {
+    await page.evaluateOnNewDocument(restoreOriginLocalStorage, origins);
+    await page.evaluate(restoreOriginLocalStorage, origins);
+  }
+  const originalUrl = page.url();
+  const cookies = storageState.cookies ?? [];
+  try {
+    for (const cookie of cookies) {
+      const origin = cookie.url
+        ? new URL(cookie.url).origin
+        : `${cookie.secure ? 'https' : 'http'}://${cookie.domain.replace(/^\./u, '')}`;
+      await page.goto(origin);
+      await page.setCookie(cookie);
+    }
+  } finally {
+    if (cookies.length) {
+      await page.goto(originalUrl);
+    }
+  }
+}
+
 /**
  * Apply Playwright-compatible storage state to a Puppeteer page.
  * @param {Object} options - Restore options

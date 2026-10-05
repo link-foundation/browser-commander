@@ -73,6 +73,8 @@ pub struct BrowserTypeConnectOverCDPParams {
     pub is_local: Option<bool>,
     #[serde(rename = "noDefaults", default, skip_serializing_if = "Option::is_none")]
     pub no_defaults: Option<bool>,
+    #[serde(rename = "isWebView", default, skip_serializing_if = "Option::is_none")]
+    pub is_web_view: Option<bool>,
     #[serde(rename = "artifactsDir", default, skip_serializing_if = "Option::is_none")]
     pub artifacts_dir: Option<String>,
     #[serde(rename = "transport", default, skip_serializing_if = "Option::is_none")]

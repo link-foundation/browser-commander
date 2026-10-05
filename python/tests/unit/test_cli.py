@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from browser_commander import cli
 from browser_commander.utilities.subprocess import CommandResult
 
@@ -15,8 +17,11 @@ async def test_version_reports_the_python_package(capsys: Any) -> None:
     assert '"language":"python"' in capsys.readouterr().out
 
 
-# feature-parity: cli.script@untyped-via-cli
-async def test_script_forwards_exact_arguments(monkeypatch: Any, capsys: Any) -> None:
+# feature-parity: cli.script@untyped-via-cli engines.cli-matrix@untyped-via-cli
+@pytest.mark.parametrize("engine", ["playwright", "puppeteer", "selenium"])
+async def test_script_forwards_exact_arguments(
+    monkeypatch: Any, capsys: Any, engine: str
+) -> None:
     calls: list[Any] = []
 
     async def run(node: str, args: list[str], **options: Any) -> CommandResult:
@@ -25,11 +30,11 @@ async def test_script_forwards_exact_arguments(monkeypatch: Any, capsys: Any) ->
 
     monkeypatch.setattr(cli, "js_cli_path", lambda: Path("/tmp/cli.js"))
     monkeypatch.setattr(cli, "run_command", run)
-    assert await cli.run_cli(["run", "script.json", "--engine", "playwright"]) == 0
+    assert await cli.run_cli(["run", "script.json", "--engine", engine]) == 0
     assert calls == [
         (
             "node",
-            [str(Path("/tmp/cli.js")), "run", "script.json", "--engine", "playwright"],
+            [str(Path("/tmp/cli.js")), "run", "script.json", "--engine", engine],
             {"check": False},
         )
     ]

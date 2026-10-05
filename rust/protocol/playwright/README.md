@@ -1,8 +1,8 @@
 # Vendored Playwright protocol spec
 
 These YAML files are copied verbatim from
-[`microsoft/playwright` `packages/protocol/spec/`](https://github.com/microsoft/playwright/tree/v1.62.1/packages/protocol/spec)
-at tag `v1.62.1`. They are licensed under the Apache License 2.0 by
+[`microsoft/playwright` `packages/protocol/spec/`](https://github.com/microsoft/playwright/tree/v1.63.0/packages/protocol/spec)
+at tag `v1.63.0`. They are licensed under the Apache License 2.0 by
 Microsoft Corporation (see the header of every file).
 
 `scripts/generate-playwright-protocol.mjs` turns them into the typed Rust

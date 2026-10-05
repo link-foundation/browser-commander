@@ -154,7 +154,7 @@ export default [
     ignores: [
       'node_modules/**',
       'coverage/**',
-      'dist/**',
+      '**/dist/**',
       'docs-api/**',
       '*.min.js',
       '.eslintcache',

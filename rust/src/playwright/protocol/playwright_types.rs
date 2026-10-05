@@ -165,6 +165,26 @@ pub struct IndexedDBDatabase {
     pub stores: Vec<IndexedDBDatabaseStores>,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum OPFSEntryType {
+    #[default]
+    #[serde(rename = "file")]
+    File,
+    #[serde(rename = "directory")]
+    Directory,
+}
+
+/// `OPFSEntry` object from `playwright.yml`.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct OPFSEntry {
+    #[serde(rename = "path")]
+    pub path: String,
+    #[serde(rename = "type")]
+    pub r#type: OPFSEntryType,
+    #[serde(rename = "base64", default, skip_serializing_if = "Option::is_none")]
+    pub base64: Option<String>,
+}
+
 /// `SetOriginStorage` object from `playwright.yml`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SetOriginStorage {
@@ -174,6 +194,8 @@ pub struct SetOriginStorage {
     pub local_storage: Vec<NameValue>,
     #[serde(rename = "indexedDB", default, skip_serializing_if = "Option::is_none")]
     pub indexed_db: Option<Vec<IndexedDBDatabase>>,
+    #[serde(rename = "opfs", default, skip_serializing_if = "Option::is_none")]
+    pub opfs: Option<Vec<OPFSEntry>>,
 }
 
 /// `OriginStorage` object from `playwright.yml`.
@@ -185,6 +207,8 @@ pub struct OriginStorage {
     pub local_storage: Vec<NameValue>,
     #[serde(rename = "indexedDB", default, skip_serializing_if = "Option::is_none")]
     pub indexed_db: Option<Vec<IndexedDBDatabase>>,
+    #[serde(rename = "opfs", default, skip_serializing_if = "Option::is_none")]
+    pub opfs: Option<Vec<OPFSEntry>>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]

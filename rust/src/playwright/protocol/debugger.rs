@@ -58,11 +58,59 @@ pub struct DebuggerPausedStateChangedEventParams {
     pub paused_details: Option<DebuggerPausedStateChangedEventParamsPausedDetails>,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct DebuggerApiCallsUpdatedEventParamsApiCallsLocation {
+    #[serde(rename = "file")]
+    pub file: String,
+    #[serde(rename = "line", default, skip_serializing_if = "Option::is_none")]
+    pub line: Option<i64>,
+    #[serde(rename = "column", default, skip_serializing_if = "Option::is_none")]
+    pub column: Option<i64>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum DebuggerApiCallsUpdatedEventParamsApiCallsStatus {
+    #[default]
+    #[serde(rename = "running")]
+    Running,
+    #[serde(rename = "success")]
+    Success,
+    #[serde(rename = "error")]
+    Error,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct DebuggerApiCallsUpdatedEventParamsApiCalls {
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "title")]
+    pub title: String,
+    #[serde(rename = "location", default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<DebuggerApiCallsUpdatedEventParamsApiCallsLocation>,
+    #[serde(rename = "newLogEntries")]
+    pub new_log_entries: Vec<String>,
+    #[serde(rename = "actionPoint", default, skip_serializing_if = "Option::is_none")]
+    pub action_point: Option<Point>,
+    #[serde(rename = "status")]
+    pub status: DebuggerApiCallsUpdatedEventParamsApiCallsStatus,
+    #[serde(rename = "error", default, skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+/// Payload of the `Debugger.apiCallsUpdated` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct DebuggerApiCallsUpdatedEventParams {
+    #[serde(rename = "apiCalls")]
+    pub api_calls: Vec<DebuggerApiCallsUpdatedEventParamsApiCalls>,
+}
+
 /// Events a `Debugger` channel can emit.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DebuggerEvent {
     /// `Debugger.pausedStateChanged`
     PausedStateChanged(DebuggerPausedStateChangedEventParams),
+    /// `Debugger.apiCallsUpdated`
+    ApiCallsUpdated(DebuggerApiCallsUpdatedEventParams),
     /// An event this binding does not know (a newer driver).
     Unknown {
         /// Event name.
@@ -76,6 +124,7 @@ impl ProtocolEvent for DebuggerEvent {
     fn parse(method: &str, params: serde_json::Value) -> Result<Self, serde_json::Error> {
         match method {
             "pausedStateChanged" => Ok(Self::PausedStateChanged(serde_json::from_value(params)?)),
+            "apiCallsUpdated" => Ok(Self::ApiCallsUpdated(serde_json::from_value(params)?)),
             _ => Ok(Self::Unknown { method: method.to_string(), params }),
         }
     }
@@ -124,5 +173,10 @@ impl Debugger {
     /// `Debugger.runTo` ("Run to location").
     pub async fn run_to(&self, params: DebuggerRunToParams) -> Result<(), ProtocolError> {
         self.channel.send_no_result("runTo", &params).await
+    }
+
+    /// `Debugger.enable` (internal).
+    pub async fn enable(&self) -> Result<(), ProtocolError> {
+        self.channel.send_no_result("enable", &serde_json::json!({})).await
     }
 }

@@ -154,6 +154,28 @@ pub struct LaunchOptions {
     pub cdp_port: Option<i64>,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum HttpCredentialsSend {
+    #[default]
+    #[serde(rename = "always")]
+    Always,
+    #[serde(rename = "unauthorized")]
+    Unauthorized,
+}
+
+/// `HttpCredentials` object from `mixins.yml`.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct HttpCredentials {
+    #[serde(rename = "username")]
+    pub username: String,
+    #[serde(rename = "password")]
+    pub password: String,
+    #[serde(rename = "origin", default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<String>,
+    #[serde(rename = "send", default, skip_serializing_if = "Option::is_none")]
+    pub send: Option<HttpCredentialsSend>,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ContextOptionsViewport {
     #[serde(rename = "width")]
@@ -192,27 +214,6 @@ pub struct ContextOptionsGeolocation {
     pub latitude: f64,
     #[serde(rename = "accuracy", default, skip_serializing_if = "Option::is_none")]
     pub accuracy: Option<f64>,
-}
-
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ContextOptionsHttpCredentialsSend {
-    #[default]
-    #[serde(rename = "always")]
-    Always,
-    #[serde(rename = "unauthorized")]
-    Unauthorized,
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct ContextOptionsHttpCredentials {
-    #[serde(rename = "username")]
-    pub username: String,
-    #[serde(rename = "password")]
-    pub password: String,
-    #[serde(rename = "origin", default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<String>,
-    #[serde(rename = "send", default, skip_serializing_if = "Option::is_none")]
-    pub send: Option<ContextOptionsHttpCredentialsSend>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -338,7 +339,7 @@ pub struct ContextOptions {
     #[serde(rename = "offline", default, skip_serializing_if = "Option::is_none")]
     pub offline: Option<bool>,
     #[serde(rename = "httpCredentials", default, skip_serializing_if = "Option::is_none")]
-    pub http_credentials: Option<ContextOptionsHttpCredentials>,
+    pub http_credentials: Option<Vec<HttpCredentials>>,
     #[serde(rename = "deviceScaleFactor", default, skip_serializing_if = "Option::is_none")]
     pub device_scale_factor: Option<f64>,
     #[serde(rename = "isMobile", default, skip_serializing_if = "Option::is_none")]

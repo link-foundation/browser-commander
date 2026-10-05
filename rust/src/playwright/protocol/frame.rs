@@ -128,6 +128,35 @@ pub struct FrameAriaSnapshotResult {
     pub snapshot: String,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum FrameAriaSnapshotJSONParamsMode {
+    #[default]
+    #[serde(rename = "ai")]
+    Ai,
+    #[serde(rename = "default")]
+    Default,
+}
+
+/// Parameters of `Frame.ariaSnapshotJSON` (Aria snapshot JSON).
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct FrameAriaSnapshotJSONParams {
+    #[serde(rename = "mode", default, skip_serializing_if = "Option::is_none")]
+    pub mode: Option<FrameAriaSnapshotJSONParamsMode>,
+    #[serde(rename = "selector", default, skip_serializing_if = "Option::is_none")]
+    pub selector: Option<String>,
+    #[serde(rename = "depth", default, skip_serializing_if = "Option::is_none")]
+    pub depth: Option<i64>,
+    #[serde(rename = "boxes", default, skip_serializing_if = "Option::is_none")]
+    pub boxes: Option<bool>,
+}
+
+/// Result of `Frame.ariaSnapshotJSON` (Aria snapshot JSON).
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct FrameAriaSnapshotJSONResult {
+    #[serde(rename = "snapshot")]
+    pub snapshot: serde_json::Value,
+}
+
 /// Parameters of `Frame.blur` (Blur).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct FrameBlurParams {
@@ -489,7 +518,7 @@ pub struct FrameGetAttributeResult {
     pub value: Option<String>,
 }
 
-/// Parameters of `Frame.goto` (Navigate to "{url}").
+/// Parameters of `Frame.goto` (Navigate).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct FrameGotoParams {
     #[serde(rename = "url")]
@@ -500,7 +529,7 @@ pub struct FrameGotoParams {
     pub referer: Option<String>,
 }
 
-/// Result of `Frame.goto` (Navigate to "{url}").
+/// Result of `Frame.goto` (Navigate).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct FrameGotoResult {
     #[serde(rename = "response", default, skip_serializing_if = "Option::is_none")]
@@ -911,29 +940,5 @@ pub enum FrameUncheckParamsScroll {
     Auto,
     #[serde(rename = "none")]
     None,
-}
-
-/// Parameters of `Frame.uncheck` (Uncheck).
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct FrameUncheckParams {
-    #[serde(rename = "selector")]
-    pub selector: String,
-    #[serde(rename = "strict", default, skip_serializing_if = "Option::is_none")]
-    pub strict: Option<bool>,
-    #[serde(rename = "force", default, skip_serializing_if = "Option::is_none")]
-    pub force: Option<bool>,
-    #[serde(rename = "scroll", default, skip_serializing_if = "Option::is_none")]
-    pub scroll: Option<FrameUncheckParamsScroll>,
-    #[serde(rename = "position", default, skip_serializing_if = "Option::is_none")]
-    pub position: Option<Point>,
-    #[serde(rename = "trial", default, skip_serializing_if = "Option::is_none")]
-    pub trial: Option<bool>,
-}
-
-/// Parameters of `Frame.waitForTimeout` (Wait for timeout).
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct FrameWaitForTimeoutParams {
-    #[serde(rename = "waitTimeout")]
-    pub wait_timeout: f64,
 }
 

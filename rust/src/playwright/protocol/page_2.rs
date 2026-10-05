@@ -10,6 +10,13 @@ use crate::playwright::connection::{
     Binary, Channel, ChannelType, ObjectRef, ProtocolError, ProtocolEvent, Ref,
 };
 
+/// Payload of the `Page.frameAttached` event.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PageFrameAttachedEventParams {
+    #[serde(rename = "frame")]
+    pub frame: Ref<Frame>,
+}
+
 /// Payload of the `Page.frameDetached` event.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PageFrameDetachedEventParams {

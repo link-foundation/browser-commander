@@ -49,7 +49,7 @@ use crate::fingerprint::automation_parity::{
 };
 use crate::utilities::{start_process, StartProcessOptions};
 
-use crate::browser::system_browser::resolve_browser_executable;
+use crate::browser::system_browser::{assert_cdp_browser, resolve_browser_executable};
 pub use crate::browser::system_browser::{
     assert_dedicated_user_data_dir, default_real_browser_user_data_dir,
 };
@@ -565,14 +565,7 @@ pub fn build_real_browser_args(options: &RealBrowserOptions) -> Result<Vec<Strin
 }
 
 fn validate_launch_request(options: &RealBrowserOptions) -> Result<()> {
-    if crate::browser::browser_sources::find_browser_source(&options.channel)
-        .is_some_and(|source| source.family != "chromium")
-    {
-        return Err(anyhow!(
-            "{} does not support CDP; use its documented WebDriver setup when available",
-            options.channel
-        ));
-    }
+    assert_cdp_browser(&options.channel)?;
     if options.engine == EngineType::Fantoccini {
         return Err(anyhow!(FANTOCCINI_OVER_CDP));
     }

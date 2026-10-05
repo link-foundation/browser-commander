@@ -11,6 +11,16 @@ use super::browser_sources::{
 };
 use std::path::{Path, PathBuf};
 
+/// Reject known non-CDP families before profile preparation or process launch.
+pub(crate) fn assert_cdp_browser(channel: &str) -> Result<(), anyhow::Error> {
+    if find_browser_source(channel).is_some_and(|source| source.family != "chromium") {
+        return Err(anyhow::anyhow!(
+            "{channel} does not support CDP; use its documented WebDriver setup when available"
+        ));
+    }
+    Ok(())
+}
+
 /// Return Browser Commander's managed dedicated profile for a channel.
 ///
 /// Launches no longer use it on their own (issue #103: a fresh temporary

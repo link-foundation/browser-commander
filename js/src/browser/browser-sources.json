@@ -39,7 +39,29 @@
         "darwin": ["com.google.chrome"],
         "linux": ["google-chrome.desktop", "google-chrome-stable.desktop"],
         "win32": ["ChromeHTML"]
-      }
+      },
+      "executableNames": ["google-chrome", "google-chrome-stable", "chrome"],
+      "executables": {
+        "darwin": [
+          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+          "{home}/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        ],
+        "win32": [
+          "{localAppData}/Google/Chrome/Application/chrome.exe",
+          "{programFiles}/Google/Chrome/Application/chrome.exe",
+          "{programFilesX86}/Google/Chrome/Application/chrome.exe"
+        ],
+        "linux": [
+          "/usr/bin/google-chrome",
+          "/usr/bin/google-chrome-stable",
+          "/usr/bin/chrome",
+          "/usr/local/bin/google-chrome",
+          "/usr/local/bin/google-chrome-stable",
+          "/usr/local/bin/chrome",
+          "/opt/google/chrome/google-chrome"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "chrome-beta",
@@ -59,7 +81,24 @@
         "darwin": ["com.google.chrome.beta"],
         "linux": ["google-chrome-beta.desktop"],
         "win32": ["ChromeBHTML"]
-      }
+      },
+      "executableNames": ["google-chrome-beta"],
+      "executables": {
+        "darwin": [
+          "/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta",
+          "{home}/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta"
+        ],
+        "win32": [
+          "{localAppData}/Google/Chrome Beta/Application/chrome.exe",
+          "{programFiles}/Google/Chrome Beta/Application/chrome.exe",
+          "{programFilesX86}/Google/Chrome Beta/Application/chrome.exe"
+        ],
+        "linux": [
+          "/usr/bin/google-chrome-beta",
+          "/usr/local/bin/google-chrome-beta"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "chrome-dev",
@@ -79,7 +118,24 @@
         "darwin": ["com.google.chrome.dev"],
         "linux": ["google-chrome-unstable.desktop"],
         "win32": ["ChromeDHTML"]
-      }
+      },
+      "executableNames": ["google-chrome-unstable"],
+      "executables": {
+        "darwin": [
+          "/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev",
+          "{home}/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev"
+        ],
+        "win32": [
+          "{localAppData}/Google/Chrome Dev/Application/chrome.exe",
+          "{programFiles}/Google/Chrome Dev/Application/chrome.exe",
+          "{programFilesX86}/Google/Chrome Dev/Application/chrome.exe"
+        ],
+        "linux": [
+          "/usr/bin/google-chrome-unstable",
+          "/usr/local/bin/google-chrome-unstable"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "chrome-canary",
@@ -97,7 +153,20 @@
       "default": {
         "darwin": ["com.google.chrome.canary"],
         "win32": ["ChromeSSHTM"]
-      }
+      },
+      "executableNames": ["google-chrome-canary"],
+      "executables": {
+        "darwin": [
+          "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+          "{home}/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
+        ],
+        "win32": [
+          "{localAppData}/Google/Chrome SxS/Application/chrome.exe",
+          "{programFiles}/Google/Chrome SxS/Application/chrome.exe",
+          "{programFilesX86}/Google/Chrome SxS/Application/chrome.exe"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "chromium",
@@ -116,7 +185,26 @@
       "default": {
         "darwin": ["org.chromium.chromium"],
         "linux": ["chromium.desktop", "chromium-browser.desktop"]
-      }
+      },
+      "executableNames": ["chromium", "chromium-browser"],
+      "executables": {
+        "darwin": [
+          "/Applications/Chromium.app/Contents/MacOS/Chromium",
+          "{home}/Applications/Chromium.app/Contents/MacOS/Chromium"
+        ],
+        "win32": [
+          "{localAppData}/Chromium/Application/chrome.exe",
+          "{programFiles}/Chromium/Application/chrome.exe",
+          "{programFilesX86}/Chromium/Application/chrome.exe"
+        ],
+        "linux": [
+          "/usr/bin/chromium",
+          "/usr/bin/chromium-browser",
+          "/usr/local/bin/chromium",
+          "/usr/local/bin/chromium-browser"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "edge",
@@ -136,12 +224,33 @@
         "darwin": ["com.microsoft.edgemac"],
         "linux": ["microsoft-edge.desktop"],
         "win32": ["MSEdgeHTM"]
-      }
+      },
+      "executableNames": ["microsoft-edge", "microsoft-edge-stable", "msedge"],
+      "executables": {
+        "darwin": [
+          "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+          "{home}/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+        ],
+        "win32": [
+          "{localAppData}/Microsoft/Edge/Application/msedge.exe",
+          "{programFiles}/Microsoft/Edge/Application/msedge.exe",
+          "{programFilesX86}/Microsoft/Edge/Application/msedge.exe"
+        ],
+        "linux": [
+          "/usr/bin/microsoft-edge",
+          "/usr/bin/microsoft-edge-stable",
+          "/usr/bin/msedge",
+          "/usr/local/bin/microsoft-edge",
+          "/usr/local/bin/microsoft-edge-stable",
+          "/usr/local/bin/msedge"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "edge-beta",
       "family": "chromium",
-      "aliases": ["microsoft-edge-beta"],
+      "aliases": ["microsoft-edge-beta", "msedge-beta"],
       "roots": {
         "darwin": ["{appSupport}/Microsoft Edge Beta"],
         "win32": ["{localAppData}/Microsoft/Edge Beta/User Data"],
@@ -155,12 +264,29 @@
       "default": {
         "darwin": ["com.microsoft.edgemac.beta"],
         "linux": ["microsoft-edge-beta.desktop"]
-      }
+      },
+      "executableNames": ["microsoft-edge-beta"],
+      "executables": {
+        "darwin": [
+          "/Applications/Microsoft Edge Beta.app/Contents/MacOS/Microsoft Edge Beta",
+          "{home}/Applications/Microsoft Edge Beta.app/Contents/MacOS/Microsoft Edge Beta"
+        ],
+        "win32": [
+          "{localAppData}/Microsoft/Edge Beta/Application/msedge.exe",
+          "{programFiles}/Microsoft/Edge Beta/Application/msedge.exe",
+          "{programFilesX86}/Microsoft/Edge Beta/Application/msedge.exe"
+        ],
+        "linux": [
+          "/usr/bin/microsoft-edge-beta",
+          "/usr/local/bin/microsoft-edge-beta"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "edge-dev",
       "family": "chromium",
-      "aliases": ["microsoft-edge-dev"],
+      "aliases": ["microsoft-edge-dev", "msedge-dev"],
       "roots": {
         "darwin": ["{appSupport}/Microsoft Edge Dev"],
         "win32": ["{localAppData}/Microsoft/Edge Dev/User Data"],
@@ -174,7 +300,24 @@
       "default": {
         "darwin": ["com.microsoft.edgemac.dev"],
         "linux": ["microsoft-edge-dev.desktop"]
-      }
+      },
+      "executableNames": ["microsoft-edge-dev"],
+      "executables": {
+        "darwin": [
+          "/Applications/Microsoft Edge Dev.app/Contents/MacOS/Microsoft Edge Dev",
+          "{home}/Applications/Microsoft Edge Dev.app/Contents/MacOS/Microsoft Edge Dev"
+        ],
+        "win32": [
+          "{localAppData}/Microsoft/Edge Dev/Application/msedge.exe",
+          "{programFiles}/Microsoft/Edge Dev/Application/msedge.exe",
+          "{programFilesX86}/Microsoft/Edge Dev/Application/msedge.exe"
+        ],
+        "linux": [
+          "/usr/bin/microsoft-edge-dev",
+          "/usr/local/bin/microsoft-edge-dev"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "brave",
@@ -194,7 +337,28 @@
         "darwin": ["com.brave.browser"],
         "linux": ["brave-browser.desktop", "brave.desktop"],
         "win32": ["BraveHTML"]
-      }
+      },
+      "executableNames": ["brave-browser", "brave-browser-stable", "brave"],
+      "executables": {
+        "darwin": [
+          "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+          "{home}/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+        ],
+        "win32": [
+          "{localAppData}/BraveSoftware/Brave-Browser/Application/brave.exe",
+          "{programFiles}/BraveSoftware/Brave-Browser/Application/brave.exe",
+          "{programFilesX86}/BraveSoftware/Brave-Browser/Application/brave.exe"
+        ],
+        "linux": [
+          "/usr/bin/brave-browser",
+          "/usr/bin/brave-browser-stable",
+          "/usr/bin/brave",
+          "/usr/local/bin/brave-browser",
+          "/usr/local/bin/brave-browser-stable",
+          "/usr/local/bin/brave"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "vivaldi",
@@ -214,7 +378,26 @@
         "darwin": ["com.vivaldi.vivaldi"],
         "linux": ["vivaldi.desktop", "vivaldi-stable.desktop"],
         "win32": ["VivaldiHTM"]
-      }
+      },
+      "executableNames": ["vivaldi", "vivaldi-stable"],
+      "executables": {
+        "darwin": [
+          "/Applications/Vivaldi.app/Contents/MacOS/Vivaldi",
+          "{home}/Applications/Vivaldi.app/Contents/MacOS/Vivaldi"
+        ],
+        "win32": [
+          "{localAppData}/Vivaldi/Application/vivaldi.exe",
+          "{programFiles}/Vivaldi/Application/vivaldi.exe",
+          "{programFilesX86}/Vivaldi/Application/vivaldi.exe"
+        ],
+        "linux": [
+          "/usr/bin/vivaldi",
+          "/usr/bin/vivaldi-stable",
+          "/usr/local/bin/vivaldi",
+          "/usr/local/bin/vivaldi-stable"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "opera",
@@ -235,7 +418,22 @@
         "darwin": ["com.operasoftware.opera"],
         "linux": ["opera.desktop", "opera_opera.desktop"],
         "win32": ["OperaStable"]
-      }
+      },
+      "executableNames": ["opera"],
+      "executables": {
+        "darwin": [
+          "/Applications/Opera.app/Contents/MacOS/Opera",
+          "{home}/Applications/Opera.app/Contents/MacOS/Opera"
+        ],
+        "win32": [
+          "{localAppData}/Programs/Opera/opera.exe",
+          "{localAppData}/Programs/Opera/launcher.exe",
+          "{programFiles}/Programs/Opera/opera.exe",
+          "{programFilesX86}/Programs/Opera/opera.exe"
+        ],
+        "linux": ["/usr/bin/opera", "/usr/local/bin/opera"]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "opera-gx",
@@ -255,7 +453,22 @@
       "default": {
         "darwin": ["com.operasoftware.operagx"],
         "win32": ["OperaGXStable"]
-      }
+      },
+      "executableNames": ["opera-gx"],
+      "executables": {
+        "darwin": [
+          "/Applications/Opera GX.app/Contents/MacOS/Opera GX",
+          "{home}/Applications/Opera GX.app/Contents/MacOS/Opera GX"
+        ],
+        "win32": [
+          "{localAppData}/Programs/Opera GX/opera.exe",
+          "{localAppData}/Programs/Opera GX/launcher.exe",
+          "{programFiles}/Programs/Opera GX/opera.exe",
+          "{programFilesX86}/Programs/Opera GX/opera.exe"
+        ],
+        "linux": ["/usr/bin/opera-gx", "/usr/local/bin/opera-gx"]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "yandex",
@@ -275,7 +488,26 @@
         "darwin": ["ru.yandex.desktop.yandex-browser"],
         "linux": ["yandex-browser.desktop"],
         "win32": ["YandexHTML"]
-      }
+      },
+      "executableNames": ["yandex-browser", "yandex-browser-stable"],
+      "executables": {
+        "darwin": [
+          "/Applications/Yandex.app/Contents/MacOS/Yandex",
+          "{home}/Applications/Yandex.app/Contents/MacOS/Yandex"
+        ],
+        "win32": [
+          "{localAppData}/Yandex/YandexBrowser/Application/browser.exe",
+          "{programFiles}/Yandex/YandexBrowser/Application/browser.exe",
+          "{programFilesX86}/Yandex/YandexBrowser/Application/browser.exe"
+        ],
+        "linux": [
+          "/usr/bin/yandex-browser",
+          "/usr/bin/yandex-browser-stable",
+          "/usr/local/bin/yandex-browser",
+          "/usr/local/bin/yandex-browser-stable"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "arc",
@@ -295,7 +527,20 @@
       "default": {
         "darwin": ["company.thebrowser.browser"],
         "win32": ["ArcHTML"]
-      }
+      },
+      "executableNames": ["arc"],
+      "executables": {
+        "darwin": [
+          "/Applications/Arc.app/Contents/MacOS/Arc",
+          "{home}/Applications/Arc.app/Contents/MacOS/Arc"
+        ],
+        "win32": [
+          "{localAppData}/Programs/Arc/Arc.exe",
+          "{programFiles}/Programs/Arc/Arc.exe",
+          "{programFilesX86}/Programs/Arc/Arc.exe"
+        ]
+      },
+      "controlProtocol": "cdp"
     },
     {
       "id": "firefox",
@@ -310,7 +555,21 @@
         "darwin": ["org.mozilla.firefox"],
         "linux": ["firefox.desktop", "firefox-esr.desktop"],
         "win32": ["FirefoxHTML", "FirefoxURL"]
-      }
+      },
+      "executableNames": ["firefox"],
+      "executables": {
+        "darwin": [
+          "/Applications/Firefox.app/Contents/MacOS/firefox",
+          "{home}/Applications/Firefox.app/Contents/MacOS/firefox"
+        ],
+        "win32": [
+          "{localAppData}/Mozilla Firefox/firefox.exe",
+          "{programFiles}/Mozilla Firefox/firefox.exe",
+          "{programFilesX86}/Mozilla Firefox/firefox.exe"
+        ],
+        "linux": ["/usr/bin/firefox", "/usr/local/bin/firefox"]
+      },
+      "controlProtocol": "bidi"
     },
     {
       "id": "firefox-developer",
@@ -323,7 +582,26 @@
       },
       "default": {
         "darwin": ["org.mozilla.firefoxdeveloperedition"]
-      }
+      },
+      "executableNames": ["firefox-developer-edition", "firefox"],
+      "executables": {
+        "darwin": [
+          "/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox",
+          "{home}/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox"
+        ],
+        "win32": [
+          "{localAppData}/Firefox Developer Edition/firefox.exe",
+          "{programFiles}/Firefox Developer Edition/firefox.exe",
+          "{programFilesX86}/Firefox Developer Edition/firefox.exe"
+        ],
+        "linux": [
+          "/usr/bin/firefox-developer-edition",
+          "/usr/bin/firefox",
+          "/usr/local/bin/firefox-developer-edition",
+          "/usr/local/bin/firefox"
+        ]
+      },
+      "controlProtocol": "bidi"
     },
     {
       "id": "firefox-nightly",
@@ -337,7 +615,26 @@
       "default": {
         "darwin": ["org.mozilla.nightly"],
         "linux": ["firefox-nightly.desktop"]
-      }
+      },
+      "executableNames": ["firefox-nightly", "firefox"],
+      "executables": {
+        "darwin": [
+          "/Applications/Firefox Nightly.app/Contents/MacOS/firefox",
+          "{home}/Applications/Firefox Nightly.app/Contents/MacOS/firefox"
+        ],
+        "win32": [
+          "{localAppData}/Firefox Nightly/firefox.exe",
+          "{programFiles}/Firefox Nightly/firefox.exe",
+          "{programFilesX86}/Firefox Nightly/firefox.exe"
+        ],
+        "linux": [
+          "/usr/bin/firefox-nightly",
+          "/usr/bin/firefox",
+          "/usr/local/bin/firefox-nightly",
+          "/usr/local/bin/firefox"
+        ]
+      },
+      "controlProtocol": "bidi"
     },
     {
       "id": "librewolf",
@@ -351,7 +648,21 @@
       "default": {
         "darwin": ["io.gitlab.librewolf-community"],
         "linux": ["librewolf.desktop"]
-      }
+      },
+      "executableNames": ["librewolf"],
+      "executables": {
+        "darwin": [
+          "/Applications/LibreWolf.app/Contents/MacOS/firefox",
+          "{home}/Applications/LibreWolf.app/Contents/MacOS/firefox"
+        ],
+        "win32": [
+          "{localAppData}/LibreWolf/librewolf.exe",
+          "{programFiles}/LibreWolf/librewolf.exe",
+          "{programFilesX86}/LibreWolf/librewolf.exe"
+        ],
+        "linux": ["/usr/bin/librewolf", "/usr/local/bin/librewolf"]
+      },
+      "controlProtocol": "bidi"
     },
     {
       "id": "waterfox",
@@ -365,7 +676,21 @@
       "default": {
         "darwin": ["net.waterfox.waterfox"],
         "linux": ["waterfox.desktop"]
-      }
+      },
+      "executableNames": ["waterfox"],
+      "executables": {
+        "darwin": [
+          "/Applications/Waterfox.app/Contents/MacOS/firefox",
+          "{home}/Applications/Waterfox.app/Contents/MacOS/firefox"
+        ],
+        "win32": [
+          "{localAppData}/Waterfox/waterfox.exe",
+          "{programFiles}/Waterfox/waterfox.exe",
+          "{programFilesX86}/Waterfox/waterfox.exe"
+        ],
+        "linux": ["/usr/bin/waterfox", "/usr/local/bin/waterfox"]
+      },
+      "controlProtocol": "bidi"
     },
     {
       "id": "zen",
@@ -379,7 +704,26 @@
       "default": {
         "darwin": ["app.zen-browser.zen"],
         "linux": ["zen.desktop", "zen-browser.desktop"]
-      }
+      },
+      "executableNames": ["zen-browser", "zen"],
+      "executables": {
+        "darwin": [
+          "/Applications/Zen.app/Contents/MacOS/firefox",
+          "{home}/Applications/Zen.app/Contents/MacOS/firefox"
+        ],
+        "win32": [
+          "{localAppData}/Zen Browser/zen.exe",
+          "{programFiles}/Zen Browser/zen.exe",
+          "{programFilesX86}/Zen Browser/zen.exe"
+        ],
+        "linux": [
+          "/usr/bin/zen-browser",
+          "/usr/bin/zen",
+          "/usr/local/bin/zen-browser",
+          "/usr/local/bin/zen"
+        ]
+      },
+      "controlProtocol": "bidi"
     },
     {
       "id": "floorp",
@@ -393,7 +737,21 @@
       "default": {
         "darwin": ["org.floorp.Floorp"],
         "linux": ["floorp.desktop"]
-      }
+      },
+      "executableNames": ["floorp"],
+      "executables": {
+        "darwin": [
+          "/Applications/Floorp.app/Contents/MacOS/firefox",
+          "{home}/Applications/Floorp.app/Contents/MacOS/firefox"
+        ],
+        "win32": [
+          "{localAppData}/Floorp/floorp.exe",
+          "{programFiles}/Floorp/floorp.exe",
+          "{programFilesX86}/Floorp/floorp.exe"
+        ],
+        "linux": ["/usr/bin/floorp", "/usr/local/bin/floorp"]
+      },
+      "controlProtocol": "bidi"
     },
     {
       "id": "safari",
@@ -424,6 +782,225 @@
       "default": {
         "darwin": ["com.apple.safaritechnologypreview"]
       }
+    },
+    {
+      "id": "whale",
+      "family": "chromium",
+      "aliases": ["naver-whale"],
+      "roots": {
+        "darwin": ["{appSupport}/Naver/Whale"],
+        "win32": ["{localAppData}/Naver/Naver Whale/User Data"],
+        "linux": ["{config}/naver-whale"]
+      },
+      "default": {
+        "darwin": ["com.naver.Whale"],
+        "win32": ["WhaleHTM"],
+        "linux": ["naver-whale.desktop"]
+      },
+      "safeStorage": {
+        "service": "Whale Safe Storage",
+        "application": "whale",
+        "folder": "Whale Keys"
+      },
+      "executableNames": ["naver-whale", "whale"],
+      "executables": {
+        "darwin": [
+          "/Applications/Whale.app/Contents/MacOS/Whale",
+          "{home}/Applications/Whale.app/Contents/MacOS/Whale"
+        ],
+        "win32": [
+          "{localAppData}/Naver/Naver Whale/Application/whale.exe",
+          "{programFiles}/Naver/Naver Whale/Application/whale.exe",
+          "{programFilesX86}/Naver/Naver Whale/Application/whale.exe"
+        ],
+        "linux": [
+          "/usr/bin/naver-whale",
+          "/usr/bin/whale",
+          "/usr/local/bin/naver-whale",
+          "/usr/local/bin/whale"
+        ]
+      },
+      "controlProtocol": "cdp"
+    },
+    {
+      "id": "360se",
+      "family": "chromium",
+      "aliases": ["360-secure"],
+      "roots": {
+        "win32": ["{appData}/360se6/User Data"]
+      },
+      "default": {
+        "win32": ["360seURL"]
+      },
+      "safeStorage": {
+        "service": "360 Safe Storage",
+        "application": "360se",
+        "folder": "360 Keys"
+      },
+      "executableNames": ["360se"],
+      "executables": {
+        "win32": [
+          "{localAppData}/360/360se6/360se.exe",
+          "{programFiles}/360/360se6/360se.exe",
+          "{programFilesX86}/360/360se6/360se.exe"
+        ]
+      },
+      "controlProtocol": "cdp"
+    },
+    {
+      "id": "360chrome",
+      "family": "chromium",
+      "aliases": ["360-extreme"],
+      "roots": {
+        "win32": ["{localAppData}/360Chrome/Chrome/User Data"]
+      },
+      "default": {
+        "win32": ["360ChromeURL"]
+      },
+      "safeStorage": {
+        "service": "360Chrome Safe Storage",
+        "application": "360chrome",
+        "folder": "360Chrome Keys"
+      },
+      "executableNames": ["360chrome"],
+      "executables": {
+        "win32": [
+          "{localAppData}/360Chrome/Chrome/Application/360chrome.exe",
+          "{programFiles}/360Chrome/Chrome/Application/360chrome.exe",
+          "{programFilesX86}/360Chrome/Chrome/Application/360chrome.exe"
+        ]
+      },
+      "controlProtocol": "cdp"
+    },
+    {
+      "id": "qq",
+      "family": "chromium",
+      "aliases": ["qq-browser"],
+      "roots": {
+        "win32": ["{localAppData}/Tencent/QQBrowser/User Data"]
+      },
+      "default": {
+        "win32": ["QQBrowserURL"]
+      },
+      "safeStorage": {
+        "service": "QQBrowser Safe Storage",
+        "application": "qq",
+        "folder": "QQBrowser Keys"
+      },
+      "executableNames": ["qqbrowser"],
+      "executables": {
+        "win32": [
+          "{localAppData}/Tencent/QQBrowser/QQBrowser.exe",
+          "{programFiles}/Tencent/QQBrowser/QQBrowser.exe",
+          "{programFilesX86}/Tencent/QQBrowser/QQBrowser.exe"
+        ]
+      },
+      "controlProtocol": "cdp"
+    },
+    {
+      "id": "sogou",
+      "family": "chromium",
+      "aliases": ["sogou-explorer"],
+      "roots": {
+        "win32": ["{appData}/SogouExplorer"]
+      },
+      "default": {
+        "win32": ["SogouExplorer.HTML"]
+      },
+      "safeStorage": {
+        "service": "Sogou Safe Storage",
+        "application": "sogou",
+        "folder": "Sogou Keys"
+      },
+      "singleProfile": true,
+      "executableNames": ["sogouexplorer"],
+      "executables": {
+        "win32": [
+          "{localAppData}/SogouExplorer/SogouExplorer.exe",
+          "{programFiles}/SogouExplorer/SogouExplorer.exe",
+          "{programFilesX86}/SogouExplorer/SogouExplorer.exe"
+        ]
+      },
+      "controlProtocol": "cdp"
+    },
+    {
+      "id": "duckduckgo",
+      "family": "detection",
+      "aliases": [],
+      "roots": {
+        "darwin": [
+          "{home}/Library/Containers/com.duckduckgo.macos.browser/Data/Library/Application Support/DuckDuckGo"
+        ],
+        "win32": [
+          "{localAppData}/Packages/DuckDuckGo.DesktopBrowser_ya2fgkz3nks94/LocalState"
+        ]
+      },
+      "default": {
+        "darwin": ["com.duckduckgo.macos.browser"],
+        "win32": ["DuckDuckGoHTML"]
+      },
+      "singleProfile": true
+    },
+    {
+      "id": "tor",
+      "family": "firefox",
+      "aliases": ["tor-browser"],
+      "roots": {
+        "darwin": ["{appSupport}/TorBrowser-Data/Browser"],
+        "linux": [
+          "{home}/.local/share/torbrowser/tbb/x86_64/tor-browser/Browser/TorBrowser/Data/Browser"
+        ],
+        "win32": ["{home}/Desktop/Tor Browser/Browser/TorBrowser/Data/Browser"]
+      },
+      "default": {
+        "darwin": ["org.torproject.torbrowser"],
+        "linux": ["torbrowser.desktop"],
+        "win32": ["TorBrowserHTML"]
+      },
+      "executableNames": ["tor-browser"],
+      "executables": {
+        "darwin": [
+          "/Applications/Tor Browser.app/Contents/MacOS/firefox",
+          "{home}/Applications/Tor Browser.app/Contents/MacOS/firefox"
+        ],
+        "win32": [
+          "{localAppData}/Tor Browser/Browser/firefox.exe",
+          "{programFiles}/Tor Browser/Browser/firefox.exe",
+          "{programFilesX86}/Tor Browser/Browser/firefox.exe"
+        ],
+        "linux": ["/usr/bin/tor-browser", "/usr/local/bin/tor-browser"]
+      },
+      "controlProtocol": "bidi"
+    },
+    {
+      "id": "edge-canary",
+      "family": "chromium",
+      "aliases": ["msedge-canary", "microsoft-edge-canary"],
+      "roots": {
+        "darwin": ["{appSupport}/Microsoft Edge Canary"],
+        "win32": ["{localAppData}/Microsoft/Edge SxS/User Data"]
+      },
+      "safeStorage": {
+        "service": "Microsoft Edge Safe Storage",
+        "application": "microsoft-edge",
+        "folder": "Microsoft Edge Keys"
+      },
+      "default": {
+        "darwin": ["com.microsoft.edgemac.Canary"]
+      },
+      "executableNames": ["microsoft-edge-canary"],
+      "executables": {
+        "darwin": [
+          "/Applications/Microsoft Edge Canary.app/Contents/MacOS/Microsoft Edge Canary",
+          "{home}/Applications/Microsoft Edge Canary.app/Contents/MacOS/Microsoft Edge Canary"
+        ],
+        "win32": [
+          "{localAppData}/Microsoft/Edge SxS/Application/msedge.exe",
+          "{programFiles}/Microsoft/Edge SxS/Application/msedge.exe",
+          "{programFilesX86}/Microsoft/Edge SxS/Application/msedge.exe"
+        ]
+      },
+      "controlProtocol": "cdp"
     }
   ]
 }

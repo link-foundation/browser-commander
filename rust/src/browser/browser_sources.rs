@@ -69,6 +69,15 @@ pub struct BrowserSource {
     /// Per-platform operating-system default-browser identifiers.
     #[serde(default)]
     pub default: HashMap<String, Vec<String>>,
+    /// Executable basenames used for PATH discovery.
+    #[serde(default)]
+    pub executable_names: Vec<String>,
+    /// Per-platform executable path templates.
+    #[serde(default)]
+    pub executables: HashMap<String, Vec<String>>,
+    /// Required protocol for installed browser control.
+    #[serde(default)]
+    pub control_protocol: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -192,6 +201,14 @@ fn template_variables(
             );
         }
         "win32" => {
+            for (variable, key) in [
+                ("programFiles", "PROGRAMFILES"),
+                ("programFilesX86", "PROGRAMFILES(X86)"),
+            ] {
+                if let Some(value) = environment.get(key) {
+                    variables.insert(variable, value.clone());
+                }
+            }
             variables.insert(
                 "localAppData",
                 environment
@@ -260,6 +277,46 @@ pub fn resolve_browser_roots(
         .filter_map(|template| expand_template(template, &variables, separator))
         .map(PathBuf::from)
         .collect())
+}
+
+/// Executable paths from the shared catalogue, with PATH fallback.
+pub fn resolve_browser_executables(
+    name: &str,
+    platform: &str,
+    home_dir: &str,
+    environment: &Environment,
+) -> Result<Vec<PathBuf>> {
+    let platform = normalize_platform(platform);
+    let source = normalize_browser_source(name)?;
+    let variables = template_variables(platform, home_dir, environment);
+    let sep = separator(platform);
+    let mut candidates: Vec<PathBuf> = source
+        .executables
+        .get(platform)
+        .into_iter()
+        .flatten()
+        .filter_map(|template| expand_template(template, &variables, sep))
+        .map(PathBuf::from)
+        .collect();
+    for directory in environment
+        .get("PATH")
+        .map(String::as_str)
+        .unwrap_or_default()
+        .split(if platform == "win32" { ';' } else { ':' })
+        .filter(|entry| !entry.is_empty())
+    {
+        for name in &source.executable_names {
+            let executable = if platform == "win32" {
+                format!("{name}.exe")
+            } else {
+                name.clone()
+            };
+            candidates.push(PathBuf::from(join_with(directory, &[&executable], sep)));
+        }
+    }
+    let mut seen = std::collections::HashSet::new();
+    candidates.retain(|entry| seen.insert(entry.clone()));
+    Ok(candidates)
 }
 
 #[cfg(test)]

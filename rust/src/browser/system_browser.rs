@@ -3,7 +3,11 @@
 //! Mirrors `js/src/browser/system-browser.js`. Split out of `real_browser`
 //! so the launcher itself stays small.
 
-use std::collections::HashSet;
+use super::browser_profiles::current_platform;
+use super::browser_sources::{
+    browser_sources, current_environment, find_browser_source, resolve_browser_executables,
+    resolve_browser_roots,
+};
 use std::path::{Path, PathBuf};
 
 /// Return Browser Commander's managed dedicated profile for a channel.
@@ -36,61 +40,19 @@ pub fn default_real_browser_user_data_dir(channel: &str) -> PathBuf {
 pub fn known_default_user_data_dirs() -> Vec<PathBuf> {
     let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
 
-    #[cfg(target_os = "macos")]
-    {
-        let support = home.join("Library").join("Application Support");
-        return vec![
-            support.join("Google/Chrome"),
-            support.join("Google/Chrome Beta"),
-            support.join("Google/Chrome Canary"),
-            support.join("Google/Chrome Dev"),
-            support.join("Chromium"),
-            support.join("BraveSoftware/Brave-Browser"),
-            support.join("BraveSoftware/Brave-Browser-Beta"),
-            support.join("BraveSoftware/Brave-Browser-Nightly"),
-            support.join("Microsoft Edge"),
-            support.join("Microsoft Edge Beta"),
-            support.join("Microsoft Edge Canary"),
-            support.join("Microsoft Edge Dev"),
-        ];
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        let local = std::env::var_os("LOCALAPPDATA")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| home.join("AppData/Local"));
-        return vec![
-            local.join("Google/Chrome/User Data"),
-            local.join("Google/Chrome Beta/User Data"),
-            local.join("Google/Chrome Dev/User Data"),
-            local.join("Google/Chrome SxS/User Data"),
-            local.join("Chromium/User Data"),
-            local.join("BraveSoftware/Brave-Browser/User Data"),
-            local.join("BraveSoftware/Brave-Browser-Beta/User Data"),
-            local.join("BraveSoftware/Brave-Browser-Nightly/User Data"),
-            local.join("Microsoft/Edge/User Data"),
-            local.join("Microsoft/Edge Beta/User Data"),
-            local.join("Microsoft/Edge Dev/User Data"),
-            local.join("Microsoft/Edge SxS/User Data"),
-        ];
-    }
-
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-    {
-        vec![
-            home.join(".config/google-chrome"),
-            home.join(".config/google-chrome-beta"),
-            home.join(".config/google-chrome-unstable"),
-            home.join(".config/chromium"),
-            home.join(".config/BraveSoftware/Brave-Browser"),
-            home.join(".config/BraveSoftware/Brave-Browser-Beta"),
-            home.join(".config/BraveSoftware/Brave-Browser-Nightly"),
-            home.join(".config/microsoft-edge"),
-            home.join(".config/microsoft-edge-beta"),
-            home.join(".config/microsoft-edge-dev"),
-        ]
-    }
+    let environment = current_environment();
+    browser_sources()
+        .iter()
+        .flat_map(|browser| {
+            resolve_browser_roots(
+                &browser.id,
+                current_platform(),
+                &home.to_string_lossy(),
+                &environment,
+            )
+            .unwrap_or_default()
+        })
+        .collect()
 }
 
 fn normalize_for_comparison(path: &Path) -> PathBuf {
@@ -120,7 +82,7 @@ pub fn assert_dedicated_user_data_dir(user_data_dir: &Path) -> Result<(), anyhow
     let requested = normalize_for_comparison(user_data_dir);
     if known_default_user_data_dirs()
         .iter()
-        .any(|default| normalize_for_comparison(default) == requested)
+        .any(|default| requested.starts_with(normalize_for_comparison(default)))
     {
         return Err(anyhow::anyhow!(
             "launch_real_browser requires a dedicated user_data_dir, not a browser default profile"
@@ -129,99 +91,21 @@ pub fn assert_dedicated_user_data_dir(user_data_dir: &Path) -> Result<(), anyhow
     Ok(())
 }
 
-fn channel_executable_names(channel: &str) -> Result<&'static [&'static str], anyhow::Error> {
-    match channel {
-        "brave" => Ok(&["brave-browser", "brave-browser-stable", "brave"]),
-        "chrome" => Ok(&["google-chrome", "google-chrome-stable", "chrome"]),
-        "chrome-beta" => Ok(&["google-chrome-beta"]),
-        "chrome-canary" => Ok(&["google-chrome-canary"]),
-        "chrome-dev" => Ok(&["google-chrome-unstable"]),
-        "chromium" => Ok(&["chromium", "chromium-browser"]),
-        "msedge" => Ok(&["microsoft-edge", "microsoft-edge-stable", "msedge"]),
-        "msedge-beta" => Ok(&["microsoft-edge-beta"]),
-        "msedge-canary" => Ok(&["microsoft-edge-canary"]),
-        "msedge-dev" => Ok(&["microsoft-edge-dev"]),
-        _ => Err(anyhow::anyhow!(
-            "unknown browser channel: {channel}; expected chrome, chrome-beta, chrome-canary, chrome-dev, chromium, brave, msedge, msedge-beta, msedge-canary, or msedge-dev"
-        )),
-    }
-}
-
 fn browser_install_candidates(channel: &str) -> Result<Vec<PathBuf>, anyhow::Error> {
-    let names = channel_executable_names(channel)?;
-    let mut candidates = Vec::new();
-
-    #[cfg(target_os = "macos")]
-    {
-        let relative = match channel {
-            "brave" => "Brave Browser.app/Contents/MacOS/Brave Browser",
-            "chrome" => "Google Chrome.app/Contents/MacOS/Google Chrome",
-            "chrome-beta" => "Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta",
-            "chrome-canary" => "Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-            "chrome-dev" => "Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev",
-            "chromium" => "Chromium.app/Contents/MacOS/Chromium",
-            "msedge" => "Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-            "msedge-beta" => "Microsoft Edge Beta.app/Contents/MacOS/Microsoft Edge Beta",
-            "msedge-canary" => "Microsoft Edge Canary.app/Contents/MacOS/Microsoft Edge Canary",
-            "msedge-dev" => "Microsoft Edge Dev.app/Contents/MacOS/Microsoft Edge Dev",
-            _ => unreachable!("channel was validated above"),
-        };
-        candidates.push(Path::new("/Applications").join(relative));
-        if let Some(home) = dirs::home_dir() {
-            candidates.push(home.join("Applications").join(relative));
-        }
+    let source = find_browser_source(channel)
+        .ok_or_else(|| anyhow::anyhow!("unknown browser channel: {channel}"))?;
+    if source.executable_names.is_empty() {
+        return Err(anyhow::anyhow!(
+            "No supported installed executable for {channel}"
+        ));
     }
-
-    #[cfg(target_os = "windows")]
-    {
-        let relative: &[&str] = match channel {
-            "brave" => &["BraveSoftware", "Brave-Browser", "Application", "brave.exe"],
-            "chrome" => &["Google", "Chrome", "Application", "chrome.exe"],
-            "chrome-beta" => &["Google", "Chrome Beta", "Application", "chrome.exe"],
-            "chrome-canary" => &["Google", "Chrome SxS", "Application", "chrome.exe"],
-            "chrome-dev" => &["Google", "Chrome Dev", "Application", "chrome.exe"],
-            "chromium" => &["Chromium", "Application", "chrome.exe"],
-            "msedge" => &["Microsoft", "Edge", "Application", "msedge.exe"],
-            "msedge-beta" => &["Microsoft", "Edge Beta", "Application", "msedge.exe"],
-            "msedge-canary" => &["Microsoft", "Edge SxS", "Application", "msedge.exe"],
-            "msedge-dev" => &["Microsoft", "Edge Dev", "Application", "msedge.exe"],
-            _ => unreachable!("channel was validated above"),
-        };
-        for key in ["PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA"] {
-            if let Some(root) = std::env::var_os(key) {
-                let mut candidate = PathBuf::from(root);
-                candidate.extend(relative);
-                candidates.push(candidate);
-            }
-        }
-    }
-
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-    {
-        for name in names {
-            candidates.push(Path::new("/usr/bin").join(name));
-            candidates.push(Path::new("/usr/local/bin").join(name));
-        }
-        if channel == "chrome" {
-            candidates.push(PathBuf::from("/opt/google/chrome/google-chrome"));
-        }
-    }
-
-    if let Some(path) = std::env::var_os("PATH") {
-        for directory in std::env::split_paths(&path) {
-            for name in names {
-                #[cfg(target_os = "windows")]
-                let executable_name = format!("{name}.exe");
-                #[cfg(not(target_os = "windows"))]
-                let executable_name = (*name).to_string();
-                candidates.push(directory.join(executable_name));
-            }
-        }
-    }
-
-    let mut seen = HashSet::new();
-    candidates.retain(|candidate| seen.insert(candidate.clone()));
-    Ok(candidates)
+    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+    resolve_browser_executables(
+        channel,
+        current_platform(),
+        &home.to_string_lossy(),
+        &current_environment(),
+    )
 }
 
 fn is_executable(path: &Path) -> bool {
@@ -276,12 +160,14 @@ pub fn resolve_browser_executable(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::browser::browser_sources::Environment;
 
     #[test]
     fn rejects_the_current_platform_default_profiles() {
         for profile in known_default_user_data_dirs() {
             let error = assert_dedicated_user_data_dir(&profile).unwrap_err();
             assert!(error.to_string().contains("dedicated user_data_dir"));
+            assert!(assert_dedicated_user_data_dir(&profile.join("Profile 1")).is_err());
         }
         let dedicated = std::env::temp_dir().join("browser-commander-dedicated");
         assert!(assert_dedicated_user_data_dir(&dedicated).is_ok());
@@ -318,5 +204,39 @@ mod tests {
         let error = resolve_browser_executable("chrome", Some(Path::new("/nonexistent/chrome")))
             .unwrap_err();
         assert!(error.to_string().contains("not accessible"), "{error}");
+    }
+
+    #[test]
+    fn derives_all_platform_executables_and_aliases_from_the_catalogue() {
+        let env = Environment::from([
+            ("LOCALAPPDATA".into(), "C:\\Local".into()),
+            ("PROGRAMFILES".into(), "C:\\Programs".into()),
+        ]);
+        for browser in browser_sources()
+            .iter()
+            .filter(|entry| entry.family == "chromium")
+        {
+            assert!(!browser.executable_names.is_empty(), "{}", browser.id);
+            for alias in &browser.aliases {
+                assert_eq!(
+                    find_browser_source(alias).unwrap().executable_names,
+                    browser.executable_names
+                );
+            }
+            for platform in browser.roots.keys() {
+                assert!(
+                    !resolve_browser_executables(&browser.id, platform, "/test", &env)
+                        .unwrap()
+                        .is_empty(),
+                    "{} {platform}",
+                    browser.id
+                );
+            }
+        }
+        assert!(
+            resolve_browser_executables("opera", "win32", "C:\\User", &env)
+                .unwrap()
+                .contains(&PathBuf::from("C:\\Local\\Programs\\Opera\\opera.exe"))
+        );
     }
 }

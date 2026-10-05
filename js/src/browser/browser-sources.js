@@ -100,6 +100,8 @@ function templateVariables(platform, homeDir, environment) {
         environment.LOCALAPPDATA ?? pathApi.join(homeDir, 'AppData', 'Local'),
       appData:
         environment.APPDATA ?? pathApi.join(homeDir, 'AppData', 'Roaming'),
+      programFiles: environment.PROGRAMFILES,
+      programFilesX86: environment['PROGRAMFILES(X86)'],
     };
   }
   return {
@@ -133,7 +135,29 @@ function expandTemplate(template, variables, pathApi) {
  * @param {Object} [options.environment=process.env]
  * @returns {string[]}
  */
-export function resolveBrowserRoots(
+export function resolveBrowserRoots(name, options = {}) {
+  const source = normalizeBrowserSource(name);
+  const templates = source.roots?.[options.platform ?? process.platform] ?? [];
+  return resolveTemplates(templates, options);
+}
+
+function resolveTemplates(
+  templates,
+  {
+    platform = process.platform,
+    homeDir = os.homedir(),
+    environment = process.env,
+  } = {}
+) {
+  const pathApi = platformPath(platform);
+  const variables = templateVariables(platform, homeDir, environment);
+  return templates
+    .map((template) => expandTemplate(template, variables, pathApi))
+    .filter((entry) => entry !== undefined);
+}
+
+/** Installed executable candidates, from the same catalogue as profile roots. */
+export function resolveBrowserExecutables(
   name,
   {
     platform = process.platform,
@@ -142,17 +166,23 @@ export function resolveBrowserRoots(
   } = {}
 ) {
   const source = normalizeBrowserSource(name);
-  const templates = source.roots?.[platform] ?? [];
   const pathApi = platformPath(platform);
-  const variables = templateVariables(platform, homeDir, environment);
-  const roots = [];
-  for (const template of templates) {
-    const resolved = expandTemplate(template, variables, pathApi);
-    if (resolved !== undefined) {
-      roots.push(resolved);
+  const candidates = resolveTemplates(source.executables?.[platform] ?? [], {
+    platform,
+    homeDir,
+    environment,
+  });
+  const delimiter = platform === 'win32' ? ';' : path.delimiter;
+  for (const directory of (environment.PATH ?? '')
+    .split(delimiter)
+    .filter(Boolean)) {
+    for (const name of source.executableNames ?? []) {
+      candidates.push(
+        pathApi.join(directory, platform === 'win32' ? `${name}.exe` : name)
+      );
     }
   }
-  return roots;
+  return [...new Set(candidates)];
 }
 
 /** True when a browser stores one profile in the root itself (Opera-style). */

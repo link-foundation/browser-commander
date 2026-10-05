@@ -46,31 +46,39 @@ reports which one with a `default-browser-fallback` warning.
 
 <!-- browser-support:generated:begin -->
 
-| Browser                   | Family   | macOS | Windows | Linux |
-| ------------------------- | -------- | ----- | ------- | ----- |
-| chrome                    | Chromium | Yes   | Yes     | Yes   |
-| chrome-beta               | Chromium | Yes   | Yes     | Yes   |
-| chrome-dev                | Chromium | Yes   | Yes     | Yes   |
-| chrome-canary             | Chromium | Yes   | Yes     | —     |
-| chromium                  | Chromium | Yes   | Yes     | Yes   |
-| edge                      | Chromium | Yes   | Yes     | Yes   |
-| edge-beta                 | Chromium | Yes   | Yes     | Yes   |
-| edge-dev                  | Chromium | Yes   | Yes     | Yes   |
-| brave                     | Chromium | Yes   | Yes     | Yes   |
-| vivaldi                   | Chromium | Yes   | Yes     | Yes   |
-| opera                     | Chromium | Yes   | Yes     | Yes   |
-| opera-gx                  | Chromium | Yes   | Yes     | Yes   |
-| yandex                    | Chromium | Yes   | Yes     | Yes   |
-| arc                       | Chromium | Yes   | Yes     | —     |
-| firefox                   | Firefox  | Yes   | Yes     | Yes   |
-| firefox-developer         | Firefox  | Yes   | Yes     | Yes   |
-| firefox-nightly           | Firefox  | Yes   | Yes     | Yes   |
-| librewolf                 | Firefox  | Yes   | Yes     | Yes   |
-| waterfox                  | Firefox  | Yes   | Yes     | Yes   |
-| zen                       | Firefox  | Yes   | Yes     | Yes   |
-| floorp                    | Firefox  | Yes   | Yes     | Yes   |
-| safari                    | Safari   | Yes   | —       | —     |
-| safari-technology-preview | Safari   | Yes   | —       | —     |
+| Browser                   | Family    | macOS | Windows | Linux |
+| ------------------------- | --------- | ----- | ------- | ----- |
+| chrome                    | Chromium  | Yes   | Yes     | Yes   |
+| chrome-beta               | Chromium  | Yes   | Yes     | Yes   |
+| chrome-dev                | Chromium  | Yes   | Yes     | Yes   |
+| chrome-canary             | Chromium  | Yes   | Yes     | —     |
+| chromium                  | Chromium  | Yes   | Yes     | Yes   |
+| edge                      | Chromium  | Yes   | Yes     | Yes   |
+| edge-beta                 | Chromium  | Yes   | Yes     | Yes   |
+| edge-dev                  | Chromium  | Yes   | Yes     | Yes   |
+| brave                     | Chromium  | Yes   | Yes     | Yes   |
+| vivaldi                   | Chromium  | Yes   | Yes     | Yes   |
+| opera                     | Chromium  | Yes   | Yes     | Yes   |
+| opera-gx                  | Chromium  | Yes   | Yes     | Yes   |
+| yandex                    | Chromium  | Yes   | Yes     | Yes   |
+| arc                       | Chromium  | Yes   | Yes     | —     |
+| firefox                   | Firefox   | Yes   | Yes     | Yes   |
+| firefox-developer         | Firefox   | Yes   | Yes     | Yes   |
+| firefox-nightly           | Firefox   | Yes   | Yes     | Yes   |
+| librewolf                 | Firefox   | Yes   | Yes     | Yes   |
+| waterfox                  | Firefox   | Yes   | Yes     | Yes   |
+| zen                       | Firefox   | Yes   | Yes     | Yes   |
+| floorp                    | Firefox   | Yes   | Yes     | Yes   |
+| safari                    | Safari    | Yes   | —       | —     |
+| safari-technology-preview | Safari    | Yes   | —       | —     |
+| whale                     | Chromium  | Yes   | Yes     | Yes   |
+| 360se                     | Chromium  | —     | Yes     | —     |
+| 360chrome                 | Chromium  | —     | Yes     | —     |
+| qq                        | Chromium  | —     | Yes     | —     |
+| sogou                     | Chromium  | —     | Yes     | —     |
+| duckduckgo                | detection | Yes   | Yes     | —     |
+| tor                       | Firefox   | Yes   | Yes     | Yes   |
+| edge-canary               | Chromium  | Yes   | Yes     | —     |
 
 <!-- browser-support:generated:end -->
 

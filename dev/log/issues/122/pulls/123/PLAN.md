@@ -19,11 +19,11 @@ explicit branch instruction takes precedence. No AGENTS.md was found.
 - [x] Generate capability matrices from shared byte-identical declarations and check them in CI.
 - [x] Run local CI checks and all tests; keep large logs outside tracked code.
 - [x] Add release fragments and commit atomic work.
-- [ ] Push only the prepared branch.
-- [ ] Review PR diff for regressions and synchronize current main.
-- [ ] Replace WIP title/body with accurate implementation and validation evidence.
-- [ ] Verify latest CI timestamps and head SHA, preserve/analyze failing logs.
-- [ ] Check a clean working tree.
+- [x] Push only the prepared branch.
+- [x] Review PR diff for regressions and synchronize current main.
+- [x] Replace WIP title/body with accurate implementation and validation evidence.
+- [x] Verify CI timestamps and head SHA; preserve/analyze failing logs and record fixes.
+- [x] Commit the reviewed changes and check a clean working tree.
 - [ ] Mark PR ready after every requirement and required check passes.
 
 ## Complete requirement inventory and candidate solutions
@@ -149,6 +149,20 @@ Unsupported platform capabilities must be explicit in the report and matrix.
 - Candidate LevelDB/structured-clone components: classic-level (JS), plyvel
   (Python), rusty-leveldb (Rust), Chromium/WebKit/Mozilla format code as primary
   references. LevelDB alone cannot decode V8/WebKit/SpiderMonkey values.
+- [Firefox Places architecture](https://firefox-source-docs.mozilla.org/browser/places/architecture-overview.html)
+  documents `places.sqlite` and the attached `favicons.sqlite` store. The
+  [bookmark API](https://firefox-source-docs.mozilla.org/browser/places/Bookmarks.html)
+  specifies folder GUIDs, item ordering and timestamps. Target writers need
+  these invariants and runtime acceptance rather than renamed Chromium files.
+- [Mozilla NSS](https://github.com/mozilla/nss) supplies Firefox's native
+  cryptographic component. A target password writer needs target-profile NSS
+  initialization and encryption, with source/target key separation and primary
+  password handling. Existing source decryption alone cannot establish this.
+- Playwright's [storage-state API](https://playwright.dev/docs/api/class-browsercontext#browser-context-storage-state)
+  can export IndexedDB when explicitly requested. Its authentication guidance
+  treats sessionStorage separately with origin-scoped initialization. This is
+  a controlled-context translation candidate, not a decoder for locked
+  Chromium/WebKit/Firefox disk formats or an OS-managed passkey export.
 - [HackBrowserData](https://github.com/moonD4rk/HackBrowserData) and
   [browser_cookie3](https://github.com/borisbabic/browser_cookie3) are useful
   source/path references, but external subprocess readers would violate native

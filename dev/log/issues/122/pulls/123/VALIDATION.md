@@ -19,6 +19,10 @@ changes.
 | Request Safe Storage credentials for a declared catalogue alias                           | Python/Rust reject `google-chrome` despite its catalogue identity            | Actual credential readers exercised with every declared identity/alias in all three languages |
 | Deny the macOS Keychain request or return an empty result                                 | Missing service-specific retry instructions                                  | Injected native credential-reader tests name the service, Keychain access and `refresh=true`  |
 
+Review also reproduced Python accepting short/long password CSV records that
+the JS/Rust parsers reject. Two minimal failing cases now raise a record-width
+error with a line number; retained source-byte checks cover all three parsers.
+
 The Safari fixture generator and real Chromium acceptance script are retained
 under `experiments/issue-122/`. They use synthetic data and never read an actual
 user profile. All source fixture imports verify retained source contents.
@@ -28,12 +32,12 @@ user profile. All source fixture imports verify retained source contents.
 | Check                                                             | Result                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | JS `npm run check`                                                | ESLint, Prettier and no new duplication clones pass                                   |
-| JS `npm test`                                                     | 1,558 pass, zero skipped                                                              |
+| JS `npm test`                                                     | 1,559 pass, zero skipped                                                              |
 | Python Ruff check/format and `mypy src`                           | Pass; 168 source files type checked                                                   |
-| Python `pytest`                                                   | 1,147 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
+| Python `pytest`                                                   | 1,149 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
 | Rust format, Clippy all targets/all features with warnings denied | Pass                                                                                  |
-| Rust `cargo test --locked`                                        | 708 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
-| Rust `cargo test --locked --all-features`                         | 708 pass, zero failures; 15 existing browser tests ignored                            |
+| Rust `cargo test --locked`                                        | 709 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
+| Rust `cargo test --locked --all-features`                         | 709 pass, zero failures; 15 existing browser tests ignored                            |
 | Full-repository Secretlint and root JavaScript lint               | Pass                                                                                  |
 | Shared asset byte comparison                                      | Catalogue, history schema and capability declarations identical in all three packages |
 | Generated browser/migration matrix freshness                      | Pass                                                                                  |
@@ -46,6 +50,32 @@ bounded in this workspace. The CI-equivalent all-features test also passes.
 Large local logs are saved under `/tmp/issue-122-*`; downloaded failed
 workflow logs go under `ci-logs/`. PR status records CI results against the actual
 pushed SHA rather than the original prepared-branch runs.
+
+## Fresh CI investigation
+
+The first pushed commit was `8ee1756b150d30efea226e7b555569d0571ec28b`, committed
+at 14:18:27 UTC. All ten workflows started at 14:18:46 UTC with that exact SHA.
+Logs were downloaded for each failed workflow before investigating:
+
+- [Python run 37323679634](https://github.com/link-foundation/browser-commander/actions/runs/37323679634):
+  `ci-logs/python-37323679634.log:3832` reports PermissionError for
+  `/root/google-chrome/Default/Local State`. The existing path-resolution test
+  now constructs its synthetic profile beneath `tmp_path`, without probing the
+  runner's protected `/root` directory or suppressing actual access errors.
+- [Rust run 37323679609](https://github.com/link-foundation/browser-commander/actions/runs/37323679609):
+  `ci-logs/rust-37323679609.log:1500` reports `real_browser.rs` at 1,004 lines,
+  exceeding Rust's separate 1,000-line gate. The early CDP-family guard is moved
+  into the existing system-browser helper; the launcher is now 997 lines and
+  its existing early-rejection tests retain the same behavior.
+- [CodeQL check 111809191596](https://github.com/link-foundation/browser-commander/runs/111809191596):
+  the retained `ci-logs/codeql-111809191596-annotations.json` identifies constant
+  cryptographic passwords in `migration/tests/passwords.rs:26` and
+  `migration/tests/safari.rs:20`. These added tests now use fresh OS-generated
+  AES keys through the existing native `random_bytes` helper; encryption and
+  decryption still round-trip without hard-coded cryptographic passwords.
+
+The subsequent PR check status is verified against the subsequent pushed SHA;
+the earlier passing jobs alone do not establish that the fixes pass CI.
 
 ## Real runtime acceptance and remaining limits
 

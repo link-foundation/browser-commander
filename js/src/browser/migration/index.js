@@ -456,7 +456,9 @@ async function migratePasswordClass(
       detail:
         'Ya Passman Data uses local_encryptor_data and may require a Yandex master password; this extra encryption layer is not supported. Export passwords to a supported format instead.',
     });
-    return report;
+    if (!(await pathExists(path.join(sourceProfileDir, 'Login Data')))) {
+      return report;
+    }
   }
   const passwordKeys = await resolvePasswordKeys({
     keys,

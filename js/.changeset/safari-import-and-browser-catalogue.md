@@ -17,3 +17,5 @@ Recognize all 18 migration data classes with explicit unsupported reports. Add s
 Translate Firefox history to Chromium with exact microsecond visit dates, domain filtering, immutable snapshots and per-visit malformed-data reports.
 
 Normalize Firefox schema 16+ cookie expiry from milliseconds to seconds in both installed-profile reading and migration, preserving legacy schemas and session markers.
+
+Preserve supported Yandex Login Data imports when an unsupported Ya Passman Data store is present, retaining separate encryption diagnostics.

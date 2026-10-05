@@ -7,7 +7,10 @@ use rusqlite::{params, Connection};
 
 use super::super::chromium_crypto::{encrypt_chromium_value, random_bytes};
 use super::super::passwords::{migrate_passwords, migrate_passwords_filtered, PasswordKeys};
-use super::super::{ClassOutcome, SourceKeyResolver};
+use super::super::{
+    migrate_profile, ClassOutcome, MigrateProfileOptions, MigrationKeys, MigrationSource,
+    SourceKeyResolver,
+};
 use super::fixtures::{
     assert_nothing_migrated, assert_source_unchanged, read_migrated_logins, TempDir,
 };
@@ -165,6 +168,56 @@ struct LoginRow {
     origin_url: &'static str,
     username: &'static str,
     password_value: Vec<u8>,
+}
+
+#[test]
+fn yandex_keeps_supported_logins_beside_unsupported_passman() {
+    let source = TempDir::new("bc-yandex-logins-");
+    let target = TempDir::new("bc-yandex-target-");
+    let profile = source.path().join("Default");
+    std::fs::create_dir(&profile).unwrap();
+    let passman = profile.join("Ya Passman Data");
+    std::fs::write(&passman, b"unsupported-store").unwrap();
+    let key = random_bytes(16).unwrap();
+    let target_key = random_bytes(16).unwrap();
+    write_login_data(
+        &profile,
+        &[encrypted_login(
+            "https://example.com",
+            "alice",
+            "retained-password",
+            &key,
+            "v11",
+        )],
+    );
+    let original = std::fs::read(profile.join("Login Data")).unwrap();
+    let report = assert_source_unchanged(&profile.join("Login Data"), || {
+        migrate_profile(
+            MigrateProfileOptions::new(
+                MigrationSource::new("yandex").user_data_dir(source.path()),
+                target.path(),
+            )
+            .include(["passwords"])
+            .platform("linux")
+            .keys(MigrationKeys {
+                target_key: Some(target_key.clone()),
+                resolve_source_key: Some(Arc::new(move |_| Ok(key.clone()))),
+                ..MigrationKeys::default()
+            }),
+        )
+        .unwrap()
+    });
+    assert_eq!(report.migrated.passwords, 1);
+    assert_eq!(
+        report.skipped[0].reason,
+        "yandex-passman-encryption-unsupported"
+    );
+    assert_eq!(
+        read_migrated_logins(target.path(), &target_key)[0].password,
+        "retained-password"
+    );
+    assert_eq!(std::fs::read(passman).unwrap(), b"unsupported-store");
+    assert_eq!(std::fs::read(profile.join("Login Data")).unwrap(), original);
 }
 
 #[test]

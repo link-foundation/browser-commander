@@ -575,7 +575,9 @@ fn migrate_passwords_class(
 ) -> Result<()> {
     if browser == "yandex" && source_profile_dir.join("Ya Passman Data").exists() {
         report.skipped.push(MigrationEntry::new("passwords", "Ya Passman Data", "yandex-passman-encryption-unsupported").with_detail("Ya Passman Data uses local_encryptor_data and may require a Yandex master password; this extra encryption layer is not supported. Export passwords to a supported format instead."));
-        return Ok(());
+        if !source_profile_dir.join("Login Data").exists() {
+            return Ok(());
+        }
     }
     let is_firefox = is_firefox_browser(browser);
     let target_browser = options.target_browser.clone().unwrap_or_else(|| {

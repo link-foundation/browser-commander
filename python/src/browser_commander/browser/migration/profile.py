@@ -393,7 +393,8 @@ def migrate_profile_sync(
                     "detail": "Ya Passman Data uses local_encryptor_data and may require a Yandex master password; this extra encryption layer is not supported. Export passwords to a supported format instead.",
                 }
             )
-            return report
+            if not (source_profile_dir / "Login Data").exists():
+                return report
         password_keys = _resolve_password_keys(
             keys=keys,
             browser=browser,

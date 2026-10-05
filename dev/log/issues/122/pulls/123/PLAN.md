@@ -26,6 +26,26 @@ explicit branch instruction takes precedence. No AGENTS.md was found.
 - [x] Commit the reviewed changes and check a clean working tree.
 - [ ] Mark PR ready after every requirement and required check passes.
 
+## CI recovery on October 5
+
+- [x] Verify current-head run timestamps, all issue/comments and default-branch ancestry.
+- [x] Save available logs, job metadata and check annotations under `ci-logs/`.
+- [x] Match unassigned jobs to GitHub's hosted-runner incident; rerun failed jobs.
+- [x] Reproduce the shared status gate accepting `abandoned` and missing results.
+- [x] Reject unexpected results in the shared gate; preserve cancellation handling.
+- [x] Complete local checks and commit the regression tests, gate and documentation.
+- [ ] Verify every workflow and aggregate CodeQL check on the updated head.
+- [ ] Update PR evidence and recheck default-branch ancestry and a clean working tree.
+
+All twelve originally cancelled jobs had no runner or executed steps. GitHub's
+[hosted-runner incident](https://www.githubstatus.com/incidents/3q1yb5m7ltvb)
+started before the affected runs. Rerunning the same commit recovered some
+workflows; others again failed before runner acquisition. Their status logs also
+revealed an undocumented `abandoned` dependency result that the shared gate
+accepted as success. The fix rejects unknown/missing results in all ten workflows
+without replacing dependencies or increasing timeouts. The full feature scope
+below remains individually tracked and incomplete.
+
 ## Complete requirement inventory and candidate solutions
 
 Each row is a requirement, including acceptance criteria. These are plans, not

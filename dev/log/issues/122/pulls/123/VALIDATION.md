@@ -277,6 +277,44 @@ default and all features, and Clippy passes with warnings denied. The downloaded
 corrected head requires a fresh aggregate CodeQL check, not just successful
 workflow jobs.
 
+## October 5 hosted-runner failures and status-gate regression
+
+The cancelled runs began at 19:17:12 UTC on `306746f`, whose only change from the
+previously green `b7e83cb` was removing `.gitkeep`. All twelve cancelled jobs had
+no assigned runner and no executed steps. Their check annotations at `.github:1`
+report `The job was not acquired by Runner of type hosted even after multiple attempts`.
+GitHub's [runner-assignment incident](https://www.githubstatus.com/incidents/3q1yb5m7ltvb)
+began at 19:11 UTC. Available logs, annotations, attempt metadata and downloaded
+archives are preserved under ignored `ci-logs/`; jobs without runners have no logs.
+
+Seven failed workflows were rerun on the same commit. Browser Parity,
+Documentation and Security recovered; repeated unassigned jobs remained in JS,
+Python, Rust and Feature Parity. Their results alone do not validate a new head.
+
+The JS attempt-2 Pipeline Status log exposed a separate reporting regression:
+`ci-logs/js-pipeline-attempt-2.log:196` records the `test` dependency result as
+`abandoned`, while line 217 claims all required jobs succeeded. The shared gate
+recognized only failures and cancellations, accepting unknown/missing results.
+Its existing native script test now reproduces abandoned jobs on PRs and
+superseded main runs, plus an unexpected result, null and missing results.
+All five new cases failed before the fix (exit zero instead of one); the
+12-case suite passes afterward. Logs are retained at
+`/tmp/issue-122-status-guard-{before,after}.log`.
+
+The shared gate rejects results outside GitHub's
+[documented dependency states](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#needs-context),
+names each unexpected job/result, and preserves the existing cancellation and
+supersede behavior. All ten workflows invoke it, and normal success/skipped,
+failure, cancellation and missing-input regressions remain covered.
+
+Fresh local checks pass the expanded 1,595-test JS suite (one existing skip),
+1,194 Python tests and both Rust test invocations (729 each).
+Lint, format, type, policy and generated-asset gates, Secretlint, both API docs
+and all three retained real Linux Chromium acceptance experiments also pass.
+The first changed-flag Rust test compilation was killed by the workspace's
+3 GiB cgroup memory limit; existing single-job/no-debug build settings completed
+both suites. The updated head requires fresh hosted checks before CI is green.
+
 ## Real runtime acceptance and remaining limits
 
 ```sh

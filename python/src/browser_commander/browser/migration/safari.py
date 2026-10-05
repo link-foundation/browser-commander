@@ -116,12 +116,21 @@ def read_safari_passwords(
             raise ValueError(
                 "Safari password CSV must have URL, Username and Password columns"
             )
-        return [
-            {
-                "origin": row["URL"],
-                "username": row["Username"],
-                "password": row["Password"],
-            }
-            for row in reader
-            if row["URL"] and matches_domains(row["URL"], domains)
-        ]
+        entries = []
+        for row in reader:
+            # DictReader silently pads short records with None and stores extra
+            # fields under a None key, unlike the native JS/Rust CSV readers.
+            if None in row or any(value is None for value in row.values()):
+                raise ValueError(
+                    f"Safari password CSV record at line {reader.line_num} "
+                    "does not match its header columns"
+                )
+            if row["URL"] and matches_domains(row["URL"], domains):
+                entries.append(
+                    {
+                        "origin": row["URL"],
+                        "username": row["Username"],
+                        "password": row["Password"],
+                    }
+                )
+        return entries

@@ -49,6 +49,18 @@ def test_explicit_quoted_utf8_password_csv():
     ]
 
 
+@pytest.mark.parametrize(
+    "record", ["https://github.com,a\n", "https://github.com,a,b,c\n"]
+)
+def test_password_csv_rejects_incomplete_or_extra_fields(tmp_path, record):
+    filename = tmp_path / "Passwords.csv"
+    filename.write_text("URL,Username,Password\n" + record, encoding="utf-8")
+    before = filename.read_bytes()
+    with pytest.raises(ValueError, match="CSV record"):
+        read_safari_passwords(filename)
+    assert filename.read_bytes() == before
+
+
 def test_custom_source_translates_and_encrypts_for_chromium(tmp_path):
     source = tmp_path / "safari"
     target = tmp_path / "target"

@@ -179,4 +179,17 @@ mod tests {
             }]
         );
     }
+
+    #[test]
+    fn exported_csv_rejects_incomplete_or_extra_fields_without_mutation() {
+        let dir = crate::browser::migration::fs_utils::make_temp_dir("bc-safari-csv-").unwrap();
+        let filename = dir.join("Passwords.csv");
+        for record in ["https://github.com,a\n", "https://github.com,a,b,c\n"] {
+            let before = format!("URL,Username,Password\n{record}");
+            std::fs::write(&filename, &before).unwrap();
+            assert!(read_safari_passwords(&filename, &[]).is_err());
+            assert_eq!(std::fs::read_to_string(&filename).unwrap(), before);
+        }
+        std::fs::remove_dir_all(dir).unwrap();
+    }
 }

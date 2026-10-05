@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile, copyFile } from 'node:fs/promises';
+import { readFile, copyFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 import {
@@ -60,6 +60,22 @@ describe('Safari data sources', () => {
   });
 
   const temporary = useTempDirectories('bc-safari-data-');
+  it('rejects password CSV records with missing or extra fields without changing the source', async () => {
+    for (const record of [
+      'https://github.com,a\n',
+      'https://github.com,a,b,c\n',
+    ]) {
+      const filename = path.join(await temporary(), 'Passwords.csv');
+      await writeFile(filename, `URL,Username,Password\n${record}`);
+      const before = await readFile(filename);
+      await assert.rejects(
+        readSafariPasswords(filename),
+        /Invalid Record Length/u
+      );
+      assert.deepEqual(await readFile(filename), before);
+    }
+  });
+
   it('migrates custom Safari sources into native Chromium stores with target encryption', async () => {
     const source = await temporary();
     const target = await temporary();

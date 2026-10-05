@@ -1,9 +1,7 @@
 """PDF generation support.
 
-Wraps Playwright's page.pdf() method behind a unified interface.
-
-Note: PDF generation only works with Playwright in Chromium headless mode.
-Selenium/WebDriver does not support native PDF generation.
+Wraps Playwright PDF and Selenium WebDriver Print Page behind a unified interface.
+Browser support depends on the engine; Chrome printing requires headless mode.
 """
 
 from __future__ import annotations

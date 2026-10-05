@@ -16,9 +16,10 @@ use thiserror::Error;
 pub enum EngineType {
     /// Chrome DevTools Protocol based engine (similar to Puppeteer)
     Chromiumoxide,
-    /// WebDriver-based engine (similar to Playwright's approach)
+    /// Native WebDriver engine, also selected with `selenium` or `webdriver`.
+    #[serde(alias = "selenium", alias = "webdriver")]
     Fantoccini,
-    /// Playwright driven through the Node.js package as a CLI bridge.
+    /// Playwright's native driver protocol, with an optional Node.js bridge.
     Playwright,
     /// Puppeteer driven through the Node.js package as a CLI bridge.
     Puppeteer,
@@ -41,7 +42,7 @@ impl std::str::FromStr for EngineType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "chromiumoxide" | "cdp" => Ok(EngineType::Chromiumoxide),
-            "fantoccini" | "webdriver" => Ok(EngineType::Fantoccini),
+            "fantoccini" | "webdriver" | "selenium" => Ok(EngineType::Fantoccini),
             "playwright" => Ok(EngineType::Playwright),
             "puppeteer" => Ok(EngineType::Puppeteer),
             _ => Err(EngineError::InvalidEngine(s.to_string())),
@@ -54,7 +55,7 @@ impl std::str::FromStr for EngineType {
 pub enum EngineError {
     /// Invalid engine type specified.
     #[error(
-        "Invalid engine: {0}. Expected 'chromiumoxide', 'fantoccini', 'playwright', or 'puppeteer'"
+        "Invalid engine: {0}. Expected 'chromiumoxide', 'fantoccini'/'selenium'/'webdriver', 'playwright', or 'puppeteer'"
     )]
     InvalidEngine(String),
 
@@ -507,6 +508,21 @@ mod tests {
         } else {
             panic!("Expected InvalidEngine error");
         }
+    }
+
+    // feature-parity: engines.webdriver@native-typed
+    #[test]
+    fn selenium_alias_selects_native_webdriver() {
+        for name in ["selenium", "SELENIUM", "webdriver", "fantoccini"] {
+            assert_eq!(name.parse::<EngineType>().unwrap(), EngineType::Fantoccini);
+        }
+        assert_eq!(
+            serde_json::from_str::<EngineType>("\"selenium\"").unwrap(),
+            EngineType::Fantoccini
+        );
+        let options =
+            crate::browser::launcher::LaunchOptions::default().engine("selenium".parse().unwrap());
+        assert_eq!(options.launch, crate::browser::launcher::LaunchMode::Engine);
     }
 
     #[test]

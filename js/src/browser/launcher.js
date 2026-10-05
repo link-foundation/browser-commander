@@ -16,10 +16,12 @@ import { resolveRestrictions } from './restrictions.js';
 import { resolveSystemBrowserExecutable } from './system-browser.js';
 import { applyFingerprint } from '../fingerprint/apply.js';
 import { attachDownloads } from '../downloads/attach.js';
+import { launchWebDriver } from './webdriver.js';
 import {
   loadStorageState,
   restorePlaywrightStorageState,
   restorePuppeteerStorageState,
+  restoreWebDriverStorageState,
 } from './storage-state.js';
 
 /** How `launchBrowser` starts the browser (issue #103). */
@@ -131,6 +133,13 @@ async function launchReal(options, dependencies) {
 }
 
 async function launchWithEngine(options, dependencies) {
+  if (options.engine === 'selenium') {
+    const launched = await (dependencies.launchWebDriver ?? launchWebDriver)({
+      ...options,
+      args: [...options.args, ...options.extraArgs],
+    });
+    return { ...launched, browser: launched.driver };
+  }
   const {
     engine,
     userDataDir: requestedUserDataDir,
@@ -261,7 +270,7 @@ async function unfocusAddressBar(page, verbose, settleMs = 500) {
  * limitations.json (`engine-launch-switches`).
  *
  * @param {Object} options - Configuration options
- * @param {string} [options.engine='playwright'] - Browser automation engine: 'playwright' or 'puppeteer'
+ * @param {string} [options.engine='playwright'] - Browser automation engine: 'playwright', 'puppeteer' or 'selenium'
  * @param {'real'|'engine'} [options.launch='real'] - Who starts the browser: Browser Commander (a hand-started command line) or the automation engine
  * @param {string} [options.userDataDir] - Persistent profile directory. When omitted a fresh temporary profile is created and deleted on close.
  * @param {boolean} [options.headless=false] - Run in headless mode
@@ -309,6 +318,16 @@ export async function launchBrowserWithDependencies(
     ...rest
   } = options;
   validateLaunchMode({ engine, launch, attach: rest.attach });
+  if (engine === 'selenium') {
+    if (colorScheme !== undefined || fingerprint !== undefined || downloads) {
+      throw new Error(
+        'selenium does not support CDP emulation, fingerprint overrides or managed downloads (webdriver-no-cdp-emulation)'
+      );
+    }
+    if (launch === 'real' && rest.browser === 'firefox') {
+      throw new Error("selenium Firefox requires launch: 'engine'");
+    }
+  }
   // Validate arguments before anything is started or written to disk.
   resolveChromeArgs({ args, extraArgs, ignoreDefaultArgs, restrictions });
   const resolvedStorageState = await loadStorageState(storageState);
@@ -341,6 +360,12 @@ export async function launchBrowserWithDependencies(
   }
 
   try {
+    if (engine === 'selenium' && launch === 'engine') {
+      await restoreWebDriverStorageState({
+        page,
+        storageState: resolvedStorageState,
+      });
+    }
     // A Playwright-launched context applies colorScheme itself; an attached
     // browser and Puppeteer need page-level emulation.
     const emulateColorScheme =

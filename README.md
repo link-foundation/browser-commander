@@ -12,11 +12,15 @@ A universal browser automation library with a unified API across multiple browse
 
 ## Engine Support
 
-| Language              | Primary engines                      | Notes                                                                                                                                                                                                                                                                                                            |
-| --------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| JavaScript/TypeScript | Playwright, Puppeteer                | Uses the official Node.js packages directly.                                                                                                                                                                                                                                                                     |
-| Rust                  | Chromiumoxide, Playwright, Puppeteer | Chromiumoxide is native Rust/CDP. Playwright runs through the official Playwright driver with typed protocol bindings, falling back to a Node.js bridge; Puppeteer runs through the Node.js bridge. Fantoccini remains available as an engine type for compatibility, but managed launch is not implemented yet. |
-| Python                | Playwright, Selenium                 | Uses the official Python integrations and supports attaching to an existing Chrome-family browser over CDP.                                                                                                                                                                                                      |
+| Language              | Primary engines                                             | Notes                                                                                                  |
+| --------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| JavaScript/TypeScript | Playwright, Puppeteer, Selenium                             | Official native Node APIs through the common launcher and commander.                                   |
+| Rust                  | Chromiumoxide, Playwright, Puppeteer, Selenium / Fantoccini | Native CDP, native typed Playwright driver, native WebDriver; Puppeteer uses the explicit Node bridge. |
+| Python                | Playwright, Selenium; typed Puppeteer bridge                | Official native Python engines; Puppeteer is available through the explicit typed stdio bridge.        |
+
+All three CLIs support Playwright, Puppeteer, and Selenium. See
+[the engine/API matrix](docs/engine-support.md) for native defaults, optional
+bridges, browser coverage, and protocol limitations.
 
 See [docs/feature-parity.md](docs/feature-parity.md) for the cross-language feature matrix and [docs/case-studies/issue-51/README.md](docs/case-studies/issue-51/README.md) for the implementation notes.
 

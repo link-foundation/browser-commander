@@ -46,14 +46,24 @@ function command(language, args, input) {
     });
     let stdout = '';
     let stderr = '';
+    const deadline = setTimeout(() => {
+      stderr += '\nCLI command exceeded its 120 second test budget';
+      child.kill('SIGKILL');
+    }, 120000);
     child.stdout.setEncoding('utf8').on('data', (chunk) => {
       stdout += chunk;
     });
     child.stderr.setEncoding('utf8').on('data', (chunk) => {
       stderr += chunk;
     });
-    child.on('error', reject);
-    child.on('close', (code) => resolve({ code, stdout, stderr }));
+    child.on('error', (error) => {
+      clearTimeout(deadline);
+      reject(error);
+    });
+    child.on('close', (code) => {
+      clearTimeout(deadline);
+      resolve({ code, stdout, stderr });
+    });
     child.stdin.end(input);
   });
 }
@@ -97,7 +107,32 @@ async function genericHandleContract(language, engine) {
     child.stdin.write(
       `${JSON.stringify({ jsonrpc: '2.0', id: ++id, method, params })}\n`
     );
-    const parsed = JSON.parse(await response);
+    let deadline;
+    const timedOut = new Promise((_, reject) => {
+      deadline = setTimeout(() => {
+        reject(
+          new Error(
+            `${language.name}/${engine}: ${method} timed out\n${stderr}`
+          )
+        );
+      }, 60000);
+    });
+    let parsed;
+    try {
+      parsed = JSON.parse(
+        await Promise.race([
+          response,
+          timedOut,
+          completion.then((code) => {
+            throw new Error(
+              `${language.name}/${engine}: CLI exited (${code}) before ${method}\n${stderr}`
+            );
+          }),
+        ])
+      );
+    } finally {
+      clearTimeout(deadline);
+    }
     assert.equal(parsed.id, id, `${language.name}/${engine}: ${stderr}`);
     assert.ok(
       !parsed.error,
@@ -107,6 +142,17 @@ async function genericHandleContract(language, engine) {
   }
 
   try {
+    if (engine === 'selenium') {
+      const module = await call('handle.root', { name: engine });
+      const builder = await call('handle.get', {
+        handle: module,
+        property: 'Builder',
+      });
+      const instance = await call('handle.construct', { handle: builder });
+      const description = await call('handle.describe', { handle: instance });
+      assert.equal(description.type, 'Builder');
+      assert.ok(description.methods.includes('build'));
+    }
     const { session } = await call('session.launch', {
       engine,
       headless: true,
@@ -119,14 +165,29 @@ async function genericHandleContract(language, engine) {
       session,
       url: 'data:text/html,<input id="name">',
     });
-    const { page } = await call('handle.root', { name: `session:${session}` });
-    const described = await call('handle.describe', { handle: page });
-    assert.ok(described.methods.includes('locator'));
-    const locator = await call('handle.call', {
-      handle: page,
-      method: 'locator',
-      args: ['#name'],
+    const { page, driver } = await call('handle.root', {
+      name: `session:${session}`,
     });
+    const described = await call('handle.describe', { handle: page });
+    assert.ok(
+      described.methods.includes(
+        engine === 'selenium' ? 'waitForSelector' : 'locator'
+      )
+    );
+    const locator = await call(
+      'handle.call',
+      engine === 'selenium'
+        ? {
+            handle: driver,
+            method: 'findElement',
+            args: [{ css: '#name' }],
+          }
+        : {
+            handle: page,
+            method: 'locator',
+            args: ['#name'],
+          }
+    );
     const locatorMethods = await call('handle.describe', { handle: locator });
     assert.ok(locatorMethods.methods.includes('click'));
     await call('handle.call', { handle: locator, method: 'click' });
@@ -140,12 +201,21 @@ async function genericHandleContract(language, engine) {
     await call('session.close', { session });
   } finally {
     child.stdin.end();
-    const code = await completion;
-    assert.equal(code, 0, `${language.name}/${engine}: ${stderr}`);
+    const deadline = setTimeout(() => child.kill('SIGKILL'), 60000);
+    try {
+      const code = await completion;
+      assert.equal(code, 0, `${language.name}/${engine}: ${stderr}`);
+    } finally {
+      clearTimeout(deadline);
+      lines.close();
+    }
   }
 }
 
-for (const language of languages) {
+const selected = process.env.BROWSER_COMMANDER_LANGUAGES?.split(',');
+for (const language of languages.filter(
+  (entry) => !selected || selected.includes(entry.name)
+)) {
   const version = await command(language, ['version']);
   assert.equal(version.code, 0, `${language.name}: ${version.stderr}`);
   assert.equal(
@@ -163,7 +233,7 @@ for (const language of languages) {
   assert.equal(response.id, 1);
   assert.equal(response.result.name, 'browser-commander');
 
-  for (const engine of ['playwright', 'puppeteer']) {
+  for (const engine of ['playwright', 'puppeteer', 'selenium']) {
     const browserArgs = [
       'run',
       script,

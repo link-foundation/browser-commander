@@ -139,7 +139,8 @@ async fn managed_webdriver_launch_bidi_download_and_cleanup() -> anyhow::Result<
             copied.close().await?;
             assert!(!copied_profile.exists());
             assert!(profile.exists());
-            let mut options = LaunchOptions::fantoccini().headless(true).sandbox(false).executable_path(std::env::var("WEBDRIVER_BROWSER_PATH")?);
+            // feature-parity: engines.webdriver@native-typed
+            let mut options = LaunchOptions::default().engine("selenium".parse()?).headless(true).sandbox(false).executable_path(std::env::var("WEBDRIVER_BROWSER_PATH")?);
             options.webdriver.driver_executable=Some(std::env::var("WEBDRIVER_PATH")?.into());
             let common = launch_browser(options).await?;
             common.page.goto("data:text/html,<input id='common'>").await?;

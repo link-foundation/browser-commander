@@ -302,11 +302,20 @@ export function buildBrowserOptions({
   args,
   automationParity,
   bidi,
+  debuggerAddress,
 }) {
   let options;
   let browserArgs;
   if (browser === 'chrome') {
     options = new selenium.chrome.Options();
+    if (debuggerAddress) {
+      options.debuggerAddress(debuggerAddress);
+      if (bidi) {
+        options.set('webSocketUrl', true);
+        options.set('unhandledPromptBehavior', 'ignore');
+      }
+      return { options, args: [] };
+    }
     browserArgs = buildRealBrowserArgs({
       userDataDir,
       remoteDebuggingPort,
@@ -450,8 +459,12 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
     env,
     startupTimeout = 30_000,
     verbose = false,
+    debuggerAddress,
   } = options;
   assertBrowser(browser);
+  if (debuggerAddress && browser !== 'chrome') {
+    throw new Error('debuggerAddress is only supported by Chrome WebDriver');
+  }
   if (browser === 'firefox' && restrictions.length > 0) {
     throw new Error(
       'Launch restrictions are Chrome switches; not available for firefox'
@@ -476,8 +489,10 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
     ...(dependencies.platform ? { platform: dependencies.platform } : {}),
   });
 
-  const temporaryProfile = !requestedUserDataDir;
-  const userDataDir = await resolveProfile(browser, requestedUserDataDir);
+  const temporaryProfile = !debuggerAddress && !requestedUserDataDir;
+  const userDataDir = debuggerAddress
+    ? undefined
+    : await resolveProfile(browser, requestedUserDataDir);
   const childEnv = driverEnvironment(restrictions, env);
 
   let driverProcess;
@@ -513,6 +528,7 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
       args,
       automationParity,
       bidi,
+      debuggerAddress,
     });
     driver = await buildSession({
       selenium,

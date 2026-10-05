@@ -74,6 +74,30 @@ fn discovers_and_reads_installed_browser_cookie_profiles() -> anyhow::Result<()>
 }
 
 #[test]
+fn discovers_and_decrypts_yandex_cookie_catalogue_alias() -> anyhow::Result<()> {
+    let temporary_directory = TempDir::new("yandex-cookies")?;
+    let host = ".yandex.ru";
+    let profile = create_chromium_profile(temporary_directory.path(), host)?;
+    let root = temporary_directory.path().join(".config/yandex-browser");
+    fs::rename(profile.parent().unwrap(), &root)?;
+    let file = root.join("Default/Network/Cookies");
+    let before = fs::read(&file)?;
+    let cookies = read_browser_cookies(
+        BrowserCookieReadOptions::new("yandex-browser")
+            .home_dir(temporary_directory.path())
+            .platform("linux")
+            .environment(Environment::new())
+            .domain_filter("yandex.ru")
+            .cache(false),
+    )?;
+    assert_eq!(cookies.len(), 1);
+    assert_eq!(cookies[0].domain, host);
+    assert_eq!(cookies[0].value, "decrypted-session");
+    assert_eq!(fs::read(file)?, before);
+    Ok(())
+}
+
+#[test]
 fn partial_result_cache_is_not_reused_for_strict_import() -> anyhow::Result<()> {
     let temporary_directory = TempDir::new("browser-cookie-strict-cache")?;
     let profile = create_chromium_profile(temporary_directory.path(), ".strict.example")?;

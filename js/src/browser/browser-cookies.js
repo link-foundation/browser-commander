@@ -1,4 +1,4 @@
-import path from 'node:path';
+import { localStatePathForProfile } from './browser-profile-files.js';
 import os from 'node:os';
 
 import {
@@ -33,6 +33,7 @@ import {
   resolveSourceBrowser,
 } from './browser-profiles.js';
 import { resolveDefaultBrowser } from './default-browser.js';
+import { matchesDomains } from './migration/domains.js';
 import {
   countSafariCookies,
   parseSafariCookies,
@@ -77,10 +78,16 @@ function readDatabaseVersion(database) {
   }
 }
 
-function readFirefoxRows(database, domainFilter) {
+// Firefox schema 16 changed expiry from Unix seconds to milliseconds. Normalize
+// in SQLite before mapping so both installed reading and migration use seconds.
+export function readFirefoxRows(database, domainFilter) {
+  const version = Number(
+    database.prepare('PRAGMA user_version').get()?.user_version ?? 0
+  );
+  const expiry = version >= 16 ? 'expiry / 1000 AS expiry' : 'expiry';
   return queryRows(
     database,
-    `SELECT name, value, host, path, expiry, isSecure, isHttpOnly, sameSite
+    `SELECT name, value, host, path, ${expiry}, isSecure, isHttpOnly, sameSite
        FROM moz_cookies
       ${domainFilter ? 'WHERE host LIKE ?' : ''}
       ORDER BY host, name, path`,
@@ -168,10 +175,7 @@ function chromiumKeyForPrefix(context, prefix) {
           },
           create: () =>
             context.readWindowsEncryptionKey({
-              localStatePath: path.join(
-                path.dirname(context.profile.path),
-                'Local State'
-              ),
+              localStatePath: localStatePathForProfile(context.profile.path),
               environment: context.environment,
               decryptDpapi: context.decryptWindowsDpapi,
             }),
@@ -380,21 +384,22 @@ export function readBrowserCookies(options) {
 function countCookiesByDomain(database, family, domains) {
   const column = family === 'firefox' ? 'host' : 'host_key';
   const table = family === 'firefox' ? 'moz_cookies' : 'cookies';
-  const countFor = (filter) => {
-    const query = filter
-      ? `SELECT COUNT(*) AS n FROM ${table} WHERE ${column} LIKE ?`
-      : `SELECT COUNT(*) AS n FROM ${table}`;
-    const statement = database.prepare(query);
-    const row = filter ? statement.get(`%${filter}%`) : statement.get();
-    return Number(row?.n ?? 0);
-  };
-  const total = countFor(null);
+  const total = Number(
+    database.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get()?.n ?? 0
+  );
   if (!Array.isArray(domains) || domains.length === 0) {
     return { total, byDomain: null };
   }
-  const byDomain = {};
-  for (const domain of domains) {
-    byDomain[domain] = countFor(domain);
+  const byDomain = Object.fromEntries(domains.map((domain) => [domain, 0]));
+  const hosts = database.prepare(
+    `SELECT ${column} AS host, COUNT(*) AS n FROM ${table} GROUP BY ${column}`
+  );
+  for (const { host, n } of hosts.all()) {
+    for (const domain of Object.keys(byDomain)) {
+      if (matchesDomains(host ?? '', [domain])) {
+        byDomain[domain] += Number(n);
+      }
+    }
   }
   return { total, byDomain };
 }
@@ -426,6 +431,16 @@ export async function listCookieSources({
   });
   const sources = [];
   for (const profile of profiles) {
+    const source = {
+      browser: profile.browser,
+      profile: profile.name,
+      path: profile.path,
+      isDefault: profile.isDefault,
+    };
+    if (profile.error) {
+      sources.push({ ...source, error: profile.error });
+      continue;
+    }
     const cookiePath = await findCookieDatabase(
       profile.browser,
       profile.path,
@@ -454,13 +469,7 @@ export async function listCookieSources({
       database?.close();
     }
     if (error) {
-      sources.push({
-        browser: profile.browser,
-        profile: profile.name,
-        path: profile.path,
-        isDefault: profile.isDefault,
-        error,
-      });
+      sources.push({ ...source, error });
       continue;
     }
     // When filtering by domain, skip profiles that hold none of them.
@@ -471,10 +480,7 @@ export async function listCookieSources({
       continue;
     }
     sources.push({
-      browser: profile.browser,
-      profile: profile.name,
-      path: profile.path,
-      isDefault: profile.isDefault,
+      ...source,
       cookies: counts.total,
       byDomain: counts.byDomain,
     });

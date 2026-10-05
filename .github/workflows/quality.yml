@@ -123,8 +123,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
       - name: Check required documents and shared sections
         run: bash scripts/check-required-docs.sh
+
+      - name: Check generated browser and migration matrices
+        run: |
+          node scripts/generate-browser-support.mjs --check
+          node scripts/generate-migration-support.mjs --check
 
   # === REPOSITORY SCRIPT LINT ===
   # `npm run lint` inside js/ cannot see these files. ESLint takes its base path

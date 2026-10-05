@@ -5,10 +5,12 @@
  * *failed*, and a run whose only casualty is a cancelled job is filed under
  * `cancelled` as well - run 24045269874 of this repository is one such run on
  * `main`. scripts/check-pipeline-status.sh is the only thing that looks at
- * that, so these tests pin the four readings it has to get right: a failure is
+ * that, so these tests pin the readings it has to get right: a failure is
  * always an error, a cancellation off the default branch is a warning, a
  * cancellation on the default branch is an error unless a newer run has already
  * taken over the branch head.
+ * Hosted-runner failures can report an undocumented abandoned result; it and
+ * other unexpected/missing results must fail on every branch.
  *
  * See docs/CI-TIMEOUT-BUDGETS.md.
  */
@@ -65,6 +67,36 @@ describe('check-pipeline-status.sh', { skip: !BASH_AVAILABLE }, () => {
     assert.equal(status, 1);
     assert.match(output, /::error::Pipeline failed\. Failing jobs: lint/);
   });
+
+  for (const env of [
+    { IS_MAIN: 'false' },
+    { IS_MAIN: 'true', RUN_SHA: 'abc', BRANCH_HEAD_SHA: 'def' },
+  ]) {
+    it(`fails on an abandoned runner job with IS_MAIN=${env.IS_MAIN}`, () => {
+      // Hosted-runner acquisition failure in run 37362314527 left the macOS
+      // check cancelled, but GitHub sent "abandoned" to the needs context.
+      const { status, output } = runGate(
+        results({ lint: 'success', test: 'abandoned', release: 'skipped' }),
+        env
+      );
+
+      assert.equal(status, 1);
+      assert.match(output, /::error::Pipeline has unexpected job results/);
+      assert.match(output, /test \(abandoned\)/);
+      assert.doesNotMatch(output, /All required jobs succeeded/);
+    });
+  }
+
+  for (const result of ['timed_out', null, undefined]) {
+    it(`rejects an unexpected result of ${result}`, () => {
+      const { status, output } = runGate(results({ test: result }));
+
+      assert.equal(status, 1);
+      assert.match(output, /::error::Pipeline has unexpected job results/);
+      assert.match(output, /test \(/);
+      assert.doesNotMatch(output, /All required jobs succeeded/);
+    });
+  }
 
   it('only warns about a cancellation off the default branch', () => {
     const { status, output } = runGate(results({ test: 'cancelled' }), {

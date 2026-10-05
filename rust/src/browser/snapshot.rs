@@ -223,7 +223,7 @@ pub fn snapshot_user_data_dir(
     to: Option<&Path>,
 ) -> Result<SnapshotReport> {
     let browser = normalize_cookie_browser(&options.browser)?;
-    if browser_family(browser)? == "firefox" {
+    if browser_family(browser)? != "chromium" {
         return Err(anyhow!(
             "snapshot attach requires a Chromium-family browser"
         ));

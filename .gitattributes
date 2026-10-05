@@ -15,3 +15,5 @@ python/src/browser_commander/puppeteer/api/*.py text eol=lf
 js/tests/fixtures/traces/conformance/** -text
 python/src/browser_commander/traces/assets.json text eol=lf
 rust/src/traces/assets.json text eol=lf
+# Keep CSV CRLF record separators and quoted LF password bytes on every OS.
+tests/fixtures/safari-data/Passwords.csv -text whitespace=cr-at-eol

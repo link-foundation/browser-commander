@@ -89,7 +89,13 @@ def _template_variables(
         roaming = environment.get("APPDATA")
         if roaming is None:
             roaming = path_module.join(home, "AppData", "Roaming")
-        return {"home": home, "localAppData": local, "appData": roaming}
+        return {
+            "home": home,
+            "localAppData": local,
+            "appData": roaming,
+            "programFiles": environment.get("PROGRAMFILES", ""),
+            "programFilesX86": environment.get("PROGRAMFILES(X86)", ""),
+        }
     config = environment.get("XDG_CONFIG_HOME")
     if config is None:
         config = path_module.join(home, ".config")
@@ -103,7 +109,7 @@ def _expand_template(
     if not match:
         return template
     base = variables.get(match.group(1))
-    if base is None:
+    if not base:
         return None
     rest = [part for part in match.group(2).split("/") if part]
     return path_module.join(base, *rest)
@@ -133,6 +139,37 @@ def resolve_browser_roots(
         if resolved is not None:
             roots.append(resolved)
     return roots
+
+
+def resolve_browser_executables(
+    name: Any,
+    *,
+    platform: str = sys.platform,
+    home_dir: str | os.PathLike[str] | None = None,
+    environment: Mapping[str, str] | None = None,
+) -> list[str]:
+    """Resolve executable declarations and PATH candidates from the catalogue."""
+    source = _normalize_source(name)
+    env = os.environ if environment is None else environment
+    path_module = _path_module(platform)
+    home = str(Path.home()) if home_dir is None else os.fspath(home_dir)
+    variables = _template_variables(platform, home, env, path_module)
+    candidates = [
+        resolved
+        for template in source.get("executables", {}).get(platform, [])
+        if (resolved := _expand_template(template, variables, path_module))
+    ]
+    for directory in env.get("PATH", "").split(
+        ";" if platform == "win32" else os.pathsep
+    ):
+        if directory:
+            for executable in source.get("executableNames", []):
+                candidates.append(
+                    path_module.join(
+                        directory, executable + (".exe" if platform == "win32" else "")
+                    )
+                )
+    return list(dict.fromkeys(candidates))
 
 
 def is_single_profile_browser(name: Any) -> bool:

@@ -13,6 +13,32 @@ import pytest
 from browser_commander.browser.snapshot import snapshot_user_data_dir
 
 
+def test_locked_snapshot_reports_guidance_without_target_database(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source"
+    profile = source / "Default"
+    profile.mkdir(parents=True)
+    with contextlib.closing(sqlite3.connect(profile / "History")) as writer:
+        writer.execute("create table visits(url text)")
+        writer.commit()
+        writer.execute("begin exclusive")
+        try:
+            report = snapshot_user_data_dir(
+                browser="chrome", user_data_dir=source, to=tmp_path / "target"
+            )
+            assert report["copied"]["databases"] == 0
+            assert not (Path(report["target"]) / "Default/History").exists()
+            assert any(
+                entry["item"] == "Default/History"
+                and entry["reason"] == "unreadable"
+                and "Consistent SQLite snapshot unavailable" in entry["detail"]
+                for entry in report["skipped"]
+            )
+        finally:
+            writer.rollback()
+
+
 # feature-parity: attach.snapshot@native-typed
 def test_snapshot_live_wal_and_selected_profile(tmp_path: Path) -> None:
     source = tmp_path / "source"

@@ -102,6 +102,8 @@ def count_safari_cookies(
     data: bytes, domains: Sequence[str] | None = None
 ) -> tuple[int, dict[str, int] | None]:
     """Decode domain strings only; never decode cookie names or values."""
+    from .migration.domains import matches_domains
+
     by_domain = dict.fromkeys(domains, 0) if domains else None
     total = 0
     for record in _records(data):
@@ -109,13 +111,32 @@ def count_safari_cookies(
         total += 1
         if by_domain is not None:
             for domain in by_domain:
-                if domain.lower() in host:
+                if matches_domains(host, [domain]):
                     by_domain[domain] += 1
     return total, by_domain
 
 
 def find_safari_cookie_file(profile_dir: Path) -> Path | None:
+    named = (
+        profile_dir.parent.name == "Profiles"
+        and profile_dir.parent.parent.name == "Safari"
+    )
+    root = profile_dir.parents[2] if named else profile_dir
+    modern = (
+        [
+            root
+            / "WebKit/WebsiteDataStore"
+            / profile_dir.name.lower()
+            / "Cookies/Cookies.binarycookies"
+        ]
+        if named
+        else [
+            root / "WebKit/WebsiteData/Default/Cookies/Cookies.binarycookies",
+            root / "WebKit/WebsiteDataStore/Default/Cookies/Cookies.binarycookies",
+        ]
+    )
     for candidate in (
+        *modern,
         profile_dir / "Cookies/Cookies.binarycookies",
         profile_dir / "Cookies.binarycookies",
     ):

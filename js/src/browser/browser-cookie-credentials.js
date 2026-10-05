@@ -68,15 +68,22 @@ export async function readSafeStoragePassword({
     throw new Error(`No Safe Storage identity is known for ${browser}`);
   }
   if (platform === 'darwin') {
-    const password = await runCommand(
-      'security',
-      ['find-generic-password', '-w', '-s', identity.service],
-      environment
-    );
-    if (!password) {
-      throw new Error(`${identity.service} returned an empty password`);
+    try {
+      const password = await runCommand(
+        'security',
+        ['find-generic-password', '-w', '-s', identity.service],
+        environment
+      );
+      if (!password) {
+        throw new Error(`${identity.service} returned an empty password`);
+      }
+      return password;
+    } catch (cause) {
+      throw new Error(
+        `Could not read ${identity.service} from macOS Keychain. Unlock the login Keychain and allow the app running Browser Commander to access this item, then retry with refresh=true.`,
+        { cause }
+      );
     }
-    return password;
   }
   if (platform === 'linux') {
     return readLinuxSafeStoragePassword(browser, environment, runCommand);

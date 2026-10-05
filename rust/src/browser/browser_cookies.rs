@@ -298,9 +298,17 @@ pub(crate) fn read_firefox_cookies(
     database: &Connection,
     domain_filter: Option<&str>,
 ) -> Result<Vec<BrowserCookie>> {
+    // Firefox schema 16 changed Unix expiry seconds to milliseconds. Normalize
+    // in SQLite so installed reading and migration keep the same seconds shape.
+    let version = database.pragma_query_value(None, "user_version", |row| row.get::<_, i64>(0))?;
+    let expiry = if version >= 16 {
+        "expiry / 1000 AS expiry"
+    } else {
+        "expiry"
+    };
     let where_clause = domain_filter.map(|_| " WHERE host LIKE ?1").unwrap_or("");
     let query = format!(
-        "SELECT name, value, host, path, expiry, isSecure, isHttpOnly, sameSite \
+        "SELECT name, value, host, path, {expiry}, isSecure, isHttpOnly, sameSite \
          FROM moz_cookies{where_clause} ORDER BY host, name, path"
     );
     let mut statement = database.prepare(&query)?;
@@ -381,10 +389,7 @@ fn chromium_key_for_prefix(
                 credential_metadata(browser, platform, "dpapi"),
                 || {
                     read_windows_encryption_key(
-                        &profile_path
-                            .parent()
-                            .unwrap_or(profile_path)
-                            .join("Local State"),
+                        &super::browser_profile_files::local_state_path_for_profile(profile_path),
                     )
                 },
             )

@@ -6,6 +6,8 @@ import { decryptChromiumCookie } from '../browser-cookie-crypto.js';
 import { openSqliteDatabase } from '../browser-cookie-database.js';
 import { withDatabaseSnapshot } from './sqlite-snapshot.js';
 import { encryptChromiumValue } from './chromium-crypto.js';
+import { matchesDomains } from './domains.js';
+import { migratePasswordMetadata } from './password-metadata.js';
 
 /**
  * Saved-password migration.
@@ -49,6 +51,44 @@ function hostFromOrigin(originUrl) {
   }
 }
 
+async function rewriteSecret(
+  value,
+  origin,
+  { platform, resolveSourceKey, targetKey, targetPrefix }
+) {
+  const encryptedValue = toBuffer(value);
+  if (!encryptedValue.length) {
+    return { value: encryptedValue };
+  }
+  const prefix = encryptedValue.subarray(0, 3).toString('ascii');
+  if (prefix === 'v20') {
+    return { reason: 'app-bound-v20' };
+  }
+  if (prefix !== 'v10' && prefix !== 'v11') {
+    return { reason: 'unsupported-encryption' };
+  }
+  let plaintext;
+  try {
+    plaintext = decryptChromiumCookie({
+      encryptedValue,
+      host: hostFromOrigin(origin),
+      databaseVersion: 0,
+      platform,
+      key: await resolveSourceKey(prefix),
+    });
+  } catch (error) {
+    return { reason: 'decrypt-failed', detail: error.message };
+  }
+  return {
+    value: encryptChromiumValue({
+      plaintext,
+      key: targetKey,
+      platform,
+      prefix: targetPrefix,
+    }),
+  };
+}
+
 /**
  * Migrate saved passwords into the target profile's `Login Data`.
  *
@@ -69,6 +109,7 @@ export async function migratePasswords({
   resolveSourceKey,
   targetKey,
   targetPrefix = platform === 'win32' ? 'v10' : 'v11',
+  domains,
 }) {
   const sourcePath = path.join(sourceProfileDir, 'Login Data');
   if (!(await pathExists(sourcePath))) {
@@ -112,56 +153,52 @@ export async function migratePasswords({
         const update = db.prepare(
           'UPDATE logins SET password_value = ? WHERE rowid = ?'
         );
+        const remove = db.prepare('DELETE FROM logins WHERE rowid = ?');
+        const skip = (row, reason, detail) => {
+          remove.run(row.rowid);
+          skipped.push({
+            type: 'passwords',
+            item: row.origin_url ?? '(unknown)',
+            reason,
+            ...(detail ? { detail } : {}),
+          });
+        };
         for (const row of rows) {
+          if (!matchesDomains(row.origin_url ?? '', domains)) {
+            remove.run(row.rowid);
+            continue;
+          }
           const encryptedValue = toBuffer(row.password_value);
           if (encryptedValue.length === 0) {
             continue;
           }
-          const prefix = encryptedValue.subarray(0, 3).toString('ascii');
-          if (prefix === 'v20') {
-            skipped.push({
-              type: 'passwords',
-              item: row.origin_url ?? '(unknown)',
-              reason: 'app-bound-v20',
-            });
-            continue;
-          }
-          if (prefix !== 'v10' && prefix !== 'v11') {
-            skipped.push({
-              type: 'passwords',
-              item: row.origin_url ?? '(unknown)',
-              reason: 'unsupported-encryption',
-            });
-            continue;
-          }
-          let plaintext;
-          try {
-            const key = await resolveSourceKey(prefix);
-            plaintext = decryptChromiumCookie({
-              encryptedValue,
-              host: hostFromOrigin(row.origin_url),
-              databaseVersion: 0,
-              platform,
-              key,
-            });
-          } catch (error) {
-            skipped.push({
-              type: 'passwords',
-              item: row.origin_url ?? '(unknown)',
-              reason: 'decrypt-failed',
-              detail: error.message,
-            });
-            continue;
-          }
-          const reencrypted = encryptChromiumValue({
-            plaintext,
-            key: targetKey,
+          const result = await rewriteSecret(encryptedValue, row.origin_url, {
             platform,
-            prefix: targetPrefix,
+            resolveSourceKey,
+            targetKey,
+            targetPrefix,
           });
-          update.run(reencrypted, row.rowid);
+          if (result.reason) {
+            skip(row, result.reason, result.detail);
+            continue;
+          }
+          update.run(result.value, row.rowid);
           migrated += 1;
         }
+        await migratePasswordMetadata({
+          db,
+          domains,
+          skipped,
+          warnings,
+          rewriteValue: (value, origin) =>
+            rewriteSecret(value, origin, {
+              platform,
+              resolveSourceKey,
+              targetKey,
+              targetPrefix,
+            }),
+        });
+        db.exec('VACUUM');
       } finally {
         db.close();
       }

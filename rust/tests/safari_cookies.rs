@@ -1,8 +1,8 @@
 // feature-parity: sources.safari-cookies@native-typed
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use browser_commander::browser::migration::{
     migrate_profile, MigrateProfileOptions, MigrationSource,
@@ -18,14 +18,19 @@ const EXPECTED: &str = include_str!("../../tests/fixtures/safari/expected.json")
 struct Home(PathBuf);
 impl Home {
     fn new() -> Self {
-        Self(std::env::temp_dir().join(format!(
+        static COUNTER: AtomicU64 = AtomicU64::new(0);
+        loop {
+            let home = std::env::temp_dir().join(format!(
                 "bc-safari-{}-{}",
                 std::process::id(),
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos()
-            )))
+                COUNTER.fetch_add(1, Ordering::Relaxed)
+            ));
+            match fs::create_dir(&home) {
+                Ok(()) => return Self(home),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(error) => panic!("Could not reserve a Safari fixture home: {error}"),
+            }
+        }
     }
     fn install(&self, browser: &str, legacy: bool) -> PathBuf {
         let bundle = if browser == "safari" {
@@ -114,6 +119,91 @@ fn listing_does_not_decode_cookie_values() {
 }
 
 #[test]
+fn catalogue_error_preserves_readable_profiles() {
+    let home = Home::new();
+    let root = home.install("safari", false);
+    fs::create_dir(root.join("Safari")).unwrap();
+    let tabs = root.join("Safari/SafariTabs.db");
+    rusqlite::Connection::open(&tabs).unwrap().close().unwrap();
+    let chromium = home
+        .0
+        .join("Library/Application Support/Google/Chrome/Default");
+    fs::create_dir_all(&chromium).unwrap();
+    let db = rusqlite::Connection::open(chromium.join("Cookies")).unwrap();
+    db.execute_batch(
+        "CREATE TABLE cookies(host_key TEXT); INSERT INTO cookies VALUES ('.github.com')",
+    )
+    .unwrap();
+    drop(db);
+    let before = fs::read(&tabs).unwrap();
+    let profiles = list_browser_profiles(
+        BrowserProfileOptions::default()
+            .platform("darwin")
+            .home_dir(&home.0)
+            .environment(Environment::new()),
+    )
+    .unwrap();
+    assert_eq!(profiles.iter().filter(|p| p.browser == "safari").count(), 2);
+    let sources = list_cookie_sources(
+        &["github.com".into()],
+        "darwin",
+        &home.0,
+        &Environment::new(),
+    )
+    .unwrap();
+    assert_eq!(
+        sources
+            .iter()
+            .find(|s| s.browser == "chrome")
+            .unwrap()
+            .cookies,
+        Some(1)
+    );
+    assert_eq!(
+        sources
+            .iter()
+            .find(|s| s.browser == "safari" && s.error.is_none())
+            .unwrap()
+            .cookies,
+        Some(4)
+    );
+    assert!(sources
+        .iter()
+        .find(|s| s.browser == "safari" && s.error.is_some())
+        .unwrap()
+        .error
+        .as_ref()
+        .unwrap()
+        .contains("no such table"));
+    assert_eq!(fs::read(tabs).unwrap(), before);
+}
+
+#[test]
+fn discovery_domains_are_exact_and_reader_filter_stays_substring() {
+    let home = Home::new();
+    home.install("safari", false);
+    let sources = list_cookie_sources(
+        &["hub.com".into(), "github.co".into()],
+        "darwin",
+        &home.0,
+        &Environment::new(),
+    )
+    .unwrap();
+    assert!(sources.is_empty());
+    let cookies = read_browser_cookies(
+        BrowserCookieReadOptions::new("safari")
+            .platform("darwin")
+            .home_dir(&home.0)
+            .environment(Environment::new())
+            .domain_filter("hub.com")
+            .cache(false),
+    )
+    .unwrap();
+    let expected: Vec<BrowserCookie> = serde_json::from_str(EXPECTED).unwrap();
+    assert_eq!(cookies, expected[..2]);
+}
+
+#[test]
 fn default_domain_migration_reports_unsupported_classes_without_keychain_access() {
     let home = Home::new();
     home.install("safari", false);
@@ -146,7 +236,22 @@ fn default_domain_migration_reports_unsupported_classes_without_keychain_access(
     let expected: Vec<BrowserCookie> = serde_json::from_str(EXPECTED).unwrap();
     assert_eq!(report.cookies, expected[..2]);
     assert_eq!(report.migrated.cookies, 2);
-    assert_eq!(report.skipped.len(), 5);
+    let classes: Vec<String> = serde_json::from_str(include_str!(
+        "../../tests/fixtures/migration-data-classes.json"
+    ))
+    .unwrap();
+    assert_eq!(
+        report
+            .skipped
+            .iter()
+            .map(|entry| entry.data_class.as_str())
+            .collect::<std::collections::BTreeSet<_>>(),
+        classes
+            .iter()
+            .map(String::as_str)
+            .filter(|class| *class != "cookies")
+            .collect::<std::collections::BTreeSet<_>>()
+    );
     assert_eq!(
         report
             .skipped

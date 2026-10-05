@@ -18,6 +18,7 @@ from browser_commander.browser.browser_profiles import (
     browser_profile_root,
     normalize_cookie_browser,
 )
+from browser_commander.browser.browser_sources import browser_family
 from browser_commander.browser.migration.sqlite_snapshot import with_database_snapshot
 from browser_commander.browser.profile_directory import (
     configure_user_data_dir,
@@ -99,7 +100,7 @@ def snapshot_user_data_dir(
     empty and outside the source. Without one, the caller owns a temporary copy.
     """
     browser = normalize_cookie_browser(browser)
-    if browser == "firefox":
+    if browser_family(browser) != "chromium":
         raise ValueError("snapshot attach requires a Chromium-family browser")
     validate_profile_name(profile)
     if user_data_dir is not None:

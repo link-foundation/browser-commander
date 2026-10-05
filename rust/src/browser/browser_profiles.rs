@@ -39,6 +39,8 @@ pub struct BrowserProfile {
     pub path: PathBuf,
     /// Whether the browser marks this profile as the default/last used one.
     pub is_default: bool,
+    /// Discovery failure for this source; readable profiles remain in the listing.
+    pub error: Option<String>,
 }
 
 /// Options for [`list_browser_profiles`].
@@ -239,6 +241,7 @@ fn list_chromium_profiles(browser: &str, root: &Path) -> Vec<BrowserProfile> {
                 display_name: "Default".to_string(),
                 path: root.to_path_buf(),
                 is_default: true,
+                error: None,
             }],
             None => Vec::new(),
         };
@@ -281,6 +284,7 @@ fn list_chromium_profiles(browser: &str, root: &Path) -> Vec<BrowserProfile> {
                 name,
                 display_name,
                 path,
+                error: None,
             })
         })
         .collect::<Vec<_>>();
@@ -373,6 +377,7 @@ fn list_firefox_profiles(browser: &str, root: &Path) -> Vec<BrowserProfile> {
                 display_name,
                 path,
                 is_default: section.get("Default").map(String::as_str) == Some("1"),
+                error: None,
             })
         })
         .collect::<Vec<_>>();
@@ -391,14 +396,9 @@ fn list_profiles_for_browser(
     let mut profiles = Vec::new();
     for root in roots {
         if family == "safari" {
-            if super::safari_cookies::find_safari_cookie_file(&root).is_some() {
-                return Ok(vec![BrowserProfile {
-                    browser: browser.into(),
-                    name: "Default".into(),
-                    display_name: "Default".into(),
-                    path: root,
-                    is_default: true,
-                }]);
+            let safari_profiles = super::safari_profiles::list_safari_profiles(browser, &root)?;
+            if !safari_profiles.is_empty() {
+                return Ok(safari_profiles);
             }
             continue;
         }
@@ -427,7 +427,7 @@ pub fn list_browser_profiles(options: BrowserProfileOptions) -> Result<Vec<Brows
     // Several Firefox channels (firefox, firefox-developer, firefox-nightly)
     // share one profile root, so a catalogue-wide scan would otherwise report
     // the same profile under each id. Keep the first (canonical) browser.
-    let mut seen: HashSet<PathBuf> = HashSet::new();
+    let mut seen: HashSet<(PathBuf, bool)> = HashSet::new();
     for browser in browsers {
         for profile in list_profiles_for_browser(
             browser,
@@ -435,7 +435,7 @@ pub fn list_browser_profiles(options: BrowserProfileOptions) -> Result<Vec<Brows
             &options.home_dir,
             &options.environment,
         )? {
-            if seen.insert(profile.path.clone()) {
+            if seen.insert((profile.path.clone(), profile.error.is_some())) {
                 profiles.push(profile);
             }
         }
@@ -465,12 +465,16 @@ pub(crate) fn resolve_browser_profile(
         })
         .or_else(|| profiles.iter().find(|profile| profile.is_default))
         .or_else(|| profiles.first());
-    selected.cloned().ok_or_else(|| {
+    let selected = selected.cloned().ok_or_else(|| {
         let detail = requested_profile
             .map(|profile| format!(" profile \"{profile}\""))
             .unwrap_or_else(|| " profile".into());
         anyhow!("Could not find a cookie database for {browser}{detail}")
-    })
+    })?;
+    if let Some(error) = &selected.error {
+        return Err(anyhow!("{error}"));
+    }
+    Ok(selected)
 }
 
 #[cfg(test)]
@@ -558,6 +562,7 @@ mod tests {
                 display_name: "Default".into(),
                 path: root,
                 is_default: true,
+                error: None,
             }]
         );
     }
@@ -576,6 +581,7 @@ mod tests {
                 display_name: "default".into(),
                 path: profile_path,
                 is_default: true,
+                error: None,
             }]
         );
     }

@@ -67,7 +67,7 @@ describe('migrateProfile', () => {
     assert.equal(report.migrated.cookies, 1);
     assert.equal(report.migrated.bookmarks, 1);
     assert.equal(report.migrated.passwords, 1);
-    // Firefox history cannot be migrated into Chrome's schema.
+    // This bookmark-only fixture has no Firefox visit table.
     assert.equal(report.migrated.history, 0);
     assert.equal(report.migrated.preferences, 0);
     assert.equal(report.migrated.extensions, 0);
@@ -95,6 +95,21 @@ describe('migrateProfile', () => {
     assert.equal(report.migrated.bookmarks, 1);
     assert.equal(report.migrated.cookies, 0);
     await assert.rejects(() => readFile(path.join(target, 'Login Data')));
+  });
+
+  it('reports unsupported Firefox preferences and extensions explicitly', async () => {
+    const report = await migrateProfile({
+      from: { browser: 'firefox', userDataDir: await makeTempDir() },
+      to: await makeTempDir(),
+      include: ['preferences', 'extensions'],
+    });
+    assert.deepEqual(
+      report.skipped.map(({ type, reason }) => [type, reason]),
+      [
+        ['preferences', 'firefox-class-not-supported'],
+        ['extensions', 'firefox-class-not-supported'],
+      ]
+    );
   });
 
   it('skips passwords with a warning when no target key is available on Windows', async () => {

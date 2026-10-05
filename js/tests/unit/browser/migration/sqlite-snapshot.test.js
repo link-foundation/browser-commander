@@ -1,5 +1,6 @@
 import assert from 'node:assert';
-import { stat } from 'node:fs/promises';
+import { stat, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import BetterSqlite3 from 'better-sqlite3';
@@ -57,6 +58,60 @@ describe('withDatabaseSnapshot', () => {
       }),
       /does not exist/
     );
+  });
+
+  it('does not substitute an unverified file copy when backup fails', async () => {
+    const sourcePath = path.join(await makeTempDir(), 'History');
+    await writeFile(sourcePath, 'not a SQLite database');
+    let readerCalled = false;
+    await assert.rejects(
+      withDatabaseSnapshot({
+        sourcePath,
+        read: () => {
+          readerCalled = true;
+        },
+      }),
+      /Consistent SQLite snapshot unavailable.*close the source browser/iu
+    );
+    assert.equal(readerCalled, false);
+  });
+
+  it(
+    'reports guidance for an exclusive lock without invoking the reader',
+    { timeout: 5000 },
+    async () => {
+      const sourcePath = await makeDatabase(1);
+      const writer = new BetterSqlite3(sourcePath);
+      writer.exec('BEGIN EXCLUSIVE');
+      try {
+        await assert.rejects(
+          withDatabaseSnapshot({
+            sourcePath,
+            read: () => assert.fail('locked snapshot reader invoked'),
+          }),
+          /Consistent SQLite snapshot unavailable.*close the source browser/iu
+        );
+      } finally {
+        writer.exec('ROLLBACK');
+        writer.close();
+      }
+    }
+  );
+
+  it('includes committed WAL records while the source connection stays open', async () => {
+    const sourcePath = await makeDatabase(1);
+    const writer = new BetterSqlite3(sourcePath);
+    writer.pragma('journal_mode = WAL');
+    writer.prepare('UPDATE urls SET title = ?').run('committed WAL title');
+    try {
+      const title = await readDatabaseSnapshot({
+        sourcePath,
+        read: (db) => db.prepare('SELECT title FROM urls').get().title,
+      });
+      assert.equal(title, 'committed WAL title');
+    } finally {
+      writer.close();
+    }
   });
 });
 

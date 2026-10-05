@@ -16,12 +16,13 @@ import { pathToFileURL } from 'node:url';
 
 import { repoPath } from '../../helpers/repo.js';
 
-const { BEGIN_MARKER, END_MARKER, readCatalogue, renderBrowserSupport } =
-  await import(pathToFileURL(repoPath('scripts/generate-browser-support.mjs')));
+const generator = await import(
+  pathToFileURL(repoPath('scripts/generate-browser-support.mjs'))
+);
 
 describe('generate-browser-support', () => {
   it('renders a row per browser with per-platform availability', () => {
-    const table = renderBrowserSupport([
+    const table = generator.renderBrowserSupport([
       {
         id: 'chrome',
         family: 'chromium',
@@ -47,10 +48,16 @@ describe('generate-browser-support', () => {
     const readme = fs
       .readFileSync(repoPath('README.md'), 'utf8')
       .replaceAll('\r\n', '\n');
-    const begin = readme.indexOf(BEGIN_MARKER);
-    const end = readme.indexOf(END_MARKER);
+    const begin = readme.indexOf(generator.BEGIN_MARKER);
+    const end = readme.indexOf(generator.END_MARKER);
     assert.ok(begin !== -1 && end > begin, 'README is missing the markers');
-    const between = readme.slice(begin + BEGIN_MARKER.length, end).trim();
-    assert.equal(between, renderBrowserSupport(readCatalogue(repoPath('.'))));
+    const between = readme
+      .slice(begin + generator.BEGIN_MARKER.length, end)
+      .trim();
+    const browsers = generator.readCatalogue(repoPath('.'));
+    assert.equal(
+      between,
+      `${generator.renderBrowserSupport(browsers)}\n\n${generator.renderBrowserControls(browsers)}`
+    );
   });
 });

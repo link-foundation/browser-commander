@@ -168,6 +168,37 @@ def test_cookie_helpers_are_exported() -> None:
     assert public_read_browser_cookies is read_browser_cookies
 
 
+def test_discovers_and_decrypts_yandex_cookie_catalogue_alias(tmp_path):
+    host = ".yandex.ru"
+    encrypted = _encrypt_cbc_cookie(host, "yandex-session", "peanuts")
+    profile = _create_chromium_profile(
+        tmp_path,
+        [
+            {
+                "host": host,
+                "name": "SID",
+                "encrypted_value": b"v10" + encrypted[3:],
+            }
+        ],
+    )
+    root = tmp_path / ".config/yandex-browser"
+    profile.parent.rename(root)
+    file = root / "Default/Network/Cookies"
+    before = file.read_bytes()
+    cookies = read_browser_cookies_with_dependencies(
+        BrowserCookieReadOptions(
+            browser="yandex-browser", domain_filter="yandex.ru", cache=False
+        ),
+        platform="linux",
+        home_dir=tmp_path,
+        environment={},
+    )
+    assert len(cookies) == 1
+    assert cookies[0]["domain"] == host
+    assert cookies[0]["value"] == "yandex-session"
+    assert file.read_bytes() == before
+
+
 def test_discovers_chromium_and_firefox_profiles(tmp_path: Path) -> None:
     chromium_path = _create_chromium_profile(tmp_path, [])
     firefox_path = _create_firefox_profile(tmp_path)

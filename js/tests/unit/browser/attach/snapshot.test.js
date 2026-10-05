@@ -34,6 +34,36 @@ function snapshotChrome(root, to) {
   return snapshotUserDataDir({ browser: 'chrome', userDataDir: root, to });
 }
 
+it(
+  'reports a locked database with snapshot guidance and leaves no target database',
+  { timeout: 5000 },
+  async () => {
+    const root = await makeTempDir();
+    const target = await makeTempDir();
+    const profile = path.join(root, 'Default');
+    await mkdir(profile);
+    const filename = await writeChromiumHistory(profile, 1);
+    const writer = new BetterSqlite3(filename);
+    writer.exec('BEGIN EXCLUSIVE');
+    try {
+      const report = await snapshotChrome(root, target);
+      assert.equal(report.copied.databases, 0);
+      assert.ok(
+        report.skipped.some(
+          ({ item, reason, detail }) =>
+            item === 'Default/History' &&
+            reason === 'unreadable' &&
+            detail.includes('Consistent SQLite snapshot unavailable')
+        )
+      );
+      await assert.rejects(stat(path.join(target, 'Default/History')));
+    } finally {
+      writer.exec('ROLLBACK');
+      writer.close();
+    }
+  }
+);
+
 /** Write `content` to `root/relativePath`, creating the parent folders. */
 async function put(root, relativePath, content = relativePath) {
   const filePath = path.join(root, ...relativePath.split('/'));

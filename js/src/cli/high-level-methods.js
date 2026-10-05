@@ -220,6 +220,8 @@ function migrateProfile(state, params) {
     include: params.include,
     domains: params.domains,
     targetBrowser: params.targetBrowser,
+    passwordCsv: params.passwordCsv,
+    includePaymentCards: params.includePaymentCards,
   });
 }
 

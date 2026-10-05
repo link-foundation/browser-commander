@@ -209,6 +209,14 @@ def test_rejects_chrome_default_user_data_directories(profile: str) -> None:
         )
 
 
+@pytest.mark.parametrize("channel", ["firefox", "librewolf", "safari", "duckduckgo"])
+def test_cdp_validation_rejects_other_protocols(channel: str) -> None:
+    from browser_commander.browser.real_browser import _validate_launch_request
+
+    with pytest.raises(ValueError, match="does not support CDP"):
+        _validate_launch_request(RealBrowserOptions(channel=channel))
+
+
 @pytest.mark.parametrize(
     ("platform", "channel", "environment", "expected"),
     [
@@ -355,6 +363,8 @@ async def test_migrates_a_profile_before_launch_and_seeds_migrated_cookies(
                 "profile": "Default",
                 "include": ["cookies", "bookmarks"],
                 "domains": ["google.com"],
+                "password_csv": "/tmp/safari-export.csv",
+                "include_payment_cards": True,
             },
         ),
         resolve_executable=_executable,
@@ -371,6 +381,8 @@ async def test_migrates_a_profile_before_launch_and_seeds_migrated_cookies(
     assert migrate_options["target_browser"] == "chrome"
     assert migrate_options["include"] == ["cookies", "bookmarks"]
     assert migrate_options["domains"] == ["google.com"]
+    assert migrate_options["password_csv"] == "/tmp/safari-export.csv"
+    assert migrate_options["include_payment_cards"] is True
     assert migrate_options["from_"] == {"browser": "chrome", "profile": "Default"}
 
     # Migrated cookies are appended to any explicit seed_cookies.

@@ -5,9 +5,8 @@ friends open (often in WAL mode), so copying the main file alone can yield a
 torn or stale database. The snapshot opens the source strictly read-only
 through a ``file:...?mode=ro`` URI and copies it with SQLite's online backup
 API (:meth:`sqlite3.Connection.backup`), which produces a transactionally
-consistent copy without ever writing to the source. When the source cannot be
-opened or backed up (an exclusive lock held by the browser, for example) the
-main file and its ``-wal``/``-shm``/``-journal`` sidecars are copied instead.
+consistent copy without ever writing to the source. When a lock prevents backup,
+report snapshot guidance: separately copying live files cannot ensure consistency.
 
 The snapshot lives in a private temporary directory that is always removed
 after the reader returns.
@@ -37,7 +36,6 @@ T = TypeVar("T")
 #: Prefix of the temporary directory that holds a snapshot.
 SNAPSHOT_PREFIX = "browser-commander-snap-"
 
-_SQLITE_SIDECARS = ("-wal", "-shm", "-journal")
 # SQLite result codes; Python 3.9/3.10 do not export the named constants.
 _SQLITE_BUSY, _SQLITE_LOCKED = 5, 6
 
@@ -53,9 +51,7 @@ def _backup(source_path: Path, snapshot_path: Path) -> None:
         nonlocal last_progress
         if status in (_SQLITE_BUSY, _SQLITE_LOCKED):
             if time.monotonic() - last_progress >= 1:
-                raise sqlite3.OperationalError(
-                    "live SQLite backup remained busy; using file snapshot"
-                )
+                raise sqlite3.OperationalError("live SQLite backup remained busy")
         else:
             last_progress = time.monotonic()
 
@@ -65,19 +61,6 @@ def _backup(source_path: Path, snapshot_path: Path) -> None:
             source.backup(destination, pages=256, progress=progress, sleep=0.05)
     finally:
         source.close()
-
-
-def _copy_database_files(source_path: Path, snapshot_path: Path) -> None:
-    for suffix in ("", *_SQLITE_SIDECARS):
-        with contextlib.suppress(FileNotFoundError):
-            snapshot_path.with_name(f"{snapshot_path.name}{suffix}").unlink()
-    shutil.copyfile(source_path, snapshot_path)
-    for suffix in _SQLITE_SIDECARS:
-        sidecar = source_path.with_name(f"{source_path.name}{suffix}")
-        if sidecar.exists():
-            shutil.copyfile(
-                sidecar, snapshot_path.with_name(f"{snapshot_path.name}{suffix}")
-            )
 
 
 def with_database_snapshot(source_path: PathLike, read: Callable[[Path], T]) -> T:
@@ -100,8 +83,13 @@ def with_database_snapshot(source_path: PathLike, read: Callable[[Path], T]) -> 
     try:
         try:
             _backup(source, snapshot_path)
-        except sqlite3.Error:
-            _copy_database_files(source, snapshot_path)
+        except sqlite3.Error as error:
+            message = (
+                f"Consistent SQLite snapshot unavailable for {source}; "
+                "close the source browser and retry, or supply a consistent "
+                f"read-only snapshot. {error}"
+            )
+            raise sqlite3.OperationalError(message) from error
         return read(snapshot_path)
     finally:
         shutil.rmtree(directory, ignore_errors=True)

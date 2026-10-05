@@ -127,6 +127,9 @@ pub(crate) fn migrate_cookies(
             options = options.domain_filter(domain);
         }
         for cookie in read_cookies(options)? {
+            if !super::domains::matches_domains(&cookie.domain, source.domains) {
+                continue;
+            }
             let key = format!("{}\0{}\0{}", cookie.domain, cookie.name, cookie.path);
             if !seen.contains_key(&key) {
                 order.push(key.clone());

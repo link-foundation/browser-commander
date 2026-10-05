@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "classes": [
+    "cookies",
+    "bookmarks",
+    "history",
+    "passwords",
+    "preferences",
+    "extensions",
+    "localStorage",
+    "indexedDB",
+    "sessionStorage",
+    "autofill",
+    "paymentCards",
+    "searchEngines",
+    "siteSettings",
+    "openTabs",
+    "downloads",
+    "readingList",
+    "clientCertificates",
+    "passkeys"
+  ],
+  "sourceFamilies": ["chromium", "firefox", "safari"],
+  "targetFamilies": ["chromium", "firefox", "webkit"],
+  "imports": {
+    "chromium": {
+      "chromium": [
+        "seed",
+        "copy",
+        "snapshot",
+        "rekey",
+        "copy",
+        "copy",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "consent/unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "non-exportable"
+      ]
+    },
+    "firefox": {
+      "chromium": [
+        "seed",
+        "translate",
+        "translate",
+        "NSS/rekey",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "consent/unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "non-exportable"
+      ]
+    },
+    "safari": {
+      "chromium": [
+        "seed",
+        "translate",
+        "translate",
+        "CSV/rekey",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "consent/unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "non-exportable"
+      ]
+    }
+  },
+  "wholeProfileMigration": {
+    "chromium": "not implemented",
+    "firefox": "not implemented",
+    "webkit": "not implemented"
+  },
+  "pendingClasses": [
+    "localStorage",
+    "indexedDB",
+    "sessionStorage",
+    "autofill",
+    "paymentCards",
+    "searchEngines",
+    "siteSettings",
+    "openTabs",
+    "downloads",
+    "readingList",
+    "clientCertificates"
+  ],
+  "installedBrowserLaunch": {
+    "chromium": "CDP",
+    "firefox": "explicit WebDriver setup",
+    "safari": "explicit safaridriver setup",
+    "detection": "unsupported"
+  }
+}

@@ -7,6 +7,7 @@ Mirrors ``js/tests/unit/browser/cookie-sources.test.js``.
 from __future__ import annotations
 
 import json
+import sqlite3
 from dataclasses import asdict
 from pathlib import Path
 
@@ -17,7 +18,80 @@ from browser_commander.browser.browser_cookies import (
     list_cookie_sources,
     resolve_import_source,
 )
+from browser_commander.browser.migration.profile import migrate_profile_sync
 from tests.helpers.migration_fixtures import write_firefox_profile
+
+
+@pytest.mark.parametrize("browser", ["firefox", "chrome"])
+def test_source_domains_match_only_whole_hosts_and_subdomains(tmp_path, browser):
+    hosts = [
+        ".github.com",
+        "api.GITHUB.COM.",
+        "notgithub.com",
+        ".github.com.attacker.test",
+        ".gitXhub.com",
+    ]
+    if browser == "firefox":
+        profile = write_firefox_profile(
+            tmp_path,
+            [
+                {"host": host, "name": str(index), "value": "secret"}
+                for index, host in enumerate(hosts)
+            ],
+        )
+        file = profile / "cookies.sqlite"
+    else:
+        file = tmp_path / ".config/google-chrome/Default/Cookies"
+        file.parent.mkdir(parents=True)
+        with sqlite3.connect(file) as database:
+            database.execute("CREATE TABLE cookies (host_key TEXT, value TEXT)")
+            database.executemany(
+                "INSERT INTO cookies VALUES (?, ?)",
+                [(host, "secret") for host in hosts],
+            )
+    before = file.read_bytes()
+    sources = list_cookie_sources(
+        domains=["GITHUB.COM.", "git_hub.com", "%github.com"],
+        platform="linux",
+        home_dir=tmp_path,
+        environment={},
+    )
+    assert len(sources) == 1
+    assert sources[0].browser == browser
+    assert sources[0].cookies == len(hosts)
+    assert sources[0].by_domain == {
+        "GITHUB.COM.": 2,
+        "git_hub.com": 0,
+        "%github.com": 0,
+    }
+    assert "secret" not in repr(sources)
+    assert file.read_bytes() == before
+
+
+def test_import_source_ignores_lookalike_domain_in_default_browser(tmp_path):
+    write_firefox_profile(
+        tmp_path,
+        [
+            {"name": "lookalike", "value": "secret", "host": ".notgithub.com"},
+        ],
+    )
+    write_firefox_profile(tmp_path, _GITHUB_COOKIE, root=".librewolf", name="default")
+    source = _resolve(tmp_path)
+    assert source.browser == "librewolf"
+    assert source.warning["reason"] == "default-browser-fallback"
+    report = migrate_profile_sync(
+        from_={"browser": "auto"},
+        to=tmp_path / "target",
+        include=["cookies"],
+        domains=["github.com"],
+        platform="linux",
+        home_dir=tmp_path,
+        environment={},
+        run_command=_firefox_is_default,
+    )
+    assert report["source"]["browser"] == "librewolf"
+    assert report["migrated"]["cookies"] == 1
+    assert report["cookies"][0]["domain"] == ".github.com"
 
 
 def test_reports_cookie_counts_per_profile_without_reading_values(

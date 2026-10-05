@@ -493,6 +493,14 @@ launch_and_connect_real_browser = launch_real_browser
 def _validate_launch_request(options: RealBrowserOptions) -> None:
     """Reject a launch request before anything touches the disk."""
 
+    from browser_commander.browser.browser_sources import find_browser_source
+
+    source = find_browser_source(options.channel)
+    if source is not None and source["family"] != "chromium":
+        raise ValueError(
+            f"{options.channel} does not support CDP; use its documented WebDriver setup when available"
+        )
+
     if options.engine not in ("playwright", "selenium"):
         msg = f"Invalid engine: {options.engine}. Expected 'playwright' or 'selenium'"
         raise ValueError(msg)
@@ -599,10 +607,16 @@ async def _run_pre_launch_migration(
     source = dict(options.migrate_from)
     include = source.pop("include", None)
     domains = source.pop("domains", None)
+    password_csv = source.pop("password_csv", source.pop("passwordCsv", None))
+    include_payment_cards = source.pop(
+        "include_payment_cards", source.pop("includePaymentCards", False)
+    )
     migrate_options: dict[str, Any] = {
         "from_": source,
         "to": str(Path(user_data_dir) / "Default"),
         "domains": domains,
+        "password_csv": password_csv,
+        "include_payment_cards": include_payment_cards,
         "target_browser": options.channel,
     }
     if include is not None:

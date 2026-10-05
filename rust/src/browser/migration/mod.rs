@@ -8,23 +8,31 @@
 //!
 //! Cookies are returned (not written): a running Chromium re-derives its own
 //! cookie encryption, so the launcher seeds them over CDP with the existing
-//! `seed_cookies` path. Every other data class is written into the target
-//! profile directory.
+//! `seed_cookies` path. Supported file imports are written into the target;
+//! classes without a native writer receive explicit skipped reports.
 
 mod bookmarks;
 mod chromium_crypto;
+mod chromium_writers;
 mod cookies;
+mod data_classes;
+pub(crate) mod domains;
 mod extensions;
 mod firefox;
 mod firefox_bookmarks;
 mod firefox_der;
+mod firefox_history;
 mod firefox_nss;
 mod fs_utils;
 mod history;
 mod os_crypt_keys;
+mod password_metadata;
 mod passwords;
 mod preferences;
+pub(crate) mod safari;
+mod safari_import;
 pub(crate) mod sqlite_snapshot;
+mod validation;
 
 use std::path::{Path, PathBuf};
 
@@ -49,14 +57,26 @@ pub use os_crypt_keys::{
 };
 pub use preferences::MIGRATED_PREFERENCE_PATHS;
 
-/// Every data class a migration can copy, in the order they run.
-pub const ALL_DATA_CLASSES: [&str; 6] = [
+/// Every recognized class, in report order; unsupported writers are reported.
+pub const ALL_DATA_CLASSES: [&str; 18] = [
     "cookies",
     "bookmarks",
     "history",
     "passwords",
     "preferences",
     "extensions",
+    "localStorage",
+    "indexedDB",
+    "sessionStorage",
+    "autofill",
+    "paymentCards",
+    "searchEngines",
+    "siteSettings",
+    "openTabs",
+    "downloads",
+    "readingList",
+    "clientCertificates",
+    "passkeys",
 ];
 
 const TARGET_KEY_UNAVAILABLE_DETAIL: &str = "A target encryption key was not available (on Windows the launcher must generate one and write it into the target Local State); passwords were not migrated.";
@@ -125,6 +145,7 @@ impl ClassOutcome {
 
 /// Per-class migrated counts.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
 pub struct MigratedCounts {
     pub cookies: u64,
     pub bookmarks: u64,
@@ -132,6 +153,19 @@ pub struct MigratedCounts {
     pub passwords: u64,
     pub preferences: u64,
     pub extensions: u64,
+    pub local_storage: u64,
+    #[serde(rename = "indexedDB")]
+    pub indexed_db: u64,
+    pub session_storage: u64,
+    pub autofill: u64,
+    pub payment_cards: u64,
+    pub search_engines: u64,
+    pub site_settings: u64,
+    pub open_tabs: u64,
+    pub downloads: u64,
+    pub reading_list: u64,
+    pub client_certificates: u64,
+    pub passkeys: u64,
 }
 
 impl MigratedCounts {
@@ -142,7 +176,20 @@ impl MigratedCounts {
             "history" => &mut self.history,
             "passwords" => &mut self.passwords,
             "preferences" => &mut self.preferences,
-            _ => &mut self.extensions,
+            "extensions" => &mut self.extensions,
+            "localStorage" => &mut self.local_storage,
+            "indexedDB" => &mut self.indexed_db,
+            "sessionStorage" => &mut self.session_storage,
+            "autofill" => &mut self.autofill,
+            "paymentCards" => &mut self.payment_cards,
+            "searchEngines" => &mut self.search_engines,
+            "siteSettings" => &mut self.site_settings,
+            "openTabs" => &mut self.open_tabs,
+            "downloads" => &mut self.downloads,
+            "readingList" => &mut self.reading_list,
+            "clientCertificates" => &mut self.client_certificates,
+            "passkeys" => &mut self.passkeys,
+            _ => unreachable!("validated migration data class"),
         };
         *slot += count;
     }
@@ -279,12 +326,16 @@ pub struct MigrateProfileOptions {
     pub to: PathBuf,
     /// Data classes to migrate; defaults to [`ALL_DATA_CLASSES`].
     pub include: Vec<String>,
-    /// Cookie domain filter (empty means all).
+    /// Per-site host/subdomain filter (empty means all).
     pub domains: Vec<String>,
     /// Platform convention (`linux`, `darwin`, `win32`).
     pub platform: String,
     /// The launching browser channel, used to derive the target key.
     pub target_browser: Option<String>,
+    /// Explicit Safari/Passwords app password CSV export.
+    pub password_csv: Option<PathBuf>,
+    /// Explicit consent to import payment cards; selecting the class is insufficient.
+    pub include_payment_cards: bool,
     /// Injected password keys.
     pub keys: Option<MigrationKeys>,
     /// Home directory used to find conventional profile locations.
@@ -331,6 +382,8 @@ impl MigrateProfileOptions {
             domains: Vec::new(),
             platform: current_platform().to_string(),
             target_browser: None,
+            password_csv: None,
+            include_payment_cards: false,
             keys: None,
             home_dir: dirs::home_dir().unwrap_or_else(|| PathBuf::from(".")),
             keystore: KeystoreHooks::default(),
@@ -351,7 +404,7 @@ impl MigrateProfileOptions {
         self
     }
 
-    /// Restrict migrated cookies to hosts containing one of `domains`.
+    /// Restrict migrated per-site data to whole hosts or their subdomains.
     #[must_use]
     pub fn domains<I, S>(mut self, domains: I) -> Self
     where
@@ -373,6 +426,20 @@ impl MigrateProfileOptions {
     #[must_use]
     pub fn target_browser(mut self, target_browser: impl Into<String>) -> Self {
         self.target_browser = Some(target_browser.into());
+        self
+    }
+
+    /// Import only this explicitly supplied Safari password export.
+    #[must_use]
+    pub fn password_csv(mut self, path: impl Into<PathBuf>) -> Self {
+        self.password_csv = Some(path.into());
+        self
+    }
+
+    /// Grant or withhold payment-card consent separately from class selection.
+    #[must_use]
+    pub fn include_payment_cards(mut self, consent: bool) -> Self {
+        self.include_payment_cards = consent;
         self
     }
 
@@ -506,6 +573,12 @@ fn migrate_passwords_class(
     source_profile_dir: &Path,
     report: &mut MigrationReport,
 ) -> Result<()> {
+    if browser == "yandex" && source_profile_dir.join("Ya Passman Data").exists() {
+        report.skipped.push(MigrationEntry::new("passwords", "Ya Passman Data", "yandex-passman-encryption-unsupported").with_detail("Ya Passman Data uses local_encryptor_data and may require a Yandex master password; this extra encryption layer is not supported. Export passwords to a supported format instead."));
+        if !source_profile_dir.join("Login Data").exists() {
+            return Ok(());
+        }
+    }
     let is_firefox = is_firefox_browser(browser);
     let target_browser = options.target_browser.clone().unwrap_or_else(|| {
         if is_firefox {
@@ -531,7 +604,7 @@ fn migrate_passwords_class(
         return Ok(());
     };
     let outcome = if is_firefox {
-        firefox::migrate_firefox_passwords(
+        firefox::migrate_firefox_passwords_filtered(
             source_profile_dir,
             &options.to,
             &firefox::FirefoxPasswordKeys {
@@ -540,6 +613,7 @@ fn migrate_passwords_class(
                 target_prefix: keys.target_prefix.as_deref(),
                 primary_password: keys.primary_password.as_deref().unwrap_or_default(),
             },
+            &options.domains,
         )?
     } else {
         let resolve_source_key = keys.resolve_source_key.clone().unwrap_or_else(|| {
@@ -552,7 +626,7 @@ fn migrate_passwords_class(
                 options.keystore.clone(),
             )
         });
-        passwords::migrate_passwords(
+        passwords::migrate_passwords_filtered(
             source_profile_dir,
             &options.to,
             &passwords::PasswordKeys {
@@ -561,6 +635,7 @@ fn migrate_passwords_class(
                 target_key: &target_key,
                 target_prefix: keys.target_prefix.as_deref(),
             },
+            &options.domains,
         )?
     };
     report.merge("passwords", outcome);
@@ -578,6 +653,7 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
     if options.to.as_os_str().is_empty() {
         return Err(anyhow!("migrate_profile requires a target directory (to)"));
     }
+    validation::validate_options(&options)?;
     // An explicit user data dir names the source, so only an installed-browser
     // import is steered towards the profile holding the requested domains.
     let no_domains: &[String] = &[];
@@ -594,6 +670,9 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
         options.run_command.as_ref(),
     )?;
     let browser = source.browser;
+    if !matches!(browser_family(&browser)?, "chromium" | "firefox" | "safari") {
+        return Err(anyhow!("Browser {browser} supports detection only; its profile format is not supported for migration"));
+    }
     let profile = options
         .from
         .profile
@@ -602,6 +681,7 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
         .unwrap_or_else(|| "Default".to_string());
     let is_firefox = is_firefox_browser(&browser);
     let source_profile_dir = resolve_source_profile_dir(&browser, &profile, &options)?;
+    validation::validate_paths(&source_profile_dir, &options.to)?;
     let selected = |name: &str| options.include.iter().any(|entry| entry == name);
     let mut report = MigrationReport {
         source: MigrationReportSource {
@@ -616,6 +696,16 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
         cookies: Vec::new(),
     };
     let target = options.to.as_path();
+    for data_class in data_classes::ADDITIONAL_DATA_CLASSES
+        .iter()
+        .filter(|name| selected(name))
+    {
+        report.skipped.extend(data_classes::report_additional_class(
+            data_class,
+            &source_profile_dir,
+            options.include_payment_cards,
+        ));
+    }
 
     if selected("cookies") {
         if is_firefox {
@@ -641,18 +731,46 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
     }
 
     if browser_family(&browser)? == "safari" {
-        for data_class in ALL_DATA_CLASSES
-            .iter()
-            .filter(|name| **name != "cookies" && selected(name))
-        {
-            let (reason, detail) = if *data_class == "passwords" {
-                ("safari-password-export-required", "Safari passwords live in the Keychain. Export Passwords from Safari or the Passwords app to CSV; CSV import is tracked separately and is not supported yet.")
-            } else {
-                ("safari-class-not-supported", "Safari currently supports cookie import only; this data class has not been translated.")
-            };
-            report
-                .skipped
-                .push(MigrationEntry::new(*data_class, &browser, reason).with_detail(detail));
+        let keys = if selected("passwords") && options.password_csv.is_some() {
+            resolve_password_keys(
+                &options,
+                &browser,
+                options.target_browser.as_deref().unwrap_or("chrome"),
+                &source_profile_dir,
+            )?
+        } else {
+            None
+        };
+        let legacy = (options.from.user_data_dir.is_none()
+            && source_profile_dir
+                .parent()
+                .and_then(Path::file_name)
+                .is_none_or(|name| name != "Profiles"))
+        .then(|| {
+            options
+                .home_dir
+                .join("Library")
+                .join(if browser == "safari" {
+                    "Safari"
+                } else {
+                    "Safari Technology Preview"
+                })
+        });
+        for data_class in ALL_DATA_CLASSES.iter().filter(|name| {
+            **name != "cookies"
+                && !data_classes::ADDITIONAL_DATA_CLASSES.contains(name)
+                && selected(name)
+        }) {
+            report.merge(
+                data_class,
+                safari_import::migrate_safari_class(
+                    data_class,
+                    &source_profile_dir,
+                    &options,
+                    keys.as_ref(),
+                    legacy.as_deref(),
+                )?,
+            );
         }
         if !report.cookies.is_empty() {
             report.warnings.push(
@@ -676,9 +794,9 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
 
     if selected("history") {
         let outcome = if is_firefox {
-            firefox::report_firefox_history(&source_profile_dir)?
+            firefox_history::migrate_firefox_history(&source_profile_dir, target, &options.domains)?
         } else {
-            history::migrate_history(&source_profile_dir, target)?
+            history::migrate_history_filtered(&source_profile_dir, target, &options.domains)?
         };
         report.merge("history", outcome);
     }
@@ -691,6 +809,19 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
     if selected("extensions") && !is_firefox {
         let outcome = extensions::migrate_extensions(&source_profile_dir, target)?;
         report.merge("extensions", outcome);
+    }
+
+    if is_firefox {
+        for data_class in ["preferences", "extensions"] {
+            if selected(data_class) {
+                report.skipped.push(MigrationEntry {
+                    data_class: data_class.into(),
+                    item: source_profile_dir.display().to_string(),
+                    reason: "firefox-class-not-supported".into(),
+                    detail: Some("Firefox preferences and extensions cannot be copied into a Chromium profile.".into()),
+                });
+            }
+        }
     }
 
     if selected("passwords") {

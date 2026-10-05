@@ -95,7 +95,7 @@ fn migrates_a_firefox_source_and_returns_the_documented_report_shape() {
     assert_eq!(report.migrated.cookies, 1);
     assert_eq!(report.migrated.bookmarks, 1);
     assert_eq!(report.migrated.passwords, 1);
-    // Firefox history cannot be migrated into Chrome's schema.
+    // This bookmark-only fixture has no Firefox visit table.
     assert_eq!(report.migrated.history, 0);
     assert_eq!(report.migrated.preferences, 0);
     assert_eq!(report.migrated.extensions, 0);
@@ -125,6 +125,29 @@ fn honours_the_include_filter() {
     assert_eq!(report.migrated.bookmarks, 1);
     assert_eq!(report.migrated.cookies, 0);
     assert!(!target.path().join("Login Data").exists());
+}
+
+#[test]
+fn reports_unsupported_firefox_classes() {
+    let source = TempDir::new("bc-unsupported-firefox-");
+    let target = TempDir::new("bc-unsupported-firefox-");
+    let report = migrate_profile(
+        MigrateProfileOptions::new(firefox_source(source.path()), target.path())
+            .include(["preferences", "extensions"]),
+    )
+    .unwrap();
+    let entries: Vec<_> = report
+        .skipped
+        .iter()
+        .map(|entry| (entry.data_class.as_str(), entry.reason.as_str()))
+        .collect();
+    assert_eq!(
+        entries,
+        [
+            ("preferences", "firefox-class-not-supported"),
+            ("extensions", "firefox-class-not-supported"),
+        ]
+    );
 }
 
 #[test]

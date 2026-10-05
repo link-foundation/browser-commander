@@ -26,6 +26,11 @@
 # cancellation is reported as a warning; if it is, nothing else will report it,
 # so the run fails.
 #
+# Hosted-runner acquisition failures can instead appear as `abandoned` in
+# toJSON(needs), even when the check conclusion is cancelled (run 37362314527).
+# Reject undocumented or missing results rather than claiming those jobs passed.
+# Only documented cancellations retain the supersede handling below.
+#
 # Usage (in a job that `needs:` every other job in the workflow):
 #   env:
 #     NEEDS_JSON: ${{ toJSON(needs) }}
@@ -51,9 +56,15 @@ IS_MAIN="${IS_MAIN:-false}"
 select_by_result() {
   NEEDS_JSON="$NEEDS_JSON" WANT_RESULT="$1" node --input-type=module -e '
     const needs = JSON.parse(process.env.NEEDS_JSON);
+    const unexpected = process.env.WANT_RESULT === "unexpected";
+    const known = ["success", "skipped", "failure", "cancelled"];
     const jobs = Object.entries(needs)
-      .filter(([, value]) => value.result === process.env.WANT_RESULT)
-      .map(([name]) => name);
+      .filter(([, value]) => unexpected
+        ? !known.includes(value?.result)
+        : value?.result === process.env.WANT_RESULT)
+      .map(([name, value]) => unexpected
+        ? `${name} (${value?.result ?? "missing"})`
+        : name);
     console.log(jobs.join(", "));
   '
 }
@@ -82,14 +93,21 @@ run_is_superseded() {
 
 failed="$(select_by_result failure)"
 cancelled="$(select_by_result cancelled)"
+unexpected="$(select_by_result unexpected)"
 
 echo "Failed jobs:    ${failed:-<none>}"
 echo "Cancelled jobs: ${cancelled:-<none>}"
+echo "Unexpected job results: ${unexpected:-<none>}"
 
 status=0
 
 if [ -n "$failed" ]; then
   echo "::error::Pipeline failed. Failing jobs: ${failed}"
+  status=1
+fi
+
+if [ -n "$unexpected" ]; then
+  echo "::error::Pipeline has unexpected job results: ${unexpected}. Required jobs must complete with a recognized result."
   status=1
 fi
 

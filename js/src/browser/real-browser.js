@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { findBrowserSource } from './browser-sources.js';
 
 import { startProcess } from '../utilities/subprocess.js';
 import {
@@ -408,12 +409,19 @@ async function spawnOnFreePort({
 /** Reject a launch request before anything touches the disk. */
 function validateLaunchRequest({
   argOptions,
+  channel,
   userDataDir,
   remoteDebuggingPort,
   endpoint,
   attach,
   migrateFrom,
 }) {
+  const source = findBrowserSource(channel);
+  if (source && source.family !== 'chromium') {
+    throw new Error(
+      `${channel} does not support CDP; use its documented WebDriver setup when available`
+    );
+  }
   if (endpoint) {
     throw new Error(
       'launchAndConnectRealBrowser creates its own endpoint; use connectBrowser to attach to an existing endpoint'
@@ -507,13 +515,16 @@ async function runPreLaunchMigration({
   if (!migrateFrom) {
     return { migration: undefined, migratedCookies: [] };
   }
-  const { include, domains, ...from } = migrateFrom;
+  const { include, domains, passwordCsv, includePaymentCards, ...from } =
+    migrateFrom;
   try {
     const report = await migrate({
       from,
       to: path.join(userDataDir, 'Default'),
       include,
       domains,
+      passwordCsv,
+      includePaymentCards,
       targetBrowser: channel,
     });
     const { cookies, ...migration } = report;
@@ -588,6 +599,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
   };
   validateLaunchRequest({
     argOptions,
+    channel,
     userDataDir: requestedUserDataDir,
     remoteDebuggingPort,
     endpoint: cdpEndpoint || wsEndpoint,

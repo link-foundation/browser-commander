@@ -8,8 +8,8 @@ translated rather than copied:
   CDP.
 - **bookmarks:** read from ``places.sqlite`` and converted to Chrome's
   ``Bookmarks`` JSON.
-- **history:** counted from ``places.sqlite`` and reported; it is not written,
-  because Chrome's ``History`` schema is incompatible with Firefox's.
+- **history:** translated from ``moz_historyvisits`` into Chrome's ``History``,
+  preserving individual visit dates and reporting untranslated metadata.
 - **passwords:** decrypted from ``logins.json`` with the NSS key in
   ``key4.db`` and re-encrypted into a Chrome ``Login Data``. When a primary
   password is set and not supplied, they are reported as
@@ -29,7 +29,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from browser_commander.browser.browser_cookies import _map_firefox_rows
+from browser_commander.browser.browser_cookies import (
+    _map_firefox_rows,
+    _read_firefox_rows,
+)
 from browser_commander.browser.migration.chromium_crypto import encrypt_chromium_value
 from browser_commander.browser.migration.firefox_bookmarks import (
     firefox_bookmarks_to_chrome,
@@ -48,6 +51,8 @@ from browser_commander.browser.migration.passwords import default_target_prefix
 from browser_commander.browser.migration.sqlite_snapshot import (
     read_database_snapshot,
 )
+
+from .domains import matches_domains
 
 __all__ = [
     "CHROME_LOGINS_SCHEMA",
@@ -146,16 +151,9 @@ def read_firefox_cookies(
     wanted = list(domains or [])
 
     def read(database: sqlite3.Connection) -> list[dict[str, Any]]:
-        rows = database.execute(
-            """SELECT name, value, host, path, expiry, isSecure, isHttpOnly, sameSite
-             FROM moz_cookies ORDER BY host, name, path"""
-        ).fetchall()
+        rows = _read_firefox_rows(database, None)
         if wanted:
-            rows = [
-                row
-                for row in rows
-                if any(domain in (row["host"] or "") for domain in wanted)
-            ]
+            rows = [row for row in rows if matches_domains(row["host"] or "", wanted)]
         return _map_firefox_rows(rows)
 
     return read_database_snapshot(cookie_path, read)
@@ -251,6 +249,7 @@ def migrate_firefox_passwords(
     target_key: bytes | None,
     target_prefix: str | None = None,
     primary_password: bytes | str = b"",
+    domains=None,
 ) -> dict[str, Any]:
     """Decrypt Firefox logins and write them into a Chrome ``Login Data``.
 
@@ -298,6 +297,8 @@ def migrate_firefox_passwords(
     decrypted: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
     for login in logins or []:
+        if not matches_domains(login.get("hostname", ""), domains):
+            continue
         try:
             decrypted.append(
                 {
@@ -321,30 +322,13 @@ def migrate_firefox_passwords(
                 }
             )
 
-    target = Path(target_profile_dir)
-    target.mkdir(parents=True, exist_ok=True)
-    migrated = 0
-    with contextlib.closing(sqlite3.connect(target / "Login Data")) as database:
-        database.executescript(CHROME_LOGINS_SCHEMA)
-        for entry in decrypted:
-            encrypted = encrypt_chromium_value(
-                entry["password"],
-                key=bytes(target_key),
-                platform=platform,
-                prefix=prefix,
-            )
-            database.execute(
-                _INSERT_LOGIN,
-                (
-                    entry["origin"],
-                    entry["origin"],
-                    entry["username"],
-                    encrypted,
-                    _signon_realm(entry["origin"]),
-                ),
-            )
-            migrated += 1
-        database.commit()
+    migrated = write_chromium_passwords(
+        entries=decrypted,
+        target_profile_dir=target_profile_dir,
+        platform=platform,
+        target_key=target_key,
+        target_prefix=prefix,
+    )
 
     warnings: list[dict[str, Any]] = []
     if migrated > 0:
@@ -361,3 +345,39 @@ def migrate_firefox_passwords(
             }
         )
     return {"migrated": migrated, "skipped": skipped, "warnings": warnings}
+
+
+def write_chromium_passwords(
+    *,
+    entries: list[dict[str, str]],
+    target_profile_dir: PathLike,
+    platform: str,
+    target_key: bytes,
+    target_prefix: str | None = None,
+) -> int:
+    target = Path(target_profile_dir)
+    target.mkdir(parents=True, exist_ok=True)
+    migrated = 0
+    with contextlib.closing(sqlite3.connect(target / "Login Data")) as database:
+        database.executescript(CHROME_LOGINS_SCHEMA)
+        for entry in entries:
+            encrypted = encrypt_chromium_value(
+                entry["password"],
+                key=bytes(target_key),
+                platform=platform,
+                prefix=target_prefix,
+            )
+            database.execute(
+                _INSERT_LOGIN,
+                (
+                    entry["origin"],
+                    entry["origin"],
+                    entry["username"],
+                    encrypted,
+                    _signon_realm(entry["origin"]),
+                ),
+            )
+            migrated += 1
+        database.commit()
+
+    return migrated

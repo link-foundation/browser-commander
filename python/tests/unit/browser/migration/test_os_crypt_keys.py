@@ -155,7 +155,8 @@ class TestResolveTargetKey:
 
 
 class TestLocalStatePathForProfile:
-    def test_points_at_local_state_next_to_the_profile_directory(self) -> None:
-        assert local_state_path_for_profile("/root/google-chrome/Default") == (
-            Path("/root/google-chrome") / "Local State"
-        )
+    def test_points_at_local_state_next_to_the_profile_directory(
+        self, tmp_path: Path
+    ) -> None:
+        profile = tmp_path / "google-chrome" / "Default"
+        assert local_state_path_for_profile(profile) == profile.parent / "Local State"

@@ -16,14 +16,63 @@ from browser_commander.browser.migration.sqlite_snapshot import (
     with_database_snapshot,
 )
 
+from .domains import matches_domains
+
 __all__ = ["migrate_history"]
 
 
-def _snapshot_into(source_path: Path, target_path: Path) -> int | None:
+def _snapshot_into(
+    source_path: Path, target_path: Path, domains, warnings
+) -> int | None:
     """Copy a snapshot of ``source_path`` to ``target_path``; count its URLs."""
 
     def copy(snapshot_path: Path) -> int | None:
         shutil.copyfile(snapshot_path, target_path)
+        if domains:
+            import contextlib
+
+            with contextlib.closing(sqlite3.connect(target_path)) as db:
+                tables = {
+                    row[0]
+                    for row in db.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    )
+                }
+                if "urls" in tables:
+                    for id_, url in db.execute("SELECT id,url FROM urls").fetchall():
+                        if not matches_domains(url, domains):
+                            db.execute("DELETE FROM urls WHERE id=?", (id_,))
+                    for table, column in [
+                        ("visits", "url"),
+                        ("segments", "url_id"),
+                        ("keyword_search_terms", "url_id"),
+                    ]:
+                        if table in tables:
+                            db.execute(
+                                f"DELETE FROM {table} WHERE {column} NOT IN (SELECT id FROM urls)"
+                            )
+                    if "visits" in tables:
+                        for table, column in [
+                            ("visit_source", "id"),
+                            ("content_annotations", "visit_id"),
+                            ("context_annotations", "visit_id"),
+                        ]:
+                            if table in tables:
+                                db.execute(
+                                    f"DELETE FROM {table} WHERE {column} NOT IN (SELECT id FROM visits)"
+                                )
+                    if "segments" in tables and "segment_usage" in tables:
+                        db.execute(
+                            "DELETE FROM segment_usage WHERE segment_id NOT IN (SELECT id FROM segments)"
+                        )
+                _filter_downloads(db, tables, domains)
+                if "top_sites" in tables:
+                    for (url,) in db.execute("SELECT url FROM top_sites").fetchall():
+                        if not matches_domains(url, domains):
+                            db.execute("DELETE FROM top_sites WHERE url=?", (url,))
+                _omit_unfiltered_metadata(db, tables, warnings)
+                db.commit()
+                db.execute("VACUUM")
         try:
             connection = sqlite3.connect(
                 f"{target_path.resolve().as_uri()}?mode=ro", uri=True
@@ -39,8 +88,68 @@ def _snapshot_into(source_path: Path, target_path: Path) -> int | None:
     return with_database_snapshot(source_path, copy)
 
 
+def _omit_unfiltered_metadata(db, tables, warnings):
+    filtered = {"urls", "downloads", "top_sites", "meta", "sqlite_sequence"}
+    if "urls" in tables:
+        filtered.update({"visits", "segments", "keyword_search_terms"})
+        if "visits" in tables:
+            filtered.update(
+                {"visit_source", "content_annotations", "context_annotations"}
+            )
+        if "segments" in tables:
+            filtered.add("segment_usage")
+    if "downloads" in tables:
+        filtered.update({"downloads_url_chains", "downloads_slices"})
+    # Derived cluster text may describe excluded visits, including in a mixed
+    # cluster. Unknown metadata cannot be safely joined to selected domains.
+    for table in sorted(tables - filtered):
+        identifier = '"' + table.replace('"', '""') + '"'
+        count = db.execute(f"SELECT COUNT(*) FROM {identifier}").fetchone()[0]
+        db.execute(f"DELETE FROM {identifier}")
+        if count:
+            warnings.append(
+                {
+                    "type": "history",
+                    "item": table,
+                    "reason": "unsupported-history-metadata",
+                    "detail": f"{count} copied metadata rows removed",
+                }
+            )
+
+
+def _filter_downloads(db, tables, domains):
+    if "downloads" not in tables:
+        return
+    cursor = db.execute("SELECT * FROM downloads")
+    columns = [column[0] for column in cursor.description]
+    for values in cursor.fetchall():
+        row = dict(zip(columns, values))
+        urls = [
+            row.get(column)
+            for column in ["url", "site_url", "tab_url", "referrer", "tab_referrer_url"]
+            if row.get(column)
+        ]
+        if "downloads_url_chains" in tables:
+            urls.extend(
+                chain[0]
+                for chain in db.execute(
+                    "SELECT url FROM downloads_url_chains WHERE id=?", (row["id"],)
+                )
+            )
+        if not urls or any(not matches_domains(url, domains) for url in urls):
+            db.execute("DELETE FROM downloads WHERE id=?", (row["id"],))
+    for table, column in [
+        ("downloads_url_chains", "id"),
+        ("downloads_slices", "download_id"),
+    ]:
+        if table in tables:
+            db.execute(
+                f"DELETE FROM {table} WHERE {column} NOT IN (SELECT id FROM downloads)"
+            )
+
+
 def migrate_history(
-    *, source_profile_dir: PathLike, target_profile_dir: PathLike
+    *, source_profile_dir: PathLike, target_profile_dir: PathLike, domains=None
 ) -> dict[str, Any]:
     """Copy ``History`` (and ``Top Sites`` when present) into the target.
 
@@ -59,7 +168,7 @@ def migrate_history(
     migrated_databases = 0
     history_source = source / "History"
     if history_source.exists():
-        count = _snapshot_into(history_source, target / "History")
+        count = _snapshot_into(history_source, target / "History", domains, warnings)
         url_count = count or 0
         migrated_databases += 1
     else:
@@ -69,7 +178,7 @@ def migrate_history(
 
     top_sites_source = source / "Top Sites"
     if top_sites_source.exists():
-        _snapshot_into(top_sites_source, target / "Top Sites")
+        _snapshot_into(top_sites_source, target / "Top Sites", domains, warnings)
         migrated_databases += 1
 
     if url_count > 0:

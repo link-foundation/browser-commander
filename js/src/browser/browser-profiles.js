@@ -11,6 +11,7 @@ import {
 } from './browser-sources.js';
 import { resolveDefaultBrowser } from './default-browser.js';
 import { findSafariCookieFile } from './safari-cookies.js';
+import { listSafariProfiles } from './safari-profiles.js';
 
 /**
  * Keywords that select the operating-system default browser instead of a named
@@ -279,16 +280,9 @@ async function listProfilesForBrowser(browser, platform, homeDir, environment) {
   const profiles = [];
   for (const root of roots) {
     if (family === 'safari') {
-      if (await findSafariCookieFile(root)) {
-        return [
-          {
-            browser,
-            name: 'Default',
-            displayName: 'Default',
-            path: root,
-            isDefault: true,
-          },
-        ];
+      const safariProfiles = await listSafariProfiles(browser, root);
+      if (safariProfiles.length) {
+        return safariProfiles;
       }
       continue;
     }
@@ -301,7 +295,7 @@ async function listProfilesForBrowser(browser, platform, homeDir, environment) {
   return profiles;
 }
 
-/** Discover cookie-bearing profiles from installed browsers. */
+/** Discover profiles, retaining per-source errors alongside readable profiles. */
 export async function listBrowserProfiles({
   browser,
   platform = process.platform,
@@ -330,10 +324,11 @@ export async function listBrowserProfiles({
       homeDir,
       environment
     )) {
-      if (seen.has(profile.path)) {
+      const identity = JSON.stringify([profile.path, Boolean(profile.error)]);
+      if (seen.has(identity)) {
         continue;
       }
-      seen.add(profile.path);
+      seen.add(identity);
       profiles.push(profile);
     }
   }
@@ -359,6 +354,9 @@ export async function resolveBrowserProfile(options) {
   if (!selected) {
     const detail = requested ? ` profile "${requested}"` : ' profile';
     throw new Error(`Could not find a cookie database for ${browser}${detail}`);
+  }
+  if (selected.error) {
+    throw new Error(selected.error);
   }
   return selected;
 }

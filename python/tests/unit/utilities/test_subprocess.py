@@ -127,12 +127,15 @@ def test_output_channel_keeps_output_until_the_first_listener() -> None:
 async def test_cancelling_run_command_reaps_its_child(tmp_path: Path) -> None:
     """Cancelling an awaited command must not leave a detached child alive."""
     pid_file = tmp_path / "pid"
+    # Existence must signal a complete PID, even if the child is descheduled.
     task = asyncio.create_task(
         run_command(
             PYTHON,
             [
                 "-c",
-                "import os, pathlib, sys, time; pathlib.Path(sys.argv[1]).write_text(str(os.getpid())); time.sleep(60)",
+                "import os, pathlib, sys, time; "
+                "pid = pathlib.Path(sys.argv[1]); pending = pid.with_suffix('.tmp'); "
+                "pending.write_text(str(os.getpid())); pending.replace(pid); time.sleep(60)",
                 str(pid_file),
             ],
         )

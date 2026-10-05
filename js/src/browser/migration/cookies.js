@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { pathExists } from './fs-utils.js';
+import { matchesDomains } from './domains.js';
 
 import { readBrowserCookies } from '../browser-cookies.js';
 
@@ -130,7 +131,9 @@ export async function migrateCookies({
       );
     }
   }
-  const cookies = [...seen.values()];
+  const cookies = [...seen.values()].filter((cookie) =>
+    matchesDomains(cookie.domain, domains)
+  );
 
   const skipped = [];
   for (const cookie of cookies) {

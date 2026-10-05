@@ -2,7 +2,8 @@
 
 :func:`migrate_profile` is the entry point; the submodules implement one data
 class each (cookies, bookmarks, history, passwords, preferences, extensions)
-plus the Firefox translation and the OSCrypt/NSS key handling they share.
+plus native Safari/Firefox translations and shared OSCrypt/NSS key handling.
+All 18 recognized classes receive counts and explicit unsupported reports.
 """
 
 from browser_commander.browser.migration.bookmarks import (
@@ -31,6 +32,7 @@ from browser_commander.browser.migration.firefox import (
 from browser_commander.browser.migration.firefox_bookmarks import (
     firefox_bookmarks_to_chrome,
 )
+from browser_commander.browser.migration.firefox_history import migrate_firefox_history
 from browser_commander.browser.migration.firefox_nss import (
     PrimaryPasswordError,
     decrypt_firefox_field,
@@ -77,6 +79,7 @@ __all__ = [
     "migrate_cookies",
     "migrate_extensions",
     "migrate_firefox_bookmarks",
+    "migrate_firefox_history",
     "migrate_firefox_passwords",
     "migrate_history",
     "migrate_passwords",

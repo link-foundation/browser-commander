@@ -4,7 +4,9 @@
  */
 import { readFile as readFileBytes, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { findSafariFile, withSafariAccess } from './safari-access.js';
 import { TextDecoder } from 'node:util';
+import { matchesDomains } from './migration/domains.js';
 
 const APPLE_EPOCH = 978_307_200;
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
@@ -121,7 +123,7 @@ export function countSafariCookies(data, domains) {
     const host = string(record, 16).toLowerCase();
     total += 1;
     for (const domain of Object.keys(byDomain ?? {})) {
-      if (host.includes(domain.toLowerCase())) {
+      if (matchesDomains(host, [domain])) {
         byDomain[domain] += 1;
       }
     }
@@ -130,44 +132,45 @@ export function countSafariCookies(data, domains) {
 }
 
 /** A protected path is still a source: preserve it for an actionable read error. */
-export async function findSafariCookieFile(profileDir, statFile = stat) {
-  for (const candidate of [
-    path.join(profileDir, 'Cookies', 'Cookies.binarycookies'),
-    path.join(profileDir, 'Cookies.binarycookies'),
-  ]) {
-    try {
-      if ((await statFile(candidate)).isFile()) {
-        return candidate;
-      }
-    } catch (error) {
-      if (['EPERM', 'EACCES'].includes(error.code)) {
-        return candidate;
-      }
-      if (!['ENOENT', 'ENOTDIR'].includes(error.code)) {
-        throw error;
-      }
-    }
-  }
-  return null;
+export function findSafariCookieFile(profileDir, statFile = stat) {
+  const named =
+    path.basename(path.dirname(profileDir)) === 'Profiles' &&
+    path.basename(path.dirname(path.dirname(profileDir))) === 'Safari';
+  const root = named
+    ? path.dirname(path.dirname(path.dirname(profileDir)))
+    : profileDir;
+  const modern = named
+    ? [
+        path.join(
+          root,
+          'WebKit/WebsiteDataStore',
+          path.basename(profileDir).toLowerCase(),
+          'Cookies/Cookies.binarycookies'
+        ),
+      ]
+    : [
+        path.join(
+          root,
+          'WebKit/WebsiteData/Default/Cookies/Cookies.binarycookies'
+        ),
+        path.join(
+          root,
+          'WebKit/WebsiteDataStore/Default/Cookies/Cookies.binarycookies'
+        ),
+      ];
+  return findSafariFile(
+    [
+      ...modern,
+      path.join(profileDir, 'Cookies', 'Cookies.binarycookies'),
+      path.join(profileDir, 'Cookies.binarycookies'),
+    ],
+    statFile
+  );
 }
 
-export async function readSafariCookieFile(
+export function readSafariCookieFile(
   filePath,
   { environment = process.env, readFile = readFileBytes } = {}
 ) {
-  try {
-    return await readFile(filePath);
-  } catch (error) {
-    if (!['EPERM', 'EACCES'].includes(error.code)) {
-      throw error;
-    }
-    const app =
-      environment.__CFBundleIdentifier ||
-      environment.TERM_PROGRAM ||
-      process.execPath;
-    throw new Error(
-      `Safari cookie access denied (${error.code}) at ${filePath}. Grant Full Disk Access to ${app}, the app running Browser Commander, then retry: x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles`,
-      { cause: error }
-    );
-  }
+  return withSafariAccess(filePath, () => readFile(filePath), environment);
 }

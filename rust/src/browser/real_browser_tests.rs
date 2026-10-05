@@ -10,6 +10,18 @@ use crate::fingerprint::automation_parity::disables_automation_controlled;
 
 const DEDICATED: &str = "/tmp/browser-commander-dedicated";
 
+#[test]
+fn cdp_validation_rejects_other_protocols() {
+    for channel in ["firefox", "librewolf", "safari", "duckduckgo"] {
+        let options = RealBrowserOptions {
+            channel: channel.into(),
+            ..Default::default()
+        };
+        let error = validate_launch_request(&options).unwrap_err();
+        assert!(error.to_string().contains("does not support CDP"));
+    }
+}
+
 fn dedicated(port: u16) -> RealBrowserOptions {
     RealBrowserOptions::default()
         .user_data_dir(DEDICATED)
@@ -381,18 +393,23 @@ async fn migrates_bookmarks_into_the_profile_before_launch() {
     .unwrap();
     let target = create_temporary_user_data_dir(None).unwrap();
     let hooks = Arc::new(FakeHooks::with_ports(&[9445]));
-    let options = RealBrowserOptions::default()
+    let mut options = RealBrowserOptions::default()
         .user_data_dir(&target)
         .migrate_from(MigrationSource {
             browser: "chrome".to_string(),
             profile: None,
             user_data_dir: Some(source.clone()),
         })
-        .migrate_include(["bookmarks"]);
+        .migrate_include(["bookmarks", "paymentCards"]);
+    options.migrate_include_payment_cards = true;
 
     let (connect, launched) = launch(&options, &hooks).await.unwrap();
     assert_eq!(connect.seed_cookies.len(), 0);
     assert_eq!(launched.migration.as_ref().unwrap().migrated.bookmarks, 1);
+    assert_eq!(
+        launched.migration.as_ref().unwrap().skipped[0].reason,
+        "data-class-not-supported"
+    );
     assert_eq!(
         serde_json::from_slice::<serde_json::Value>(
             &std::fs::read(target.join("Default/Bookmarks")).unwrap()

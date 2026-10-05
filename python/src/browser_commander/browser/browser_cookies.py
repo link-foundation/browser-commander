@@ -33,6 +33,7 @@ from browser_commander.browser.browser_cookie_crypto import (
     derive_chromium_cookie_key,
     firefox_same_site,
 )
+from browser_commander.browser.browser_profile_files import local_state_path_for_profile
 from browser_commander.browser.browser_profiles import (
     BrowserProfile,
     find_cookie_database,
@@ -111,9 +112,13 @@ def _domain_query(column: str, domain_filter: str | None) -> tuple[str, tuple]:
 def _read_firefox_rows(
     database: sqlite3.Connection, domain_filter: str | None
 ) -> list[sqlite3.Row]:
+    # Firefox schema 16 changed Unix expiry seconds to milliseconds. Keep the
+    # public cookie shape in seconds for installed reading and migration alike.
+    version = database.execute("PRAGMA user_version").fetchone()[0]
+    expiry = "expiry / 1000 AS expiry" if version >= 16 else "expiry"
     where, parameters = _domain_query("host", domain_filter)
     return database.execute(
-        "SELECT name, value, host, path, expiry, isSecure, isHttpOnly, sameSite "
+        f"SELECT name, value, host, path, {expiry}, isSecure, isHttpOnly, sameSite "
         f"FROM moz_cookies{where} ORDER BY host, name, path",
         parameters,
     ).fetchall()
@@ -189,7 +194,7 @@ def _chromium_key_for_prefix(prefix: bytes, context: dict) -> bytes:
 
         def create_windows_key() -> bytes:
             return context["read_windows_encryption_key"](
-                local_state_path=context["profile_path"].parent / "Local State",
+                local_state_path=local_state_path_for_profile(context["profile_path"]),
                 environment=context["environment"],
                 decrypt_dpapi=context["decrypt_windows_dpapi"],
             )
@@ -418,16 +423,6 @@ class CookieSource:
     error: str | None = None
 
 
-def _count_for(
-    database: sqlite3.Connection, table: str, column: str, domain: str | None
-) -> int:
-    where, parameters = _domain_query(column, domain)
-    row = database.execute(
-        f"SELECT COUNT(*) AS n FROM {table}{where}", parameters
-    ).fetchone()
-    return int(row["n"]) if row else 0
-
-
 def _count_cookies_by_domain(
     database: sqlite3.Connection, family: str, domains: Sequence[str] | None
 ) -> tuple[int, dict[str, int] | None]:
@@ -436,14 +431,21 @@ def _count_cookies_by_domain(
     Only host names and row counts are touched, so this is safe to expose for
     a "which browser holds cookies for this domain" listing.
     """
+    from .migration.domains import matches_domains
+
     column = "host" if family == "firefox" else "host_key"
     table = "moz_cookies" if family == "firefox" else "cookies"
-    total = _count_for(database, table, column, None)
+    total = int(database.execute(f"SELECT COUNT(*) AS n FROM {table}").fetchone()["n"])
     if not domains:
         return total, None
-    by_domain = {
-        domain: _count_for(database, table, column, domain) for domain in domains
-    }
+    by_domain = dict.fromkeys(domains, 0)
+    hosts = database.execute(
+        f"SELECT {column} AS host, COUNT(*) AS n FROM {table} GROUP BY {column}"
+    )
+    for row in hosts:
+        for domain in by_domain:
+            if matches_domains(row["host"] or "", [domain]):
+                by_domain[domain] += int(row["n"])
     return total, by_domain
 
 
@@ -467,6 +469,17 @@ def list_cookie_sources(
     )
     sources: list[CookieSource] = []
     for profile in profiles:
+        if profile.error:
+            sources.append(
+                CookieSource(
+                    browser=profile.browser,
+                    profile=profile.name,
+                    path=profile.path,
+                    is_default=profile.is_default,
+                    error=profile.error,
+                )
+            )
+            continue
         cookie_path = find_cookie_database(profile.browser, profile.path)
         if cookie_path is None:
             continue

@@ -87,12 +87,18 @@ direct child.
 
 [`scripts/check-pipeline-status.sh`](../scripts/check-pipeline-status.sh) runs
 in a `pipeline-status` job that `needs:` every other job of its workflow, in all
-nine workflows. It fails the run when a job failed, and — because a cancelled
+ten workflows. It fails the run when a job failed, and — because a cancelled
 job is the shape a timeout kill takes — when a job was cancelled on the default
 branch while this run still points at the branch head. When the run no longer
 points at the branch head, a newer run is already covering the same ground and
 the cancellation is reported as a warning instead, so superseding a `main` push
 does not paint the superseded run red.
+
+Hosted-runner acquisition failures can report `abandoned` in the dependency
+results even though their check conclusion is `cancelled`. The gate rejects
+any result outside `success`, `failure`, `cancelled` and `skipped`, including
+missing results, on every branch. It names the job and unexpected result rather
+than reporting that all required jobs succeeded.
 
 ## The invariant
 

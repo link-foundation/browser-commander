@@ -40,6 +40,20 @@ async def test_copies_bookmarks_without_touching_the_source(tmp_path: Path) -> N
     assert (profile / "Bookmarks").read_text(encoding="utf-8") == original
 
 
+async def test_reports_unsupported_firefox_classes(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    report = await migrate_profile(
+        from_={"browser": "firefox", "user_data_dir": source},
+        to=tmp_path / "target",
+        include=["preferences", "extensions"],
+    )
+    assert [(entry["type"], entry["reason"]) for entry in report["skipped"]] == [
+        ("preferences", "firefox-class-not-supported"),
+        ("extensions", "firefox-class-not-supported"),
+    ]
+
+
 async def test_imports_a_domain_from_whichever_installed_browser_holds_it(
     tmp_path: Path,
 ) -> None:

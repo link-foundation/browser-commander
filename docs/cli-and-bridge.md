@@ -45,6 +45,11 @@ script. `BROWSER_COMMANDER_NODE` selects the Node executable.
 | `run <script.json>`       |                                                                                                                                                                                        | Runs a command script. `{"results": [...]}`                                                                                                                                                                                                   |
 | `serve --stdio`           |                                                                                                                                                                                        | JSON-RPC 2.0 on stdin/stdout, one message per line                                                                                                                                                                                            |
 
+`profile sources` and `cookies sources` preserve Safari discovery failures as
+entries with `error`, alongside readable sources. A `Profiles` error describes
+the profile catalogue; it does not replace a readable `Default` profile. Error
+entries have no cookie counts and remain visible under `--domain` filtering.
+
 **Page options**, accepted by every page command:
 
 - `--cdp-endpoint URL`: attach to a browser started by `launch --keep-open` (or
@@ -228,14 +233,50 @@ or `profile.migrate` with `{"from":"safari","include":["cookies"],"domains":["gi
 Targets remain Chromium. A custom `userDataDir` can point at a directory containing
 `Cookies/Cookies.binarycookies` or directly at the cookie-store directory.
 Unsupported selected Safari classes are skipped with a reason; passwords require
-an explicit Safari/Passwords CSV export, with CSV import tracked in
-[#117](https://github.com/link-foundation/browser-commander/issues/117).
+an explicit Safari/Passwords CSV export supplied with `--password-csv` or
+the `passwordCsv` JSON-RPC parameter. Bookmarks and history are translated;
+named Safari profiles and modern WebKit cookie-store paths are discovered.
+See the generated [migration matrix](profile-migration.md) for target/class limits.
 The format lacks SameSite, so imported cookies use `Lax` and the report includes
 `safari-samesite-unavailable`. Discovery decodes only hosts and counts, never names
 or values. File-level access errors are retained in `cookies.sources` entries;
 EPERM/EACCES explains which application needs Full Disk Access. A scoped
 default/auto import reports an unreadable default source instead of treating it
 as empty and silently choosing a different browser.
+
+Chromium password imports also re-encrypt retained password notes with the
+target key and remove notes/security records whose login was excluded or could
+not be decrypted. Domain filters apply to the independent origin statistics.
+Copied sync metadata is reset with `sync-metadata-reset` warnings. During a
+domain-filtered import, unrecognized Login Data metadata tables are cleared
+with `unsupported-password-metadata` warnings naming each affected table and
+its removed row count; unfiltered imports preserve those tables. Unreadable
+notes have individual skipped entries, without exposing note values.
+
+The include/report schema also recognizes `localStorage`, `indexedDB`,
+`sessionStorage`, `autofill`, `paymentCards`, `searchEngines`, `siteSettings`,
+`openTabs`, `downloads`, `readingList`, `clientCertificates` and `passkeys`.
+Classes without a native source reader and target writer return zero counts
+with `data-class-not-supported` entries. Payment cards require the separate
+boolean `includePaymentCards` (`include_payment_cards` in Python/Rust,
+`--include-payment-cards` in the CLI), including in pre-launch migration.
+Selecting `paymentCards` alone returns `payment-card-consent-required` without
+reading card stores. Consent currently still returns an unsupported report;
+it does not establish a payment-card writer.
+
+Firefox `history` imports translate each Places visit to Chromium and preserve
+microsecond timestamps. `--domain` filters exact hosts and their subdomains;
+bookmark-only URLs are excluded. Invalid URLs/dates have individual skipped
+entries, and a warning identifies transition/referrer/sync metadata that was
+not translated. A missing visit table returns `source-format-unsupported`
+before writing history.
+
+Passkey selection returns `passkey-not-exportable` entries for iCloud Keychain,
+Google Password Manager and Windows Hello: browser profile copies cannot export
+their private keys. Provider-authorized transfer is separate. Sign in once with
+the platform passkey in a dedicated persistent profile and retain its session.
+Client certificates return `client-certificates-os-export-required`, naming the
+need for an authorized OS/NSS export and non-exportable/hardware key limits.
 
 The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):
 
@@ -249,10 +290,32 @@ The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):
     "history": 1,
     "passwords": 4,
     "preferences": 5,
-    "extensions": 2
+    "extensions": 2,
+    "localStorage": 0,
+    "indexedDB": 0,
+    "sessionStorage": 0,
+    "autofill": 0,
+    "paymentCards": 0,
+    "searchEngines": 0,
+    "siteSettings": 0,
+    "openTabs": 0,
+    "downloads": 0,
+    "readingList": 0,
+    "clientCertificates": 0,
+    "passkeys": 0
   },
   "skipped": [
-    { "type": "cookies", "item": ".google.com SIDTS", "reason": "dbsc-bound" }
+    { "type": "cookies", "item": ".google.com SIDTS", "reason": "dbsc-bound" },
+    {
+      "type": "localStorage",
+      "item": "…",
+      "reason": "data-class-not-supported"
+    },
+    {
+      "type": "paymentCards",
+      "item": "…",
+      "reason": "payment-card-consent-required"
+    }
   ],
   "warnings": []
 }

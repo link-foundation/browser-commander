@@ -9,8 +9,8 @@
 //!   them over CDP.
 //! - **bookmarks:** read from `places.sqlite` (`moz_bookmarks` + `moz_places`)
 //!   and converted to Chrome's `Bookmarks` JSON.
-//! - **history:** counted from `places.sqlite` and reported; it is not written,
-//!   because Chrome's `History` schema is incompatible with Firefox's.
+//! - **history:** translated from `moz_historyvisits` into Chrome's `History`,
+//!   preserving individual visit dates and reporting untranslated metadata.
 //! - **passwords:** decrypted from `logins.json` with the NSS key in `key4.db`
 //!   and re-encrypted into a Chrome `Login Data`. When a primary password is
 //!   set and not supplied, they are reported as `primary-password-set`.
@@ -109,9 +109,7 @@ pub(crate) fn read_firefox_profile_cookies(
         let cookies = read_firefox_cookies(database, None)?;
         Ok(cookies
             .into_iter()
-            .filter(|cookie| {
-                domains.is_empty() || domains.iter().any(|domain| cookie.domain.contains(domain))
-            })
+            .filter(|cookie| super::domains::matches_domains(&cookie.domain, domains))
             .collect())
     })
 }
@@ -158,6 +156,7 @@ pub(crate) fn migrate_firefox_bookmarks(
 }
 
 /// Count Firefox history and report it (Chrome's schema is incompatible).
+#[cfg(test)]
 pub(crate) fn report_firefox_history(profile_dir: &Path) -> Result<ClassOutcome> {
     let Some(places_path) = profile_file_if_present(profile_dir, "places.sqlite") else {
         return Ok(ClassOutcome::default());
@@ -190,10 +189,10 @@ pub(crate) struct FirefoxPasswordKeys<'a> {
     pub primary_password: &'a [u8],
 }
 
-struct DecryptedLogin {
-    origin: Option<String>,
-    username: String,
-    password: String,
+pub(crate) struct DecryptedLogin {
+    pub origin: Option<String>,
+    pub username: String,
+    pub password: String,
 }
 
 fn decrypt_login(login: &Value, key: &[u8]) -> Result<DecryptedLogin> {
@@ -215,10 +214,20 @@ fn decrypt_login(login: &Value, key: &[u8]) -> Result<DecryptedLogin> {
 }
 
 /// Decrypt Firefox logins and write them into a Chrome `Login Data`.
+#[cfg(test)]
 pub(crate) fn migrate_firefox_passwords(
     profile_dir: &Path,
     target_profile_dir: &Path,
     keys: &FirefoxPasswordKeys<'_>,
+) -> Result<ClassOutcome> {
+    migrate_firefox_passwords_filtered(profile_dir, target_profile_dir, keys, &[])
+}
+
+pub(crate) fn migrate_firefox_passwords_filtered(
+    profile_dir: &Path,
+    target_profile_dir: &Path,
+    keys: &FirefoxPasswordKeys<'_>,
+    domains: &[String],
 ) -> Result<ClassOutcome> {
     let logins_path = profile_file_if_present(profile_dir, "logins.json");
     let key4_path = profile_file_if_present(profile_dir, "key4.db");
@@ -259,6 +268,15 @@ pub(crate) fn migrate_firefox_passwords(
     let mut outcome = ClassOutcome::default();
     let mut decrypted = Vec::new();
     for login in &logins {
+        if !super::domains::matches_domains(
+            login
+                .get("hostname")
+                .and_then(Value::as_str)
+                .unwrap_or_default(),
+            domains,
+        ) {
+            continue;
+        }
         match decrypt_login(login, &key) {
             Ok(entry) => decrypted.push(entry),
             Err(error) => outcome.skipped.push(
@@ -275,6 +293,27 @@ pub(crate) fn migrate_firefox_passwords(
         }
     }
 
+    outcome.migrated = write_chromium_passwords(target_profile_dir, &decrypted, keys)?;
+
+    if outcome.migrated > 0 {
+        outcome.warnings.push(
+            MigrationEntry::new("passwords", "Login Data", "reencrypted-for-chrome").with_detail(
+                format!(
+                    "{} Firefox logins were decrypted and re-encrypted into a Chrome Login Data; Chrome may re-key the store on first launch.",
+                    outcome.migrated
+                ),
+            ),
+        );
+    }
+    Ok(outcome)
+}
+
+pub(crate) fn write_chromium_passwords(
+    target_profile_dir: &Path,
+    entries: &[DecryptedLogin],
+    keys: &FirefoxPasswordKeys<'_>,
+) -> Result<u64> {
+    let mut migrated = 0;
     fs::create_dir_all(target_profile_dir)
         .with_context(|| format!("Could not create {}", target_profile_dir.display()))?;
     let target_path = target_profile_dir.join("Login Data");
@@ -295,7 +334,7 @@ pub(crate) fn migrate_firefox_passwords(
                date_last_used, date_password_modified
              ) VALUES (?1, ?2, '', ?3, '', ?4, '', ?5, 0, 0, 0, 0, 0, 0, 0)",
         )?;
-        for entry in &decrypted {
+        for entry in entries {
             let encrypted = encrypt_chromium_value(
                 entry.password.as_bytes(),
                 keys.target_key,
@@ -310,20 +349,10 @@ pub(crate) fn migrate_firefox_passwords(
                 encrypted,
                 realm
             ])?;
-            outcome.migrated += 1;
+            migrated += 1;
         }
     }
     drop(database);
 
-    if outcome.migrated > 0 {
-        outcome.warnings.push(
-            MigrationEntry::new("passwords", "Login Data", "reencrypted-for-chrome").with_detail(
-                format!(
-                    "{} Firefox logins were decrypted and re-encrypted into a Chrome Login Data; Chrome may re-key the store on first launch.",
-                    outcome.migrated
-                ),
-            ),
-        );
-    }
-    Ok(outcome)
+    Ok(migrated)
 }

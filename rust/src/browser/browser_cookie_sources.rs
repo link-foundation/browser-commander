@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Result};
-use rusqlite::{params, Connection};
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 
 use super::browser_cookies::open_cookie_database;
@@ -17,6 +17,7 @@ use super::browser_profiles::{
 };
 use super::browser_sources::{browser_family, Environment};
 use super::default_browser::{default_run_command, resolve_default_browser, RunCommand};
+use super::migration::domains::matches_domains;
 use super::migration::MigrationEntry;
 
 /// One installed browser profile that holds cookies, with per-domain counts
@@ -62,28 +63,32 @@ fn count_cookies_by_domain(
     } else {
         "cookies"
     };
-    let count_for = |filter: Option<&str>| -> Result<u64> {
-        let count = match filter {
-            Some(domain) => {
-                let query = format!("SELECT COUNT(*) FROM {table} WHERE {column} LIKE ?1");
-                database.query_row(&query, params![format!("%{domain}%")], |row| {
-                    row.get::<_, i64>(0)
-                })?
-            }
-            None => {
-                let query = format!("SELECT COUNT(*) FROM {table}");
-                database.query_row(&query, [], |row| row.get::<_, i64>(0))?
-            }
-        };
-        Ok(count.max(0) as u64)
-    };
-    let total = count_for(None)?;
+    let total = database
+        .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+            row.get::<_, i64>(0)
+        })?
+        .max(0) as u64;
     if domains.is_empty() {
         return Ok((total, None));
     }
-    let mut by_domain = BTreeMap::new();
-    for domain in domains {
-        by_domain.insert(domain.clone(), count_for(Some(domain))?);
+    let mut by_domain: BTreeMap<String, u64> =
+        domains.iter().map(|domain| (domain.clone(), 0)).collect();
+    let mut statement = database.prepare(&format!(
+        "SELECT {column}, COUNT(*) FROM {table} GROUP BY {column}"
+    ))?;
+    let hosts = statement.query_map([], |row| {
+        Ok((
+            row.get::<_, Option<String>>(0)?.unwrap_or_default(),
+            row.get::<_, i64>(1)?,
+        ))
+    })?;
+    for row in hosts {
+        let (host, count) = row?;
+        for (domain, matched) in &mut by_domain {
+            if matches_domains(&host, std::slice::from_ref(domain)) {
+                *matched += count.max(0) as u64;
+            }
+        }
     }
     Ok((total, Some(by_domain)))
 }
@@ -277,6 +282,7 @@ pub fn resolve_import_source(
 pub(crate) mod tests {
     // feature-parity: sources.cookie-listing@native-typed
     use super::*;
+    use rusqlite::params;
     use std::fs;
 
     pub(crate) struct TempDir(PathBuf);
@@ -443,6 +449,79 @@ pub(crate) mod tests {
         value: "1",
         host: ".github.com",
     }];
+
+    #[test]
+    fn domain_counts_match_whole_hosts_in_both_sqlite_families() {
+        for (family, table, column) in [
+            ("firefox", "moz_cookies", "host"),
+            ("chromium", "cookies", "host_key"),
+        ] {
+            let database = Connection::open_in_memory().unwrap();
+            database
+                .execute(&format!("CREATE TABLE {table} ({column} TEXT)"), [])
+                .unwrap();
+            for host in [
+                ".github.com",
+                "api.GITHUB.COM.",
+                "notgithub.com",
+                ".github.com.attacker.test",
+                ".gitXhub.com",
+            ] {
+                database
+                    .execute(&format!("INSERT INTO {table} VALUES (?1)"), [host])
+                    .unwrap();
+            }
+            let domains = ["GITHUB.COM.", "git_hub.com", "%github.com"].map(String::from);
+            let (total, counts) = count_cookies_by_domain(&database, family, &domains).unwrap();
+            assert_eq!(total, 5);
+            assert_eq!(
+                counts.unwrap(),
+                BTreeMap::from([
+                    ("GITHUB.COM.".into(), 2),
+                    ("git_hub.com".into(), 0),
+                    ("%github.com".into(), 0),
+                ])
+            );
+        }
+    }
+
+    #[test]
+    fn import_source_ignores_lookalike_domain_in_default_browser() {
+        use super::super::migration::{migrate_profile, MigrateProfileOptions, MigrationSource};
+
+        let temp = TempDir::new("bc-imp-lookalike-");
+        make_firefox_profile(
+            temp.path(),
+            &[FirefoxCookie {
+                name: "lookalike",
+                value: "secret",
+                host: ".notgithub.com",
+            }],
+        );
+        make_firefox_profile_in(temp.path(), ".librewolf", "default", &GITHUB_COOKIE);
+        let source = resolve(
+            "default",
+            &["github.com"],
+            temp.path(),
+            &firefox_is_default(),
+        )
+        .unwrap();
+        assert_eq!(source.browser, "librewolf");
+        assert_eq!(source.warning.unwrap().reason, "default-browser-fallback");
+        let report = migrate_profile(
+            MigrateProfileOptions::new(MigrationSource::new("auto"), temp.path().join("target"))
+                .include(["cookies"])
+                .domains(["github.com"])
+                .platform("linux")
+                .home_dir(temp.path())
+                .environment(Environment::new())
+                .run_command(firefox_is_default()),
+        )
+        .unwrap();
+        assert_eq!(report.source.browser, "librewolf");
+        assert_eq!(report.migrated.cookies, 1);
+        assert_eq!(report.cookies[0].domain, ".github.com");
+    }
     const OTHER_COOKIE: [FirefoxCookie; 1] = [FirefoxCookie {
         name: "b",
         value: "2",

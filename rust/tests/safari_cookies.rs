@@ -119,6 +119,31 @@ fn listing_does_not_decode_cookie_values() {
 }
 
 #[test]
+fn discovery_domains_are_exact_and_reader_filter_stays_substring() {
+    let home = Home::new();
+    home.install("safari", false);
+    let sources = list_cookie_sources(
+        &["hub.com".into(), "github.co".into()],
+        "darwin",
+        &home.0,
+        &Environment::new(),
+    )
+    .unwrap();
+    assert!(sources.is_empty());
+    let cookies = read_browser_cookies(
+        BrowserCookieReadOptions::new("safari")
+            .platform("darwin")
+            .home_dir(&home.0)
+            .environment(Environment::new())
+            .domain_filter("hub.com")
+            .cache(false),
+    )
+    .unwrap();
+    let expected: Vec<BrowserCookie> = serde_json::from_str(EXPECTED).unwrap();
+    assert_eq!(cookies, expected[..2]);
+}
+
+#[test]
 fn default_domain_migration_reports_unsupported_classes_without_keychain_access() {
     let home = Home::new();
     home.install("safari", false);

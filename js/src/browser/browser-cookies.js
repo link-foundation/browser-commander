@@ -33,6 +33,7 @@ import {
   resolveSourceBrowser,
 } from './browser-profiles.js';
 import { resolveDefaultBrowser } from './default-browser.js';
+import { matchesDomains } from './migration/domains.js';
 import {
   countSafariCookies,
   parseSafariCookies,
@@ -377,21 +378,22 @@ export function readBrowserCookies(options) {
 function countCookiesByDomain(database, family, domains) {
   const column = family === 'firefox' ? 'host' : 'host_key';
   const table = family === 'firefox' ? 'moz_cookies' : 'cookies';
-  const countFor = (filter) => {
-    const query = filter
-      ? `SELECT COUNT(*) AS n FROM ${table} WHERE ${column} LIKE ?`
-      : `SELECT COUNT(*) AS n FROM ${table}`;
-    const statement = database.prepare(query);
-    const row = filter ? statement.get(`%${filter}%`) : statement.get();
-    return Number(row?.n ?? 0);
-  };
-  const total = countFor(null);
+  const total = Number(
+    database.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get()?.n ?? 0
+  );
   if (!Array.isArray(domains) || domains.length === 0) {
     return { total, byDomain: null };
   }
-  const byDomain = {};
-  for (const domain of domains) {
-    byDomain[domain] = countFor(domain);
+  const byDomain = Object.fromEntries(domains.map((domain) => [domain, 0]));
+  const hosts = database.prepare(
+    `SELECT ${column} AS host, COUNT(*) AS n FROM ${table} GROUP BY ${column}`
+  );
+  for (const { host, n } of hosts.all()) {
+    for (const domain of Object.keys(byDomain)) {
+      if (matchesDomains(host ?? '', [domain])) {
+        byDomain[domain] += Number(n);
+      }
+    }
   }
   return { total, byDomain };
 }

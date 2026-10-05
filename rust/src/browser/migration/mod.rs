@@ -15,7 +15,7 @@ mod bookmarks;
 mod chromium_crypto;
 mod chromium_writers;
 mod cookies;
-mod domains;
+pub(crate) mod domains;
 mod extensions;
 mod firefox;
 mod firefox_bookmarks;

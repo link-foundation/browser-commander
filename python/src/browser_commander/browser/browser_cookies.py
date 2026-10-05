@@ -419,16 +419,6 @@ class CookieSource:
     error: str | None = None
 
 
-def _count_for(
-    database: sqlite3.Connection, table: str, column: str, domain: str | None
-) -> int:
-    where, parameters = _domain_query(column, domain)
-    row = database.execute(
-        f"SELECT COUNT(*) AS n FROM {table}{where}", parameters
-    ).fetchone()
-    return int(row["n"]) if row else 0
-
-
 def _count_cookies_by_domain(
     database: sqlite3.Connection, family: str, domains: Sequence[str] | None
 ) -> tuple[int, dict[str, int] | None]:
@@ -437,14 +427,21 @@ def _count_cookies_by_domain(
     Only host names and row counts are touched, so this is safe to expose for
     a "which browser holds cookies for this domain" listing.
     """
+    from .migration.domains import matches_domains
+
     column = "host" if family == "firefox" else "host_key"
     table = "moz_cookies" if family == "firefox" else "cookies"
-    total = _count_for(database, table, column, None)
+    total = int(database.execute(f"SELECT COUNT(*) AS n FROM {table}").fetchone()["n"])
     if not domains:
         return total, None
-    by_domain = {
-        domain: _count_for(database, table, column, domain) for domain in domains
-    }
+    by_domain = dict.fromkeys(domains, 0)
+    hosts = database.execute(
+        f"SELECT {column} AS host, COUNT(*) AS n FROM {table} GROUP BY {column}"
+    )
+    for row in hosts:
+        for domain in by_domain:
+            if matches_domains(row["host"] or "", [domain]):
+                by_domain[domain] += int(row["n"])
     return total, by_domain
 
 

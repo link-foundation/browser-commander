@@ -47,6 +47,21 @@ def test_decodes_shared_fixture():
     assert parse_safari_cookies(DATA) == EXPECTED
 
 
+def test_discovery_domains_are_exact_and_reader_filter_stays_substring(tmp_path):
+    install(tmp_path)
+    options = {"platform": "darwin", "home_dir": tmp_path, "environment": {}}
+    assert list_cookie_sources(domains=["hub.com", "github.co"], **options) == []
+    assert (
+        read_browser_cookies_with_dependencies(
+            BrowserCookieReadOptions(
+                browser="safari", domain_filter="hub.com", cache=False
+            ),
+            **options,
+        )
+        == EXPECTED[:2]
+    )
+
+
 def test_rejects_truncation_and_forged_offsets():
     for end in range(len(DATA) - 8):
         with pytest.raises(ValueError, match="Invalid Safari binarycookies"):

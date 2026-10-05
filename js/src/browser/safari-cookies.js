@@ -6,6 +6,7 @@ import { readFile as readFileBytes, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { findSafariFile, withSafariAccess } from './safari-access.js';
 import { TextDecoder } from 'node:util';
+import { matchesDomains } from './migration/domains.js';
 
 const APPLE_EPOCH = 978_307_200;
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
@@ -122,7 +123,7 @@ export function countSafariCookies(data, domains) {
     const host = string(record, 16).toLowerCase();
     total += 1;
     for (const domain of Object.keys(byDomain ?? {})) {
-      if (host.includes(domain.toLowerCase())) {
+      if (matchesDomains(host, [domain])) {
         byDomain[domain] += 1;
       }
     }

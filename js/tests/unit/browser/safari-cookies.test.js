@@ -49,6 +49,22 @@ async function installed(browser = 'safari', legacy = false) {
 }
 
 describe('Safari cookies', { timeout: 10000 }, () => {
+  it('uses whole domains for discovery while retaining reader substring filters', async () => {
+    const options = await installed();
+    const sources = await listCookieSources({
+      ...options,
+      domains: ['hub.com', 'github.co'],
+    });
+    assert.deepEqual(sources, []);
+    assert.deepEqual(
+      await readBrowserCookiesWithDependencies(
+        { browser: 'safari', domainFilter: 'hub.com', cache: false },
+        options
+      ),
+      expected.slice(0, 2)
+    );
+  });
+
   it('decodes multiple pages, flags, UTF-8 and Apple epoch without guessing session cookies', () => {
     assert.deepEqual(parseSafariCookies(fixture), expected);
   });

@@ -130,7 +130,7 @@ pub(crate) fn count_safari_cookies(data: &[u8], domains: &[String]) -> Result<Do
         let host = string(record, 16)?.to_lowercase();
         total += 1;
         for (domain, count) in &mut counts {
-            if host.contains(&domain.to_lowercase()) {
+            if super::migration::domains::matches_domains(&host, std::slice::from_ref(domain)) {
                 *count += 1;
             }
         }

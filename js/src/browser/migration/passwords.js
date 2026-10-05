@@ -7,6 +7,7 @@ import { openSqliteDatabase } from '../browser-cookie-database.js';
 import { withDatabaseSnapshot } from './sqlite-snapshot.js';
 import { encryptChromiumValue } from './chromium-crypto.js';
 import { matchesDomains } from './domains.js';
+import { migratePasswordMetadata } from './password-metadata.js';
 
 /**
  * Saved-password migration.
@@ -48,6 +49,44 @@ function hostFromOrigin(originUrl) {
   } catch {
     return originUrl ?? '';
   }
+}
+
+async function rewriteSecret(
+  value,
+  origin,
+  { platform, resolveSourceKey, targetKey, targetPrefix }
+) {
+  const encryptedValue = toBuffer(value);
+  if (!encryptedValue.length) {
+    return { value: encryptedValue };
+  }
+  const prefix = encryptedValue.subarray(0, 3).toString('ascii');
+  if (prefix === 'v20') {
+    return { reason: 'app-bound-v20' };
+  }
+  if (prefix !== 'v10' && prefix !== 'v11') {
+    return { reason: 'unsupported-encryption' };
+  }
+  let plaintext;
+  try {
+    plaintext = decryptChromiumCookie({
+      encryptedValue,
+      host: hostFromOrigin(origin),
+      databaseVersion: 0,
+      platform,
+      key: await resolveSourceKey(prefix),
+    });
+  } catch (error) {
+    return { reason: 'decrypt-failed', detail: error.message };
+  }
+  return {
+    value: encryptChromiumValue({
+      plaintext,
+      key: targetKey,
+      platform,
+      prefix: targetPrefix,
+    }),
+  };
 }
 
 /**
@@ -133,38 +172,32 @@ export async function migratePasswords({
           if (encryptedValue.length === 0) {
             continue;
           }
-          const prefix = encryptedValue.subarray(0, 3).toString('ascii');
-          if (prefix === 'v20') {
-            skip(row, 'app-bound-v20');
-            continue;
-          }
-          if (prefix !== 'v10' && prefix !== 'v11') {
-            skip(row, 'unsupported-encryption');
-            continue;
-          }
-          let plaintext;
-          try {
-            const key = await resolveSourceKey(prefix);
-            plaintext = decryptChromiumCookie({
-              encryptedValue,
-              host: hostFromOrigin(row.origin_url),
-              databaseVersion: 0,
-              platform,
-              key,
-            });
-          } catch (error) {
-            skip(row, 'decrypt-failed', error.message);
-            continue;
-          }
-          const reencrypted = encryptChromiumValue({
-            plaintext,
-            key: targetKey,
+          const result = await rewriteSecret(encryptedValue, row.origin_url, {
             platform,
-            prefix: targetPrefix,
+            resolveSourceKey,
+            targetKey,
+            targetPrefix,
           });
-          update.run(reencrypted, row.rowid);
+          if (result.reason) {
+            skip(row, result.reason, result.detail);
+            continue;
+          }
+          update.run(result.value, row.rowid);
           migrated += 1;
         }
+        await migratePasswordMetadata({
+          db,
+          domains,
+          skipped,
+          warnings,
+          rewriteValue: (value, origin) =>
+            rewriteSecret(value, origin, {
+              platform,
+              resolveSourceKey,
+              targetKey,
+              targetPrefix,
+            }),
+        });
         db.exec('VACUUM');
       } finally {
         db.close();

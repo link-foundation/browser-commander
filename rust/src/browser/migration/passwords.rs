@@ -40,7 +40,7 @@ pub(crate) struct PasswordKeys<'a> {
     pub target_prefix: Option<&'a str>,
 }
 
-fn to_bytes(value: SqlValue) -> Vec<u8> {
+pub(super) fn to_bytes(value: SqlValue) -> Vec<u8> {
     match value {
         SqlValue::Blob(bytes) => bytes,
         SqlValue::Text(text) => text.into_bytes(),
@@ -64,6 +64,60 @@ struct LoginRow {
     password_value: Vec<u8>,
 }
 
+pub(super) enum SecretRewrite {
+    Encrypted(Vec<u8>),
+    Skipped(MigrationEntry),
+}
+
+pub(super) fn reencrypt_secret(
+    value: &[u8],
+    origin: Option<&str>,
+    keys: &PasswordKeys<'_>,
+) -> Result<SecretRewrite> {
+    if value.is_empty() {
+        return Ok(SecretRewrite::Encrypted(Vec::new()));
+    }
+    let item = origin.unwrap_or("(unknown)");
+    let prefix = String::from_utf8_lossy(&value[..value.len().min(3)]).into_owned();
+    let reason = if prefix == "v20" {
+        Some("app-bound-v20")
+    } else if prefix != "v10" && prefix != "v11" {
+        Some("unsupported-encryption")
+    } else {
+        None
+    };
+    if let Some(reason) = reason {
+        return Ok(SecretRewrite::Skipped(MigrationEntry::new(
+            "passwords",
+            item,
+            reason,
+        )));
+    }
+    let decrypted = (keys.resolve_source_key)(&prefix).and_then(|key| {
+        decrypt_chromium_cookie(value, &host_from_origin(origin), 0, keys.platform, &key)
+    });
+    let plaintext = match decrypted {
+        Ok(plaintext) => plaintext,
+        Err(error) => {
+            return Ok(SecretRewrite::Skipped(
+                MigrationEntry::new("passwords", item, "decrypt-failed")
+                    .with_detail(format!("{error:#}")),
+            ))
+        }
+    };
+    let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "win32" {
+        "v10"
+    } else {
+        "v11"
+    });
+    Ok(SecretRewrite::Encrypted(encrypt_chromium_value(
+        plaintext.as_bytes(),
+        keys.target_key,
+        keys.platform,
+        Some(target_prefix),
+    )?))
+}
+
 fn reencrypt_logins(
     database: &Connection,
     keys: &PasswordKeys<'_>,
@@ -81,11 +135,6 @@ fn reencrypt_logins(
         })?;
         mapped.collect::<rusqlite::Result<Vec<_>>>()?
     };
-    let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "win32" {
-        "v10"
-    } else {
-        "v11"
-    });
     let mut outcome = ClassOutcome::default();
     for row in rows {
         if !super::domains::matches_domains(row.origin_url.as_deref().unwrap_or_default(), domains)
@@ -96,52 +145,15 @@ fn reencrypt_logins(
         if row.password_value.is_empty() {
             continue;
         }
-        let item = row.origin_url.as_deref().unwrap_or("(unknown)");
-        let prefix =
-            String::from_utf8_lossy(&row.password_value[..row.password_value.len().min(3)])
-                .into_owned();
-        if prefix == "v20" {
-            database.execute("DELETE FROM logins WHERE rowid=?", [row.rowid])?;
-            outcome
-                .skipped
-                .push(MigrationEntry::new("passwords", item, "app-bound-v20"));
-            continue;
-        }
-        if prefix != "v10" && prefix != "v11" {
-            database.execute("DELETE FROM logins WHERE rowid=?", [row.rowid])?;
-            outcome.skipped.push(MigrationEntry::new(
-                "passwords",
-                item,
-                "unsupported-encryption",
-            ));
-            continue;
-        }
-        let decrypted = (keys.resolve_source_key)(&prefix).and_then(|key| {
-            decrypt_chromium_cookie(
-                &row.password_value,
-                &host_from_origin(row.origin_url.as_deref()),
-                0,
-                keys.platform,
-                &key,
-            )
-        });
-        let plaintext = match decrypted {
-            Ok(plaintext) => plaintext,
-            Err(error) => {
-                database.execute("DELETE FROM logins WHERE rowid=?", [row.rowid])?;
-                outcome.skipped.push(
-                    MigrationEntry::new("passwords", item, "decrypt-failed")
-                        .with_detail(format!("{error:#}")),
-                );
-                continue;
-            }
-        };
-        let reencrypted = encrypt_chromium_value(
-            plaintext.as_bytes(),
-            keys.target_key,
-            keys.platform,
-            Some(target_prefix),
-        )?;
+        let reencrypted =
+            match reencrypt_secret(&row.password_value, row.origin_url.as_deref(), keys)? {
+                SecretRewrite::Encrypted(value) => value,
+                SecretRewrite::Skipped(entry) => {
+                    database.execute("DELETE FROM logins WHERE rowid=?", [row.rowid])?;
+                    outcome.skipped.push(entry);
+                    continue;
+                }
+            };
         database.execute(
             "UPDATE logins SET password_value = ?1 WHERE rowid = ?2",
             params![reencrypted, row.rowid],
@@ -190,7 +202,13 @@ pub(crate) fn migrate_passwords_filtered(
             .with_context(|| format!("Could not write {}", target_path.display()))?;
         let database = Connection::open(&target_path)
             .with_context(|| format!("Could not open {}", target_path.display()))?;
-        let outcome = reencrypt_logins(&database, keys, domains)?;
+        let mut outcome = reencrypt_logins(&database, keys, domains)?;
+        super::password_metadata::migrate_password_metadata(
+            &database,
+            keys,
+            domains,
+            &mut outcome,
+        )?;
         database.execute_batch("VACUUM")?;
         Ok(outcome)
     })

@@ -59,17 +59,28 @@ profiles, and carries the error through cookie-source domain filtering without
 manufacturing cookie counts. The fixture verifies unchanged catalogue bytes.
 Before/after logs are retained at `/tmp/issue-122-profile-discovery-*.log`.
 
+Upstream Login Data review identified additional copied notes, security records,
+statistics and opaque sync metadata. The shared
+`tests/fixtures/password-domain-isolation.sql` first failed in all three native
+implementations: excluded, undecryptable-parent, dangling and null parent
+references remained in the target. The retained native tests now verify linked
+record cleanup, exact statistics filtering, UTF-8 note re-keying with dates and
+confidential flags preserved, explicit sync/unknown-table warnings, removed
+copied bytes after vacuum and unchanged source bytes. The unfiltered variant
+preserves both sites' records and unknown metadata while re-keying both notes.
+Before/after logs are retained at `/tmp/issue-122-password-metadata-*.log`.
+
 ## Local checks
 
 | Check                                                             | Result                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | JS `npm run check`                                                | ESLint, Prettier and no new duplication clones pass                                   |
-| JS `npm test`                                                     | 1,563 pass, zero skipped                                                              |
-| Python Ruff check/format and `mypy src`                           | Pass; 168 source files type checked                                                   |
-| Python `pytest`                                                   | 1,155 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
+| JS `npm test`                                                     | 1,565 pass, zero skipped                                                              |
+| Python Ruff check/format and `mypy src`                           | Pass; 169 source files type checked                                                   |
+| Python `pytest`                                                   | 1,157 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
 | Rust format, Clippy all targets/all features with warnings denied | Pass                                                                                  |
-| Rust `cargo test --locked`                                        | 714 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
-| Rust `cargo test --locked --all-features`                         | 714 pass, zero failures; 15 existing browser tests ignored                            |
+| Rust `cargo test --locked`                                        | 716 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
+| Rust `cargo test --locked --all-features`                         | 716 pass, zero failures; 15 existing browser tests ignored                            |
 | Full-repository Secretlint and root JavaScript lint               | Pass                                                                                  |
 | Shared asset byte comparison                                      | Catalogue, history schema and capability declarations identical in all three packages |
 | Generated browser/migration matrix freshness                      | Pass                                                                                  |
@@ -145,6 +156,11 @@ All ten workflows and the aggregate CodeQL check also passed on
 `bd8062fa49225e9e1b0c2c3f8048b3db39a8a482`, committed at 15:42:37 UTC.
 Those runs started at 15:42:45 UTC with the exact head SHA. Subsequent Safari
 catalogue-error changes require a new CI verification after they are pushed.
+
+All ten workflows and aggregate CodeQL also passed on
+`cd857345b557936a1375083c6a6e227fe19cccbf`, committed at 16:10:54 UTC.
+Those runs started at 16:14:17–18 UTC with the exact head SHA. Subsequent Login
+Data metadata changes require their own CI verification after they are pushed.
 
 ## Real runtime acceptance and remaining limits
 

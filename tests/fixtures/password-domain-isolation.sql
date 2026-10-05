@@ -1,0 +1,20 @@
+-- Minimal Chromium Login Data associations, with opaque future metadata.
+CREATE TABLE logins(id INTEGER PRIMARY KEY, origin_url TEXT, password_value BLOB);
+INSERT INTO logins VALUES (7, 'https://github.com', X'');
+INSERT INTO logins VALUES (8, 'https://notgithub.com', X'');
+INSERT INTO logins VALUES (9, 'https://locked.github.com', X'763230756E7265616461626C65');
+CREATE TABLE password_notes(id INTEGER PRIMARY KEY, parent_id INTEGER, key TEXT, value BLOB, date_created INTEGER, confidential INTEGER);
+INSERT INTO password_notes VALUES (70, 7, 'selected', X'', 123, 1);
+INSERT INTO password_notes VALUES (71, 8, 'excluded', X'', 456, 0);
+INSERT INTO password_notes VALUES (72, 9, 'locked', X'', 789, 0);
+INSERT INTO password_notes VALUES (73, 7, 'unreadable', X'763230756E7265616461626C65', 321, 1);
+CREATE TABLE insecure_credentials(parent_id INTEGER, insecurity_type INTEGER);
+INSERT INTO insecure_credentials VALUES (7, 0), (8, 0), (9, 0), (999, 0), (NULL, 0);
+CREATE TABLE stats(origin_domain TEXT, username_value TEXT, dismissal_count INTEGER, update_time INTEGER);
+INSERT INTO stats VALUES ('https://github.com', 'selected', 1, 123), ('https://notgithub.com', 'excluded', 2, 456);
+CREATE TABLE sync_entities_metadata(storage_key TEXT, metadata BLOB);
+INSERT INTO sync_entities_metadata VALUES ('8', 'unrelated-sync-marker');
+CREATE TABLE sync_model_metadata(id INTEGER PRIMARY KEY, model_metadata BLOB);
+INSERT INTO sync_model_metadata VALUES (1, 'unrelated-sync-marker');
+CREATE TABLE future_password_metadata(id INTEGER PRIMARY KEY, opaque BLOB);
+INSERT INTO future_password_metadata VALUES (1, 'unrelated-future-marker');

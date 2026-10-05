@@ -9,3 +9,5 @@ Resolve native Safe Storage credentials from the catalogue and provide service-s
 Match exact hosts and subdomains in cookie-source metadata and automatic source selection, without decoding cookie values or treating domain strings as SQL wildcard patterns.
 
 Keep Safari profile-catalogue errors alongside readable profiles and cookie sources, including domain-filtered listings.
+
+Filter associated Login Data notes, security records and origin statistics; re-encrypt retained notes with the target key. Reset copied sync state and report unknown metadata omitted during domain-filtered imports.

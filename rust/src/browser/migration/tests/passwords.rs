@@ -11,7 +11,155 @@ use super::super::{ClassOutcome, SourceKeyResolver};
 use super::fixtures::{
     assert_nothing_migrated, assert_source_unchanged, read_migrated_logins, TempDir,
 };
-use crate::browser::browser_cookie_crypto::derive_chromium_cookie_key;
+use crate::browser::browser_cookie_crypto::{decrypt_chromium_cookie, derive_chromium_cookie_key};
+
+#[test]
+fn filters_associated_metadata_and_reencrypts_retained_notes() {
+    verify_login_metadata(&["github.com".into()]);
+}
+
+#[test]
+fn preserves_unfiltered_metadata_and_reencrypts_all_retained_notes() {
+    verify_login_metadata(&[]);
+}
+
+fn verify_login_metadata(domains: &[String]) {
+    let filtered = !domains.is_empty();
+    let source = TempDir::new("bc-password-metadata-");
+    let target = TempDir::new("bc-password-metadata-");
+    let key = random_bytes(16).unwrap();
+    let target_key = random_bytes(16).unwrap();
+    let database = Connection::open(source.path().join("Login Data")).unwrap();
+    database
+        .execute_batch(include_str!(
+            "../../../../../tests/fixtures/password-domain-isolation.sql"
+        ))
+        .unwrap();
+    let password = encrypt_chromium_value(b"password", &key, "linux", Some("v11")).unwrap();
+    let note =
+        encrypt_chromium_value("private note ☃".as_bytes(), &key, "linux", Some("v11")).unwrap();
+    database
+        .execute(
+            "UPDATE logins SET password_value=? WHERE id IN (7,8)",
+            [&password],
+        )
+        .unwrap();
+    database
+        .execute(
+            "UPDATE password_notes SET value=? WHERE id IN (70,71,72)",
+            [&note],
+        )
+        .unwrap();
+    drop(database);
+    let resolver: SourceKeyResolver = Arc::new(move |_| Ok(key.clone()));
+    let report = assert_source_unchanged(&source.path().join("Login Data"), || {
+        migrate_passwords_filtered(
+            source.path(),
+            target.path(),
+            &PasswordKeys {
+                platform: "linux",
+                resolve_source_key: &resolver,
+                target_key: &target_key,
+                target_prefix: Some("v11"),
+            },
+            domains,
+        )
+        .unwrap()
+    });
+    assert_eq!(report.migrated, if filtered { 1 } else { 2 });
+    let database = Connection::open(target.path().join("Login Data")).unwrap();
+    let parents: Vec<Option<i64>> = database
+        .prepare("SELECT parent_id FROM insecure_credentials")
+        .unwrap()
+        .query_map([], |row| row.get(0))
+        .unwrap()
+        .collect::<rusqlite::Result<_>>()
+        .unwrap();
+    assert_eq!(
+        parents,
+        if filtered {
+            vec![Some(7)]
+        } else {
+            vec![Some(7), Some(8)]
+        }
+    );
+    assert_eq!(
+        database
+            .query_row("SELECT origin_domain FROM stats", [], |row| row
+                .get::<_, String>(0))
+            .unwrap(),
+        "https://github.com"
+    );
+    assert_eq!(
+        database
+            .query_row("SELECT count(*) FROM stats", [], |row| row.get::<_, i64>(0))
+            .unwrap(),
+        if filtered { 1 } else { 2 }
+    );
+    assert_eq!(
+        database
+            .query_row("SELECT count(*) FROM password_notes", [], |row| row
+                .get::<_, i64>(0))
+            .unwrap(),
+        if filtered { 1 } else { 2 }
+    );
+    let (id, value, created, confidential): (i64, Vec<u8>, i64, i64) = database
+        .query_row(
+            "SELECT id,value,date_created,confidential FROM password_notes",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+        .unwrap();
+    assert_eq!((id, created, confidential), (70, 123, 1));
+    assert_eq!(
+        decrypt_chromium_cookie(&value, "", 0, "linux", &target_key).unwrap(),
+        "private note ☃"
+    );
+    if !filtered {
+        let value: Vec<u8> = database
+            .query_row("SELECT value FROM password_notes WHERE id=71", [], |row| {
+                row.get(0)
+            })
+            .unwrap();
+        assert_eq!(
+            decrypt_chromium_cookie(&value, "", 0, "linux", &target_key).unwrap(),
+            "private note ☃"
+        );
+    }
+    for table in [
+        "sync_entities_metadata",
+        "sync_model_metadata",
+        "future_password_metadata",
+    ] {
+        let preserved = table == "future_password_metadata" && !filtered;
+        assert_eq!(
+            database
+                .query_row(&format!("SELECT count(*) FROM {table}"), [], |row| row
+                    .get::<_, i64>(0))
+                .unwrap(),
+            i64::from(preserved)
+        );
+        assert_eq!(
+            report.warnings.iter().any(|entry| entry.item == table),
+            !preserved
+        );
+    }
+    assert!(report
+        .skipped
+        .iter()
+        .any(|entry| entry.item == "password_notes/73" && entry.reason == "app-bound-v20"));
+    drop(database);
+    let bytes = std::fs::read(target.path().join("Login Data")).unwrap();
+    for marker in [b"unrelated-sync-marker".as_slice(), &note] {
+        assert!(!bytes.windows(marker.len()).any(|part| part == marker));
+    }
+    assert_eq!(
+        bytes
+            .windows(b"unrelated-future-marker".len())
+            .any(|part| part == b"unrelated-future-marker"),
+        !filtered
+    );
+}
 
 struct LoginRow {
     origin_url: &'static str,

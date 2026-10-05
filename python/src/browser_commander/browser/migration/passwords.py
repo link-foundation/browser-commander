@@ -21,6 +21,9 @@ from urllib.parse import urlsplit
 from browser_commander.browser.browser_cookie_crypto import decrypt_chromium_cookie
 from browser_commander.browser.migration.chromium_crypto import encrypt_chromium_value
 from browser_commander.browser.migration.fs_utils import PathLike
+from browser_commander.browser.migration.password_metadata import (
+    migrate_password_metadata,
+)
 from browser_commander.browser.migration.sqlite_snapshot import (
     with_database_snapshot,
 )
@@ -113,9 +116,38 @@ def migrate_passwords(
     target_dir.mkdir(parents=True, exist_ok=True)
     target_path = target_dir / "Login Data"
 
+    def rewrite_secret(
+        value: Any, origin: Any
+    ) -> tuple[bytes | None, dict[str, Any] | None]:
+        encrypted = _to_bytes(value)
+        if not encrypted:
+            return encrypted, None
+        prefix = encrypted[:3].decode("ascii", errors="replace")
+        if prefix == "v20":
+            return None, _skip(origin, "app-bound-v20")
+        if prefix not in ("v10", "v11"):
+            return None, _skip(origin, "unsupported-encryption")
+        try:
+            plaintext = decrypt_chromium_cookie(
+                encrypted,
+                host=_host_from_origin(origin),
+                database_version=0,
+                platform=platform,
+                key=resolve_source_key(prefix),
+            )
+        except Exception as error:
+            return None, _skip(origin, "decrypt-failed", str(error))
+        return encrypt_chromium_value(
+            plaintext,
+            key=bytes(target_key),
+            platform=platform,
+            prefix=prefix_for_target,
+        ), None
+
     def rewrite(snapshot_path: Path) -> dict[str, Any]:
         shutil.copyfile(snapshot_path, target_path)
         skipped: list[dict[str, Any]] = []
+        warnings: list[dict[str, Any]] = []
         migrated = 0
         with contextlib.closing(sqlite3.connect(target_path)) as database:
             rows = database.execute(
@@ -130,40 +162,21 @@ def migrate_passwords(
                 encrypted_value = _to_bytes(password_value)
                 if not encrypted_value:
                     continue
-                prefix = encrypted_value[:3].decode("ascii", errors="replace")
-                if prefix == "v20":
+                reencrypted, error = rewrite_secret(encrypted_value, origin_url)
+                if error is not None:
                     database.execute("DELETE FROM logins WHERE rowid = ?", (rowid,))
-                    skipped.append(_skip(origin_url, "app-bound-v20"))
+                    skipped.append(error)
                     continue
-                if prefix not in ("v10", "v11"):
-                    database.execute("DELETE FROM logins WHERE rowid = ?", (rowid,))
-                    skipped.append(_skip(origin_url, "unsupported-encryption"))
-                    continue
-                try:
-                    plaintext = decrypt_chromium_cookie(
-                        encrypted_value,
-                        host=_host_from_origin(origin_url),
-                        database_version=0,
-                        platform=platform,
-                        key=resolve_source_key(prefix),
-                    )
-                except Exception as error:
-                    database.execute("DELETE FROM logins WHERE rowid = ?", (rowid,))
-                    skipped.append(_skip(origin_url, "decrypt-failed", str(error)))
-                    continue
-                reencrypted = encrypt_chromium_value(
-                    plaintext,
-                    key=bytes(target_key),
-                    platform=platform,
-                    prefix=prefix_for_target,
-                )
                 database.execute(
                     "UPDATE logins SET password_value = ? WHERE rowid = ?",
                     (reencrypted, rowid),
                 )
                 migrated += 1
+            migrate_password_metadata(
+                database, domains, rewrite_secret, skipped, warnings
+            )
             database.commit()
             database.execute("VACUUM")
-        return {"migrated": migrated, "skipped": skipped, "warnings": []}
+        return {"migrated": migrated, "skipped": skipped, "warnings": warnings}
 
     return with_database_snapshot(source_path, rewrite)

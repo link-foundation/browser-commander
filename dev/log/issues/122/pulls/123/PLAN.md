@@ -200,6 +200,14 @@ parent and every child remain incomplete; no closing keywords are appropriate.
   and subdomain rule for Chromium, Firefox and Safari. Lookalike hosts and SQL
   wildcard characters cannot select a profile whose cookies migration excludes;
   grouped SQLite host counts and Safari host metadata never decode cookie values.
+- Login Data cleanup also follows `password_notes` and `insecure_credentials`
+  parent IDs, including dangling/null references and undecryptable parent logins.
+  Retained notes are re-keyed with their original dates/confidential flags;
+  independent origin statistics use the exact domain rule. Copied sync state is
+  reset with warnings. Domain-filtered imports omit unknown metadata tables with
+  named/count warnings; unfiltered imports preserve them. The same shared SQL
+  fixture failed first in each native language and verifies source immutability,
+  target-key decryption and vacuumed removal of copied sensitive bytes.
 - Opera resolves its same-directory Local State before the parent fallback.
   Yandex Ya Passman Data gets a specific unsupported encryption-layer reason
   before credential lookup. Detection-only DuckDuckGo cannot enter Chromium
@@ -254,12 +262,12 @@ metadata remain absent. Windows and macOS native browser acceptance
 could not be established in this Linux workspace. Password fixture decryption
 proves target-key encryption, not real browser password-store acceptance.
 
-Chromium's current Login Data schema also has login-linked `password_notes` and
-`insecure_credentials`, independent statistics, and opaque sync metadata. The
-implemented password filter rewrites/removes `logins` rows; it does not yet
-filter or re-key all ancillary tables. Their parent IDs, origins and encrypted
-note values need separate cleanup and round-trip coverage. This is an unresolved
-part of 119.14, not a claim of complete password-database domain isolation.
+Chromium's current Login Data associations, statistics and notes now have native
+cleanup/re-keying fixtures. Unknown metadata is explicitly omitted during
+filtered imports, and copied sync state is reset. These fixtures do not establish
+real browser password-store acceptance or support for every vendor-specific
+Login Data schema. Requirement 119.14 remains partial because the other origin
+storage and permission classes are still absent.
 
 These are unresolved requirements inside PR #123, not proposed follow-up issues.
 The capability matrix explicitly declares their current unsupported/pending
@@ -286,8 +294,10 @@ by this existing behavior and retained regression coverage.
 - [Chromium Login Data schema](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/components/password_manager/core/browser/password_store/login_database.cc)
   defines parent-ID associations and sync metadata beyond `logins`;
   [password notes](https://raw.githubusercontent.com/chromium/chromium/main/components/password_manager/core/browser/password_store/password_notes_table.cc)
-  use the database encryptor. Copying these tables unchanged does not establish
-  complete filtered migration or note re-keying.
+  use the database encryptor, which converts strings to UTF-8. Chromium's
+  [statistics table](https://raw.githubusercontent.com/chromium/chromium/main/components/password_manager/core/browser/password_store/statistics_table.cc)
+  stores independent `origin_domain` records. These primary schemas informed the
+  added native association/statistics cleanup and note re-keying tests.
 - [Safari profile-layout RFC](https://github.com/i358/dddddd/blob/main/rfcs/011-safari-data-storage.md)
   is an implementation reference for named stores, not Apple platform acceptance.
 - [Apple Safari WebDriver](https://developer.apple.com/documentation/webkit/testing-with-webdriver-in-safari)

@@ -243,6 +243,15 @@ EPERM/EACCES explains which application needs Full Disk Access. A scoped
 default/auto import reports an unreadable default source instead of treating it
 as empty and silently choosing a different browser.
 
+Chromium password imports also re-encrypt retained password notes with the
+target key and remove notes/security records whose login was excluded or could
+not be decrypted. Domain filters apply to the independent origin statistics.
+Copied sync metadata is reset with `sync-metadata-reset` warnings. During a
+domain-filtered import, unrecognized Login Data metadata tables are cleared
+with `unsupported-password-metadata` warnings naming each affected table and
+its removed row count; unfiltered imports preserve those tables. Unreadable
+notes have individual skipped entries, without exposing note values.
+
 The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):
 
 ```json

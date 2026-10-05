@@ -24,6 +24,7 @@ mod firefox_nss;
 mod fs_utils;
 mod history;
 mod os_crypt_keys;
+mod password_metadata;
 mod passwords;
 mod preferences;
 pub(crate) mod safari;

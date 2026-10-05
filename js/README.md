@@ -459,7 +459,7 @@ const session = await launchRealBrowser({
     browser: 'chrome', // chrome | edge | brave | chromium | firefox
     profile: 'Default',
     include: ['cookies', 'bookmarks', 'history', 'passwords', 'preferences'],
-    domains: ['npmjs.com', 'github.com'], // optional cookie filter
+    domains: ['npmjs.com', 'github.com'], // optional cookies/history/passwords filter
   },
 });
 console.log(session.migration.migrated, session.migration.skipped);
@@ -583,7 +583,7 @@ const report = await migrateProfile({
     'preferences',
     'extensions',
   ],
-  domains: ['github.com'], // optional cookie filter
+  domains: ['github.com'], // optional cookies/history/passwords filter
 });
 ```
 

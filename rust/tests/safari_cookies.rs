@@ -1,8 +1,8 @@
 // feature-parity: sources.safari-cookies@native-typed
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use browser_commander::browser::migration::{
     migrate_profile, MigrateProfileOptions, MigrationSource,
@@ -18,14 +18,19 @@ const EXPECTED: &str = include_str!("../../tests/fixtures/safari/expected.json")
 struct Home(PathBuf);
 impl Home {
     fn new() -> Self {
-        Self(std::env::temp_dir().join(format!(
+        static COUNTER: AtomicU64 = AtomicU64::new(0);
+        loop {
+            let home = std::env::temp_dir().join(format!(
                 "bc-safari-{}-{}",
                 std::process::id(),
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos()
-            )))
+                COUNTER.fetch_add(1, Ordering::Relaxed)
+            ));
+            match fs::create_dir(&home) {
+                Ok(()) => return Self(home),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(error) => panic!("Could not reserve a Safari fixture home: {error}"),
+            }
+        }
     }
     fn install(&self, browser: &str, legacy: bool) -> PathBuf {
         let bundle = if browser == "safari" {

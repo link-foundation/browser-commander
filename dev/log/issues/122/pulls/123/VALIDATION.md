@@ -18,6 +18,7 @@ changes.
 | Launch a newly created target beneath a symlink to a protected profile root               | JavaScript permits it; Rust leaves the alias unresolved                      | Native catalogue/protection tests; Python's existing behavior already passes                  |
 | Request Safe Storage credentials for a declared catalogue alias                           | Python/Rust reject `google-chrome` despite its catalogue identity            | Actual credential readers exercised with every declared identity/alias in all three languages |
 | Deny the macOS Keychain request or return an empty result                                 | Missing service-specific retry instructions                                  | Injected native credential-reader tests name the service, Keychain access and `refresh=true`  |
+| Run parallel Rust Safari fixtures with a coarse process wall clock                         | Fixtures share timestamp-only homes; one test deletes another test's source   | Existing Safari integration suite and retained bounded clock probe                           |
 
 Review also reproduced Python accepting short/long password CSV records that
 the JS/Rust parsers reject. Two minimal failing cases now raise a record-width
@@ -76,6 +77,32 @@ Logs were downloaded for each failed workflow before investigating:
 
 The subsequent PR check status is verified against the subsequent pushed SHA;
 the earlier passing jobs alone do not establish that the fixes pass CI.
+
+The next head was `aaca08f5f44666b9e2479d48424e6b23c8908bb3`, committed at
+14:41:09 UTC; all ten workflows started at 14:41:23 UTC. Python, repository
+quality and Security passed, including the aggregate CodeQL check. The
+[Rust macOS job](https://github.com/link-foundation/browser-commander/actions/runs/37326723364/job/111820775375)
+failed: `ci-logs/rust-macos-111820775375.log:2174` reports a missing Safari
+cookie database at `tests/safari_cookies.rs:145`. The full downloaded run log
+records the same error at `ci-logs/rust-37326723364.log:4732`. Linux and Windows
+Rust tests passed on that head; only the macOS test caused the workflow failure.
+
+The fixture helper constructed home names from PID and time without reserving
+them. Parallel tests with equal timestamps could share, modify and remove one
+another's home. The retained Linux probe coarsens only the child process's wall
+clock, keeps monotonic time unchanged, limits the test process to 512 MiB, and
+runs a finite ten suites. It reproduced the same missing-database error before
+the fix in 10/10 runs; after atomic directory reservation, 10/10 pass:
+
+```sh
+python experiments/issue-122/safari_fixture_race.py --runs 10 \
+  --log /tmp/safari-fixture-race.log
+```
+
+Other profile allocators were checked: the production launcher and migration
+snapshot helpers already reserve directories atomically. Their behavior stays
+intact; the colliding shared-prefix Safari fixture helper now uses a counter and
+exclusive `create_dir`, retrying existing names without deleting them.
 
 ## Real runtime acceptance and remaining limits
 

@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use rusqlite::{params, Connection};
 
-use super::super::chromium_crypto::encrypt_chromium_value;
+use super::super::chromium_crypto::{encrypt_chromium_value, random_bytes};
 use super::super::passwords::{migrate_passwords, migrate_passwords_filtered, PasswordKeys};
 use super::super::{ClassOutcome, SourceKeyResolver};
 use super::fixtures::{
@@ -23,7 +23,7 @@ struct LoginRow {
 fn filters_domains_and_removes_undecryptable_ciphertext_from_target() {
     let source = TempDir::new("bc-password-domain-");
     let target = TempDir::new("bc-password-domain-");
-    let key = derive_chromium_cookie_key("source", "linux").unwrap();
+    let key = random_bytes(16).unwrap();
     write_login_data(
         source.path(),
         &[

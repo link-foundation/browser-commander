@@ -2,9 +2,9 @@
 
 use std::path::Path;
 
+use super::super::chromium_crypto::random_bytes;
 use super::super::{migrate_profile, MigrateProfileOptions, MigrationKeys, MigrationSource};
 use super::fixtures::{read_migrated_logins, TempDir};
-use crate::browser::browser_cookie_crypto::derive_chromium_cookie_key;
 
 #[test]
 fn translates_safari_classes_and_encrypts_exported_passwords() {
@@ -17,7 +17,7 @@ fn translates_safari_classes_and_encrypts_exported_passwords() {
     )
     .unwrap();
     std::fs::copy(fixture.join("History.db"), source.path().join("History.db")).unwrap();
-    let key = derive_chromium_cookie_key("target", "linux").unwrap();
+    let key = random_bytes(16).unwrap();
     let report = migrate_profile(
         MigrateProfileOptions::new(
             MigrationSource::new("safari").user_data_dir(source.path()),

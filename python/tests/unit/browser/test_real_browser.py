@@ -364,6 +364,7 @@ async def test_migrates_a_profile_before_launch_and_seeds_migrated_cookies(
                 "include": ["cookies", "bookmarks"],
                 "domains": ["google.com"],
                 "password_csv": "/tmp/safari-export.csv",
+                "include_payment_cards": True,
             },
         ),
         resolve_executable=_executable,
@@ -381,6 +382,7 @@ async def test_migrates_a_profile_before_launch_and_seeds_migrated_cookies(
     assert migrate_options["include"] == ["cookies", "bookmarks"]
     assert migrate_options["domains"] == ["google.com"]
     assert migrate_options["password_csv"] == "/tmp/safari-export.csv"
+    assert migrate_options["include_payment_cards"] is True
     assert migrate_options["from_"] == {"browser": "chrome", "profile": "Default"}
 
     # Migrated cookies are appended to any explicit seed_cookies.

@@ -15,6 +15,10 @@ import {
 import { migrateBookmarks } from './bookmarks.js';
 import { pathExists } from './fs-utils.js';
 import { migrateCookies } from './cookies.js';
+import {
+  ADDITIONAL_DATA_CLASSES,
+  reportAdditionalClasses,
+} from './data-classes.js';
 import { migrateExtensions } from './extensions.js';
 import {
   migrateFirefoxBookmarks,
@@ -42,8 +46,8 @@ import {
  *
  * Cookies are returned (not written): a running Chromium re-derives its own
  * cookie encryption, so the launcher seeds them over CDP with the existing
- * `seedCookies` path. Every other data class is written into the target profile
- * directory.
+ * `seedCookies` path. Supported file imports are written into the target profile;
+ * classes without a native writer receive explicit skipped reports.
  */
 
 export const ALL_DATA_CLASSES = Object.freeze([
@@ -53,6 +57,7 @@ export const ALL_DATA_CLASSES = Object.freeze([
   'passwords',
   'preferences',
   'extensions',
+  ...ADDITIONAL_DATA_CLASSES,
 ]);
 
 // Classification is driven by the shared catalogue so every Chromium variant
@@ -68,14 +73,7 @@ function isFirefoxBrowser(browser) {
 }
 
 function emptyMigrated() {
-  return {
-    cookies: 0,
-    bookmarks: 0,
-    history: 0,
-    passwords: 0,
-    preferences: 0,
-    extensions: 0,
-  };
+  return Object.fromEntries(ALL_DATA_CLASSES.map((type) => [type, 0]));
 }
 
 async function resolveSourceProfileDir({
@@ -157,7 +155,8 @@ async function resolvePasswordKeys({
  * @param {{browser: string, profile: (string|undefined), userDataDir: (string|undefined)}} options.from
  * @param {string} options.to - Target profile directory
  * @param {string[]} [options.include=ALL_DATA_CLASSES]
- * @param {string[]} [options.domains] - Cookie domain filter
+ * @param {string[]} [options.domains] - Per-site host/subdomain filter
+ * @param {boolean} [options.includePaymentCards=false] - Separate explicit payment-card consent
  * @param {string} [options.platform=process.platform]
  * @param {string} [options.targetBrowser] - Launching browser channel (key derivation)
  * @param {Object} [options.keys] - Injected password keys {resolveSourceKey, targetKey, targetPrefix, primaryPassword}
@@ -177,6 +176,7 @@ export async function migrateProfile({
   environment = process.env,
   runCommand,
   passwordCsv,
+  includePaymentCards = false,
 }) {
   if (!from?.browser) {
     throw new TypeError('migrateProfile requires from.browser');
@@ -193,6 +193,7 @@ export async function migrateProfile({
     homeDir,
     environment,
     classes: ALL_DATA_CLASSES,
+    includePaymentCards,
   });
   // An explicit userDataDir names the source, so only an installed-browser
   // import is steered towards the profile holding the requested domains.
@@ -233,6 +234,13 @@ export async function migrateProfile({
   if (source.warning) {
     report.warnings.push(source.warning);
   }
+  report.skipped.push(
+    ...reportAdditionalClasses({
+      selected,
+      profileDir: sourceProfileDir,
+      includePaymentCards,
+    })
+  );
 
   if (selected.has('cookies')) {
     if (isFirefox) {
@@ -379,7 +387,10 @@ async function migrateSafariProfile({
         })
       : null;
   for (const type of ALL_DATA_CLASSES.filter(
-    (type) => type !== 'cookies' && selected.has(type)
+    (type) =>
+      type !== 'cookies' &&
+      !ADDITIONAL_DATA_CLASSES.includes(type) &&
+      selected.has(type)
   )) {
     mergeReport(
       report,

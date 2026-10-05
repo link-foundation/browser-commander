@@ -7,6 +7,7 @@ mod fixtures;
 mod bookmarks;
 mod chromium_crypto;
 mod cookies;
+mod data_classes;
 mod extensions;
 mod firefox;
 mod firefox_nss;

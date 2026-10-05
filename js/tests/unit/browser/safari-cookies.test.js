@@ -149,7 +149,16 @@ describe('Safari cookies', { timeout: 10000 }, () => {
     });
     assert.deepEqual(report.cookies, expected.slice(0, 2));
     assert.equal(report.migrated.cookies, 2);
-    assert.equal(report.skipped.length, 5);
+    const classes = JSON.parse(
+      await readFile(
+        repoPath('tests/fixtures/migration-data-classes.json'),
+        'utf8'
+      )
+    );
+    assert.deepEqual(
+      new Set(report.skipped.map((entry) => entry.type)),
+      new Set(classes.filter((type) => type !== 'cookies'))
+    );
     assert.equal(
       report.skipped.find((entry) => entry.type === 'passwords').reason,
       'safari-password-export-required'

@@ -6,13 +6,44 @@
     "history",
     "passwords",
     "preferences",
-    "extensions"
+    "extensions",
+    "localStorage",
+    "indexedDB",
+    "sessionStorage",
+    "autofill",
+    "paymentCards",
+    "searchEngines",
+    "siteSettings",
+    "openTabs",
+    "downloads",
+    "readingList",
+    "clientCertificates",
+    "passkeys"
   ],
   "sourceFamilies": ["chromium", "firefox", "safari"],
   "targetFamilies": ["chromium", "firefox", "webkit"],
   "imports": {
     "chromium": {
-      "chromium": ["seed", "copy", "snapshot", "rekey", "copy", "copy"]
+      "chromium": [
+        "seed",
+        "copy",
+        "snapshot",
+        "rekey",
+        "copy",
+        "copy",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "consent/unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "non-exportable"
+      ]
     },
     "firefox": {
       "chromium": [
@@ -21,7 +52,19 @@
         "unsupported",
         "NSS/rekey",
         "unsupported",
-        "unsupported"
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "consent/unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "non-exportable"
       ]
     },
     "safari": {
@@ -31,7 +74,19 @@
         "translate",
         "CSV/rekey",
         "unsupported",
-        "unsupported"
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "consent/unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "unsupported",
+        "non-exportable"
       ]
     }
   },
@@ -45,13 +100,13 @@
     "indexedDB",
     "sessionStorage",
     "autofill",
+    "paymentCards",
     "searchEngines",
     "siteSettings",
     "openTabs",
     "downloads",
     "readingList",
-    "clientCertificates",
-    "passkeys"
+    "clientCertificates"
   ],
   "installedBrowserLaunch": {
     "chromium": "CDP",

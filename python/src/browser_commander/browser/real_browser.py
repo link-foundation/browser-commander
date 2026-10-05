@@ -601,11 +601,15 @@ async def _run_pre_launch_migration(
     include = source.pop("include", None)
     domains = source.pop("domains", None)
     password_csv = source.pop("password_csv", source.pop("passwordCsv", None))
+    include_payment_cards = source.pop(
+        "include_payment_cards", source.pop("includePaymentCards", False)
+    )
     migrate_options: dict[str, Any] = {
         "from_": source,
         "to": str(Path(user_data_dir) / "Default"),
         "domains": domains,
         "password_csv": password_csv,
+        "include_payment_cards": include_payment_cards,
         "target_browser": options.channel,
     }
     if include is not None:

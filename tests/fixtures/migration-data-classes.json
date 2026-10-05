@@ -1,0 +1,20 @@
+[
+  "cookies",
+  "bookmarks",
+  "history",
+  "passwords",
+  "preferences",
+  "extensions",
+  "localStorage",
+  "indexedDB",
+  "sessionStorage",
+  "autofill",
+  "paymentCards",
+  "searchEngines",
+  "siteSettings",
+  "openTabs",
+  "downloads",
+  "readingList",
+  "clientCertificates",
+  "passkeys"
+]

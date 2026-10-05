@@ -510,7 +510,8 @@ async function runPreLaunchMigration({
   if (!migrateFrom) {
     return { migration: undefined, migratedCookies: [] };
   }
-  const { include, domains, passwordCsv, ...from } = migrateFrom;
+  const { include, domains, passwordCsv, includePaymentCards, ...from } =
+    migrateFrom;
   try {
     const report = await migrate({
       from,
@@ -518,6 +519,7 @@ async function runPreLaunchMigration({
       include,
       domains,
       passwordCsv,
+      includePaymentCards,
       targetBrowser: channel,
     });
     const { cookies, ...migration } = report;

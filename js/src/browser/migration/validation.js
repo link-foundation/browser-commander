@@ -13,7 +13,11 @@ export function validateMigrationOptions({
   homeDir,
   environment,
   classes,
+  includePaymentCards = false,
 }) {
+  if (typeof includePaymentCards !== 'boolean') {
+    throw new TypeError('includePaymentCards must be a boolean');
+  }
   if (
     !Array.isArray(include) ||
     include.some((type) => !classes.includes(type))

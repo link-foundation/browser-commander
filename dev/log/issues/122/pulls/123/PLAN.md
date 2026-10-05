@@ -76,17 +76,17 @@ Unsupported platform capabilities must be explicit in the report and matrix.
 | 119.2  | IndexedDB extraction/translation/clone                                        | Browser structured-clone decoding or exported Playwright state                                    | Pending     |
 | 119.3  | sessionStorage extraction/translation/clone                                   | Browser session format adapters and origin-aware init script                                      | Pending     |
 | 119.4  | Autofill addresses                                                            | Read family address schemas; target-native writer                                                 | Pending     |
-| 119.5  | Payment cards explicit opt-in only                                            | Separate includePaymentCards flag; reject implicit card copying                                   | Pending     |
+| 119.5  | Payment cards explicit opt-in only                                            | Separate includePaymentCards flag; reject implicit card copying                                   | Partial     |
 | 119.6  | searchEngines                                                                 | Chromium Web Data / Firefox search JSON adapters                                                  | Pending     |
 | 119.7  | siteSettings/permissions                                                      | Preferences / permissions.sqlite adapters with domains filter                                     | Pending     |
 | 119.8  | openTabs/sessions                                                             | Session format adapters; preserve same-engine stores                                              | Pending     |
 | 119.9  | downloads history                                                             | Chromium History and Firefox annotation metadata; target acceptance                               | Pending     |
 | 119.10 | readingList                                                                   | Safari bookmark reading-list and Chromium ReadingList adapters                                    | Partial     |
 | 119.11 | Client certificates where OS allows                                           | Exportable certificate stores only; explicit OS/hardware limitations                              | Pending     |
-| 119.12 | Explicit passkey skipped reasons                                              | Name iCloud Keychain, Google Password Manager and Windows Hello                                   | Pending     |
+| 119.12 | Explicit passkey skipped reasons                                              | Name iCloud Keychain, Google Password Manager and Windows Hello                                   | Implemented |
 | 119.13 | Persistent-profile passkey workaround documentation                           | Sign in once with the platform passkey and retain the session                                     | Implemented |
 | 119.14 | Domains on cookies/storage/passwords/history/permissions                      | Central host matching; prune login-linked metadata, per-origin stats and opaque sync state; re-key notes | Partial     |
-| 119.15 | Every selected class has count or skipped reason                              | Validate unknown classes; never manufacture migrated counts                                       | Partial     |
+| 119.15 | Every selected class has count or skipped reason                              | Validate unknown classes; never manufacture migrated counts                                       | Implemented |
 | 119.16 | Warnings on lossy translation                                                 | Report discarded fields/unsupported value encodings                                               | Partial     |
 | 119.17 | Family fixtures, consent, immutability, native parity                         | Add minimum reproductions and round-trip assertions                                               | Partial     |
 | 120.1  | Read-only consistent snapshots for locked stores                              | Reuse SQLite online backups; preserve WAL commits                                                 | Partial     |
@@ -181,6 +181,14 @@ because a skipped reason or feature marker exists.
 
 ## Implementation evidence and unresolved scope
 
+- All 18 requested data classes now have native include/report names and counts,
+  matched against a shared fixture. Selected classes without compatible readers
+  and writers produce explicit zero-count skipped reports. Payment-card consent
+  is a separate boolean passed through CLI, command streams and pre-launch paths;
+  selecting the class alone does not access protected stores. Passkey reports
+  identify all three named providers and the persistent-session workaround.
+  Synthetic fixtures cover Chromium, Firefox and Safari source families.
+
 All requirement IDs above were compared with the existing catalogue, native
 readers, migration dispatch, launch paths and CLI/command-stream schemas. The
 parent and every child remain incomplete; no closing keywords are appropriate.
@@ -248,10 +256,11 @@ parent and every child remain incomplete; no closing keywords are appropriate.
 ### Why the parent is not complete
 
 Firefox and WebKit target writers are absent. There is no whole-profile clone
-mode. The current public include/report schema still has the original six data
-classes: origin storage, autofill/card consent, search engines, site settings,
-sessions, separate downloads/reading lists, certificates and passkey report
-entries need new schemas, readers and accepted native target writers. Raw
+mode. The public include/report schema now recognizes all 18 classes, with
+explicit payment-card consent and provider-specific passkey reports. Origin
+storage, autofill/payment-card data, search engines, site settings, sessions,
+separate downloads/reading lists and certificates still need native source
+readers and accepted target writers; unsupported reports are not imports. Raw
 LevelDB copies alone cannot translate engine structured-clone values; simple
 SQLite/JSON copies cannot create NSS keys or compatible WebKit profiles.
 
@@ -302,3 +311,12 @@ by this existing behavior and retained regression coverage.
   is an implementation reference for named stores, not Apple platform acceptance.
 - [Apple Safari WebDriver](https://developer.apple.com/documentation/webkit/testing-with-webdriver-in-safari)
   describes Remote Automation prerequisites for future installed-Safari routing.
+
+- [Google authorized passkey transfers](https://blog.google/products-and-platforms/platforms/android/switch-password-managers/)
+  (September 10, 2026) and [Apple provider-to-provider export](https://support.apple.com/guide/iphone/export-passwords-iphf28f2e93e/ios)
+  establish that blanket claims that passkeys can never be transferred are
+  outdated. The importer reports only its inability to export provider private
+  keys from profile files, not a restriction on separate authorized flows.
+- [Microsoft Windows Hello private-key access](https://github.com/MicrosoftDocs/windows-dev-docs/blob/docs/hub/apps/develop/security/windows-hello.md)
+  documents the OS-mediated signing API and lack of direct application access
+  to private keys.

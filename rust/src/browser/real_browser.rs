@@ -128,8 +128,7 @@ pub struct RealBrowserOptions {
     pub automation_parity: bool,
     /// Maximum time to wait for Chrome's DevTools endpoint.
     pub startup_timeout: Duration,
-    /// Maximum time [`RealBrowserLaunchResult::close`] waits for the browser
-    /// to exit before killing it.
+    /// Time allowed for browser exit before [`RealBrowserLaunchResult::close`] kills it.
     pub close_timeout: Duration,
     /// Delay Playwright/Puppeteer operations by this many milliseconds.
     pub slow_mo: u64,
@@ -143,10 +142,12 @@ pub struct RealBrowserOptions {
     pub migrate_from: Option<MigrationSource>,
     /// Data classes to copy. `None` selects every supported class.
     pub migrate_include: Option<Vec<String>>,
-    /// Host filters for migrated cookies.
+    /// Host/subdomain filters for migrated per-site data.
     pub migrate_domains: Vec<String>,
     /// Explicit Safari/Passwords CSV export to import before launching.
     pub migrate_password_csv: Option<PathBuf>,
+    /// Separate explicit consent to import payment cards before launching.
+    pub migrate_include_payment_cards: bool,
     /// Enable browser and connector logging; the browser's output is mirrored.
     pub verbose: bool,
     /// Node.js executable for Playwright/Puppeteer bridge engines.
@@ -196,6 +197,7 @@ impl Default for RealBrowserOptions {
             migrate_include: None,
             migrate_domains: Vec::new(),
             migrate_password_csv: None,
+            migrate_include_payment_cards: false,
             verbose: false,
             node_executable: None,
             node_working_dir: None,
@@ -840,6 +842,7 @@ where
         }
         migrate_options.domains = options.migrate_domains.clone();
         migrate_options.password_csv = options.migrate_password_csv.clone();
+        migrate_options.include_payment_cards = options.migrate_include_payment_cards;
         let result = tokio::task::spawn_blocking(move || migrate_profile(migrate_options)).await;
         let report = match result {
             Ok(Ok(report)) => report,

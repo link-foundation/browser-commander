@@ -20,7 +20,10 @@ def validate_migration_options(
     home_dir: Path,
     environment: Mapping[str, str],
     classes: Sequence[str],
+    include_payment_cards: bool = False,
 ) -> None:
+    if not isinstance(include_payment_cards, bool):
+        raise TypeError("include_payment_cards must be a boolean")
     if any(type_ not in classes for type_ in include):
         raise ValueError(
             f"include must contain supported data classes: {', '.join(classes)}"

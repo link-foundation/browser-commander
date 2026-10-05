@@ -213,6 +213,7 @@ async function profileMigrate(parsed, io) {
       userDataDir: options.userDataDir,
       targetBrowser: options.targetBrowser,
       passwordCsv: options.passwordCsv,
+      includePaymentCards: options.includePaymentCards,
       to: options.to,
       include: options.include
         ?.split(',')

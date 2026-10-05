@@ -393,18 +393,23 @@ async fn migrates_bookmarks_into_the_profile_before_launch() {
     .unwrap();
     let target = create_temporary_user_data_dir(None).unwrap();
     let hooks = Arc::new(FakeHooks::with_ports(&[9445]));
-    let options = RealBrowserOptions::default()
+    let mut options = RealBrowserOptions::default()
         .user_data_dir(&target)
         .migrate_from(MigrationSource {
             browser: "chrome".to_string(),
             profile: None,
             user_data_dir: Some(source.clone()),
         })
-        .migrate_include(["bookmarks"]);
+        .migrate_include(["bookmarks", "paymentCards"]);
+    options.migrate_include_payment_cards = true;
 
     let (connect, launched) = launch(&options, &hooks).await.unwrap();
     assert_eq!(connect.seed_cookies.len(), 0);
     assert_eq!(launched.migration.as_ref().unwrap().migrated.bookmarks, 1);
+    assert_eq!(
+        launched.migration.as_ref().unwrap().skipped[0].reason,
+        "data-class-not-supported"
+    );
     assert_eq!(
         serde_json::from_slice::<serde_json::Value>(
             &std::fs::read(target.join("Default/Bookmarks")).unwrap()

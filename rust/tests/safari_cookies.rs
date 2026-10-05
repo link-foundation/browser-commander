@@ -236,7 +236,22 @@ fn default_domain_migration_reports_unsupported_classes_without_keychain_access(
     let expected: Vec<BrowserCookie> = serde_json::from_str(EXPECTED).unwrap();
     assert_eq!(report.cookies, expected[..2]);
     assert_eq!(report.migrated.cookies, 2);
-    assert_eq!(report.skipped.len(), 5);
+    let classes: Vec<String> = serde_json::from_str(include_str!(
+        "../../tests/fixtures/migration-data-classes.json"
+    ))
+    .unwrap();
+    assert_eq!(
+        report
+            .skipped
+            .iter()
+            .map(|entry| entry.data_class.as_str())
+            .collect::<std::collections::BTreeSet<_>>(),
+        classes
+            .iter()
+            .map(String::as_str)
+            .filter(|class| *class != "cookies")
+            .collect::<std::collections::BTreeSet<_>>()
+    );
     assert_eq!(
         report
             .skipped

@@ -90,6 +90,7 @@ export const COMMANDS = Object.freeze({
       'user-data-dir': STRING,
       'target-browser': STRING,
       'password-csv': STRING,
+      'include-payment-cards': FLAG,
       to: STRING,
       include: STRING,
       domain: STRINGS,

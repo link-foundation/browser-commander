@@ -70,17 +70,35 @@ copied bytes after vacuum and unchanged source bytes. The unfiltered variant
 preserves both sites' records and unknown metadata while re-keying both notes.
 Before/after logs are retained at `/tmp/issue-122-password-metadata-*.log`.
 
+All three orchestrators first rejected the twelve additional data-class names.
+The shared `tests/fixtures/migration-data-classes.json` now verifies the complete
+18-class schema and zero-count skipped entries on Chromium, Firefox and Safari
+sources. A deliberately invalid protected card-store fixture remains byte-for-
+byte unchanged, and no target card store is created. Tests exercise boolean
+consent rejection before writes, consent forwarding through CLI/streams/launch,
+consented-but-unsupported card reports and all three named passkey providers.
+The existing default Safari test now verifies coverage of every skipped class
+instead of assuming the original five entries. A separate Rust regression
+first failed with `missing field localStorage`; defaulted count fields now
+accept the original six-class serialized report. Reproduction logs are retained
+at `/tmp/issue-122-data-classes-before-*.log` and
+`/tmp/issue-122-data-classes-legacy-before-rust.log`.
+
+The duplication baseline refresh replaces one fingerprint for the expanded
+repeated JSON capability declarations; it accepts no new implementation clone.
+The native package helpers are also verified in npm and Python wheel contents.
+
 ## Local checks
 
 | Check                                                             | Result                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | JS `npm run check`                                                | ESLint, Prettier and no new duplication clones pass                                   |
-| JS `npm test`                                                     | 1,565 pass, zero skipped                                                              |
-| Python Ruff check/format and `mypy src`                           | Pass; 169 source files type checked                                                   |
-| Python `pytest`                                                   | 1,157 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
+| JS `npm test`                                                     | 1,570 pass, zero skipped                                                              |
+| Python Ruff check/format and `mypy src`                           | Pass; 170 source files type checked                                                   |
+| Python `pytest`                                                   | 1,162 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
 | Rust format, Clippy all targets/all features with warnings denied | Pass                                                                                  |
-| Rust `cargo test --locked`                                        | 716 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
-| Rust `cargo test --locked --all-features`                         | 716 pass, zero failures; 15 existing browser tests ignored                            |
+| Rust `cargo test --locked`                                        | 719 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
+| Rust `cargo test --locked --all-features`                         | 719 pass, zero failures; 15 existing browser tests ignored                            |
 | Full-repository Secretlint and root JavaScript lint               | Pass                                                                                  |
 | Shared asset byte comparison                                      | Catalogue, history schema and capability declarations identical in all three packages |
 | Generated browser/migration matrix freshness                      | Pass                                                                                  |
@@ -161,6 +179,11 @@ All ten workflows and aggregate CodeQL also passed on
 `cd857345b557936a1375083c6a6e227fe19cccbf`, committed at 16:10:54 UTC.
 Those runs started at 16:14:17–18 UTC with the exact head SHA. Subsequent Login
 Data metadata changes require their own CI verification after they are pushed.
+
+All ten workflows and aggregate CodeQL also passed on
+`08ab20fff9821c2f47bdd72077087c0b62df04f0`, committed at 16:36:50 UTC.
+Those runs started at 16:37:36–37 UTC with the exact head SHA. The subsequent
+18-class schema requires its own CI verification after pushing.
 
 ## Real runtime acceptance and remaining limits
 

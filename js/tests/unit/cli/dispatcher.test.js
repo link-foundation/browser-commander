@@ -183,9 +183,11 @@ describe('dispatcher: high-level methods', () => {
       from: 'chrome',
       include: ['cookies'],
       passwordCsv: '/tmp/export.csv',
+      includePaymentCards: true,
     });
     assert.deepEqual(migrated.options.include, ['cookies']);
     assert.equal(migrated.options.passwordCsv, '/tmp/export.csv');
+    assert.equal(migrated.options.includePaymentCards, true);
     assert.deepEqual(await dispatch('doctor', {}), { ok: true, unlisted: [] });
     assert.equal((await dispatch('version')).language, 'js');
   });

@@ -2,7 +2,8 @@
 
 :func:`migrate_profile` is the entry point; the submodules implement one data
 class each (cookies, bookmarks, history, passwords, preferences, extensions)
-plus the Firefox translation and the OSCrypt/NSS key handling they share.
+plus native Safari/Firefox translations and shared OSCrypt/NSS key handling.
+All 18 recognized classes receive counts and explicit unsupported reports.
 """
 
 from browser_commander.browser.migration.bookmarks import (

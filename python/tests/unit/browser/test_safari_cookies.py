@@ -133,7 +133,10 @@ def test_counts_and_default_migration(tmp_path):
     )
     assert report["cookies"] == EXPECTED[:2]
     assert report["migrated"]["cookies"] == 2
-    assert len(report["skipped"]) == 5
+    classes = json.loads(
+        (FIXTURES.parent / "migration-data-classes.json").read_text(encoding="utf-8")
+    )
+    assert {entry["type"] for entry in report["skipped"]} == set(classes) - {"cookies"}
     assert (
         next(item for item in report["skipped"] if item["type"] == "passwords")[
             "reason"

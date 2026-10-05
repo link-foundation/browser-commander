@@ -7,19 +7,31 @@ that all requirements of issue #122 have shipped.
 
 <!-- migration-support:generated:begin -->
 
-| Source family | Target family | cookies     | bookmarks   | history     | passwords   | preferences | extensions  |
-| ------------- | ------------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
-| chromium      | chromium      | seed        | copy        | snapshot    | rekey       | copy        | copy        |
-| chromium      | firefox       | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
-| chromium      | webkit        | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
-| firefox       | chromium      | seed        | translate   | unsupported | NSS/rekey   | unsupported | unsupported |
-| firefox       | firefox       | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
-| firefox       | webkit        | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
-| safari        | chromium      | seed        | translate   | translate   | CSV/rekey   | unsupported | unsupported |
-| safari        | firefox       | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
-| safari        | webkit        | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
+| Source family | Target family | cookies     | bookmarks   | history     | passwords   | preferences | extensions  | localStorage | indexedDB   | sessionStorage | autofill    | paymentCards        | searchEngines | siteSettings | openTabs    | downloads   | readingList | clientCertificates | passkeys       |
+| ------------- | ------------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ------------ | ----------- | -------------- | ----------- | ------------------- | ------------- | ------------ | ----------- | ----------- | ----------- | ------------------ | -------------- |
+| chromium      | chromium      | seed        | copy        | snapshot    | rekey       | copy        | copy        | unsupported  | unsupported | unsupported    | unsupported | consent/unsupported | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | non-exportable |
+| chromium      | firefox       | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
+| chromium      | webkit        | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
+| firefox       | chromium      | seed        | translate   | unsupported | NSS/rekey   | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | consent/unsupported | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | non-exportable |
+| firefox       | firefox       | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
+| firefox       | webkit        | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
+| safari        | chromium      | seed        | translate   | translate   | CSV/rekey   | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | consent/unsupported | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | non-exportable |
+| safari        | firefox       | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
+| safari        | webkit        | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported  | unsupported | unsupported    | unsupported | unsupported         | unsupported   | unsupported  | unsupported | unsupported | unsupported | unsupported        | unsupported    |
 
 <!-- migration-support:generated:end -->
+
+All 18 data-class names appear in the native include/report schema. Additional
+classes currently return explicit unsupported reports, with zero migrated
+counts. `consent/unsupported` additionally requires `includePaymentCards=true`
+in JS/command streams, `include_payment_cards=True` in Python, the Rust option
+of the same name, or CLI `--include-payment-cards`; selecting the class alone
+does not grant consent or read the card store. Consent does not substitute for
+an implemented reader/writer. `non-exportable` reports the private-key limits
+of browser profile copying separately for iCloud Keychain, Google Password
+Manager and Windows Hello. Authorized provider-to-provider transfers may be
+available outside this importer. Certificate reports explain OS/NSS export and
+hardware/non-exportable key limits.
 
 `seed` returns cookies for the launcher to add to the running Chromium through
 CDP. Direct migration does not create a cookie database. `snapshot` uses SQLite
@@ -77,8 +89,8 @@ app, and retrying the cookie read with `refresh=true`.
 The broader pending requirements are recorded individually in
 [the implementation plan](../dev/log/issues/122/pulls/123/PLAN.md):
 Firefox/WebKit target writers, whole locked-profile migration, origin storage,
-autofill and explicit payment-card consent, search engines, permissions, tabs,
-separate downloads/reading-list classes, certificates/passkey reporting,
+autofill/payment-card writers, search engines, permissions, tabs,
+separate downloads/reading-list writers and certificate export,
 comprehensive lock/keychain diagnostics, and installed-browser route parity.
 Profile-local browser files cannot export platform passkeys from iCloud
 Keychain, Google Password Manager or Windows Hello. Sign in once in a dedicated

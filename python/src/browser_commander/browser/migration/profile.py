@@ -8,8 +8,8 @@ safe while the source browser is open.
 
 Cookies are returned rather than written: a running Chromium re-derives its
 own cookie encryption, so the launcher seeds them over CDP with the existing
-``seed_cookies`` path. Every other data class is written into the target
-profile directory.
+``seed_cookies`` path. Supported file imports are written into the target;
+classes without a native writer receive explicit skipped reports.
 """
 
 from __future__ import annotations
@@ -33,6 +33,10 @@ from browser_commander.browser.browser_sources import (
 from browser_commander.browser.default_browser import RunCommand
 from browser_commander.browser.migration.bookmarks import migrate_bookmarks
 from browser_commander.browser.migration.cookies import migrate_cookies
+from browser_commander.browser.migration.data_classes import (
+    ADDITIONAL_DATA_CLASSES,
+    report_additional_class,
+)
 from browser_commander.browser.migration.extensions import migrate_extensions
 from browser_commander.browser.migration.firefox import (
     migrate_firefox_bookmarks,
@@ -57,7 +61,7 @@ from browser_commander.browser.migration.validation import (
 
 __all__ = ["ALL_DATA_CLASSES", "migrate_profile", "migrate_profile_sync"]
 
-#: Every data class a migration can move, in report order.
+#: Every recognized data class, in report order; unsupported writers are reported.
 ALL_DATA_CLASSES = (
     "cookies",
     "bookmarks",
@@ -65,6 +69,7 @@ ALL_DATA_CLASSES = (
     "passwords",
     "preferences",
     "extensions",
+    *ADDITIONAL_DATA_CLASSES,
 )
 
 _TARGET_KEY_UNAVAILABLE_DETAIL = (
@@ -164,6 +169,7 @@ def migrate_profile_sync(
     environment: Mapping[str, str] | None = None,
     run_command: RunCommand | None = None,
     password_csv: PathLike | None = None,
+    include_payment_cards: bool = False,
 ) -> dict[str, Any]:
     """Synchronous :func:`migrate_profile`; see it for the arguments."""
 
@@ -187,6 +193,7 @@ def migrate_profile_sync(
         home_dir=home,
         environment=env,
         classes=ALL_DATA_CLASSES,
+        include_payment_cards=include_payment_cards,
     )
 
     user_data_dir = from_.get("user_data_dir", from_.get("userDataDir"))
@@ -234,6 +241,13 @@ def migrate_profile_sync(
     }
     if source.warning is not None:
         report["warnings"].append(source.warning)
+    for type_ in ADDITIONAL_DATA_CLASSES:
+        if type_ in selected:
+            report["skipped"].extend(
+                report_additional_class(
+                    type_, source_profile_dir, include_payment_cards
+                )
+            )
 
     if "cookies" in selected:
         if is_firefox:
@@ -273,6 +287,8 @@ def migrate_profile_sync(
             else None
         )
         for type_ in ALL_DATA_CLASSES:
+            if type_ in ADDITIONAL_DATA_CLASSES:
+                continue
             if type_ != "cookies" and type_ in selected:
                 _merge_report(
                     report,
@@ -445,6 +461,7 @@ async def migrate_profile(
     environment: Mapping[str, str] | None = None,
     run_command: RunCommand | None = None,
     password_csv: PathLike | None = None,
+    include_payment_cards: bool = False,
 ) -> dict[str, Any]:
     """Migrate a browser profile into a dedicated target profile directory.
 
@@ -455,7 +472,8 @@ async def migrate_profile(
             ``profile`` defaults to ``"Default"``.
         to: Target profile directory (for Chromium, ``<user-data-dir>/Default``).
         include: Data classes to migrate (default :data:`ALL_DATA_CLASSES`).
-        domains: Cookie host filters; all cookies when empty.
+        domains: Per-site host/subdomain filters; all hosts when empty.
+        include_payment_cards: Separate explicit payment-card consent, false by default.
         platform: ``darwin``/``linux``/``win32``; defaults to ``sys.platform``.
         target_browser: The launching channel, for the target key derivation.
         keys: Injected password keys ``{"target_key", "target_prefix",
@@ -490,4 +508,5 @@ async def migrate_profile(
         environment=environment,
         run_command=run_command,
         password_csv=password_csv,
+        include_payment_cards=include_payment_cards,
     )

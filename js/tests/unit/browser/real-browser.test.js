@@ -301,6 +301,7 @@ describe('launchAndConnectRealBrowser', () => {
           include: ['cookies', 'bookmarks'],
           domains: ['google.com'],
           passwordCsv: '/tmp/safari-export.csv',
+          includePaymentCards: true,
         },
       },
       {
@@ -347,6 +348,7 @@ describe('launchAndConnectRealBrowser', () => {
     assert.deepEqual(migrateOptions.include, ['cookies', 'bookmarks']);
     assert.deepEqual(migrateOptions.domains, ['google.com']);
     assert.equal(migrateOptions.passwordCsv, '/tmp/safari-export.csv');
+    assert.equal(migrateOptions.includePaymentCards, true);
     assert.deepEqual(migrateOptions.from, {
       browser: 'chrome',
       profile: 'Default',

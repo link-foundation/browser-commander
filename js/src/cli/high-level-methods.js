@@ -204,6 +204,7 @@ function migrateProfile(state, params) {
     domains: params.domains,
     targetBrowser: params.targetBrowser,
     passwordCsv: params.passwordCsv,
+    includePaymentCards: params.includePaymentCards,
   });
 }
 

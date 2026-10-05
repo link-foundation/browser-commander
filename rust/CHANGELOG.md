@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- changelog-insert-here -->
+## [0.17.0] - 2026-10-05
+
+### Added
+
+- Accept `selenium` and `webdriver` aliases for native Fantoccini, including
+  deserialization, and test the shared CLI across all three engine families.
+
+### Changed
+
+- Upgrade all direct dependencies and regenerate Puppeteer APIs and Playwright
+  1.63 protocol bindings. Document native defaults and explicit bridge support.
+
 ## [0.16.0] - 2026-10-05
 
 ### Added

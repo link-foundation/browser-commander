@@ -4,6 +4,7 @@ import path from 'node:path';
 import { it } from 'node:test';
 import Database from 'better-sqlite3';
 import { listBrowserProfiles } from '../../../src/browser/browser-profiles.js';
+import { listCookieSources } from '../../../src/browser/browser-cookies.js';
 import { findSafariCookieFile } from '../../../src/browser/safari-cookies.js';
 import { repoPath } from '../../helpers/repo.js';
 import { useTempDirectories } from '../../helpers/temp-directory.js';
@@ -59,4 +60,52 @@ it('discovers Safari named profiles and prefers WebKit stores to stale legacy co
     await findSafariCookieFile(named),
     path.join(root, locations[2], 'Cookies.binarycookies')
   );
+});
+
+it('preserves a Safari catalogue error while listing its readable cookies and other browsers', async () => {
+  const homeDir = await temporary();
+  const root = path.join(
+    homeDir,
+    'Library/Containers/com.apple.Safari/Data/Library'
+  );
+  await mkdir(path.join(root, 'Safari'), { recursive: true });
+  await mkdir(path.join(root, 'Cookies'));
+  await copyFile(
+    repoPath('tests/fixtures/safari/Cookies.binarycookies'),
+    path.join(root, 'Cookies/Cookies.binarycookies')
+  );
+  const tabs = path.join(root, 'Safari/SafariTabs.db');
+  new Database(tabs).close();
+  const chromium = path.join(
+    homeDir,
+    'Library/Application Support/Google/Chrome/Default'
+  );
+  await mkdir(chromium, { recursive: true });
+  const db = new Database(path.join(chromium, 'Cookies'));
+  db.exec(
+    "CREATE TABLE cookies(host_key TEXT); INSERT INTO cookies VALUES ('.github.com')"
+  );
+  db.close();
+  const before = await readFile(tabs);
+  const options = { platform: 'darwin', homeDir, environment: {} };
+  const profiles = await listBrowserProfiles(options);
+  assert.equal(
+    profiles.filter(({ browser }) => browser === 'safari').length,
+    2
+  );
+  const sources = await listCookieSources({
+    ...options,
+    domains: ['github.com'],
+  });
+  assert.equal(sources.find(({ browser }) => browser === 'chrome').cookies, 1);
+  assert.equal(
+    sources.find(({ browser, error }) => browser === 'safari' && !error)
+      .cookies,
+    4
+  );
+  assert.match(
+    sources.find(({ browser, error }) => browser === 'safari' && error).error,
+    /no such table/u
+  );
+  assert.deepEqual(await readFile(tabs), before);
 });

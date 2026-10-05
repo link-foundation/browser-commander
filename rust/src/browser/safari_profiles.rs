@@ -23,6 +23,7 @@ pub(crate) fn list_safari_profiles(browser: &str, root: &Path) -> Result<Vec<Bro
             display_name: "Default".into(),
             path: root.into(),
             is_default: true,
+            error: None,
         });
     }
     let tabs = [
@@ -42,7 +43,21 @@ pub(crate) fn list_safari_profiles(browser: &str, root: &Path) -> Result<Vec<Bro
         let db = Connection::open_with_flags(&tabs, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
         let rows = db.prepare("SELECT DISTINCT external_uuid,title FROM bookmarks WHERE subtype=2 AND external_uuid != 'DefaultProfile' ORDER BY external_uuid")?.query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?)))?.collect::<rusqlite::Result<Vec<_>>>()?;
         Ok(rows)
-    })?;
+    });
+    let rows = match rows {
+        Ok(rows) => rows,
+        Err(error) => {
+            profiles.push(BrowserProfile {
+                browser: browser.into(),
+                name: "Profiles".into(),
+                display_name: "Safari profile discovery".into(),
+                path: root.into(),
+                is_default: false,
+                error: Some(error.to_string()),
+            });
+            return Ok(profiles);
+        }
+    };
     for (uuid, title) in rows {
         if uuid.len() != 36
             || !uuid.chars().enumerate().all(|(index, ch)| {
@@ -62,6 +77,7 @@ pub(crate) fn list_safari_profiles(browser: &str, root: &Path) -> Result<Vec<Bro
             path: root.join("Safari/Profiles").join(&name),
             name,
             is_default: false,
+            error: None,
         });
     }
     Ok(profiles)

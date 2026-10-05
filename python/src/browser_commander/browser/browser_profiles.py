@@ -49,6 +49,7 @@ class BrowserProfile:
     display_name: str
     path: Path
     is_default: bool
+    error: str | None = None
 
 
 def normalize_cookie_browser(browser: str) -> str:
@@ -286,7 +287,7 @@ def list_browser_profiles(
     environment: Mapping[str, str] | None = None,
     run_command: RunCommand | None = None,
 ) -> list[BrowserProfile]:
-    """Discover cookie-bearing profiles from installed browsers."""
+    """Discover profiles, retaining source errors alongside readable profiles."""
     browsers = (
         (
             resolve_source_browser(
@@ -303,7 +304,7 @@ def list_browser_profiles(
     # Several Firefox channels (firefox, firefox-developer, firefox-nightly)
     # share one profile root, so a catalogue-wide scan would otherwise report
     # the same profile under each id. Keep the first (canonical) browser.
-    seen: set[Path] = set()
+    seen: set[tuple[Path, bool]] = set()
     for candidate in browsers:
         for profile in _list_profiles_for_browser(
             candidate,
@@ -311,9 +312,10 @@ def list_browser_profiles(
             home_dir=home_dir,
             environment=environment,
         ):
-            if profile.path in seen:
+            identity = (profile.path, bool(profile.error))
+            if identity in seen:
                 continue
-            seen.add(profile.path)
+            seen.add(identity)
             profiles.append(profile)
     return profiles
 
@@ -358,4 +360,6 @@ def resolve_browser_profile(
         raise FileNotFoundError(
             f"Could not find a cookie database for {browser}{detail}"
         )
+    if selected.error:
+        raise RuntimeError(selected.error)
     return selected

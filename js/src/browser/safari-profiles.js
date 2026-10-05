@@ -31,23 +31,36 @@ export async function listSafariProfiles(browser, root) {
   if (!tabs) {
     return profiles;
   }
-  const rows = await withSafariAccess(tabs, async () => {
-    const file = await open(tabs, 'r');
-    await file.close();
-    const db = await openSqliteDatabase(tabs, {
-      readOnly: true,
-      fileMustExist: true,
+  let rows;
+  try {
+    rows = await withSafariAccess(tabs, async () => {
+      const file = await open(tabs, 'r');
+      await file.close();
+      const db = await openSqliteDatabase(tabs, {
+        readOnly: true,
+        fileMustExist: true,
+      });
+      try {
+        return db
+          .prepare(
+            "SELECT DISTINCT external_uuid,title FROM bookmarks WHERE subtype=2 AND external_uuid != 'DefaultProfile' ORDER BY external_uuid"
+          )
+          .all();
+      } finally {
+        db.close();
+      }
     });
-    try {
-      return db
-        .prepare(
-          "SELECT DISTINCT external_uuid,title FROM bookmarks WHERE subtype=2 AND external_uuid != 'DefaultProfile' ORDER BY external_uuid"
-        )
-        .all();
-    } finally {
-      db.close();
-    }
-  });
+  } catch (error) {
+    profiles.push({
+      browser,
+      name: 'Profiles',
+      displayName: 'Safari profile discovery',
+      path: root,
+      isDefault: false,
+      error: error.message,
+    });
+    return profiles;
+  }
   for (const row of rows) {
     if (
       !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu.test(

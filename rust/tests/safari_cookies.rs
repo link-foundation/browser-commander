@@ -119,6 +119,66 @@ fn listing_does_not_decode_cookie_values() {
 }
 
 #[test]
+fn catalogue_error_preserves_readable_profiles() {
+    let home = Home::new();
+    let root = home.install("safari", false);
+    fs::create_dir(root.join("Safari")).unwrap();
+    let tabs = root.join("Safari/SafariTabs.db");
+    rusqlite::Connection::open(&tabs).unwrap().close().unwrap();
+    let chromium = home
+        .0
+        .join("Library/Application Support/Google/Chrome/Default");
+    fs::create_dir_all(&chromium).unwrap();
+    let db = rusqlite::Connection::open(chromium.join("Cookies")).unwrap();
+    db.execute_batch(
+        "CREATE TABLE cookies(host_key TEXT); INSERT INTO cookies VALUES ('.github.com')",
+    )
+    .unwrap();
+    drop(db);
+    let before = fs::read(&tabs).unwrap();
+    let profiles = list_browser_profiles(
+        BrowserProfileOptions::default()
+            .platform("darwin")
+            .home_dir(&home.0)
+            .environment(Environment::new()),
+    )
+    .unwrap();
+    assert_eq!(profiles.iter().filter(|p| p.browser == "safari").count(), 2);
+    let sources = list_cookie_sources(
+        &["github.com".into()],
+        "darwin",
+        &home.0,
+        &Environment::new(),
+    )
+    .unwrap();
+    assert_eq!(
+        sources
+            .iter()
+            .find(|s| s.browser == "chrome")
+            .unwrap()
+            .cookies,
+        Some(1)
+    );
+    assert_eq!(
+        sources
+            .iter()
+            .find(|s| s.browser == "safari" && s.error.is_none())
+            .unwrap()
+            .cookies,
+        Some(4)
+    );
+    assert!(sources
+        .iter()
+        .find(|s| s.browser == "safari" && s.error.is_some())
+        .unwrap()
+        .error
+        .as_ref()
+        .unwrap()
+        .contains("no such table"));
+    assert_eq!(fs::read(tabs).unwrap(), before);
+}
+
+#[test]
 fn discovery_domains_are_exact_and_reader_filter_stays_substring() {
     let home = Home::new();
     home.install("safari", false);

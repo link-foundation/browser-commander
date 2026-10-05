@@ -51,7 +51,20 @@ def list_safari_profiles(browser, root):
                 "SELECT DISTINCT external_uuid,title FROM bookmarks WHERE subtype=2 AND external_uuid != 'DefaultProfile' ORDER BY external_uuid"
             ).fetchall()
 
-    rows = with_safari_access(tabs, read)
+    try:
+        rows = with_safari_access(tabs, read)
+    except (OSError, sqlite3.Error, ValueError) as error:
+        profiles.append(
+            BrowserProfile(
+                browser,
+                "Profiles",
+                "Safari profile discovery",
+                root,
+                False,
+                error=str(error),
+            )
+        )
+        return profiles
     for uuid, title in rows:
         if not isinstance(uuid, str) or not re.fullmatch(
             r"[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}", uuid, re.IGNORECASE

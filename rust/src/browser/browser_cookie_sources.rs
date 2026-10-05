@@ -110,6 +110,18 @@ pub fn list_cookie_sources(
     )?;
     let mut sources = Vec::new();
     for profile in profiles {
+        if profile.error.is_some() {
+            sources.push(CookieSourceListing {
+                browser: profile.browser,
+                profile: profile.name,
+                path: profile.path,
+                is_default: profile.is_default,
+                cookies: None,
+                by_domain: None,
+                error: profile.error,
+            });
+            continue;
+        }
         let Some(cookie_path) = find_cookie_database(&profile.browser, &profile.path) else {
             continue;
         };

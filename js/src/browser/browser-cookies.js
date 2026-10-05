@@ -425,6 +425,16 @@ export async function listCookieSources({
   });
   const sources = [];
   for (const profile of profiles) {
+    const source = {
+      browser: profile.browser,
+      profile: profile.name,
+      path: profile.path,
+      isDefault: profile.isDefault,
+    };
+    if (profile.error) {
+      sources.push({ ...source, error: profile.error });
+      continue;
+    }
     const cookiePath = await findCookieDatabase(
       profile.browser,
       profile.path,
@@ -453,13 +463,7 @@ export async function listCookieSources({
       database?.close();
     }
     if (error) {
-      sources.push({
-        browser: profile.browser,
-        profile: profile.name,
-        path: profile.path,
-        isDefault: profile.isDefault,
-        error,
-      });
+      sources.push({ ...source, error });
       continue;
     }
     // When filtering by domain, skip profiles that hold none of them.
@@ -470,10 +474,7 @@ export async function listCookieSources({
       continue;
     }
     sources.push({
-      browser: profile.browser,
-      profile: profile.name,
-      path: profile.path,
-      isDefault: profile.isDefault,
+      ...source,
       cookies: counts.total,
       byDomain: counts.byDomain,
     });

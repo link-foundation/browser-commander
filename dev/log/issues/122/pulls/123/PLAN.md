@@ -85,14 +85,14 @@ Unsupported platform capabilities must be explicit in the report and matrix.
 | 119.11 | Client certificates where OS allows                                           | Exportable certificate stores only; explicit OS/hardware limitations                              | Pending     |
 | 119.12 | Explicit passkey skipped reasons                                              | Name iCloud Keychain, Google Password Manager and Windows Hello                                   | Pending     |
 | 119.13 | Persistent-profile passkey workaround documentation                           | Sign in once with the platform passkey and retain the session                                     | Implemented |
-| 119.14 | Domains on cookies/storage/passwords/history/permissions                      | Central host matching; remove existing history/password leakage                                   | Partial     |
+| 119.14 | Domains on cookies/storage/passwords/history/permissions                      | Central host matching; prune login-linked metadata, per-origin stats and opaque sync state; re-key notes | Partial     |
 | 119.15 | Every selected class has count or skipped reason                              | Validate unknown classes; never manufacture migrated counts                                       | Partial     |
 | 119.16 | Warnings on lossy translation                                                 | Report discarded fields/unsupported value encodings                                               | Partial     |
 | 119.17 | Family fixtures, consent, immutability, native parity                         | Add minimum reproductions and round-trip assertions                                               | Partial     |
 | 120.1  | Read-only consistent snapshots for locked stores                              | Reuse SQLite online backups; preserve WAL commits                                                 | Partial     |
 | 120.2  | Lock errors with snapshot guidance, Windows sharing/SQLite                    | Stable diagnostic reasons; bounded lock handling, no timeout inflation                            | Partial     |
 | 120.3  | FDA EPERM/EACCES for every Safari store                                       | Shared error enrichment naming executing app and Privacy_AllFiles link                            | Partial     |
-| 120.4  | Listings retain protected errors and readable sources                         | Per-source errors in results instead of swallowing browser-wide failures                          | Pending     |
+| 120.4  | Listings retain protected errors and readable sources                         | Per-source errors in results instead of swallowing browser-wide failures                          | Partial     |
 | 120.5  | Keychain errors identify service/key and retry                                | Enrich Safe Storage errors; no protected-data fallback                                            | Implemented |
 | 120.6  | Domain discovery across implemented site stores                               | Metadata-only names/counts; never echo passwords/storage/cookie values                            | Partial     |
 | 120.7  | binarycookies listing decodes host metadata only                              | Dedicated metadata decoder that never materializes values                                         | Implemented |
@@ -208,6 +208,11 @@ parent and every child remain incomplete; no closing keywords are appropriate.
   Linux fixtures verify catalogue-alias discovery, version-24 host-bound cookie
   decryption and source-byte immutability in every language. Installed runtime
   acceptance remains separate from these synthetic fixtures.
+- Safari profile-catalogue failures no longer abort browser-wide profile and
+  cookie-source listings. An error entry retains the diagnostic beside readable
+  Safari/Chromium sources, survives domain filters, and cannot be selected as a
+  successful import. Native regressions preserve the unreadable source bytes;
+  protected-root discovery beyond the implemented Safari paths remains partial.
 - Executable discovery, control declarations and protected roots derive from the
   byte-identical catalogue. Added Whale, 360 Secure/Extreme, QQ, Sogou,
   DuckDuckGo/Tor entries and channel aliases have native fixture coverage.
@@ -244,10 +249,17 @@ SQLite/JSON copies cannot create NSS keys or compatible WebKit profiles.
 
 Installed Firefox forks and Safari still require the existing explicit
 WebDriver path; catalogue discovery does not establish automatic launch/BiDi
-routing. Browser-wide protected-source aggregation, cross-store domain
+routing. Complete protected-root aggregation and cross-store domain
 metadata remain absent. Windows and macOS native browser acceptance
 could not be established in this Linux workspace. Password fixture decryption
 proves target-key encryption, not real browser password-store acceptance.
+
+Chromium's current Login Data schema also has login-linked `password_notes` and
+`insecure_credentials`, independent statistics, and opaque sync metadata. The
+implemented password filter rewrites/removes `logins` rows; it does not yet
+filter or re-key all ancillary tables. Their parent IDs, origins and encrypted
+note values need separate cleanup and round-trip coverage. This is an unresolved
+part of 119.14, not a claim of complete password-database domain isolation.
 
 These are unresolved requirements inside PR #123, not proposed follow-up issues.
 The capability matrix explicitly declares their current unsupported/pending
@@ -271,6 +283,11 @@ by this existing behavior and retained regression coverage.
 - [Chromium annotation schema](https://chromium.googlesource.com/chromium/src/+/main/components/history/core/browser/visit_annotations_database.cc)
   and [history fixture](https://chromium.googlesource.com/chromium/src/+/refs/tags/142.0.7444.56/components/test/data/history/history.49.sql)
   informed annotation/download cleanup tests.
+- [Chromium Login Data schema](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/components/password_manager/core/browser/password_store/login_database.cc)
+  defines parent-ID associations and sync metadata beyond `logins`;
+  [password notes](https://raw.githubusercontent.com/chromium/chromium/main/components/password_manager/core/browser/password_store/password_notes_table.cc)
+  use the database encryptor. Copying these tables unchanged does not establish
+  complete filtered migration or note re-keying.
 - [Safari profile-layout RFC](https://github.com/i358/dddddd/blob/main/rfcs/011-safari-data-storage.md)
   is an implementation reference for named stores, not Apple platform acceptance.
 - [Apple Safari WebDriver](https://developer.apple.com/documentation/webkit/testing-with-webdriver-in-safari)

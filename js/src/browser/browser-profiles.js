@@ -295,7 +295,7 @@ async function listProfilesForBrowser(browser, platform, homeDir, environment) {
   return profiles;
 }
 
-/** Discover cookie-bearing profiles from installed browsers. */
+/** Discover profiles, retaining per-source errors alongside readable profiles. */
 export async function listBrowserProfiles({
   browser,
   platform = process.platform,
@@ -324,10 +324,11 @@ export async function listBrowserProfiles({
       homeDir,
       environment
     )) {
-      if (seen.has(profile.path)) {
+      const identity = JSON.stringify([profile.path, Boolean(profile.error)]);
+      if (seen.has(identity)) {
         continue;
       }
-      seen.add(profile.path);
+      seen.add(identity);
       profiles.push(profile);
     }
   }
@@ -353,6 +354,9 @@ export async function resolveBrowserProfile(options) {
   if (!selected) {
     const detail = requested ? ` profile "${requested}"` : ' profile';
     throw new Error(`Could not find a cookie database for ${browser}${detail}`);
+  }
+  if (selected.error) {
+    throw new Error(selected.error);
   }
   return selected;
 }

@@ -465,6 +465,17 @@ def list_cookie_sources(
     )
     sources: list[CookieSource] = []
     for profile in profiles:
+        if profile.error:
+            sources.append(
+                CookieSource(
+                    browser=profile.browser,
+                    profile=profile.name,
+                    path=profile.path,
+                    is_default=profile.is_default,
+                    error=profile.error,
+                )
+            )
+            continue
         cookie_path = find_cookie_database(profile.browser, profile.path)
         if cookie_path is None:
             continue

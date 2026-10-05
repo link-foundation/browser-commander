@@ -51,17 +51,25 @@ the child created the file but before its write completed. The fixture now
 renames a completed temporary PID file atomically; cancellation behavior and
 the test's finite readiness loop stay intact.
 
+Native regressions for an unreadable SafariTabs database first failed with
+`no such table: bookmarks` in every language: browser-wide discovery aborted
+before returning readable Safari cookies or Chromium profiles. Discovery now
+returns the catalogue diagnostic as a `Profiles` error entry, keeps readable
+profiles, and carries the error through cookie-source domain filtering without
+manufacturing cookie counts. The fixture verifies unchanged catalogue bytes.
+Before/after logs are retained at `/tmp/issue-122-profile-discovery-*.log`.
+
 ## Local checks
 
 | Check                                                             | Result                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | JS `npm run check`                                                | ESLint, Prettier and no new duplication clones pass                                   |
-| JS `npm test`                                                     | 1,562 pass, zero skipped                                                              |
+| JS `npm test`                                                     | 1,563 pass, zero skipped                                                              |
 | Python Ruff check/format and `mypy src`                           | Pass; 168 source files type checked                                                   |
-| Python `pytest`                                                   | 1,154 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
+| Python `pytest`                                                   | 1,155 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
 | Rust format, Clippy all targets/all features with warnings denied | Pass                                                                                  |
-| Rust `cargo test --locked`                                        | 713 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
-| Rust `cargo test --locked --all-features`                         | 713 pass, zero failures; 15 existing browser tests ignored                            |
+| Rust `cargo test --locked`                                        | 714 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
+| Rust `cargo test --locked --all-features`                         | 714 pass, zero failures; 15 existing browser tests ignored                            |
 | Full-repository Secretlint and root JavaScript lint               | Pass                                                                                  |
 | Shared asset byte comparison                                      | Catalogue, history schema and capability declarations identical in all three packages |
 | Generated browser/migration matrix freshness                      | Pass                                                                                  |
@@ -133,6 +141,11 @@ head SHA. Rust passed on Linux, macOS and Windows, including coverage/package
 jobs, and the aggregate CodeQL check passed. Subsequent source-discovery changes
 require their own checks; these earlier passes alone do not validate a new head.
 
+All ten workflows and the aggregate CodeQL check also passed on
+`bd8062fa49225e9e1b0c2c3f8048b3db39a8a482`, committed at 15:42:37 UTC.
+Those runs started at 15:42:45 UTC with the exact head SHA. Subsequent Safari
+catalogue-error changes require a new CI verification after they are pushed.
+
 ## Real runtime acceptance and remaining limits
 
 ```sh
@@ -148,7 +161,7 @@ macOS Safari/STP and Windows runtime acceptance have not been run here.
 
 Firefox/WebKit target writers, whole-profile migration, the additional storage
 classes and automatic installed-browser protocol routing remain unimplemented.
-Profile-wide protected-source aggregation and discovery of domains across every
+Complete protected-root aggregation and discovery of domains across every
 implemented site store also remain unresolved. The native matrix declares these
 limits. PR #123 remains draft and contains no issue-closing keywords while those
 requirements are incomplete.

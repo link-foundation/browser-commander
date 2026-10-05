@@ -3,6 +3,7 @@ import shutil
 import sqlite3
 from pathlib import Path
 
+from browser_commander.browser.browser_cookies import list_cookie_sources
 from browser_commander.browser.browser_profiles import list_browser_profiles
 from browser_commander.browser.safari_cookies import find_safari_cookie_file
 
@@ -38,3 +39,36 @@ def test_named_profiles_prefer_modern_cookie_stores(tmp_path):
     assert (
         find_safari_cookie_file(named) == root / locations[2] / "Cookies.binarycookies"
     )
+
+
+def test_catalogue_error_preserves_readable_profiles(tmp_path):
+    fixtures = Path(__file__).resolve().parents[4] / "tests/fixtures"
+    root = tmp_path / "Library/Containers/com.apple.Safari/Data/Library"
+    (root / "Safari").mkdir(parents=True)
+    (root / "Cookies").mkdir()
+    shutil.copyfile(
+        fixtures / "safari/Cookies.binarycookies",
+        root / "Cookies/Cookies.binarycookies",
+    )
+    tabs = root / "Safari/SafariTabs.db"
+    sqlite3.connect(tabs).close()
+    chromium = tmp_path / "Library/Application Support/Google/Chrome/Default"
+    chromium.mkdir(parents=True)
+    with contextlib.closing(sqlite3.connect(chromium / "Cookies")) as db:
+        db.executescript(
+            "CREATE TABLE cookies(host_key TEXT); INSERT INTO cookies VALUES ('.github.com')"
+        )
+    before = tabs.read_bytes()
+    options = {"platform": "darwin", "home_dir": tmp_path, "environment": {}}
+    profiles = list_browser_profiles(**options)
+    assert len([p for p in profiles if p.browser == "safari"]) == 2
+    sources = list_cookie_sources(domains=["github.com"], **options)
+    assert next(s for s in sources if s.browser == "chrome").cookies == 1
+    assert (
+        next(s for s in sources if s.browser == "safari" and not s.error).cookies == 4
+    )
+    assert (
+        "no such table"
+        in next(s for s in sources if s.browser == "safari" and s.error).error
+    )
+    assert tabs.read_bytes() == before

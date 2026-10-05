@@ -515,9 +515,12 @@ overrides and managed downloads need CDP and throw on this engine; see
 
 ### listBrowserProfiles(options)
 
-Discover cookie-bearing profiles for Chrome, Edge, Brave, Chromium, and Firefox.
+Discover profiles for the browsers in the shared catalogue, including Safari.
 Pass an optional `browser` to narrow discovery. Each result contains
-`{ browser, name, displayName, path, isDefault }`.
+`{ browser, name, displayName, path, isDefault }`. If Safari's profile catalogue
+cannot be read, a `Profiles` entry carries `error` alongside readable profiles.
+Protected-file errors retain Full Disk Access instructions; cookie-source
+listings preserve the same error even when a domain filter is supplied.
 
 ### readBrowserCookies(options)
 

@@ -45,6 +45,11 @@ script. `BROWSER_COMMANDER_NODE` selects the Node executable.
 | `run <script.json>`       |                                                                                                                                                                                        | Runs a command script. `{"results": [...]}`                                                                                                                                                                                                   |
 | `serve --stdio`           |                                                                                                                                                                                        | JSON-RPC 2.0 on stdin/stdout, one message per line                                                                                                                                                                                            |
 
+`profile sources` and `cookies sources` preserve Safari discovery failures as
+entries with `error`, alongside readable sources. A `Profiles` error describes
+the profile catalogue; it does not replace a readable `Default` profile. Error
+entries have no cookie counts and remain visible under `--domain` filtering.
+
 **Page options**, accepted by every page command:
 
 - `--cdp-endpoint URL`: attach to a browser started by `launch --keep-open` (or

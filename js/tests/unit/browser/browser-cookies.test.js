@@ -12,6 +12,7 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  rename,
   rm,
   stat,
   writeFile,
@@ -147,6 +148,40 @@ describe('installed browser cookie import', () => {
       await rm(temporaryDirectory, { recursive: true, force: true });
       temporaryDirectory = undefined;
     }
+  });
+
+  it('discovers and decrypts Yandex Cookies through its catalogue alias', async () => {
+    temporaryDirectory = await mkdtemp(
+      path.join(os.tmpdir(), 'bc-yandex-cookies-')
+    );
+    const host = '.yandex.ru';
+    const { root } = await createChromiumProfile({
+      homeDir: temporaryDirectory,
+      rows: [
+        {
+          host,
+          name: 'SID',
+          encryptedValue: encryptCbcCookie({
+            host,
+            value: 'yandex-session',
+            password: 'peanuts',
+            prefix: 'v10',
+          }),
+        },
+      ],
+    });
+    const yandexRoot = path.join(temporaryDirectory, '.config/yandex-browser');
+    await rename(root, yandexRoot);
+    const file = path.join(yandexRoot, 'Default/Network/Cookies');
+    const before = await readFile(file);
+    const cookies = await readBrowserCookiesWithDependencies(
+      { browser: 'yandex-browser', domainFilter: 'yandex.ru', cache: false },
+      { platform: 'linux', homeDir: temporaryDirectory, environment: {} }
+    );
+    assert.equal(cookies.length, 1);
+    assert.equal(cookies[0].domain, host);
+    assert.equal(cookies[0].value, 'yandex-session');
+    assert.deepEqual(await readFile(file), before);
   });
 
   it('exports both public helpers', () => {

@@ -19,6 +19,7 @@ changes.
 | Request Safe Storage credentials for a declared catalogue alias                           | Python/Rust reject `google-chrome` despite its catalogue identity            | Actual credential readers exercised with every declared identity/alias in all three languages |
 | Deny the macOS Keychain request or return an empty result                                 | Missing service-specific retry instructions                                  | Injected native credential-reader tests name the service, Keychain access and `refresh=true`  |
 | Run parallel Rust Safari fixtures with a coarse process wall clock                         | Fixtures share timestamp-only homes; one test deletes another test's source   | Existing Safari integration suite and retained bounded clock probe                           |
+| Resolve `auto` for `github.com` when the default holds `notgithub.com` and another browser holds the actual domain | Substring metadata picks the default; exact migration then imports no cookies | Native discovery and real migration regressions; SQLite family counts and Safari metadata tests |
 
 Review also reproduced Python accepting short/long password CSV records that
 the JS/Rust parsers reject. Two minimal failing cases now raise a record-width
@@ -28,17 +29,39 @@ The Safari fixture generator and real Chromium acceptance script are retained
 under `experiments/issue-122/`. They use synthetic data and never read an actual
 user profile. All source fixture imports verify retained source contents.
 
+The source-selection regressions failed first in every native implementation.
+SQLite discovery also counted `%` and `_` as wildcard patterns; Safari counted
+`hub.com` and `github.co` inside `github.com`. Discovery now shares migration's
+whole-host/subdomain matcher, including case and trailing-dot normalization.
+Public cookie readers retain their documented substring filter. Tests verify
+that automatic migration selects the actual holder, returns its cookie, never
+exposes cookie values in listing results and preserves source database bytes.
+
+Yandex cookie reading already uses the native Chromium reader. Added Linux
+fixtures exercise the declared `yandex-browser` alias, installed-profile
+discovery, version-24 host-bound cookie decryption and unchanged source bytes in
+JS, Python and Rust. They establish this synthetic source case; they do not
+claim installed Yandex or Windows/macOS runtime acceptance. The Ya Passman
+password-format limitation remains separately reported.
+
+The complete Python test run also exposed an existing cancellation-fixture race:
+the first run reported `ValueError: invalid literal for int() with base 10: ''` at
+`tests/unit/utilities/test_subprocess.py:145`, where an empty PID was read after
+the child created the file but before its write completed. The fixture now
+renames a completed temporary PID file atomically; cancellation behavior and
+the test's finite readiness loop stay intact.
+
 ## Local checks
 
 | Check                                                             | Result                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | JS `npm run check`                                                | ESLint, Prettier and no new duplication clones pass                                   |
-| JS `npm test`                                                     | 1,559 pass, zero skipped                                                              |
+| JS `npm test`                                                     | 1,562 pass, zero skipped                                                              |
 | Python Ruff check/format and `mypy src`                           | Pass; 168 source files type checked                                                   |
-| Python `pytest`                                                   | 1,149 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
+| Python `pytest`                                                   | 1,154 pass, eight existing real-browser tests gated by `RUN_E2E`                      |
 | Rust format, Clippy all targets/all features with warnings denied | Pass                                                                                  |
-| Rust `cargo test --locked`                                        | 709 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
-| Rust `cargo test --locked --all-features`                         | 709 pass, zero failures; 15 existing browser tests ignored                            |
+| Rust `cargo test --locked`                                        | 713 pass across unit/integration/doc suites; 15 existing browser tests ignored        |
+| Rust `cargo test --locked --all-features`                         | 713 pass, zero failures; 15 existing browser tests ignored                            |
 | Full-repository Secretlint and root JavaScript lint               | Pass                                                                                  |
 | Shared asset byte comparison                                      | Catalogue, history schema and capability declarations identical in all three packages |
 | Generated browser/migration matrix freshness                      | Pass                                                                                  |
@@ -103,6 +126,12 @@ Other profile allocators were checked: the production launcher and migration
 snapshot helpers already reserve directories atomically. Their behavior stays
 intact; the colliding shared-prefix Safari fixture helper now uses a counter and
 exclusive `create_dir`, retrying existing names without deleting them.
+
+All ten workflows passed on `ccd33185a7c560791f9adae1f5617761a928bfc9`,
+committed at 15:02:30 UTC; those runs started at 15:02:56–57 UTC with the exact
+head SHA. Rust passed on Linux, macOS and Windows, including coverage/package
+jobs, and the aggregate CodeQL check passed. Subsequent source-discovery changes
+require their own checks; these earlier passes alone do not validate a new head.
 
 ## Real runtime acceptance and remaining limits
 

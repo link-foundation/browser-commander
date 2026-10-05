@@ -114,7 +114,7 @@ Unsupported platform capabilities must be explicit in the report and matrix.
 | 121.11 | DuckDuckGo and Tor at least detection/readable import                         | Separate detection-only from supported store families                                             | Partial     |
 | 121.12 | Safari support and mobile exclusions                                          | Safari family; document Samsung Internet/UC mobile outside desktop scope                          | Implemented |
 | 121.13 | Yandex Ya Passman Data supported or specific skipped reason                   | Detect custom meta/local_encryptor_data; explicit encryption/master-password limitation           | Implemented |
-| 121.14 | Yandex Cookies fixture                                                        | Native Chromium cookie fixture using Yandex identity                                              | Pending     |
+| 121.14 | Yandex Cookies fixture                                                        | Native Chromium cookie fixture using Yandex identity                                              | Implemented |
 | 121.15 | Opera single profile and Roaming/Local State keys all OSes                    | Resolve Local State beside profile first, with documented fallback                                | Implemented |
 | 121.16 | Preserve Opera messengers/VPN by default                                      | No new restrictive flags; test catalogue launches inherit existing neutral args                   | Partial     |
 | 121.17 | Generated browser × capability × OS matrix in CI                              | Catalogue declares actual protocol/import/detection/protection support                            | Implemented |
@@ -196,10 +196,18 @@ parent and every child remain incomplete; no closing keywords are appropriate.
   unreadable source ciphertext and vacuum deleted pages. Cookie readers retain
   their existing public substring-filter contract; migration filters the final
   cookie set exactly.
+- Cookie source discovery and default/auto selection use the same exact host
+  and subdomain rule for Chromium, Firefox and Safari. Lookalike hosts and SQL
+  wildcard characters cannot select a profile whose cookies migration excludes;
+  grouped SQLite host counts and Safari host metadata never decode cookie values.
 - Opera resolves its same-directory Local State before the parent fallback.
   Yandex Ya Passman Data gets a specific unsupported encryption-layer reason
   before credential lookup. Detection-only DuckDuckGo cannot enter Chromium
   migration dispatch.
+- Yandex cookie reading already works through the native Chromium reader. New
+  Linux fixtures verify catalogue-alias discovery, version-24 host-bound cookie
+  decryption and source-byte immutability in every language. Installed runtime
+  acceptance remains separate from these synthetic fixtures.
 - Executable discovery, control declarations and protected roots derive from the
   byte-identical catalogue. Added Whale, 360 Secure/Extreme, QQ, Sogou,
   DuckDuckGo/Tor entries and channel aliases have native fixture coverage.

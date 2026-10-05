@@ -39,6 +39,11 @@ discarded errors from source listing and treated an unreadable store as empty.
 JavaScript and Python tests failed before the resolver fix. All three resolvers
 now propagate that error when no readable matching default profile exists.
 
+The first CI run also caught a bare URL in the Rust module documentation.
+`RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --all-features` reproduced
+`rustdoc::bare_urls` locally. Formatting the layout reference as an autolink
+allows the strict documentation build to pass.
+
 This Linux investigation cannot verify a live macOS Safari store or a real TCC
 permission prompt. Portable fixtures exercise the conventional paths only;
 modern named profiles/WebsiteDataStore layouts and non-cookie stores are tracked

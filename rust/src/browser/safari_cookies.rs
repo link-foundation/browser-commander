@@ -1,5 +1,5 @@
 //! Safari's unencrypted, mixed-endian binarycookies store. Layout reference:
-//! https://github.com/libyal/dtformats/blob/main/documentation/Safari%20Cookies.asciidoc
+//! <https://github.com/libyal/dtformats/blob/main/documentation/Safari%20Cookies.asciidoc>
 
 use std::collections::BTreeMap;
 use std::fs;

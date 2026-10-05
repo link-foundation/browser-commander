@@ -27,8 +27,8 @@ import {
 import {
   findCookieDatabase,
   listBrowserProfiles,
-  normalizeCookieBrowser,
   resolveBrowserProfile,
+  resolveSourceBrowser,
 } from './browser-profiles.js';
 
 const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600n;
@@ -266,16 +266,22 @@ export async function readBrowserCookiesWithDependencies(
   if (!options || typeof options !== 'object') {
     throw new TypeError('readBrowserCookies requires an options object');
   }
-  const browser = normalizeCookieBrowser(options.browser);
   const platform = dependencies.platform ?? process.platform;
   const homeDir = dependencies.homeDir ?? os.homedir();
   const environment = dependencies.environment ?? process.env;
+  const runCommand = dependencies.runCommand;
+  const browser = await resolveSourceBrowser(options.browser, {
+    platform,
+    environment,
+    runCommand,
+  });
   const profile = await resolveBrowserProfile({
     browser,
     profile: options.profile,
     platform,
     homeDir,
     environment,
+    runCommand,
   });
   const cookiePath = await findCookieDatabase(browser, profile.path, platform);
   if (!cookiePath) {

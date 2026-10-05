@@ -4,7 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 
-import { listBrowserProfiles } from '../../../src/browser/browser-profiles.js';
+import {
+  listBrowserProfiles,
+  resolveBrowserProfile,
+  resolveSourceBrowser,
+} from '../../../src/browser/browser-profiles.js';
 import { writeFirefoxCookies } from '../../helpers/migration-fixtures.js';
 
 let temporaryDirectory;
@@ -101,6 +105,74 @@ describe('listBrowserProfiles with the expanded catalogue', () => {
     assert.deepEqual(
       profiles.map((profile) => profile.browser),
       ['firefox']
+    );
+  });
+
+  it('resolves browser: "default" to the system default browser', async () => {
+    const runCommand = async (command, args) => {
+      if (
+        command === 'xdg-settings' &&
+        args.join(' ') === 'get default-web-browser'
+      ) {
+        return 'firefox.desktop\n';
+      }
+      throw new Error('unexpected command');
+    };
+    assert.equal(
+      await resolveSourceBrowser('default', { platform: 'linux', runCommand }),
+      'firefox'
+    );
+    assert.equal(
+      await resolveSourceBrowser('AUTO', { platform: 'linux', runCommand }),
+      'firefox'
+    );
+  });
+
+  it('lists the default browser profile when browser is "default"', async () => {
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), 'bc-default-'));
+    const root = path.join(temporaryDirectory, '.mozilla', 'firefox');
+    const profileName = 'xyz.default-release';
+    const profilePath = path.join(root, profileName);
+    await mkdir(profilePath, { recursive: true });
+    await writeFile(
+      path.join(root, 'profiles.ini'),
+      `[Profile0]\nName=default-release\nIsRelative=1\nPath=${profileName}\nDefault=1\n`
+    );
+    await writeFirefoxCookies(profilePath, [
+      { name: 'a', value: '1', host: '.example.com' },
+    ]);
+    const runCommand = async () => 'firefox.desktop\n';
+
+    const resolved = await resolveBrowserProfile({
+      browser: 'default',
+      platform: 'linux',
+      homeDir: temporaryDirectory,
+      runCommand,
+    });
+    assert.equal(resolved.browser, 'firefox');
+    assert.equal(resolved.path, profilePath);
+
+    const profiles = await listBrowserProfiles({
+      browser: 'auto',
+      platform: 'linux',
+      homeDir: temporaryDirectory,
+      runCommand,
+    });
+    assert.deepEqual(
+      profiles.map((profile) => profile.browser),
+      ['firefox']
+    );
+  });
+
+  it('reports a clear error when the default browser is unknown', async () => {
+    await assert.rejects(
+      resolveSourceBrowser('default', {
+        platform: 'linux',
+        runCommand: async () => {
+          throw new Error('no xdg');
+        },
+      }),
+      /Could not determine the system default browser/
     );
   });
 });

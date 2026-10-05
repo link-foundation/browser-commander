@@ -9,6 +9,47 @@ import {
   normalizeBrowserId,
   resolveBrowserRoots,
 } from './browser-sources.js';
+import { resolveDefaultBrowser } from './default-browser.js';
+
+/**
+ * Keywords that select the operating-system default browser instead of a named
+ * one, so `browser: 'default'` (or `'auto'`) imports from whatever a person
+ * actually uses. Importing stays opt-in: callers pass this explicitly.
+ */
+const DEFAULT_BROWSER_KEYWORDS = new Set(['default', 'auto']);
+
+/** Whether `browser` asks for the system default rather than a named browser. */
+export function isDefaultBrowserKeyword(browser) {
+  return (
+    typeof browser === 'string' &&
+    DEFAULT_BROWSER_KEYWORDS.has(browser.trim().toLowerCase())
+  );
+}
+
+/**
+ * Resolve a requested browser to a canonical catalogue id, expanding the
+ * `default`/`auto` keywords to the system default browser. Named browsers are
+ * normalized through the catalogue as before.
+ */
+export async function resolveSourceBrowser(
+  browser,
+  { platform = process.platform, environment = process.env, runCommand } = {}
+) {
+  if (!isDefaultBrowserKeyword(browser)) {
+    return normalizeCookieBrowser(browser);
+  }
+  const resolved = await resolveDefaultBrowser({
+    platform,
+    environment,
+    runCommand,
+  });
+  if (!resolved) {
+    throw new Error(
+      'Could not determine the system default browser; pass an explicit browser instead of "default".'
+    );
+  }
+  return resolved;
+}
 
 /**
  * Every browser profile discovery can read from. Driven by the shared
@@ -247,8 +288,17 @@ export async function listBrowserProfiles({
   platform = process.platform,
   homeDir = os.homedir(),
   environment = process.env,
+  runCommand,
 } = {}) {
-  const browsers = browser ? [normalizeCookieBrowser(browser)] : BROWSER_IDS;
+  const browsers = browser
+    ? [
+        await resolveSourceBrowser(browser, {
+          platform,
+          environment,
+          runCommand,
+        }),
+      ]
+    : BROWSER_IDS;
   const profiles = [];
   // Several Firefox channels (firefox, firefox-developer, firefox-nightly)
   // share one profile root, so a catalogue-wide scan would otherwise report
@@ -272,7 +322,11 @@ export async function listBrowserProfiles({
 }
 
 export async function resolveBrowserProfile(options) {
-  const browser = normalizeCookieBrowser(options.browser);
+  const browser = await resolveSourceBrowser(options.browser, {
+    platform: options.platform,
+    environment: options.environment,
+    runCommand: options.runCommand,
+  });
   const profiles = await listBrowserProfiles({ ...options, browser });
   const requested = options.profile;
   const selected = requested

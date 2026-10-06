@@ -169,3 +169,50 @@ async def test_empty_initial_url_is_initialized_before_seeding():
     assert driver.get.call_args_list[0].args == ("about:blank",)
     assert driver.current_url == "about:blank"
     await result.close()
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Service /usr/bin/safaridriver unexpectedly exited. Status code was: 1",
+        "HTTPConnectionPool(host='localhost', port=49198): Max retries exceeded"
+        " (Caused by NewConnectionError: [Errno 61] Connection refused)",
+    ],
+)
+async def test_safari_launch_retries_a_driver_that_fails_to_start(message):
+    """Issue #128: right after a previous session, safaridriver can exit or refuse."""
+    driver = MagicMock()
+    driver.capabilities = {"browserName": "safari"}
+    driver.current_url = "about:blank"
+    create = MagicMock(side_effect=[RuntimeError(message), driver])
+    result = await launch_safari(
+        LaunchOptions(channel="safari"),
+        {"platform": "darwin", "create_safari": create, "safari_retry_delay": 0},
+    )
+    assert result.browser is driver
+    assert create.call_count == 2
+    await result.close()
+
+
+async def test_safari_launch_gives_up_after_three_attempts():
+    create = MagicMock(
+        side_effect=RuntimeError("[Errno 61] Connection refused (attempt)")
+    )
+    with pytest.raises(RuntimeError, match="Connection refused"):
+        await launch_safari(
+            LaunchOptions(channel="safari"),
+            {"platform": "darwin", "create_safari": create, "safari_retry_delay": 0},
+        )
+    assert create.call_count == 3
+
+
+async def test_safari_setup_errors_are_not_retried():
+    create = MagicMock(
+        side_effect=RuntimeError("You must enable the 'Allow Remote Automation' option")
+    )
+    with pytest.raises(SafariSetupError):
+        await launch_safari(
+            LaunchOptions(channel="safari"),
+            {"platform": "darwin", "create_safari": create, "safari_retry_delay": 0},
+        )
+    assert create.call_count == 1

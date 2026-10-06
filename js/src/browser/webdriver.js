@@ -574,6 +574,10 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
       browser,
       options: built.options,
     });
+    // Fresh Safari sessions can report an empty URL until first navigation.
+    if (safari) {
+      await driver.get('about:blank');
+    }
     const page = await createWebDriverPage(driver, {
       ...dependencies.pageOptions,
       ...(safari ? { browserName: 'safari' } : {}),

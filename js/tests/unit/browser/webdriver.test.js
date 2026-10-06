@@ -456,10 +456,12 @@ function safariDependencies() {
 describe('Safari driver lifecycle', () => {
   it('uses no disk profile or Chromium/BiDi capabilities and closes idempotently', async () => {
     const { dependencies, started, mock } = safariDependencies();
+    mock.driver.state.url = '';
     const result = await launchWebDriver(
       { browser: 'safari-technology-preview' },
       dependencies
     );
+    assert.equal(result.page.url(), 'about:blank');
     assert.equal(result.userDataDir, undefined);
     assert.equal(result.temporaryProfile, false);
     assert.equal(

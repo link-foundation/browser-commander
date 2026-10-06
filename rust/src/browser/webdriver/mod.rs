@@ -379,6 +379,10 @@ async fn launch_owned(
             .capabilities(capabilities)
             .connect(&endpoint)
             .await?;
+        // Safari reports an empty URL until its first navigation.
+        if safari {
+            client.goto("about:blank").await?;
+        }
         Ok::<_, anyhow::Error>(client)
     })
     .await;

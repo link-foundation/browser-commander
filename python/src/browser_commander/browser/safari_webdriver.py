@@ -225,6 +225,8 @@ async def launch_safari(
     try:
         from browser_commander.browser.storage_state import restore_storage_state
 
+        # Safari reports an empty URL until the first navigation.
+        await asyncio.to_thread(driver.get, "about:blank")
         state = load_storage_state(options.storage_state) or {
             "cookies": [],
             "origins": [],

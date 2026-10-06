@@ -146,3 +146,26 @@ async def test_driver_exit_output_explains_authorization(monkeypatch):
     monkeypatch.setattr(webdriver, "Safari", failed_driver)
     with pytest.raises(SafariSetupError, match="--enable authorization"):
         await launch_safari(LaunchOptions(channel="safari-tp"), {"platform": "darwin"})
+
+
+async def test_empty_initial_url_is_initialized_before_seeding():
+    driver = MagicMock()
+    driver.capabilities = {"browserName": "safari"}
+    driver.current_url = ""
+
+    def navigate(url):
+        if not url:
+            raise ValueError("Could not parse requested URL ''")
+        driver.current_url = url
+
+    driver.get.side_effect = navigate
+    result = await launch_safari(
+        LaunchOptions(
+            channel="safari",
+            seed_cookies=[{"domain": "example.test", "name": "seed", "value": "yes"}],
+        ),
+        {"platform": "darwin", "create_safari": lambda *_: driver},
+    )
+    assert driver.get.call_args_list[0].args == ("about:blank",)
+    assert driver.current_url == "about:blank"
+    await result.close()

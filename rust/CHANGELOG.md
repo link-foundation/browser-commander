@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- changelog-insert-here -->
+## [0.19.0] - 2026-10-06
+
+### Changed
+
+- The typed Puppeteer bindings now describe puppeteer-core 25.12.0, the version the JavaScript package installs (`PUPPETEER_VERSION` was still 25.10.0). The API is unchanged between the two versions.
+
+### Fixed
+
+- A Safari launch right after a previous Safari session closed starts a fresh `safaridriver`, up to three attempts, when the driver exits before it is ready or refuses the connection. safaridriver serves one automation session at a time, and CI saw both failures on back-to-back launches. Authorization errors are still reported at once. Set `VERBOSE=1` to log each retry.
+
+### Added
+
+- Safari and Technology Preview native W3C WebDriver control through real/common launchers, typed native handles, isolated cookie seeding, setup guidance and unsupported feature errors.
+
 ## [0.18.0] - 2026-10-05
 
 ### Added

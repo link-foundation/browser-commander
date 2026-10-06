@@ -1,0 +1,913 @@
+Lint and Format Check	Check code duplication	﻿2026-10-06T20:13:02.2726106Z ##[group]Run npm run check:duplication
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.2726309Z ^[[36;1mnpm run check:duplication^[[0m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.2776207Z shell: /usr/bin/bash -e {0}
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.2776409Z env:
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.2776583Z   GIT_CONFIG_COUNT: 1
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.2776778Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.2777002Z   GIT_CONFIG_VALUE_0: main
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.2777170Z ##[endgroup]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.3416975Z 
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.3417418Z > browser-commander@0.26.0 check:duplication
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.3417791Z > jscpd . --baseline .jscpd-baseline.json --fail-on-new-clones
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.3417948Z 
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.3668346Z Using config from .jscpd.json
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4170020Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4170671Z  - ^[[1m^[[32mREADME.md:javascript^[[39m^[[22m [61:27 - 92:17] (15 lines, 123 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4171128Z    src/README.md:javascript [29:38 - 60:17]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4171452Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4171949Z  - ^[[1m^[[32mREADME.md:javascript^[[39m^[[22m [237:12 - 242:54] (5 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4172406Z    examples/browser-commander-tests.example.js [11:36 - 18:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4172786Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4173239Z  - ^[[1m^[[32mREADME.md:javascript^[[39m^[[22m [280:27 - 379:4] (42 lines, 255 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4173616Z    src/README.md:javascript [74:38 - 204:4]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4173938Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4174836Z  - ^[[1m^[[32mREADME.md:javascript^[[39m^[[22m [678:70 - 716:17] (19 lines, 119 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4175225Z    src/README.md:javascript [376:1 - 426:17]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4175673Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4176126Z  - ^[[1m^[[32mREADME.md:javascript^[[39m^[[22m [708:32 - 730:4] (13 lines, 50 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4176508Z    src/README.md:javascript [428:27 - 450:4]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4176826Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4177250Z  - ^[[1m^[[32mREADME.md:javascript^[[39m^[[22m [896:16 - 973:6] (28 lines, 177 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4177625Z    src/README.md:javascript [477:40 - 548:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4177934Z ^[[1mClone found (markdown)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4178325Z  - ^[[1m^[[32mREADME.md:markdown^[[39m^[[22m [35:139 - 54:15] (20 lines, 77 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4178687Z    src/README.md:markdown [3:232 - 22:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4178994Z ^[[1mClone found (markdown)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4179429Z  - ^[[1m^[[32mREADME.md:markdown^[[39m^[[22m [270:1 - 336:3] (67 lines, 117 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4179801Z    src/README.md:markdown [64:1 - 130:3]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4180095Z ^[[1mClone found (markdown)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4180486Z  - ^[[1m^[[32mREADME.md:markdown^[[39m^[[22m [681:1 - 713:15] (33 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4180854Z    src/README.md:markdown [388:1 - 420:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4181156Z ^[[1mClone found (markdown)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4181546Z  - ^[[1m^[[32mREADME.md:markdown^[[39m^[[22m [902:67 - 964:3] (63 lines, 54 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4181907Z    src/README.md:markdown [481:97 - 543:3]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4182220Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4182659Z  - ^[[1m^[[32mexamples/pdf-generation.js^[[39m^[[22m [56:7 - 61:8] (6 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4183072Z    tests/unit/browser/pdf.test.js [28:9 - 33:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4183400Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4183834Z  - ^[[1m^[[32mexamples/pdf-generation.js^[[39m^[[22m [57:9 - 63:10] (7 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4184246Z    tests/unit/browser/pdf.test.js [29:11 - 35:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4184570Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4185013Z  - ^[[1m^[[32mscripts/changeset-version.mjs^[[39m^[[22m [29:45 - 34:2] (6 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4185551Z    scripts/create-manual-changeset.mjs [80:44 - 85:2]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4185898Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4186334Z  - ^[[1m^[[32mscripts/changeset-version.mjs^[[39m^[[22m [29:45 - 34:2] (6 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4187010Z    scripts/instant-version-bump.mjs [115:53 - 120:2]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4187354Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4187789Z  - ^[[1m^[[32mscripts/changeset-version.mjs^[[39m^[[22m [29:45 - 34:2] (6 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4188213Z    scripts/validate-changeset.mjs [266:53 - 271:2]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4188549Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4189015Z  - ^[[1m^[[32mscripts/create-github-release.mjs^[[39m^[[22m [20:3 - 32:15] (13 lines, 48 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4189478Z    scripts/create-manual-changeset.mjs [19:3 - 30:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4189818Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4190276Z  - ^[[1m^[[32mscripts/create-github-release.mjs^[[39m^[[22m [25:7 - 41:9] (17 lines, 76 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4190712Z    scripts/format-github-release.mjs [22:7 - 38:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4191034Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4191480Z  - ^[[1m^[[32mscripts/create-github-release.mjs^[[39m^[[22m [25:7 - 35:18] (11 lines, 47 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4191917Z    scripts/format-release-notes.mjs [32:7 - 42:18]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4192249Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4192723Z  - ^[[1m^[[32mscripts/create-manual-changeset.mjs^[[39m^[[22m [14:37 - 30:15] (17 lines, 56 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4193156Z    scripts/publish-to-npm.mjs [16:56 - 31:18]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4193472Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4193939Z  - ^[[1m^[[32mscripts/create-manual-changeset.mjs^[[39m^[[22m [16:1 - 30:15] (15 lines, 55 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4194503Z    scripts/format-release-notes.mjs [24:1 - 39:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4194815Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4195244Z  - ^[[1m^[[32mscripts/create-manual-changeset.mjs^[[39m^[[22m [16:41 - 39:18] (24 lines, 104 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4195771Z    scripts/instant-version-bump.mjs [15:49 - 38:18]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4196096Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4196569Z  - ^[[1m^[[32mscripts/create-manual-changeset.mjs^[[39m^[[22m [16:41 - 30:15] (15 lines, 51 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4197014Z    scripts/version-and-commit.mjs [22:50 - 35:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4197571Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4198034Z  - ^[[1m^[[32mscripts/create-manual-changeset.mjs^[[39m^[[22m [18:1 - 30:15] (13 lines, 50 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4198475Z    scripts/format-github-release.mjs [16:1 - 29:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4198800Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4199258Z  - ^[[1m^[[32mscripts/format-github-release.mjs^[[39m^[[22m [32:49 - 46:6] (15 lines, 58 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4199691Z    scripts/format-release-notes.mjs [47:38 - 61:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4200002Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4200455Z  - ^[[1m^[[32mscripts/publish-to-npm.mjs^[[39m^[[22m [47:69 - 60:2] (14 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4200873Z    scripts/version-and-commit.mjs [100:17 - 113:2]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4201230Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4201663Z  - ^[[1m^[[32mscripts/publish-to-npm.mjs^[[39m^[[22m [118:3 - 124:8] (7 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4202079Z    scripts/version-and-commit.mjs [255:3 - 261:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4202423Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4202874Z  - ^[[1m^[[32msrc/ARCHITECTURE.md:javascript^[[39m^[[22m [188:1 - 193:11] (5 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4203291Z    src/README.md:javascript [213:3 - 218:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4203587Z ^[[1mClone found (text)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4203995Z  - ^[[1m^[[32msrc/ARCHITECTURE.md:text^[[39m^[[22m [10:1 - 15:137] (6 lines, 144 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4204368Z    src/README.md:text [10:1 - 15:137]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4204642Z ^[[1mClone found (text)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4205045Z  - ^[[1m^[[32msrc/ARCHITECTURE.md:text^[[39m^[[22m [15:83 - 22:52] (3 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4205537Z    src/README.md:text [158:55 - 322:52]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4205808Z ^[[1mClone found (text)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4206357Z  - ^[[1m^[[32msrc/ARCHITECTURE.md:text^[[39m^[[22m [27:1 - 35:61] (9 lines, 118 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4206731Z    src/README.md:text [324:1 - 332:61]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4207035Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4207527Z  - ^[[1m^[[32msrc/browser/browser-cookie-crypto.js^[[39m^[[22m [110:33 - 118:2] (9 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4208003Z    src/browser/browser-cookie-crypto.js [120:32 - 128:2]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4208345Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4208801Z  - ^[[1m^[[32msrc/browser/browser-cookies.js^[[39m^[[22m [133:75 - 145:20] (13 lines, 62 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4209237Z    src/browser/browser-cookies.js [162:63 - 174:20]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4209570Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4210021Z  - ^[[1m^[[32msrc/browser/browser-profiles.js^[[39m^[[22m [141:36 - 149:5] (9 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4210457Z    src/browser/browser-profiles.js [219:35 - 224:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4210762Z ^[[1mClone found (json)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4211218Z  - ^[[1m^[[32msrc/browser/browser-sources.json^[[39m^[[22m [548:36 - 555:20] (8 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4211667Z    src/browser/browser-sources.json [577:61 - 584:20]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4211974Z ^[[1mClone found (json)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4212420Z  - ^[[1m^[[32msrc/browser/browser-sources.json^[[39m^[[22m [548:36 - 555:20] (8 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4212862Z    src/browser/browser-sources.json [609:28 - 616:20]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4213163Z ^[[1mClone found (json)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4213763Z  - ^[[1m^[[32msrc/browser/migration/capabilities.json^[[39m^[[22m [53:20 - 69:6] (17 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4214253Z    src/browser/migration/capabilities.json [75:20 - 91:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4214604Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4215036Z  - ^[[1m^[[32msrc/browser/navigation.js^[[39m^[[22m [99:45 - 107:38] (9 lines, 51 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4215578Z    src/interactions/fill.js [55:39 - 63:38]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4215892Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4216321Z  - ^[[1m^[[32msrc/browser/navigation.js^[[39m^[[22m [99:45 - 107:38] (9 lines, 51 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4216714Z    src/interactions/scroll.js [89:41 - 97:38]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4217031Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4217456Z  - ^[[1m^[[32msrc/browser/navigation.js^[[39m^[[22m [126:77 - 135:10] (10 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4217845Z    src/interactions/fill.js [82:77 - 91:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4218152Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4218578Z  - ^[[1m^[[32msrc/browser/navigation.js^[[39m^[[22m [126:77 - 135:10] (10 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4218983Z    src/interactions/scroll.js [117:7 - 126:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4219304Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4219731Z  - ^[[1m^[[32msrc/browser/navigation.js^[[39m^[[22m [267:30 - 285:25] (19 lines, 58 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4220131Z    src/browser/navigation.js [324:15 - 342:23]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4220445Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4220877Z  - ^[[1m^[[32msrc/browser/storage-state.js^[[39m^[[22m [87:58 - 94:10] (8 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4221287Z    src/browser/storage-state.js [111:62 - 118:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4221640Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4222192Z  - ^[[1m^[[32msrc/core/dialog-manager.js^[[39m^[[22m [65:73 - 71:8] (7 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4222583Z    src/core/dialog-manager.js [90:70 - 96:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4222891Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4223333Z  - ^[[1m^[[32msrc/core/engine-adapter.js^[[39m^[[22m [304:48 - 311:4] (8 lines, 50 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4223730Z    src/elements/selectors.js [55:65 - 62:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4224038Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4224467Z  - ^[[1m^[[32msrc/core/engine-adapter.js^[[39m^[[22m [354:48 - 366:28] (13 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4224881Z    src/core/engine-adapter.js [509:7 - 523:28]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4225197Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4225834Z  - ^[[1m^[[32msrc/core/engine-adapter.js^[[39m^[[22m [370:33 - 401:40] (32 lines, 105 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4226232Z    src/core/engine-adapter.js [536:7 - 568:40]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4226539Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4226955Z  - ^[[1m^[[32msrc/core/engine-adapter.js^[[39m^[[22m [423:3 - 441:7] (19 lines, 54 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4227347Z    src/core/engine-adapter.js [571:3 - 592:7]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4227679Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4228101Z  - ^[[1m^[[32msrc/core/engine-adapter.js^[[39m^[[22m [530:7 - 535:23] (6 lines, 49 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4228501Z    src/elements/locators.js [172:11 - 177:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4228809Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4229256Z  - ^[[1m^[[32msrc/core/navigation-manager.js^[[39m^[[22m [86:36 - 95:5] (10 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4229661Z    tests/helpers/mocks.js [429:46 - 436:5]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4229969Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4230424Z  - ^[[1m^[[32msrc/core/navigation-manager.js^[[39m^[[22m [453:43 - 480:11] (28 lines, 83 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4230843Z    src/core/network-tracker.js [323:16 - 351:11]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4231162Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4231603Z  - ^[[1m^[[32msrc/core/navigation-safety.js^[[39m^[[22m [60:33 - 65:14] (6 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4231996Z    src/utilities/wait.js [122:60 - 127:16]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4232303Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4232843Z  - ^[[1m^[[32msrc/core/network-tracker.js^[[39m^[[22m [63:21 - 68:9] (6 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4233239Z    src/core/network-tracker.js [95:24 - 99:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4233554Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4233981Z  - ^[[1m^[[32msrc/core/network-tracker.js^[[39m^[[22m [145:5 - 153:6] (9 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4234380Z    src/core/network-tracker.js [352:5 - 358:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4234698Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4235129Z  - ^[[1m^[[32msrc/core/network-tracker.js^[[39m^[[22m [192:5 - 199:20] (8 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4235648Z    src/core/network-tracker.js [353:5 - 359:20]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4235974Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4236389Z  - ^[[1m^[[32msrc/elements/content.js^[[39m^[[22m [40:3 - 50:26] (11 lines, 44 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4236767Z    src/elements/content.js [76:3 - 86:26]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4237077Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4237499Z  - ^[[1m^[[32msrc/elements/content.js^[[39m^[[22m [69:34 - 84:13] (16 lines, 73 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4237887Z    src/elements/content.js [105:33 - 120:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4238200Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4238617Z  - ^[[1m^[[32msrc/elements/content.js^[[39m^[[22m [73:54 - 86:26] (14 lines, 47 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4238998Z    src/elements/content.js [154:69 - 167:26]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4239309Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4239734Z  - ^[[1m^[[32msrc/elements/content.js^[[39m^[[22m [188:36 - 193:4] (6 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4240116Z    src/interactions/fill.js [106:42 - 111:4]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4240423Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4240838Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [39:42 - 45:7] (7 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4241227Z    src/elements/locators.js [149:24 - 156:7]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4241537Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4241953Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [39:42 - 44:4] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4242337Z    src/elements/selectors.js [12:36 - 17:4]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4242650Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4243063Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [39:42 - 44:4] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4243442Z    src/elements/selectors.js [46:39 - 51:4]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4243760Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4244167Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [39:42 - 45:7] (7 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4244716Z    src/elements/selectors.js [158:40 - 167:7]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4245029Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4245534Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [39:42 - 44:4] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4245922Z    src/elements/visibility.js [13:32 - 18:4]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4246229Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4246634Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [39:42 - 44:4] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4247017Z    src/elements/visibility.js [124:28 - 129:4]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4247325Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4247744Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [74:37 - 84:22] (11 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4248141Z    src/elements/selectors.js [351:19 - 361:22]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4248460Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4248882Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [75:29 - 84:22] (10 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4249284Z    src/elements/visibility.js [67:50 - 77:22]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4249600Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4250015Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [76:3 - 84:22] (9 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4250407Z    src/elements/selectors.js [13:34 - 21:22]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4250716Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4251123Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [76:5 - 84:77] (9 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4251620Z    src/elements/visibility.js [14:36 - 22:77]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4251942Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4252355Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [183:25 - 188:39] (6 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4252744Z    src/elements/locators.js [197:30 - 203:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4253052Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4253462Z  - ^[[1m^[[32msrc/elements/locators.js^[[39m^[[22m [209:41 - 217:8] (9 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4253849Z    src/elements/visibility.js [33:75 - 41:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4254159Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4254582Z  - ^[[1m^[[32msrc/elements/selectors.js^[[39m^[[22m [12:47 - 21:66] (10 lines, 49 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4254970Z    src/elements/selectors.js [46:50 - 55:66]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4255366Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4255780Z  - ^[[1m^[[32msrc/elements/selectors.js^[[39m^[[22m [12:47 - 21:22] (10 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4256173Z    src/elements/visibility.js [13:43 - 22:22]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4256486Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4256902Z  - ^[[1m^[[32msrc/elements/selectors.js^[[39m^[[22m [12:47 - 20:19] (9 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4257299Z    src/elements/visibility.js [124:39 - 134:17]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4257629Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4258054Z  - ^[[1m^[[32msrc/elements/selectors.js^[[39m^[[22m [13:36 - 21:66] (9 lines, 37 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4258448Z    src/elements/selectors.js [353:5 - 361:66]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4258756Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4259241Z  - ^[[1m^[[32msrc/elements/selectors.js^[[39m^[[22m [49:18 - 55:67] (7 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4259631Z    src/elements/selectors.js [355:18 - 361:67]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4259956Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4260388Z  - ^[[1m^[[32msrc/elements/selectors.js^[[39m^[[22m [199:72 - 223:9] (25 lines, 152 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4260784Z    src/elements/selectors.js [247:35 - 271:11]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4261105Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4261519Z  - ^[[1m^[[32msrc/elements/selectors.js^[[39m^[[22m [244:9 - 249:16] (6 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4261925Z    src/elements/visibility.js [137:7 - 141:17]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4262237Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4262655Z  - ^[[1m^[[32msrc/elements/selectors.js^[[39m^[[22m [311:5 - 316:6] (6 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4263164Z    src/elements/selectors.js [323:5 - 328:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4263467Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4263899Z  - ^[[1m^[[32msrc/elements/visibility.js^[[39m^[[22m [32:5 - 38:12] (7 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4264291Z    src/elements/visibility.js [88:5 - 95:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4264601Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4265021Z  - ^[[1m^[[32msrc/elements/visibility.js^[[39m^[[22m [81:27 - 87:9] (7 lines, 53 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4265558Z    src/elements/visibility.js [94:24 - 101:11]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4265870Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4266297Z  - ^[[1m^[[32msrc/fingerprint/presets.js^[[39m^[[22m [52:32 - 60:14] (9 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4266713Z    src/fingerprint/presets.js [135:26 - 143:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4267033Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4267456Z  - ^[[1m^[[32msrc/fingerprint/presets.js^[[39m^[[22m [60:22 - 67:20] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4267868Z    src/fingerprint/presets.js [182:29 - 189:20]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4268189Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4268611Z  - ^[[1m^[[32msrc/fingerprint/presets.js^[[39m^[[22m [64:35 - 72:19] (9 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4269010Z    src/fingerprint/presets.js [147:22 - 155:19]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4269327Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4269753Z  - ^[[1m^[[32msrc/fingerprint/presets.js^[[39m^[[22m [67:22 - 75:7] (9 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4270324Z    tests/unit/fingerprint/init-script.test.js [181:31 - 189:7]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4270691Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4271109Z  - ^[[1m^[[32msrc/interactions/fill.js^[[39m^[[22m [63:55 - 70:24] (8 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4271520Z    src/interactions/scroll.js [97:57 - 104:24]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4271836Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4272254Z  - ^[[1m^[[32msrc/interactions/fill.js^[[39m^[[22m [109:3 - 116:21] (8 lines, 42 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4272650Z    src/interactions/fill.js [169:3 - 176:21]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4272960Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4273394Z  - ^[[1m^[[32msrc/interactions/scroll.js^[[39m^[[22m [163:29 - 169:9] (7 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4273806Z    src/interactions/scroll.js [171:17 - 178:11]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4274124Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4274571Z  - ^[[1m^[[32mtests/e2e/downloads.e2e.test.js^[[39m^[[22m [56:9 - 66:12] (11 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4275002Z    tests/e2e/traces.e2e.test.js [68:59 - 76:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4275412Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4275867Z  - ^[[1m^[[32mtests/e2e/downloads.e2e.test.js^[[39m^[[22m [145:49 - 152:8] (8 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4276298Z    tests/e2e/downloads.e2e.test.js [196:7 - 203:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4276603Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4277019Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [20:34 - 28:25] (9 lines, 43 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4277424Z    tests/e2e/puppeteer.e2e.test.js [19:40 - 25:23]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4277729Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4278150Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [37:27 - 78:16] (42 lines, 204 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4278553Z    tests/e2e/puppeteer.e2e.test.js [33:25 - 74:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4278863Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4279283Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [83:45 - 93:16] (11 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4279686Z    tests/e2e/puppeteer.e2e.test.js [79:43 - 89:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4279987Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4280406Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [106:76 - 122:42] (17 lines, 72 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4280814Z    tests/e2e/puppeteer.e2e.test.js [102:60 - 118:40]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4281119Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4281534Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [137:9 - 154:29] (18 lines, 67 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4282041Z    tests/e2e/puppeteer.e2e.test.js [128:74 - 144:27]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4282340Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4282815Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [154:34 - 162:34] (9 lines, 46 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4283211Z    tests/e2e/puppeteer.e2e.test.js [144:32 - 152:32]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4283508Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4283917Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [165:55 - 172:43] (8 lines, 39 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4284314Z    tests/e2e/puppeteer.e2e.test.js [155:50 - 162:41]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4284613Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4285030Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [178:43 - 191:10] (14 lines, 54 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4285583Z    tests/e2e/puppeteer.e2e.test.js [162:39 - 175:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4285882Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4286293Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [195:36 - 203:42] (9 lines, 39 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4286696Z    tests/e2e/playwright.e2e.test.js [211:36 - 219:42]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4287009Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4287425Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [203:75 - 208:70] (6 lines, 44 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4287829Z    tests/e2e/playwright.e2e.test.js [219:75 - 224:70]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4288132Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4288647Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [243:42 - 250:43] (8 lines, 39 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4289047Z    tests/e2e/puppeteer.e2e.test.js [234:46 - 241:41]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4289351Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4289760Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [260:63 - 268:37] (9 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4290154Z    tests/e2e/puppeteer.e2e.test.js [245:61 - 253:35]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4290460Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4290875Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [271:39 - 281:14] (11 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4291275Z    tests/e2e/playwright.e2e.test.js [446:50 - 456:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4291579Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4291994Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [271:39 - 281:14] (11 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4292395Z    tests/e2e/playwright.e2e.test.js [492:68 - 501:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4292704Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4293116Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [271:39 - 278:35] (8 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4293514Z    tests/e2e/puppeteer.e2e.test.js [256:42 - 263:33]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4293815Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4294230Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [271:39 - 281:14] (11 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4294632Z    tests/e2e/puppeteer.e2e.test.js [446:47 - 455:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4294933Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4295504Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [278:40 - 289:16] (12 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4295936Z    tests/e2e/puppeteer.e2e.test.js [263:38 - 274:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4296255Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4296688Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [289:29 - 301:10] (13 lines, 56 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4297113Z    tests/e2e/puppeteer.e2e.test.js [274:37 - 286:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4297430Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4297866Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [294:40 - 303:10] (10 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4298288Z    tests/e2e/playwright.e2e.test.js [463:40 - 472:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4298606Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4299042Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [397:33 - 406:10] (10 lines, 44 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4299564Z    tests/e2e/puppeteer.e2e.test.js [314:35 - 323:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4299881Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4300319Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [441:39 - 482:14] (42 lines, 176 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4300743Z    tests/e2e/puppeteer.e2e.test.js [396:72 - 437:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4301061Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4301495Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [447:25 - 462:25] (16 lines, 56 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4301921Z    tests/e2e/playwright.e2e.test.js [493:25 - 507:25]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4302239Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4302672Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [447:25 - 462:25] (16 lines, 56 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4303093Z    tests/e2e/puppeteer.e2e.test.js [447:23 - 461:23]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4303408Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4303842Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [462:48 - 472:10] (11 lines, 44 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4304266Z    tests/e2e/playwright.e2e.test.js [507:51 - 516:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4304584Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4305020Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [482:57 - 492:10] (11 lines, 57 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4305553Z    tests/e2e/puppeteer.e2e.test.js [434:38 - 446:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4305869Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4306302Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [499:42 - 514:10] (16 lines, 78 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4306818Z    tests/e2e/puppeteer.e2e.test.js [453:40 - 468:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4307138Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4307570Z  - ^[[1m^[[32mtests/e2e/playwright.e2e.test.js^[[39m^[[22m [524:41 - 548:3] (25 lines, 99 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4307966Z    tests/e2e/puppeteer.e2e.test.js [467:44 - 489:4]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4308264Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4308681Z  - ^[[1m^[[32mtests/e2e/puppeteer.e2e.test.js^[[39m^[[22m [279:40 - 289:12] (11 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4309093Z    tests/e2e/puppeteer.e2e.test.js [462:40 - 471:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4309399Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4309777Z  - ^[[1m^[[32mtests/helpers/mocks.js^[[39m^[[22m [69:41 - 78:8] (10 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4310126Z    tests/helpers/mocks.js [195:40 - 204:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4310406Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4310788Z  - ^[[1m^[[32mtests/helpers/mocks.js^[[39m^[[22m [78:21 - 88:13] (11 lines, 43 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4311138Z    tests/helpers/mocks.js [204:21 - 214:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4311423Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4311806Z  - ^[[1m^[[32mtests/helpers/mocks.js^[[39m^[[22m [128:45 - 145:26] (18 lines, 110 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4312159Z    tests/helpers/mocks.js [258:53 - 275:24]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4312446Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4312834Z  - ^[[1m^[[32mtests/helpers/mocks.js^[[39m^[[22m [133:11 - 145:26] (13 lines, 59 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4313191Z    tests/helpers/mocks.js [301:48 - 313:28]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4313477Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4313861Z  - ^[[1m^[[32mtests/helpers/mocks.js^[[39m^[[22m [151:22 - 156:47] (6 lines, 65 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4314213Z    tests/helpers/mocks.js [226:21 - 231:47]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4314497Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4314875Z  - ^[[1m^[[32mtests/helpers/mocks.js^[[39m^[[22m [270:17 - 275:32] (6 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4315224Z    tests/helpers/mocks.js [308:21 - 313:36]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4315602Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4315979Z  - ^[[1m^[[32mtests/helpers/mocks.js^[[39m^[[22m [396:5 - 409:7] (14 lines, 86 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4316326Z    tests/helpers/mocks.js [451:38 - 464:7]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4316614Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4317016Z  - ^[[1m^[[32mtests/unit/bindings.test.js^[[39m^[[22m [13:53 - 24:47] (12 lines, 53 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4317522Z    tests/unit/bindings.test.js [45:50 - 57:47]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4317840Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4318247Z  - ^[[1m^[[32mtests/unit/bindings.test.js^[[39m^[[22m [13:53 - 20:13] (8 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4318640Z    tests/unit/bindings.test.js [290:37 - 297:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4318948Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4319362Z  - ^[[1m^[[32mtests/unit/bindings.test.js^[[39m^[[22m [219:54 - 228:24] (10 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4319758Z    tests/unit/bindings.test.js [250:62 - 258:41]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4320063Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4320494Z  - ^[[1m^[[32mtests/unit/bindings.test.js^[[39m^[[22m [219:54 - 228:24] (10 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4320891Z    tests/unit/bindings.test.js [261:57 - 270:24]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4321223Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4321655Z  - ^[[1m^[[32mtests/unit/bindings.test.js^[[39m^[[22m [220:45 - 228:24] (9 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4322048Z    tests/unit/bindings.test.js [239:8 - 246:41]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4322352Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4322763Z  - ^[[1m^[[32mtests/unit/bindings.test.js^[[39m^[[22m [251:46 - 258:50] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4323153Z    tests/unit/bindings.test.js [262:46 - 270:33]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4323459Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4323874Z  - ^[[1m^[[32mtests/unit/bindings.test.js^[[39m^[[22m [322:64 - 331:31] (10 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4324369Z    tests/unit/bindings.test.js [338:64 - 347:31]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4324680Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4325156Z  - ^[[1m^[[32mtests/unit/browser/browser-cookies.test.js^[[39m^[[22m [54:62 - 59:33] (6 lines, 39 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4325733Z    tests/unit/browser/browser-cookies.test.js [68:31 - 73:33]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4326071Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4326548Z  - ^[[1m^[[32mtests/unit/browser/browser-cookies.test.js^[[39m^[[22m [268:7 - 280:29] (13 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4327039Z    tests/unit/browser/browser-cookies.test.js [559:56 - 572:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4327387Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4327861Z  - ^[[1m^[[32mtests/unit/browser/browser-cookies.test.js^[[39m^[[22m [269:7 - 277:8] (9 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4328346Z    tests/unit/browser/browser-cookies.test.js [356:26 - 364:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4328683Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4329125Z  - ^[[1m^[[32mtests/unit/browser/browser-profiles-sources.test.js^[[39m^[[22m [1:1 - 6:9] (6 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4329451Z    tests/unit/browser/migration/cookies.test.js [1:1 - 6:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4329665Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4329981Z  - ^[[1m^[[32mtests/unit/browser/connector.test.js^[[39m^[[22m [42:49 - 48:18] (7 lines, 37 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4330265Z    tests/unit/browser/connector.test.js [84:58 - 91:19]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4330473Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4330756Z  - ^[[1m^[[32mtests/unit/browser/navigation.test.js^[[39m^[[22m [24:40 - 30:49] (7 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4331039Z    tests/unit/browser/navigation.test.js [36:48 - 42:49]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4331246Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4331701Z  - ^[[1m^[[32mtests/unit/browser/navigation.test.js^[[39m^[[22m [84:50 - 94:45] (11 lines, 49 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4332150Z    tests/unit/interactions/fill.test.js [101:72 - 111:45]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4332473Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4332753Z  - ^[[1m^[[32mtests/unit/browser/navigation.test.js^[[39m^[[22m [86:12 - 93:8] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4333032Z    tests/unit/interactions/scroll.test.js [76:21 - 83:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4333236Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4333523Z  - ^[[1m^[[32mtests/unit/browser/navigation.test.js^[[39m^[[22m [111:37 - 117:10] (7 lines, 46 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4333910Z    tests/unit/browser/navigation.test.js [311:30 - 317:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4334120Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4334403Z  - ^[[1m^[[32mtests/unit/browser/navigation.test.js^[[39m^[[22m [134:63 - 139:12] (6 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4334691Z    tests/unit/browser/navigation.test.js [389:57 - 393:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4334901Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4335165Z  - ^[[1m^[[32mtests/unit/browser/pdf.test.js^[[39m^[[22m [13:61 - 19:19] (7 lines, 37 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4335838Z    tests/unit/browser/pdf.test.js [55:60 - 61:19]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4336298Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4336788Z  - ^[[1m^[[32mtests/unit/browser/pdf.test.js^[[39m^[[22m [19:44 - 27:16] (9 lines, 43 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4337221Z    tests/unit/browser/pdf.test.js [61:43 - 69:16]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4337529Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4337987Z  - ^[[1m^[[32mtests/unit/browser/real-browser.test.js^[[39m^[[22m [27:39 - 37:6] (11 lines, 46 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4338469Z    tests/unit/browser/storage-state.test.js [15:33 - 25:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4338808Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4339285Z  - ^[[1m^[[32mtests/unit/browser/storage-state.test.js^[[39m^[[22m [25:71 - 30:10] (6 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4339754Z    tests/unit/browser/storage-state.test.js [124:63 - 129:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4340092Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4340776Z  - ^[[1m^[[32mtests/unit/browser/storage-state.test.js^[[39m^[[22m [51:69 - 62:19] (12 lines, 66 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4341242Z    tests/unit/browser/storage-state.test.js [78:70 - 89:19]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4341583Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4342035Z  - ^[[1m^[[32mtests/unit/browser/storage-state.test.js^[[39m^[[22m [69:46 - 78:6] (10 lines, 94 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4342494Z    tests/unit/browser/storage-state.test.js [99:50 - 108:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4342826Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4343279Z  - ^[[1m^[[32mtests/unit/core/dialog-manager.test.js^[[39m^[[22m [36:26 - 45:12] (10 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4343730Z    tests/unit/core/network-tracker.test.js [9:27 - 18:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4344056Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4344492Z  - ^[[1m^[[32mtests/unit/core/dialog-manager.test.js^[[39m^[[22m [102:14 - 107:64] (6 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4344948Z    tests/unit/core/dialog-manager.test.js [372:16 - 377:64]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4345405Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4345849Z  - ^[[1m^[[32mtests/unit/core/dialog-manager.test.js^[[39m^[[22m [107:74 - 112:6] (6 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4346303Z    tests/unit/core/dialog-manager.test.js [377:73 - 383:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4346629Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4347075Z  - ^[[1m^[[32mtests/unit/core/dialog-manager.test.js^[[39m^[[22m [180:40 - 185:12] (6 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4347522Z    tests/unit/core/dialog-manager.test.js [213:36 - 218:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4347844Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4348291Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [56:38 - 62:13] (7 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4348740Z    tests/unit/core/engine-adapter.test.js [155:37 - 161:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4349064Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4349511Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [63:38 - 69:13] (7 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4349962Z    tests/unit/core/engine-adapter.test.js [162:37 - 168:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4350293Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4350737Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [70:38 - 76:13] (7 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4351183Z    tests/unit/core/engine-adapter.test.js [169:37 - 175:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4351509Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4351949Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [77:38 - 84:15] (8 lines, 46 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4352511Z    tests/unit/core/engine-adapter.test.js [176:37 - 183:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4352836Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4353282Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [85:40 - 91:15] (7 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4353722Z    tests/unit/core/engine-adapter.test.js [184:39 - 190:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4354044Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4354492Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [92:40 - 98:15] (7 lines, 48 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4354931Z    tests/unit/core/engine-adapter.test.js [191:39 - 197:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4355356Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4355799Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [99:40 - 105:10] (7 lines, 43 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4356239Z    tests/unit/core/engine-adapter.test.js [198:39 - 204:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4356566Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4357013Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [107:40 - 116:10] (10 lines, 64 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4357456Z    tests/unit/core/engine-adapter.test.js [206:39 - 214:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4357777Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4358281Z  - ^[[1m^[[32mtests/unit/core/engine-adapter.test.js^[[39m^[[22m [221:44 - 226:8] (6 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4358753Z    tests/unit/core/engine-adapter.test.js [228:43 - 233:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4359208Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4359672Z  - ^[[1m^[[32mtests/unit/core/engine-detection.test.js^[[39m^[[22m [45:78 - 50:17] (6 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4360135Z    tests/unit/core/engine-detection.test.js [69:51 - 74:17]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4360473Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4360951Z  - ^[[1m^[[32mtests/unit/core/navigation-manager.test.js^[[39m^[[22m [41:78 - 48:59] (8 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4361431Z    tests/unit/core/navigation-manager.test.js [76:36 - 82:59]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4361767Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4362223Z  - ^[[1m^[[32mtests/unit/core/navigation-safety.test.js^[[39m^[[22m [22:43 - 27:26] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4362683Z    tests/unit/core/navigation-safety.test.js [81:40 - 86:26]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4363022Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4363481Z  - ^[[1m^[[32mtests/unit/core/navigation-safety.test.js^[[39m^[[22m [147:63 - 154:12] (8 lines, 48 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4363932Z    tests/unit/utilities/wait.test.js [149:8 - 156:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4364244Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4364707Z  - ^[[1m^[[32mtests/unit/core/navigation-safety.test.js^[[39m^[[22m [158:49 - 165:8] (8 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4365144Z    tests/unit/utilities/wait.test.js [167:7 - 174:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4365587Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4366050Z  - ^[[1m^[[32mtests/unit/core/network-tracker.test.js^[[39m^[[22m [53:44 - 60:15] (8 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4366512Z    tests/unit/core/network-tracker.test.js [64:41 - 71:15]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4366848Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4367316Z  - ^[[1m^[[32mtests/unit/core/network-tracker.test.js^[[39m^[[22m [113:35 - 120:46] (8 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4367774Z    tests/unit/core/network-tracker.test.js [124:38 - 131:46]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4368049Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4368341Z  - ^[[1m^[[32mtests/unit/core/network-tracker.test.js^[[39m^[[22m [113:35 - 120:18] (8 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4368632Z    tests/unit/core/network-tracker.test.js [136:54 - 143:18]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4368876Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4369304Z  - ^[[1m^[[32mtests/unit/core/network-tracker.test.js^[[39m^[[22m [170:61 - 179:17] (10 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4369739Z    tests/unit/core/network-tracker.test.js [185:38 - 193:65]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4370164Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4370631Z  - ^[[1m^[[32mtests/unit/core/page-trigger-manager.test.js^[[39m^[[22m [199:56 - 205:27] (7 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4371100Z    tests/unit/core/page-trigger-manager.test.js [210:56 - 216:27]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4371442Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4371904Z  - ^[[1m^[[32mtests/unit/core/page-trigger-manager.test.js^[[39m^[[22m [223:57 - 229:27] (7 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4372390Z    tests/unit/core/page-trigger-manager.test.js [238:56 - 244:27]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4372740Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4373215Z  - ^[[1m^[[32mtests/unit/core/page-trigger-manager.test.js^[[39m^[[22m [290:35 - 297:10] (8 lines, 48 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4373716Z    tests/unit/core/page-trigger-manager.test.js [330:35 - 337:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4374078Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4374568Z  - ^[[1m^[[32mtests/unit/core/page-trigger-manager.test.js^[[39m^[[22m [302:55 - 309:23] (8 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4375061Z    tests/unit/core/page-trigger-manager.test.js [316:52 - 323:23]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4375640Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4376069Z  - ^[[1m^[[32mtests/unit/downloads/manager.test.js^[[39m^[[22m [1:46 - 7:9] (7 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4376494Z    tests/unit/traces/recorder.test.js [2:23 - 8:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4376807Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4377402Z  - ^[[1m^[[32mtests/unit/downloads/manager.test.js^[[39m^[[22m [266:7 - 271:11] (6 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4377838Z    tests/unit/downloads/manager.test.js [485:23 - 490:11]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4378154Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4378586Z  - ^[[1m^[[32mtests/unit/downloads/manager.test.js^[[39m^[[22m [363:72 - 368:12] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4379005Z    tests/unit/downloads/manager.test.js [414:75 - 422:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4379328Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4379771Z  - ^[[1m^[[32mtests/unit/downloads/manager.test.js^[[39m^[[22m [363:72 - 368:19] (6 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4380231Z    tests/unit/downloads/manager.test.js [451:78 - 456:19]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4380519Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4380937Z  - ^[[1m^[[32mtests/unit/downloads/manager.test.js^[[39m^[[22m [386:7 - 394:8] (9 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4381362Z    tests/unit/downloads/manager.test.js [444:7 - 451:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4381691Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4382138Z  - ^[[1m^[[32mtests/unit/downloads/staging.test.js^[[39m^[[22m [93:63 - 102:12] (10 lines, 37 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4382583Z    tests/unit/downloads/staging.test.js [106:60 - 115:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4382920Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4383370Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [130:67 - 137:31] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4383807Z    tests/unit/elements/content.test.js [174:9 - 181:31]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4384138Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4384586Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [166:36 - 171:30] (6 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4385014Z    tests/unit/elements/content.test.js [232:35 - 237:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4385501Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4385950Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [166:30 - 171:30] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4386407Z    tests/unit/elements/content.test.js [304:31 - 309:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4386745Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4387209Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [166:30 - 171:30] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4387651Z    tests/unit/elements/selectors.test.js [59:28 - 64:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4387992Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4388451Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [166:36 - 171:30] (6 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4389077Z    tests/unit/elements/selectors.test.js [125:44 - 130:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4389410Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4389868Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [166:36 - 171:30] (6 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4390344Z    tests/unit/elements/visibility.test.js [68:40 - 73:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4390850Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4391456Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [166:36 - 171:30] (6 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4392103Z    tests/unit/elements/visibility.test.js [216:30 - 221:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4392522Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4393118Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [196:62 - 203:32] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4393677Z    tests/unit/elements/content.test.js [240:9 - 247:32]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4394153Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4394812Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [232:36 - 242:12] (11 lines, 49 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4395505Z    tests/unit/interactions/fill.test.js [63:49 - 75:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4395958Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4396517Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [270:66 - 278:32] (9 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4397020Z    tests/unit/elements/content.test.js [312:9 - 320:32]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4408614Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4409090Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [339:51 - 347:32] (9 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4409383Z    tests/unit/elements/content.test.js [356:10 - 364:32]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4409595Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4409882Z  - ^[[1m^[[32mtests/unit/elements/content.test.js^[[39m^[[22m [396:8 - 403:28] (8 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4410169Z    tests/unit/interactions/scroll.test.js [178:53 - 184:28]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4410389Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4410675Z  - ^[[1m^[[32mtests/unit/elements/locators.test.js^[[39m^[[22m [135:19 - 140:30] (6 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4410960Z    tests/unit/elements/selectors.test.js [312:38 - 317:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4411168Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4411450Z  - ^[[1m^[[32mtests/unit/elements/selectors.test.js^[[39m^[[22m [52:43 - 60:8] (9 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4411724Z    tests/unit/elements/selectors.test.js [69:11 - 77:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4411935Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4412214Z  - ^[[1m^[[32mtests/unit/elements/selectors.test.js^[[39m^[[22m [59:35 - 65:24] (7 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4412499Z    tests/unit/elements/visibility.test.js [136:41 - 142:24]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4412710Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4412989Z  - ^[[1m^[[32mtests/unit/elements/selectors.test.js^[[39m^[[22m [91:40 - 99:42] (9 lines, 46 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4413274Z    tests/unit/elements/selectors.test.js [117:40 - 125:42]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4413482Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4413760Z  - ^[[1m^[[32mtests/unit/elements/selectors.test.js^[[39m^[[22m [91:42 - 99:42] (9 lines, 45 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4414042Z    tests/unit/elements/selectors.test.js [133:9 - 141:42]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4414248Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4414532Z  - ^[[1m^[[32mtests/unit/elements/selectors.test.js^[[39m^[[22m [95:29 - 102:8] (8 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4414811Z    tests/unit/elements/selectors.test.js [108:28 - 115:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4415016Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4415433Z  - ^[[1m^[[32mtests/unit/elements/selectors.test.js^[[39m^[[22m [121:17 - 126:8] (6 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4415879Z    tests/unit/elements/selectors.test.js [137:17 - 142:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4416173Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4416462Z  - ^[[1m^[[32mtests/unit/elements/selectors.test.js^[[39m^[[22m [125:45 - 135:12] (11 lines, 49 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4416907Z    tests/unit/elements/visibility.test.js [216:31 - 226:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4417124Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4417408Z  - ^[[1m^[[32mtests/unit/elements/selectors.test.js^[[39m^[[22m [315:70 - 323:12] (9 lines, 42 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4417693Z    tests/unit/elements/visibility.test.js [71:41 - 78:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4417895Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4418179Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [24:44 - 29:16] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4418455Z    tests/unit/elements/visibility.test.js [48:43 - 53:16]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4418659Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4418966Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [25:44 - 32:34] (8 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4419243Z    tests/unit/elements/visibility.test.js [37:45 - 44:34]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4419448Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4419730Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [25:57 - 32:34] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4420009Z    tests/unit/elements/visibility.test.js [76:9 - 83:34]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4420211Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4420491Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [38:7 - 45:8] (8 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4420766Z    tests/unit/elements/visibility.test.js [77:7 - 84:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4421052Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4421328Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [49:55 - 56:34] (8 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4421605Z    tests/unit/elements/visibility.test.js [61:40 - 68:34]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4421806Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4422084Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [68:33 - 73:30] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4422365Z    tests/unit/elements/visibility.test.js [136:33 - 141:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4422578Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4422854Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [68:33 - 73:30] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4423124Z    tests/unit/interactions/fill.test.js [63:41 - 69:30]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4423323Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4423608Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [98:38 - 105:34] (8 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4423890Z    tests/unit/elements/visibility.test.js [110:55 - 117:34]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4424094Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4424374Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [98:58 - 105:34] (8 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4424653Z    tests/unit/elements/visibility.test.js [146:11 - 153:34]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4424865Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4425143Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [111:7 - 118:8] (8 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4425693Z    tests/unit/elements/visibility.test.js [147:7 - 154:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4425896Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4426179Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [168:40 - 175:28] (8 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4426482Z    tests/unit/elements/visibility.test.js [192:40 - 199:28]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4426695Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4426982Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [168:42 - 175:28] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4427261Z    tests/unit/elements/visibility.test.js [224:9 - 231:28]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4427466Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4427745Z  - ^[[1m^[[32mtests/unit/elements/visibility.test.js^[[39m^[[22m [193:7 - 200:8] (8 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4428019Z    tests/unit/elements/visibility.test.js [225:7 - 232:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4428220Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4428565Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:54 - 24:52] (9 lines, 61 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4428802Z    tests/unit/factory.test.js [49:38 - 57:52]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4428993Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4429249Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:54 - 26:17] (11 lines, 68 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4429486Z    tests/unit/factory.test.js [62:42 - 73:17]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4429675Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4429926Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:54 - 26:26] (11 lines, 69 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4430166Z    tests/unit/factory.test.js [102:35 - 113:18]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4430357Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4430606Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:54 - 26:14] (11 lines, 66 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4430844Z    tests/unit/factory.test.js [117:35 - 127:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4431032Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4431282Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:54 - 24:52] (9 lines, 61 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4431521Z    tests/unit/factory.test.js [130:49 - 139:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4431708Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4431957Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:54 - 24:52] (9 lines, 61 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4432192Z    tests/unit/factory.test.js [147:51 - 156:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4432379Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4432713Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:56 - 26:17] (11 lines, 67 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4432952Z    tests/unit/factory.test.js [164:44 - 174:17]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4433140Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4433387Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:54 - 26:14] (11 lines, 66 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4433622Z    tests/unit/factory.test.js [180:90 - 192:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4433810Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4434064Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [16:54 - 22:33] (7 lines, 54 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4434300Z    tests/unit/factory.test.js [199:97 - 205:33]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4434490Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4434740Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [22:32 - 28:56] (7 lines, 42 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4434995Z    tests/unit/factory.test.js [40:34 - 46:56]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4435187Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4435556Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [35:53 - 44:14] (10 lines, 45 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4435804Z    tests/unit/factory.test.js [221:85 - 229:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4435996Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4436247Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [67:7 - 73:34] (7 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4436611Z    tests/unit/factory.test.js [169:7 - 174:34]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4436901Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4437296Z  - ^[[1m^[[32mtests/unit/factory.test.js^[[39m^[[22m [121:31 - 127:46] (7 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4437677Z    tests/unit/factory.test.js [184:31 - 194:13]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4437987Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4438425Z  - ^[[1m^[[32mtests/unit/fingerprint/apply.test.js^[[39m^[[22m [34:5 - 41:2] (8 lines, 51 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4438855Z    tests/unit/fingerprint/apply.test.js [50:5 - 57:2]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4439178Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4439637Z  - ^[[1m^[[32mtests/unit/fingerprint/apply.test.js^[[39m^[[22m [113:70 - 118:10] (6 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4440058Z    tests/unit/fingerprint/apply.test.js [192:69 - 196:10]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4440361Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4440645Z  - ^[[1m^[[32mtests/unit/fingerprint/apply.test.js^[[39m^[[22m [148:57 - 155:29] (8 lines, 39 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4440920Z    tests/unit/fingerprint/apply.test.js [178:77 - 185:29]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4441224Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4441506Z  - ^[[1m^[[32mtests/unit/fingerprint/apply.test.js^[[39m^[[22m [204:70 - 211:25] (8 lines, 61 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4441781Z    tests/unit/fingerprint/apply.test.js [217:47 - 222:71]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4441986Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4442291Z  - ^[[1m^[[32mtests/unit/high-level/universal-logic.test.js^[[39m^[[22m [19:43 - 31:8] (13 lines, 47 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4442605Z    tests/unit/high-level/universal-logic.test.js [105:44 - 117:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4442829Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4443132Z  - ^[[1m^[[32mtests/unit/high-level/universal-logic.test.js^[[39m^[[22m [134:38 - 142:27] (9 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4443447Z    tests/unit/high-level/universal-logic.test.js [172:39 - 180:27]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4443668Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4443972Z  - ^[[1m^[[32mtests/unit/high-level/universal-logic.test.js^[[39m^[[22m [192:46 - 202:27] (11 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4444290Z    tests/unit/high-level/universal-logic.test.js [251:48 - 261:27]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4444510Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4444791Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [20:45 - 30:49] (11 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4445064Z    tests/unit/interactions/fill.test.js [37:56 - 47:49]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4445377Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4445708Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [122:12 - 130:12] (9 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4446073Z    tests/unit/interactions/scroll.test.js [96:26 - 104:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4446281Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4446564Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [151:38 - 164:8] (14 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4446834Z    tests/unit/interactions/fill.test.js [167:41 - 180:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4447035Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4447313Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [151:38 - 161:33] (11 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4447586Z    tests/unit/interactions/fill.test.js [183:50 - 193:33]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4447789Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4448061Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [151:38 - 162:8] (12 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4448331Z    tests/unit/interactions/fill.test.js [201:10 - 212:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4448534Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4448806Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [190:16 - 198:12] (9 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4449084Z    tests/unit/interactions/scroll.test.js [236:38 - 244:12]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4449292Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4449567Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [216:48 - 224:34] (9 lines, 37 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4449837Z    tests/unit/interactions/fill.test.js [232:60 - 240:34]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4450040Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4450319Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [254:22 - 264:24] (11 lines, 39 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4450591Z    tests/unit/interactions/fill.test.js [280:22 - 290:24]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4450793Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4451072Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [325:54 - 336:18] (12 lines, 50 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4451348Z    tests/unit/interactions/fill.test.js [343:50 - 354:18]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4451551Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4451825Z  - ^[[1m^[[32mtests/unit/interactions/fill.test.js^[[39m^[[22m [325:54 - 331:14] (7 lines, 37 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4452103Z    tests/unit/interactions/scroll.test.js [261:62 - 267:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4452308Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4452593Z  - ^[[1m^[[32mtests/unit/interactions/keyboard.test.js^[[39m^[[22m [25:44 - 30:37] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4452971Z    tests/unit/interactions/keyboard.test.js [37:43 - 42:37]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4453178Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4453461Z  - ^[[1m^[[32mtests/unit/interactions/keyboard.test.js^[[39m^[[22m [57:49 - 63:14] (7 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4453749Z    tests/unit/interactions/keyboard.test.js [157:46 - 163:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4453962Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4454246Z  - ^[[1m^[[32mtests/unit/interactions/keyboard.test.js^[[39m^[[22m [57:49 - 63:14] (7 lines, 30 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4454535Z    tests/unit/interactions/keyboard.test.js [207:45 - 213:14]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4454744Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4455027Z  - ^[[1m^[[32mtests/unit/interactions/keyboard.test.js^[[39m^[[22m [75:44 - 80:37] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4455441Z    tests/unit/interactions/keyboard.test.js [87:43 - 92:37]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4455783Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4456097Z  - ^[[1m^[[32mtests/unit/interactions/keyboard.test.js^[[39m^[[22m [125:44 - 130:36] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4456388Z    tests/unit/interactions/keyboard.test.js [137:43 - 142:36]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4456599Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4456886Z  - ^[[1m^[[32mtests/unit/interactions/keyboard.test.js^[[39m^[[22m [175:44 - 180:34] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4457179Z    tests/unit/interactions/keyboard.test.js [187:43 - 192:34]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4457478Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4457755Z  - ^[[1m^[[32mtests/unit/interactions/scroll.test.js^[[39m^[[22m [21:45 - 28:42] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4458031Z    tests/unit/interactions/scroll.test.js [35:46 - 42:42]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4458234Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4458513Z  - ^[[1m^[[32mtests/unit/interactions/scroll.test.js^[[39m^[[22m [21:45 - 28:42] (8 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4458785Z    tests/unit/interactions/scroll.test.js [51:10 - 58:42]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4458988Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4459266Z  - ^[[1m^[[32mtests/unit/interactions/scroll.test.js^[[39m^[[22m [36:8 - 43:33] (8 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4459540Z    tests/unit/interactions/scroll.test.js [52:8 - 59:33]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4459742Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4460021Z  - ^[[1m^[[32mtests/unit/interactions/scroll.test.js^[[39m^[[22m [43:43 - 53:27] (11 lines, 49 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4460306Z    tests/unit/interactions/scroll.test.js [239:32 - 250:27]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4460512Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4460797Z  - ^[[1m^[[32mtests/unit/interactions/scroll.test.js^[[39m^[[22m [120:22 - 132:42] (13 lines, 39 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4461081Z    tests/unit/interactions/scroll.test.js [186:61 - 198:42]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4461286Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4461571Z  - ^[[1m^[[32mtests/unit/interactions/scroll.test.js^[[39m^[[22m [136:47 - 150:39] (15 lines, 64 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4461853Z    tests/unit/interactions/scroll.test.js [158:52 - 172:39]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4462060Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4462340Z  - ^[[1m^[[32mtests/unit/interactions/scroll.test.js^[[39m^[[22m [230:36 - 240:8] (11 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4462621Z    tests/unit/interactions/scroll.test.js [247:10 - 257:8]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4462827Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4463117Z  - ^[[1m^[[32mtests/unit/scripts/cargo-lock-sync.test.js^[[39m^[[22m [17:1 - 39:9] (23 lines, 58 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4463437Z    tests/unit/scripts/changelog-collection-order.test.js [26:1 - 43:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4463674Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4463982Z  - ^[[1m^[[32mtests/unit/scripts/check-release-format.test.js^[[39m^[[22m [14:23 - 19:9] (6 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4464305Z    tests/unit/scripts/push-with-rebase-retry.test.js [18:23 - 23:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4464617Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4464922Z  - ^[[1m^[[32mtests/unit/scripts/check-release-format.test.js^[[39m^[[22m [14:23 - 19:9] (6 lines, 31 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4465224Z    tests/unit/scripts/release-tags.test.js [19:23 - 24:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4465538Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4465834Z  - ^[[1m^[[32mtests/unit/scripts/ci-workflow-policy.test.js^[[39m^[[22m [1:45 - 7:9] (7 lines, 34 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4466154Z    tests/unit/scripts/npm-release-helpers.test.js [7:1 - 13:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4466374Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4466672Z  - ^[[1m^[[32mtests/unit/scripts/ci-workflow-policy.test.js^[[39m^[[22m [87:52 - 95:6] (9 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4466982Z    tests/unit/scripts/ci-workflow-policy.test.js [174:19 - 182:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4467204Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4467504Z  - ^[[1m^[[32mtests/unit/scripts/ci-workflow-policy.test.js^[[39m^[[22m [173:60 - 182:6] (10 lines, 40 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4467817Z    tests/unit/scripts/ci-workflow-policy.test.js [248:81 - 257:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4468042Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4468342Z  - ^[[1m^[[32mtests/unit/scripts/ci-workflow-policy.test.js^[[39m^[[22m [173:60 - 180:6] (8 lines, 38 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4468651Z    tests/unit/scripts/ci-workflow-policy.test.js [262:84 - 269:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4468870Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4469185Z  - ^[[1m^[[32mtests/unit/scripts/command-stream-errexit.test.js^[[39m^[[22m [25:1 - 39:2] (15 lines, 57 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4469601Z    tests/unit/scripts/use-module-integration.test.js [15:1 - 29:2]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4469828Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4470138Z  - ^[[1m^[[32mtests/unit/scripts/command-stream-errexit.test.js^[[39m^[[22m [88:60 - 93:22] (6 lines, 32 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4470466Z    tests/unit/scripts/command-stream-errexit.test.js [105:45 - 110:22]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4470699Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4471009Z  - ^[[1m^[[32mtests/unit/scripts/command-stream-errexit.test.js^[[39m^[[22m [88:60 - 96:14] (9 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4471336Z    tests/unit/scripts/command-stream-errexit.test.js [118:81 - 130:33]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4471599Z ^[[1mClone found (javascript)^[[22m ^[[31m[NEW]^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4471913Z  - ^[[1m^[[32mtests/unit/scripts/jscpd-config.test.js^[[39m^[[22m [15:13 - 24:9] (10 lines, 36 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4472229Z    tests/unit/scripts/run-with-budget-warning.test.js [20:12 - 30:9]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4472465Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4472750Z  - ^[[1m^[[32mtests/unit/scripts/read-manifest.test.js^[[39m^[[22m [1:10 - 7:7] (7 lines, 35 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4473050Z    tests/unit/scripts/use-module-adoption.test.js [13:23 - 19:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4473294Z ^[[1mClone found (javascript)^[[22m ^[[31m[NEW]^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4473602Z  - ^[[1m^[[32mtests/unit/scripts/required-docs.test.js^[[39m^[[22m [22:56 - 29:25] (8 lines, 41 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4473923Z    tests/unit/scripts/run-with-budget-warning.test.js [25:1 - 32:25]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4474149Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4474450Z  - ^[[1m^[[32mtests/unit/scripts/use-module-adoption.test.js^[[39m^[[22m [50:48 - 56:6] (7 lines, 33 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4474757Z    tests/unit/scripts/use-module-adoption.test.js [59:51 - 65:6]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4474976Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4475364Z  - ^[[1m^[[32mtests/unit/tests/index.test.js^[[39m^[[22m [293:75 - 304:7] (12 lines, 115 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4475620Z    tests/unit/tests/index.test.js [332:75 - 343:7]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4475814Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4476090Z  - ^[[1m^[[32mtests/unit/traces/recorder.test.js^[[39m^[[22m [257:48 - 262:38] (6 lines, 43 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4476361Z    tests/unit/traces/recorder.test.js [408:74 - 415:38]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4476563Z ^[[1mClone found (javascript)^[[22m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4476923Z  - ^[[1m^[[32mtests/unit/utilities/wait.test.js^[[39m^[[22m [155:57 - 164:26] (10 lines, 51 tokens)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4477186Z    tests/unit/utilities/wait.test.js [174:61 - 183:26]
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4477823Z ^[[90m┌────────────┬────────────────┬─────────────┬──────────────┬──────────────┬──────────────────┬───────────────────┐^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4478598Z ^[[90m│^[[39m^[[31m Format     ^[[39m^[[90m│^[[39m^[[31m Files analyzed ^[[39m^[[90m│^[[39m^[[31m Total lines ^[[39m^[[90m│^[[39m^[[31m Total tokens ^[[39m^[[90m│^[[39m^[[31m Clones found ^[[39m^[[90m│^[[39m^[[31m Duplicated lines ^[[39m^[[90m│^[[39m^[[31m Duplicated tokens ^[[39m^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4479301Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4479879Z ^[[90m│^[[39m bash       ^[[90m│^[[39m 1              ^[[90m│^[[39m 12          ^[[90m│^[[39m 112          ^[[90m│^[[39m 0            ^[[90m│^[[39m 0 (0.00%)        ^[[90m│^[[39m 0 (0.00%)         ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4480409Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4480933Z ^[[90m│^[[39m css        ^[[90m│^[[39m 1              ^[[90m│^[[39m 323         ^[[90m│^[[39m 1321         ^[[90m│^[[39m 0            ^[[90m│^[[39m 0 (0.00%)        ^[[90m│^[[39m 0 (0.00%)         ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4481429Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4482104Z ^[[90m│^[[39m javascript ^[[90m│^[[39m 337            ^[[90m│^[[39m 73496       ^[[90m│^[[39m 334256       ^[[90m│^[[39m 263          ^[[90m│^[[39m 2611 (3.55%)     ^[[90m│^[[39m 11994 (3.59%)     ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4482622Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4483149Z ^[[90m│^[[39m json       ^[[90m│^[[39m 10             ^[[90m│^[[39m 1867        ^[[90m│^[[39m 5924         ^[[90m│^[[39m 3            ^[[90m│^[[39m 33 (1.77%)       ^[[90m│^[[39m 90 (1.52%)        ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4483659Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4484181Z ^[[90m│^[[39m jsx        ^[[90m│^[[39m 2              ^[[90m│^[[39m 484         ^[[90m│^[[39m 2606         ^[[90m│^[[39m 0            ^[[90m│^[[39m 0 (0.00%)        ^[[90m│^[[39m 0 (0.00%)         ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4484681Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4485211Z ^[[90m│^[[39m markdown   ^[[90m│^[[39m 4              ^[[90m│^[[39m 2524        ^[[90m│^[[39m 19030        ^[[90m│^[[39m 4            ^[[90m│^[[39m 183 (7.25%)      ^[[90m│^[[39m 278 (1.46%)       ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4485868Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4486477Z ^[[90m│^[[39m markup     ^[[90m│^[[39m 1              ^[[90m│^[[39m 25          ^[[90m│^[[39m 142          ^[[90m│^[[39m 0            ^[[90m│^[[39m 0 (0.00%)        ^[[90m│^[[39m 0 (0.00%)         ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4486973Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4487485Z ^[[90m│^[[39m sql        ^[[90m│^[[39m 1              ^[[90m│^[[39m 22          ^[[90m│^[[39m 196          ^[[90m│^[[39m 0            ^[[90m│^[[39m 0 (0.00%)        ^[[90m│^[[39m 0 (0.00%)         ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4488056Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4488580Z ^[[90m│^[[39m text       ^[[90m│^[[39m 3              ^[[90m│^[[39m 152         ^[[90m│^[[39m 2367         ^[[90m│^[[39m 3            ^[[90m│^[[39m 18 (11.84%)      ^[[90m│^[[39m 294 (12.42%)      ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4489082Z ^[[90m├────────────┼────────────────┼─────────────┼──────────────┼──────────────┼──────────────────┼───────────────────┤^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4489643Z ^[[90m│^[[39m ^[[1mTotal:^[[22m     ^[[90m│^[[39m 360            ^[[90m│^[[39m 78905       ^[[90m│^[[39m 365954       ^[[90m│^[[39m 273          ^[[90m│^[[39m 2845 (3.61%)     ^[[90m│^[[39m 12656 (3.46%)     ^[[90m│^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4490165Z ^[[90m└────────────┴────────────────┴─────────────┴──────────────┴──────────────┴──────────────────┴───────────────────┘^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4490437Z ^[[90mFound 273 clones (2 new).^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4490688Z ^[[32mHTML report saved to ./reports/jscpd/jscpd-report.html^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4490903Z ^[[90mtime: 50.004ms^[[39m
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4491218Z ERROR: jscpd found 2 new clones not in the baseline (allowed: 0)
+Lint and Format Check	Check code duplication	2026-10-06T20:13:02.4500028Z ##[error]Process completed with exit code 1.
+Pipeline Status	Fail the run when a required job was cancelled or failed	﻿2026-10-06T20:13:50.0917713Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.0918118Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1123103Z shell: /usr/bin/bash -e {0}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1123367Z env:
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1123570Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1123771Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1124002Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1125430Z   NEEDS_JSON: {
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "detect-changes": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "docs-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "workflow-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "any-code-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "js-code-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "mjs-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "js-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "package-changed": "false"
+Pipeline Status	Fail the run when a required job was cancelled or failed	    }
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "changeset-check": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "lint": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "failure",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "test": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "release": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "instant-release": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "changeset-pr": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+Pipeline Status	Fail the run when a required job was cancelled or failed	}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1127042Z   IS_MAIN: false
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1127255Z   RUN_SHA: ba4c0cb0f81f87bd5d5579bf5f1c8d120fc6f088
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1127522Z ##[endgroup]
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1938282Z Failed jobs:    lint
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1938640Z Cancelled jobs: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1938906Z Unexpected job results: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1952776Z ##[error]Pipeline failed. Failing jobs: lint
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:13:50.1963308Z ##[error]Process completed with exit code 1.

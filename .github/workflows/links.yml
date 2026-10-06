@@ -58,6 +58,18 @@ jobs:
         with:
           node-version: '24.x'
 
+      # `--cache` below reads and writes .lycheecache in the workspace, which
+      # a fresh checkout does not have; without this step the flag did nothing
+      # and every run re-checked every link (issue #128). A key per commit
+      # saves a new entry each run, and the prefix restores the newest one;
+      # `--max-cache-age` still expires individual results.
+      - name: Restore lychee cache
+        uses: actions/cache@v5
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.sha }}
+          restore-keys: lychee-
+
       - name: Check links with lychee
         id: lychee
         uses: lycheeverse/lychee-action@v2

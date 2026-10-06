@@ -151,3 +151,6 @@ js/docs-api/
 
 # Solver session transcripts are machine-generated and may echo credentials.
 dev/log/**/sessions/
+
+# lychee link-check cache (links.yml restores it with actions/cache)
+.lycheecache

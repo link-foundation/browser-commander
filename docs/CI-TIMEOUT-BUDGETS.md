@@ -161,6 +161,57 @@ The `no-openssl` job in `rust.yml` is deliberately unwrapped: it runs in a
 `rust:slim-bookworm` container that has no `bash` on `PATH`, so GitHub falls
 back to `sh -e` there and the wrapper could not run.
 
+## Release preflight
+
+A timeout is not the only way a release fails late. Run 37509328334 built,
+tested and versioned the Python package on `main` and only then failed at
+"Publish to PyPI" with `invalid-publisher`: PyPI had no trusted publisher for
+this repository and workflow, and nothing before the publish step asked
+(issue #128). Principle 16 of the pipeline templates — "Prove You Can Publish
+Before You Build" — moves that question to the start of the run.
+
+[`scripts/preflight-credentials.sh`](../scripts/preflight-credentials.sh) runs
+in a `release-preflight` job (5-minute backstop, no build) in `python.yml`,
+`js.yml` and `rust.yml`, in parallel with lint and tests. `PREFLIGHT_REGISTRIES`
+picks the probe:
+
+| Workflow     | Registry | Probe                                                                                            |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------ |
+| `python.yml` | `pypi`   | exchanges the job's OIDC token at PyPI's `/_/oidc/mint-token`, as the publish action does        |
+| `js.yml`     | `npm`    | exchanges the job's OIDC token at npm's trusted-publishing token endpoint, as `npm publish` does |
+| `rust.yml`   | `crates` | sends `CARGO_TOKEN` to crates.io and checks crate ownership when the account is visible          |
+
+The exchanges publish nothing, but they are the credential step the real
+publish performs, so a passing probe means the publish will be accepted.
+crates.io has no dry-run write: its probe proves the token is live, not which
+scopes it carries.
+
+On a push to `main` or a manual release the job runs in **release** mode: a
+refused credential, or a run that verified nothing because every probe came
+back unknown (unreachable, rate-limited, unexpected status), fails the job, and
+the publishing jobs, which require `needs.release-preflight.result ==
+'success'`, never start. On pull requests it runs in **report** mode and only
+annotates, because a fork gets neither OIDC tokens nor secrets. Every failure
+is reported, not just the first, and no token is ever printed.
+
+### Registering the PyPI trusted publisher
+
+The PyPI probe stays red until a maintainer registers the publisher. Because
+the project is not on PyPI yet, that is a _pending_ publisher, created at
+<https://pypi.org/manage/account/publishing/> with:
+
+| Field             | Value               |
+| ----------------- | ------------------- |
+| PyPI project name | `browser-commander` |
+| Owner             | `link-foundation`   |
+| Repository name   | `browser-commander` |
+| Workflow name     | `python.yml`        |
+| Environment name  | _(leave empty)_     |
+
+When the preflight fails in release mode, its next step runs
+[`python/scripts/explain_pypi_failure.py`](../python/scripts/explain_pypi_failure.py),
+which prints the same values for the run that failed.
+
 ## Reference
 
 Both scripts are adopted from the `link-foundation` pipeline templates

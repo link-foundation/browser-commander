@@ -70,6 +70,20 @@ async function load(t) {
   }
 }
 
+/**
+ * A test that runs commands through `$`, skipped when it cannot be loaded.
+ * @param {string} name
+ * @param {(shell: (...args: any[]) => Promise<any>) => Promise<void>} body
+ */
+function itWithShell(name, body) {
+  it(name, async (t) => {
+    const $ = (await load(t))?.$;
+    if ($) {
+      await body($);
+    }
+  });
+}
+
 describe('loadCommandStream makes a failed command fail', () => {
   it('turns errexit on, so the release scripts catch what they try to catch', async (t) => {
     const cs = await load(t);
@@ -85,52 +99,44 @@ describe('loadCommandStream makes a failed command fail', () => {
     );
   });
 
-  it('rejects on a non-zero exit and reports the exit code', async (t) => {
-    const cs = await load(t);
-    if (!cs) {
-      return;
+  itWithShell(
+    'rejects on a non-zero exit and reports the exit code',
+    async ($) => {
+      // A real process, as in the release scripts. command-stream's virtual
+      // `exit` builtin would also reject, but it writes "Command failed with
+      // exit code 7" to stderr on top, which surfaced as a stray line at the end
+      // of every CI test log (issue #128).
+      await assert.rejects(
+        () => $`sh -c "exit 7"`,
+        (error) => {
+          assert.equal(
+            error.code,
+            7,
+            'the exit code must survive on the error'
+          );
+          return true;
+        },
+        'a command exiting 7 must reject, not resolve'
+      );
     }
-    const { $ } = cs;
+  );
 
-    // A real process, as in the release scripts. command-stream's virtual
-    // `exit` builtin would also reject, but it writes "Command failed with
-    // exit code 7" to stderr on top, which surfaced as a stray line at the end
-    // of every CI test log (issue #128).
-    await assert.rejects(
-      () => $`sh -c "exit 7"`,
-      (error) => {
-        assert.equal(error.code, 7, 'the exit code must survive on the error');
-        return true;
-      },
-      'a command exiting 7 must reject, not resolve'
-    );
-  });
-
-  it('still resolves with stdout on success', async (t) => {
-    const cs = await load(t);
-    if (!cs) {
-      return;
-    }
-    const { $ } = cs;
-
+  itWithShell('still resolves with stdout on success', async ($) => {
     // errexit must not turn every command into a throw: the success path is
     // what the release scripts read version numbers and git status out of.
     const result = await $`echo errexit-ok`;
     assert.match(String(result.stdout), /errexit-ok/);
   });
 
-  it('reports a non-zero exit for the exact command that broke the Rust release', async (t) => {
-    const cs = await load(t);
-    if (!cs) {
-      return;
+  itWithShell(
+    'reports a non-zero exit for the exact command that broke the Rust release',
+    async ($) => {
+      // `git diff --cached --quiet` exits 1 when there ARE staged changes.
+      // rust/scripts/version-and-commit.mjs relied on that becoming a rejection
+      // and, because it did not, reported "No changes to commit" after staging
+      // two modified files. `false` stands in for it here so the test needs no
+      // git fixture; the contract under test is identical.
+      await assert.rejects(() => $`false`, 'a command exiting 1 must reject');
     }
-    const { $ } = cs;
-
-    // `git diff --cached --quiet` exits 1 when there ARE staged changes.
-    // rust/scripts/version-and-commit.mjs relied on that becoming a rejection
-    // and, because it did not, reported "No changes to commit" after staging
-    // two modified files. `false` stands in for it here so the test needs no
-    // git fixture; the contract under test is identical.
-    await assert.rejects(() => $`false`, 'a command exiting 1 must reject');
-  });
+  );
 });

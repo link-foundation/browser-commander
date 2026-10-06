@@ -65,3 +65,16 @@ test at tests/unit/scripts/bot-commit-attribution.test.js:54:3
     operator: 'deepStrictEqual',
     diff: 'simple'
   }
+
+# Note added after the fix (2026-10-06). The failures above show only that the
+# legacy address was configured. They do not show that commits were
+# unattributed. The commits API attributes the legacy-address release commits
+# to the bot:
+#   $ gh api repos/link-foundation/browser-commander/commits/<sha> \
+#       -q '"\(.sha[0:7]) email=\(.commit.author.email) author=\(.author.login)"'
+#   9f8a552 email=github-actions[bot]@users.noreply.github.com author=github-actions[bot]
+#   cca988f email=github-actions[bot]@users.noreply.github.com author=github-actions[bot]
+#   fda33e7 email=github-actions[bot]@users.noreply.github.com author=github-actions[bot]
+#   d159aeb email=github-actions[bot]@users.noreply.github.com author=github-actions[bot]
+# The switch to 41898282+... is therefore alignment with the documented form
+# (actions/checkout README), not a fix for an observed failure.

@@ -1,13 +1,20 @@
 /**
- * Release commits must be attributed to the github-actions[bot] account
- * (issue #128).
+ * CI commits use the bot's documented no-reply address (issue #128).
  *
- * GitHub links a commit to the bot only through the numeric-prefixed no-reply
- * address. `github-actions[bot]@users.noreply.github.com` matches no account,
- * so the release commits of all three packages showed up as unattributed, and
- * a ruleset with `require_extra_approval_for_unattributed_changes` would hold
- * every automated release for a manual approval. The JS pipeline template
- * switched to the prefixed address for the same reason.
+ * GitHub documents a user's no-reply address as
+ * `{user.id}+{user.login}@users.noreply.github.com`, and the actions/checkout
+ * README configures `41898282+github-actions[bot]@users.noreply.github.com`
+ * for commits pushed from a workflow. The three release paths here used the
+ * legacy `github-actions[bot]@users.noreply.github.com` instead.
+ *
+ * Checked on 2026-10-06: GitHub still links the legacy address to the bot
+ * (the commits API returns `author.login: github-actions[bot]` for release
+ * commits 9f8a552, cca988f, fda33e7 and d159aeb), so no release was ever
+ * unattributed here. The JS pipeline template switched for that reason
+ * (link-foundation/js-ai-driven-development-pipeline-template#144), which
+ * this repository could not reproduce. The test pins the documented form so
+ * the three packages agree with each other and with the template, without
+ * relying on GitHub continuing to resolve the undocumented one.
  */
 
 import assert from 'node:assert/strict';

@@ -7,12 +7,16 @@
  * - Only checks changeset files ADDED by the current PR (not pre-existing ones)
  * - Uses git diff to compare PR head against base branch
  * - Validates that the PR adds exactly one changeset with proper format
- * - Falls back to checking all changesets for local development
+ * - Fails when a pull request's diff cannot be computed (issue #128): checking
+ *   every changeset on disk instead would let a stale one satisfy the check
+ * - Outside a pull request (local runs), checks the changesets on disk
  */
 
 import { execSync } from 'child_process';
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
+
+import { printUntrusted } from '../../scripts/github-actions-log.mjs';
 
 const PACKAGE_NAME = 'browser-commander';
 // When running from js/ directory, the changeset dir is local
@@ -113,13 +117,11 @@ function tryBaseBranchComparison(prBase) {
 }
 
 /**
- * Fallback: get all changesets in directory
+ * Outside a pull request: get all changesets in directory
  * @returns {string[]} Array of all changeset file names
  */
 function getAllChangesets() {
-  console.log(
-    'Warning: Could not determine PR diff, checking all changesets in directory'
-  );
+  console.log('No pull request to compare; checking all changesets on disk');
   if (!existsSync(CHANGESET_DIR)) {
     return [];
   }
@@ -136,6 +138,8 @@ function getAddedChangesetFiles() {
   const baseSha = process.env.GITHUB_BASE_SHA || process.env.BASE_SHA;
   const headSha = process.env.GITHUB_HEAD_SHA || process.env.HEAD_SHA;
 
+  const prBase = process.env.GITHUB_BASE_REF;
+
   // Try explicit SHAs first
   if (baseSha && headSha) {
     const result = tryExplicitShaComparison(baseSha, headSha);
@@ -145,7 +149,6 @@ function getAddedChangesetFiles() {
   }
 
   // Try base branch comparison
-  const prBase = process.env.GITHUB_BASE_REF;
   if (prBase) {
     const result = tryBaseBranchComparison(prBase);
     if (result !== null) {
@@ -153,7 +156,14 @@ function getAddedChangesetFiles() {
     }
   }
 
-  // Fallback to checking all changesets
+  // In a pull request, every changeset on disk includes ones already on the
+  // base branch, so falling back to them would pass a PR that adds none.
+  if (prBase || baseSha || headSha) {
+    throw new Error(
+      'Could not determine which changesets this pull request adds, because git could not diff it against its base'
+    );
+  }
+
   return getAllChangesets();
 }
 
@@ -252,7 +262,9 @@ try {
     console.error(`::error::${validation.error}`);
     console.error(`\nFile content of ${changesetFile}:`);
     try {
-      console.error(readFileSync(changesetFile, 'utf-8'));
+      printUntrusted(readFileSync(changesetFile, 'utf-8'), {
+        stream: process.stderr,
+      });
     } catch {
       console.error('(could not read file)');
     }
@@ -261,9 +273,10 @@ try {
 
   console.log('Changeset validation passed');
   console.log(`   Type: ${validation.type}`);
-  console.log(`   Description: ${validation.description}`);
+  console.log('   Description:');
+  printUntrusted(validation.description);
 } catch (error) {
-  console.error('Error during changeset validation:', error.message);
+  console.error(`::error::${error.message}`);
   if (process.env.DEBUG) {
     console.error('Stack trace:', error.stack);
   }

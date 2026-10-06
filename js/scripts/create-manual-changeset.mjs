@@ -13,6 +13,8 @@
 import { writeFileSync } from 'fs';
 import { randomBytes } from 'crypto';
 
+import { printUntrusted } from '../../scripts/github-actions-log.mjs';
+
 const PACKAGE_NAME = 'browser-commander';
 
 import {
@@ -69,7 +71,7 @@ ${description}
 
   console.log(`Created changeset: ${changesetFile}`);
   console.log('Content:');
-  console.log(content);
+  printUntrusted(content);
 
   // Format with Prettier
   console.log('\nFormatting with Prettier...');

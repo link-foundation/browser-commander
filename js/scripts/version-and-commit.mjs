@@ -24,6 +24,7 @@ import {
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
+import { printUntrusted } from '../../scripts/github-actions-log.mjs';
 
 const { $ } = await loadCommandStream();
 const { makeConfig } = await loadLinoArguments();
@@ -53,11 +54,9 @@ const config = makeConfig({
 const { mode, bumpType, description } = config;
 
 // Debug: Log parsed configuration
-console.log('Parsed configuration:', {
-  mode,
-  bumpType,
-  description: description || '(none)',
-});
+console.log('Parsed configuration:', { mode, bumpType });
+console.log('Description:');
+printUntrusted(description || '(none)');
 
 // Detect if positional arguments were used (common mistake)
 const args = process.argv.slice(2);

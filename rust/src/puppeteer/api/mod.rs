@@ -8,7 +8,7 @@
 //! `handle.call` or `handle.get` over [`crate::puppeteer::bridge`].
 
 /// puppeteer-core release the wrappers were generated from.
-pub const PUPPETEER_VERSION: &str = "25.10.0";
+pub const PUPPETEER_VERSION: &str = "25.12.0";
 
 mod accessibility;
 mod bluetooth_emulation;

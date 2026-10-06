@@ -7,7 +7,8 @@
  * extracts from puppeteer-core's `lib/types.d.ts`. These tests fail when:
  *
  * - the committed wrappers differ from what the generator writes;
- * - the committed manifest differs from the installed puppeteer-core;
+ * - the committed manifest differs from the installed puppeteer-core,
+ *   including its version (a mismatch fails rather than skips);
  * - a public method or getter declared in `lib/types.d.ts` (own or inherited)
  *   has no typed entry point in Rust or Python.
  */
@@ -131,12 +132,15 @@ describe('Puppeteer bindings (Rust and Python)', () => {
       t.skip('puppeteer-core is not installed');
       return;
     }
-    if (installed.version !== manifest.version) {
-      t.skip(
-        `puppeteer-core ${installed.version} is installed, the manifest is ${manifest.version}`
-      );
-      return;
-    }
+    // A version mismatch is exactly the drift this test exists to catch (issue
+    // #128: puppeteer-core was upgraded to 25.12.0 while the manifest stayed
+    // at 25.10.0, and a skip here hid it), so it fails instead of skipping.
+    assert.equal(
+      manifest.version,
+      installed.version,
+      `puppeteer-core ${installed.version} is installed, the manifest is ${manifest.version}; ` +
+        'run node scripts/generate-puppeteer-bindings.mjs --update-api'
+    );
     const fresh = {
       package: 'puppeteer-core',
       version: installed.version,

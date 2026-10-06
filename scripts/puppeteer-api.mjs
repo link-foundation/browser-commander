@@ -358,7 +358,10 @@ function ownMembers(declaration, classifier, sourceFile) {
       continue;
     }
     let entry;
-    if (t.isMethodDeclaration(member) || t.isMethodSignature(member)) {
+    if (
+      t.isMethodDeclaration(member) ||
+      t.isMethodSignatureDeclaration(member)
+    ) {
       const scope = typeScope(member, classScope);
       entry = {
         kind: 'method',
@@ -426,7 +429,7 @@ function isHandleType(declaration) {
     members.length > 0 &&
     members.every(
       (member) =>
-        t.isMethodSignature(member) ||
+        t.isMethodSignatureDeclaration(member) ||
         t.isGetAccessorDeclaration(member) ||
         t.isSetAccessorDeclaration(member)
     )

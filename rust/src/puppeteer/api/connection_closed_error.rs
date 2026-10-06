@@ -9,7 +9,7 @@ use super::*;
 use crate::puppeteer::bridge::{binary, remote_type, BridgeError, JsFunction, Remote};
 
 remote_type!(
-    /// Puppeteer's `ConnectionClosedError` (puppeteer-core 25.10.0), a remote object
+    /// Puppeteer's `ConnectionClosedError` (puppeteer-core 25.12.0), a remote object
     /// served by `browser-commander serve --stdio`.
     ///
     /// Extends [`ProtocolError`]; the inherited methods are repeated here.

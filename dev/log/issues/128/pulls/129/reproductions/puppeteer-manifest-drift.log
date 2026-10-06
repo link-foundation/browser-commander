@@ -1,0 +1,103 @@
+## BEFORE: node --test tests/unit/puppeteer-bindings-coverage.test.js (manifest 25.10.0, installed puppeteer-core 25.12.0)
+▶ Puppeteer bindings (Rust and Python)
+  ✔ are what the generator writes from the committed manifest (89.055277ms)
+  ﹣ come from the installed puppeteer-core (7.472875ms) # puppeteer-core 25.12.0 is installed, the manifest is 25.10.0
+  ✔ give every declared Puppeteer method a typed entry point (52.540096ms)
+  ✔ give every manifest member, own or inherited, a typed entry point (17.251985ms)
+  ✔ keep Python classes in the Puppeteer class hierarchy (5.099365ms)
+✔ Puppeteer bindings (Rust and Python) (177.224552ms)
+ℹ tests 5
+ℹ suites 1
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 388.011394
+exit=0
+
+## AFTER TEST FIX, BEFORE REGENERATION: the mismatch now fails
+▶ Puppeteer bindings (Rust and Python)
+  ✔ are what the generator writes from the committed manifest (65.111806ms)
+  ✖ come from the installed puppeteer-core (6.741831ms)
+  ✔ give every declared Puppeteer method a typed entry point (34.260152ms)
+  ✔ give every manifest member, own or inherited, a typed entry point (16.401476ms)
+  ✔ keep Python classes in the Puppeteer class hierarchy (5.583971ms)
+✖ Puppeteer bindings (Rust and Python) (132.236066ms)
+ℹ tests 5
+ℹ suites 1
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 370.912581
+
+✖ failing tests:
+
+test at tests/unit/puppeteer-bindings-coverage.test.js:127:3
+✖ come from the installed puppeteer-core (6.741831ms)
+  AssertionError [ERR_ASSERTION]: puppeteer-core 25.12.0 is installed, the manifest is 25.10.0; run node scripts/generate-puppeteer-bindings.mjs --update-api
+  + actual - expected
+  
+  + '25.10.0'
+  - '25.12.0'
+         ^
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/puppeteer-bindings-coverage.test.js:138:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '25.10.0',
+    expected: '25.12.0',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+exit=1
+
+## ROOT CAUSE 2: --update-api crashed under TypeScript 7.0.2 (t.isMethodSignature is not a function); fixed in scripts/puppeteer-api.mjs
+## Validation: TS7 extractor over puppeteer-core 25.10.0 lib/types.d.ts vs the committed 25.10.0 manifest
+TS7 extraction of 25.10.0 identical to committed manifest: true
+
+## node scripts/generate-puppeteer-bindings.mjs --update-api
+Extracted the API of puppeteer-core 25.12.0.
+Wrote 49 Rust and 48 Python files for Puppeteer. (only version strings changed: manifest has no API delta 25.10.0 -> 25.12.0)
+
+## node scripts/generate-puppeteer-bindings.mjs --check
+Puppeteer bindings are up to date (49 Rust, 48 Python files).
+exit=0
+
+## node scripts/generate-feature-parity.mjs --check
+exit=0
+
+## AFTER: node --test tests/unit/puppeteer-bindings-coverage.test.js
+▶ Puppeteer bindings (Rust and Python)
+  ✔ are what the generator writes from the committed manifest (56.840905ms)
+  ✔ come from the installed puppeteer-core (299.950912ms)
+  ✔ give every declared Puppeteer method a typed entry point (34.293984ms)
+  ✔ give every manifest member, own or inherited, a typed entry point (16.137632ms)
+  ✔ keep Python classes in the Puppeteer class hierarchy (7.193173ms)
+✔ Puppeteer bindings (Rust and Python) (417.205751ms)
+ℹ tests 5
+ℹ suites 1
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 644.783423
+exit=0
+
+## Full JS unit suite: node scripts/run-tests.mjs tests/unit (exit 0)
+ℹ tests 1617
+ℹ pass 1617
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0

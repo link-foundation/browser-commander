@@ -1,6 +1,6 @@
 {
   "package": "puppeteer-core",
-  "version": "25.10.0",
+  "version": "25.12.0",
   "types": [
     {"name": "Accessibility", "extends": null, "methods": [
       {"owner":"Accessibility","name":"snapshot","kind":"method","params":[{"name":"options","type":"json","optional":true,"rest":false}],"returns":"json?","signatures":["snapshot(options?: SnapshotOptions): Promise<SerializedAXNode | null>"]}

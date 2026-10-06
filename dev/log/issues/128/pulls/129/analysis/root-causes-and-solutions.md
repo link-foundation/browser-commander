@@ -30,6 +30,24 @@ test, or the experiment, failing before the fix.
 | 19 | Pages deployment skipped silently | `DEPLOY_GITHUB_PAGES` is not set. | Emit a `::notice::` so the skip shows in the run summary. **Maintainer action:** configure Pages and set the variable to publish. | `404d183` | — |
 | 20 to 27 | Platform skips, CodeQL's `python2` probe, `::error::` text inside echoed script source, runner notices, PR-only steps, silent passes, audit successes | Expected, or noise from outside the repository. | No change. | — | — |
 
+## Signals found while working on this PR
+
+CodeQL's open alerts on `main` (`../github/codeql-open-alerts-main.json`) are
+CI signals too, and the PR's own runs exposed two more once the unrun suites
+started running.
+
+| # | Signal | Root cause | Fix | Commit | Guard |
+|---|---|---|---|---|---|
+| 28 | CodeQL `js/polynomial-redos` #3, #4 (`js/src/elements/selectors.js`), and the same pattern in Python | `/^(.+?):has-text\("(.+?)"\)$/` backtracks quadratically on a long selector that does not match: 16s for 550,000 characters in JS, 48s for 220,000 in Python. | Split the selector with `indexOf`/`find` and `endsWith` (`splitTextPseudo`, `_split_text_pseudo`). | `ccc072c` | linear-time tests in `selectors.test.js` and `test_selectors.py`; `reproductions/text-selector-redos-*.log` |
+| 29 | CodeQL `js/polynomial-redos` #5 (`js/src/tests/index.js`) | `/^-+\|-+$/g` is quadratic on a long run of inner dashes (4s for 50,000). | Trim the dashes by index. | `47a61cd` | `index.test.js`; `reproductions/artifact-name-redos-*.log` |
+| 30 | CodeQL `js/incomplete-sanitization` #7 (`js/scripts/version-and-commit.mjs`) | The script escaped `"` by hand inside `"${…}"`, but command-stream already quotes interpolations, so the escapes became literal backslashes in the commit message. A real bug, not just a lint. | Pass the bare interpolation. A test bans `.replace(/"/g` in every release script. | `d6a0451` | `command-stream-errexit.test.js`; `reproductions/commit-message-hand-escaping-*.log` |
+| 31 | CodeQL `js/incomplete-url-substring-sanitization` #6 (`js/scripts/format-release-notes.mjs`) | `includes('img.shields.io')` was used as a "notes already formatted" marker and read as a URL host check. | Look for the badge's markdown prefix, which the script itself writes. The old and new checks agree on all 60 releases. | `df2c54d` | `reproductions/release-notes-badge-marker.log` |
+| 32 | CodeQL `js/incomplete-url-substring-sanitization` (PR alert #62, a test) | The preflight test asserted the registration URL with `includes`. | Extract the URL and compare it whole. | `c760d16` | `preflight-credentials.test.js` |
+| 33 | CodeQL `rust/cleartext-logging` #8, #9 (`rust/src/fingerprint/profile.rs`, a test) | Name-based false positive: the rule treats variables named after latitude and longitude as private data. | Name the variables for what they hold (range errors). | `dbfc075` | — |
+| 34 | CodeQL `rust/hard-coded-cryptographic-value` #14, #15 (`rust/tests/browser_cookies.rs`) | The fixture built Chrome's PBKDF2 key into a zeroed buffer and wrote the fixed IV inline. Both are public Chrome constants, but they read as secrets. | Derive the key with `pbkdf2_hmac_array` and name `CHROME_CBC_IV`. The ciphertext is byte-identical. | `3a31c23` | `experiments/issue-128/cookie-fixture-equivalence/`; `reproductions/cookie-fixture-equivalence.log` |
+| 35 | Parity "snapshots" job fails in `real_browser_smoke` (run 37533920926) | A false negative made visible by `481f01e`: `4dc6743` added the `about:blank` start URL to the launch arguments, but this `#[ignore]`d smoke kept the old list because no workflow ran it. | Expect `about:blank`, as the unit and API tests already do. | `7859214` | the parity job itself |
+| 36 | Safari JS smoke fails in 3 of the last 7 PR runs: `WebDriver server exited with code 1 before it was ready` (run 37533483103), or `ECONNREFUSED` from selenium (runs 37525917388, 37533921118) | Each failure is a launch less than 1.3s after the previous Safari session closed. safaridriver serves one automation session at a time, and a new driver can exit, or answer `/status` and then refuse the new session, while the previous session is still winding down. **Partly unverified:** safaridriver printed nothing, so Safari's side of the race is inferred from the timing. WebKit bug 240524 (fixed in 2022) describes the same kind of race. | Safari launches retry those start-up failures with a fresh driver, up to three attempts, in JS, Python and Rust. Authorization errors are not retried. A refused connection now names the driver server and whether it had exited. `VERBOSE=1` logs each retry. | `7ac5cd3`, `9faa67b`, `03f27be` | `webdriver.test.js` ("Safari launch right after a previous session"), `test_safari_webdriver.py`, `safari.rs` unit tests; `reproductions/safari-launch-retry-*.log` |
+
 ## Gaps against the pipeline templates
 
 | # | Gap | Outcome |
@@ -56,6 +74,7 @@ test, or the experiment, failing before the fix.
 - `PIPELINE_STATUS_VERBOSE=1`: `scripts/check-pipeline-status.sh` prints how it classified each job (superseded or not, and the effective `cancel-in-progress`).
 - `BUDGET_VERBOSE=1` (defaults to GitHub's `RUNNER_DEBUG`, so a debug re-run turns it on): `scripts/run-with-budget-warning.sh` traces its liveness and signalling decisions and lists what is still running when a step overruns its budget.
 - `CI_SCRIPTS_DEBUG`: already present before this work.
+- `VERBOSE=1` (the libraries' existing switch): the JS, Python and Rust Safari launchers log each start-up retry (signal 36). A launch that still fails reports the driver server, its exit state and its last output in the error.
 
 ## What remains for the maintainers
 

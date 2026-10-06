@@ -14,7 +14,7 @@ never ran), warnings and noise.
 |---|---|
 | `analysis/requirements.md` | Every requirement and where it is met |
 | `analysis/timeline.md` | The sequence of events |
-| `analysis/signal-classification.md` | 27 signal groups from the logs, each classified with log line references, plus signals 28 to 36 (CodeQL alerts and failures found on the PR) |
+| `analysis/signal-classification.md` | 27 signal groups from the logs, each classified with log line references, plus signals 28 to 38 (CodeQL alerts and failures found on the PR) |
 | `analysis/template-comparison.md` | Gaps against the link-foundation pipeline templates |
 | `analysis/root-causes-and-solutions.md` | Root cause, fix, commit and guarding test for every signal and gap; what remains for maintainers |
 | `research/web-sources.md` | Online sources checked, and existing components considered |

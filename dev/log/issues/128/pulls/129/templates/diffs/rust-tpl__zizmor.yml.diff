@@ -1,0 +1,9 @@
+--- /tmp/tpl/rust/.github/zizmor.yml	2026-10-06 19:48:20.077524300 +0000
++++ .github/zizmor.yml	2026-10-06 19:40:41.229560855 +0000
+@@ -1,5 +1,5 @@
+ # zizmor configuration for the workflow security audit run by
+-# `.github/workflows/workflows.yml`.
++# `.github/workflows/ci-policy.yml`.
+ #
+ # Blanket policy: third-party actions must be pinned to a commit hash, because
+ # a mutable tag or branch of a repository we do not control is arbitrary code

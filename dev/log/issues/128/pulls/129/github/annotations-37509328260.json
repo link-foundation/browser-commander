@@ -1,0 +1,502 @@
+{
+  "run_id": 37509328260,
+  "jobs": [
+    {
+      "job_id": 112426057159,
+      "name": "Detect Changes",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:07Z",
+      "completed_at": "2026-10-06T18:11:14Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Detect changes",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426129460,
+      "name": "Lint and Format Check",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:16Z",
+      "completed_at": "2026-10-06T18:11:37Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run ESLint",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Check formatting",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Check code duplication",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426132145,
+      "name": "Check for Changesets",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:11:15Z",
+      "completed_at": "2026-10-06T18:11:14Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112426318760,
+      "name": "Create Changeset PR",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:11:39Z",
+      "completed_at": "2026-10-06T18:11:39Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112426322746,
+      "name": "Test (Node.js on ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:42Z",
+      "completed_at": "2026-10-06T18:12:27Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426323006,
+      "name": "Test (Node.js on windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:42Z",
+      "completed_at": "2026-10-06T18:13:01Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426323055,
+      "name": "Test (Node.js on macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:47Z",
+      "completed_at": "2026-10-06T18:12:35Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426935567,
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:13:04Z",
+      "completed_at": "2026-10-06T18:13:44Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Remove deprecated npm auth config",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Update npm for OIDC trusted publishing",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Check for changesets",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Merge multiple changesets",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 9,
+          "name": "Version packages and commit to main",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Publish to npm",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Create GitHub Release",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Format GitHub release notes",
+          "conclusion": "success"
+        },
+        {
+          "number": 23,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 24,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 25,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426937137,
+      "name": "Instant Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:13:02Z",
+      "completed_at": "2026-10-06T18:13:01Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112427260734,
+      "name": "Pipeline Status",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:13:48Z",
+      "completed_at": "2026-10-06T18:13:54Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Fail the run when a required job was cancelled or failed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    }
+  ]
+}

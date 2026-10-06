@@ -1,0 +1,205 @@
+{
+  "run_id": 37509328273,
+  "jobs": [
+    {
+      "job_id": 112426056449,
+      "name": "actionlint",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:07Z",
+      "completed_at": "2026-10-06T18:11:14Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Pull rhysd/actionlint:1.7.12",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Run rhysd/actionlint:1.7.12",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426056889,
+      "name": "Check CI Workflow Policy",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:08Z",
+      "completed_at": "2026-10-06T18:11:17Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Check workflows",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426056954,
+      "name": "zizmor",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:07Z",
+      "completed_at": "2026-10-06T18:11:20Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run zizmorcore/zizmor-action@v0.6.2",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Post Run zizmorcore/zizmor-action@v0.6.2",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426178308,
+      "name": "Pipeline Status",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:25Z",
+      "completed_at": "2026-10-06T18:11:37Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Fail the run when a required job was cancelled or failed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    }
+  ]
+}

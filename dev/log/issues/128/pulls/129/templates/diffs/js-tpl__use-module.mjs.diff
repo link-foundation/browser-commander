@@ -1,0 +1,320 @@
+--- /tmp/tpl/js/scripts/use-module.mjs	2026-10-06 19:48:18.957536673 +0000
++++ scripts/use-module.mjs	2026-10-06 19:40:41.865553935 +0000
+@@ -8,17 +8,20 @@
+  * through its **CommonJS** entry point. It unwraps the callable `default` only
+  * when the namespace carries nothing but known metadata keys.
+  *
+- * Node.js 22.12+ adds a synthetic `'module.exports'` named export to CommonJS
++ * Node.js 23+ adds a synthetic `'module.exports'` named export to CommonJS
+  * namespaces whose names `cjs-module-lexer` cannot infer
+  * (https://nodejs.org/api/esm.html#commonjs-namespaces). That extra key is not
+- * in the metadata set of `use-m`, so the unwrap is skipped:
++ * in the metadata set of `use-m`, so the unwrap is skipped. Measured against
++ * `command-stream` with experiments/ci-repro/repro-command-stream-dollar.mjs:
+  *
+- *   node v20.20.2  -> keys [default]                    typeof loaded.$ : function
+- *   node v24.19.0  -> keys [default, 'module.exports']  typeof loaded.$ : undefined
++ *   node v20.20.2  -> 32 keys                           typeof loaded.$ : function
++ *   node v22.21.1  -> 32 keys                           typeof loaded.$ : function
++ *   node v24.20.0  -> keys [default, 'module.exports']  typeof loaded.$ : undefined
+  *
+- * On Node 24 — the version every workflow in this template requests —
++ * On Node 24 — the version every workflow in this repository requests —
+  * `const { $ } = await use('command-stream')` therefore yields `undefined` and
+- * the first tagged template dies with `TypeError: $ is not a function`.
++ * the first tagged template dies with `TypeError: $ is not a function`. That is
++ * what broke the JS release and the Rust auto-release jobs on 2026-09-04.
+  * Upstream tracker: https://github.com/link-foundation/use-m/issues/72
+  *
+  * This module normalises every shape observed so far (Node 20, 22, 24 and Bun)
+@@ -27,12 +30,12 @@
+  *
+  * Set CI_SCRIPTS_DEBUG=1 to trace the resolved module shape (default off).
+  *
+- * Usage:
+- *   import { loadCommandStream } from './use-module.mjs';
++ * Usage (from js/scripts or rust/scripts):
++ *   import { loadCommandStream } from '../../scripts/use-module.mjs';
+  *   const { $ } = await loadCommandStream();
+  */
+ 
+-import { debug } from './debug-print.mjs';
++import { debug, isDebugEnabled } from './debug-print.mjs';
+ 
+ /** Unpinned CDN entry point for use-m, kept in one place. */
+ export const USE_M_URL = 'https://unpkg.com/use-m/use.js';
+@@ -97,150 +100,40 @@
+ }
+ 
+ /**
+- * Per-attempt deadline. Without it a stalled CDN connection is bounded only by
+- * undici's 300 s `headersTimeout`, so one fetch can burn five minutes of a
+- * job's `timeout-minutes`.
+- */
+-export const DEFAULT_TIMEOUT_MS = 15000;
+-
+-/** Total attempts, including the first one. */
+-export const DEFAULT_ATTEMPTS = 3;
+-
+-/** Delay before the second attempt; doubled for each attempt after it. */
+-export const DEFAULT_RETRY_DELAY_MS = 2000;
+-
+-/**
+- * One fetch-and-evaluate attempt, with a deadline on the request.
+- *
+- * The deadline is an `AbortController` armed by a timer that is always
+- * cleared. `AbortSignal.timeout()` would leave the deadline unref'd, so a
+- * stalled fetch would go unaborted when nothing else keeps the event loop
+- * alive.
++ * Fetch and evaluate use-m, caching the result for the whole process.
+  *
+  * A non-2xx response is reported as an HTTP failure; eval-ing an error page as
+  * JavaScript would only produce an opaque `SyntaxError`.
+  *
+- * @param {{fetchImpl: typeof fetch, url: string, timeoutMs: number}} options
+- * @returns {Promise<(name: string) => Promise<unknown>>}
+- */
+-async function fetchUseOnce({ fetchImpl, url, timeoutMs }) {
+-  const controller = timeoutMs > 0 ? new AbortController() : null;
+-  const timer = controller
+-    ? setTimeout(
+-        () =>
+-          controller.abort(
+-            new Error(
+-              `Timed out after ${timeoutMs}ms while fetching use-m from ${url}`
+-            )
+-          ),
+-        timeoutMs
+-      )
+-    : null;
+-  try {
+-    const response = await (controller
+-      ? fetchImpl(url, { signal: controller.signal })
+-      : fetchImpl(url));
+-    if (!response.ok) {
+-      throw new Error(
+-        `Failed to fetch use-m from ${url}: ${response.status} ${response.statusText || ''}`.trim()
+-      );
+-    }
+-    const source = await response.text();
+-    // use-m ships as an eval-able bundle; this is its documented entry point.
+-    const evaluated = await eval(source);
+-    const use = evaluated?.use ?? evaluated?.default?.use;
+-    if (typeof use !== 'function') {
+-      throw new Error(
+-        `use-m loaded from ${url} did not export a callable "use". ` +
+-          `Received ${describeModule(evaluated)}.`
+-      );
+-    }
+-    return use;
+-  } catch (error) {
+-    // `fetch` reports an abort as its own error; the reason says what happened.
+-    throw controller?.signal.aborted ? controller.signal.reason : error;
+-  } finally {
+-    if (timer) {
+-      clearTimeout(timer);
+-    }
+-  }
+-}
+-
+-/**
+- * Fill in the load defaults, keeping every knob injectable from a test.
+- * @param {Record<string, unknown>} options
+- * @returns {{fetchImpl: typeof fetch, url: string, attempts: number,
+- *   timeoutMs: number, retryDelayMs: number,
+- *   sleep: (ms: number) => Promise<void>}}
+- */
+-function loadSettings(options) {
+-  return {
+-    fetchImpl: options.fetchImpl ?? fetch,
+-    url: options.url ?? USE_M_URL,
+-    attempts: options.attempts ?? DEFAULT_ATTEMPTS,
+-    timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+-    retryDelayMs: options.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS,
+-    sleep:
+-      options.sleep ??
+-      ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),
+-  };
+-}
+-
+-/**
+- * Fetch and evaluate use-m, caching the result for the whole process.
+- *
+- * The load is a network dependency of every release script, so it is bounded
+- * on both axes: each attempt carries a deadline and a transient failure is
+- * retried with exponential backoff. The worst case stays well inside a job's
+- * `timeout-minutes` (3 x 15 s + 2 s + 4 s = 51 s by default).
+- *
+- * The final error names the CDN, the URL and the attempt count. A bare
+- * `TypeError: fetch failed` names neither, which makes a third-party outage
+- * look like a defect in the release logic.
+- *
+- * @param {{fetchImpl?: typeof fetch, url?: string, attempts?: number,
+- *   timeoutMs?: number, retryDelayMs?: number,
+- *   sleep?: (ms: number) => Promise<void>}} [options] injection seam for tests
++ * @param {{fetchImpl?: typeof fetch, url?: string}} [options] injection seam for tests
+  * @returns {Promise<(name: string) => Promise<unknown>>}
+  */
+ export async function loadUse(options = {}) {
+-  const settings = loadSettings(options);
+-  const { url, attempts } = settings;
+-  // A caller-supplied URL is a separate source. It must never silently return
+-  // the default CDN's cached loader or overwrite that shared cache.
+-  const useSharedCache = !options.fetchImpl && !options.url;
+-  if (cachedUse && useSharedCache) {
++  const { fetchImpl = fetch, url = USE_M_URL } = options;
++  if (cachedUse && !options.fetchImpl) {
+     return cachedUse;
+   }
+-  let lastError;
+-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+-    try {
+-      const use = await fetchUseOnce(settings);
+-      debug('loaded use-m', { url, attempt });
+-      if (useSharedCache) {
+-        cachedUse = use;
+-      }
+-      return use;
+-    } catch (error) {
+-      lastError = error;
+-      debug('use-m load attempt failed', {
+-        url,
+-        attempt,
+-        attempts,
+-        error: error?.message,
+-      });
+-      if (attempt < attempts) {
+-        await settings.sleep(settings.retryDelayMs * 2 ** (attempt - 1));
+-      }
+-    }
++  const response = await fetchImpl(url);
++  if (!response.ok) {
++    throw new Error(
++      `Failed to fetch use-m from ${url}: ${response.status} ${response.statusText || ''}`.trim()
++    );
+   }
+-  throw new Error(
+-    `Failed to load use-m from ${url} after ${attempts} attempt(s): ` +
+-      `${lastError?.message ?? String(lastError)}. This is a network ` +
+-      'dependency of the release scripts, not a defect in the published ' +
+-      'package; re-run the job when the CDN answers again.',
+-    { cause: lastError }
+-  );
++  const source = await response.text();
++  // use-m ships as an eval-able bundle; this is its documented entry point.
++  const evaluated = await eval(source);
++  const use = evaluated?.use ?? evaluated?.default?.use;
++  if (typeof use !== 'function') {
++    throw new Error(
++      `use-m loaded from ${url} did not export a callable "use". ` +
++        `Received ${describeModule(evaluated)}.`
++    );
++  }
++  debug('loaded use-m', { url });
++  if (!options.fetchImpl) {
++    cachedUse = use;
++  }
++  return use;
+ }
+ 
+ /**
+@@ -262,31 +155,85 @@
+ }
+ 
+ /**
+- * Load `command-stream` with `$` guaranteed to be callable and with
+- * non-zero exits rejecting.
++ * All the text a `command-stream` rejection carries, as one string.
++ *
++ * With `errexit` on, a failed command rejects with
++ *
++ *   message : "Command failed with exit code 101"
++ *   code    : 101
++ *   stdout  : ""
++ *   stderr  : "error: crate version 0.10.11 is already uploaded"
++ *
++ * The reason a caller needs to branch on — "already exists", "already
++ * uploaded" — is in `stderr` or `stdout`, never in `message`. Call sites that
++ * test `error.message.includes(...)` therefore stop matching as soon as the
++ * promise genuinely rejects, which would turn a harmless re-run over an
++ * already-published version into a failed release. Use this instead.
++ *
++ * @param {unknown} error value caught from an awaited `$` call
++ * @returns {string} message, stdout and stderr joined; empty for nullish input
++ */
++export function commandErrorText(error) {
++  if (error === null || error === undefined) {
++    return '';
++  }
++  if (typeof error === 'string') {
++    return error;
++  }
++  const parts = [error.message, error.stdout, error.stderr]
++    .map((part) => (part === null || part === undefined ? '' : String(part)))
++    .filter(Boolean);
++  return parts.join('\n');
++}
++
++/**
++ * Load `command-stream` with `$` guaranteed to be callable **and to fail on a
++ * non-zero exit code**.
++ *
++ * `command-stream` resolves its promise on a non-zero exit rather than
++ * rejecting, which is the opposite of what `zx` and `execa` do and the opposite
++ * of what every consumer in this repository assumes. Each of them is written
++ * as
++ *
++ *   try { await $`some-command`; } catch { process.exit(1); }
+  *
+- * The errexit switch is the semantics every release script is written
+- * against: without it `$` RESOLVES on a non-zero exit, so every
+- * `try { await $`...`; } catch` in the release path is unreachable and a
+- * crashed step prints the success line. The scripts that deliberately
+- * probe for a non-zero outcome (`push-main-with-rebase-retry.mjs`,
+- * `land-via-pull-request.mjs`) use `runCommand`/`runStrict` from
+- * run-command.mjs, which resolves with the code, so this switch does not
+- * reach them.
++ * and under the library default that `catch` is unreachable. The consequences
++ * were not theoretical: a crashed `changeset version` was reported as a
++ * successful JS release, and a Rust release that never committed its version
++ * bump published to crates.io anyway. See
++ * dev/log/issues/83/pulls/84/analysis/root-causes.md, RC-B and RC-C.
++ *
++ * Enabling `errexit` here — the one place every consumer obtains `$` from —
++ * restores the assumption those scripts are written against. A caller that
++ * genuinely wants to inspect a failing exit code should read it from the
++ * rejection (`error.code`) rather than expect the promise to resolve.
++ *
++ * `CI_SCRIPTS_DEBUG=1` additionally turns on the shell's own `verbose` and
++ * `xtrace`, so a failing release job logs the commands it ran. Default off.
+  *
+  * @param {(name: string) => Promise<unknown>} [use] pre-loaded use-m function
+  * @returns {Promise<Record<string, unknown>>} command-stream exports
+  */
+ export async function loadCommandStream(use) {
+   const commandStream = await useModule('command-stream', '$', use);
+-  const shell = commandStream.shell;
+ 
++  // `shell` is absent from no released version we support, but a missing or
++  // renamed control surface must not turn into `undefined is not a function`
++  // inside a release job.
++  const shell = commandStream.shell;
+   if (shell && typeof shell.errexit === 'function') {
+     shell.errexit(true);
++    if (isDebugEnabled()) {
++      shell.verbose?.(true);
++      shell.xtrace?.(true);
++    }
++    debug('configured command-stream shell', {
++      settings: shell.settings?.(),
++    });
+   } else {
+-    debug(
+-      'command-stream did not expose shell.errexit; $ keeps resolve-on-exit semantics'
+-    );
++    debug('command-stream exposes no shell.errexit; failures may not reject', {
++      received: describeModule(shell),
++    });
+   }
+ 
+   return commandStream;

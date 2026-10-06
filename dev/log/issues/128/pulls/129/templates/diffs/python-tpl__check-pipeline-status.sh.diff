@@ -1,0 +1,235 @@
+--- /tmp/tpl/python/scripts/check-pipeline-status.sh	2026-10-06 19:48:20.912515075 +0000
++++ scripts/check-pipeline-status.sh	2026-10-06 19:40:41.855554044 +0000
+@@ -1,131 +1,127 @@
+ #!/usr/bin/env bash
+-
++# check-pipeline-status.sh
++#
++# Turns a cancelled required job into a visible failure.
++#
++# GitHub reports a job that its `timeout-minutes` killed as *cancelled*, not as
++# *failed* (community discussion 38004, "timing out github action without
++# 'failure' status"), and a run whose only casualty is a cancelled job carries
++# the conclusion `cancelled` too. Nothing in this repository looked at that.
++#
++# The history shows the shape of the blind spot. Run 24045269874 is a push to
++# `main` (Rust CI/CD Pipeline) whose `Auto Release`, `Build Package` and two
++# `Test` jobs are all `cancelled`; the run's conclusion is `cancelled`, not
++# `failure`. That one was a legitimate supersede - a second push arrived 38
++# seconds later - and the release writers have since been moved to a
++# non-cancellable `main-writer` concurrency group. What has not changed is that
++# a check killed by its own `timeout-minutes` would look exactly the same, and
++# nothing would say so.
++#
++# On a branch a cancelled job is almost always that supersede, so it is reported
++# as a warning. On the default branch a supersede is still possible - the check
++# jobs cancel each other through `${{ github.workflow }}-${{ github.ref }}-*`
++# groups, which is how run 24045269874 came to be cancelled - so before failing
++# the run this script asks whether the commit it is testing is still the head of
++# the branch. If it is not, a newer run is already covering this ground and the
++# cancellation is reported as a warning; if it is, nothing else will report it,
++# so the run fails.
++#
++# Hosted-runner acquisition failures can instead appear as `abandoned` in
++# toJSON(needs), even when the check conclusion is cancelled (run 37362314527).
++# Reject undocumented or missing results rather than claiming those jobs passed.
++# Only documented cancellations retain the supersede handling below.
++#
++# Usage (in a job that `needs:` every other job in the workflow):
++#   env:
++#     NEEDS_JSON: ${{ toJSON(needs) }}
++#     IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
++#     RUN_SHA: ${{ github.sha }}
++#   run: bash scripts/check-pipeline-status.sh
++#
++# Environment:
++#   NEEDS_JSON       toJSON(needs) of a job that needs every other job (required)
++#   IS_MAIN          "true" when this run is a push to the default branch
++#   RUN_SHA          the commit this run is testing (github.sha)
++#   MAIN_BRANCH      default branch name (default "main")
++#   BRANCH_HEAD_SHA  skip the `git ls-remote` lookup and use this value instead
++#
++# Adopted from the link-foundation pipeline templates, where the same script is
++# `scripts/check-pipeline-status.sh` in all three languages; the supersede
++# lookup below is an addition, see dev/log/issues/81/pulls/82/analysis for why.
+ set -euo pipefail
+ 
+-if [[ -z "${NEEDS_JSON:-}" ]]; then
+-  echo "NEEDS_JSON must contain the workflow needs context" >&2
+-  exit 2
+-fi
+-
+-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+-BRANCH_NAME="${BRANCH_NAME:-${BRANCH_REF:-main}}"
+-GIT_REMOTE="${GIT_REMOTE:-origin}"
++: "${NEEDS_JSON:?NEEDS_JSON is required (pass toJSON(needs))}"
++IS_MAIN="${IS_MAIN:-false}"
+ 
+ select_by_result() {
+-  local selection="$1"
+-  SELECTION="$selection" NEEDS_JSON="$NEEDS_JSON" python3 - <<'PY'
+-import json
+-import os
+-
+-needs = json.loads(os.environ["NEEDS_JSON"])
+-selection = os.environ["SELECTION"]
+-for name, details in needs.items():
+-    result = (details or {}).get("result", "unknown")
+-    if selection == "cancelled" and result == "cancelled":
+-        print(name)
+-    elif selection == "failed" and result not in {"success", "skipped", "cancelled"}:
+-        print(name)
+-PY
++  NEEDS_JSON="$NEEDS_JSON" WANT_RESULT="$1" node --input-type=module -e '
++    const needs = JSON.parse(process.env.NEEDS_JSON);
++    const unexpected = process.env.WANT_RESULT === "unexpected";
++    const known = ["success", "skipped", "failure", "cancelled"];
++    const jobs = Object.entries(needs)
++      .filter(([, value]) => unexpected
++        ? !known.includes(value?.result)
++        : value?.result === process.env.WANT_RESULT)
++      .map(([name, value]) => unexpected
++        ? `${name} (${value?.result ?? "missing"})`
++        : name);
++    console.log(jobs.join(", "));
++  '
+ }
+ 
+-join_names() {
+-  paste -sd, - | sed 's/,/, /g'
+-}
++# Answers "is a newer run already testing this branch?". A cancelled job on the
++# default branch means an overrun when this run still points at the branch head,
++# and a supersede when it does not. An unresolvable head is treated as "not
++# superseded": a missed supersede costs one noisy warning, a missed overrun costs
++# a silent failure on main.
++run_is_superseded() {
++  local branch="${MAIN_BRANCH:-main}"
++  local head="${BRANCH_HEAD_SHA:-}"
+ 
+-resolve_workflow_file() {
+-  if [[ -n "${WORKFLOW_FILE:-}" ]]; then
+-    printf '%s\n' "$WORKFLOW_FILE"
+-    return
+-  fi
+-  if [[ -n "${GITHUB_WORKFLOW_REF:-}" ]]; then
+-    local reference="${GITHUB_WORKFLOW_REF%@*}"
+-    local path="${reference#*/.github/}"
+-    [[ "$path" == "$reference" ]] && return 1
+-    reference="$path"
+-    printf '.github/%s\n' "$reference"
++  if [ -z "$head" ]; then
++    head="$(git ls-remote "${GIT_REMOTE:-origin}" "refs/heads/${branch}" 2>/dev/null | awk 'NR == 1 { print $1 }')"
+   fi
+-}
+ 
+-run_is_superseded() {
+-  local run_sha="${RUN_SHA:-${GITHUB_SHA:-}}"
+-  if [[ -z "$run_sha" || -z "$BRANCH_NAME" ]]; then
++  if [ -z "$head" ] || [ -z "${RUN_SHA:-}" ]; then
++    echo "Could not compare this run's commit with the head of ${branch}; assuming it is current." >&2
+     return 1
+   fi
+ 
+-  local branch_head="${BRANCH_HEAD_SHA:-}"
+-  if [[ -z "$branch_head" ]]; then
+-    branch_head="$(git ls-remote "$GIT_REMOTE" "refs/heads/$BRANCH_NAME" 2>/dev/null | awk 'NR == 1 {print $1}')"
+-  fi
+-  [[ -n "$branch_head" && "$branch_head" != "$run_sha" ]]
++  echo "This run tests ${RUN_SHA}; ${branch} is at ${head}."
++  [ "$head" != "$RUN_SHA" ]
+ }
+ 
+-failed_jobs="$(select_by_result failed)"
+-cancelled_jobs="$(select_by_result cancelled)"
++failed="$(select_by_result failure)"
++cancelled="$(select_by_result cancelled)"
++unexpected="$(select_by_result unexpected)"
+ 
+-if [[ -n "$failed_jobs" ]]; then
+-  echo "::error title=Pipeline failed::Failed jobs: $(printf '%s\n' "$failed_jobs" | join_names)"
+-fi
++echo "Failed jobs:    ${failed:-<none>}"
++echo "Cancelled jobs: ${cancelled:-<none>}"
++echo "Unexpected job results: ${unexpected:-<none>}"
+ 
+-superseded_jobs=()
+-unexpected_jobs=()
+-unexpected_reasons=()
+-
+-if [[ -n "$cancelled_jobs" ]]; then
+-  workflow_file="$(resolve_workflow_file)"
+-  superseded=false
+-  if run_is_superseded; then
+-    superseded=true
+-  fi
++status=0
+ 
+-  declare -A cancellation_policy=()
+-  if [[ -n "$workflow_file" && -f "$workflow_file" ]]; then
+-    while IFS=$'\t' read -r job value; do
+-      cancellation_policy["$job"]="$value"
+-    done < <(
+-      WORKFLOW_FILE="$workflow_file" JOB_NAMES="$cancelled_jobs" \
+-        "$SCRIPT_DIR/read-job-cancel-in-progress.sh"
+-    )
+-  fi
+-
+-  while IFS= read -r job; do
+-    [[ -z "$job" ]] && continue
+-    policy="${cancellation_policy[$job]:-unreadable}"
+-    if [[ "$superseded" == true && "$policy" == true ]]; then
+-      superseded_jobs+=("$job")
+-      continue
+-    fi
+-
+-    unexpected_jobs+=("$job")
+-    if [[ "$superseded" != true ]]; then
+-      unexpected_reasons+=("$job: the run cannot be proven superseded by a newer branch head")
+-    else
+-      case "$policy" in
+-        false) reason="effective cancel-in-progress is false" ;;
+-        none) reason="no workflow or job cancel-in-progress policy is configured" ;;
+-        missing) reason="the job was not found in the active workflow" ;;
+-        unknown) reason="cancel-in-progress is dynamic and cannot be proven true" ;;
+-        *) reason="the active workflow cancellation policy could not be read" ;;
+-      esac
+-      unexpected_reasons+=("$job: $reason")
+-    fi
+-  done <<< "$cancelled_jobs"
++if [ -n "$failed" ]; then
++  echo "::error::Pipeline failed. Failing jobs: ${failed}"
++  status=1
+ fi
+ 
+-if (( ${#superseded_jobs[@]} > 0 )); then
+-  joined="$(printf '%s\n' "${superseded_jobs[@]}" | join_names)"
+-  echo "::warning title=Cancelled jobs in a superseded run::${joined}. This run is no longer the head of ${BRANCH_NAME} and these jobs cancel in progress."
++if [ -n "$unexpected" ]; then
++  echo "::error::Pipeline has unexpected job results: ${unexpected}. Required jobs must complete with a recognized result."
++  status=1
+ fi
+ 
+-if (( ${#unexpected_jobs[@]} > 0 )); then
+-  for reason in "${unexpected_reasons[@]}"; do
+-    echo "  $reason"
+-  done
+-  joined="$(printf '%s\n' "${unexpected_jobs[@]}" | join_names)"
+-  echo "::error title=Pipeline has cancelled jobs::${joined}. No supersede accounts for these cancellations (see the reasons above)."
++if [ -n "$cancelled" ]; then
++  if [ "$IS_MAIN" = "true" ] && ! run_is_superseded; then
++    echo "::error::Pipeline has cancelled jobs on main: ${cancelled}. A job killed by 'timeout-minutes' is reported as cancelled, which would otherwise hide the failure."
++    status=1
++  else
++    echo "::warning::Cancelled jobs: ${cancelled}. This run is not the current head of its branch, or is not a push to the default branch, so the cancellation reads as a superseded run. A genuine overrun surfaces as a step budget failure instead (see docs/CI-TIMEOUT-BUDGETS.md)."
++  fi
+ fi
+ 
+-if [[ -n "$failed_jobs" || ${#unexpected_jobs[@]} -gt 0 ]]; then
+-  exit 1
++if [ "$status" -eq 0 ]; then
++  echo "All required jobs succeeded or were legitimately skipped."
+ fi
+ 
+-echo "Pipeline passed."
++exit "$status"

@@ -1,0 +1,343 @@
+--- /tmp/tpl/python/scripts/run-with-budget-warning.sh	2026-10-06 19:48:20.914515053 +0000
++++ scripts/run-with-budget-warning.sh	2026-10-06 19:40:41.864553946 +0000
+@@ -1,19 +1,31 @@
+ #!/usr/bin/env bash
+-# Run a command under an execution budget that expires before the job clock.
+-# Usage: run-with-budget-warning.sh <budget-seconds> <label> <command> [args...]
++# run-with-budget-warning.sh
++#
++# Owns the deadline for a long CI step so the step, not the job, decides
++# when time has run out.
++#
++# `timeout-minutes` on a job is a backstop, never the deadline: GitHub
++# reports a job killed by it as *cancelled*, not *failed*, so a genuine
++# overrun can pass unnoticed on a pull request and cannot name the
++# deadline it blew on the default branch. A step that owns its own budget
++# exits non-zero instead, which GitHub reports as a failure with a title
++# naming the budget and the overrun.
++#
++# Usage:
++#   bash scripts/run-with-budget-warning.sh SECONDS LABEL COMMAND [ARG...]
+ #
+ # Environment:
+-#   BUDGET_WARN_RATIO_PERCENT  warn at this percentage of the budget (70)
+-#   BUDGET_ENFORCE             false warns without terminating (true)
+-#   BUDGET_GRACE_SECONDS       seconds between SIGTERM and SIGKILL (15)
+-#   BUDGET_KILL_SECONDS        seconds to wait after SIGKILL (5)
+-#   BUDGET_POLL_SECONDS        polling and output relay interval (1)
+-#   BUDGET_HEARTBEAT_SECONDS   verbose progress interval (60)
+-#   CI_VERBOSE                 true enables progress and signal tracing (false)
+-#   BUDGET_CAPTURE_OUTPUT      capture and relay private output files (1)
+-#   BUDGET_SUDO_KILL           use passwordless sudo for survivors (1)
+-#   BUDGET_STATE_PARENT        parent directory for private control files
+-set -euo pipefail
++#   BUDGET_WARN_PERCENT   emit a warning at this share of the budget (default 70)
++#   BUDGET_GRACE_SECONDS  seconds between SIGTERM and SIGKILL (default 10)
++#   BUDGET_POLL_SECONDS   polling interval while the command runs (default 1)
++#
++# Exit codes: the command's own status, or 124 on timeout (matching timeout(1)).
++#
++# Adopted verbatim from the link-foundation pipeline templates, where the same
++# script is `scripts/run-with-budget-warning.sh` in all three languages. The
++# budgets this repository sets, and which step owns which, are in
++# docs/CI-TIMEOUT-BUDGETS.md.
++set -uo pipefail
+ 
+ if [ "$#" -lt 3 ]; then
+   echo "Usage: $0 SECONDS LABEL COMMAND [ARG...]" >&2
+@@ -30,237 +42,98 @@
+     exit 2
+     ;;
+ esac
+-[ "$budget_seconds" -gt 0 ] || {
++
++if [ "$budget_seconds" -le 0 ]; then
+   echo "Budget must be greater than zero seconds." >&2
+   exit 2
+-}
++fi
+ 
+-warn_ratio="${BUDGET_WARN_RATIO_PERCENT:-70}"
+-enforce="${BUDGET_ENFORCE:-true}"
+-grace_seconds="${BUDGET_GRACE_SECONDS:-15}"
+-kill_seconds="${BUDGET_KILL_SECONDS:-5}"
++warn_percent="${BUDGET_WARN_PERCENT:-70}"
++grace_seconds="${BUDGET_GRACE_SECONDS:-10}"
+ poll_seconds="${BUDGET_POLL_SECONDS:-1}"
+-heartbeat_seconds="${BUDGET_HEARTBEAT_SECONDS:-60}"
+-capture_output="${BUDGET_CAPTURE_OUTPUT:-1}"
+-sudo_kill="${BUDGET_SUDO_KILL:-1}"
+-verbose="${CI_VERBOSE:-${BUDGET_VERBOSE:-false}}"
+-threshold=$((budget_seconds * warn_ratio / 100))
+-[ "$threshold" -gt 0 ] || threshold=1
+-
+-case "$poll_seconds" in
+-  '' | *[!0-9.]* | *.*.*)
+-    echo "BUDGET_POLL_SECONDS must be a positive number, got: ${poll_seconds}" >&2
+-    exit 2
+-    ;;
+-esac
++warn_seconds=$((budget_seconds * warn_percent / 100))
+ 
+-trace() {
+-  { [ "$verbose" = true ] || [ "$verbose" = 1 ]; } &&
+-    echo "[budget] $*" >&2 || true
+-}
+-
+-state_parent="${BUDGET_STATE_PARENT:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}}"
+-if ! status_dir="$(mktemp -d "${state_parent%/}/budget-status.XXXXXX")"; then
+-  echo "Could not create budget control state under ${state_parent}." >&2
+-  exit 2
+-fi
++status_dir="$(mktemp -d "${TMPDIR:-/tmp}/budget-status.XXXXXX")"
+ status_file="${status_dir}/status"
+-stdout_file="${status_dir}/stdout"
+-stderr_file="${status_dir}/stderr"
+-trap 'rm -rf -- "$status_dir"' EXIT
+-
+-if [ "$capture_output" = 1 ] || [ "$capture_output" = true ]; then
+-  capture_output=1
+-  : >"$stdout_file"
+-  : >"$stderr_file"
+-else
+-  capture_output=0
+-fi
+-
+-stdout_offset=0
+-stderr_offset=0
++trap 'rm -rf "${status_dir}"' EXIT
+ 
+-stream_size() {
+-  local size
+-  size="$(wc -c <"$1" 2>/dev/null || echo 0)"
+-  size="${size//[![:digit:]]/}"
+-  echo "${size:-0}"
+-}
+-
+-emit_range() {
+-  tail -c "+$(($2 + 1))" "$1" 2>/dev/null |
+-    head -c "$(($3 - $2))"
+-}
+-
+-relay_output() {
+-  [ "$capture_output" = 1 ] || return 0
+-  local size
+-  size="$(stream_size "$stdout_file")"
+-  if [ "$size" -gt "$stdout_offset" ]; then
+-    emit_range "$stdout_file" "$stdout_offset" "$size" || true
+-    stdout_offset="$size"
+-  fi
+-  size="$(stream_size "$stderr_file")"
+-  if [ "$size" -gt "$stderr_offset" ]; then
+-    emit_range "$stderr_file" "$stderr_offset" "$size" >&2 || true
+-    stderr_offset="$size"
+-  fi
+-}
+-
+-# The command gets a private process group and private output files. A worker
+-# that outlives the command root therefore cannot keep the CI step's pipe open.
+-# The atomically renamed status file distinguishes completion from a zombie.
++# `set -m` puts the command in its own process group, so the signals below
++# reach the whole tree. `npm test` and `bun test` spawn workers, and killing
++# only the direct child leaves orphans holding the runner -- which is also
++# why timeout(1) is not sufficient here.
++#
++# Completion is detected through the status file rather than process
++# liveness: a finished child stays visible as a zombie until it is reaped,
++# so `kill -0` alone would never report it as done.
+ set -m
+-if [ "$capture_output" = 1 ]; then
+-  {
+-    command_status=0
+-    "$@" || command_status=$?
+-    printf '%s\n' "$command_status" >"${status_file}.partial"
+-    mv "${status_file}.partial" "$status_file"
+-  } >"$stdout_file" 2>"$stderr_file" &
+-else
+-  {
+-    command_status=0
+-    "$@" || command_status=$?
+-    printf '%s\n' "$command_status" >"${status_file}.partial"
+-    mv "${status_file}.partial" "$status_file"
+-  } &
+-fi
++{
++  "$@"
++  command_status=$?
++  printf '%s\n' "${command_status}" > "${status_file}.partial"
++  mv "${status_file}.partial" "${status_file}"
++} &
+ command_pid=$!
+ set +m
+ 
+-have_ps=false
+-if ps -eo pgid=,pid=,stat= >/dev/null 2>&1; then
+-  have_ps=true
+-fi
+-
+-# Process-table liveness separates an inaccessible live process (EPERM) from
+-# a missing process (ESRCH), while excluding zombies from active work.
+-group_members() {
+-  ps -eo pgid=,pid=,stat=,user=,args= 2>/dev/null |
+-    awk -v group="$command_pid" '$1 == group && $3 !~ /^Z/ {
+-      pid = $2; user = $4
+-      $1 = ""; $2 = ""; $3 = ""; $4 = ""
+-      sub(/^ +/, "")
+-      printf "%s %s %s\n", pid, user, $0
+-    }'
+-}
+-
+-group_is_populated() {
+-  if [ "$have_ps" = true ]; then
+-    [ -n "$(group_members)" ]
+-  else
+-    kill -0 -- "-$command_pid" 2>/dev/null
+-  fi
+-}
+-
+-sudo_kill_available=''
+-can_sudo_kill() {
+-  [ "$sudo_kill" = 1 ] || [ "$sudo_kill" = true ] || return 1
+-  if [ -z "$sudo_kill_available" ]; then
+-    if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+-      sudo_kill_available=yes
+-    else
+-      sudo_kill_available=no
+-    fi
+-  fi
+-  [ "$sudo_kill_available" = yes ]
+-}
+-
+-signal_command_tree() {
++# Signal the process group when possible, falling back to the direct child
++# on platforms without usable process groups (notably Git Bash on Windows).
++signal_command() {
+   local signal="$1"
+-  kill "-$signal" -- "-$command_pid" 2>/dev/null ||
+-    kill "-$signal" "$command_pid" 2>/dev/null || true
+-  if group_is_populated && can_sudo_kill; then
+-    trace "survivors after SIG${signal}; retrying as root"
+-    sudo -n kill "-$signal" -- "-$command_pid" 2>/dev/null ||
+-      sudo -n kill "-$signal" "$command_pid" 2>/dev/null || true
+-  fi
++  kill "-${signal}" -- "-${command_pid}" 2>/dev/null ||
++    kill "-${signal}" "${command_pid}" 2>/dev/null ||
++    true
+ }
+ 
+-# shellcheck disable=SC2329  # invoked indirectly by the trap below
+-forward_cancellation() {
+-  signal_command_tree TERM
+-}
+-trap forward_cancellation INT TERM
+-
+ command_is_running() {
+-  [ -f "$status_file" ] && return 1
+-  group_is_populated
++  [ ! -f "${status_file}" ] && kill -0 "${command_pid}" 2>/dev/null
+ }
+ 
+-wait_while_running() {
+-  local deadline=$((SECONDS + $1))
+-  while group_is_populated && [ "$SECONDS" -lt "$deadline" ]; do
+-    relay_output
+-    sleep "$poll_seconds"
+-  done
+-}
++terminate_over_budget() {
++  echo "::error title=${label} exceeded its execution budget::${label} did not finish within its ${budget_seconds}s budget and was terminated. Shorten the step or raise its budget (keeping it below the job's timeout-minutes backstop)."
++  signal_command TERM
+ 
+-report_survivors() {
+-  [ "$have_ps" = true ] || return 0
+-  local survivors
+-  survivors="$(group_members)"
+-  [ -n "$survivors" ] || return 0
+-  echo "::error title=${label} left processes running::${label} could not be terminated. Still running: $(echo "$survivors" | tr '\n' ';')" >&2
+-  echo "$survivors" >&2
+-  return 1
+-}
++  local waited=0
++  while command_is_running && [ "${waited}" -lt "${grace_seconds}" ]; do
++    sleep "${poll_seconds}"
++    waited=$((waited + poll_seconds))
++  done
+ 
+-terminate_over_budget() {
+-  echo "::error title=${label} exceeded its execution budget::Termination was requested after ${SECONDS}s, its full ${budget_seconds}s execution budget. The budget expires before \`timeout-minutes\` so this reports as a failure instead of a cancelled job." >&2
+-  signal_command_tree TERM
+-  wait_while_running "$grace_seconds"
+-  if group_is_populated; then
++  if command_is_running; then
+     echo "${label} ignored SIGTERM after ${grace_seconds}s; sending SIGKILL."
+-    signal_command_tree KILL
+-    wait_while_running "$kill_seconds"
+-  fi
+-  survivors=false
+-  report_survivors || survivors=true
+-  wait "$command_pid" 2>/dev/null || true
+-  relay_output
+-  if [ "$survivors" = true ]; then
+-    printf '%s still had live processes after its %ss execution budget.\n' \
+-      "$label" "$budget_seconds"
+-  else
+-    printf '%s was terminated after %ss, its full %ss execution budget.\n' \
+-      "$label" "$SECONDS" "$budget_seconds"
++    signal_command KILL
+   fi
++
++  wait "${command_pid}" 2>/dev/null || true
+   exit 124
+ }
+ 
++echo "Running ${label} with a ${budget_seconds}s budget (warning at ${warn_seconds}s)."
++
+ SECONDS=0
+ warned=false
+-last_heartbeat=0
+ 
+ while command_is_running; do
+-  if [ "$warned" = false ] && [ "$SECONDS" -ge "$threshold" ]; then
++  if [ "${warned}" = false ] && [ "${SECONDS}" -ge "${warn_seconds}" ]; then
+     warned=true
+-    echo "::warning title=${label} is approaching its timeout::The command is still running after ${SECONDS}s (${warn_ratio}% of its ${budget_seconds}s execution budget)." >&2
++    echo "::warning title=${label} is approaching its execution budget::${label} has run for ${SECONDS}s of its ${budget_seconds}s budget."
+   fi
+-  if { [ "$verbose" = true ] || [ "$verbose" = 1 ]; } &&
+-    [ $((SECONDS - last_heartbeat)) -ge "$heartbeat_seconds" ]; then
+-    last_heartbeat="$SECONDS"
+-    echo "[budget] ${label} has been running for ${SECONDS}s of its ${budget_seconds}s budget." >&2
+-  fi
+-  if [ "$enforce" = true ] && [ "$SECONDS" -ge "$budget_seconds" ]; then
++
++  if [ "${SECONDS}" -ge "${budget_seconds}" ]; then
+     terminate_over_budget
+   fi
+-  relay_output
+-  sleep "$poll_seconds"
++
++  sleep "${poll_seconds}"
+ done
+ 
+-wait_status=0
+-wait "$command_pid" 2>/dev/null || wait_status=$?
+-trap - INT TERM
+-relay_output
++wait "${command_pid}" 2>/dev/null
++wait_status=$?
+ 
+-if [ -f "$status_file" ]; then
+-  status="$(cat "$status_file")"
++# The status file is authoritative: the wrapper subshell's own exit status is
++# that of the bookkeeping it does after the command returns.
++if [ -f "${status_file}" ]; then
++  status="$(cat "${status_file}")"
+ else
+-  status="$wait_status"
++  status="${wait_status}"
+ fi
+-printf '%s took %ss of its %ss execution budget.\n' \
+-  "$label" "$SECONDS" "$budget_seconds"
+-exit "$status"
++echo "${label} finished in ${SECONDS}s of its ${budget_seconds}s budget (exit ${status})."
++exit "${status}"

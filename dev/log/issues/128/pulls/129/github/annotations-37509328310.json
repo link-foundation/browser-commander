@@ -1,0 +1,128 @@
+{
+  "run_id": 37509328310,
+  "jobs": [
+    {
+      "job_id": 112426057250,
+      "name": "matrix",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:07Z",
+      "completed_at": "2026-10-06T18:11:17Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/setup-node@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Reject missing or stale parity claims",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Reject a stale importable-browser matrix",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Post Run actions/setup-node@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426150995,
+      "name": "Pipeline Status",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:22Z",
+      "completed_at": "2026-10-06T18:11:27Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/setup-node@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Report failed or cancelled jobs",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Run actions/setup-node@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    }
+  ]
+}

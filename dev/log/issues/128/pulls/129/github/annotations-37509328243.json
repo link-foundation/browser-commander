@@ -1,0 +1,120 @@
+{
+  "run_id": 37509328243,
+  "jobs": [
+    {
+      "job_id": 112426057012,
+      "name": "Check Links",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:07Z",
+      "completed_at": "2026-10-06T18:11:22Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Check links with lychee",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Check broken links against Web Archive",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 6,
+          "name": "Fail if broken links found and no web archive fallback",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 11,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 162,
+          "start_column": null,
+          "end_line": 162,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "Summary report available at: https://github.com/link-foundation/browser-commander/actions/runs/37509328243#summary-112426057012",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426189336,
+      "name": "Pipeline Status",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:27Z",
+      "completed_at": "2026-10-06T18:11:32Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Fail the run when a required job was cancelled or failed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    }
+  ]
+}

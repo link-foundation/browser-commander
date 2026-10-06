@@ -1,0 +1,724 @@
+{
+  "run_id": 37509328334,
+  "jobs": [
+    {
+      "job_id": 112426057333,
+      "name": "Detect Changes",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:07Z",
+      "completed_at": "2026-10-06T18:11:16Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Detect changes",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426143722,
+      "name": "Lint and Format Check",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:26Z",
+      "completed_at": "2026-10-06T18:11:54Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run Ruff linting",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Check Ruff formatting",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Run mypy",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Run mypy on the CI scripts",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Check file size limit",
+          "conclusion": "success"
+        },
+        {
+          "number": 19,
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 20,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 21,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426145398,
+      "name": "Changelog Fragment Check",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:11:16Z",
+      "completed_at": "2026-10-06T18:11:16Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112426432897,
+      "name": "Test (Python 3.13 on ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:57Z",
+      "completed_at": "2026-10-06T18:12:52Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Upload coverage to Codecov",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 8,
+          "name": "Report skipped Codecov upload",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 16,
+          "start_column": null,
+          "end_line": 16,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "Skipping Codecov upload because CODECOV_TOKEN is not configured",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426432906,
+      "name": "Test (Python 3.9 on ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:56Z",
+      "completed_at": "2026-10-06T18:12:57Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Upload coverage to Codecov",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 8,
+          "name": "Report skipped Codecov upload",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 15,
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426432919,
+      "name": "Test (Python 3.13 on macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:12:00Z",
+      "completed_at": "2026-10-06T18:12:42Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Upload coverage to Codecov",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 8,
+          "name": "Report skipped Codecov upload",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 15,
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426432999,
+      "name": "Test (Python 3.13 on windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:57Z",
+      "completed_at": "2026-10-06T18:13:53Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Upload coverage to Codecov",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 8,
+          "name": "Report skipped Codecov upload",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 15,
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112427316469,
+      "name": "Build Package",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:13:55Z",
+      "completed_at": "2026-10-06T18:14:11Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install build dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Build package",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Check package",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Upload artifacts",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112427449032,
+      "name": "Auto Release",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-06T18:14:14Z",
+      "completed_at": "2026-10-06T18:14:42Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Check if version changed",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Collect changelog fragments",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Download artifacts",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Publish to PyPI",
+          "conclusion": "failure"
+        },
+        {
+          "number": 9,
+          "name": "Explain a trusted-publishing failure",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Create GitHub Release",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 18,
+          "name": "Post Publish to PyPI",
+          "conclusion": "success"
+        },
+        {
+          "number": 19,
+          "name": "Post Setup Python",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 20,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 21,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 21,
+          "start_column": null,
+          "end_line": 21,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "PyPI trusted publisher is not configured",
+          "message": "PyPI rejected this release because no trusted publisher matches this workflow.\n\nbrowser-commander does not exist on PyPI yet, so the per-project settings page does not exist either. Register a *pending* publisher instead: https://pypi.org/manage/account/publishing/\n\nFill the form with exactly these values:\n  PyPI Project Name: browser-commander\n  Owner: link-foundation\n  Repository name: browser-commander\n  Workflow name: python.yml\n  Environment name: leave this empty   (the job declares no `environment:`, so the OIDC claim is MISSING; filling this in is the most common way to get an `invalid-publisher` that otherwise looks correct)\n\nThen re-run this job. Nothing in this repository can complete this step; it needs a PyPI account with permission to register the name. More detail: https://docs.pypi.org/trusted-publishers/troubleshooting/",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 182,
+          "start_column": null,
+          "end_line": 182,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "Trusted publishing exchange failure: \nToken request failed: the server refused the request for the following reasons:\n\n* `invalid-publisher`: valid token, but no corresponding publisher (Publisher with matching claims was not found)\n\nThis generally indicates a trusted publisher configuration error, but could\nalso indicate an internal error on GitHub or PyPI's part.\n\n\nThe claims rendered below are **for debugging purposes only**. You should **not**\nuse them to configure a trusted publisher unless they already match your expectations.\n\nIf a claim is not present in the claim set, then it is rendered as `MISSING`.\n\n* `sub`: `repo:link-foundation/browser-commander:ref:refs/heads/main`\n* `repository`: `link-foundation/browser-commander`\n* `repository_owner`: `link-foundation`\n* `repository_owner_id`: `176174013`\n* `workflow_ref`: `link-foundation/browser-commander/.github/workflows/python.yml@refs/heads/main`\n* `job_workflow_ref`: `link-foundation/browser-commander/.github/workflows/python.yml@refs/heads/main`\n* `ref`: `refs/heads/main`\n* `environment`: `MISSING`\n\nSee https://docs.pypi.org/trusted-publishers/troubleshooting/ for more help.\n\n",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112427451390,
+      "name": "Manual Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:14:12Z",
+      "completed_at": "2026-10-06T18:14:12Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112427676562,
+      "name": "Pipeline Status",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-06T18:14:45Z",
+      "completed_at": "2026-10-06T18:14:54Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Fail the run when a required job was cancelled or failed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 52,
+          "start_column": null,
+          "end_line": 52,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "Process completed with exit code 1.",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 51,
+          "start_column": null,
+          "end_line": 51,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "Pipeline failed. Failing jobs: auto-release",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    }
+  ]
+}

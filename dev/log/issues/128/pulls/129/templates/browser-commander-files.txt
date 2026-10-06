@@ -1,0 +1,90 @@
+# File inventory for browser-commander (generated 2026-10-06T19:57:52Z)
+## .github (all files)
+.github/codeql/codeql-config.yml
+.github/workflows/ci-policy.yml
+.github/workflows/docs.yml
+.github/workflows/feature-parity.yml
+.github/workflows/js.yml
+.github/workflows/links.yml
+.github/workflows/parity.yml
+.github/workflows/python.yml
+.github/workflows/quality.yml
+.github/workflows/rust.yml
+.github/workflows/safari.yml
+.github/workflows/security.yml
+.github/zizmor.yml
+
+## scripts/
+scripts/check-ci-workflows.mjs
+scripts/check-file-line-limits.sh
+scripts/check-pipeline-status.sh
+scripts/check-required-docs.sh
+scripts/check-shared-fingerprint-assets.sh
+scripts/check-version-modification.mjs
+scripts/check-web-archive.mjs
+scripts/debug-print.mjs
+scripts/detect-code-changes.mjs
+scripts/generate-browser-support.mjs
+scripts/generate-feature-parity.mjs
+scripts/generate-migration-support.mjs
+scripts/generate-playwright-protocol.mjs
+scripts/generate-puppeteer-bindings.mjs
+scripts/generate-trace-assets.mjs
+scripts/generate-trace-conformance.mjs
+scripts/puppeteer-api.mjs
+scripts/push-failure-classifier.mjs
+scripts/push-with-rebase-retry.mjs
+scripts/read-manifest.mjs
+scripts/release-tags.mjs
+scripts/run-with-budget-warning.sh
+scripts/simulate-fresh-merge.sh
+scripts/use-module.mjs
+
+## js/scripts/
+js/scripts/changeset-version.mjs
+js/scripts/check-release-format.mjs
+js/scripts/clean-npm-config.mjs
+js/scripts/create-github-release.mjs
+js/scripts/create-manual-changeset.mjs
+js/scripts/format-github-release.mjs
+js/scripts/format-release-notes.mjs
+js/scripts/instant-version-bump.mjs
+js/scripts/merge-changesets.mjs
+js/scripts/npm-registry.mjs
+js/scripts/publish-to-npm.mjs
+js/scripts/run-tests.mjs
+js/scripts/setup-npm.mjs
+js/scripts/validate-changeset.mjs
+js/scripts/version-and-commit.mjs
+
+## python/scripts/
+python/scripts/audit_dependencies.py
+python/scripts/check_file_size.py
+python/scripts/collect_changelog.py
+python/scripts/create_github_release.py
+python/scripts/detect_code_changes.py
+python/scripts/explain_pypi_failure.py
+python/scripts/git_push.py
+python/scripts/read_manifest.py
+python/scripts/version_and_commit.py
+
+## rust/scripts/
+rust/scripts/bump-version.mjs
+rust/scripts/changelog.mjs
+rust/scripts/check-file-size.mjs
+rust/scripts/collect-changelog.mjs
+rust/scripts/create-github-release.mjs
+rust/scripts/get-bump-type.mjs
+rust/scripts/publish-crate.mjs
+rust/scripts/rust-paths.mjs
+rust/scripts/version-and-commit.mjs
+
+## root config files
+.gitattributes
+.lycheeignore
+.pre-commit-config.yaml
+.prettierrc
+.secretlintrc.json
+eslint.config.js
+(no .github/dependabot.yml)
+(no actionlint config file)

@@ -1,0 +1,202 @@
+--- /tmp/tpl/rust/scripts/check-required-docs.sh	2026-10-06 19:48:20.102524024 +0000
++++ scripts/check-required-docs.sh	2026-10-06 19:40:41.856554033 +0000
+@@ -1,101 +1,128 @@
+ #!/usr/bin/env bash
+-# Validate the repository's key documentation (issue #161).
++# check-required-docs.sh
+ #
+-# CI-CD-BEST-PRACTICES principle 12 asks for three checks on documentation:
+-# size limits (scripts/check-file-size.rs), broken links (.github/workflows/
+-# links.yml), and "the documents that are supposed to exist carry the sections
+-# other documents link to". This script is the third check: a diff review
+-# reliably misses a deleted CONTRIBUTING.md or a gutted README, and the link
+-# checker actually gets greener when the sections that contained the links go
+-# away.
++# Validates documentation the way the workflows validate code (CI/CD best
++# practice #12): the documents a reader is promised must exist, and the three
++# language READMEs must keep the section list they share.
++#
++# The other two halves of principle #12 are already covered elsewhere and are
++# deliberately not repeated here: check-file-line-limits.sh scans every tracked
++# .md file against the 1500-line limit, and links.yml runs lychee over every
++# markdown file, which resolves relative paths as well as URLs. What neither of
++# them notices is a document that stopped existing, or one language README
++# quietly losing a section the other two still document - the drift
++# docs/feature-parity.md exists to prevent.
+ #
+ # Usage:
+-#   bash scripts/check-required-docs.sh          # run the check
+-#   bash scripts/check-required-docs.sh --list   # print `path<TAB>section`
++#   bash scripts/check-required-docs.sh [ROOT]
++#   bash scripts/check-required-docs.sh --list
++#
++# ROOT defaults to the current directory; the tests point it at a fixture tree.
++# --list prints the requirement table as `path<TAB>section` lines, so a test can
++# build a passing fixture from the same source the check reads.
+ #
+-# --list prints the requirement table itself, so tests (and anyone extending
+-# the table) build fixtures from the same source the check reads instead of
+-# restating it and drifting from it.
++# Exit code 0 = every requirement met; non-zero = one or more violations.
+ 
+ set -euo pipefail
+ 
++ROOT="."
++LIST_ONLY=false
++
++while [ "$#" -gt 0 ]; do
++  case "$1" in
++    --list) LIST_ONLY=true ;;
++    -h | --help)
++      sed -n '2,25p' "$0"
++      exit 0
++      ;;
++    *) ROOT="$1" ;;
++  esac
++  shift
++done
++
++# The sections js/, python/ and rust/ all document today. A reader who learned
++# the JavaScript package should find the same shape in the other two, and a
++# section dropped from one of them is exactly the kind of divergence that shows
++# up as a support question rather than as a failing test.
++LANGUAGE_README_SECTIONS="Installation|Core Concept: Page State Machine|Quick Start|API Reference|Extensibility / Escape Hatch|License"
++
+ # `path|section|section|...`; a bare `path` requires only that the file exists.
+-# Keep this table in sync with what the README of the template promises.
+ REQUIREMENTS=(
+-  "README.md|Features|Quick Start|Configuration|Contributing|License"
+-  "CONTRIBUTING.md|Development Setup|Pull Request Process|Changelog Management"
+-  "CHANGELOG.md"
++  "README.md|Available Implementations|Engine Support|Getting Started|Architecture|License"
++  "js/README.md|${LANGUAGE_README_SECTIONS}"
++  "python/README.md|${LANGUAGE_README_SECTIONS}"
++  "rust/README.md|${LANGUAGE_README_SECTIONS}"
++  "CLAUDE.md"
++  "docs/feature-parity.md"
++  "docs/CI-TIMEOUT-BUDGETS.md"
+ )
+ 
+-# Prose that mentions the words does not count: a table-of-contents entry is
+-# not the section it links to. The heading has to be a level-2 heading on a
+-# line of its own.
+-has_heading() {
+-  local file="$1" section="$2"
+-  grep -Fxq "## ${section}" "$file"
+-}
+-
+-print_requirements() {
+-  local requirement path sections section saved_ifs
++if [ "$LIST_ONLY" = true ]; then
+   for requirement in "${REQUIREMENTS[@]}"; do
+-    path="${requirement%%|*}"
+-    if [ "$path" = "$requirement" ]; then
+-      printf '%s\n' "$path"
++    file="${requirement%%|*}"
++    sections="${requirement#*|}"
++    if [ "$sections" = "$requirement" ]; then
++      printf '%s\t\n' "$file"
+       continue
+     fi
+-    sections="${requirement#*|}"
+-    saved_ifs=$IFS
+-    IFS='|'
+-    set -f
+-    for section in $sections; do
+-      printf '%s\t%s\n' "$path" "$section"
++    while [ -n "$sections" ]; do
++      printf '%s\t%s\n' "$file" "${sections%%|*}"
++      [ "${sections#*|}" = "$sections" ] && break
++      sections="${sections#*|}"
+     done
+-    set +f
+-    IFS=$saved_ifs
+   done
+-}
++  exit 0
++fi
+ 
+-# A string accumulator, not an array: bash 3.2 -- still what a macOS runner
+-# ships -- treats `${#empty[@]}` under `set -u` as an unbound variable, so an
+-# array-based failure list works on Ubuntu and breaks on macOS.
+-FAILURES=''
+-
+-add_failure() {
+-  if [ -n "$FAILURES" ]; then
+-    FAILURES="${FAILURES}
+-$1"
+-  else
+-    FAILURES="$1"
+-  fi
++# A newline-delimited accumulator rather than an array: bash 3.2, which is what
++# a macOS runner still ships, treats `${#empty[@]}` under `set -u` as an unbound
++# variable, and this script runs on all three operating systems in the matrix.
++FAILURES=""
++
++# has_heading FILE SECTION
++# True when SECTION appears as a level-2 heading. Prose that mentions the words
++# does not count: a table of contents entry is not the section it links to.
++has_heading() {
++  local file="$1" section="$2"
++  grep -Fxq "## ${section}" "$file"
+ }
+ 
+-if [ "${1:-}" = "--list" ]; then
+-  print_requirements
+-  exit 0
+-fi
++echo "Checking required documentation in ${ROOT}..."
+ 
+-if [ "${1:-}" != "" ]; then
+-  echo "usage: bash scripts/check-required-docs.sh [--list]" >&2
+-  exit 2
+-fi
++for requirement in "${REQUIREMENTS[@]}"; do
++  file="${requirement%%|*}"
++  path="${ROOT}/${file}"
+ 
+-while IFS=$'\t' read -r path section; do
+   if [ ! -f "$path" ]; then
+-    add_failure "$path: file is missing"
++    echo "ERROR: required document is missing: ${file}"
++    echo "::error file=${file}::Required document is missing."
++    FAILURES="${FAILURES}${file} (missing)"$'\n'
+     continue
+   fi
+-  if [ -n "$section" ] && ! has_heading "$path" "$section"; then
+-    add_failure "$path: missing required section '## ${section}'"
+-  fi
+-done < <(print_requirements)
++
++  sections="${requirement#*|}"
++  [ "$sections" = "$requirement" ] && sections=""
++
++  while [ -n "$sections" ]; do
++    section="${sections%%|*}"
++    if ! has_heading "$path" "$section"; then
++      echo "ERROR: ${file} has no \"## ${section}\" section"
++      echo "::error file=${file}::Required section \"${section}\" is missing."
++      FAILURES="${FAILURES}${file} (## ${section})"$'\n'
++    fi
++    [ "${sections#*|}" = "$sections" ] && break
++    sections="${sections#*|}"
++  done
++done
+ 
+ if [ -n "$FAILURES" ]; then
+-  echo "Documentation validation failed:"
+-  while IFS= read -r failure; do
+-    echo "  $failure"
+-    echo "::error title=Documentation validation failed::${failure}"
+-  done <<< "$FAILURES"
++  echo ""
++  echo "Documentation requirements not met:"
++  printf '%s' "$FAILURES" | sed 's/^/  /'
++  echo ""
++  echo "Restore the document or the section, or update the table in"
++  echo "scripts/check-required-docs.sh if the requirement genuinely changed."
+   exit 1
+ fi
+ 
+-echo "All required documentation is present with its required sections."
++echo "All required documents and sections are present."

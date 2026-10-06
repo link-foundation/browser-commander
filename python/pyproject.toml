@@ -166,6 +166,15 @@ addopts = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# An unclosed sqlite3 connection, file or socket only surfaces as a
+# ResourceWarning in the warnings summary, which CI does not fail on, so a leak
+# went unnoticed in every run (issue #128). Turning both into errors makes the
+# suite fail instead. A leak finalized by the garbage collector is reported
+# through sys.unraisablehook, hence the second entry.
+filterwarnings = [
+    "error::ResourceWarning",
+    "error::pytest.PytestUnraisableExceptionWarning",
+]
 markers = [
     "e2e: marks tests as end-to-end tests (deselect with '-m \"not e2e\"')",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

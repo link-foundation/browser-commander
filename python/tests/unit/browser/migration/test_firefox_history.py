@@ -1,6 +1,7 @@
 """Firefox history translation preserves individual visits and source bytes."""
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -19,9 +20,8 @@ async def test_translates_visits_and_filters_domains(
     source = tmp_path / "source"
     source.mkdir()
     filename = source / "places.sqlite"
-    with sqlite3.connect(filename) as db:
+    with closing(sqlite3.connect(filename)) as db, db:
         db.executescript(SCHEMA)
-    db.close()
     before = filename.read_bytes()
     target = tmp_path / "new-profile"
     report = await migrate_profile(
@@ -34,7 +34,7 @@ async def test_translates_visits_and_filters_domains(
     assert report["migrated"]["history"] == count
     assert report["skipped"] == []
     assert report["warnings"][0]["reason"] == "firefox-history-metadata-not-translated"
-    with sqlite3.connect(target / "History") as db:
+    with closing(sqlite3.connect(target / "History")) as db, db:
         rows = db.execute(
             "SELECT url,title,visit_count,last_visit_time FROM urls ORDER BY url"
         ).fetchall()
@@ -51,7 +51,6 @@ async def test_translates_visits_and_filters_domains(
             13344473600000003,
             13344473600000004,
         ][:count]
-    db.close()
     assert filename.read_bytes() == before
     assert not (target / "places.sqlite").exists()
 
@@ -61,11 +60,10 @@ async def test_reports_invalid_visit_urls(tmp_path: Path, value: str) -> None:
     source = tmp_path / "source"
     source.mkdir()
     filename = source / "places.sqlite"
-    with sqlite3.connect(filename) as db:
+    with closing(sqlite3.connect(filename)) as db, db:
         db.executescript(SCHEMA)
         db.execute(f"INSERT INTO moz_places VALUES (5,{value},'Invalid')")
         db.execute("INSERT INTO moz_historyvisits VALUES (5,5,1700000000000005,1)")
-    db.close()
     before = filename.read_bytes()
     report = await migrate_profile(
         from_={"browser": "firefox", "user_data_dir": source},
@@ -85,11 +83,10 @@ async def test_reports_missing_visit_table_before_creating_target(
 ) -> None:
     source = tmp_path / "source"
     source.mkdir()
-    with sqlite3.connect(source / "places.sqlite") as db:
+    with closing(sqlite3.connect(source / "places.sqlite")) as db, db:
         db.execute(
             "CREATE TABLE moz_places (id INTEGER PRIMARY KEY, url TEXT, title TEXT)"
         )
-    db.close()
     target = tmp_path / "new-profile"
     report = await migrate_profile(
         from_={"browser": "firefox", "user_data_dir": source},
@@ -109,10 +106,9 @@ async def test_reports_corrupt_or_overflowing_dates(tmp_path: Path, value: str) 
     source = tmp_path / "source"
     source.mkdir()
     filename = source / "places.sqlite"
-    with sqlite3.connect(filename) as db:
+    with closing(sqlite3.connect(filename)) as db, db:
         db.executescript(SCHEMA)
         db.execute(f"INSERT INTO moz_historyvisits VALUES (5,1,{value},1)")
-    db.close()
     before = filename.read_bytes()
     report = await migrate_profile(
         from_={"browser": "firefox", "user_data_dir": source},

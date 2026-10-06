@@ -249,6 +249,49 @@ describe('browser-commander/tests', () => {
     }
   });
 
+  it('names failure artifacts without leading or trailing dashes', async () => {
+    const tmpDir = mkdtempSync(path.join(os.tmpdir(), 'bc-artifacts-'));
+
+    try {
+      const [errorPath] = await writeFailureArtifacts({
+        error: new Error('broken'),
+        testId: '--checkout / pay--',
+        engine: 'playwright--',
+        artifactsDir: tmpDir,
+      });
+
+      assert.strictEqual(
+        path.basename(errorPath),
+        'checkout-pay---playwright.error.json'
+      );
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('sanitizes a long run of dashes in linear time', async () => {
+    // /^-+|-+$/g backtracked quadratically on inner dashes: about 4s for this
+    // name (CodeQL js/polynomial-redos, issue #128). A name this long cannot
+    // be a file name, so the write fails; it must fail promptly.
+    const tmpDir = mkdtempSync(path.join(os.tmpdir(), 'bc-artifacts-'));
+
+    try {
+      const started = performance.now();
+      await assert.rejects(() =>
+        writeFailureArtifacts({
+          error: new Error('broken'),
+          testId: `a${'-'.repeat(50_000)}a`,
+          engine: 'playwright',
+          artifactsDir: tmpDir,
+        })
+      );
+      const elapsed = performance.now() - started;
+      assert.ok(elapsed < 1000, `took ${elapsed.toFixed(0)}ms`);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   it('captures failure artifacts before closing failed browser scenarios', async () => {
     const tmpDir = mkdtempSync(path.join(os.tmpdir(), 'bc-scenario-'));
     const calls = [];

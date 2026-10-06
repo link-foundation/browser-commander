@@ -92,8 +92,12 @@ describe('loadCommandStream makes a failed command fail', () => {
     }
     const { $ } = cs;
 
+    // A real process, as in the release scripts. command-stream's virtual
+    // `exit` builtin would also reject, but it writes "Command failed with
+    // exit code 7" to stderr on top, which surfaced as a stray line at the end
+    // of every CI test log (issue #128).
     await assert.rejects(
-      () => $`exit 7`,
+      () => $`sh -c "exit 7"`,
       (error) => {
         assert.equal(error.code, 7, 'the exit code must survive on the error');
         return true;

@@ -126,7 +126,10 @@ jobs:
 
       - name: Skip Pages deployment
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES != 'true'
-        run: echo "GitHub Pages deployment is disabled. Set repository variable DEPLOY_GITHUB_PAGES=true after Pages is configured."
+        # A notice, not a log line: on a plain echo the run summary shows a
+        # green "Deploy GitHub Pages" skip with nothing saying the site was
+        # never published (issue #128).
+        run: echo "::notice title=GitHub Pages not deployed::DEPLOY_GITHUB_PAGES is not 'true', so the built docs were not published. Set the repository variable after Pages is configured."
 
   deploy-docs:
     name: Deploy GitHub Pages

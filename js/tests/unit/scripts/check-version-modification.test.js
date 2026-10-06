@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { findManualVersionChanges } from '../../../../scripts/check-version-modification.mjs';
+import {
+  checkVersionModification,
+  findManualVersionChanges,
+} from '../../../../scripts/check-version-modification.mjs';
+import { repoPath } from '../../helpers/repo.js';
+
+const SCRIPT = repoPath('scripts/check-version-modification.mjs');
 
 // The real implementation shells out to git; injecting the diff keeps these
 // cases independent of the branch the suite happens to run on.
@@ -66,5 +76,101 @@ describe('check-version-modification', () => {
     });
 
     assert.deepEqual(findManualVersionChanges('main', diff), []);
+  });
+});
+
+describe('check-version-modification when git cannot diff', () => {
+  // Issue #128 (link-foundation/rust-ai-driven-development-pipeline-template
+  // #174): a failed `git diff` used to read as "nothing changed", so a missing
+  // base ref turned the check into a pass.
+  function failingDiff() {
+    throw new Error("fatal: ambiguous argument 'origin/main...HEAD'");
+  }
+
+  it('fails rather than reporting no change', () => {
+    assert.throws(
+      () => findManualVersionChanges('main', failingDiff),
+      /Could not diff js\/package\.json against origin\/main/
+    );
+  });
+
+  it('fetches the base once and retries before giving up', () => {
+    let fetched = 0;
+    const diff = (_baseRef, path) => {
+      if (fetched === 0) {
+        failingDiff();
+      }
+      return path === 'rust/Cargo.toml' ? '+version = "0.9.1"' : '';
+    };
+
+    assert.deepEqual(
+      checkVersionModification('main', {
+        diff,
+        fetchBase: () => {
+          fetched += 1;
+        },
+      }),
+      ['rust/Cargo.toml']
+    );
+    assert.equal(fetched, 1);
+  });
+
+  it('reports the failure when the retry fails too', () => {
+    let fetched = 0;
+
+    assert.throws(
+      () =>
+        checkVersionModification('main', {
+          diff: failingDiff,
+          fetchBase: () => {
+            fetched += 1;
+          },
+        }),
+      /Could not diff/
+    );
+    assert.equal(fetched, 1);
+  });
+
+  it('exits 1 with an error annotation from the command line', () => {
+    const directory = mkdtempSync(path.join(tmpdir(), 'version-check-'));
+
+    try {
+      // A repository with no origin: the base ref cannot exist, and neither
+      // can the fetch that would bring it in.
+      spawnSync('git', ['init', '-q', directory]);
+      spawnSync(
+        'git',
+        [
+          '-C',
+          directory,
+          '-c',
+          'user.name=t',
+          '-c',
+          'user.email=t@example.com',
+          'commit',
+          '-q',
+          '--allow-empty',
+          '-m',
+          'init',
+        ],
+        { encoding: 'utf8' }
+      );
+
+      const result = spawnSync(process.execPath, [SCRIPT], {
+        cwd: directory,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          GITHUB_BASE_REF: 'main',
+          GITHUB_HEAD_REF: 'feature',
+        },
+      });
+
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stderr, /::error::Could not diff/);
+      assert.doesNotMatch(result.stdout, /No manual version changes/);
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
   });
 });

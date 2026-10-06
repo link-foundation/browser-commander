@@ -19,7 +19,7 @@
  *
  * Exit codes:
  *   0 - no manual version change (or the branch is an automated release branch)
- *   1 - a manual version change was found
+ *   1 - a manual version change was found, or the diff could not be computed
  */
 
 import { execFileSync } from 'node:child_process';
@@ -52,25 +52,68 @@ const AUTOMATED_RELEASE_BRANCH_PREFIXES = [
   'changeset-manual-release-',
 ];
 
+// `git diff A...B -- path` exits 0 with no output for a path that exists on
+// neither side, so a thrown error is never "nothing changed": it is a missing
+// base ref or merge base. Reading it as an empty diff turned the check into a
+// pass on exactly the checkouts that could not see the change (issue #128,
+// link-foundation/rust-ai-driven-development-pipeline-template#174).
 function gitDiff(baseRef, path) {
-  try {
-    return execFileSync(
-      'git',
-      ['diff', `origin/${baseRef}...HEAD`, '--', path],
-      { encoding: 'utf8' }
-    );
-  } catch (error) {
-    // A manifest that does not exist on either side produces no diff, which is
-    // not a failure. Anything else is worth surfacing rather than swallowing.
-    console.error(`Could not diff ${path}: ${error.message}`);
-    return '';
-  }
+  return execFileSync('git', ['diff', `origin/${baseRef}...HEAD`, '--', path], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
+function gitFetchBase(baseRef) {
+  execFileSync(
+    'git',
+    [
+      'fetch',
+      '--no-tags',
+      'origin',
+      `+refs/heads/${baseRef}:refs/remotes/origin/${baseRef}`,
+    ],
+    { stdio: ['ignore', 'inherit', 'inherit'] }
+  );
 }
 
 export function findManualVersionChanges(baseRef, diff = gitDiff) {
-  return MANIFESTS.filter(({ path, pattern }) =>
-    pattern.test(diff(baseRef, path))
-  ).map(({ path }) => path);
+  return MANIFESTS.filter(({ path, pattern }) => {
+    let text;
+    try {
+      text = diff(baseRef, path);
+    } catch (error) {
+      const detail = String(error.stderr || error.message).trim();
+      throw new Error(
+        `Could not diff ${path} against origin/${baseRef}: ${detail}`,
+        { cause: error }
+      );
+    }
+    return pattern.test(text);
+  }).map(({ path }) => path);
+}
+
+/**
+ * Find manual version changes, fetching the base branch once if the first
+ * diff fails (a shallow or single-branch checkout has no origin/<base>).
+ * Throws when the diff still cannot be computed.
+ */
+export function checkVersionModification(
+  baseRef,
+  { diff = gitDiff, fetchBase = gitFetchBase } = {}
+) {
+  try {
+    return findManualVersionChanges(baseRef, diff);
+  } catch (error) {
+    console.error(`${error.message}`);
+    console.error(`Fetching origin/${baseRef} and retrying once.`);
+    try {
+      fetchBase(baseRef);
+    } catch (fetchError) {
+      console.error(`Fetching origin/${baseRef} failed: ${fetchError.message}`);
+    }
+    return findManualVersionChanges(baseRef, diff);
+  }
 }
 
 export function main() {
@@ -87,7 +130,17 @@ export function main() {
     return;
   }
 
-  const changed = findManualVersionChanges(baseRef);
+  let changed;
+  try {
+    changed = checkVersionModification(baseRef);
+  } catch (error) {
+    console.error(`::error::${error.message.split('\n')[0]}`);
+    console.error(
+      'The version check could not see what this pull request changes, so it cannot pass.'
+    );
+    process.exitCode = 1;
+    return;
+  }
 
   if (changed.length === 0) {
     console.log('No manual version changes detected.');

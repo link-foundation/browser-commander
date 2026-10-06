@@ -476,7 +476,7 @@ jobs:
           CURRENT_VERSION: ${{ steps.version_check.outputs.current_version }}
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           python scripts/collect_changelog.py --version "$CURRENT_VERSION"
           git add -A CHANGELOG.md changelog.d
           if git diff --cached --quiet; then
@@ -579,7 +579,7 @@ jobs:
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       # Changelog fragments are collected inside version_and_commit.py, after
       # the bump has computed the version. This step used to run beforehand as

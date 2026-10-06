@@ -117,7 +117,12 @@ def configure_git() -> None:
         ["git", "config", "user.name", "github-actions[bot]"],
     )
     run_command(
-        ["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"],
+        [
+            "git",
+            "config",
+            "user.email",
+            "41898282+github-actions[bot]@users.noreply.github.com",
+        ],
     )
 
 

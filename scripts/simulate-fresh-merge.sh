@@ -39,7 +39,7 @@ echo "=== Synchronizing pull request with the latest $BASE_REF ==="
 echo ""
 
 # The merge below creates a commit, which git refuses to do without an identity.
-git config user.email "github-actions[bot]@users.noreply.github.com"
+git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git config user.name "github-actions[bot]"
 
 echo "Fetching latest $BASE_REF..."

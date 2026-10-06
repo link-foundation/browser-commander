@@ -144,7 +144,7 @@ async function main() {
   try {
     // Configure git
     await $`git config user.name "github-actions[bot]"`;
-    await $`git config user.email "github-actions[bot]@users.noreply.github.com"`;
+    await $`git config user.email "41898282+github-actions[bot]@users.noreply.github.com"`;
 
     // Check if remote main has advanced (handles re-runs after partial success)
     console.log('Checking for remote changes...');

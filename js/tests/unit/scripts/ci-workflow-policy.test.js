@@ -43,6 +43,8 @@ function workflow({ on = 'push', preamble = '', job = 'test', steps }) {
     '      cancel-in-progress: true',
     '    steps:',
     '      - uses: actions/checkout@v6',
+    '        with:',
+    '          persist-credentials: false',
     steps,
     // Every workflow has to end in the gate that reads the other jobs'
     // results, so the scaffolding carries one; the gate's own tests are in
@@ -103,6 +105,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: npm install
       - run: echo "\${{ github.head_ref }}"
       - uses: codecov/codecov-action@v6
@@ -177,6 +181,39 @@ jobs:
     }).replace('    runs-on: ubuntu-24.04', '    runs-on: ubuntu-latest');
 
     assert.equal(countFailures(content), 2);
+  });
+
+  it('rejects a checkout that leaves the job token in .git/config', () => {
+    // actions/checkout persists the token unless told not to, so any later
+    // step - an install script, an artifact upload of the workspace - can
+    // read it. zizmor reports this as artipacked at low confidence, below the
+    // floor the audit ran with, so 38 checkouts did it unreported (#128).
+    const content = workflow({ steps: '' }).replace(
+      '        with:\n          persist-credentials: false\n',
+      ''
+    );
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects a persisted credential in a job that does not write to main', () => {
+    const content = workflow({ steps: '' }).replace(
+      'persist-credentials: false',
+      'persist-credentials: true'
+    );
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('accepts a persisted credential in a main-writer job that pushes', () => {
+    const content = workflow({ job: 'release', steps: '' })
+      .replace(
+        'group: ${{ github.workflow }}-${{ github.ref }}-release\n      cancel-in-progress: true',
+        'group: main-writer-${{ github.repository }}-main\n      cancel-in-progress: false'
+      )
+      .replace('persist-credentials: false', 'persist-credentials: true');
+
+    assert.equal(countFailures(content), 0);
   });
 
   it('accepts a base_ref bound to any environment variable name', () => {
@@ -309,6 +346,8 @@ function lintAndTest({ needs, condition = '' }) {
     '      cancel-in-progress: true',
     '    steps:',
     '      - uses: actions/checkout@v6',
+    '        with:',
+    '          persist-credentials: false',
     '  test:',
     '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
@@ -319,6 +358,8 @@ function lintAndTest({ needs, condition = '' }) {
     condition,
     '    steps:',
     '      - uses: actions/checkout@v6',
+    '        with:',
+    '          persist-credentials: false',
     '  pipeline-status:',
     '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',

@@ -62,6 +62,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -91,6 +92,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -161,6 +163,7 @@ jobs:
         with:
           # Full history: simulate-fresh-merge.sh needs a merge base.
           fetch-depth: 0
+          persist-credentials: false
 
       # Lint the state that will exist after the merge, not the stale merge
       # preview GitHub built when the pull request was last synced.
@@ -238,6 +241,7 @@ jobs:
         with:
           # Full history: simulate-fresh-merge.sh needs a merge base.
           fetch-depth: 0
+          persist-credentials: false
 
       # Test the state that will exist after the merge. This is the check that
       # catches a semantic conflict: two pull requests that each pass alone but
@@ -314,6 +318,8 @@ jobs:
       (needs.test.result == 'success' || needs.test.result == 'skipped')
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -424,6 +430,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          # The release pushes its version commit and tag with this token.
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -520,10 +528,11 @@ jobs:
       - name: Create GitHub Release
         if: steps.version_check.outputs.should_release == 'true'
         env:
+          CURRENT_VERSION: ${{ steps.version_check.outputs.current_version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python scripts/create_github_release.py \
-            --version "${{ steps.version_check.outputs.current_version }}" \
+            --version "$CURRENT_VERSION" \
             --repository "${{ github.repository }}" \
             --tag-prefix "python-v"
 
@@ -554,6 +563,8 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          # The release pushes its version commit and tag with this token.
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -627,10 +638,11 @@ jobs:
       - name: Create GitHub Release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python scripts/create_github_release.py \
-            --version "${{ steps.version.outputs.new_version }}" \
+            --version "$NEW_VERSION" \
             --repository "${{ github.repository }}" \
             --tag-prefix "python-v"
 

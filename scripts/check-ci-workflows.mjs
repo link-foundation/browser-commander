@@ -657,6 +657,57 @@ function checkJobConcurrency(filePath, block, jobName, start) {
 }
 
 /**
+ * actions/checkout writes the job token into .git/config unless told not to,
+ * where every later step - an install script, a workspace artifact upload -
+ * can read it. Only a job in the main-writer group pushes, so only such a job
+ * may keep the credential, and it has to say so. zizmor's artipacked audit
+ * reports the same thing at low confidence, which is below the floor the
+ * audit long ran with (issue #128).
+ *
+ * @param {string} filePath
+ * @param {string[]} block
+ * @param {string} jobName
+ * @param {number} start
+ * @returns {number}
+ */
+function checkCheckoutCredentials(filePath, block, jobName, start) {
+  const writer = block.some((line) =>
+    line.includes('group: main-writer-${{ github.repository }}-main')
+  );
+  let failures = 0;
+
+  for (const [offset, line] of block.entries()) {
+    if (!/^ {6}- uses: actions\/checkout@/.test(line)) {
+      continue;
+    }
+
+    const stepEnd = block.findIndex(
+      (next, index) => index > offset && /^ {0,6}\S/.test(next)
+    );
+    const step = block
+      .slice(offset, stepEnd === -1 ? block.length : stepEnd)
+      .join('\n');
+    const persists = /^ {10}persist-credentials:\s*true\s*$/m.test(step);
+    const drops = /^ {10}persist-credentials:\s*false\s*$/m.test(step);
+
+    if (drops || (persists && writer)) {
+      continue;
+    }
+
+    report(
+      filePath,
+      start + offset + 1,
+      persists
+        ? `Job ${jobName} keeps the checkout token in .git/config but is not a main-writer job; set persist-credentials: false.`
+        : `Checkout in job ${jobName} must set persist-credentials: false (or true in a main-writer job that pushes).`
+    );
+    failures++;
+  }
+
+  return failures;
+}
+
+/**
  * Every job needs a backstop, a concurrency group, and a condition that lets
  * cancellation propagate.
  *
@@ -683,6 +734,7 @@ function checkJobPolicies(filePath, lines, jobStarts) {
     }
 
     failures += checkJobConcurrency(filePath, block, jobName, start);
+    failures += checkCheckoutCredentials(filePath, block, jobName, start);
 
     const executableBlockText = block
       .filter((line) => !line.trimStart().startsWith('#'))

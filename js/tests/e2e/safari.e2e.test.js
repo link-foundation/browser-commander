@@ -28,13 +28,17 @@ it(
     let session;
     let commander;
     const cli = createDispatcher();
+    const phase = (message) =>
+      console.info(`[Safari smoke] ${new Date().toISOString()} ${message}`);
     try {
+      phase('launch seeded session');
       session = await launchRealBrowser({
         channel: 'safari',
         startupTimeout: 20_000,
         seedCookies: [{ name: 'seed', value: 'yes', url, httpOnly: true }],
       });
       const { page, driver } = session;
+      phase('exercise page commands');
       commander = makeBrowserCommander({ page });
       await page.goto(url);
       assert.equal(commander.engine, 'selenium');
@@ -47,6 +51,7 @@ it(
       assert.equal(await page.evaluateAsync(async (value) => value + 1, 4), 5);
       assert.ok((await page.screenshot()).length > 100);
       assert.equal((await driver.manage().getCookie('seed')).value, 'yes');
+      phase('exercise windows and tabs');
       const initial = await driver.getWindowHandle();
       for (const type of ['tab', 'window']) {
         const handle = await page.newWindow(type);
@@ -60,7 +65,9 @@ it(
         () => page.setRequestInterception(true),
         SafariUnsupportedError
       );
+      phase('close seeded session');
       await session.close();
+      phase('launch fresh session');
       session = await launchRealBrowser({ channel: 'safari' });
       await session.page.goto(url);
       assert.equal(
@@ -69,11 +76,14 @@ it(
         ),
         false
       );
+      phase('close fresh session');
       await session.close();
+      phase('launch CLI session');
       await cli.dispatch('session.launch', {
         browser: 'safari',
         engine: 'selenium',
       });
+      phase('exercise CLI commands');
       await cli.dispatch('page.goto', { url });
       assert.equal(
         (await cli.dispatch('page.eval', { expression: 'document.title' }))
@@ -81,10 +91,14 @@ it(
         'Safari smoke'
       );
     } finally {
+      phase('close CLI session');
       await cli.close();
+      phase('destroy commander');
       await commander?.destroy();
+      phase('close remaining session and server');
       await session?.close();
       await new Promise((resolve) => server.close(resolve));
+      phase('cleanup complete');
     }
   }
 );

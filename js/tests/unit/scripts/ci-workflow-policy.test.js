@@ -183,6 +183,33 @@ jobs:
     assert.equal(countFailures(content), 2);
   });
 
+  it('rejects a checker that npx fetches at whatever version is newest', () => {
+    // `npx --yes -p secretlint` resolves the latest release on every run, so a
+    // new rule set could fail a pull request that changed nothing it scans.
+    const content = workflow({
+      steps: [
+        '      - run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint "**/*"',
+        '      - run: npx --yes -p secretlint@13.0.7 -p @secretlint/secretlint-rule-preset-recommend@13.0.7 secretlint "**/*"',
+      ].join('\n'),
+    });
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects a cargo audit that passes on advisory warnings', () => {
+    // Without --deny warnings, an unmaintained, unsound or yanked crate prints
+    // "warning: 1 allowed warning found" and exits 0 (issue #128,
+    // reproductions/cargo-audit-deny-warnings.log).
+    const content = workflow({
+      steps: [
+        '      - run: cargo audit --file Cargo.lock',
+        '      - run: cargo audit --file Cargo.lock --deny warnings',
+      ].join('\n'),
+    });
+
+    assert.equal(countFailures(content), 1);
+  });
+
   it('rejects a checkout that leaves the job token in .git/config', () => {
     // actions/checkout persists the token unless told not to, so any later
     // step - an install script, an artifact upload of the workspace - can

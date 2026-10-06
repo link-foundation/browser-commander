@@ -164,7 +164,7 @@ jobs:
           tool: cargo-audit@0.22.2
 
       - name: Audit committed Cargo.lock
-        run: cargo audit --file Cargo.lock
+        run: cargo audit --file Cargo.lock --deny warnings
 
   python-audit:
     name: Audit Python dependencies

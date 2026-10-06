@@ -76,6 +76,22 @@ const DISALLOWED_PATTERNS = [
       'ubuntu-latest is a moving label that changes the OS under the job.',
   },
   {
+    // `npx -p pkg` fetches the newest release on every run, so a checker run
+    // that way changes its rules under a pull request that changed nothing.
+    // A package counts as pinned when its name is followed by @version.
+    pattern:
+      /^[^#]*\bnpx\b.*\s(?:-p|--package)[ =](?:@[^/\s]+\/)?[^@\s]+(?=\s|$)/,
+    replacement: 'npx -p <package>@<version>',
+    reason: 'an unpinned package is whatever version is newest when CI runs.',
+  },
+  {
+    // An unmaintained, unsound or yanked crate is reported as a warning, and
+    // cargo audit exits 0 on warnings unless told otherwise (issue #128).
+    pattern: /^[^#]*\bcargo audit\b(?!.*--deny warnings)/,
+    replacement: 'cargo audit --deny warnings',
+    reason: 'without it, advisory warnings are printed and the job passes.',
+  },
+  {
     pattern: /node-version:\s*['"]?20\.x['"]?/,
     replacement: "node-version: '24.x'",
   },

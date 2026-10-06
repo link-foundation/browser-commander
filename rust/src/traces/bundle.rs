@@ -34,6 +34,8 @@ pub const DEFAULT_MAX_RESOURCE_BYTES: u64 = 32 * 1024 * 1024;
 /// Why recording could not go on.
 #[derive(Debug, thiserror::Error)]
 pub enum TraceRecordError {
+    #[error(transparent)]
+    Engine(#[from] crate::core::engine::EngineError),
     /// The options cannot describe a trace.
     #[error("{0}")]
     Invalid(String),

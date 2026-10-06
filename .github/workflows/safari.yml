@@ -1,0 +1,101 @@
+name: Safari WebDriver
+
+on:
+  pull_request:
+    paths:
+      - 'js/**'
+      - 'python/**'
+      - 'rust/**'
+      - '.github/workflows/safari.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'js/**'
+      - 'python/**'
+      - 'rust/**'
+      - '.github/workflows/safari.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Safari (${{ matrix.language }})
+    runs-on: macos-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript, python, rust]
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.language }}
+      cancel-in-progress: true
+    env:
+      RUN_SAFARI_E2E: 'true'
+      CARGO_BUILD_JOBS: '2'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Enable Safari automation on the disposable runner
+        run: |
+          sudo /usr/bin/safaridriver --enable &
+          driver_setup=$!
+          wait "$driver_setup"
+      - uses: actions/setup-node@v6
+        if: matrix.language == 'javascript'
+        with:
+          node-version: '24.x'
+      - name: Install JavaScript dependencies
+        if: matrix.language == 'javascript'
+        working-directory: js
+        run: npm ci --ignore-scripts
+      - name: Exercise JavaScript Safari commands
+        if: matrix.language == 'javascript'
+        working-directory: js
+        run: node scripts/run-tests.mjs tests/e2e/safari.e2e.test.js
+      - uses: actions/setup-python@v6
+        if: matrix.language == 'python'
+        with:
+          python-version: '3.13'
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: python -m pip install -e 'python[dev]'
+      - name: Exercise Python Safari commands
+        if: matrix.language == 'python'
+        working-directory: python
+        run: pytest tests/e2e/test_safari.py -v
+      - uses: dtolnay/rust-toolchain@stable
+        if: matrix.language == 'rust'
+      - uses: Swatinem/rust-cache@v2
+        if: matrix.language == 'rust'
+        with:
+          workspaces: rust
+      - name: Exercise Rust Safari commands
+        if: matrix.language == 'rust'
+        working-directory: rust
+        run: cargo test --locked --test safari_webdriver safari_local_page_smoke -- --ignored --nocapture
+
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    needs: [smoke]
+    if: >-
+      !cancelled()
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Report failed or cancelled jobs
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash scripts/check-pipeline-status.sh

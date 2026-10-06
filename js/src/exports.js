@@ -322,3 +322,9 @@ export {
   redactUrl,
   redactValue,
 } from './traces/redaction.js';
+
+export {
+  SafariSetupError,
+  SafariUnsupportedError,
+  openSafariSettings,
+} from './browser/safari-support.js';

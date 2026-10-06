@@ -628,6 +628,41 @@ impl std::fmt::Debug for LaunchResult {
 /// Returns an error if the options are invalid or the browser fails to
 /// launch. Invalid options are refused before anything is started.
 pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyhow::Error> {
+    if options
+        .channel
+        .as_deref()
+        .is_some_and(super::safari::is_safari_channel)
+        || (options.engine == EngineType::Fantoccini && options.webdriver.browser.is_safari())
+    {
+        if options.fingerprint.is_some() || options.color_scheme.is_some() {
+            return Err(super::safari::unsupported("fingerprint or media emulation").into());
+        }
+        let mut real_options = options.real_browser_options();
+        if !super::safari::is_safari_channel(&real_options.channel) {
+            real_options.channel = if options.webdriver.browser
+                == super::webdriver::WebDriverBrowser::SafariTechnologyPreview
+            {
+                "safari-technology-preview".into()
+            } else {
+                "safari".into()
+            };
+        }
+        let safari = super::safari::launch_safari_real_with_webdriver(
+            real_options,
+            options.webdriver.clone(),
+        )
+        .await?;
+        let mut result = LaunchResult::attached(safari.browser, safari.page, None)
+            .launched_by_engine(
+                Vec::new(),
+                false,
+                Some(safari.executable_path),
+                safari.closer,
+            );
+        result.launch = Some(options.launch);
+        result.browser_process = Some(safari.browser_process);
+        return Ok(result);
+    }
     if options.engine == EngineType::Fantoccini && options.launch == LaunchMode::Real {
         return Err(anyhow::anyhow!(
             "fantoccini requires LaunchMode::Engine; use LaunchOptions::fantoccini()"

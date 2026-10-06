@@ -17,6 +17,8 @@ import { resolveSystemBrowserExecutable } from './system-browser.js';
 import { applyFingerprint } from '../fingerprint/apply.js';
 import { attachDownloads } from '../downloads/attach.js';
 import { launchWebDriver } from './webdriver.js';
+import { launchSafari } from './safari-launch.js';
+import { isSafariChannel } from './safari-support.js';
 import {
   loadStorageState,
   restorePlaywrightStorageState,
@@ -300,6 +302,18 @@ export async function launchBrowserWithDependencies(
   options = {},
   dependencies = {}
 ) {
+  if (isSafariChannel(options.channel ?? options.browser)) {
+    validateLaunchMode({
+      engine: options.engine ?? 'playwright',
+      launch: options.launch ?? 'real',
+      attach: options.attach,
+    });
+    return await launchSafari(options, dependencies);
+  }
+  return await launchNonSafariBrowser(options, dependencies);
+}
+
+async function launchNonSafariBrowser(options, dependencies) {
   const {
     engine = 'playwright',
     launch = 'real',

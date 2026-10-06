@@ -93,6 +93,12 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.safari_webdriver import (
+    SafariSetupError,
+    SafariUnsupportedError,
+    open_safari_settings,
+    require_safari_feature,
+)
 from browser_commander.browser.snapshot import (
     SnapshotOptions,
     launch_snapshot,
@@ -321,6 +327,10 @@ from browser_commander.utilities.wait import (
 )
 
 __all__ = [  # noqa: RUF022 - grouped by public API area
+    "SafariSetupError",
+    "SafariUnsupportedError",
+    "open_safari_settings",
+    "require_safari_feature",
     "ExtensionRelay",
     "RelayAddress",
     "RelayEvent",

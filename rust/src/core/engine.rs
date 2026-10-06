@@ -78,6 +78,10 @@ pub enum EngineError {
     /// Generic browser error.
     #[error("Browser error: {0}")]
     Browser(String),
+
+    /// A feature unavailable in the selected browser.
+    #[error("{feature} is unsupported on {browser}")]
+    Unsupported { browser: String, feature: String },
 }
 
 /// Result of an element query.
@@ -274,6 +278,10 @@ pub enum TraceEngineEvent {
 /// engines, allowing the library to work with multiple backends.
 #[async_trait]
 pub trait EngineAdapter: Send + Sync {
+    /// Validate a feature before starting observers or writing artifacts.
+    fn require_feature(&self, _feature: &str) -> Result<(), EngineError> {
+        Ok(())
+    }
     /// Get the engine type.
     fn engine_type(&self) -> EngineType;
 

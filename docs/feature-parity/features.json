@@ -113,6 +113,27 @@
           "title": "Read a portable trace"
         }
       ]
+    },
+    {
+      "title": "Safari WebDriver",
+      "features": [
+        {
+          "id": "safari.control",
+          "title": "Safari and Technology Preview native W3C control"
+        },
+        {
+          "id": "safari.setup",
+          "title": "Remote Automation setup diagnostics and settings opener"
+        },
+        {
+          "id": "safari.seed",
+          "title": "Explicit cookie seeding in isolated automation sessions"
+        },
+        {
+          "id": "safari.unsupported",
+          "title": "Typed rejection of Safari network interception, tracing and PDF"
+        }
+      ]
     }
   ]
 }

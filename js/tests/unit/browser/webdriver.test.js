@@ -92,7 +92,7 @@ function createMockSelenium(driver = createMockDriver()) {
     record,
     driver,
     selenium: {
-      webdriver: { Builder },
+      webdriver: { Builder, Capabilities: Options },
       chrome: {
         Options: class extends Options {
           constructor() {
@@ -265,8 +265,8 @@ describe('resolveWebDriverExecutable', () => {
 
   it('rejects browsers it has no driver for', async () => {
     await assert.rejects(
-      () => resolveWebDriverExecutable({ browser: 'safari' }),
-      /Unsupported WebDriver browser: safari/
+      () => resolveWebDriverExecutable({ browser: 'unknown-browser' }),
+      /Unsupported WebDriver browser: unknown-browser/
     );
   });
 });
@@ -443,6 +443,49 @@ describe('launchWebDriver', () => {
       .slice('--user-data-dir='.length);
     assert.ok(started[0].child.killed);
     assert.ok(!existsSync(profile));
+  });
+});
+
+function safariDependencies() {
+  return launchDependencies({
+    platform: 'darwin',
+    checkAccess: async () => {},
+  });
+}
+
+describe('Safari driver lifecycle', () => {
+  it('uses no disk profile or Chromium/BiDi capabilities and closes idempotently', async () => {
+    const { dependencies, started, mock } = safariDependencies();
+    const result = await launchWebDriver(
+      { browser: 'safari-technology-preview' },
+      dependencies
+    );
+    assert.equal(result.userDataDir, undefined);
+    assert.equal(result.temporaryProfile, false);
+    assert.equal(
+      mock.record.builders[0].capabilities.capabilities.browserName,
+      'Safari Technology Preview'
+    );
+    assert.deepEqual(started[0].args, ['--port', '41001']);
+    assert.match(started[0].file, /Safari Technology Preview.app/);
+    await Promise.all([result.close(), result.close()]);
+    assert.equal(
+      mock.driver.calls.filter(([name]) => name === 'quit').length,
+      1
+    );
+    assert.ok(started[0].child.killed);
+  });
+
+  it('cleans up the driver if Safari authorization fails', async () => {
+    const { dependencies, started, mock } = safariDependencies();
+    mock.selenium.webdriver.Builder.prototype.build = () => {
+      throw new Error("You must enable the 'Allow Remote Automation' option");
+    };
+    await assert.rejects(
+      () => launchWebDriver({ browser: 'safari' }, dependencies),
+      (error) => error.code === 'SAFARI_SETUP_REQUIRED'
+    );
+    assert.ok(started[0].child.killed);
   });
 });
 

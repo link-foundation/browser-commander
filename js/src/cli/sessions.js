@@ -12,6 +12,9 @@ export const BROWSER_CHANNELS = Object.freeze({
   msedge: 'msedge',
   brave: 'brave',
   chromium: 'chromium',
+  safari: 'safari',
+  'safari-technology-preview': 'safari-technology-preview',
+  'safari-tp': 'safari-technology-preview',
 });
 
 const ENGINES = Object.freeze(['playwright', 'puppeteer', 'selenium']);
@@ -40,6 +43,7 @@ const LAUNCH_PASSTHROUGH = Object.freeze([
   'firstRun',
   'driverPath',
   'bidi',
+  'seedCookies',
 ]);
 
 /** Validate an engine name, defaulting to Playwright. */
@@ -118,6 +122,7 @@ export function buildLaunchOptions(params = {}) {
  * persistent context whose `browser()` is null. Puppeteer returns a Browser.
  */
 export function sessionFromLaunch(engine, launched) {
+  engine = launched.engine ?? engine;
   const playwright = engine === 'playwright';
   const handle = launched.browser;
   return {

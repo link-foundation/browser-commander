@@ -766,7 +766,9 @@
       },
       "default": {
         "darwin": ["com.apple.safari"]
-      }
+      },
+      "executables": { "darwin": ["/usr/bin/safaridriver"] },
+      "controlProtocol": "webdriver"
     },
     {
       "id": "safari-technology-preview",
@@ -781,7 +783,13 @@
       },
       "default": {
         "darwin": ["com.apple.safaritechnologypreview"]
-      }
+      },
+      "executables": {
+        "darwin": [
+          "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"
+        ]
+      },
+      "controlProtocol": "webdriver"
     },
     {
       "id": "whale",

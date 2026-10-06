@@ -734,6 +734,9 @@ class SeleniumAdapter(EngineAdapter):
 
     async def pdf(self, **options: Any) -> bytes:
         """Generate a PDF with the native WebDriver Print Page command."""
+        from browser_commander.browser.safari_webdriver import require_safari_feature
+
+        require_safari_feature(self.page, "PDF")
         from browser_commander.browser.webdriver_pdf import webdriver_pdf
 
         return webdriver_pdf(self.page, options)

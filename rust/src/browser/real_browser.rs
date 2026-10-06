@@ -28,7 +28,7 @@ use serde_json::Value;
 
 use crate::browser::browser_process::{BrowserCloser, BrowserProcess};
 use crate::browser::cdp_endpoint::{wait_for_cdp_endpoint, CdpEndpointRequest};
-use crate::browser::connector::{connect_browser, ConnectOptions};
+use crate::browser::connector::ConnectOptions;
 use crate::browser::debugging_port::{
     assert_fixed_debugging_port, reserve_loopback_port, DevToolsOutputWatcher, PortRaceError,
 };
@@ -459,7 +459,9 @@ pub struct RealBrowserLaunchResult {
     pub downloads: Option<Arc<DownloadManager>>,
     /// Cookie-free profile migration report when `migrate_from` was set.
     pub migration: Option<MigrationSummary>,
-    closer: Arc<RealBrowserCloser>,
+    pub(crate) closer: Arc<dyn BrowserCloser>,
+    /// Native Safari session, including the complete typed W3C client.
+    pub webdriver: Option<Arc<crate::browser::webdriver::ManagedWebDriver>>,
 }
 
 impl RealBrowserLaunchResult {
@@ -965,21 +967,10 @@ where
 /// browser exits; known default profiles are refused because Chrome 136 and
 /// newer ignore remote-debugging switches for them.
 pub async fn launch_real_browser(options: RealBrowserOptions) -> Result<RealBrowserLaunchResult> {
+    if crate::browser::safari::is_safari_channel(&options.channel) {
+        return crate::browser::safari::launch_safari_real(options).await;
+    }
     launch_real_browser_owned(options, false).await
-}
-
-pub(crate) async fn launch_real_browser_owned(
-    options: RealBrowserOptions,
-    owned_profile: bool,
-) -> Result<RealBrowserLaunchResult> {
-    let (connection, launched) = launch_real_browser_with_owned(
-        &options,
-        Arc::new(SystemLaunchHooks),
-        connect_browser,
-        owned_profile,
-    )
-    .await?;
-    Ok(real_browser_result(connection, launched, options.headless))
 }
 
 /// Descriptive alias for [`launch_real_browser`].
@@ -991,8 +982,7 @@ pub async fn launch_and_connect_real_browser(
 
 #[path = "real_browser_result.rs"]
 mod result;
-use result::real_browser_result;
-pub(crate) use result::{connection_options, launch_real_browser_with};
+pub(crate) use result::{connection_options, launch_real_browser_owned, launch_real_browser_with};
 
 #[cfg(test)]
 #[path = "real_browser_tests.rs"]

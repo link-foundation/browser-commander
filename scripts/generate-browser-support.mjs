@@ -97,7 +97,7 @@ export function renderBrowserControls(browsers) {
   const routes = {
     chromium: 'CDP',
     firefox: 'WebDriver setup',
-    safari: 'safaridriver setup',
+    safari: 'WebDriver',
   };
   const rows = browsers.map((browser) => [
     browser.id,

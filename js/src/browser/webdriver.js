@@ -40,6 +40,13 @@ import {
 } from './profile-directory.js';
 import { buildRealBrowserArgs } from './real-browser.js';
 import { resolveRestrictions } from './restrictions.js';
+import { findBrowserSource } from './browser-sources.js';
+import {
+  isSafariChannel,
+  SafariUnsupportedError,
+  safariLaunchError,
+  validateSafariOptions,
+} from './safari-support.js';
 
 const require = createRequire(import.meta.url);
 const accessAsync = promisify(access);
@@ -76,6 +83,8 @@ export const CHROMEDRIVER_DEFAULT_SWITCHES = Object.freeze([
 const DRIVERS = Object.freeze({
   chrome: { name: 'chromedriver', builder: 'chrome' },
   firefox: { name: 'geckodriver', builder: 'firefox' },
+  safari: { name: 'safaridriver', builder: 'safari' },
+  'safari-technology-preview': { name: 'safaridriver', builder: 'safari' },
 });
 
 /**
@@ -102,7 +111,7 @@ export function loadSelenium(subpath) {
 function assertBrowser(browser) {
   if (!DRIVERS[browser]) {
     throw new Error(
-      `Unsupported WebDriver browser: ${browser}. Expected 'chrome' or 'firefox'`
+      `Unsupported WebDriver browser: ${browser}. Expected 'chrome', 'firefox' or 'safari'`
     );
   }
   return DRIVERS[browser];
@@ -182,6 +191,20 @@ export async function resolveWebDriverExecutable({
   managerPath,
 } = {}) {
   const { name } = assertBrowser(browser);
+  if (isSafariChannel(browser)) {
+    if (platform !== 'darwin') {
+      throw new SafariUnsupportedError('Safari launch outside macOS');
+    }
+    const file = driverPath ?? findBrowserSource(browser).executables.darwin[0];
+    if (!(await isExecutable(file, checkAccess))) {
+      throw new Error(`Safari WebDriver executable is not accessible: ${file}`);
+    }
+    return {
+      driverPath: file,
+      browserPath: null,
+      source: 'bundled-safaridriver',
+    };
+  }
   if (driverPath) {
     if (!(await isExecutable(driverPath, checkAccess))) {
       throw new Error(`WebDriver executable is not accessible: ${driverPath}`);
@@ -237,6 +260,9 @@ export async function resolveWebDriverExecutable({
  * @returns {string[]}
  */
 export function buildDriverServerArgs(browser, port) {
+  if (isSafariChannel(browser)) {
+    return ['--port', String(port)];
+  }
   if (assertBrowser(browser).name === 'geckodriver') {
     return ['--port', String(port), '--host', LOOPBACK_HOST];
   }
@@ -306,6 +332,16 @@ export function buildBrowserOptions({
 }) {
   let options;
   let browserArgs;
+  if (isSafariChannel(browser)) {
+    options = new selenium.webdriver.Capabilities();
+    options.set(
+      'browserName',
+      browser === 'safari-technology-preview'
+        ? 'Safari Technology Preview'
+        : 'safari'
+    );
+    return { options, args: [] };
+  }
   if (browser === 'chrome') {
     options = new selenium.chrome.Options();
     if (debuggerAddress) {
@@ -387,7 +423,9 @@ function buildSession({ selenium, serverUrl, browser, options }) {
   const builder = new selenium.webdriver.Builder()
     .usingServer(serverUrl)
     .forBrowser(DRIVERS[browser].builder);
-  if (browser === 'chrome') {
+  if (isSafariChannel(browser)) {
+    builder.withCapabilities(options);
+  } else if (browser === 'chrome') {
     builder.setChromeOptions(options);
   } else {
     builder.setFirefoxOptions(options);
@@ -462,6 +500,10 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
     debuggerAddress,
   } = options;
   assertBrowser(browser);
+  const safari = isSafariChannel(browser);
+  if (safari) {
+    validateSafariOptions(options);
+  }
   if (debuggerAddress && browser !== 'chrome') {
     throw new Error('debuggerAddress is only supported by Chrome WebDriver');
   }
@@ -476,23 +518,17 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
   const startProcess = dependencies.startProcess ?? defaultStartProcess;
 
   const resolved = await resolveWebDriverExecutable({
+    ...dependencies,
     browser,
     driverPath: requestedDriverPath,
     executablePath,
-    runCommand: dependencies.runCommand ?? defaultRunCommand,
-    ...(dependencies.checkAccess
-      ? { checkAccess: dependencies.checkAccess }
-      : {}),
-    ...(dependencies.environment
-      ? { environment: dependencies.environment }
-      : {}),
-    ...(dependencies.platform ? { platform: dependencies.platform } : {}),
   });
 
-  const temporaryProfile = !debuggerAddress && !requestedUserDataDir;
-  const userDataDir = debuggerAddress
-    ? undefined
-    : await resolveProfile(browser, requestedUserDataDir);
+  const temporaryProfile = !safari && !debuggerAddress && !requestedUserDataDir;
+  const userDataDir =
+    safari || debuggerAddress
+      ? undefined
+      : await resolveProfile(browser, requestedUserDataDir);
   const childEnv = driverEnvironment(restrictions, env);
 
   let driverProcess;
@@ -506,9 +542,11 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
       { env: childEnv, forwardOutput: verbose }
     );
     let output = '';
-    driverProcess.stderr?.on('data', (chunk) => {
-      output = `${output}${chunk}`.slice(-4000);
-    });
+    for (const stream of [driverProcess.stdout, driverProcess.stderr]) {
+      stream?.on('data', (chunk) => {
+        output = `${output}${chunk}`.slice(-4000);
+      });
+    }
     await waitForDriverReady(serverUrl, {
       fetchImplementation: dependencies.fetch ?? fetch,
       timeout: startupTimeout,
@@ -536,7 +574,10 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
       browser,
       options: built.options,
     });
-    const page = await createWebDriverPage(driver, dependencies.pageOptions);
+    const page = await createWebDriverPage(driver, {
+      ...dependencies.pageOptions,
+      ...(safari ? { browserName: 'safari' } : {}),
+    });
 
     const close = memoize(() =>
       teardown({ page, driver, driverProcess, temporaryProfile, userDataDir })
@@ -558,7 +599,7 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
     };
   } catch (error) {
     await teardown({ driver, driverProcess, temporaryProfile, userDataDir });
-    throw error;
+    throw safari ? safariLaunchError(error, browser) : error;
   }
 }
 

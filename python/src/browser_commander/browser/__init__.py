@@ -87,6 +87,12 @@ from browser_commander.browser.restrictions import (
     merge_feature_switches,
     resolve_restrictions,
 )
+from browser_commander.browser.safari_webdriver import (
+    SafariSetupError,
+    SafariUnsupportedError,
+    open_safari_settings,
+    require_safari_feature,
+)
 from browser_commander.browser.snapshot import (
     SnapshotOptions,
     launch_snapshot,
@@ -122,6 +128,8 @@ __all__ = [
     "RelayOptions",
     "RelaySession",
     "RelayTab",
+    "SafariSetupError",
+    "SafariUnsupportedError",
     "SnapshotOptions",
     "WaitAfterActionResult",
     "assert_fixed_debugging_port",
@@ -148,14 +156,15 @@ __all__ = [
     "merge_feature_switches",
     "migrate_profile",
     "open_in_user_browser",
+    "open_safari_settings",
     "parse_switches",
-    # PDF generation
     "pdf",
     "pick_foreground_page",
     "prepare_user_data_dir",
     "read_browser_cookies",
     "read_browser_version_page",
     "remove_user_data_dir",
+    "require_safari_feature",
     "reserve_loopback_port",
     "resolve_import_source",
     "resolve_launch_executable",

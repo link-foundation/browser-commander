@@ -32,6 +32,7 @@ import {
   toWebDriverKey,
 } from './webdriver-conversions.js';
 import { createWebDriverEventBridge } from './webdriver-events.js';
+import { SafariUnsupportedError } from '../browser/safari-support.js';
 
 const require = createRequire(import.meta.url);
 
@@ -99,6 +100,7 @@ export class WebDriverPage extends EventEmitter {
     }
     this.driver = driver;
     this.engine = 'selenium';
+    this.browserName = options.browserName;
     this.isWebDriverPage = true;
     this._url = 'about:blank';
     this._closed = false;
@@ -356,6 +358,57 @@ export class WebDriverPage extends EventEmitter {
       this._url = href;
     }
     return result;
+  }
+
+  /** Execute an asynchronous function using W3C execute/async. */
+  async evaluateAsync(pageFunction, ...args) {
+    const script = buildEvaluateScript(pageFunction);
+    const result = await this.driver.executeAsyncScript(
+      `const done = arguments[arguments.length - 1]; const args = Array.from(arguments).slice(0, -1); Promise.resolve((function(){${script}}).apply(null, args)).then(value => done({value}), error => done({error: String(error)}));`,
+      ...args
+    );
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    const [value, href] = result.value;
+    this._url = href;
+    return value;
+  }
+
+  /** Fail before subscribing or creating files for unsupported Safari features. */
+  requireFeature(feature) {
+    if (this.browserName?.toLowerCase().startsWith('safari')) {
+      throw new SafariUnsupportedError(feature);
+    }
+  }
+
+  setRequestInterception() {
+    return Promise.resolve().then(() => {
+      this.requireFeature('network interception');
+      throw new Error('Network interception requires a supporting engine');
+    });
+  }
+
+  route() {
+    return this.setRequestInterception();
+  }
+
+  /** W3C window handles include both tabs and windows. */
+  async windows() {
+    return await this.driver.getAllWindowHandles();
+  }
+
+  async newWindow(type = 'tab') {
+    await this.driver.switchTo().newWindow(type);
+    this._contextId = await this.driver.getWindowHandle();
+    await this.syncUrl();
+    return this._contextId;
+  }
+
+  async switchToWindow(handle) {
+    await this.driver.switchTo().window(handle);
+    this._contextId = handle;
+    await this.syncUrl();
   }
 
   /**
@@ -626,6 +679,7 @@ export class WebDriverPage extends EventEmitter {
    * @returns {Promise<Buffer>}
    */
   async pdf(options = {}) {
+    this.requireFeature('PDF');
     const buffer = Buffer.from(
       await this.driver.printPage(toPrintOptions(options)),
       'base64'
@@ -709,6 +763,14 @@ export class WebDriverPage extends EventEmitter {
  * @returns {Promise<WebDriverPage>}
  */
 export async function createWebDriverPage(driver, options = {}) {
+  if (!options.browserName) {
+    const capabilities = await driver.getCapabilities();
+    options = {
+      ...options,
+      browserName:
+        capabilities?.get?.('browserName') ?? capabilities?.browserName,
+    };
+  }
   const page = new WebDriverPage(driver, options);
   await page.contextId();
   await page.syncUrl();

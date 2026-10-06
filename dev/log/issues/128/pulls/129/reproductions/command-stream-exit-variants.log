@@ -1,0 +1,18 @@
+$ node experiments/issue-128/command-stream-exit-variants.mjs  (command-stream 1.6.2)
+--- stdout
+[virtual exit 7, mirror default] rejected code=7 stderr="Command failed with exit code 7"
+[virtual exit 7, mirror false] rejected code=7 stderr="Command failed with exit code 7"
+[real sh -c "exit 7"] rejected code=7 stderr=""
+[virtual exit 0 under set -e] rejected code=0 stderr="Command failed with exit code 0"
+[virtual exit 0] resolved code=0 stderr=""
+--- stderr
+
+[virtual exit 7, mirror default] stderr begins >>>Command failed with exit code 7<<< [virtual exit 7, mirror default] stderr ends
+
+[virtual exit 7, mirror false] stderr begins >>><<< [virtual exit 7, mirror false] stderr ends
+
+[real sh -c "exit 7"] stderr begins >>><<< [real sh -c "exit 7"] stderr ends
+
+[virtual exit 0 under set -e] stderr begins >>>Command failed with exit code 0<<< [virtual exit 0 under set -e] stderr ends
+
+[virtual exit 0] stderr begins >>><<< [virtual exit 0] stderr ends

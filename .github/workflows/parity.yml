@@ -22,11 +22,15 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'js/src/fingerprint/**'
-      - 'js/src/parity/**'
-      - 'js/src/browser/**'
-      - 'js/src/core/webdriver-*.js'
+      # The engine-suites job drives the whole commander API through both
+      # Node engines, so any source change, or a Playwright or Puppeteer bump
+      # in the lockfile, is something it can catch.
+      - 'js/src/**'
+      - 'js/package.json'
+      - 'js/package-lock.json'
       - 'js/tests/e2e/**'
+      - 'js/tests/helpers/**'
+      - 'js/examples/react-test-app/**'
       - 'experiments/fingerprint-parity/**'
       - 'js/src/cli/**'
       - 'js/bin/**'
@@ -40,6 +44,10 @@ on:
       - 'rust/tests/webdriver*.rs'
       - 'rust/tests/playwright_driver.rs'
       - 'rust/tests/puppeteer_bridge.rs'
+      - 'rust/tests/trace_record_real_browser.rs'
+      - 'rust/tests/launch_smoke.rs'
+      - 'rust/tests/connect_smoke.rs'
+      - 'rust/tests/real_browser_smoke.rs'
       - 'rust/tests/support/**'
       - '.github/workflows/parity.yml'
   workflow_dispatch:
@@ -68,6 +76,8 @@ jobs:
         working-directory: js
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -207,6 +217,8 @@ jobs:
         working-directory: js
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -290,6 +302,8 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: '24.x'
@@ -322,12 +336,17 @@ jobs:
   snapshots:
     name: Native snapshots (real Chrome)
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # 30 rather than 20 since the headful Python and Rust launch smokes joined
+    # (issue #128): its four budgets sum to 1260s, above the 840s that 70% of
+    # 20 minutes allows.
+    timeout-minutes: 30
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-snapshots
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: '24.x'
@@ -375,13 +394,167 @@ jobs:
         run: |
           bash scripts/run-with-budget-warning.sh 180 "Python native snapshot launches" \
             python -m pytest python/tests/e2e/test_snapshot.py python/tests/e2e/test_puppeteer_bridge.py python/tests/e2e/test_trace_recording.py python/tests/e2e/test_engine_matrix.py -v
+      - name: Launch headful Python browsers under Xvfb
+        # These two launch a visible window, so without a display they skip --
+        # and a skipped pytest run exits zero. Until issue #128 no workflow ran
+        # them at all. The grep turns a skip into a failure.
+        env:
+          RUN_E2E: 'true'
+          CHROME_NO_SANDBOX: 'true'
+        shell: bash
+        run: |
+          bash scripts/run-with-budget-warning.sh 180 "Python headful real-browser launches" \
+            bash -c 'set -o pipefail; xvfb-run -a --server-args="-screen 0 1920x1080x24" python -m pytest python/tests/e2e/test_real_browser_webdriver.py python/tests/e2e/test_portable_storage_state.py -v -rs 2>&1 | tee python-headful.log'
+          if grep -qE '[0-9]+ skipped' python-headful.log; then
+            echo "::error::a headful Python suite skipped instead of asserting"
+            exit 1
+          fi
+      - name: Launch and attach Rust engines to the installed Chrome
+        # #[ignore]d smoke tests that no workflow ran until issue #128. One of
+        # them launches headful, hence the display.
+        working-directory: rust
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 300 "Rust launch and connect smokes" \
+            xvfb-run -a --server-args="-screen 0 1920x1080x24" cargo test --locked --test launch_smoke --test connect_smoke --test real_browser_smoke -- --ignored --nocapture
+
+  # The JavaScript suites that drive both Node engines through a whole
+  # lifecycle: click readiness, managed downloads and portable traces. They
+  # skip without RUN_E2E, and until issue #128 no workflow set it for them.
+  engine-suites:
+    name: Engine lifecycle suites (real Chrome)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-engine-suites
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Playwright's headless Chromium
+        # The click-readiness suite launches Playwright's own Chromium rather
+        # than $CHROME_PATH, and --ignore-scripts above skips its download.
+        run: npx playwright install --with-deps --only-shell chromium
+
+      - name: Verify Chrome is present
+        run: |
+          test -x "$CHROME_PATH" || {
+            echo "::error::no Chrome binary at $CHROME_PATH"
+            exit 1
+          }
+          "$CHROME_PATH" --version
+
+      - name: Run engine lifecycle suites under Xvfb
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 1200 "Engine lifecycle suites" \
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/click-readiness.e2e.test.js tests/e2e/downloads.e2e.test.js tests/e2e/traces.e2e.test.js 2>&1 | tee engine-suites.log'
+
+      - name: Fail on a suite that asserted nothing
+        run: |
+          if grep -q '# SKIP' engine-suites.log; then
+            echo "::error::an engine lifecycle suite skipped a case instead of asserting it"
+            grep '# SKIP' engine-suites.log
+            exit 1
+          fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' engine-suites.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the engine lifecycle suites reported no passing tests"
+            exit 1
+          fi
+          echo "engine lifecycle suites passed $passed tests against a real Chrome"
+
+  # The Playwright and Puppeteer suites exercise the commander API against the
+  # React fixture app in js/examples/react-test-app, which they expect on
+  # http://localhost:3000. Like the suites above, nothing ran them before
+  # issue #128.
+  fixture-suites:
+    name: React fixture suites (real Chrome)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-fixture-suites
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Serve the React fixture app
+        # A production build behind `vite preview`, so no file watcher or
+        # hot-reload socket is part of what the suites measure. The server
+        # outlives this step and is stopped with the job.
+        working-directory: js/examples/react-test-app
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+          nohup npm run preview -- --port 3000 --strictPort > fixture-server.log 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:3000 >/dev/null && exit 0
+            sleep 1
+          done
+          echo "::error::the React fixture app did not start on port 3000"
+          cat fixture-server.log
+          exit 1
+
+      - name: Verify Chrome is present
+        run: |
+          test -x "$CHROME_PATH" || {
+            echo "::error::no Chrome binary at $CHROME_PATH"
+            exit 1
+          }
+          "$CHROME_PATH" --version
+
+      - name: Run Playwright and Puppeteer suites under Xvfb
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 1500 "React fixture suites" \
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/playwright.e2e.test.js tests/e2e/puppeteer.e2e.test.js 2>&1 | tee fixture-suites.log'
+
+      - name: Fail on a suite that asserted nothing
+        run: |
+          if grep -q '# SKIP' fixture-suites.log; then
+            echo "::error::a React fixture suite skipped a case instead of asserting it"
+            grep '# SKIP' fixture-suites.log
+            exit 1
+          fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' fixture-suites.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the React fixture suites reported no passing tests"
+            exit 1
+          fi
+          echo "React fixture suites passed $passed tests against a real Chrome"
 
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
   # cancelled rather than failed, and a run whose only casualty is a cancelled
-  # job carries the conclusion `cancelled` as well, so on the default branch the
-  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  # job carries the conclusion `cancelled` as well, so the failure would pass
+  # unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
     runs-on: ubuntu-24.04
@@ -394,6 +567,8 @@ jobs:
       - cli
       - storage-state
       - snapshots
+      - engine-suites
+      - fixture-suites
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs
     # it exists to report. `!cancelled()` keeps it out of a superseded run,
@@ -413,6 +588,6 @@ jobs:
       - name: Fail the run when a required job was cancelled or failed
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
-          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          RUN_SHA: ${{ github.sha }}
+          RUN_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: bash scripts/check-pipeline-status.sh

@@ -133,16 +133,22 @@ of a budget is the same threshold the invariant enforces against the backstop.
 Budgets are set from measured step durations taken from recent successful runs,
 with at least a fivefold margin, and always below 70% of the job's backstop.
 
-| Workflow     | Job          | Backstop | Step                        | Budget | Measured |
-| ------------ | ------------ | -------- | --------------------------- | ------ | -------- |
-| `js.yml`     | `test`       | 20 min   | Node.js test suite          | 300s   | 1–5s     |
-| `python.yml` | `test`       | 20 min   | pytest suite                | 300s   | 5–10s    |
-| `rust.yml`   | `test`       | 20 min   | Rust test suite             | 480s   | 23–86s   |
-| `rust.yml`   | `coverage`   | 15 min   | Rust code coverage          | 480s   | 10s      |
-| `docs.yml`   | `build-docs` | 15 min   | Rust API docs               | 480s   | 58s      |
-| `parity.yml` | `parity`     | 40 min   | Fingerprint parity suite    | 1200s  | 26s      |
-| `parity.yml` | `parity`     | 40 min   | WebDriver suite             | 300s   | 44s      |
-| `parity.yml` | `cli`        | 15 min   | CLI and API coverage suites | 300s   | 30s      |
+| Workflow     | Job              | Backstop | Step                                 | Budget | Measured         |
+| ------------ | ---------------- | -------- | ------------------------------------ | ------ | ---------------- |
+| `js.yml`     | `test`           | 20 min   | Node.js test suite                   | 300s   | 1–5s             |
+| `python.yml` | `test`           | 20 min   | pytest suite                         | 300s   | 5–10s            |
+| `rust.yml`   | `test`           | 20 min   | Rust test suite                      | 480s   | 23–86s           |
+| `rust.yml`   | `coverage`       | 15 min   | Rust code coverage                   | 480s   | 10s              |
+| `docs.yml`   | `build-docs`     | 15 min   | Rust API docs                        | 480s   | 58s              |
+| `parity.yml` | `parity`         | 40 min   | Fingerprint parity suite             | 1200s  | 26s              |
+| `parity.yml` | `parity`         | 40 min   | WebDriver suite                      | 300s   | 44s              |
+| `parity.yml` | `cli`            | 40 min   | CLI and API coverage suites          | 300s   | 30s              |
+| `parity.yml` | `snapshots`      | 30 min   | Rust native snapshots and parity     | 600s   | —                |
+| `parity.yml` | `snapshots`      | 30 min   | Python native snapshot launches      | 180s   | —                |
+| `parity.yml` | `snapshots`      | 30 min   | Python headful real-browser launches | 180s   | 22s (local)      |
+| `parity.yml` | `snapshots`      | 30 min   | Rust launch and connect smokes       | 300s   | not run locally  |
+| `parity.yml` | `engine-suites`  | 30 min   | Engine lifecycle suites              | 1200s  | 150–231s (local) |
+| `parity.yml` | `fixture-suites` | 40 min   | React fixture suites                 | 1500s  | 297–299s (local) |
 
 `rust.yml` no longer has a separate doc-test step (issue #128): `cargo test
 --all-features` already runs the doc tests, and the repeat with the default
@@ -152,6 +158,19 @@ Windows until its 180s budget killed it. The Windows job still caches
 recompiled and the suite takes 178–198s, while the restore costs 47–87s and a
 fresh save ~5 minutes of post-job time. A cold Windows build would take most
 of the 480s budget.
+
+The `snapshots`, `engine-suites` and `fixture-suites` rows marked _local_ came
+in with issue #128, which found real-browser suites that skip without
+`RUN_E2E` (or are `#[ignore]`d) and that no workflow ran, so CI stayed green
+whatever they did. Their measurements are from a local Linux run under
+`xvfb-run` and should be replaced by CI timings once the jobs have run. The
+Rust smokes could not be built locally (the container's 3 GB memory limit
+kills `rustc` on `chromiumoxide_cdp`), so their budget rests on the 600s the
+same job already allows for compiling and running the native snapshot tests.
+The `snapshots` backstop went from 20 to 30 minutes to fit the two new budgets.
+[`js/tests/unit/scripts/e2e-suite-coverage.test.js`](../js/tests/unit/scripts/e2e-suite-coverage.test.js)
+now fails when a suite is neither run by a workflow nor listed as manual-only
+with a reason.
 
 The `parity` backstop went from 30 to 40 minutes when the WebDriver suite joined
 the job (issue #104): the two budgets sum to 1500s, above the 1260s that 70% of

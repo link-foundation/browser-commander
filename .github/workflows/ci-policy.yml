@@ -98,7 +98,7 @@ jobs:
       # Reproduce this job locally with:
       #   pipx run zizmor==1.30.1 --config .github/zizmor.yml \
       #     --min-confidence low .github/workflows
-      - uses: zizmorcore/zizmor-action@v0.6.2
+      - uses: zizmorcore/zizmor-action@v0.6.4
         with:
           advanced-security: false
           annotations: true
@@ -110,8 +110,12 @@ jobs:
           # outputs expanded into shell text (issue #128). The checkout rule
           # in scripts/check-ci-workflows.mjs pins the first in-repo as well.
           min-confidence: low
-          # The action defaults to the latest zizmor, so a new audit could turn
-          # this job red on a pull request that changed nothing it checks.
+          # Named rather than left at `latest`, which is not the newest zizmor
+          # but an entry in each action release's own digest table (v0.6.2 ->
+          # 1.29.0, v0.6.4 -> 1.30.1). Naming it keeps this run and the pipx
+          # run below on one analyser and makes a bump a visible diff line.
+          # The action refuses versions missing from its table ("Unknown
+          # version"), so bump the action first.
           version: 1.30.1
 
       # unpinned-images is a pedantic-only audit, so the run above does not

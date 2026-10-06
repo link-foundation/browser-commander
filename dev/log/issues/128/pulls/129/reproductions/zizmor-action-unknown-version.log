@@ -1,0 +1,24 @@
+## before (HEAD: zizmor-action@v0.6.2 with version: 1.30.1)
+  ✔ names an explicit zizmor version for the action (1.388571ms)
+  ✔ uses one zizmor version in the action, the pipx pass and the reproduce comment (0.457024ms)
+  ✖ asks the action only for a version its digest table contains (1.607328ms)
+  AssertionError [ERR_ASSERTION]: zizmor-action v0.6.2 cannot install zizmor 1.30.1
+
+## after (zizmor-action@v0.6.4)
+  ✔ names an explicit zizmor version for the action (1.421403ms)
+  ✔ uses one zizmor version in the action, the pipx pass and the reproduce comment (0.61111ms)
+  ✔ asks the action only for a version its digest table contains (0.443117ms)
+
+## action.sh v0.6.2 lookup
+normalized_version="${GHA_ZIZMOR_VERSION#v}"
+digest="${versions[${normalized_version}]:-}"
+
+# We only proceed if we have a digest for the requested version; a lookup
+# failure indicates an unknown version (i.e. either nonsense or a version
+# that was released after this action's last release).
+if [[ -z "${digest}" ]]; then
+    die "Unknown version: ${GHA_ZIZMOR_VERSION}"
+fi
+## v0.6.2 support/versions tail
+latest sha256:863026d54f91271b10b60b67ad8054cb37120167e162482597db102b3026a284
+1.29.0 sha256:863026d54f91271b10b60b67ad8054cb37120167e162482597db102b3026a284

@@ -1,0 +1,20 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ TestParsePlaywrightTextSelector.test_rejects_a_long_unparseable_selector_in_linear_time _
+
+self = <tests.unit.elements.test_selectors.TestParsePlaywrightTextSelector object at 0x777088e0b570>
+
+    def test_rejects_a_long_unparseable_selector_in_linear_time(self):
+        # The former r'^(.+?):has-text\("(.+?)"\)$' backtracked quadratically
+        # on this input (issue #128, CodeQL polynomial-redos in the JS twin).
+        selector = "a" + ':has-text("' * 20_000
+        started = time.perf_counter()
+        assert parse_playwright_text_selector(selector) is None
+>       assert time.perf_counter() - started < 1.0
+E       assert (209151.384202081 - 209102.983399735) < 1.0
+E        +  where 209151.384202081 = <built-in function perf_counter>()
+E        +    where <built-in function perf_counter> = time.perf_counter
+
+tests/unit/elements/test_selectors.py:193: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/elements/test_selectors.py::TestParsePlaywrightTextSelector::test_rejects_a_long_unparseable_selector_in_linear_time

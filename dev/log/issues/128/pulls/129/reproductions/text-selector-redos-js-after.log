@@ -1,0 +1,89 @@
+⚠️  Navigation detected during querySelector, returning null
+⚠️  Navigation detected during querySelectorAll, returning empty array
+normalizeSelector received invalid selector type: object. Expected string or text selector object.
+normalizeSelector received invalid selector type: array. Expected string or text selector object.
+normalizeSelector received invalid selector type: number. Expected string or text selector object.
+⚠️  Navigation detected during waitForSelector, recovering gracefully
+▶ selectors
+  ▶ querySelector
+    ✔ should throw when selector is not provided (2.726449ms)
+    ✔ should find element with Playwright (0.991219ms)
+    ✔ should find element with Puppeteer (1.051303ms)
+    ✔ should return null when element not found with Playwright (3.538014ms)
+    ✔ should handle navigation errors (2.28776ms)
+  ✔ querySelector (13.132743ms)
+  ▶ querySelectorAll
+    ✔ should throw when selector is not provided (1.266193ms)
+    ✔ should find all elements with Playwright (0.409383ms)
+    ✔ should find all elements with Puppeteer (1.01311ms)
+    ✔ should return empty array when no elements found (1.771357ms)
+    ✔ should handle navigation errors (2.287219ms)
+  ✔ querySelectorAll (9.320367ms)
+  ▶ findByText
+    ✔ should throw when text is not provided (0.953087ms)
+    ✔ should return Playwright text selector (0.277858ms)
+    ✔ should return Playwright exact text selector (0.287005ms)
+    ✔ should return Puppeteer text selector object (0.346035ms)
+    ✔ should use default selector when not provided (0.229329ms)
+  ✔ findByText (2.853817ms)
+  ▶ normalizeSelector with Playwright text selectors
+    ✔ splits :has-text into base selector and text (2.018508ms)
+    ✔ splits :text-is into base selector and exact text (0.17185ms)
+    ✔ returns an unparseable selector unchanged (0.195375ms)
+    ✔ rejects a long unparseable selector in linear time (4.213413ms)
+  ✔ normalizeSelector with Playwright text selectors (6.954931ms)
+  ▶ normalizeSelector
+    ✔ should throw when selector is not provided (0.640275ms)
+    ✔ should return string selector unchanged (0.20871ms)
+    ✔ should return null for invalid object selector (0.394587ms)
+    ✔ should return null for array selector (1.203516ms)
+    ✔ should return null for number selector (0.45033ms)
+    ✔ should accept valid Puppeteer text selector object (0.317683ms)
+  ✔ normalizeSelector (3.831993ms)
+  ▶ withTextSelectorSupport
+    ✔ should wrap function and pass through options (0.552281ms)
+    ✔ should pass through string selectors unchanged for Puppeteer (0.293047ms)
+  ✔ withTextSelectorSupport (1.670538ms)
+  ▶ waitForSelector
+    ✔ should throw when selector is not provided (0.668118ms)
+    ✔ should wait for selector with Playwright (0.4818ms)
+    ✔ should wait for selector with Puppeteer (0.223728ms)
+    ✔ should handle navigation errors with throwOnNavigation false (0.467201ms)
+  ✔ waitForSelector (2.222438ms)
+✔ selectors (42.073862ms)
+⚠️  Temporary error while checking URL: Temporary error... (retrying)
+⚠️  Navigation detected during installClickListener, skipping
+⚠️  Navigation detected during checkAndClearFlag, returning false
+▶ universal-logic
+  ▶ waitForUrlCondition
+    ✔ should return true when target URL is reached (3.671353ms)
+    ✔ should return null when page is closed (0.500544ms)
+    ✔ should return custom check result when provided (0.657517ms)
+    ✔ should continue when customCheck returns undefined (0.614086ms)
+    ✔ should handle errors gracefully (4.363925ms)
+  ✔ waitForUrlCondition (13.282483ms)
+  ▶ installClickListener
+    ✔ should install click listener (2.283862ms)
+    ✔ should return false on navigation error (1.54277ms)
+  ✔ installClickListener (4.573737ms)
+  ▶ checkAndClearFlag
+    ✔ should return true when flag is set (2.170701ms)
+    ✔ should return false when flag is not set (0.309047ms)
+    ✔ should return false on navigation error (6.089425ms)
+  ✔ checkAndClearFlag (10.860813ms)
+  ▶ findToggleButton
+    ✔ should find button by data-qa selector (1.257648ms)
+    ✔ should fallback to text search (0.415686ms)
+    ✔ should return null when button not found (3.40727ms)
+    ✔ should try multiple data-qa selectors (1.965558ms)
+    ✔ should try multiple element types for text search (0.465829ms)
+  ✔ findToggleButton (8.426318ms)
+✔ universal-logic (39.772164ms)
+ℹ tests 46
+ℹ suites 13
+ℹ pass 46
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 393.078836

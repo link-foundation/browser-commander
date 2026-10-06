@@ -192,6 +192,81 @@ describe('selectors', () => {
     });
   });
 
+  describe('normalizeSelector with Playwright text selectors', () => {
+    /** A page whose evaluate records the parsed selector it was given. */
+    function capturingPage() {
+      const page = {
+        parsed: null,
+        evaluate: async (_fn, parsed) => {
+          page.parsed = parsed;
+          return 'button:nth-of-type(1)';
+        },
+      };
+      return page;
+    }
+
+    it('splits :has-text into base selector and text', async () => {
+      const page = capturingPage();
+      await normalizeSelector({
+        page,
+        engine: 'playwright',
+        selector: 'nav a:has-text("Sign in")',
+      });
+      assert.deepStrictEqual(page.parsed, {
+        baseSelector: 'nav a',
+        text: 'Sign in',
+        exact: false,
+      });
+    });
+
+    it('splits :text-is into base selector and exact text', async () => {
+      const page = capturingPage();
+      await normalizeSelector({
+        page,
+        engine: 'playwright',
+        selector: 'button:text-is("Submit")',
+      });
+      assert.deepStrictEqual(page.parsed, {
+        baseSelector: 'button',
+        text: 'Submit',
+        exact: true,
+      });
+    });
+
+    it('returns an unparseable selector unchanged', async () => {
+      for (const selector of [
+        ':has-text("no base")',
+        'a:has-text("")',
+        'a:has-text("unclosed',
+      ]) {
+        const page = capturingPage();
+        const result = await normalizeSelector({
+          page,
+          engine: 'playwright',
+          selector,
+        });
+        assert.strictEqual(result, selector);
+        assert.strictEqual(page.parsed, null);
+      }
+    });
+
+    it('rejects a long unparseable selector in linear time', async () => {
+      // The former /^(.+?):has-text\("(.+?)"\)$/ backtracked quadratically
+      // on this input: about 18s at this length (CodeQL js/polynomial-redos,
+      // issue #128; experiments/issue-128/text-selector-redos.mjs).
+      const selector = `a${':has-text("'.repeat(50_000)}`;
+      const started = performance.now();
+      const result = await normalizeSelector({
+        page: capturingPage(),
+        engine: 'playwright',
+        selector,
+      });
+      const elapsed = performance.now() - started;
+      assert.strictEqual(result, selector);
+      assert.ok(elapsed < 1000, `took ${elapsed.toFixed(0)}ms`);
+    });
+  });
+
   describe('normalizeSelector', () => {
     it('should throw when selector is not provided', async () => {
       const page = createMockPlaywrightPage();

@@ -118,28 +118,45 @@ function isPlaywrightTextSelector(selector) {
 }
 
 /**
+ * Split `base:<pseudo>("text")` into its base selector and text.
+ *
+ * String operations rather than a regular expression: the former
+ * /^(.+?):has-text\("(.+?)"\)$/ backtracked quadratically on long selectors
+ * that do not match (CodeQL js/polynomial-redos). The base is everything before
+ * the first `:<pseudo>("`, as the lazy `(.+?)` made it; base and text must be
+ * non-empty.
+ * @param {string} selector - Selector to split
+ * @param {string} pseudo - Pseudo-class name, e.g. 'has-text'
+ * @returns {{baseSelector: string, text: string}|null} - Parts, or null
+ */
+function splitTextPseudo(selector, pseudo) {
+  const open = `:${pseudo}("`;
+  const start = selector.indexOf(open, 1);
+  if (start === -1 || !selector.endsWith('")')) {
+    return null;
+  }
+  const text = selector.slice(start + open.length, -2);
+  if (!text) {
+    return null;
+  }
+  return { baseSelector: selector.slice(0, start), text };
+}
+
+/**
  * Parse a Playwright text selector to extract base selector and text
  * @param {string} selector - Playwright text selector like 'a:has-text("text")'
  * @returns {Object|null} - { baseSelector, text, exact } or null if not parseable
  */
 function parsePlaywrightTextSelector(selector) {
   // Match patterns like 'a:has-text("text")' or 'button:text-is("exact text")'
-  const hasTextMatch = selector.match(/^(.+?):has-text\("(.+?)"\)$/);
-  if (hasTextMatch) {
-    return {
-      baseSelector: hasTextMatch[1],
-      text: hasTextMatch[2],
-      exact: false,
-    };
+  const hasText = splitTextPseudo(selector, 'has-text');
+  if (hasText) {
+    return { ...hasText, exact: false };
   }
 
-  const textIsMatch = selector.match(/^(.+?):text-is\("(.+?)"\)$/);
-  if (textIsMatch) {
-    return {
-      baseSelector: textIsMatch[1],
-      text: textIsMatch[2],
-      exact: true,
-    };
+  const textIs = splitTextPseudo(selector, 'text-is');
+  if (textIs) {
+    return { ...textIs, exact: true };
   }
 
   return null;

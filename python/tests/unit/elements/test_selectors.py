@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -10,6 +11,7 @@ from browser_commander.elements.selectors import (
     SeleniumTextSelector,
     find_by_text,
     normalize_selector,
+    parse_playwright_text_selector,
     query_selector,
     query_selector_all,
     wait_for_selector,
@@ -155,6 +157,40 @@ class TestWithTextSelectorSupport:
         result = await wrapped(selector="button")
         assert result == "result"
         assert received_selector == "button"
+
+
+# ---------------------------------------------------------------------------
+# parse_playwright_text_selector
+# ---------------------------------------------------------------------------
+class TestParsePlaywrightTextSelector:
+    def test_splits_has_text(self):
+        assert parse_playwright_text_selector('nav a:has-text("Sign in")') == {
+            "base_selector": "nav a",
+            "text": "Sign in",
+            "exact": False,
+        }
+
+    def test_splits_text_is(self):
+        assert parse_playwright_text_selector('button:text-is("Submit")') == {
+            "base_selector": "button",
+            "text": "Submit",
+            "exact": True,
+        }
+
+    @pytest.mark.parametrize(
+        "selector",
+        [':has-text("no base")', 'a:has-text("")', 'a:has-text("unclosed'],
+    )
+    def test_returns_none_when_unparseable(self, selector):
+        assert parse_playwright_text_selector(selector) is None
+
+    def test_rejects_a_long_unparseable_selector_in_linear_time(self):
+        # The former r'^(.+?):has-text\("(.+?)"\)$' backtracked quadratically
+        # on this input (issue #128, CodeQL polynomial-redos in the JS twin).
+        selector = "a" + ':has-text("' * 20_000
+        started = time.perf_counter()
+        assert parse_playwright_text_selector(selector) is None
+        assert time.perf_counter() - started < 1.0
 
 
 # ---------------------------------------------------------------------------

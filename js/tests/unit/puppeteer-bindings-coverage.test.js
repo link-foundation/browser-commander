@@ -153,6 +153,23 @@ describe('Puppeteer bindings (Rust and Python)', () => {
     );
   });
 
+  it('are read through virtual paths the TypeScript API can find on Windows', () => {
+    // TypeScript 7's virtual file system matches file names as exact keys, and
+    // the native compiler asks for them with forward slashes. Keys built with
+    // path.join on Windows (`D:\a\…\tsconfig.json`) were never found, so the
+    // project came back undefined (issue #128, run 37526767522).
+    const paths = extractor.virtualProjectPaths(
+      'D:\\a\\browser-commander\\browser-commander'
+    );
+    assert.deepEqual(paths, {
+      cwd: 'D:/a/browser-commander/browser-commander/experiments/puppeteer-api-virtual',
+      config:
+        'D:/a/browser-commander/browser-commander/experiments/puppeteer-api-virtual/tsconfig.json',
+      declaration:
+        'D:/a/browser-commander/browser-commander/experiments/puppeteer-api-virtual/types.d.ts',
+    });
+  });
+
   it('give every declared Puppeteer method a typed entry point', () => {
     const missing = [];
     let checked = 0;

@@ -43,13 +43,27 @@ function ts() {
   return require('typescript/unstable/ast');
 }
 
+/**
+ * Paths of the virtual project, with forward slashes on every platform.
+ *
+ * The virtual file system matches file names as exact keys, and the native
+ * compiler asks for them with `/`. Keys from `path.join` on Windows use `\`,
+ * so nothing was found there and the project came back undefined (issue #128).
+ */
+export function virtualProjectPaths(root = ROOT) {
+  const cwd = `${root.replaceAll('\\', '/')}/experiments/puppeteer-api-virtual`;
+  return {
+    cwd,
+    config: `${cwd}/tsconfig.json`,
+    declaration: `${cwd}/types.d.ts`,
+  };
+}
+
 /** Parse declarations with TypeScript 7's native compiler and virtual files. */
 function parseDeclarations(source) {
   const { API } = require('typescript/unstable/sync');
   const { createVirtualFileSystem } = require('typescript/unstable/fs');
-  const cwd = path.join(ROOT, 'experiments', 'puppeteer-api-virtual');
-  const config = path.join(cwd, 'tsconfig.json');
-  const declaration = path.join(cwd, 'types.d.ts');
+  const { cwd, config, declaration } = virtualProjectPaths();
   const api = new API({
     cwd,
     fs: createVirtualFileSystem({

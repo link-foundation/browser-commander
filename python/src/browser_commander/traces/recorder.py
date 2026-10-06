@@ -624,6 +624,9 @@ async def start_trace(
         page = getattr(commander, "page", None)
     if page is None:
         raise ValueError("startTrace requires a page or a commander")
+    from browser_commander.browser.safari_webdriver import require_safari_feature
+
+    require_safari_feature(page, "tracing")
 
     recorder = TraceRecorder(
         commander=commander,

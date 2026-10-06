@@ -280,7 +280,7 @@ describe('dispatcher: high-level methods', () => {
       { code: -32602 }
     );
     await assert.rejects(
-      dispatcher.dispatch('session.launch', { browser: 'safari' }),
+      dispatcher.dispatch('session.launch', { browser: 'unknown-browser' }),
       { code: -32602 }
     );
     await assert.rejects(dispatcher.dispatch('page.goto', { url: 'x' }), {

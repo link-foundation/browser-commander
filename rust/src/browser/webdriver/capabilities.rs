@@ -17,10 +17,55 @@ pub fn build_capabilities(
         .cloned()
         .ok_or_else(|| anyhow!("WebDriver preferences must be an object"))?;
     let mut caps = options.capabilities.clone();
+    if options.browser.is_safari() {
+        use crate::browser::safari::unsupported;
+        for (feature, requested) in [
+            ("headless", options.headless),
+            ("persistent profile", options.user_data_dir.is_some()),
+            ("browser arguments", !options.args.is_empty()),
+            (
+                "preferences",
+                !preferences.is_empty() || options.local_state != json!({}),
+            ),
+            (
+                "browser executable (use driver_executable)",
+                options.browser_executable.is_some(),
+            ),
+            (
+                "managed downloads",
+                !matches!(options.downloads, crate::downloads::DownloadSetting::Off),
+            ),
+            (
+                "first-run settings",
+                options.first_run || options.default_browser_check == Some(true),
+            ),
+        ] {
+            if requested {
+                return Err(unsupported(feature).into());
+            }
+        }
+        for key in ["goog:chromeOptions", "moz:firefoxOptions", "webSocketUrl"] {
+            if caps.contains_key(key) {
+                return Err(unsupported(key).into());
+            }
+        }
+        caps.insert(
+            "browserName".into(),
+            json!(
+                if options.browser == WebDriverBrowser::SafariTechnologyPreview {
+                    "Safari Technology Preview"
+                } else {
+                    "safari"
+                }
+            ),
+        );
+        return Ok(caps);
+    }
     let mut args = options.args.clone();
     let key = match options.browser {
         WebDriverBrowser::Chrome => "goog:chromeOptions",
         WebDriverBrowser::Firefox => "moz:firefoxOptions",
+        _ => unreachable!("Safari capabilities returned above"),
     };
     let mut vendor = match caps.remove(key) {
         Some(Value::Object(options)) => options,
@@ -127,6 +172,7 @@ pub fn build_capabilities(
             }
             caps.insert("browserName".into(), json!("firefox"));
         }
+        _ => unreachable!("Safari capabilities returned above"),
     }
     vendor.insert("args".into(), json!(args));
     vendor.insert("prefs".into(), json!(preferences));

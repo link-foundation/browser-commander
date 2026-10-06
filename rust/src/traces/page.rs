@@ -22,6 +22,9 @@ use crate::core::engine::{EngineAdapter, TraceEngineEvent};
 /// them, except that one mentioning `closed` is reported as `page-closed`.
 #[async_trait]
 pub trait TracePage: Send + Sync {
+    fn require_feature(&self, _feature: &str) -> Result<(), crate::core::engine::EngineError> {
+        Ok(())
+    }
     /// The engine's name, written to the manifest unless the options name one.
     fn engine(&self) -> Option<String> {
         None
@@ -111,6 +114,9 @@ impl AdapterTracePage {
 
 #[async_trait]
 impl TracePage for AdapterTracePage {
+    fn require_feature(&self, feature: &str) -> Result<(), crate::core::engine::EngineError> {
+        self.adapter.require_feature(feature)
+    }
     fn engine(&self) -> Option<String> {
         Some(self.adapter.engine_type().to_string())
     }

@@ -204,7 +204,7 @@ describe('launchAndConnectRealBrowser', () => {
   });
 
   it('rejects non-CDP catalogue browsers before resolving or spawning them', async () => {
-    for (const channel of ['firefox', 'librewolf', 'safari', 'duckduckgo']) {
+    for (const channel of ['firefox', 'librewolf', 'duckduckgo']) {
       await assert.rejects(
         launchAndConnectRealBrowserWithDependencies(
           { channel },

@@ -77,6 +77,15 @@ async def restore_storage_state(
                     await current.evaluate(script)
         return
     if engine == "selenium":
+        if (
+            str(getattr(browser, "capabilities", {}).get("browserName", ""))
+            .lower()
+            .startswith("safari")
+        ):
+            from browser_commander.browser.safari_webdriver import seed_safari_state
+
+            await seed_safari_state(browser, loaded)
+            return
         for cookie in cookies:
             browser.execute_cdp_cmd("Network.setCookie", dict(cookie))
         if origins:

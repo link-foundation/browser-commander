@@ -38,6 +38,14 @@ pub enum WebDriverBrowser {
     #[default]
     Chrome,
     Firefox,
+    Safari,
+    SafariTechnologyPreview,
+}
+
+impl WebDriverBrowser {
+    pub fn is_safari(self) -> bool {
+        matches!(self, Self::Safari | Self::SafariTechnologyPreview)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -91,7 +99,7 @@ impl Default for WebDriverOptions {
 }
 
 struct OwnedDriver {
-    child: Option<ManagedProcess>,
+    child: Option<Arc<ManagedProcess>>,
     profile: PathBuf,
     temporary: bool,
 }
@@ -135,6 +143,7 @@ impl Drop for OwnedDriver {
 /// All typed Fantoccini APIs are available through [`Self::client`]. Close
 /// waits for downloads before quitting; Drop stops the owned driver as well.
 pub struct ManagedWebDriver {
+    browser: WebDriverBrowser,
     client: WebDriverClient,
     bidi: Option<Arc<BidiClient>>,
     downloads: Option<Arc<DownloadManager>>,
@@ -160,7 +169,26 @@ impl ManagedWebDriver {
         self.driver
             .try_lock()
             .ok()
-            .and_then(|driver| driver.child.as_ref().and_then(ManagedProcess::pid))
+            .and_then(|driver| driver.child.as_ref().and_then(|child| child.pid()))
+    }
+    pub(crate) fn process_handle(&self) -> crate::browser::browser_process::BrowserProcess {
+        let child = self
+            .driver
+            .try_lock()
+            .expect("new driver is unlocked")
+            .child
+            .as_ref()
+            .unwrap()
+            .clone();
+        crate::browser::browser_process::BrowserProcess::from_control(child)
+    }
+    /// Reject unsupported Safari features before starting an operation.
+    pub fn require_feature(&self, feature: &str) -> Result<(), crate::core::engine::EngineError> {
+        if self.browser.is_safari() {
+            Err(crate::browser::safari::unsupported(feature))
+        } else {
+            Ok(())
+        }
     }
     pub async fn close(&self) -> Result<()> {
         self.closed
@@ -215,13 +243,21 @@ async fn launch_owned(
     }
     // Validate before creating profiles or starting a process.
     build_capabilities(&options, Path::new("validation-profile"), None)?;
-    let temporary = own_profile || options.user_data_dir.is_none();
-    let profile = match &options.user_data_dir {
-        Some(path) => {
-            std::fs::create_dir_all(path)?;
-            std::fs::canonicalize(path)?
+    let safari = options.browser.is_safari();
+    if safari && !cfg!(target_os = "macos") && options.driver_executable.is_none() {
+        return Err(crate::browser::safari::unsupported("Safari launch outside macOS").into());
+    }
+    let temporary = !safari && (own_profile || options.user_data_dir.is_none());
+    let profile = if safari {
+        PathBuf::new()
+    } else {
+        match &options.user_data_dir {
+            Some(path) => {
+                std::fs::create_dir_all(path)?;
+                std::fs::canonicalize(path)?
+            }
+            None => create_temporary_user_data_dir_with_first_run(None, options.first_run)?,
         }
-        None => create_temporary_user_data_dir_with_first_run(None, options.first_run)?,
     };
     let mut owner = OwnedDriver {
         child: None,
@@ -270,6 +306,10 @@ async fn launch_owned(
         PathBuf::from(match options.browser {
             WebDriverBrowser::Chrome => "chromedriver",
             WebDriverBrowser::Firefox => "geckodriver",
+            WebDriverBrowser::Safari => "/usr/bin/safaridriver",
+            WebDriverBrowser::SafariTechnologyPreview => {
+                "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"
+            }
         })
     });
     let args = match options.browser {
@@ -286,6 +326,9 @@ async fn launch_owned(
             "--websocket-port".into(),
             "0".into(),
         ],
+        WebDriverBrowser::Safari | WebDriverBrowser::SafariTechnologyPreview => {
+            vec!["--port".into(), port.to_string()]
+        }
     };
     let output = Arc::new(std::sync::Mutex::new(Vec::new()));
     let tail = output.clone();
@@ -298,7 +341,7 @@ async fn launch_owned(
             tail.drain(..excess);
         }
     });
-    owner.child = Some(
+    owner.child = Some(Arc::new(
         start_process(
             executable.to_string_lossy().as_ref(),
             &args,
@@ -317,11 +360,11 @@ async fn launch_owned(
         )
         .await
         .with_context(|| format!("start WebDriver {}", executable.display()))?,
-    );
+    ));
     let endpoint = format!("http://127.0.0.1:{port}");
     let launched = timeout(options.launch_timeout, async {
         loop {
-            if let Some(code) = owner.child.as_ref().and_then(ManagedProcess::exit_code) {
+            if let Some(code) = owner.child.as_ref().and_then(|child| child.exit_code()) {
                 return Err(anyhow!(
                     "WebDriver exited with {code}: {}",
                     String::from_utf8_lossy(&output.lock().unwrap())
@@ -336,6 +379,10 @@ async fn launch_owned(
             .capabilities(capabilities)
             .connect(&endpoint)
             .await?;
+        // Safari reports an empty URL until its first navigation.
+        if safari {
+            client.goto("about:blank").await?;
+        }
         Ok::<_, anyhow::Error>(client)
     })
     .await;
@@ -344,7 +391,11 @@ async fn launch_owned(
         result => {
             owner.stop().await?;
             return match result {
-                Ok(Err(error)) => Err(error),
+                Ok(Err(error)) => Err(if safari {
+                    crate::browser::safari::launch_error(error, options.browser)
+                } else {
+                    error
+                }),
                 _ => Err(anyhow!(
                     "WebDriver launch timed out: {}",
                     String::from_utf8_lossy(&output.lock().unwrap())
@@ -353,6 +404,7 @@ async fn launch_owned(
         }
     };
     let mut browser = ManagedWebDriver {
+        browser: options.browser,
         client,
         bidi: None,
         downloads: manager,

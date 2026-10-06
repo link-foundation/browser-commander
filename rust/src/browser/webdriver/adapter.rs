@@ -76,6 +76,9 @@ impl ManagedWebDriver {
 
 #[async_trait]
 impl EngineAdapter for ManagedWebDriver {
+    fn require_feature(&self, feature: &str) -> Result<(), EngineError> {
+        ManagedWebDriver::require_feature(self, feature)
+    }
     fn engine_type(&self) -> EngineType {
         EngineType::Fantoccini
     }
@@ -257,6 +260,7 @@ impl EngineAdapter for ManagedWebDriver {
         self.client.screenshot().await.map_err(error)
     }
     async fn pdf(&self, options: PdfOptions) -> Result<Vec<u8>, EngineError> {
+        self.require_feature("PDF")?;
         use fantoccini::wd::{PrintConfiguration, PrintMargins, PrintSize};
         let size = match options.format.as_deref().unwrap_or("A4") {
             "A4" => PrintSize::A4,

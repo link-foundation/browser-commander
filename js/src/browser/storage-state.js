@@ -31,27 +31,47 @@ function restoreOriginLocalStorage(origins) {
 }
 
 /** Restore classic WebDriver cookies; origin preload scripts require BiDi. */
-export async function restoreWebDriverStorageState({ page, storageState }) {
-  if (!storageState) {
+export async function restoreWebDriverStorageState({
+  page,
+  storageState,
+  seedCookies = [],
+}) {
+  storageState = await loadStorageState(storageState);
+  if (!storageState && !seedCookies.length) {
     return;
   }
-  const origins = storageState.origins ?? [];
+  const origins = storageState?.origins ?? [];
   if (origins.length) {
-    await page.evaluateOnNewDocument(restoreOriginLocalStorage, origins);
-    await page.evaluate(restoreOriginLocalStorage, origins);
+    if (!page.browserName?.toLowerCase().startsWith('safari')) {
+      await page.evaluateOnNewDocument(restoreOriginLocalStorage, origins);
+      await page.evaluate(restoreOriginLocalStorage, origins);
+    }
   }
   const originalUrl = page.url();
-  const cookies = storageState.cookies ?? [];
+  const cookies = [...(storageState?.cookies ?? []), ...seedCookies];
   try {
     for (const cookie of cookies) {
       const origin = cookie.url
         ? new URL(cookie.url).origin
-        : `${cookie.secure ? 'https' : 'http'}://${cookie.domain.replace(/^\./u, '')}`;
+        : (origins.find(
+            ({ origin }) =>
+              new URL(origin).hostname === cookie.domain?.replace(/^\./u, '')
+          )?.origin ??
+          `${cookie.secure ? 'https' : 'http'}://${cookie.domain.replace(/^\./u, '')}`);
       await page.goto(origin);
       await page.setCookie(cookie);
     }
+    if (page.browserName?.toLowerCase().startsWith('safari')) {
+      for (const { origin } of origins) {
+        await page.goto(origin);
+        await page.evaluate(restoreOriginLocalStorage, origins);
+      }
+    }
   } finally {
-    if (cookies.length) {
+    if (
+      cookies.length ||
+      (origins.length && page.browserName?.toLowerCase().startsWith('safari'))
+    ) {
       await page.goto(originalUrl);
     }
   }

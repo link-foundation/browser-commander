@@ -93,6 +93,7 @@ function validateLinksOptions(links) {
  * @returns {Promise<Object>} The running trace
  */
 export async function startTrace(options = {}) {
+  requireTraceSupport(options);
   const {
     commander,
     page = commander?.page,
@@ -467,4 +468,8 @@ export async function startTrace(options = {}) {
       return [...checkpoints];
     },
   };
+}
+
+function requireTraceSupport(options) {
+  (options.page ?? options.commander?.page)?.requireFeature?.('tracing');
 }

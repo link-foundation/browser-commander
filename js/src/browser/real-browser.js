@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { findBrowserSource } from './browser-sources.js';
+import { launchSafari } from './safari-launch.js';
+import { isSafariChannel } from './safari-support.js';
 
 import { startProcess } from '../utilities/subprocess.js';
 import {
@@ -563,6 +565,9 @@ export async function launchAndConnectRealBrowserWithDependencies(
   options = {},
   dependencies = {}
 ) {
+  if (isSafariChannel(options.channel ?? options.browser)) {
+    return launchSafari(options, dependencies);
+  }
   const {
     engine = 'playwright',
     channel = 'chrome',

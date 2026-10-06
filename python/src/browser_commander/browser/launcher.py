@@ -68,6 +68,7 @@ class LaunchOptions:
     preferences: Mapping[str, Any] | None = None
     local_state: Mapping[str, Any] | None = None
     storage_state: StorageStateInput = None
+    seed_cookies: list[dict[str, Any]] = field(default_factory=list)
     headless: bool = False
     slow_mo: int = 0
     verbose: bool = False
@@ -557,6 +558,13 @@ async def launch_browser_with_dependencies(
 
     dependencies = dependencies or {}
     _validate_launch_options(options)
+    from browser_commander.browser.safari_webdriver import (
+        is_safari_channel,
+        launch_safari,
+    )
+
+    if is_safari_channel(options.channel):
+        return await launch_safari(options, dependencies)
     engine = options.engine
     verbose = options.verbose
 

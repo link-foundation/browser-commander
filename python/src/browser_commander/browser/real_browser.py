@@ -650,6 +650,14 @@ async def launch_real_browser_with_dependencies(
 ) -> RealBrowserResult:
     """Dependency-injected implementation used by the public helper and tests."""
 
+    from browser_commander.browser.safari_webdriver import (
+        is_safari_channel,
+        launch_safari,
+    )
+
+    if is_safari_channel(options.channel):
+        return await launch_safari(options)
+
     _validate_launch_request(options)
     executable_path = str(
         await _resolve(

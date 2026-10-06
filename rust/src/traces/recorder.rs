@@ -157,6 +157,7 @@ pub async fn start_trace(
     page: Arc<dyn TracePage>,
     options: TraceOptions,
 ) -> Result<TraceRecorder, TraceRecordError> {
+    page.require_feature("tracing")?;
     let mode = normalize_mode(&options.mode)?;
     let dom = options.dom;
     let mutations = match dom.mutations {

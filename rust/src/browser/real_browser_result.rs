@@ -5,9 +5,9 @@ use std::sync::Arc;
 
 use super::{
     launch_real_browser_with_owned, LaunchHooks, LaunchedRealBrowser, RealBrowserLaunchResult,
-    RealBrowserOptions, FANTOCCINI_OVER_CDP,
+    RealBrowserOptions, SystemLaunchHooks, FANTOCCINI_OVER_CDP,
 };
-use crate::browser::connector::ConnectOptions;
+use crate::browser::connector::{connect_browser, ConnectOptions};
 use crate::browser::launcher::LaunchResult;
 use crate::core::engine::EngineType;
 use anyhow::{anyhow, Result};
@@ -76,5 +76,20 @@ pub(super) fn real_browser_result(
         downloads,
         migration: launched.migration,
         closer: launched.closer,
+        webdriver: None,
     }
+}
+
+pub(crate) async fn launch_real_browser_owned(
+    options: RealBrowserOptions,
+    owned_profile: bool,
+) -> Result<RealBrowserLaunchResult> {
+    let (connection, launched) = launch_real_browser_with_owned(
+        &options,
+        Arc::new(SystemLaunchHooks),
+        connect_browser,
+        owned_profile,
+    )
+    .await?;
+    Ok(real_browser_result(connection, launched, options.headless))
 }

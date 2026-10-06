@@ -1,0 +1,4 @@
+# Releases where the old check (body contains img.shields.io) and the new one (body contains '[![npm version](') disagree.
+# Command: gh api 'repos/link-foundation/browser-commander/releases?per_page=100' --paginate --jq '[.[] | select((.body|contains("img.shields.io")) != (.body|contains("[![npm version](")))] | map(.tag_name)'
+# Run 2026-10-06 over 60 releases:
+[]

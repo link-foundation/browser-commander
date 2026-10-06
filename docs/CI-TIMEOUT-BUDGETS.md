@@ -138,12 +138,20 @@ with at least a fivefold margin, and always below 70% of the job's backstop.
 | `js.yml`     | `test`       | 20 min   | Node.js test suite          | 300s   | 1–5s     |
 | `python.yml` | `test`       | 20 min   | pytest suite                | 300s   | 5–10s    |
 | `rust.yml`   | `test`       | 20 min   | Rust test suite             | 480s   | 23–86s   |
-| `rust.yml`   | `test`       | 20 min   | Rust doc tests              | 180s   | 6–11s    |
 | `rust.yml`   | `coverage`   | 15 min   | Rust code coverage          | 480s   | 10s      |
 | `docs.yml`   | `build-docs` | 15 min   | Rust API docs               | 480s   | 58s      |
 | `parity.yml` | `parity`     | 40 min   | Fingerprint parity suite    | 1200s  | 26s      |
 | `parity.yml` | `parity`     | 40 min   | WebDriver suite             | 300s   | 44s      |
 | `parity.yml` | `cli`        | 15 min   | CLI and API coverage suites | 300s   | 30s      |
+
+`rust.yml` no longer has a separate doc-test step (issue #128): `cargo test
+--all-features` already runs the doc tests, and the repeat with the default
+feature set rebuilt the crate, cost ~77s per OS and once stalled silently on
+Windows until its 180s budget killed it. The Windows job still caches
+`rust/target`, unlike the Rust template: with it only one or two crates are
+recompiled and the suite takes 178–198s, while the restore costs 47–87s and a
+fresh save ~5 minutes of post-job time. A cold Windows build would take most
+of the 480s budget.
 
 The `parity` backstop went from 30 to 40 minutes when the WebDriver suite joined
 the job (issue #104): the two budgets sum to 1500s, above the 1260s that 70% of

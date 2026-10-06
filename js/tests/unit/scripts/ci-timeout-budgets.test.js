@@ -206,9 +206,18 @@ describe('CI execution budgets', () => {
       'parity.yml storage-state Rust storage state transfer',
       'python.yml test pytest suite',
       'rust.yml coverage Rust code coverage',
-      'rust.yml test Rust doc tests',
       'rust.yml test Rust test suite',
     ]);
+  });
+
+  it('runs the Rust doc tests once, inside the main test suite', () => {
+    // `cargo test --all-features` already runs them. A second `cargo test
+    // --doc` with the default features rebuilt the crate and, on Windows,
+    // stalled silently until its budget killed it (issue #128).
+    const block = getJobBlock(readWorkflow('rust.yml'), 'test');
+
+    assert.match(block, /cargo test --all-features/);
+    assert.doesNotMatch(block, /cargo test --doc/);
   });
 
   it('warns at the same share of a budget that this invariant allows', () => {

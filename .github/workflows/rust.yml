@@ -260,6 +260,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      # This step also runs the doc tests ("Doc-tests browser_commander" in its
+      # log). A separate doc-test-only step used to follow it: with the default
+      # feature set instead of --all-features it rebuilt the crate, ran the
+      # same 20 doc tests again for ~77s per OS, and on Windows once stalled
+      # silently until its budget killed it (issue #128).
       - name: Run tests
         shell: bash
         # The budget, not `timeout-minutes`, owns this step's deadline: a job
@@ -268,12 +273,6 @@ jobs:
         run: >-
           bash ../scripts/run-with-budget-warning.sh 480 "Rust test suite"
           cargo test --all-features --verbose
-
-      - name: Run doc tests
-        shell: bash
-        run: >-
-          bash ../scripts/run-with-budget-warning.sh 180 "Rust doc tests"
-          cargo test --doc --verbose
 
   # === OPENSSL-FREE BUILD ===
   # Regression guard for issue #77: taking `fantoccini` with its default

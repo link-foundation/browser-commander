@@ -230,10 +230,9 @@ async function main() {
       // Stage all changes (package.json, package-lock.json, CHANGELOG.md, deleted changesets)
       await $`git add -A`;
 
-      // Commit with version number as message
-      const commitMessage = newVersion;
-      const escapedMessage = commitMessage.replace(/"/g, '\\"');
-      await $`git commit -m "${escapedMessage}"`;
+      // Commit with version number as message. command-stream quotes the
+      // interpolated value itself; escaping it here would add backslashes.
+      await $`git commit -m ${newVersion}`;
 
       // Push directly to main.
       //

@@ -1,0 +1,3 @@
+{"value":"0.26.0","bare":"0.26.0","bareExact":true,"wrapped":"0.26.0","wrappedExact":true}
+{"value":"a \"quoted\" word","bare":"a \"quoted\" word","bareExact":true,"wrapped":"a \\\"quoted\\\" word","wrappedExact":false}
+{"value":"back\\slash $HOME `id`","bare":"back\\slash $HOME `id`","bareExact":true,"wrapped":"back\\slash $HOME `id`","wrappedExact":true}

@@ -23,12 +23,17 @@
  */
 
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   loadCommandStream,
   USE_M_URL,
 } from '../../../../scripts/use-module.mjs';
+
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 
 async function hasNetwork() {
   try {
@@ -139,4 +144,37 @@ describe('loadCommandStream makes a failed command fail', () => {
       await assert.rejects(() => $`false`, 'a command exiting 1 must reject');
     }
   );
+});
+
+describe('command-stream quotes interpolated values itself', () => {
+  // `${value}` in a `$` template is passed through as one argument, quoted by
+  // the library. Escaping by hand on top of that is not a no-op: inside
+  // `"${…}"` the backslashes survive into the argument. CodeQL flagged the
+  // hand escaping in js/scripts/version-and-commit.mjs
+  // (js/incomplete-sanitization, issue #128); this pins why it was removed.
+  const message = 'a "quoted" $HOME `id` back\\slash';
+
+  itWithShell('passes a bare interpolation through unchanged', async ($) => {
+    const result = await $({ mirror: false })`printf '%s' ${message}`;
+    assert.equal(String(result.stdout), message);
+  });
+
+  itWithShell('keeps hand-added backslashes inside quotes', async ($) => {
+    const escaped = message.replace(/"/g, '\\"');
+    const result = await $({ mirror: false })`printf '%s' "${escaped}"`;
+    assert.notEqual(String(result.stdout), message);
+  });
+
+  it('no release script escapes quotes by hand before interpolating', () => {
+    const offenders = ['js/scripts', 'rust/scripts']
+      .flatMap((dir) =>
+        readdirSync(join(REPO_ROOT, dir))
+          .filter((name) => name.endsWith('.mjs'))
+          .map((name) => join(dir, name))
+      )
+      .filter((file) =>
+        /\.replace\(\/"\/g/.test(readFileSync(join(REPO_ROOT, file), 'utf8'))
+      );
+    assert.deepEqual(offenders, []);
+  });
 });

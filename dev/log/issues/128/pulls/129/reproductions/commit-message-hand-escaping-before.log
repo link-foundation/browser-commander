@@ -1,0 +1,48 @@
+▶ loadCommandStream makes a failed command fail
+  ✔ turns errexit on, so the release scripts catch what they try to catch (1190.050736ms)
+  ✔ rejects on a non-zero exit and reports the exit code (803.336116ms)
+errexit-ok
+  ✔ still resolves with stdout on success (535.438605ms)
+  ✔ reports a non-zero exit for the exact command that broke the Rust release (557.087575ms)
+✔ loadCommandStream makes a failed command fail (3090.350986ms)
+▶ command-stream quotes interpolated values itself
+  ✔ passes a bare interpolation through unchanged (634.875422ms)
+  ✔ keeps hand-added backslashes inside quotes (551.93669ms)
+  ✖ no release script escapes quotes by hand before interpolating (5.645117ms)
+✖ command-stream quotes interpolated values itself (1193.765909ms)
+ℹ tests 7
+ℹ suites 2
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4458.785757
+
+✖ failing tests:
+
+test at js/tests/unit/scripts/command-stream-errexit.test.js:168:3
+✖ no release script escapes quotes by hand before interpolating (5.645117ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'js/scripts/version-and-commit.mjs'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/scripts/command-stream-errexit.test.js:178:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'js/scripts/version-and-commit.mjs' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

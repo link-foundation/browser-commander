@@ -22,3 +22,4 @@ All times are UTC. Sources: `../github/run-*.json`, `../github/recent-main-runs.
 | 21:30 to 21:47 | Fixes for the CodeQL alerts: the preflight test URL (`c760d16`), command-stream quoting of the release commit (`d6a0451`), linear-time text selectors in JS and Python (`ccc072c`), artifact names (`47a61cd`), the release-notes marker (`df2c54d`), and the Rust test names and cookie fixture (`dbfc075`, `3a31c23`). | `git log`; `github/codeql-open-alerts-main.json` |
 | 21:49 to 21:57 | The `about:blank` smoke expectation (`7859214`), and the Safari launch retry in JS, Python and Rust (`7ac5cd3`, `9faa67b`, `03f27be`). | `git log` |
 | 21:58 to 22:10 | On `03f27be`, the JS duplication gate fails (signal 37), and CodeQL opens PR alerts 63 and 64 (signal 38). Both are fixed in `14dfbc4` and `7978db9`. | `ci-logs/pr/failed-37537484417.log` |
+| 22:11 | CodeQL on the PR opens alerts 65 and 66 against the cookie-fixture experiment (signal 39). | `github/` (code-scanning API) |

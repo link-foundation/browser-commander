@@ -6,7 +6,7 @@ started (`../github/issue-comments.json` is `[]`).
 
 | # | Requirement | Where it is met |
 |---|---|---|
-| R1 | Check every CI/CD signal on `main` for false positives, false negatives, warnings and errors. The issue lists the 11 runs on `b24e4c5`: three failed (Python, Rust, Safari), eight passed. | `signal-classification.md` classifies 27 signal groups across all 11 runs plus the latest scheduled parity run. Signals 28 to 38 in `root-causes-and-solutions.md` cover the open CodeQL alerts and what the PR's own runs exposed. |
+| R1 | Check every CI/CD signal on `main` for false positives, false negatives, warnings and errors. The issue lists the 11 runs on `b24e4c5`: three failed (Python, Rust, Safari), eight passed. | `signal-classification.md` classifies 27 signal groups across all 11 runs plus the latest scheduled parity run. Signals 28 to 39 in `root-causes-and-solutions.md` cover the open CodeQL alerts and what the PR's own runs exposed. |
 | R2 | Fix them all. | `root-causes-and-solutions.md`, one row per signal and per template gap, each with its commit or the reason it needs no change. |
 | R3 | Download all logs and related data into `dev/log/issues/128/pulls/129`. | `ci-logs/` (one log per run), `github/` (run metadata, check-run annotations, issue, PR, recent main runs) and `templates/` (template inventories and diffs). |
 | R4 | Do a deep analysis, with online research. | `signal-classification.md`, `template-comparison.md` and `../research/web-sources.md`. |

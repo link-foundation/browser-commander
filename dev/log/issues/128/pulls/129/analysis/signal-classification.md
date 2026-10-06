@@ -109,10 +109,10 @@ that lychee cannot check.
 **18-27. Expected or noise.** No action is required beyond the optional
 improvements noted in the table.
 
-**28-38. Found while fixing.** CodeQL's open alerts on `main` are signals
+**28-39. Found while fixing.** CodeQL's open alerts on `main` are signals
 as well. Two ReDoS patterns (in JS and Python selectors, and in artifact names)
 and the hand-escaped commit message are true positives. The other alerts were
 false positives, cleared by naming and fixture changes. Running the
 previously unrun suites exposed one stale smoke test (a false negative until
 then) and an intermittent Safari back-to-back launch race. See
-`root-causes-and-solutions.md`, signals 28 to 38.
+`root-causes-and-solutions.md`, signals 28 to 39.

@@ -1,0 +1,470 @@
+{
+  "run_id": 37308596612,
+  "jobs": [
+    {
+      "job_id": 111758189353,
+      "name": "CLI and bridge (real Chrome)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-05T12:18:18Z",
+      "completed_at": "2026-10-05T12:21:14Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Install Python package",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Setup Rust",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Cache Cargo build",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Build Rust CLI",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Verify Chrome is present",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Run CLI and API coverage suites under Xvfb",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Fail on a suite that asserted nothing",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Compare all three CLIs against the shared browser contract",
+          "conclusion": "success"
+        },
+        {
+          "number": 23,
+          "name": "Post Cache Cargo build",
+          "conclusion": "success"
+        },
+        {
+          "number": 24,
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "number": 25,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 26,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 27,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/1693531b3cc3dea6528bc99918821a1f4764c905/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 111758189710,
+      "name": "Native snapshots (real Chrome)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-05T12:18:18Z",
+      "completed_at": "2026-10-05T12:21:04Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/setup-node@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install browser engines",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Install Python test dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Run dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Cache Cargo build",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Verify Chrome is present",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Resolve matching native WebDriver",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Run Rust snapshots and parity in all CDP engines",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Launch Python snapshot copies and record a Python trace",
+          "conclusion": "success"
+        },
+        {
+          "number": 21,
+          "name": "Post Cache Cargo build",
+          "conclusion": "success"
+        },
+        {
+          "number": 22,
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 23,
+          "name": "Post Run actions/setup-node@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 24,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 25,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/1693531b3cc3dea6528bc99918821a1f4764c905/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 111758189748,
+      "name": "Rust storage state (real Chrome)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-05T12:18:18Z",
+      "completed_at": "2026-10-05T12:20:46Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/setup-node@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install browser engines",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Run dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Cache Cargo build",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Verify Chrome is present",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Transfer Rust storage state across engines",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Post Cache Cargo build",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Post Run actions/setup-node@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/1693531b3cc3dea6528bc99918821a1f4764c905/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 111758189783,
+      "name": "Fingerprint Parity (real Chrome)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-05T12:18:18Z",
+      "completed_at": "2026-10-05T12:22:52Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Install dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Verify the suite can actually run",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Give the preinstalled browsers a usable sandbox",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Run parity suite under Xvfb",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Fail on a suite that asserted nothing",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Verify native browser window has no default-browser infobar",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Run WebDriver suite under Xvfb",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Fail on a WebDriver suite that asserted nothing",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Upload parity log",
+          "conclusion": "success"
+        },
+        {
+          "number": 23,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 24,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 25,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/1693531b3cc3dea6528bc99918821a1f4764c905/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 111759933534,
+      "name": "Pipeline Status",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-05T12:22:54Z",
+      "completed_at": "2026-10-05T12:23:00Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Fail the run when a required job was cancelled or failed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/1693531b3cc3dea6528bc99918821a1f4764c905/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    }
+  ]
+}

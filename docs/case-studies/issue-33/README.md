@@ -149,7 +149,7 @@ After the fix:
 
 ## References
 
-- GitHub Organization Secrets: https://docs.github.com/actions/security-guides/using-secrets-in-github-actions
+- GitHub Organization Secrets: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
 - Cargo Registry Configuration: https://doc.rust-lang.org/cargo/reference/registries.html
 - CI Run logs: https://github.com/link-foundation/browser-commander/actions/runs/21116038007/job/60721745091
 - PR #32: https://github.com/link-foundation/browser-commander/pull/32

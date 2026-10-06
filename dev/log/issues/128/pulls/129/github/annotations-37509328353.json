@@ -1,0 +1,147 @@
+{
+  "run_id": 37509328353,
+  "jobs": [
+    {
+      "job_id": 112426057171,
+      "name": "Build Combined Docs",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:07Z",
+      "completed_at": "2026-10-06T18:13:03Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Setup Rust",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Install JavaScript dependencies",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Generate JavaScript API docs",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Generate Rust API docs",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Assemble Pages artifact",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Upload docs artifact",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Configure GitHub Pages",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 11,
+          "name": "Upload Pages artifact",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 12,
+          "name": "Skip Pages deployment",
+          "conclusion": "success"
+        },
+        {
+          "number": 23,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 24,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 25,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426949454,
+      "name": "Pipeline Status",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:13:07Z",
+      "completed_at": "2026-10-06T18:13:17Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Fail the run when a required job was cancelled or failed",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426950932,
+      "name": "Deploy GitHub Pages",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:13:04Z",
+      "completed_at": "2026-10-06T18:13:03Z",
+      "steps": [],
+      "annotations": []
+    }
+  ]
+}

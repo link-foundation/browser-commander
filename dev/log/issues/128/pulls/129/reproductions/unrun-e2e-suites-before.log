@@ -1,0 +1,54 @@
+# Issue #128: e2e-suite-coverage.test.js run against the parity.yml at HEAD (before the fix)
+$ cd js && node scripts/run-tests.mjs tests/unit/scripts/e2e-suite-coverage.test.js
+▶ end-to-end suite coverage
+  ✔ finds the suites to check (1.227774ms)
+  ✖ runs every end-to-end suite in some workflow, or says why not (95.163895ms)
+  ✔ keeps MANUAL_ONLY to suites that exist and that no workflow runs (6.346823ms)
+✖ end-to-end suite coverage (104.581803ms)
+ℹ tests 3
+ℹ suites 1
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 168.434886
+
+✖ failing tests:
+
+test at tests/unit/scripts/e2e-suite-coverage.test.js:151:3
+✖ runs every end-to-end suite in some workflow, or says why not (95.163895ms)
+  AssertionError [ERR_ASSERTION]: these suites skip in every workflow, so CI is green whether or not they pass; run them in a workflow (.github/workflows/parity.yml) or add them to MANUAL_ONLY with a reason
+  + actual - expected
+  
+  + [
+  +   'js/tests/e2e/click-readiness.e2e.test.js',
+  +   'js/tests/e2e/downloads.e2e.test.js',
+  +   'js/tests/e2e/playwright.e2e.test.js',
+  +   'js/tests/e2e/puppeteer.e2e.test.js',
+  +   'js/tests/e2e/traces.e2e.test.js',
+  +   'python/tests/e2e/test_portable_storage_state.py',
+  +   'python/tests/e2e/test_real_browser_webdriver.py',
+  +   'rust/tests/connect_smoke.rs',
+  +   'rust/tests/launch_smoke.rs',
+  +   'rust/tests/real_browser_smoke.rs'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/scripts/e2e-suite-coverage.test.js:156:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [Array],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+exit=1

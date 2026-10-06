@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from dataclasses import asdict
 from pathlib import Path
 
@@ -43,7 +44,8 @@ def test_source_domains_match_only_whole_hosts_and_subdomains(tmp_path, browser)
     else:
         file = tmp_path / ".config/google-chrome/Default/Cookies"
         file.parent.mkdir(parents=True)
-        with sqlite3.connect(file) as database:
+        # closing() closes the handle; the inner `with database` still commits.
+        with closing(sqlite3.connect(file)) as database, database:
             database.execute("CREATE TABLE cookies (host_key TEXT, value TEXT)")
             database.executemany(
                 "INSERT INTO cookies VALUES (?, ?)",

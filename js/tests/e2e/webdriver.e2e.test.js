@@ -20,6 +20,7 @@ import path from 'node:path';
 import { launchWebDriver } from '../../src/browser/webdriver.js';
 import { makeBrowserCommander } from '../../src/factory.js';
 import { CHROME_LAUNCH_OPTIONS } from '../helpers/e2e-browser.js';
+import { closeServer } from '../helpers/fixture-server.js';
 
 const PAGE = `<!doctype html>
 <title>WebDriver e2e</title>
@@ -42,7 +43,7 @@ async function startPageServer() {
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   return {
     url: `http://127.0.0.1:${server.address().port}/`,
-    close: () => new Promise((resolve) => server.close(resolve)),
+    close: () => closeServer(server),
   };
 }
 

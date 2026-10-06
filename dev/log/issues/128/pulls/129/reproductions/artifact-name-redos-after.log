@@ -1,0 +1,26 @@
+▶ browser-commander/tests
+  ✔ normalizes supported browser engines (3.232714ms)
+  ✔ updates cumulative timing averages (1.1032ms)
+  ✔ records timing data to disk (2.560999ms)
+  ✔ orders historically slow tests first while preserving ties (0.588459ms)
+  ✔ plans balanced shards using longest tests first (1.289106ms)
+  ✔ parses Playwright-style shard strings (0.612104ms)
+  ✔ creates and closes a browser fixture with injected launchers (1.03363ms)
+  ✔ cleans up fixture after successful callbacks (1.162531ms)
+  ✔ retries failing operations (0.849196ms)
+  ✔ times out slow operations (32.058948ms)
+  ✔ writes error and screenshot artifacts on failure (2.728093ms)
+  ✔ names failure artifacts without leading or trailing dashes (1.262486ms)
+  ✔ sanitizes a long run of dashes in linear time (5.291788ms)
+  ✔ captures failure artifacts before closing failed browser scenarios (3.029455ms)
+  ✔ orders registered browser entries by engine-specific timing history (0.930857ms)
+  ✔ registers browser tests without duration recording for unit testing (0.606822ms)
+✔ browser-commander/tests (62.629267ms)
+ℹ tests 16
+ℹ suites 1
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 476.604841

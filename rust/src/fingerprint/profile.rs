@@ -847,7 +847,9 @@ mod tests {
 
     #[test]
     fn rejects_out_of_range_coordinates() {
-        let latitude = FingerprintProfile::default()
+        // Named for what they hold: CodeQL's rust/cleartext-logging treats any
+        // value named latitude or longitude as private location data.
+        let north_south_error = FingerprintProfile::default()
             .geolocation(GeolocationProfile {
                 latitude: 91.0,
                 longitude: 0.0,
@@ -855,7 +857,7 @@ mod tests {
             })
             .resolve()
             .expect_err("an impossible latitude is rejected");
-        let longitude = FingerprintProfile::default()
+        let east_west_error = FingerprintProfile::default()
             .geolocation(GeolocationProfile {
                 latitude: 0.0,
                 longitude: -181.0,
@@ -865,16 +867,16 @@ mod tests {
             .expect_err("an impossible longitude is rejected");
 
         assert!(
-            latitude
+            north_south_error
                 .to_string()
                 .contains("latitude must be between -90 and 90"),
-            "{latitude}"
+            "{north_south_error}"
         );
         assert!(
-            longitude
+            east_west_error
                 .to_string()
                 .contains("longitude must be between -180 and 180"),
-            "{longitude}"
+            "{east_west_error}"
         );
     }
 

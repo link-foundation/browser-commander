@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import os
+import re
 import sys
 import tempfile
 from collections.abc import Mapping
@@ -14,6 +15,7 @@ from urllib.parse import urlsplit
 
 from browser_commander.browser.browser_sources import find_browser_source
 from browser_commander.browser.storage_state import load_storage_state
+from browser_commander.core.logger import is_verbose_enabled
 from browser_commander.utilities.subprocess import run_command
 
 
@@ -182,6 +184,42 @@ def _create_safari(options: Any, driver_path: str) -> Any:
             raise
 
 
+# safaridriver serves one Safari automation session at a time. Launched right
+# after a previous session closed, CI saw a new driver exit with code 1 before
+# it was ready, and a ready driver refuse the new-session request (issue #128).
+# Both are start-up failures of a driver this process owns, so a Safari launch
+# starts a fresh driver for them, a bounded number of times.
+SAFARI_LAUNCH_ATTEMPTS = 3
+SAFARI_RETRY_DELAY = 1.0
+_TRANSIENT_DRIVER_START_ERROR = re.compile(
+    r"unexpectedly exited|Connection refused|Connection reset|ECONNREFUSED|ECONNRESET"
+    r"|RemoteDisconnected"
+)
+
+
+async def _create_safari_with_retry(
+    create: Any, options: Any, driver_path: str, delay: float
+) -> Any:
+    attempt = 1
+    while True:
+        try:
+            return await asyncio.to_thread(create, options, driver_path)
+        except Exception as error:
+            if (
+                attempt >= SAFARI_LAUNCH_ATTEMPTS
+                or not _TRANSIENT_DRIVER_START_ERROR.search(str(error))
+            ):
+                raise
+            if is_verbose_enabled():
+                print(
+                    f"[webdriver] Safari launch attempt {attempt} failed,"
+                    f" retrying in {delay}s: {error}",
+                    file=sys.stderr,
+                )
+            attempt += 1
+            await asyncio.sleep(delay)
+
+
 async def launch_safari(
     options: Any, dependencies: Mapping[str, Any] | None = None
 ) -> Any:
@@ -197,7 +235,12 @@ async def launch_safari(
     driver_path = options.executable_path or source["executables"]["darwin"][0]
     create = dependencies.get("create_safari", _create_safari)
     try:
-        driver = await asyncio.to_thread(create, options, driver_path)
+        driver = await _create_safari_with_retry(
+            create,
+            options,
+            driver_path,
+            dependencies.get("safari_retry_delay", SAFARI_RETRY_DELAY),
+        )
     except Exception as error:
         message = str(error).lower()
         if (

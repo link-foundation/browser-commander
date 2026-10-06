@@ -198,12 +198,15 @@ describe('Rust Playwright protocol bindings', () => {
     const installed = JSON.parse(
       fs.readFileSync(path.join(root, 'package.json'), 'utf8')
     ).version;
-    if (installed !== version) {
-      t.skip(
-        `playwright-core ${installed} is installed, the spec is ${version}`
-      );
-      return;
-    }
+    // A version mismatch is the drift this test exists to catch, so it fails
+    // rather than skips (issue #128: the same skip in the Puppeteer bindings
+    // test hid a stale manifest on every CI run).
+    assert.equal(
+      version,
+      installed,
+      `playwright-core ${installed} is installed, the spec is ${version}; ` +
+        'refresh rust/protocol/playwright/ as its README describes'
+    );
     // The driver validates every message against these schemes; one exists per
     // command (`<Interface><Command>Params`) and event (`<Interface><Event>Event`).
     const bundle = fs.readFileSync(

@@ -24,3 +24,8 @@ https://medium\.com
 
 # Web Archive returns 502 to link checkers (bot protection)
 https://web\.archive\.org
+
+# Browser-internal pages (chrome://version, edge://welcome-edge, …) are named in
+# the docs as places to look, not fetchable links; lychee reports each as an
+# unsupported URL scheme (issue #128).
+^(chrome|edge)://

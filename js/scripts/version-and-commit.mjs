@@ -24,6 +24,7 @@ import {
   loadCommandStream,
   loadLinoArguments,
 } from '../../scripts/use-module.mjs';
+import { printUntrusted } from '../../scripts/github-actions-log.mjs';
 
 const { $ } = await loadCommandStream();
 const { makeConfig } = await loadLinoArguments();
@@ -53,11 +54,9 @@ const config = makeConfig({
 const { mode, bumpType, description } = config;
 
 // Debug: Log parsed configuration
-console.log('Parsed configuration:', {
-  mode,
-  bumpType,
-  description: description || '(none)',
-});
+console.log('Parsed configuration:', { mode, bumpType });
+console.log('Description:');
+printUntrusted(description || '(none)');
 
 // Detect if positional arguments were used (common mistake)
 const args = process.argv.slice(2);
@@ -145,7 +144,7 @@ async function main() {
   try {
     // Configure git
     await $`git config user.name "github-actions[bot]"`;
-    await $`git config user.email "github-actions[bot]@users.noreply.github.com"`;
+    await $`git config user.email "41898282+github-actions[bot]@users.noreply.github.com"`;
 
     // Check if remote main has advanced (handles re-runs after partial success)
     console.log('Checking for remote changes...');
@@ -231,10 +230,9 @@ async function main() {
       // Stage all changes (package.json, package-lock.json, CHANGELOG.md, deleted changesets)
       await $`git add -A`;
 
-      // Commit with version number as message
-      const commitMessage = newVersion;
-      const escapedMessage = commitMessage.replace(/"/g, '\\"');
-      await $`git commit -m "${escapedMessage}"`;
+      // Commit with version number as message. command-stream quotes the
+      // interpolated value itself; escaping it here would add backslashes.
+      await $`git commit -m ${newVersion}`;
 
       // Push directly to main.
       //

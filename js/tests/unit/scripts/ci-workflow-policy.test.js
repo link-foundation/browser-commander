@@ -36,19 +36,21 @@ function workflow({ on = 'push', preamble = '', job = 'test', steps }) {
     '  GIT_CONFIG_KEY_0: init.defaultBranch',
     'jobs:',
     `  ${job}:`,
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     `      group: \${{ github.workflow }}-\${{ github.ref }}-${job}`,
     '      cancel-in-progress: true',
     '    steps:',
     '      - uses: actions/checkout@v6',
+    '        with:',
+    '          persist-credentials: false',
     steps,
     // Every workflow has to end in the gate that reads the other jobs'
     // results, so the scaffolding carries one; the gate's own tests are in
     // ci-timeout-budgets.test.js.
     '  pipeline-status:',
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     '      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status',
@@ -100,9 +102,11 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: npm install
       - run: echo "\${{ github.head_ref }}"
       - uses: codecov/codecov-action@v6
@@ -161,6 +165,82 @@ jobs:
     });
 
     assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects the moving ubuntu-latest label in runs-on and in a matrix', () => {
+    // ubuntu-latest moves to Ubuntu 26.04 from 2026-10-19
+    // (actions/runner-images#14748), and every job using it carried that
+    // migration warning in issue #128's runs.
+    const content = workflow({
+      preamble: '',
+      steps: [
+        '    strategy:',
+        '      matrix:',
+        '        os: [ubuntu-latest, windows-latest]',
+      ].join('\n'),
+    }).replace('    runs-on: ubuntu-24.04', '    runs-on: ubuntu-latest');
+
+    assert.equal(countFailures(content), 2);
+  });
+
+  it('rejects a checker that npx fetches at whatever version is newest', () => {
+    // `npx --yes -p secretlint` resolves the latest release on every run, so a
+    // new rule set could fail a pull request that changed nothing it scans.
+    const content = workflow({
+      steps: [
+        '      - run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint "**/*"',
+        '      - run: npx --yes -p secretlint@13.0.7 -p @secretlint/secretlint-rule-preset-recommend@13.0.7 secretlint "**/*"',
+      ].join('\n'),
+    });
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects a cargo audit that passes on advisory warnings', () => {
+    // Without --deny warnings, an unmaintained, unsound or yanked crate prints
+    // "warning: 1 allowed warning found" and exits 0 (issue #128,
+    // reproductions/cargo-audit-deny-warnings.log).
+    const content = workflow({
+      steps: [
+        '      - run: cargo audit --file Cargo.lock',
+        '      - run: cargo audit --file Cargo.lock --deny warnings',
+      ].join('\n'),
+    });
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects a checkout that leaves the job token in .git/config', () => {
+    // actions/checkout persists the token unless told not to, so any later
+    // step - an install script, an artifact upload of the workspace - can
+    // read it. zizmor reports this as artipacked at low confidence, below the
+    // floor the audit ran with, so 38 checkouts did it unreported (#128).
+    const content = workflow({ steps: '' }).replace(
+      '        with:\n          persist-credentials: false\n',
+      ''
+    );
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects a persisted credential in a job that does not write to main', () => {
+    const content = workflow({ steps: '' }).replace(
+      'persist-credentials: false',
+      'persist-credentials: true'
+    );
+
+    assert.equal(countFailures(content), 1);
+  });
+
+  it('accepts a persisted credential in a main-writer job that pushes', () => {
+    const content = workflow({ job: 'release', steps: '' })
+      .replace(
+        'group: ${{ github.workflow }}-${{ github.ref }}-release\n      cancel-in-progress: true',
+        'group: main-writer-${{ github.repository }}-main\n      cancel-in-progress: false'
+      )
+      .replace('persist-credentials: false', 'persist-credentials: true');
+
+    assert.equal(countFailures(content), 0);
   });
 
   it('accepts a base_ref bound to any environment variable name', () => {
@@ -229,7 +309,7 @@ jobs:
       steps: '      - run: npm ci --ignore-scripts',
     })}
   drifted:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: \${{ github.workflow }}-\${{ github.ref }}-drifted
@@ -286,15 +366,17 @@ function lintAndTest({ needs, condition = '' }) {
     '  GIT_CONFIG_KEY_0: init.defaultBranch',
     'jobs:',
     '  lint:',
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     '      group: ${{ github.workflow }}-${{ github.ref }}-lint',
     '      cancel-in-progress: true',
     '    steps:',
     '      - uses: actions/checkout@v6',
+    '        with:',
+    '          persist-credentials: false',
     '  test:',
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     '      group: ${{ github.workflow }}-${{ github.ref }}-test',
@@ -303,8 +385,10 @@ function lintAndTest({ needs, condition = '' }) {
     condition,
     '    steps:',
     '      - uses: actions/checkout@v6',
+    '        with:',
+    '          persist-credentials: false',
     '  pipeline-status:',
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     '      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status',

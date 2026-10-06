@@ -34,13 +34,15 @@ env:
 jobs:
   build-docs:
     name: Build Combined Docs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-build-docs
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -124,11 +126,14 @@ jobs:
 
       - name: Skip Pages deployment
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_GITHUB_PAGES != 'true'
-        run: echo "GitHub Pages deployment is disabled. Set repository variable DEPLOY_GITHUB_PAGES=true after Pages is configured."
+        # A notice, not a log line: on a plain echo the run summary shows a
+        # green "Deploy GitHub Pages" skip with nothing saying the site was
+        # never published (issue #128).
+        run: echo "::notice title=GitHub Pages not deployed::DEPLOY_GITHUB_PAGES is not 'true', so the built docs were not published. Set the repository variable after Pages is configured."
 
   deploy-docs:
     name: Deploy GitHub Pages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: main-writer-${{ github.repository }}-main
@@ -150,11 +155,11 @@ jobs:
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
   # cancelled rather than failed, and a run whose only casualty is a cancelled
-  # job carries the conclusion `cancelled` as well, so on the default branch the
-  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  # job carries the conclusion `cancelled` as well, so the failure would pass
+  # unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
@@ -181,6 +186,6 @@ jobs:
       - name: Fail the run when a required job was cancelled or failed
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
-          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          RUN_SHA: ${{ github.sha }}
+          RUN_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: bash scripts/check-pipeline-status.sh

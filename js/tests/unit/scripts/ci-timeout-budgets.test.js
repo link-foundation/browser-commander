@@ -199,16 +199,29 @@ describe('CI execution budgets', () => {
       'parity.yml cli CLI and API coverage suites',
       'parity.yml cli Cross-language CLI contract',
       'parity.yml cli Rust CLI build',
+      'parity.yml engine-suites Engine lifecycle suites',
+      'parity.yml fixture-suites React fixture suites',
       'parity.yml parity Fingerprint parity suite',
       'parity.yml parity WebDriver suite',
+      'parity.yml snapshots Python headful real-browser launches',
       'parity.yml snapshots Python native snapshot launches',
+      'parity.yml snapshots Rust launch and connect smokes',
       'parity.yml snapshots Rust native snapshots and parity',
       'parity.yml storage-state Rust storage state transfer',
       'python.yml test pytest suite',
       'rust.yml coverage Rust code coverage',
-      'rust.yml test Rust doc tests',
       'rust.yml test Rust test suite',
     ]);
+  });
+
+  it('runs the Rust doc tests once, inside the main test suite', () => {
+    // `cargo test --all-features` already runs them. A second `cargo test
+    // --doc` with the default features rebuilt the crate and, on Windows,
+    // stalled silently until its budget killed it (issue #128).
+    const block = getJobBlock(readWorkflow('rust.yml'), 'test');
+
+    assert.match(block, /cargo test --all-features/);
+    assert.doesNotMatch(block, /cargo test --doc/);
   });
 
   it('warns at the same share of a budget that this invariant allows', () => {
@@ -313,7 +326,7 @@ describe('pipeline status gate', () => {
 
       assert.match(
         block,
-        /RUN_SHA: \$\{\{ github\.sha \}\}/,
+        /RUN_SHA: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
         `${fileName}: ${GATE_JOB} cannot tell a supersede from an overrun without RUN_SHA`
       );
     }

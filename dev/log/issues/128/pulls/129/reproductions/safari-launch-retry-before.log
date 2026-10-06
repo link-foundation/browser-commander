@@ -1,0 +1,60 @@
+
+test at tests/unit/browser/webdriver.test.js:536:5
+✖ starts a new driver when the first one fails with 'exit' (3.650175ms)
+  Error: WebDriver server exited with code 1 before it was ready: safaridriver: busy
+      at waitForDriverReady (file:///tmp/gh-issue-solver-1791315637449/js/src/browser/webdriver.js:289:13)
+      at launchWebDriver (file:///tmp/gh-issue-solver-1791315637449/js/src/browser/webdriver.js:550:11)
+      at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/browser/webdriver.test.js:538:22)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at tests/unit/browser/webdriver.test.js:536:5
+✖ starts a new driver when the first one fails with 'refused' (0.650533ms)
+  Error: ECONNREFUSED connect ECONNREFUSED 127.0.0.1:49001 (attempt 1)
+      at mock.selenium.webdriver.Builder.build (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/browser/webdriver.test.js:525:13)
+      at buildSession (file:///tmp/gh-issue-solver-1791315637449/js/src/browser/webdriver.js:433:18)
+      at launchWebDriver (file:///tmp/gh-issue-solver-1791315637449/js/src/browser/webdriver.js:571:20)
+      at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/browser/webdriver.test.js:538:22)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at tests/unit/browser/webdriver.test.js:547:3
+✖ gives up after three attempts and reports what the driver printed (1.995771ms)
+  AssertionError [ERR_ASSERTION]: 1 == 3
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/browser/webdriver.test.js:557:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 3,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/unit/browser/webdriver.test.js:560:3
+✖ adds the driver exit status to a refused session request (0.856146ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: ECONNREFUSED connect ECONNREFUSED 127.0.0.1:49001 (attempt 1)
+      at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/browser/webdriver.test.js:567:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: ECONNREFUSED connect ECONNREFUSED 127.0.0.1:49001 (attempt 1)
+        at mock.selenium.webdriver.Builder.build (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/browser/webdriver.test.js:525:13)
+        at buildSession (file:///tmp/gh-issue-solver-1791315637449/js/src/browser/webdriver.js:433:18)
+        at launchWebDriver (file:///tmp/gh-issue-solver-1791315637449/js/src/browser/webdriver.js:571:20)
+        at async waitForActual (node:assert:615:5)
+        at async assert.rejects (node:assert:738:25)
+        at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/browser/webdriver.test.js:567:5)
+        at async Test.run (node:internal/test_runner/test:1409:7)
+        at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7),
+    operator: 'rejects',
+    diff: 'simple'
+  }

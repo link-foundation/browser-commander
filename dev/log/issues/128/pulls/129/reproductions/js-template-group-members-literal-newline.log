@@ -1,0 +1,3 @@
+lines=1
+218518 box bash -c set -m; source ./gm.sh; (sleep 30 & sleep 31 & wait) & command_pid=$!; sleep 0.5; out="$(group_members)"; printf "lines=%s\n" "$(printf "%s" "$out" | grep -c "")"; printf "%s\n" "$out"; echo "annotation: Still running: $(echo "$out" | tr "\n" ";")"; kill -KILL -- -$command_pid\n218520 box sleep 30\n218521 box sleep 31\n
+annotation: Still running: 218518 box bash -c set -m; source ./gm.sh; (sleep 30 & sleep 31 & wait) & command_pid=$!; sleep 0.5; out="$(group_members)"; printf "lines=%s\n" "$(printf "%s" "$out" | grep -c "")"; printf "%s\n" "$out"; echo "annotation: Still running: $(echo "$out" | tr "\n" ";")"; kill -KILL -- -$command_pid\n218520 box sleep 30\n218521 box sleep 31\n;

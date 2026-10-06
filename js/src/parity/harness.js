@@ -109,8 +109,11 @@ export async function startProbeServer(probeSource) {
       });
     },
     async close() {
+      // Stop listening before dropping connections, so none can slip in
+      // between and keep close() waiting (issue #128).
+      const closed = new Promise((resolve) => server.close(resolve));
       server.closeAllConnections?.();
-      await new Promise((resolve) => server.close(resolve));
+      await closed;
     },
   };
 }

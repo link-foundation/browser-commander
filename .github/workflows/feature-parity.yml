@@ -41,13 +41,15 @@ env:
 
 jobs:
   matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-matrix
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: '24.x'
@@ -58,7 +60,7 @@ jobs:
 
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
@@ -76,6 +78,6 @@ jobs:
       - name: Report failed or cancelled jobs
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
-          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          RUN_SHA: ${{ github.sha }}
+          RUN_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: bash scripts/check-pipeline-status.sh

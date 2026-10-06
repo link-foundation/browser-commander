@@ -1,0 +1,20 @@
+▶ loadCommandStream makes a failed command fail
+  ✔ turns errexit on, so the release scripts catch what they try to catch (1218.018008ms)
+  ✔ rejects on a non-zero exit and reports the exit code (634.185652ms)
+errexit-ok
+  ✔ still resolves with stdout on success (663.369786ms)
+  ✔ reports a non-zero exit for the exact command that broke the Rust release (609.018947ms)
+✔ loadCommandStream makes a failed command fail (3127.932809ms)
+▶ command-stream quotes interpolated values itself
+  ✔ passes a bare interpolation through unchanged (683.13028ms)
+  ✔ keeps hand-added backslashes inside quotes (626.894172ms)
+  ✔ no release script escapes quotes by hand before interpolating (6.077805ms)
+✔ command-stream quotes interpolated values itself (1316.997519ms)
+ℹ tests 7
+ℹ suites 2
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4628.784175

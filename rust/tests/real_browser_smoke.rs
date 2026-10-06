@@ -83,6 +83,7 @@ async fn headful_launch_keeps_navigator_webdriver_false() -> anyhow::Result<()> 
         [
             format!("--user-data-dir={}", result.user_data_dir.display()),
             format!("--remote-debugging-port={}", result.remote_debugging_port),
+            "about:blank".to_string(),
         ]
     );
     result

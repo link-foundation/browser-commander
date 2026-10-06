@@ -1,0 +1,39 @@
+# File inventory for python-ai-driven-development-pipeline-template (generated 2026-10-06T19:57:52Z)
+## .github (all files)
+.github/workflows/docs.yml
+.github/workflows/links.yml
+.github/workflows/release.yml
+.github/workflows/security.yml
+.github/workflows/workflows.yml
+.github/zizmor.yml
+
+## scripts/
+scripts/audit_dependencies.py
+scripts/bump_version.py
+scripts/check-pipeline-status.sh
+scripts/check-required-docs.sh
+scripts/check_file_size.py
+scripts/check_web_archive.py
+scripts/create_github_release.py
+scripts/create_manual_changeset.py
+scripts/detect_code_changes.py
+scripts/format_release_notes.py
+scripts/preflight-credentials.sh
+scripts/publish_to_pypi.py
+scripts/read-job-cancel-in-progress.sh
+scripts/read_manifest.py
+scripts/recheck_broken_links.py
+scripts/release_naming.py
+scripts/run-with-budget-warning.sh
+scripts/simulate-fresh-merge.sh
+scripts/smoke_test_published_package.py
+scripts/validate_changeset.py
+scripts/version_and_commit.py
+
+## root config files
+.pre-commit-config.yaml
+.ruff.toml
+.secretlintrc.json
+pyproject.toml
+(no .github/dependabot.yml)
+(no actionlint config file)

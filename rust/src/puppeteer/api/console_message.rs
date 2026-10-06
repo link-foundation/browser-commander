@@ -9,7 +9,7 @@ use super::*;
 use crate::puppeteer::bridge::{binary, remote_type, BridgeError, JsFunction, Remote};
 
 remote_type!(
-    /// Puppeteer's `ConsoleMessage` (puppeteer-core 25.10.0), a remote object
+    /// Puppeteer's `ConsoleMessage` (puppeteer-core 25.12.0), a remote object
     /// served by `browser-commander serve --stdio`.
     ConsoleMessage
 );

@@ -488,6 +488,106 @@ describe('Safari driver lifecycle', () => {
       (error) => error.code === 'SAFARI_SETUP_REQUIRED'
     );
     assert.ok(started[0].child.killed);
+    assert.equal(started.length, 1, 'setup errors are not retried');
+  });
+});
+
+/**
+ * Safari dependencies whose first `failures` driver starts fail the way CI
+ * saw right after the previous session closed: `'exit'` is a safaridriver that
+ * exits with code 1 before /status answers, `'refused'` is one that answered
+ * /status and then refused the new-session request.
+ */
+function flakySafariDependencies(failures) {
+  const setup = safariDependencies();
+  const { dependencies, started, mock } = setup;
+  let port = 49000;
+  dependencies.reservePort = async () => (port += 1);
+  dependencies.safariRetryDelay = 0;
+  const startProcess = dependencies.startProcess;
+  dependencies.startProcess = (...args) => {
+    const child = startProcess(...args);
+    if (failures[started.length - 1] === 'exit') {
+      child.exitCode = 1;
+      child.stdout = {
+        on: (_event, listener) => listener('safaridriver: busy\n'),
+      };
+    }
+    return child;
+  };
+  dependencies.fetch = async () => ({
+    ok: true,
+    json: async () => ({ value: { ready: true } }),
+  });
+  const build = mock.selenium.webdriver.Builder.prototype.build;
+  mock.selenium.webdriver.Builder.prototype.build = function () {
+    if (failures[started.length - 1] === 'refused') {
+      throw new Error(
+        `ECONNREFUSED connect ECONNREFUSED 127.0.0.1:${port} (attempt ${started.length})`
+      );
+    }
+    return build.call(this);
+  };
+  return setup;
+}
+
+describe('Safari launch right after a previous session', () => {
+  for (const failure of ['exit', 'refused']) {
+    it(`starts a new driver when the first one fails with '${failure}'`, async () => {
+      const { dependencies, started } = flakySafariDependencies([failure]);
+      const result = await launchWebDriver({ browser: 'safari' }, dependencies);
+      assert.equal(started.length, 2);
+      assert.equal(result.driverProcess, started[1].child);
+      assert.ok(started[0].child.killed || started[0].child.exitCode === 1);
+      assert.equal(result.serverUrl, 'http://127.0.0.1:49002');
+      await result.close();
+    });
+  }
+
+  it('gives up after three attempts and reports what the driver printed', async () => {
+    const { dependencies, started } = flakySafariDependencies([
+      'exit',
+      'refused',
+      'exit',
+    ]);
+    await assert.rejects(
+      () => launchWebDriver({ browser: 'safari' }, dependencies),
+      /exited with code 1 before it was ready: safaridriver: busy/
+    );
+    assert.equal(started.length, 3);
+  });
+
+  it('adds the driver exit status to a refused session request', async () => {
+    const { dependencies } = flakySafariDependencies([
+      'refused',
+      'refused',
+      'refused',
+    ]);
+    await assert.rejects(
+      () => launchWebDriver({ browser: 'safari' }, dependencies),
+      (error) =>
+        /ECONNREFUSED .*\(attempt 3\)/.test(error.message) &&
+        /WebDriver server at http:\/\/127\.0\.0\.1:49003/.test(error.message)
+    );
+  });
+
+  it('does not retry other browsers', async () => {
+    const { dependencies, started, mock } = launchDependencies({
+      checkAccess: accessOnly('/opt/drivers/chromedriver'),
+      safariRetryDelay: 0,
+    });
+    mock.selenium.webdriver.Builder.prototype.build = () => {
+      throw new Error('ECONNREFUSED connect ECONNREFUSED 127.0.0.1:41001');
+    };
+    await assert.rejects(
+      () =>
+        launchWebDriver(
+          { driverPath: '/opt/drivers/chromedriver' },
+          dependencies
+        ),
+      /ECONNREFUSED/
+    );
+    assert.equal(started.length, 1);
   });
 });
 

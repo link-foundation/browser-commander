@@ -176,7 +176,18 @@ function expandBrowserTestEntries(scenarios, engines) {
 }
 
 function sanitizeArtifactName(value) {
-  return value.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+  const name = value.replace(/[^a-zA-Z0-9._-]+/g, '-');
+  // Trimmed by index: /^-+|-+$/g backtracks quadratically on a long run of
+  // inner dashes (CodeQL js/polynomial-redos).
+  let start = 0;
+  let end = name.length;
+  while (start < end && name[start] === '-') {
+    start++;
+  }
+  while (end > start && name[end - 1] === '-') {
+    end--;
+  }
+  return name.slice(start, end);
 }
 
 function closeBrowserLike(browser) {

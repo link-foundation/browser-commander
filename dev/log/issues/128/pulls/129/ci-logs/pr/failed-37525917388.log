@@ -1,0 +1,446 @@
+Safari (javascript)	UNKNOWN STEP	﻿2026-10-06T20:22:24.1754690Z Current runner version: '2.337.0'
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1784060Z ##[group]Runner Image Provisioner
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1785610Z Hosted Compute Agent
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1787330Z Version: 20260828.587
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1787820Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1788860Z Build Date: 2026-08-28T16:44:25Z
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1789550Z Worker ID: {d9c9390d-5620-402d-90ef-f1039ad1e905}
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1790290Z Azure Region: westus
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1790760Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1792720Z ##[group]Operating System
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1793200Z macOS
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1797260Z 26.6.2
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1824720Z 25G83
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1825220Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1829100Z ##[group]Runner Image
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1829540Z Image: macos-26-arm64
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1829940Z Version: 20260907.0351.1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1831020Z Included Software: https://github.com/actions/runner-images/blob/macos-26-arm64/20260907.0351/images/macos/macos-26-arm64-Readme.md
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1835420Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-26-arm64%2F20260907.0351
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1836160Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1836980Z ##[group]GITHUB_TOKEN Permissions
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1839090Z Contents: read
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1839550Z Metadata: read
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1840050Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1841830Z Secret source: Actions
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1842510Z Cache mode: write
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.1844220Z Prepare workflow directory
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.2473060Z Prepare all required actions
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.2519060Z Getting action download info
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:24.6327100Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:25.0469980Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:25.1733450Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:25.2775070Z Download action repository 'dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067' (SHA:7e38f4b43b4db5c8dd498af069a4f6196df1d067)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:25.7213520Z Download action repository 'Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6' (SHA:6323deb102c322ba6fcbdcafc7e3dddab59af2b6)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.6485360Z Complete job name: Safari (javascript)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7062360Z ##[group]Run actions/checkout@v6
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7063250Z with:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7063900Z   repository: link-foundation/browser-commander
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7069950Z   token: ***
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7070590Z   ssh-strict: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7071380Z   ssh-user: git
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7072110Z   persist-credentials: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7072890Z   clean: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7073620Z   sparse-checkout-cone-mode: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7074360Z   fetch-depth: 1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7075000Z   fetch-tags: false
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7075690Z   show-progress: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7076400Z   lfs: false
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7077030Z   submodules: false
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7077600Z   set-safe-directory: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7078250Z   allow-unsafe-pr-checkout: false
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7079080Z env:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7079620Z   GIT_CONFIG_COUNT: 1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7080220Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7080950Z   GIT_CONFIG_VALUE_0: main
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7081660Z   RUN_SAFARI_E2E: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7082370Z   CARGO_BUILD_JOBS: 2
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7083190Z   CARGO_PROFILE_DEV_DEBUG: 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:26.7084100Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0427950Z Syncing repository: link-foundation/browser-commander
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0431680Z ##[group]Getting Git version info
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0432940Z Working directory is '/Users/runner/work/browser-commander/browser-commander'
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0434440Z [command]/opt/homebrew/bin/git version
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0930980Z git version 2.55.0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0950350Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0961080Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/cbdb14e2-741c-48d4-be04-46d564836a08/.gitconfig'
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0976860Z Temporarily overriding HOME='/Users/runner/work/_temp/cbdb14e2-741c-48d4-be04-46d564836a08' before making global git config changes
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0979670Z Adding repository directory to the temporary git global config as a safe directory
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.0982250Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/browser-commander/browser-commander
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1104830Z Deleting the contents of '/Users/runner/work/browser-commander/browser-commander'
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1107540Z ##[group]Determining repository object format
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1109190Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1110210Z ##[group]Initializing the repository
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1112400Z [command]/opt/homebrew/bin/git init /Users/runner/work/browser-commander/browser-commander
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1354540Z Initialized empty Git repository in /Users/runner/work/browser-commander/browser-commander/.git/
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1362240Z [command]/opt/homebrew/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1453570Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1454640Z ##[group]Disabling automatic garbage collection
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1457840Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1537900Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1539010Z ##[group]Setting up auth
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1539820Z Removing SSH command configuration
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1543090Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.1612980Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.2826190Z Removing HTTP extra header
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.2829550Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.2902500Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.3709310Z Removing includeIf entries pointing to credentials config files
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.3710960Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.3786680Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.4576280Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.4645890Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/Users/runner/work/browser-commander/browser-commander/.git.path /Users/runner/work/_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.4711530Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/Users/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /Users/runner/work/_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.4791600Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.4863350Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.4929420Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.4930420Z ##[group]Fetching the repository
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:27.4934290Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a8c9b8b8c8c120f11a39304c8e22e4e71594a40e:refs/remotes/pull/129/merge
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6509700Z From https://github.com/link-foundation/browser-commander
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6511790Z  * [new ref]         a8c9b8b8c8c120f11a39304c8e22e4e71594a40e -> pull/129/merge
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6513800Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6515070Z ##[group]Determining the checkout info
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6602000Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6603490Z [command]/opt/homebrew/bin/git sparse-checkout disable
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6767700Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6933780Z ##[group]Checking out the ref
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:28.6940990Z [command]/opt/homebrew/bin/git checkout --progress --force refs/remotes/pull/129/merge
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.3497950Z HEAD is now at a8c9b8b Merge f1c4d1d0dc41013e687cca649e01530acb7f2451 into 9f8a552f4881d28816ef91a968cd0ecac4067285
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.3565070Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.3653700Z [command]/opt/homebrew/bin/git log -1 --format=%H
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.3812120Z a8c9b8b8c8c120f11a39304c8e22e4e71594a40e
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4089440Z ##[group]Run sudo /usr/bin/safaridriver --enable &
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4090040Z ^[[36;1msudo /usr/bin/safaridriver --enable &^[[0m
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4090370Z ^[[36;1mdriver_setup=$!^[[0m
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4090610Z ^[[36;1mwait "$driver_setup"^[[0m
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4159120Z shell: /bin/bash -e {0}
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4159390Z env:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4159650Z   GIT_CONFIG_COUNT: 1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4159870Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4160100Z   GIT_CONFIG_VALUE_0: main
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4160340Z   RUN_SAFARI_E2E: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4160590Z   CARGO_BUILD_JOBS: 2
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4160860Z   CARGO_PROFILE_DEV_DEBUG: 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.4161090Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5860560Z ##[group]Run actions/setup-node@v6
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5860930Z with:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5861140Z   node-version: 24.x
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5861390Z   check-latest: false
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5863570Z   token: ***
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5863780Z   package-manager-cache: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5863990Z env:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5864150Z   GIT_CONFIG_COUNT: 1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5864330Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5864610Z   GIT_CONFIG_VALUE_0: main
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5864820Z   RUN_SAFARI_E2E: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5865000Z   CARGO_BUILD_JOBS: 2
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5865210Z   CARGO_PROFILE_DEV_DEBUG: 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.5865450Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.7624060Z Found in cache @ /Users/runner/hostedtoolcache/node/24.20.0/arm64
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:29.7627020Z ##[group]Environment details
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8002040Z node: v24.20.0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8002960Z npm: 11.19.0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8003750Z yarn: 1.22.22
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8005100Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8232800Z ##[group]Run npm ci --ignore-scripts
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8233560Z ^[[36;1mnpm ci --ignore-scripts^[[0m
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8339510Z shell: /bin/bash -e {0}
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8339910Z env:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8340280Z   GIT_CONFIG_COUNT: 1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8340530Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8340910Z   GIT_CONFIG_VALUE_0: main
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8341130Z   RUN_SAFARI_E2E: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8341460Z   CARGO_BUILD_JOBS: 2
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8341770Z   CARGO_PROFILE_DEV_DEBUG: 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:30.8342200Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.8570290Z 
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.8686590Z added 221 packages, and audited 222 packages in 6s
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.8693910Z 
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.8694500Z 43 packages are looking for funding
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.8695010Z   run `npm fund` for details
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.8695350Z 
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.8695540Z found 0 vulnerabilities
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9788970Z ##[group]Run node scripts/run-tests.mjs tests/e2e/safari.e2e.test.js
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9789660Z ^[[36;1mnode scripts/run-tests.mjs tests/e2e/safari.e2e.test.js^[[0m
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9837970Z shell: /bin/bash -e {0}
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9838290Z env:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9838500Z   GIT_CONFIG_COUNT: 1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9838850Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9839220Z   GIT_CONFIG_VALUE_0: main
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9839450Z   RUN_SAFARI_E2E: true
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9839740Z   CARGO_BUILD_JOBS: 2
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9839960Z   CARGO_PROFILE_DEV_DEBUG: 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:36.9840300Z ##[endgroup]
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:37.3753430Z [Safari smoke] 2026-10-06T20:22:37.373Z launch seeded session
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:22:50.8100220Z [Safari smoke] 2026-10-06T20:22:50.705Z exercise page commands
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:00.2180650Z [Safari smoke] 2026-10-06T20:23:00.212Z exercise windows and tabs
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:02.3600260Z [Safari smoke] 2026-10-06T20:23:02.349Z close seeded session
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:02.5838490Z [Safari smoke] 2026-10-06T20:23:02.581Z launch fresh session
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:04.2695830Z [Safari smoke] 2026-10-06T20:23:04.266Z close fresh session
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:04.3206600Z [Safari smoke] 2026-10-06T20:23:04.299Z launch CLI session
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.5784740Z [Safari smoke] 2026-10-06T20:23:05.556Z close CLI session
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.5916300Z [Safari smoke] 2026-10-06T20:23:05.557Z destroy commander
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.6034670Z [Safari smoke] 2026-10-06T20:23:05.557Z close remaining session and server
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.6141230Z [Safari smoke] 2026-10-06T20:23:05.560Z cleanup complete
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.6264040Z ✖ Safari drives a local page in an isolated automation session (28181.431292ms)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.6377360Z ℹ tests 1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.6516700Z ℹ suites 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.6801590Z ℹ pass 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.6922260Z ℹ fail 1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.7064860Z ℹ cancelled 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.7185230Z ℹ skipped 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.7323620Z ℹ todo 0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.7444420Z ℹ duration_ms 28403.211709
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.7559660Z 
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.7665170Z ✖ failing tests:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.7791750Z 
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.7928120Z test at tests/e2e/safari.e2e.test.js:13:1
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8045420Z ✖ Safari drives a local page in an isolated automation session (28181.431292ms)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8149560Z   Error: ECONNREFUSED connect ECONNREFUSED 127.0.0.1:49199
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8253550Z       at ClientRequest.<anonymous> (/Users/runner/work/browser-commander/browser-commander/js/node_modules/selenium-webdriver/http/index.js:293:15)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8364440Z       at ClientRequest.emit (node:events:514:28)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8467330Z       at emitErrorEvent (node:_http_client:114:11)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8596220Z       at Socket.socketErrorListener (node:_http_client:766:5)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8667840Z       at Socket.emit (node:events:514:28)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8852270Z       at emitErrorNT (node:internal/streams/destroy:170:8)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.8963420Z       at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.9086170Z       at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.9181420Z ##[error]Process completed with exit code 1.
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:05.9740280Z Post job cleanup.
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.8312350Z [command]/opt/homebrew/bin/git version
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.8905280Z git version 2.55.0
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.9008200Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/588fc491-74e8-4da6-9441-4a6cd19ecb13/.gitconfig'
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.9009180Z Temporarily overriding HOME='/Users/runner/work/_temp/588fc491-74e8-4da6-9441-4a6cd19ecb13' before making global git config changes
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.9011010Z Adding repository directory to the temporary git global config as a safe directory
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.9011950Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/browser-commander/browser-commander
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.9273920Z Removing SSH command configuration
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.9288880Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:06.9359280Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.1137870Z Removing HTTP extra header
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.1144410Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.1296170Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.3316850Z Removing includeIf entries pointing to credentials config files
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.3418930Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.3520800Z includeif.gitdir:/Users/runner/work/browser-commander/browser-commander/.git.path
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.3625250Z includeif.gitdir:/Users/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.3734040Z includeif.gitdir:/github/workspace/.git.path
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.3835730Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4100850Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/Users/runner/work/browser-commander/browser-commander/.git.path
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4150090Z /Users/runner/work/_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4212830Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/Users/runner/work/browser-commander/browser-commander/.git.path /Users/runner/work/_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4217520Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/Users/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4219810Z /Users/runner/work/_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4225020Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/Users/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /Users/runner/work/_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4299050Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4300980Z /github/runner_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4363960Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4401330Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4403830Z /github/runner_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4437790Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.4443270Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.5908340Z Removing credentials config '/Users/runner/work/_temp/git-credentials-2bbfaa5e-6cab-4721-a3ad-f6993c469e15.config'
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:07.7280970Z Cleaning up orphan processes
+Safari (javascript)	UNKNOWN STEP	2026-10-06T20:23:11.2200320Z Terminate orphan process: pid (2842) (Safari)
+Pipeline Status	UNKNOWN STEP	﻿2026-10-06T20:24:03.2570502Z Current runner version: '2.337.0'
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2605560Z ##[group]Runner Image Provisioner
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2607217Z Hosted Compute Agent
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2608226Z Version: 20260901.588
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2609199Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2610681Z Build Date: 2026-09-01T19:56:44Z
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2611852Z Worker ID: {a8ae02e3-fd6f-4e18-b6bf-0ae29a1be1b5}
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2613188Z Azure Region: eastus
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2614140Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2617253Z ##[group]Operating System
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2618357Z Ubuntu
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2619271Z 24.04.5
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2620170Z LTS
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2620969Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2621964Z ##[group]Runner Image
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2623002Z Image: ubuntu-24.04
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2623917Z Version: 20260927.320.1
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2626059Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2629174Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260927.320
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2630828Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2632846Z ##[group]GITHUB_TOKEN Permissions
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2635686Z Contents: read
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2636675Z Metadata: read
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2637865Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2640784Z Secret source: Actions
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2642436Z Cache mode: write
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.2643829Z Prepare workflow directory
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.3209650Z Prepare all required actions
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.3281400Z Getting action download info
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.6026781Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.7117568Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.8962578Z Complete job name: Pipeline Status
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9730082Z ##[group]Run actions/checkout@v6
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9730985Z with:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9731430Z   persist-credentials: false
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9732012Z   repository: link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9736160Z   token: ***
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9736595Z   ssh-strict: true
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9737242Z   ssh-user: git
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9737683Z   clean: true
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9738134Z   sparse-checkout-cone-mode: true
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9738659Z   fetch-depth: 1
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9739090Z   fetch-tags: false
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9739544Z   show-progress: true
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9739999Z   lfs: false
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9740414Z   submodules: false
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9740869Z   set-safe-directory: true
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9741385Z   allow-unsafe-pr-checkout: false
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9742142Z env:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9742559Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9743053Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9743647Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:03.9744129Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0821569Z Syncing repository: link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0824604Z ##[group]Getting Git version info
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0826065Z Working directory is '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0828025Z [command]/usr/bin/git version
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0895494Z git version 2.55.0
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0919072Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0951863Z Temporarily overriding HOME='/home/runner/work/_temp/4ad91315-9982-4f69-acdb-64fbbf7743a7' before making global git config changes
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0954368Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.0956429Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1006009Z Deleting the contents of '/home/runner/work/browser-commander/browser-commander'
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1011425Z ##[group]Determining repository object format
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1014194Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1016062Z ##[group]Initializing the repository
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1019909Z [command]/usr/bin/git init /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1124418Z Initialized empty Git repository in /home/runner/work/browser-commander/browser-commander/.git/
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1136344Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1185091Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1186482Z ##[group]Disabling automatic garbage collection
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1189746Z [command]/usr/bin/git config --local gc.auto 0
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1223995Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1225453Z ##[group]Setting up auth
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1226435Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1233564Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1271052Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1626094Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1636050Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1679983Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1903198Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1910475Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.1945856Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.2179602Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.2223844Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.2261467Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.2307768Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.2343576Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.2374575Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.2375946Z ##[group]Fetching the repository
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:04.2384993Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a8c9b8b8c8c120f11a39304c8e22e4e71594a40e:refs/remotes/pull/129/merge
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8786261Z From https://github.com/link-foundation/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8788402Z  * [new ref]         a8c9b8b8c8c120f11a39304c8e22e4e71594a40e -> pull/129/merge
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8793365Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8802915Z ##[group]Determining the checkout info
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8804778Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8805888Z [command]/usr/bin/git sparse-checkout disable
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8861585Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8896738Z ##[group]Checking out the ref
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:05.8901739Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/129/merge
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1092861Z Note: switching to 'refs/remotes/pull/129/merge'.
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1094107Z 
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1095273Z You are in 'detached HEAD' state. You can look around, make experimental
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1096714Z changes and commit them, and you can discard any commits you make in this
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1098452Z state without impacting any branches by switching back to a branch.
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1099291Z 
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1099860Z If you want to create a new branch to retain commits you create, you may
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1101148Z do so (now or later) by using -c with the switch command. Example:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1101930Z 
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1102301Z   git switch -c <new-branch-name>
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1102879Z 
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1103219Z Or undo this operation with:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1103736Z 
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1104037Z   git switch -
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1104445Z 
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1105183Z Turn off this advice by setting config variable advice.detachedHead to false
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1106234Z 
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1107760Z HEAD is now at a8c9b8b Merge f1c4d1d0dc41013e687cca649e01530acb7f2451 into 9f8a552f4881d28816ef91a968cd0ecac4067285
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1136318Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1184043Z [command]/usr/bin/git log -1 --format=%H
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1212725Z a8c9b8b8c8c120f11a39304c8e22e4e71594a40e
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1222986Z ##[group]Removing auth
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1223924Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1227204Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1263448Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1487784Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1493055Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1532243Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1758487Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1762005Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1790594Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1794036Z includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1796593Z includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1798753Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1803744Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1827681Z /home/runner/work/_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1840015Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git.path /home/runner/work/_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1876848Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1901171Z /home/runner/work/_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1912562Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/browser-commander/browser-commander/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1948884Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1982384Z /github/runner_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.1991086Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2027279Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2054410Z /github/runner_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2068738Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2105143Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2330107Z Removing credentials config '/home/runner/work/_temp/git-credentials-5e365a01-8246-437c-9fbd-2f3d5276fa92.config'
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2339275Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2790193Z ##[group]Run actions/setup-node@v6
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2791280Z with:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2792063Z   node-version: 24.x
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2792941Z   check-latest: false
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2804158Z   token: ***
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2805051Z   package-manager-cache: true
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2806058Z env:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2806803Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2808048Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2809176Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.2810125Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.4244039Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.4261412Z ##[group]Environment details
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8385261Z node: v24.21.0
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8386434Z npm: 11.19.0
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8387477Z yarn: 1.22.22
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8388779Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8557672Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8558377Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8821715Z shell: /usr/bin/bash -e {0}
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8822267Z env:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8822733Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8823241Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8823801Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8824437Z   NEEDS_JSON: {
+Pipeline Status	UNKNOWN STEP	  "smoke": {
+Pipeline Status	UNKNOWN STEP	    "result": "failure",
+Pipeline Status	UNKNOWN STEP	    "outputs": {}
+Pipeline Status	UNKNOWN STEP	  }
+Pipeline Status	UNKNOWN STEP	}
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8825121Z   IS_MAIN: false
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8825622Z   RUN_SHA: a8c9b8b8c8c120f11a39304c8e22e4e71594a40e
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.8826211Z ##[endgroup]
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.9790682Z Failed jobs:    smoke
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.9791271Z Cancelled jobs: <none>
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.9791849Z Unexpected job results: <none>
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.9808575Z ##[error]Pipeline failed. Failing jobs: smoke
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.9820810Z ##[error]Process completed with exit code 1.
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:06.9976065Z Post job cleanup.
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.0833171Z [command]/usr/bin/git version
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.0876879Z git version 2.55.0
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.0921647Z Temporarily overriding HOME='/home/runner/work/_temp/63ddd9c1-75e7-4d63-900d-09f9844be3b5' before making global git config changes
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.0923700Z Adding repository directory to the temporary git global config as a safe directory
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.0927943Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/browser-commander/browser-commander
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.0961978Z Removing SSH command configuration
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.0969464Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.1007945Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.1253262Z Removing HTTP extra header
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.1261294Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.1302064Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.1599241Z Removing includeIf entries pointing to credentials config files
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.1618779Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.1708841Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Pipeline Status	UNKNOWN STEP	2026-10-06T20:24:07.2055384Z Cleaning up orphan processes

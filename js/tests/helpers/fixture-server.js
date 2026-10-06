@@ -32,6 +32,23 @@ export function sendNotFound(res) {
 }
 
 /**
+ * Close an HTTP server without waiting for the browser's idle connections.
+ *
+ * Browsers open speculative connections they may never send a request on.
+ * Node 24's http.Server#close() waits for those until the client drops them,
+ * which stalled the Safari smoke cleanup for ~30s (issue #128), so stop
+ * listening first and then drop every connection that is left.
+ *
+ * @param {import('node:http').Server} server - Listening server
+ * @returns {Promise<void>} Resolves once the server is closed
+ */
+export function closeServer(server) {
+  const closed = new Promise((resolve) => server.close(() => resolve()));
+  server.closeAllConnections();
+  return closed;
+}
+
+/**
  * Start a fixture server on an ephemeral port.
  *
  * @param {Function} handle - Request handler, called with (path, req, res)
@@ -50,7 +67,7 @@ export async function startFixtureHost(handle, onClose) {
     baseUrl: `http://127.0.0.1:${port}`,
     close: async () => {
       await onClose?.();
-      await new Promise((resolve) => server.close(resolve));
+      await closeServer(server);
     },
   };
 }

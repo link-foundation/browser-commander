@@ -1,0 +1,13 @@
+$ zizmor 1.30.1 --config .github/zizmor.yml --min-confidence low .github/workflows
+help[artipacked]: credential persistence through GitHub Actions artifacts
+  --> .github/workflows/parity.yml:70:9
+help[artipacked]: credential persistence through GitHub Actions artifacts
+   --> .github/workflows/parity.yml:209:9
+help[artipacked]: credential persistence through GitHub Actions artifacts
+   --> .github/workflows/parity.yml:292:9
+help[artipacked]: credential persistence through GitHub Actions artifacts
+   --> .github/workflows/parity.yml:330:9
+50 findings (46 suppressed, 4 unsafe fixes): 0 informational, 4 low, 0 medium, 0 high
+$ zizmor 1.30.1 --persona pedantic --min-severity high --min-confidence high
+No findings to report. Good job! (39 ignored, 11 suppressed)
+(the 4 remaining artipacked findings are parity.yml, fixed together with the e2e suites)

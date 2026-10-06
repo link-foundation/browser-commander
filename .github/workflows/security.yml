@@ -35,7 +35,7 @@ env:
 jobs:
   codeql:
     name: CodeQL (${{ matrix.language }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-codeql-${{ matrix.language }}
@@ -70,7 +70,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-dependency-review
@@ -121,7 +121,7 @@ jobs:
 
   npm-audit:
     name: Audit npm lock
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:
@@ -146,7 +146,7 @@ jobs:
 
   cargo-audit:
     name: Cargo audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
@@ -164,11 +164,11 @@ jobs:
           tool: cargo-audit@0.22.2
 
       - name: Audit committed Cargo.lock
-        run: cargo audit --file Cargo.lock
+        run: cargo audit --file Cargo.lock --deny warnings
 
   python-audit:
     name: Audit Python dependencies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
@@ -195,11 +195,11 @@ jobs:
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
   # cancelled rather than failed, and a run whose only casualty is a cancelled
-  # job carries the conclusion `cancelled` as well, so on the default branch the
-  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  # job carries the conclusion `cancelled` as well, so the failure would pass
+  # unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
@@ -229,6 +229,6 @@ jobs:
       - name: Fail the run when a required job was cancelled or failed
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
-          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          RUN_SHA: ${{ github.sha }}
+          RUN_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: bash scripts/check-pipeline-status.sh

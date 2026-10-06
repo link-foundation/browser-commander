@@ -222,7 +222,7 @@ async function main() {
   try {
     // Configure git
     await $`git config user.name "github-actions[bot]"`;
-    await $`git config user.email "github-actions[bot]@users.noreply.github.com"`;
+    await $`git config user.email "41898282+github-actions[bot]@users.noreply.github.com"`;
 
     const current = getCurrentVersion();
     const currentVersionStr = `${current.major}.${current.minor}.${current.patch}`;

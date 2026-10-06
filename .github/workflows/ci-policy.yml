@@ -27,13 +27,15 @@ env:
 jobs:
   check:
     name: Check CI Workflow Policy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-check
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -49,7 +51,7 @@ jobs:
   # and 39 zizmor findings accumulated unnoticed.
   actionlint:
     name: actionlint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-actionlint
@@ -64,13 +66,13 @@ jobs:
       # PATH silently skips the shell checks and exits 0 - worth knowing when
       # reproducing a failure locally:
       #   docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
-      - uses: docker://rhysd/actionlint:1.7.12
+      - uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
         with:
           args: -color
 
   zizmor:
     name: zizmor
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-zizmor
@@ -94,24 +96,48 @@ jobs:
       # `dev/log/issues/81/pulls/82/analysis/root-causes.md` (RC-10).
       #
       # Reproduce this job locally with:
-      #   zizmor --config .github/zizmor.yml --min-confidence medium .github/workflows
-      - uses: zizmorcore/zizmor-action@v0.6.2
+      #   pipx run zizmor==1.30.1 --config .github/zizmor.yml \
+      #     --min-confidence low .github/workflows
+      - uses: zizmorcore/zizmor-action@v0.6.4
         with:
           advanced-security: false
           annotations: true
           config: .github/zizmor.yml
           inputs: .github/workflows
-          min-confidence: medium
+          # Low, not medium: artipacked and template-injection report at low
+          # confidence, so the medium floor this job used to run with hid 38
+          # checkouts that left the job token in .git/config and 10 step
+          # outputs expanded into shell text (issue #128). The checkout rule
+          # in scripts/check-ci-workflows.mjs pins the first in-repo as well.
+          min-confidence: low
+          # Named rather than left at `latest`, which is not the newest zizmor
+          # but an entry in each action release's own digest table (v0.6.2 ->
+          # 1.29.0, v0.6.4 -> 1.30.1). Naming it keeps this run and the pipx
+          # run below on one analyser and makes a bump a visible diff line.
+          # The action refuses versions missing from its table ("Unknown
+          # version"), so bump the action first.
+          version: 1.30.1
+
+      # unpinned-images is a pedantic-only audit, so the run above does not
+      # apply the `'*': hash-pin` policy to `docker://` and `container:`
+      # images. High severity and high confidence keep that one rule without
+      # the stylistic findings the pedantic persona adds.
+      - name: Audit for pedantic-only high-severity findings
+        timeout-minutes: 5
+        run: |
+          pipx run zizmor==1.30.1 --config .github/zizmor.yml \
+            --persona pedantic --min-severity high --min-confidence high \
+            .github/workflows
 
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
   # cancelled rather than failed, and a run whose only casualty is a cancelled
-  # job carries the conclusion `cancelled` as well, so on the default branch the
-  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  # job carries the conclusion `cancelled` as well, so the failure would pass
+  # unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
@@ -139,6 +165,6 @@ jobs:
       - name: Fail the run when a required job was cancelled or failed
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
-          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          RUN_SHA: ${{ github.sha }}
+          RUN_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: bash scripts/check-pipeline-status.sh

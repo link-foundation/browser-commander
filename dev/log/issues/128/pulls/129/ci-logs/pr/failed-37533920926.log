@@ -1,0 +1,128 @@
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	﻿2026-10-06T21:33:36.4374932Z ##[group]Run bash ../scripts/run-with-budget-warning.sh 300 "Rust launch and connect smokes" \
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4376368Z ^[[36;1mbash ../scripts/run-with-budget-warning.sh 300 "Rust launch and connect smokes" \^[[0m
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4377962Z ^[[36;1m  xvfb-run -a --server-args="-screen 0 1920x1080x24" cargo test --locked --test launch_smoke --test connect_smoke --test real_browser_smoke -- --ignored --nocapture^[[0m
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4442084Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4442433Z env:
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4442625Z   GIT_CONFIG_COUNT: 1
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4442874Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4443151Z   GIT_CONFIG_VALUE_0: main
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4443400Z   CHROME_PATH: /usr/bin/google-chrome
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4443748Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4444188Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4444617Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4445050Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4445438Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4446051Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4446404Z   CARGO_HOME: /home/runner/.cargo
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4446656Z   CARGO_INCREMENTAL: 0
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4446873Z   CARGO_TERM_COLOR: always
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4447116Z   WEBDRIVER_PATH: /usr/bin/chromedriver
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4447421Z   WEBDRIVER_BROWSER_PATH: /usr/bin/google-chrome
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4447707Z ##[endgroup]
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:36.4648417Z Running Rust launch and connect smokes with a 300s budget (warning at 210s).
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:37.6029738Z ^[[1m^[[92m   Compiling^[[0m browser-commander v0.18.0 (/home/runner/work/browser-commander/browser-commander/rust)
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:38.6372456Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized + debuginfo] target(s) in 2.09s
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:38.6374448Z ^[[1m^[[92m     Running^[[0m tests/connect_smoke.rs (target/debug/deps/connect_smoke-17b2f02196992704)
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:38.6375137Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:38.6375313Z running 1 test
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:40.9812960Z test attach_all_cdp_engines_to_system_chrome ... ok
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:40.9997193Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:41.0223781Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.38s
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:41.0377103Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:41.0473224Z ^[[1m^[[92m     Running^[[0m tests/launch_smoke.rs (target/debug/deps/launch_smoke-5dd00cb5ef3e290f)
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:41.0597278Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:41.0759862Z running 4 tests
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:42.0258743Z test engine_launch_uses_a_temporary_profile_and_close_removes_it ... ok
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:42.0260363Z test real_launch_is_the_default_and_close_removes_the_profile ... ok
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:42.0261196Z test a_given_profile_is_kept ... ok
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1567843Z test node_engines_launch_in_both_modes ... ok
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1592017Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1614826Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.67s
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1616524Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1618196Z ^[[1m^[[92m     Running^[[0m tests/real_browser_smoke.rs (target/debug/deps/real_browser_smoke-6270c8b1fb648760)
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1619208Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1619541Z running 2 tests
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1621443Z [12947:12985:1006/213344.761904:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1624389Z [12947:12985:1006/213344.762488:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1628284Z [12947:12985:1006/213344.780411:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1637971Z [12947:12985:1006/213344.826664:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1639308Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1640157Z DevTools listening on ws://127.0.0.1:40843/devtools/browser/6feb4e28-546f-4fa6-b155-aaf7b9127b41
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1642235Z [12947:12947:1006/213344.979257:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1644913Z [12947:12947:1006/213344.979322:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1648123Z [12947:12985:1006/213344.979335:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1650738Z [12947:12985:1006/213344.979346:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1653368Z [12947:12947:1006/213344.979612:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1656159Z [12947:12947:1006/213344.986006:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1658893Z [12947:12985:1006/213344.986130:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1661569Z [12947:12947:1006/213345.017317:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1664125Z [12947:12947:1006/213345.017533:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1666976Z [12947:12985:1006/213345.022220:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1670215Z [12947:12947:1006/213345.034625:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1673090Z [12947:12947:1006/213345.075211:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1677745Z [12947:12947:1006/213345.075274:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.Properties.GetAll: object_path= /org/freedesktop/UPower/devices/DisplayDevice: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.UPower was not provided by any .service files
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1681686Z [12947:12985:1006/213345.075496:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1684453Z [12947:12947:1006/213345.107615:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1687944Z [12947:12985:1006/213345.109374:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:45.1690808Z [12947:12947:1006/213345.137932:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1661893Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1663384Z thread 'headful_launch_keeps_navigator_webdriver_false' (12944) panicked at tests/real_browser_smoke.rs:81:5:
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1664619Z assertion `left == right` failed
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1666005Z   left: ["--user-data-dir=/tmp/browser-commander-profile-12943-18dc0e4120dc8682-1", "--remote-debugging-port=40841", "about:blank"]
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1667647Z  right: ["--user-data-dir=/tmp/browser-commander-profile-12943-18dc0e4120dc8682-1", "--remote-debugging-port=40841"]
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1668501Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1669094Z test headful_launch_keeps_navigator_webdriver_false ... FAILED
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1669579Z test launch_system_chrome_and_attach ... ok
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1669792Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1669887Z failures:
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1670006Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1670090Z failures:
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1670397Z     headful_launch_keeps_navigator_webdriver_false
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1670632Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1671042Z test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.99s
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1671440Z 
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1672017Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test real_browser_smoke`
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1700210Z Rust launch and connect smokes finished in 10s of its 300s budget (exit 101).
+Native snapshots (real Chrome)	Launch and attach Rust engines to the installed Chrome	2026-10-06T21:33:46.1728411Z ##[error]Process completed with exit code 101.
+Pipeline Status	Fail the run when a required job was cancelled or failed	﻿2026-10-06T21:38:51.2182231Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2182805Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2481354Z shell: /usr/bin/bash -e {0}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2481782Z env:
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2482030Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2482316Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2482643Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2482941Z   CHROME_PATH: /usr/bin/google-chrome
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2484343Z   NEEDS_JSON: {
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "parity": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "cli": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "storage-state": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "snapshots": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "failure",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "engine-suites": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "fixture-suites": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+Pipeline Status	Fail the run when a required job was cancelled or failed	}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2485765Z   RUN_SHA: a3be93bdc80354a9099252e59963d4be05ac40dc
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2486107Z   BRANCH_NAME: issue-128-ae7261d9fb8b
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.2486542Z ##[endgroup]
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.3500953Z Failed jobs:    snapshots
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.3501659Z Cancelled jobs: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.3502118Z Unexpected job results: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.3519937Z ##[error]Pipeline failed. Failing jobs: snapshots
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T21:38:51.3532402Z ##[error]Process completed with exit code 1.

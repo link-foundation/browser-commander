@@ -26,7 +26,7 @@ Reproduction, on any branch:
 ```yaml
 jobs:
   demo:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - name: Slow suite
@@ -79,9 +79,24 @@ language subdirectory.
   command's own exit status through unchanged.
 
 Overrides: `BUDGET_WARN_PERCENT` (default 70), `BUDGET_GRACE_SECONDS`
-(default 10), `BUDGET_POLL_SECONDS` (default 1). On Windows runners Git Bash
-may not support process groups, so the wrapper falls back to signalling the
-direct child.
+(default 10), `BUDGET_POLL_SECONDS` (default 1, fractions allowed),
+`BUDGET_KILL_SECONDS`, `BUDGET_CAPTURE_OUTPUT`, `BUDGET_SUDO_KILL` and
+`BUDGET_STATE_PARENT` (default `RUNNER_TEMP`); the script header documents each.
+On Windows runners Git Bash may not support process groups, so the wrapper
+falls back to signalling the direct child.
+
+The wrapper is the link-foundation pipeline templates' version (issue #128):
+the command's output goes through files, so a child that survives the command
+cannot hold the caller's pipe open; group liveness is read from the process
+table, so zombies do not count as running; and processes that outlive even
+`SIGKILL` are listed by name.
+
+When the cause of an overrun is not visible in the log — the issue #128 Windows
+doc-test step printed nothing for its whole budget — re-run the job with
+**debug logging** enabled. GitHub then sets `RUNNER_DEBUG=1`, and the wrapper
+traces its liveness and signalling decisions and lists what was still running
+at the moment the budget ran out. `BUDGET_VERBOSE=1` does the same without a
+re-run; both are off by default.
 
 ## The gate
 
@@ -118,17 +133,44 @@ of a budget is the same threshold the invariant enforces against the backstop.
 Budgets are set from measured step durations taken from recent successful runs,
 with at least a fivefold margin, and always below 70% of the job's backstop.
 
-| Workflow     | Job          | Backstop | Step                        | Budget | Measured |
-| ------------ | ------------ | -------- | --------------------------- | ------ | -------- |
-| `js.yml`     | `test`       | 20 min   | Node.js test suite          | 300s   | 1–5s     |
-| `python.yml` | `test`       | 20 min   | pytest suite                | 300s   | 5–10s    |
-| `rust.yml`   | `test`       | 20 min   | Rust test suite             | 480s   | 23–86s   |
-| `rust.yml`   | `test`       | 20 min   | Rust doc tests              | 180s   | 6–11s    |
-| `rust.yml`   | `coverage`   | 15 min   | Rust code coverage          | 480s   | 10s      |
-| `docs.yml`   | `build-docs` | 15 min   | Rust API docs               | 480s   | 58s      |
-| `parity.yml` | `parity`     | 40 min   | Fingerprint parity suite    | 1200s  | 26s      |
-| `parity.yml` | `parity`     | 40 min   | WebDriver suite             | 300s   | 44s      |
-| `parity.yml` | `cli`        | 15 min   | CLI and API coverage suites | 300s   | 30s      |
+| Workflow     | Job              | Backstop | Step                                 | Budget | Measured         |
+| ------------ | ---------------- | -------- | ------------------------------------ | ------ | ---------------- |
+| `js.yml`     | `test`           | 20 min   | Node.js test suite                   | 300s   | 1–5s             |
+| `python.yml` | `test`           | 20 min   | pytest suite                         | 300s   | 5–10s            |
+| `rust.yml`   | `test`           | 20 min   | Rust test suite                      | 480s   | 23–86s           |
+| `rust.yml`   | `coverage`       | 15 min   | Rust code coverage                   | 480s   | 10s              |
+| `docs.yml`   | `build-docs`     | 15 min   | Rust API docs                        | 480s   | 58s              |
+| `parity.yml` | `parity`         | 40 min   | Fingerprint parity suite             | 1200s  | 26s              |
+| `parity.yml` | `parity`         | 40 min   | WebDriver suite                      | 300s   | 44s              |
+| `parity.yml` | `cli`            | 40 min   | CLI and API coverage suites          | 300s   | 30s              |
+| `parity.yml` | `snapshots`      | 30 min   | Rust native snapshots and parity     | 600s   | —                |
+| `parity.yml` | `snapshots`      | 30 min   | Python native snapshot launches      | 180s   | —                |
+| `parity.yml` | `snapshots`      | 30 min   | Python headful real-browser launches | 180s   | 22s (local)      |
+| `parity.yml` | `snapshots`      | 30 min   | Rust launch and connect smokes       | 300s   | not run locally  |
+| `parity.yml` | `engine-suites`  | 30 min   | Engine lifecycle suites              | 1200s  | 150–231s (local) |
+| `parity.yml` | `fixture-suites` | 40 min   | React fixture suites                 | 1500s  | 297–299s (local) |
+
+`rust.yml` no longer has a separate doc-test step (issue #128): `cargo test
+--all-features` already runs the doc tests, and the repeat with the default
+feature set rebuilt the crate, cost ~77s per OS and once stalled silently on
+Windows until its 180s budget killed it. The Windows job still caches
+`rust/target`, unlike the Rust template: with it only one or two crates are
+recompiled and the suite takes 178–198s, while the restore costs 47–87s and a
+fresh save ~5 minutes of post-job time. A cold Windows build would take most
+of the 480s budget.
+
+The `snapshots`, `engine-suites` and `fixture-suites` rows marked _local_ came
+in with issue #128, which found real-browser suites that skip without
+`RUN_E2E` (or are `#[ignore]`d) and that no workflow ran, so CI stayed green
+whatever they did. Their measurements are from a local Linux run under
+`xvfb-run` and should be replaced by CI timings once the jobs have run. The
+Rust smokes could not be built locally (the container's 3 GB memory limit
+kills `rustc` on `chromiumoxide_cdp`), so their budget rests on the 600s the
+same job already allows for compiling and running the native snapshot tests.
+The `snapshots` backstop went from 20 to 30 minutes to fit the two new budgets.
+[`js/tests/unit/scripts/e2e-suite-coverage.test.js`](../js/tests/unit/scripts/e2e-suite-coverage.test.js)
+now fails when a suite is neither run by a workflow nor listed as manual-only
+with a reason.
 
 The `parity` backstop went from 30 to 40 minutes when the WebDriver suite joined
 the job (issue #104): the two budgets sum to 1500s, above the 1260s that 70% of
@@ -137,6 +179,57 @@ the job (issue #104): the two budgets sum to 1500s, above the 1260s that 70% of
 The `no-openssl` job in `rust.yml` is deliberately unwrapped: it runs in a
 `rust:slim-bookworm` container that has no `bash` on `PATH`, so GitHub falls
 back to `sh -e` there and the wrapper could not run.
+
+## Release preflight
+
+A timeout is not the only way a release fails late. Run 37509328334 built,
+tested and versioned the Python package on `main` and only then failed at
+"Publish to PyPI" with `invalid-publisher`: PyPI had no trusted publisher for
+this repository and workflow, and nothing before the publish step asked
+(issue #128). Principle 16 of the pipeline templates — "Prove You Can Publish
+Before You Build" — moves that question to the start of the run.
+
+[`scripts/preflight-credentials.sh`](../scripts/preflight-credentials.sh) runs
+in a `release-preflight` job (5-minute backstop, no build) in `python.yml`,
+`js.yml` and `rust.yml`, in parallel with lint and tests. `PREFLIGHT_REGISTRIES`
+picks the probe:
+
+| Workflow     | Registry | Probe                                                                                            |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------ |
+| `python.yml` | `pypi`   | exchanges the job's OIDC token at PyPI's `/_/oidc/mint-token`, as the publish action does        |
+| `js.yml`     | `npm`    | exchanges the job's OIDC token at npm's trusted-publishing token endpoint, as `npm publish` does |
+| `rust.yml`   | `crates` | sends `CARGO_TOKEN` to crates.io and checks crate ownership when the account is visible          |
+
+The exchanges publish nothing, but they are the credential step the real
+publish performs, so a passing probe means the publish will be accepted.
+crates.io has no dry-run write: its probe proves the token is live, not which
+scopes it carries.
+
+On a push to `main` or a manual release the job runs in **release** mode: a
+refused credential, or a run that verified nothing because every probe came
+back unknown (unreachable, rate-limited, unexpected status), fails the job, and
+the publishing jobs, which require `needs.release-preflight.result ==
+'success'`, never start. On pull requests it runs in **report** mode and only
+annotates, because a fork gets neither OIDC tokens nor secrets. Every failure
+is reported, not just the first, and no token is ever printed.
+
+### Registering the PyPI trusted publisher
+
+The PyPI probe stays red until a maintainer registers the publisher. Because
+the project is not on PyPI yet, that is a _pending_ publisher, created at
+<https://pypi.org/manage/account/publishing/> with:
+
+| Field             | Value               |
+| ----------------- | ------------------- |
+| PyPI project name | `browser-commander` |
+| Owner             | `link-foundation`   |
+| Repository name   | `browser-commander` |
+| Workflow name     | `python.yml`        |
+| Environment name  | _(leave empty)_     |
+
+When the preflight fails in release mode, its next step runs
+[`python/scripts/explain_pypi_failure.py`](../python/scripts/explain_pypi_failure.py),
+which prints the same values for the run that failed.
 
 ## Reference
 

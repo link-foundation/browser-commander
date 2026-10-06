@@ -1,0 +1,570 @@
+{
+  "run_id": 37509328352,
+  "jobs": [
+    {
+      "job_id": 112426058066,
+      "name": "Detect Changes",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:07Z",
+      "completed_at": "2026-10-06T18:11:15Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Detect changes",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426137762,
+      "name": "Lint and Format Check",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:25Z",
+      "completed_at": "2026-10-06T18:12:43Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Rust",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Cache cargo registry",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Check formatting",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Run Clippy",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Check file size limit",
+          "conclusion": "success"
+        },
+        {
+          "number": 16,
+          "name": "Post Cache cargo registry",
+          "conclusion": "success"
+        },
+        {
+          "number": 17,
+          "name": "Post Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 18,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 19,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426137880,
+      "name": "OpenSSL-free Build",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:11:23Z",
+      "completed_at": "2026-10-06T18:13:35Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Assert openssl-sys is absent from the default-feature graph",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Build with default features and no system TLS libraries",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426140446,
+      "name": "Changelog Fragment Check",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:11:16Z",
+      "completed_at": "2026-10-06T18:11:15Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112426804848,
+      "name": "Test (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:12:46Z",
+      "completed_at": "2026-10-06T18:15:56Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Rust",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Cache cargo registry",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Run doc tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Post Cache cargo registry",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112426804976,
+      "name": "Test (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-06T18:12:54Z",
+      "completed_at": "2026-10-06T18:19:44Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Rust",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Cache cargo registry",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Run doc tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 13,
+          "name": "Post Cache cargo registry",
+          "conclusion": "success"
+        },
+        {
+          "number": 14,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "job_id": 112426804985,
+      "name": "Test (windows-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-06T18:12:46Z",
+      "completed_at": "2026-10-06T18:21:47Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Simulate fresh merge with base branch (PR only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 4,
+          "name": "Setup Rust",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Cache cargo registry",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Run tests",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Run doc tests",
+          "conclusion": "failure"
+        },
+        {
+          "number": 13,
+          "name": "Post Cache cargo registry",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 14,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 15,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 16,
+          "start_column": null,
+          "end_line": 16,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "Process completed with exit code 124.",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 15,
+          "start_column": null,
+          "end_line": 15,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "Rust doc tests exceeded its execution budget",
+          "message": "Rust doc tests did not finish within its 180s budget and was terminated. Shorten the step or raise its budget (keeping it below the job's timeout-minutes backstop).",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 14,
+          "start_column": null,
+          "end_line": 14,
+          "end_column": null,
+          "annotation_level": "warning",
+          "title": "Rust doc tests is approaching its execution budget",
+          "message": "Rust doc tests has run for 126s of its 180s budget.",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112430833824,
+      "name": "Build Package",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:21:49Z",
+      "completed_at": "2026-10-06T18:21:48Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112430835515,
+      "name": "Code Coverage",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:21:49Z",
+      "completed_at": "2026-10-06T18:21:49Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112430835527,
+      "name": "Pipeline Status",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-06T18:21:52Z",
+      "completed_at": "2026-10-06T18:22:02Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Setup Node.js",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Fail the run when a required job was cancelled or failed",
+          "conclusion": "failure"
+        },
+        {
+          "number": 7,
+          "name": "Post Setup Node.js",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 8,
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 63,
+          "start_column": null,
+          "end_line": 63,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "Process completed with exit code 1.",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 62,
+          "start_column": null,
+          "end_line": 62,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "Pipeline failed. Failing jobs: test",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/link-foundation/browser-commander/blob/b24e4c55ebd94d4fe6ba849ad31a394f89ffa16c/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+          "raw_details": ""
+        }
+      ]
+    },
+    {
+      "job_id": 112430835829,
+      "name": "Manual Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:21:49Z",
+      "completed_at": "2026-10-06T18:21:49Z",
+      "steps": [],
+      "annotations": []
+    },
+    {
+      "job_id": 112430836889,
+      "name": "Auto Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-10-06T18:21:49Z",
+      "completed_at": "2026-10-06T18:21:49Z",
+      "steps": [],
+      "annotations": []
+    }
+  ]
+}

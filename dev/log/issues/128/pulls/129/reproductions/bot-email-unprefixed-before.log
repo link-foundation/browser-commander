@@ -1,0 +1,80 @@
+▶ github-actions[bot] commit attribution
+  ✖ configures the prefixed bot e-mail somewhere (14.606582ms)
+  ✖ never configures the unprefixed bot e-mail (9.868242ms)
+✖ github-actions[bot] commit attribution (27.486ms)
+ℹ tests 2
+ℹ suites 1
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 245.991314
+
+✖ failing tests:
+
+test at tests/unit/scripts/bot-commit-attribution.test.js:45:3
+✖ configures the prefixed bot e-mail somewhere (14.606582ms)
+  AssertionError [ERR_ASSERTION]: no file configures 41898282+github-actions[bot]@users.noreply.github.com
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/scripts/bot-commit-attribution.test.js:46:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at node:internal/test_runner/test:1903:71
+      at node:internal/per_context/primordials:505:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:479:3)
+      at node:internal/per_context/primordials:505:9
+      at Array.map (<anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/unit/scripts/bot-commit-attribution.test.js:54:3
+✖ never configures the unprefixed bot e-mail (9.868242ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   '.github/workflows/python.yml',
+  +   '.github/workflows/rust.yml',
+  +   'js/scripts/version-and-commit.mjs',
+  +   'python/scripts/version_and_commit.py',
+  +   'rust/scripts/version-and-commit.mjs',
+  +   'scripts/simulate-fresh-merge.sh'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/scripts/bot-commit-attribution.test.js:61:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '.github/workflows/python.yml', '.github/workflows/rust.yml', 'js/scripts/version-and-commit.mjs', 'python/scripts/version_and_commit.py', 'rust/scripts/version-and-commit.mjs', 'scripts/simulate-fresh-merge.sh' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+# Note added after the fix (2026-10-06). The failures above show only that the
+# legacy address was configured. They do not show that commits were
+# unattributed. The commits API attributes the legacy-address release commits
+# to the bot:
+#   $ gh api repos/link-foundation/browser-commander/commits/<sha> \
+#       -q '"\(.sha[0:7]) email=\(.commit.author.email) author=\(.author.login)"'
+#   9f8a552 email=github-actions[bot]@users.noreply.github.com author=github-actions[bot]
+#   cca988f email=github-actions[bot]@users.noreply.github.com author=github-actions[bot]
+#   fda33e7 email=github-actions[bot]@users.noreply.github.com author=github-actions[bot]
+#   d159aeb email=github-actions[bot]@users.noreply.github.com author=github-actions[bot]
+# The switch to 41898282+... is therefore alignment with the documented form
+# (actions/checkout README), not a fix for an observed failure.

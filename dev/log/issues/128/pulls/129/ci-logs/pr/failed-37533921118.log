@@ -1,0 +1,67 @@
+Safari (javascript)	Exercise JavaScript Safari commands	﻿2026-10-06T21:27:20.1426490Z ##[group]Run node scripts/run-tests.mjs tests/e2e/safari.e2e.test.js
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1427060Z ^[[36;1mnode scripts/run-tests.mjs tests/e2e/safari.e2e.test.js^[[0m
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1478010Z shell: /bin/bash -e {0}
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1478230Z env:
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1478400Z   GIT_CONFIG_COUNT: 1
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1478620Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1486530Z   GIT_CONFIG_VALUE_0: main
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1486760Z   RUN_SAFARI_E2E: true
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1486990Z   CARGO_BUILD_JOBS: 2
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1487160Z   CARGO_PROFILE_DEV_DEBUG: 0
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.1487340Z ##[endgroup]
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:20.5705400Z [Safari smoke] 2026-10-06T21:27:20.569Z launch seeded session
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:32.8970620Z [Safari smoke] 2026-10-06T21:27:32.880Z exercise page commands
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:43.3301790Z [Safari smoke] 2026-10-06T21:27:43.252Z exercise windows and tabs
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:46.5952320Z [Safari smoke] 2026-10-06T21:27:46.439Z close seeded session
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:46.6961640Z [Safari smoke] 2026-10-06T21:27:46.690Z launch fresh session
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:49.3064250Z [Safari smoke] 2026-10-06T21:27:49.280Z close fresh session
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:49.3799140Z [Safari smoke] 2026-10-06T21:27:49.376Z launch CLI session
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6174150Z [Safari smoke] 2026-10-06T21:27:50.604Z close CLI session
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6277250Z [Safari smoke] 2026-10-06T21:27:50.604Z destroy commander
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6344320Z [Safari smoke] 2026-10-06T21:27:50.604Z close remaining session and server
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6365650Z [Safari smoke] 2026-10-06T21:27:50.605Z cleanup complete
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6431630Z ✖ Safari drives a local page in an isolated automation session (30033.942917ms)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6439500Z ℹ tests 1
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6459660Z ℹ suites 0
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6463210Z ℹ pass 0
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6464050Z ℹ fail 1
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6465990Z ℹ cancelled 0
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6466530Z ℹ skipped 0
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6467030Z ℹ todo 0
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6467880Z ℹ duration_ms 30295.063292
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6468520Z 
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6581280Z ✖ failing tests:
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6607310Z 
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6701920Z test at tests/e2e/safari.e2e.test.js:13:1
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6705380Z ✖ Safari drives a local page in an isolated automation session (30033.942917ms)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6706400Z   Error: ECONNREFUSED connect ECONNREFUSED 127.0.0.1:49198
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6708300Z       at ClientRequest.<anonymous> (/Users/runner/work/browser-commander/browser-commander/js/node_modules/selenium-webdriver/http/index.js:293:15)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6709360Z       at ClientRequest.emit (node:events:514:28)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6710020Z       at emitErrorEvent (node:_http_client:114:11)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6710640Z       at Socket.socketErrorListener (node:_http_client:766:5)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6711590Z       at Socket.emit (node:events:514:28)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6713630Z       at emitErrorNT (node:internal/streams/destroy:170:8)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6715920Z       at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6726700Z       at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+Safari (javascript)	Exercise JavaScript Safari commands	2026-10-06T21:27:50.6748600Z ##[error]Process completed with exit code 1.
+Pipeline Status	Report failed or cancelled jobs	﻿2026-10-06T21:30:34.8911914Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.8912315Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9319064Z shell: /usr/bin/bash -e {0}
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9319333Z env:
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9319488Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9319656Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9319840Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9320065Z   NEEDS_JSON: {
+Pipeline Status	Report failed or cancelled jobs	  "smoke": {
+Pipeline Status	Report failed or cancelled jobs	    "result": "failure",
+Pipeline Status	Report failed or cancelled jobs	    "outputs": {}
+Pipeline Status	Report failed or cancelled jobs	  }
+Pipeline Status	Report failed or cancelled jobs	}
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9320340Z   RUN_SHA: a3be93bdc80354a9099252e59963d4be05ac40dc
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9320544Z   BRANCH_NAME: issue-128-ae7261d9fb8b
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:34.9320719Z ##[endgroup]
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:35.0063416Z Failed jobs:    smoke
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:35.0063988Z Cancelled jobs: <none>
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:35.0064330Z Unexpected job results: <none>
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:35.0076700Z ##[error]Pipeline failed. Failing jobs: smoke
+Pipeline Status	Report failed or cancelled jobs	2026-10-06T21:30:35.0085357Z ##[error]Process completed with exit code 1.

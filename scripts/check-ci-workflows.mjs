@@ -66,6 +66,32 @@ const DISALLOWED_PATTERNS = [
     replacement: 'codecov/codecov-action@v7',
   },
   {
+    // A moving label: ubuntu-latest becomes Ubuntu 26.04 from 2026-10-19
+    // (actions/runner-images#14748), and until then every job on it carries
+    // the migration warning. Matrix values and `matrix.os ==` conditions are
+    // caught too, so a condition cannot keep naming a label the matrix dropped.
+    pattern: /^[^#]*\bubuntu-latest\b/,
+    replacement: 'ubuntu-24.04',
+    reason:
+      'ubuntu-latest is a moving label that changes the OS under the job.',
+  },
+  {
+    // `npx -p pkg` fetches the newest release on every run, so a checker run
+    // that way changes its rules under a pull request that changed nothing.
+    // A package counts as pinned when its name is followed by @version.
+    pattern:
+      /^[^#]*\bnpx\b.*\s(?:-p|--package)[ =](?:@[^/\s]+\/)?[^@\s]+(?=\s|$)/,
+    replacement: 'npx -p <package>@<version>',
+    reason: 'an unpinned package is whatever version is newest when CI runs.',
+  },
+  {
+    // An unmaintained, unsound or yanked crate is reported as a warning, and
+    // cargo audit exits 0 on warnings unless told otherwise (issue #128).
+    pattern: /^[^#]*\bcargo audit\b(?!.*--deny warnings)/,
+    replacement: 'cargo audit --deny warnings',
+    reason: 'without it, advisory warnings are printed and the job passes.',
+  },
+  {
     pattern: /node-version:\s*['"]?20\.x['"]?/,
     replacement: "node-version: '24.x'",
   },
@@ -647,6 +673,57 @@ function checkJobConcurrency(filePath, block, jobName, start) {
 }
 
 /**
+ * actions/checkout writes the job token into .git/config unless told not to,
+ * where every later step - an install script, a workspace artifact upload -
+ * can read it. Only a job in the main-writer group pushes, so only such a job
+ * may keep the credential, and it has to say so. zizmor's artipacked audit
+ * reports the same thing at low confidence, which is below the floor the
+ * audit long ran with (issue #128).
+ *
+ * @param {string} filePath
+ * @param {string[]} block
+ * @param {string} jobName
+ * @param {number} start
+ * @returns {number}
+ */
+function checkCheckoutCredentials(filePath, block, jobName, start) {
+  const writer = block.some((line) =>
+    line.includes('group: main-writer-${{ github.repository }}-main')
+  );
+  let failures = 0;
+
+  for (const [offset, line] of block.entries()) {
+    if (!/^ {6}- uses: actions\/checkout@/.test(line)) {
+      continue;
+    }
+
+    const stepEnd = block.findIndex(
+      (next, index) => index > offset && /^ {0,6}\S/.test(next)
+    );
+    const step = block
+      .slice(offset, stepEnd === -1 ? block.length : stepEnd)
+      .join('\n');
+    const persists = /^ {10}persist-credentials:\s*true\s*$/m.test(step);
+    const drops = /^ {10}persist-credentials:\s*false\s*$/m.test(step);
+
+    if (drops || (persists && writer)) {
+      continue;
+    }
+
+    report(
+      filePath,
+      start + offset + 1,
+      persists
+        ? `Job ${jobName} keeps the checkout token in .git/config but is not a main-writer job; set persist-credentials: false.`
+        : `Checkout in job ${jobName} must set persist-credentials: false (or true in a main-writer job that pushes).`
+    );
+    failures++;
+  }
+
+  return failures;
+}
+
+/**
  * Every job needs a backstop, a concurrency group, and a condition that lets
  * cancellation propagate.
  *
@@ -673,6 +750,7 @@ function checkJobPolicies(filePath, lines, jobStarts) {
     }
 
     failures += checkJobConcurrency(filePath, block, jobName, start);
+    failures += checkCheckoutCredentials(filePath, block, jobName, start);
 
     const executableBlockText = block
       .filter((line) => !line.trimStart().startsWith('#'))
@@ -704,13 +782,13 @@ function checkJobPolicies(filePath, lines, jobStarts) {
 function checkDisallowedVersions(filePath, lines) {
   let failures = 0;
 
-  for (const { pattern, replacement } of DISALLOWED_PATTERNS) {
+  for (const { pattern, replacement, reason } of DISALLOWED_PATTERNS) {
     for (const [index, line] of lines.entries()) {
       if (pattern.test(line)) {
         report(
           filePath,
           index + 1,
-          `Use ${replacement}; older action/runtime versions reintroduce CI warnings.`
+          `Use ${replacement}; ${reason ?? 'older action/runtime versions reintroduce CI warnings.'}`
         );
         failures++;
       }

@@ -8,7 +8,7 @@ use browser_commander::{
     Environment,
 };
 use cbc::cipher::{block_padding::Pkcs7, BlockModeEncrypt, KeyIvInit};
-use pbkdf2::pbkdf2_hmac;
+use pbkdf2::pbkdf2_hmac_array;
 use rusqlite::{params, Connection};
 use sha1::Sha1;
 use sha2::{Digest, Sha256};
@@ -16,6 +16,8 @@ use sha2::{Digest, Sha256};
 const CHROME_EPOCH_OFFSET_SECONDS: i64 = 11_644_473_600;
 
 type Aes128CbcEncryptor = cbc::Encryptor<Aes128>;
+/// The IV Chrome uses for every AES-128-CBC (`v10`/`v11`) cookie value.
+const CHROME_CBC_IV: [u8; 16] = [0x20; 16];
 
 // The fixtures pass an empty environment: GitHub's Linux runners set
 // XDG_CONFIG_HOME, which would otherwise move Chrome's root out of the fixture home.
@@ -164,11 +166,13 @@ fn create_chromium_profile(home: &Path, host: &str) -> anyhow::Result<PathBuf> {
 }
 
 fn encrypt_linux_cookie(host: &str, value: &str) -> Vec<u8> {
-    let mut key = [0_u8; 16];
-    pbkdf2_hmac::<Sha1>(b"peanuts", b"saltysalt", 1, &mut key);
+    // Chrome's own scheme on Linux without a keyring: the "peanuts" password
+    // and this fixed IV are what the code under test must decrypt.
+    let key = pbkdf2_hmac_array::<Sha1, 16>(b"peanuts", b"saltysalt", 1);
     let mut plaintext = Sha256::digest(host.as_bytes()).to_vec();
     plaintext.extend_from_slice(value.as_bytes());
-    let encrypted = Aes128CbcEncryptor::new(&key.into(), &[0x20; 16].into())
+    let encrypted = Aes128CbcEncryptor::new_from_slices(&key, &CHROME_CBC_IV)
+        .expect("a 16-byte key and IV")
         .encrypt_padded_vec::<Pkcs7>(&plaintext);
     [b"v10".as_slice(), encrypted.as_slice()].concat()
 }

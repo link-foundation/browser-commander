@@ -1,0 +1,20 @@
+# scripts/check-pipeline-status.sh at 2617221, before the per-job cancel-in-progress port
+
+## 1. PR run, test job killed by timeout-minutes (reported as cancelled), nothing superseded it
+$ NEEDS_JSON={"test":{"result":"cancelled"}} IS_MAIN=false RUN_SHA=abc BRANCH_HEAD_SHA=abc bash scripts/check-pipeline-status.sh
+Failed jobs:    <none>
+Cancelled jobs: test
+Unexpected job results: <none>
+::warning::Cancelled jobs: test. This run is not the current head of its branch, or is not a push to the default branch, so the cancellation reads as a superseded run. A genuine overrun surfaces as a step budget failure instead (see docs/CI-TIMEOUT-BUDGETS.md).
+All required jobs succeeded or were legitimately skipped.
+exit=0  <- false negative: gate passes
+
+## 2. main push, release writer (cancel-in-progress: false, cannot be superseded) cancelled, newer commit on main
+$ NEEDS_JSON={"auto-release":{"result":"cancelled"}} IS_MAIN=true RUN_SHA=abc BRANCH_HEAD_SHA=def bash scripts/check-pipeline-status.sh
+Failed jobs:    <none>
+Cancelled jobs: auto-release
+Unexpected job results: <none>
+This run tests abc; main is at def.
+::warning::Cancelled jobs: auto-release. This run is not the current head of its branch, or is not a push to the default branch, so the cancellation reads as a superseded run. A genuine overrun surfaces as a step budget failure instead (see docs/CI-TIMEOUT-BUDGETS.md).
+All required jobs succeeded or were legitimately skipped.
+exit=0  <- false negative: a writer that queues instead of cancelling was excused as superseded

@@ -70,6 +70,9 @@ if (!releaseId || !version || !repository) {
   process.exit(1);
 }
 
+/** Start of the npm badge appended below, which marks a formatted body. */
+const NPM_BADGE_PREFIX = '[![npm version](';
+
 try {
   // Get current release body
   const result = await $`gh api repos/${repository}/releases/${releaseId}`.run({
@@ -79,8 +82,10 @@ try {
 
   const currentBody = releaseData.body || '';
 
-  // Skip if already formatted (has shields.io badge image)
-  if (currentBody.includes('img.shields.io')) {
+  // Skip if already formatted (has the npm badge this script appends). The
+  // badge's alt text marks it: matching the image host would also skip a
+  // body whose changelog text mentions that host.
+  if (currentBody.includes(NPM_BADGE_PREFIX)) {
     console.log('ℹ️ Release notes already formatted');
     process.exit(0);
   }
@@ -186,7 +191,7 @@ try {
 
   // Build formatted release notes
   const versionWithoutV = version.replace(/^v/, '');
-  const npmBadge = `[![npm version](https://img.shields.io/badge/npm-${versionWithoutV}-blue.svg)](https://www.npmjs.com/package/${PACKAGE_NAME}/v/${versionWithoutV})`;
+  const npmBadge = `${NPM_BADGE_PREFIX}https://img.shields.io/badge/npm-${versionWithoutV}-blue.svg)](https://www.npmjs.com/package/${PACKAGE_NAME}/v/${versionWithoutV})`;
 
   let formattedBody = `${cleanDescription}`;
 

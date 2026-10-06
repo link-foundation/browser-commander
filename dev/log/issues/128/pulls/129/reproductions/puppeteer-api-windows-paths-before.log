@@ -1,0 +1,32 @@
+▶ Puppeteer bindings (Rust and Python)
+  ✖ are read through virtual paths the TypeScript API can find on Windows (2.344357ms)
+✖ Puppeteer bindings (Rust and Python) (5.012699ms)
+ℹ tests 1
+ℹ suites 1
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 305.6345
+
+✖ failing tests:
+
+test at tests/unit/puppeteer-bindings-coverage.test.js:156:3
+✖ are read through virtual paths the TypeScript API can find on Windows (2.344357ms)
+  TypeError [Error]: extractor.virtualProjectPaths is not a function
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/puppeteer-bindings-coverage.test.js:161:29)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at node:internal/test_runner/test:1903:71
+      at node:internal/per_context/primordials:505:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:479:3)
+      at node:internal/per_context/primordials:505:9
+      at Array.map (<anonymous>)
+key written      : D:\a\browser-commander\browser-commander\tsconfig.json
+compiler asks for: D:/a/browser-commander/browser-commander/tsconfig.json
+fileExists       : false
+readFile         : undefined
+with "/" keys    : true

@@ -1,0 +1,75 @@
+# Issue #128: local runs of the end-to-end suites no workflow ran
+# Recorded 2026-10-06 on Linux 6.8 (container), Node 24, Python 3.14.7, pytest 9.1.1.
+# Every command was bounded with `timeout` (JS/Python) or run-with-budget-warning.sh.
+#
+# Browsers available: Google Chrome 153.0.8010.36 at /usr/bin/google-chrome; xvfb-run.
+# Not available: chromium, firefox, chromedriver, geckodriver (nothing installed with sudo).
+# Playwright 1.63.0 browsers in ~/.cache/ms-playwright: chromium-1243, chromium headless
+# shell, firefox-1543, webkit-2359. Puppeteer 25.12.0 has no browser of its own downloaded
+# (it wants Chrome 154.0.8037.57), so it is pointed at CHROME_PATH=/usr/bin/google-chrome,
+# which parity.yml already sets at workflow level.
+
+## Final run, mirroring the new parity.yml jobs exactly (machine otherwise idle)
+
+$ cd js && CHROME_PATH=/usr/bin/google-chrome bash ../scripts/run-with-budget-warning.sh 1200 "Engine lifecycle suites" \
+    bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/click-readiness.e2e.test.js tests/e2e/downloads.e2e.test.js tests/e2e/traces.e2e.test.js'
+Running Engine lifecycle suites with a 1200s budget (warning at 840s).
+Engine lifecycle suites finished in 150s of its 1200s budget (exit 0).
+# tests 50
+# pass 50
+# fail 0
+# (no "# SKIP" lines)
+
+$ (cd js/examples/react-test-app && npm ci --ignore-scripts && npm run build && npm run preview -- --port 3000 --strictPort &)
+$ cd js && CHROME_PATH=/usr/bin/google-chrome bash ../scripts/run-with-budget-warning.sh 1500 "React fixture suites" \
+    bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/playwright.e2e.test.js tests/e2e/puppeteer.e2e.test.js'
+Running React fixture suites with a 1500s budget (warning at 1050s).
+React fixture suites finished in 299s of its 1500s budget (exit 0).
+# tests 53
+# pass 53
+# fail 0
+# (no "# SKIP" lines)
+# Note: several goto/setContent tests in both suites take ~30s each (e.g. "should navigate
+# to test app" 31.6s, "should load HTML through commander.setContent" 31.2s); they pass,
+# but the stall is most of the suites' runtime and looks like a navigation wait that only
+# ends at a 30s timeout.
+
+## Earlier per-suite runs (RUN_E2E=true xvfb-run -a node scripts/run-tests.mjs --reporter tap <file>)
+
+js/tests/e2e/click-readiness.e2e.test.js   tests 11  pass 11  fail 0   102s
+js/tests/e2e/downloads.e2e.test.js         tests 19  pass 8   fail 2  cancelled 9   121s   <- while cargo was compiling
+    error: 'Timed out after 30000ms waiting for the DevTools endpoint on port 36601'
+js/tests/e2e/downloads.e2e.test.js         tests 19  pass 19  fail 0   13s    (re-run, machine idle)
+js/tests/e2e/traces.e2e.test.js            tests 20  pass 0   cancelled 20  63s  <- while cargo was compiling
+    error: 'Timed out after 30000ms waiting for the DevTools endpoint on port 42619'
+js/tests/e2e/traces.e2e.test.js            tests 20  pass 20  fail 0   113s   (re-run, machine idle)
+    => the first failures were CPU/memory contention from a parallel Rust build, not suite bugs.
+js/tests/e2e/playwright.e2e.test.js        tests 28  pass 28  fail 0   154s   (vite dev server)
+js/tests/e2e/playwright.e2e.test.js        tests 28  pass 28  fail 0   151s   (vite build + preview, as in CI)
+js/tests/e2e/puppeteer.e2e.test.js         tests 25  cancelled 25          1s     <- CHROME_PATH unset
+    Could not find Chrome (ver. 154.0.8037.57). This can occur if either ...
+js/tests/e2e/puppeteer.e2e.test.js         tests 25  pass 25  fail 0   146s   (CHROME_PATH=/usr/bin/google-chrome, preview)
+
+## Python (RUN_E2E=true CHROME_NO_SANDBOX=true xvfb-run -a python -m pytest <file> -v -rs)
+
+python/tests/e2e/test_portable_storage_state.py    2 passed in 11.39s
+python/tests/e2e/test_real_browser_webdriver.py    2 passed in 8.65s
+    => wired together as "Python headful real-browser launches", 180s budget.
+
+## Rust (cargo test --locked --test launch_smoke --test connect_smoke --test real_browser_smoke -- --ignored)
+
+NOT RUN LOCALLY. The dependency chromiumoxide_cdp v0.9.1 cannot be compiled in this container:
+rustc is SIGKILLed by the cgroup memory limit (memory.max = 3135373312 bytes, ~2.9 GiB).
+  attempt 1 (default dev profile, debuginfo=2):            SIGKILL
+  attempt 2 (CARGO_BUILD_JOBS=1):                           SIGKILL after 95s
+  attempt 3 (CARGO_BUILD_JOBS=1, CARGO_PROFILE_DEV_DEBUG=0): SIGKILL after 437s
+    error: could not compile `chromiumoxide_cdp` (lib)
+    process didn't exit successfully: `.../rustc --crate-name chromiumoxide_cdp ...` (signal: 9, SIGKILL: kill)
+No prebuilt libchromiumoxide_cdp rlib exists on the machine. The CI snapshots job already
+compiles the same crate for its native snapshot tests, so the three smokes run there
+(300s budget) are expected to build; whether they pass is verified only by CI.
+
+## Manual only
+
+js/tests/e2e/google-signin-probe.e2e.test.js  not run: drives Google's live sign-in page
+(third-party site, abuse detection from shared runner IPs); opt-in via RUN_GOOGLE_PROBE.

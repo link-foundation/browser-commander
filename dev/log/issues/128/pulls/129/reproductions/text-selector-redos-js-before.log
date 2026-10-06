@@ -1,0 +1,33 @@
+▶ selectors
+  ▶ normalizeSelector with Playwright text selectors
+    ✖ rejects a long unparseable selector in linear time (16339.206058ms)
+  ✖ normalizeSelector with Playwright text selectors (16342.82908ms)
+✖ selectors (16346.008887ms)
+ℹ tests 1
+ℹ suites 2
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16607.788756
+
+✖ failing tests:
+
+test at tests/unit/elements/selectors.test.js:253:5
+✖ rejects a long unparseable selector in linear time (16339.206058ms)
+  AssertionError [ERR_ASSERTION]: took 16333ms
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1791315637449/js/tests/unit/elements/selectors.test.js:266:14)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Promise.all (index 3)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async Promise.all (index 3)
+      at async Suite.run (node:internal/test_runner/test:1905:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

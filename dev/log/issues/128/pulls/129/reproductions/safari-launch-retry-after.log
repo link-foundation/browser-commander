@@ -1,0 +1,19 @@
+▶ Safari driver lifecycle
+  ✔ uses no disk profile or Chromium/BiDi capabilities and closes idempotently (112.529987ms)
+  ✔ cleans up the driver if Safari authorization fails (104.597875ms)
+✔ Safari driver lifecycle (221.318936ms)
+▶ Safari launch right after a previous session
+  ✔ starts a new driver when the first one fails with 'exit' (5.724325ms)
+  ✔ starts a new driver when the first one fails with 'refused' (5.074674ms)
+  ✔ gives up after three attempts and reports what the driver printed (4.51004ms)
+  ✔ adds the driver exit status to a refused session request (9.421059ms)
+  ✔ does not retry other browsers (124.841235ms)
+✔ Safari launch right after a previous session (152.107421ms)
+ℹ tests 7
+ℹ suites 2
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 698.264958

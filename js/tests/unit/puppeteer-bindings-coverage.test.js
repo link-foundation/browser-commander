@@ -7,7 +7,8 @@
  * extracts from puppeteer-core's `lib/types.d.ts`. These tests fail when:
  *
  * - the committed wrappers differ from what the generator writes;
- * - the committed manifest differs from the installed puppeteer-core;
+ * - the committed manifest differs from the installed puppeteer-core,
+ *   including its version (a mismatch fails rather than skips);
  * - a public method or getter declared in `lib/types.d.ts` (own or inherited)
  *   has no typed entry point in Rust or Python.
  */
@@ -131,12 +132,15 @@ describe('Puppeteer bindings (Rust and Python)', () => {
       t.skip('puppeteer-core is not installed');
       return;
     }
-    if (installed.version !== manifest.version) {
-      t.skip(
-        `puppeteer-core ${installed.version} is installed, the manifest is ${manifest.version}`
-      );
-      return;
-    }
+    // A version mismatch is exactly the drift this test exists to catch (issue
+    // #128: puppeteer-core was upgraded to 25.12.0 while the manifest stayed
+    // at 25.10.0, and a skip here hid it), so it fails instead of skipping.
+    assert.equal(
+      manifest.version,
+      installed.version,
+      `puppeteer-core ${installed.version} is installed, the manifest is ${manifest.version}; ` +
+        'run node scripts/generate-puppeteer-bindings.mjs --update-api'
+    );
     const fresh = {
       package: 'puppeteer-core',
       version: installed.version,
@@ -147,6 +151,23 @@ describe('Puppeteer bindings (Rust and Python)', () => {
       formatManifest(fresh),
       'run node scripts/generate-puppeteer-bindings.mjs --update-api'
     );
+  });
+
+  it('are read through virtual paths the TypeScript API can find on Windows', () => {
+    // TypeScript 7's virtual file system matches file names as exact keys, and
+    // the native compiler asks for them with forward slashes. Keys built with
+    // path.join on Windows (`D:\a\…\tsconfig.json`) were never found, so the
+    // project came back undefined (issue #128, run 37526767522).
+    const paths = extractor.virtualProjectPaths(
+      'D:\\a\\browser-commander\\browser-commander'
+    );
+    assert.deepEqual(paths, {
+      cwd: 'D:/a/browser-commander/browser-commander/experiments/puppeteer-api-virtual',
+      config:
+        'D:/a/browser-commander/browser-commander/experiments/puppeteer-api-virtual/tsconfig.json',
+      declaration:
+        'D:/a/browser-commander/browser-commander/experiments/puppeteer-api-virtual/types.d.ts',
+    });
   });
 
   it('give every declared Puppeteer method a typed entry point', () => {

@@ -1,0 +1,60 @@
+Lint Repository Scripts	Lint the scripts outside the js package	﻿2026-10-06T20:13:31.4405968Z ##[group]Run node js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:31.4406708Z ^[[36;1mnode js/node_modules/eslint/bin/eslint.js scripts experiments rust/scripts^[[0m
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:31.4474782Z shell: /usr/bin/bash -e {0}
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:31.4475071Z env:
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:31.4475272Z   GIT_CONFIG_COUNT: 1
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:31.4475520Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:31.4475821Z   GIT_CONFIG_VALUE_0: main
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:31.4476059Z ##[endgroup]
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.7867273Z 
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.7868416Z /home/runner/work/browser-commander/browser-commander/experiments/issue-128/server-close-preconnect.mjs
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.7906256Z ##[error]  19:30  error  Expected { after 'for-of'                                                                                                                                                                           curly
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.7915695Z ##[error]  22:43  error  Replace `·console.log(`used·socket·closed·after·${Date.now()·-·started}ms`)` with `⏎··console.log(`used·socket·closed·after·${Date.now()·-·started}ms`)⏎`                                           prettier/prettier
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.7919238Z ##[error]  23:41  error  Replace `·console.log(`preconnect·socket·closed·after·${Date.now()·-·started}ms`)` with `⏎··console.log(`preconnect·socket·closed·after·${Date.now()·-·started}ms`)⏎`                               prettier/prettier
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.7922166Z ##[error]  31:13  error  Replace ``node·${process.version}·mode=${mode}:·server·'close'·after·${Date.now()·-·started}ms`` with `⏎··`node·${process.version}·mode=${mode}:·server·'close'·after·${Date.now()·-·started}ms`⏎`  prettier/prettier
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.7923756Z 
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.8553186Z ✖ 4 problems (4 errors, 0 warnings)
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.8554042Z   4 errors and 0 warnings potentially fixable with the `--fix` option.
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.8554372Z 
+Lint Repository Scripts	Lint the scripts outside the js package	2026-10-06T20:13:33.8557902Z ##[error]Process completed with exit code 1.
+Pipeline Status	Fail the run when a required job was cancelled or failed	﻿2026-10-06T20:14:07.6941020Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.6941601Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7209501Z shell: /usr/bin/bash -e {0}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7209962Z env:
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7210283Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7210615Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7211001Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7212632Z   NEEDS_JSON: {
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "secrets-scan": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "version-check": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "file-line-limits": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "shared-fingerprint-assets": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "validate-docs": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "repo-scripts-lint": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "failure",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+Pipeline Status	Fail the run when a required job was cancelled or failed	}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7214374Z   IS_MAIN: false
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7214713Z   RUN_SHA: ba4c0cb0f81f87bd5d5579bf5f1c8d120fc6f088
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.7215187Z ##[endgroup]
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.8240325Z Failed jobs:    repo-scripts-lint
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.8240960Z Cancelled jobs: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.8241382Z Unexpected job results: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.8258174Z ##[error]Pipeline failed. Failing jobs: repo-scripts-lint
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T20:14:07.8269074Z ##[error]Process completed with exit code 1.

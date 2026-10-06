@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   describeModule,
+  isUseMReachable,
   loadCommandStream,
   loadLinoArguments,
   loadUse,
@@ -145,6 +146,25 @@ describe('use-module interop shim', () => {
     const module = await loadLinoArguments(use);
     assert.deepEqual(calls, ['lino-arguments']);
     assert.equal(typeof module.makeConfig, 'function');
+  });
+
+  it('reports use-m as unreachable on an error status or a failed fetch', async () => {
+    const requests = [];
+    assert.equal(
+      await isUseMReachable(async (url, init) => {
+        requests.push([url, init.method]);
+        return { ok: true };
+      }),
+      true
+    );
+    assert.deepEqual(requests, [[USE_M_URL, 'HEAD']]);
+    assert.equal(await isUseMReachable(async () => ({ ok: false })), false);
+    assert.equal(
+      await isUseMReachable(async () => {
+        throw new TypeError('fetch failed');
+      }),
+      false
+    );
   });
 
   it('points at the unpinned use-m entry point', () => {

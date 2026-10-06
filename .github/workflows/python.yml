@@ -45,7 +45,7 @@ jobs:
   # === DETECT CHANGES - determines which jobs should run ===
   detect-changes:
     name: Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-detect-changes
@@ -62,6 +62,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -80,7 +81,7 @@ jobs:
   # Docs-only PRs (./docs folder, markdown files) don't require changelog fragments
   changelog:
     name: Changelog Fragment Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-changelog
@@ -91,6 +92,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -135,7 +137,7 @@ jobs:
   # === LINT AND FORMAT CHECK ===
   lint:
     name: Lint and Format Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-lint
@@ -161,6 +163,7 @@ jobs:
         with:
           # Full history: simulate-fresh-merge.sh needs a merge base.
           fetch-depth: 0
+          persist-credentials: false
 
       # Lint the state that will exist after the merge, not the stale merge
       # preview GitHub built when the pull request was last synced.
@@ -228,16 +231,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-latest, windows-latest]
         python-version: ['3.13']
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             python-version: '3.9'
     steps:
       - uses: actions/checkout@v6
         with:
           # Full history: simulate-fresh-merge.sh needs a merge base.
           fetch-depth: 0
+          persist-credentials: false
 
       # Test the state that will exist after the merge. This is the check that
       # catches a semantic conflict: two pull requests that each pass alone but
@@ -279,7 +283,7 @@ jobs:
       # the coverage report silently stopped updating and nothing said so.
       - name: Upload coverage to Codecov
         if: >-
-          matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' &&
+          matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' &&
           env.CODECOV_TOKEN != ''
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
@@ -291,14 +295,14 @@ jobs:
 
       - name: Report skipped Codecov upload
         if: >-
-          matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' &&
+          matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' &&
           env.CODECOV_TOKEN == ''
         run: echo "::notice::Skipping Codecov upload because CODECOV_TOKEN is not configured"
 
   # === BUILD PACKAGE ===
   build:
     name: Build Package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-build
@@ -314,6 +318,8 @@ jobs:
       (needs.test.result == 'success' || needs.test.result == 'skipped')
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -337,10 +343,70 @@ jobs:
           name: python-dist
           path: python/dist/
 
+  # === RELEASE PREFLIGHT - prove PyPI will accept the publish (issue #128) ===
+  # Principle 16 of the link-foundation pipeline templates, "Prove You Can
+  # Publish Before You Build". Run 37509328334 built, tested and versioned on
+  # main and only then failed at "Publish to PyPI" with `invalid-publisher`:
+  # no trusted publisher was registered for this repository and workflow, and
+  # no pull request ever reached the publish step to say so. This job performs
+  # the first half of that publish -- exchanging the job's OIDC token for a
+  # PyPI upload token, which uploads nothing -- on every run. In release mode
+  # (push to main, manual release) a refusal fails the run and keeps both
+  # release jobs from starting; in report mode (pull requests -- a fork gets
+  # no OIDC token) it annotates without blocking, which is why the release
+  # jobs gate on `result == 'success'` rather than on the run being green.
+  # See scripts/preflight-credentials.sh and docs/CI-TIMEOUT-BUDGETS.md.
+  release-preflight:
+    name: Release Preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-release-preflight
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      # The PyPI probe exchanges this job's OIDC token for a short-lived
+      # upload token -- the same exchange the publish step performs. The
+      # claims PyPI matches (repository, workflow file) are this workflow's.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Probe the PyPI trusted publisher
+        id: preflight
+        env:
+          # Expressions have no ternary operator; this idiom is safe because
+          # both branch values are non-empty string literals.
+          PREFLIGHT_MODE: >-
+            ${{
+              (
+                (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+                github.event_name == 'workflow_dispatch'
+              ) && 'release' || 'report'
+            }}
+          PREFLIGHT_REGISTRIES: pypi
+        run: bash ../scripts/preflight-credentials.sh
+
+      # The same explanation the release jobs print after a failed publish,
+      # here before anything was built: which of PyPI's two registration forms
+      # applies and what to type into it.
+      - name: Explain a trusted-publishing failure
+        if: failure() && steps.preflight.outcome == 'failure'
+        env:
+          REPOSITORY: ${{ github.repository }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          python3 scripts/explain_pypi_failure.py \
+            --project "$(python3 scripts/read_manifest.py pyproject.toml --field name)" \
+            --repository "$REPOSITORY" \
+            --workflow "$(basename "${WORKFLOW_REF%%@*}")"
+
   # === AUTO RELEASE - triggers on push to main if version changed ===
   auto-release:
     name: Auto Release
-    needs: [lint, test, build]
+    needs: [lint, test, build, release-preflight]
     timeout-minutes: 30
     concurrency:
       group: main-writer-${{ github.repository }}-main
@@ -354,8 +420,9 @@ jobs:
       github.ref == 'refs/heads/main' &&
       needs.lint.result == 'success' &&
       needs.test.result == 'success' &&
-      needs.build.result == 'success'
-    runs-on: ubuntu-latest
+      needs.build.result == 'success' &&
+      needs.release-preflight.result == 'success'
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       id-token: write
@@ -363,6 +430,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          # The release pushes its version commit and tag with this token.
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -407,7 +476,7 @@ jobs:
           CURRENT_VERSION: ${{ steps.version_check.outputs.current_version }}
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           python scripts/collect_changelog.py --version "$CURRENT_VERSION"
           git add -A CHANGELOG.md changelog.d
           if git diff --cached --quiet; then
@@ -459,17 +528,18 @@ jobs:
       - name: Create GitHub Release
         if: steps.version_check.outputs.should_release == 'true'
         env:
+          CURRENT_VERSION: ${{ steps.version_check.outputs.current_version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python scripts/create_github_release.py \
-            --version "${{ steps.version_check.outputs.current_version }}" \
+            --version "$CURRENT_VERSION" \
             --repository "${{ github.repository }}" \
             --tag-prefix "python-v"
 
   # === MANUAL RELEASE - triggered via workflow_dispatch ===
   manual-release:
     name: Manual Release
-    needs: [lint, test, build]
+    needs: [lint, test, build, release-preflight]
     timeout-minutes: 30
     concurrency:
       group: main-writer-${{ github.repository }}-main
@@ -482,8 +552,9 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       needs.lint.result == 'success' &&
       needs.test.result == 'success' &&
-      needs.build.result == 'success'
-    runs-on: ubuntu-latest
+      needs.build.result == 'success' &&
+      needs.release-preflight.result == 'success'
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       id-token: write
@@ -492,6 +563,8 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          # The release pushes its version commit and tag with this token.
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -506,7 +579,7 @@ jobs:
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       # Changelog fragments are collected inside version_and_commit.py, after
       # the bump has computed the version. This step used to run beforehand as
@@ -565,10 +638,11 @@ jobs:
       - name: Create GitHub Release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python scripts/create_github_release.py \
-            --version "${{ steps.version.outputs.new_version }}" \
+            --version "$NEW_VERSION" \
             --repository "${{ github.repository }}" \
             --tag-prefix "python-v"
 
@@ -576,11 +650,11 @@ jobs:
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
   # cancelled rather than failed, and a run whose only casualty is a cancelled
-  # job carries the conclusion `cancelled` as well, so on the default branch the
-  # failure would pass unannounced. See scripts/check-pipeline-status.sh.
+  # job carries the conclusion `cancelled` as well, so the failure would pass
+  # unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status
@@ -591,6 +665,7 @@ jobs:
       - lint
       - test
       - build
+      - release-preflight
       - auto-release
       - manual-release
     # A status function is required here, or the gate would inherit the implicit
@@ -613,6 +688,6 @@ jobs:
         working-directory: .
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
-          IS_MAIN: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          RUN_SHA: ${{ github.sha }}
+          RUN_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: bash scripts/check-pipeline-status.sh

@@ -23,6 +23,8 @@ import {
 } from 'fs';
 import { join } from 'path';
 
+import { printUntrusted } from '../../scripts/github-actions-log.mjs';
+
 const PACKAGE_NAME = 'browser-commander';
 const CHANGESET_DIR = '.changeset';
 
@@ -254,7 +256,8 @@ function main() {
   }
 
   console.log('\nChangeset merge completed successfully');
-  console.log(`\nMerged changeset content:\n${mergedContent}`);
+  console.log('\nMerged changeset content:');
+  printUntrusted(mergedContent);
 }
 
 main();

@@ -6,7 +6,6 @@ across both Playwright and Selenium engines.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -147,6 +146,25 @@ def is_playwright_text_selector(selector: Any) -> bool:
     return ":has-text(" in selector or ":text-is(" in selector
 
 
+def _split_text_pseudo(selector: str, pseudo: str) -> tuple[str, str] | None:
+    """Split ``base:<pseudo>("text")`` into its base selector and text.
+
+    String operations rather than a regular expression: the former
+    ``r'^(.+?):has-text\\("(.+?)"\\)$'`` backtracked quadratically on long
+    selectors that do not match (issue #128). The base is everything before the
+    first ``:<pseudo>("``, as the lazy ``(.+?)`` made it; base and text must be
+    non-empty.
+    """
+    opening = f':{pseudo}("'
+    start = selector.find(opening, 1)
+    if start == -1 or not selector.endswith('")'):
+        return None
+    text = selector[start + len(opening) : -2]
+    if not text:
+        return None
+    return selector[:start], text
+
+
 def parse_playwright_text_selector(selector: str) -> dict | None:
     """Parse a Playwright text selector to extract base selector and text.
 
@@ -157,21 +175,11 @@ def parse_playwright_text_selector(selector: str) -> dict | None:
         Dictionary with base_selector, text, exact or None if not parseable
     """
     # Match patterns like 'a:has-text("text")' or 'button:text-is("exact text")'
-    has_text_match = re.match(r'^(.+?):has-text\("(.+?)"\)$', selector)
-    if has_text_match:
-        return {
-            "base_selector": has_text_match.group(1),
-            "text": has_text_match.group(2),
-            "exact": False,
-        }
-
-    text_is_match = re.match(r'^(.+?):text-is\("(.+?)"\)$', selector)
-    if text_is_match:
-        return {
-            "base_selector": text_is_match.group(1),
-            "text": text_is_match.group(2),
-            "exact": True,
-        }
+    for pseudo, exact in (("has-text", False), ("text-is", True)):
+        parts = _split_text_pseudo(selector, pseudo)
+        if parts:
+            base_selector, text = parts
+            return {"base_selector": base_selector, "text": text, "exact": exact}
 
     return None
 

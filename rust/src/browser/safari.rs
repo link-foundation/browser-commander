@@ -9,7 +9,7 @@ use super::{
 };
 use crate::core::engine::{EngineAdapter, EngineError, EngineType};
 use anyhow::Result;
-use std::{path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 pub fn is_safari_channel(channel: &str) -> bool {
     find_browser_source(channel).is_some_and(|source| source.family == "safari")
@@ -44,6 +44,54 @@ pub(crate) fn launch_error(error: anyhow::Error, browser: WebDriverBrowser) -> a
         .into()
     } else {
         error
+    }
+}
+
+/// safaridriver serves one Safari automation session at a time. Launched right
+/// after a previous session closed, CI saw a new driver exit with code 1 before
+/// it was ready, and a ready driver refuse the new-session request (issue
+/// #128). Both are start-up failures of a driver this process owns, so a Safari
+/// launch starts a fresh driver for them, a bounded number of times.
+const LAUNCH_ATTEMPTS: u32 = 3;
+const RETRY_DELAY: Duration = Duration::from_secs(1);
+
+/// Whether a failed launch is a driver start-up failure worth a fresh driver.
+pub(crate) fn is_transient_start_error(error: &anyhow::Error) -> bool {
+    if error.downcast_ref::<SafariSetupError>().is_some() {
+        return false;
+    }
+    let refused = error.chain().any(|cause| {
+        cause.downcast_ref::<std::io::Error>().is_some_and(|io| {
+            matches!(
+                io.kind(),
+                std::io::ErrorKind::ConnectionRefused | std::io::ErrorKind::ConnectionReset
+            )
+        })
+    });
+    let message = format!("{error:#}").to_lowercase();
+    refused
+        || message.contains("webdriver exited with")
+        || message.contains("connection refused")
+        || message.contains("connection reset")
+}
+
+async fn launch_webdriver_with_retry(options: WebDriverOptions) -> Result<ManagedWebDriver> {
+    let mut attempt = 1;
+    loop {
+        match launch_webdriver(options.clone()).await {
+            Ok(driver) => return Ok(driver),
+            Err(error) if attempt < LAUNCH_ATTEMPTS && is_transient_start_error(&error) => {
+                if crate::core::logger::is_verbose_enabled() {
+                    eprintln!(
+                        "[webdriver] Safari launch attempt {attempt} failed, retrying in {}ms: {error:#}",
+                        RETRY_DELAY.as_millis()
+                    );
+                }
+                attempt += 1;
+                tokio::time::sleep(RETRY_DELAY).await;
+            }
+            Err(error) => return Err(error),
+        }
     }
 }
 
@@ -113,7 +161,7 @@ pub(crate) async fn launch_safari_real_with_webdriver(
         .or_else(|| webdriver_options.driver_executable.clone())
         .unwrap_or_else(|| PathBuf::from(driver_path(browser)));
     let native = Arc::new(
-        launch_webdriver(WebDriverOptions {
+        launch_webdriver_with_retry(WebDriverOptions {
             browser,
             driver_executable: options
                 .executable_path
@@ -179,4 +227,33 @@ pub(crate) async fn launch_safari_real_with_webdriver(
         closer: native.clone(),
         webdriver: Some(native),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn driver_start_failures_are_transient() {
+        for error in [
+            anyhow::anyhow!("WebDriver exited with 1: "),
+            anyhow::Error::new(std::io::Error::from(std::io::ErrorKind::ConnectionRefused))
+                .context("webdriver did not respond"),
+            anyhow::anyhow!("tcp connect error: Connection refused (os error 61)"),
+        ] {
+            assert!(is_transient_start_error(&error), "{error:#}");
+        }
+    }
+
+    #[test]
+    fn setup_and_other_failures_are_not_retried() {
+        let setup = launch_error(
+            anyhow::anyhow!("You must enable the 'Allow Remote Automation' option"),
+            WebDriverBrowser::Safari,
+        );
+        assert!(!is_transient_start_error(&setup));
+        assert!(!is_transient_start_error(&anyhow::anyhow!(
+            "WebDriver launch timed out"
+        )));
+    }
 }

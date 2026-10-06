@@ -1,0 +1,8 @@
+# after: npm run check:duplication, passing tree
+jscpd: 272 clones, 0 new (the rest are accepted in .jscpd-baseline.json).
+exit=0
+
+# after: one new clone (src/core/zz-dup-probe.js = copy of dialog-manager.js), GITHUB_ACTIONS=true
+::error file=js/src/core/dialog-manager.js,line=21,endLine=206,title=New duplicated code::186 lines duplicate js/src/core/zz-dup-probe.js:21-206. Extract the shared code, or accept the clone with `npm run check:duplication:update`.
+jscpd: 273 clones, 1 new (the rest are accepted in .jscpd-baseline.json).
+exit=1

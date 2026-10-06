@@ -1,0 +1,42 @@
+# jscpd 5.4.0, before: 'jscpd . --baseline .jscpd-baseline.json --fail-on-new-clones' on a passing tree
+# 843 lines, 272 'Clone found' blocks, exit 0; first 40 lines:
+Using config from .jscpd.json
+Clone found (javascript)
+ - README.md:javascript [61:27 - 92:17] (15 lines, 123 tokens)
+   src/README.md:javascript [29:38 - 60:17]
+Clone found (javascript)
+ - README.md:javascript [237:12 - 242:54] (5 lines, 36 tokens)
+   examples/browser-commander-tests.example.js [11:36 - 18:10]
+Clone found (javascript)
+ - README.md:javascript [280:27 - 379:4] (42 lines, 255 tokens)
+   src/README.md:javascript [74:38 - 204:4]
+Clone found (javascript)
+ - README.md:javascript [678:70 - 716:17] (19 lines, 119 tokens)
+   src/README.md:javascript [376:1 - 426:17]
+Clone found (javascript)
+ - README.md:javascript [708:32 - 730:4] (13 lines, 50 tokens)
+   src/README.md:javascript [428:27 - 450:4]
+Clone found (javascript)
+ - README.md:javascript [896:16 - 973:6] (28 lines, 177 tokens)
+   src/README.md:javascript [477:40 - 548:6]
+Clone found (markdown)
+ - README.md:markdown [35:139 - 54:15] (20 lines, 77 tokens)
+   src/README.md:markdown [3:232 - 22:15]
+Clone found (markdown)
+ - README.md:markdown [270:1 - 336:3] (67 lines, 117 tokens)
+   src/README.md:markdown [64:1 - 130:3]
+Clone found (markdown)
+ - README.md:markdown [681:1 - 713:15] (33 lines, 30 tokens)
+   src/README.md:markdown [388:1 - 420:15]
+Clone found (markdown)
+ - README.md:markdown [902:67 - 964:3] (63 lines, 54 tokens)
+   src/README.md:markdown [481:97 - 543:3]
+Clone found (javascript)
+ - examples/pdf-generation.js [56:7 - 61:8] (6 lines, 36 tokens)
+   tests/unit/browser/pdf.test.js [28:9 - 33:10]
+Clone found (javascript)
+ - examples/pdf-generation.js [57:9 - 63:10] (7 lines, 33 tokens)
+   tests/unit/browser/pdf.test.js [29:11 - 35:13]
+Clone found (javascript)
+ - scripts/changeset-version.mjs [29:45 - 34:2] (6 lines, 35 tokens)
+   scripts/create-manual-changeset.mjs [82:44 - 87:2]

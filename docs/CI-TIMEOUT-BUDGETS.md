@@ -79,9 +79,24 @@ language subdirectory.
   command's own exit status through unchanged.
 
 Overrides: `BUDGET_WARN_PERCENT` (default 70), `BUDGET_GRACE_SECONDS`
-(default 10), `BUDGET_POLL_SECONDS` (default 1). On Windows runners Git Bash
-may not support process groups, so the wrapper falls back to signalling the
-direct child.
+(default 10), `BUDGET_POLL_SECONDS` (default 1, fractions allowed),
+`BUDGET_KILL_SECONDS`, `BUDGET_CAPTURE_OUTPUT`, `BUDGET_SUDO_KILL` and
+`BUDGET_STATE_PARENT` (default `RUNNER_TEMP`); the script header documents each.
+On Windows runners Git Bash may not support process groups, so the wrapper
+falls back to signalling the direct child.
+
+The wrapper is the link-foundation pipeline templates' version (issue #128):
+the command's output goes through files, so a child that survives the command
+cannot hold the caller's pipe open; group liveness is read from the process
+table, so zombies do not count as running; and processes that outlive even
+`SIGKILL` are listed by name.
+
+When the cause of an overrun is not visible in the log — the issue #128 Windows
+doc-test step printed nothing for its whole budget — re-run the job with
+**debug logging** enabled. GitHub then sets `RUNNER_DEBUG=1`, and the wrapper
+traces its liveness and signalling decisions and lists what was still running
+at the moment the budget ran out. `BUDGET_VERBOSE=1` does the same without a
+re-run; both are off by default.
 
 ## The gate
 

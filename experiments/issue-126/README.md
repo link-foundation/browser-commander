@@ -45,3 +45,9 @@ CI policy run 37502674201 requires hash-pinned third-party actions
 (policy job log line 148). JS run 37502674147 also requires exactly one new
 changeset (changeset job log lines 295–304). The Safari workflow now follows
 those policies, and both release notes are combined in one minor changeset.
+
+The next JavaScript macOS smoke (run 37503775488, commit a2c33ce) passed
+seeded cookies, interactions, evaluation, screenshots and windows/tabs, then
+failed at the fresh-session assertion: Selenium's named-cookie API raises
+`NoSuchCookieError` for absence (`ci-logs/safari-js-37503775488.log`, lines
+188–196). The isolation check now inspects the full cookie list instead.

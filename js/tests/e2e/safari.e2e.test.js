@@ -63,7 +63,12 @@ it(
       await session.close();
       session = await launchRealBrowser({ channel: 'safari' });
       await session.page.goto(url);
-      assert.equal(await session.driver.manage().getCookie('seed'), null);
+      assert.equal(
+        (await session.driver.manage().getCookies()).some(
+          (cookie) => cookie.name === 'seed'
+        ),
+        false
+      );
       await session.close();
       await cli.dispatch('session.launch', {
         browser: 'safari',

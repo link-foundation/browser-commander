@@ -198,7 +198,10 @@ describe('scripts/preflight-credentials.sh', { skip: !BASH_AVAILABLE }, () => {
         output,
         /::error::release-preflight: PyPI refused to mint an upload token \(422, invalid-publisher\)/
       );
-      assert.ok(output.includes(PENDING_PUBLISHER_URL), output);
+      // Compared whole: a substring check on a URL is what CodeQL's
+      // incomplete-url-substring-sanitization rule flags.
+      const registration = output.match(/Register one \(.*?\) at (\S+);/);
+      assert.equal(registration?.[1], PENDING_PUBLISHER_URL, output);
       assert.match(output, /explain_pypi_failure\.py/);
       assert.match(output, /refusing to release with 1 refused credential/);
       assertNoSecrets(output);

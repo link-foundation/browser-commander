@@ -153,8 +153,9 @@ describe('command-stream quotes interpolated values itself', () => {
   });
 
   itWithShell('keeps hand-added backslashes inside quotes', async ($) => {
-    const escaped = message.replace(/"/g, '\\"');
-    const result = await $({ mirror: false })`printf '%s' "${escaped}"`;
+    // What the removed code produced: `"` escaped, nothing else.
+    const handEscaped = 'a \\"quoted\\" $HOME `id` back\\slash';
+    const result = await $({ mirror: false })`printf '%s' "${handEscaped}"`;
     assert.notEqual(String(result.stdout), message);
   });
 

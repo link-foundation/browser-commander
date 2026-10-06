@@ -6,9 +6,15 @@ import { loadCommandStream } from '../../scripts/use-module.mjs';
 
 const { $ } = await loadCommandStream();
 
-for (const value of ['0.26.0', 'a "quoted" word', 'back\\slash $HOME `id`']) {
+// Each value with the escaping the old script applied: `"` only.
+const cases = [
+  ['0.26.0', '0.26.0'],
+  ['a "quoted" word', 'a \\"quoted\\" word'],
+  ['back\\slash $HOME `id`', 'back\\slash $HOME `id`'],
+];
+
+for (const [value, manual] of cases) {
   const bare = await $({ mirror: false })`printf '%s' ${value}`;
-  const manual = value.replace(/"/g, '\\"');
   const wrapped = await $({ mirror: false })`printf '%s' "${manual}"`;
   console.log(
     JSON.stringify({

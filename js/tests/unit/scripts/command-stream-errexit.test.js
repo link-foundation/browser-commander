@@ -29,19 +29,12 @@ import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
+  isUseMReachable,
   loadCommandStream,
   USE_M_URL,
 } from '../../../../scripts/use-module.mjs';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
-
-async function hasNetwork() {
-  try {
-    return (await fetch(USE_M_URL, { method: 'HEAD' })).ok;
-  } catch {
-    return false;
-  }
-}
 
 /**
  * Load command-stream, or a reason to skip.
@@ -56,7 +49,7 @@ async function load(t) {
     t.skip('use-m cannot import absolute paths on Windows');
     return null;
   }
-  if (!(await hasNetwork())) {
+  if (!(await isUseMReachable())) {
     t.skip(`${USE_M_URL} is unreachable, so use-m cannot be evaluated`);
     return null;
   }

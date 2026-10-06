@@ -16,17 +16,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  isUseMReachable,
   loadCommandStream,
   USE_M_URL,
 } from '../../../../scripts/use-module.mjs';
-
-async function hasNetwork() {
-  try {
-    return (await fetch(USE_M_URL, { method: 'HEAD' })).ok;
-  } catch {
-    return false;
-  }
-}
 
 describe('use-m loads command-stream on this Node version', () => {
   it('exposes a callable $ from command-stream', async (t) => {
@@ -38,7 +31,7 @@ describe('use-m loads command-stream on this Node version', () => {
       return t.skip('use-m cannot import absolute paths on Windows');
     }
 
-    if (!(await hasNetwork())) {
+    if (!(await isUseMReachable())) {
       return t.skip(
         `${USE_M_URL} is unreachable, so use-m cannot be evaluated`
       );

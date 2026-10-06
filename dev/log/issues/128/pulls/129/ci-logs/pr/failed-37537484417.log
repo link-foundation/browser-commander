@@ -1,0 +1,72 @@
+Lint and Format Check	Check code duplication	﻿2026-10-06T21:58:41.2701246Z ##[group]Run npm run check:duplication
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.2701602Z ^[[36;1mnpm run check:duplication^[[0m
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.2764213Z shell: /usr/bin/bash -e {0}
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.2764492Z env:
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.2764679Z   GIT_CONFIG_COUNT: 1
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.2764914Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.2765192Z   GIT_CONFIG_VALUE_0: main
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.2765422Z ##[endgroup]
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.3813743Z 
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.3814567Z > browser-commander@0.26.0 check:duplication
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.3815109Z > node scripts/check-duplication.mjs
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.3815329Z 
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.5708712Z ##[error]9 lines duplicate js/tests/unit/scripts/use-module-integration.test.js:21-29. Extract the shared code, or accept the clone with `npm run check:duplication:update`.
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.5717604Z jscpd: 272 clones, 1 new (the rest are accepted in .jscpd-baseline.json).
+Lint and Format Check	Check code duplication	2026-10-06T21:58:41.5819953Z ##[error]Process completed with exit code 1.
+Pipeline Status	Fail the run when a required job was cancelled or failed	﻿2026-10-06T22:00:02.9812470Z ##[group]Run bash scripts/check-pipeline-status.sh
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:02.9813375Z ^[[36;1mbash scripts/check-pipeline-status.sh^[[0m
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:02.9999236Z shell: /usr/bin/bash -e {0}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:02.9999688Z env:
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:02.9999954Z   GIT_CONFIG_COUNT: 1
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0000324Z   GIT_CONFIG_KEY_0: init.defaultBranch
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0000640Z   GIT_CONFIG_VALUE_0: main
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0002416Z   NEEDS_JSON: {
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "detect-changes": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "any-code-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "js-code-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "mjs-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "js-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "package-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "docs-changed": "true",
+Pipeline Status	Fail the run when a required job was cancelled or failed	      "workflow-changed": "true"
+Pipeline Status	Fail the run when a required job was cancelled or failed	    }
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "changeset-check": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "lint": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "failure",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "test": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "release-preflight": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "success",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "release": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "instant-release": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  },
+Pipeline Status	Fail the run when a required job was cancelled or failed	  "changeset-pr": {
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "result": "skipped",
+Pipeline Status	Fail the run when a required job was cancelled or failed	    "outputs": {}
+Pipeline Status	Fail the run when a required job was cancelled or failed	  }
+Pipeline Status	Fail the run when a required job was cancelled or failed	}
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0004663Z   RUN_SHA: 03f27be7ed4f8bc06d7fe1199864ce2869d9ee52
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0004990Z   BRANCH_NAME: issue-128-ae7261d9fb8b
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0005308Z ##[endgroup]
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0908095Z Failed jobs:    lint
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0908627Z Cancelled jobs: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0908945Z Unexpected job results: <none>
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0924340Z ##[error]Pipeline failed. Failing jobs: lint
+Pipeline Status	Fail the run when a required job was cancelled or failed	2026-10-06T22:00:03.0934300Z ##[error]Process completed with exit code 1.

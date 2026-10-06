@@ -100,6 +100,21 @@ export function resolveNamedExport(loaded, exportName, moduleName) {
 }
 
 /**
+ * Whether use-m's CDN answers. The network-dependent tests skip when it does
+ * not, so offline and sandboxed runs are not blocked.
+ *
+ * @param {typeof fetch} [fetchImpl] injection seam for tests
+ * @returns {Promise<boolean>}
+ */
+export async function isUseMReachable(fetchImpl = fetch) {
+  try {
+    return (await fetchImpl(USE_M_URL, { method: 'HEAD' })).ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Fetch and evaluate use-m, caching the result for the whole process.
  *
  * A non-2xx response is reported as an HTTP failure; eval-ing an error page as

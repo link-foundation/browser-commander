@@ -16,11 +16,17 @@ await new Promise((r) => used.once('data', r));
 // 2) a preconnected socket that never sends a byte
 const pre = connect(port, '127.0.0.1');
 await new Promise((r) => pre.once('connect', r));
-for (const s of [used, pre]) s.on('error', () => {});
+for (const s of [used, pre]) {
+  s.on('error', () => {});
+}
 const closed = (s) => new Promise((r) => s.once('close', () => r()));
 const started = Date.now();
-const usedClosed = closed(used).then(() => console.log(`used socket closed after ${Date.now() - started}ms`));
-const preClosed = closed(pre).then(() => console.log(`preconnect socket closed after ${Date.now() - started}ms`));
+const usedClosed = closed(used).then(() =>
+  console.log(`used socket closed after ${Date.now() - started}ms`)
+);
+const preClosed = closed(pre).then(() =>
+  console.log(`preconnect socket closed after ${Date.now() - started}ms`)
+);
 if (mode === 'closeAll') {
   server.close();
   server.closeAllConnections();
@@ -28,5 +34,7 @@ if (mode === 'closeAll') {
   server.close();
 }
 await new Promise((r) => server.once('close', r));
-console.log(`node ${process.version} mode=${mode}: server 'close' after ${Date.now() - started}ms`);
+console.log(
+  `node ${process.version} mode=${mode}: server 'close' after ${Date.now() - started}ms`
+);
 await Promise.all([usedClosed, preClosed]);

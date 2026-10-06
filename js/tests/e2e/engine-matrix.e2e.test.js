@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import { describe, it } from 'node:test';
 import { launchBrowser } from '../../src/browser/launcher.js';
 import { makeBrowserCommander } from '../../src/factory.js';
+import { closeServer } from '../helpers/fixture-server.js';
 import {
   CHROME_LAUNCH_OPTIONS,
   PARITY_CHROME,
@@ -50,7 +51,7 @@ describe('Common native engine API', { skip: !process.env.RUN_E2E }, () => {
         );
       } finally {
         await session?.close();
-        await new Promise((resolve) => server.close(resolve));
+        await closeServer(server);
       }
     }
   );

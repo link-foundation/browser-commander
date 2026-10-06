@@ -8,6 +8,7 @@ import {
   makeBrowserCommander,
 } from '../../src/index.js';
 import { createDispatcher } from '../../src/cli/dispatcher.js';
+import { closeServer } from '../helpers/fixture-server.js';
 
 it(
   'Safari drives a local page in an isolated automation session',
@@ -97,7 +98,7 @@ it(
       await commander?.destroy();
       phase('close remaining session and server');
       await session?.close();
-      await new Promise((resolve) => server.close(resolve));
+      await closeServer(server);
       phase('cleanup complete');
     }
   }

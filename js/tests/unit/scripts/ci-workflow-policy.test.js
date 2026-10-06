@@ -36,7 +36,7 @@ function workflow({ on = 'push', preamble = '', job = 'test', steps }) {
     '  GIT_CONFIG_KEY_0: init.defaultBranch',
     'jobs:',
     `  ${job}:`,
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     `      group: \${{ github.workflow }}-\${{ github.ref }}-${job}`,
@@ -48,7 +48,7 @@ function workflow({ on = 'push', preamble = '', job = 'test', steps }) {
     // results, so the scaffolding carries one; the gate's own tests are in
     // ci-timeout-budgets.test.js.
     '  pipeline-status:',
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     '      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status',
@@ -100,7 +100,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - run: npm install
@@ -161,6 +161,22 @@ jobs:
     });
 
     assert.equal(countFailures(content), 1);
+  });
+
+  it('rejects the moving ubuntu-latest label in runs-on and in a matrix', () => {
+    // ubuntu-latest moves to Ubuntu 26.04 from 2026-10-19
+    // (actions/runner-images#14748), and every job using it carried that
+    // migration warning in issue #128's runs.
+    const content = workflow({
+      preamble: '',
+      steps: [
+        '    strategy:',
+        '      matrix:',
+        '        os: [ubuntu-latest, windows-latest]',
+      ].join('\n'),
+    }).replace('    runs-on: ubuntu-24.04', '    runs-on: ubuntu-latest');
+
+    assert.equal(countFailures(content), 2);
   });
 
   it('accepts a base_ref bound to any environment variable name', () => {
@@ -229,7 +245,7 @@ jobs:
       steps: '      - run: npm ci --ignore-scripts',
     })}
   drifted:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: \${{ github.workflow }}-\${{ github.ref }}-drifted
@@ -286,7 +302,7 @@ function lintAndTest({ needs, condition = '' }) {
     '  GIT_CONFIG_KEY_0: init.defaultBranch',
     'jobs:',
     '  lint:',
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     '      group: ${{ github.workflow }}-${{ github.ref }}-lint',
@@ -294,7 +310,7 @@ function lintAndTest({ needs, condition = '' }) {
     '    steps:',
     '      - uses: actions/checkout@v6',
     '  test:',
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     '      group: ${{ github.workflow }}-${{ github.ref }}-test',
@@ -304,7 +320,7 @@ function lintAndTest({ needs, condition = '' }) {
     '    steps:',
     '      - uses: actions/checkout@v6',
     '  pipeline-status:',
-    '    runs-on: ubuntu-latest',
+    '    runs-on: ubuntu-24.04',
     '    timeout-minutes: 5',
     '    concurrency:',
     '      group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status',

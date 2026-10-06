@@ -27,7 +27,7 @@ env:
 jobs:
   check:
     name: Check CI Workflow Policy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-check
@@ -49,7 +49,7 @@ jobs:
   # and 39 zizmor findings accumulated unnoticed.
   actionlint:
     name: actionlint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-actionlint
@@ -70,7 +70,7 @@ jobs:
 
   zizmor:
     name: zizmor
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-zizmor
@@ -111,7 +111,7 @@ jobs:
   # failure would pass unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status

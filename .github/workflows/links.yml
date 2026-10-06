@@ -41,7 +41,7 @@ env:
 jobs:
   link-checker:
     name: Check Links
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Typical run: <1min with the lychee cache. 10min stops a slow external host
     # or a Wayback Machine probe from hanging the workflow.
     timeout-minutes: 10
@@ -118,7 +118,7 @@ jobs:
   # failure would pass unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status

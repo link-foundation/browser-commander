@@ -26,7 +26,7 @@ Reproduction, on any branch:
 ```yaml
 jobs:
   demo:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - name: Slow suite

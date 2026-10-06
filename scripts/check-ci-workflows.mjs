@@ -66,6 +66,16 @@ const DISALLOWED_PATTERNS = [
     replacement: 'codecov/codecov-action@v7',
   },
   {
+    // A moving label: ubuntu-latest becomes Ubuntu 26.04 from 2026-10-19
+    // (actions/runner-images#14748), and until then every job on it carries
+    // the migration warning. Matrix values and `matrix.os ==` conditions are
+    // caught too, so a condition cannot keep naming a label the matrix dropped.
+    pattern: /^[^#]*\bubuntu-latest\b/,
+    replacement: 'ubuntu-24.04',
+    reason:
+      'ubuntu-latest is a moving label that changes the OS under the job.',
+  },
+  {
     pattern: /node-version:\s*['"]?20\.x['"]?/,
     replacement: "node-version: '24.x'",
   },
@@ -704,13 +714,13 @@ function checkJobPolicies(filePath, lines, jobStarts) {
 function checkDisallowedVersions(filePath, lines) {
   let failures = 0;
 
-  for (const { pattern, replacement } of DISALLOWED_PATTERNS) {
+  for (const { pattern, replacement, reason } of DISALLOWED_PATTERNS) {
     for (const [index, line] of lines.entries()) {
       if (pattern.test(line)) {
         report(
           filePath,
           index + 1,
-          `Use ${replacement}; older action/runtime versions reintroduce CI warnings.`
+          `Use ${replacement}; ${reason ?? 'older action/runtime versions reintroduce CI warnings.'}`
         );
         failures++;
       }

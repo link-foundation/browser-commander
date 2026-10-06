@@ -35,7 +35,7 @@ env:
 jobs:
   codeql:
     name: CodeQL (${{ matrix.language }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-codeql-${{ matrix.language }}
@@ -70,7 +70,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-dependency-review
@@ -121,7 +121,7 @@ jobs:
 
   npm-audit:
     name: Audit npm lock
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:
@@ -146,7 +146,7 @@ jobs:
 
   cargo-audit:
     name: Cargo audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
@@ -168,7 +168,7 @@ jobs:
 
   python-audit:
     name: Audit Python dependencies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
@@ -199,7 +199,7 @@ jobs:
   # failure would pass unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status

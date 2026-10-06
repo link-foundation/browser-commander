@@ -58,7 +58,7 @@ env:
 jobs:
   parity:
     name: Fingerprint Parity (real Chrome)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-parity
@@ -197,7 +197,7 @@ jobs:
   # so its budget does not eat into the parity suite's.
   cli:
     name: CLI and bridge (real Chrome)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-cli
@@ -283,7 +283,7 @@ jobs:
   # cannot consume the CLI job's build and browser-test allowance.
   storage-state:
     name: Rust storage state (real Chrome)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-storage-state
@@ -321,7 +321,7 @@ jobs:
 
   snapshots:
     name: Native snapshots (real Chrome)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-snapshots
@@ -384,7 +384,7 @@ jobs:
   # failure would pass unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-pipeline-status

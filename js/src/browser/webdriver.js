@@ -28,6 +28,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import { createWebDriverPage } from '../core/webdriver-page.js';
+import { isVerboseEnabled } from '../core/logger.js';
 import {
   runCommand as defaultRunCommand,
   startProcess as defaultStartProcess,
@@ -484,6 +485,68 @@ async function teardown({
  * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, bidi: boolean}>}
  */
 export async function launchWebDriver(options = {}, dependencies = {}) {
+  if (!isSafariChannel(options.browser ?? 'chrome')) {
+    return await launchWebDriverOnce(options, dependencies);
+  }
+  const delay = dependencies.safariRetryDelay ?? SAFARI_RETRY_DELAY;
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await launchWebDriverOnce(options, dependencies);
+    } catch (error) {
+      if (
+        attempt >= SAFARI_LAUNCH_ATTEMPTS ||
+        !TRANSIENT_DRIVER_START_ERROR.test(error?.message ?? '')
+      ) {
+        throw error;
+      }
+      if (isVerboseEnabled()) {
+        console.warn(
+          `[webdriver] Safari launch attempt ${attempt} failed, retrying in ${delay}ms: ${error.message}`
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+
+/**
+ * safaridriver serves one Safari automation session at a time. Launched right
+ * after a previous session closed, CI saw a new driver exit with code 1 before
+ * it was ready, and a driver that was ready refuse the new-session request
+ * (issue #128). Both are start-up failures of a driver this process owns, so a
+ * Safari launch starts a fresh driver for them, a bounded number of times.
+ */
+const SAFARI_LAUNCH_ATTEMPTS = 3;
+const SAFARI_RETRY_DELAY = 1000;
+const TRANSIENT_DRIVER_START_ERROR =
+  /ECONNREFUSED|ECONNRESET|socket hang up|exited with code \d+ before it was ready/;
+
+/**
+ * Name the driver server behind a connection error from selenium, which only
+ * says which port refused: whether the server had exited, and its last output.
+ */
+function withDriverContext(error, { serverUrl, exitCode, output }) {
+  if (
+    !serverUrl ||
+    !/ECONNREFUSED|ECONNRESET|socket hang up/.test(error?.message ?? '')
+  ) {
+    return error;
+  }
+  const state =
+    exitCode === null || exitCode === undefined
+      ? 'was still running'
+      : `had exited with code ${exitCode}`;
+  const tail = output.trim();
+  return Object.assign(
+    new Error(
+      `${error.message} (WebDriver server at ${serverUrl} ${state}${tail ? `: ${tail}` : ''})`,
+      { cause: error }
+    ),
+    { code: error.code }
+  );
+}
+
+async function launchWebDriverOnce(options, dependencies) {
   const {
     browser = 'chrome',
     executablePath,
@@ -533,15 +596,16 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
 
   let driverProcess;
   let driver;
+  let serverUrl;
+  let output = '';
   try {
     const port = await reservePort();
-    const serverUrl = `http://${LOOPBACK_HOST}:${port}`;
+    serverUrl = `http://${LOOPBACK_HOST}:${port}`;
     driverProcess = startProcess(
       resolved.driverPath,
       buildDriverServerArgs(browser, port),
       { env: childEnv, forwardOutput: verbose }
     );
-    let output = '';
     for (const stream of [driverProcess.stdout, driverProcess.stderr]) {
       stream?.on('data', (chunk) => {
         output = `${output}${chunk}`.slice(-4000);
@@ -602,8 +666,10 @@ export async function launchWebDriver(options = {}, dependencies = {}) {
       bidi,
     };
   } catch (error) {
+    const exitCode = driverProcess?.exitCode;
     await teardown({ driver, driverProcess, temporaryProfile, userDataDir });
-    throw safari ? safariLaunchError(error, browser) : error;
+    const failure = withDriverContext(error, { serverUrl, exitCode, output });
+    throw safari ? safariLaunchError(failure, browser) : failure;
   }
 }
 

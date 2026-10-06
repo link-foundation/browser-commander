@@ -14,3 +14,10 @@ now rejected in linear time. CodeQL reported it as `js/polynomial-redos`.
 
 Failure artifact names are trimmed of leading and trailing dashes by index, so
 a test name with a long run of dashes no longer takes quadratic time.
+
+A Safari launch right after a previous Safari session closed starts a fresh
+`safaridriver`, up to three attempts, when the driver exits before it is ready
+or refuses the connection. safaridriver serves one automation session at a
+time, and CI saw both failures on back-to-back launches. A refused connection
+now also names the driver server and whether it had exited. Authorization
+errors are still reported at once. Set `VERBOSE=1` to log each retry.

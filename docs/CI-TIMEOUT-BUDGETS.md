@@ -198,12 +198,12 @@ picks the probe:
 | ------------ | -------- | ------------------------------------------------------------------------------------------------ |
 | `python.yml` | `pypi`   | exchanges the job's OIDC token at PyPI's `/_/oidc/mint-token`, as the publish action does        |
 | `js.yml`     | `npm`    | exchanges the job's OIDC token at npm's trusted-publishing token endpoint, as `npm publish` does |
-| `rust.yml`   | `crates` | sends `CARGO_TOKEN` to crates.io and checks crate ownership when the account is visible          |
+| `rust.yml`   | `crates` | exchanges the job's OIDC token at crates.io's trusted-publishing endpoint and revokes it         |
 
 The exchanges publish nothing, but they are the credential step the real
-publish performs, so a passing probe means the publish will be accepted.
-crates.io has no dry-run write: its probe proves the token is live, not which
-scopes it carries.
+publish performs, so a passing probe verifies the trusted-publisher mapping.
+Package validity and version availability are checked by the actual publish.
+Each Rust release job obtains its own fresh token immediately before publishing.
 
 On a push to `main` or a manual release the job runs in **release** mode: a
 refused credential, or a run that verified nothing because every probe came
@@ -230,6 +230,9 @@ the project is not on PyPI yet, that is a _pending_ publisher, created at
 When the preflight fails in release mode, its next step runs
 [`python/scripts/explain_pypi_failure.py`](../python/scripts/explain_pypi_failure.py),
 which prints the same values for the run that failed.
+
+The [publishing setup guide](PUBLISHING.md) covers the first PyPI release,
+crates.io trusted-publisher registration, and retiring the old Cargo secret.
 
 ## Reference
 

@@ -445,17 +445,10 @@ jobs:
         run: cargo package --list
 
   # === RELEASE PREFLIGHT - prove crates.io will accept the publish (issue #128) ===
-  # Principle 16 of the link-foundation pipeline templates, "Prove You Can
-  # Publish Before You Build". The release jobs only learn whether the
-  # CARGO_TOKEN secret still works at `cargo publish`, after the build, the
-  # test matrix and the version commit. This job asks crates.io about the
-  # token on every run: in release mode (push to main, manual release) a
-  # rejected token fails the run and keeps both release jobs from starting; in
-  # report mode (pull requests -- a fork gets no secrets) it annotates without
-  # blocking, which is why the release jobs gate on `result == 'success'`
-  # rather than on the run being green. crates.io has no dry-run write, so the
-  # probe proves the token is live, not which scopes it carries.
-  # See scripts/preflight-credentials.sh and docs/CI-TIMEOUT-BUDGETS.md.
+  # Prove the trusted publisher matches this workflow by exchanging OIDC for
+  # a temporary publish token, then revoking it without uploading anything.
+  # Release mode blocks a missing publisher; PR report mode is advisory since
+  # fork jobs cannot obtain OIDC credentials. See docs/PUBLISHING.md.
   release-preflight:
     name: Release Preflight
     runs-on: ubuntu-24.04
@@ -465,12 +458,13 @@ jobs:
       cancel-in-progress: true
     permissions:
       contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
-      - name: Probe the crates.io publish token
+      - name: Probe crates.io trusted publishing
         env:
           # Expressions have no ternary operator; this idiom is safe because
           # both branch values are non-empty string literals.
@@ -482,8 +476,6 @@ jobs:
               ) && 'release' || 'report'
             }}
           PREFLIGHT_REGISTRIES: crates
-          # The organization secret is named CARGO_TOKEN, as in the release jobs.
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
         run: bash ../scripts/preflight-credentials.sh
 
   # === AUTO RELEASE ===
@@ -507,6 +499,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -595,13 +588,19 @@ jobs:
         if: steps.check.outputs.should_release == 'true' && (steps.version.outputs.version_committed == 'true' || steps.check.outputs.skip_bump == 'true')
         run: cargo build --release
 
+      # Mint immediately before publishing so the temporary token's lifetime
+      # is spent on the upload rather than the release build. The action masks
+      # the token and revokes it in its post step.
+      - name: Authenticate with crates.io
+        id: crates_auth
+        if: steps.check.outputs.should_release == 'true' && (steps.version.outputs.version_committed == 'true' || steps.check.outputs.skip_bump == 'true')
+        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+
       - name: Publish to Crates.io
         if: steps.check.outputs.should_release == 'true' && (steps.version.outputs.version_committed == 'true' || steps.check.outputs.skip_bump == 'true')
         id: publish-crate
         env:
-          # Note: Organization secret is named CARGO_TOKEN, we map it to CARGO_REGISTRY_TOKEN
-          # which is the standard environment variable that Cargo uses for crates.io auth
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates_auth.outputs.token }}
         working-directory: .
         run: node rust/scripts/publish-crate.mjs
 
@@ -635,6 +634,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -681,13 +681,19 @@ jobs:
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         run: cargo build --release
 
+      # Mint immediately before publishing so the temporary token's lifetime
+      # is spent on the upload rather than the release build. The action masks
+      # the token and revokes it in its post step.
+      - name: Authenticate with crates.io
+        id: crates_auth
+        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
+        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+
       - name: Publish to Crates.io
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         id: publish-crate
         env:
-          # Note: Organization secret is named CARGO_TOKEN, we map it to CARGO_REGISTRY_TOKEN
-          # which is the standard environment variable that Cargo uses for crates.io auth
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates_auth.outputs.token }}
         working-directory: .
         run: node rust/scripts/publish-crate.mjs
 

@@ -141,6 +141,19 @@ export function resolveBrowserRoots(name, options = {}) {
   return resolveTemplates(templates, options);
 }
 
+/**
+ * Browser-owned paths forbidden as automation profiles. Import discovery may
+ * search broader locations; use explicit protection roots when declared.
+ */
+export function resolveBrowserProtectionRoots(name, options = {}) {
+  const source = normalizeBrowserSource(name);
+  const roots = source.protectionRoots ?? source.roots;
+  return resolveTemplates(
+    roots?.[options.platform ?? process.platform] ?? [],
+    options
+  );
+}
+
 function resolveTemplates(
   templates,
   {

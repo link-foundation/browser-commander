@@ -764,6 +764,13 @@
           "{home}/Library"
         ]
       },
+      "protectionRoots": {
+        "darwin": [
+          "{home}/Library/Safari",
+          "{home}/Library/Containers/com.apple.Safari",
+          "{home}/Library/Cookies"
+        ]
+      },
       "default": {
         "darwin": ["com.apple.safari"]
       },
@@ -779,6 +786,12 @@
         "darwin": [
           "{home}/Library/Containers/com.apple.SafariTechnologyPreview/Data/Library",
           "{home}/Library/Safari Technology Preview"
+        ]
+      },
+      "protectionRoots": {
+        "darwin": [
+          "{home}/Library/Safari Technology Preview",
+          "{home}/Library/Containers/com.apple.SafariTechnologyPreview"
         ]
       },
       "default": {

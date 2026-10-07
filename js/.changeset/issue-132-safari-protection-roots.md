@@ -1,0 +1,5 @@
+---
+'browser-commander': patch
+---
+
+Accept dedicated macOS application profiles under `~/Library/Application Support` by separating Safari import discovery roots from protected browser data paths. Safari, Technology Preview and Chrome default profiles remain protected.

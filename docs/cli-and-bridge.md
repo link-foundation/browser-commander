@@ -226,6 +226,14 @@ them so that the outputs stay identical.
 
 ## Reports
 
+Launch and migration targets must use dedicated profiles. On macOS, an app's
+own profile under `~/Library/Application Support/<app>/` is accepted. Safari's
+data directories (`~/Library/Safari`, `~/Library/Cookies` and its container),
+Safari Technology Preview's data directories, and other browsers' default
+profile roots and their descendants remain protected. The shared catalogue's
+optional `protectionRoots` declarations control this protection; import discovery
+continues to use `roots`, including broad legacy Safari search locations.
+
 Safari sources (`safari`, `safari-technology-preview`, alias `safari-tp`) support
 cookies through the same CLI and JSON-RPC methods as other sources. For example,
 `profile migrate --from safari --include cookies --domain github.com --to ./profile`

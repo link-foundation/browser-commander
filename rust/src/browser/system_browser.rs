@@ -7,7 +7,7 @@ use super::browser_profile_files::physical_path;
 use super::browser_profiles::current_platform;
 use super::browser_sources::{
     browser_sources, current_environment, find_browser_source, resolve_browser_executables,
-    resolve_browser_roots,
+    resolve_browser_protection_roots, Environment,
 };
 use std::path::{Path, PathBuf};
 
@@ -51,15 +51,22 @@ pub fn default_real_browser_user_data_dir(channel: &str) -> PathBuf {
 pub fn known_default_user_data_dirs() -> Vec<PathBuf> {
     let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
 
-    let environment = current_environment();
+    known_default_user_data_dirs_for(current_platform(), &home, &current_environment())
+}
+
+fn known_default_user_data_dirs_for(
+    platform: &str,
+    home: &Path,
+    environment: &Environment,
+) -> Vec<PathBuf> {
     browser_sources()
         .iter()
         .flat_map(|browser| {
-            resolve_browser_roots(
+            resolve_browser_protection_roots(
                 &browser.id,
-                current_platform(),
+                platform,
                 &home.to_string_lossy(),
-                &environment,
+                environment,
             )
             .unwrap_or_default()
         })
@@ -82,9 +89,16 @@ fn normalize_for_comparison(path: &Path) -> Result<PathBuf, anyhow::Error> {
 
 /// Ensure Chrome is not asked to expose a known default profile over CDP.
 pub fn assert_dedicated_user_data_dir(user_data_dir: &Path) -> Result<(), anyhow::Error> {
+    assert_dedicated_user_data_dir_against(user_data_dir, &known_default_user_data_dirs())
+}
+
+fn assert_dedicated_user_data_dir_against(
+    user_data_dir: &Path,
+    defaults: &[PathBuf],
+) -> Result<(), anyhow::Error> {
     let requested = normalize_for_comparison(user_data_dir)?;
-    for default in known_default_user_data_dirs() {
-        if requested.starts_with(normalize_for_comparison(&default)?) {
+    for default in defaults {
+        if requested.starts_with(normalize_for_comparison(default)?) {
             return Err(anyhow::anyhow!(
                 "launch_real_browser requires a dedicated user_data_dir, not a browser default profile"
             ));
@@ -162,7 +176,70 @@ pub fn resolve_browser_executable(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::browser::browser_sources::Environment;
+    use crate::browser::browser_sources::resolve_browser_roots;
+
+    #[test]
+    fn protection_defaults_to_discovery_roots_for_other_browsers() {
+        let environment = Environment::new();
+        for browser in browser_sources()
+            .iter()
+            .filter(|entry| entry.protection_roots.is_none())
+        {
+            for platform in ["linux", "darwin", "win32"] {
+                assert_eq!(
+                    resolve_browser_protection_roots(
+                        &browser.id,
+                        platform,
+                        "/users/test",
+                        &environment
+                    )
+                    .unwrap(),
+                    resolve_browser_roots(&browser.id, platform, "/users/test", &environment)
+                        .unwrap()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn accepts_dedicated_macos_application_profiles_under_library() {
+        let home = std::env::temp_dir().join("bc-macos-profile-protection");
+        let defaults = known_default_user_data_dirs_for("darwin", &home, &Environment::new());
+        for directory in [
+            "Library/Application Support/package-registry-manager/browser-profile",
+            "Library/Safari-backup/profile",
+            "Library/Cookies-backup/profile",
+            "Library/Containers/com.apple.Safari-helper/profile",
+        ] {
+            let requested = home.join(directory);
+            assert!(
+                assert_dedicated_user_data_dir_against(&requested, &defaults).is_ok(),
+                "{}",
+                requested.display()
+            );
+        }
+    }
+
+    #[test]
+    fn protects_safari_stores_and_chrome_profiles_on_macos() {
+        let home = std::env::temp_dir().join("bc-macos-profile-protection");
+        let defaults = known_default_user_data_dirs_for("darwin", &home, &Environment::new());
+        for directory in [
+            "Library/Safari",
+            "Library/Cookies",
+            "Library/Containers/com.apple.Safari",
+            "Library/Safari Technology Preview",
+            "Library/Containers/com.apple.SafariTechnologyPreview",
+            "Library/Application Support/Google/Chrome/Default",
+        ] {
+            let root = home.join(directory);
+            for requested in [&root, &root.join("new-profile")] {
+                let error =
+                    assert_dedicated_user_data_dir_against(requested, &defaults).unwrap_err();
+                assert!(error.to_string().contains("dedicated user_data_dir"));
+            }
+        }
+    }
 
     #[cfg(unix)]
     #[test]

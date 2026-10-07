@@ -129,6 +129,32 @@ def resolve_browser_roots(
     """
     source = _normalize_source(name)
     templates: Sequence[str] = source.get("roots", {}).get(platform, [])
+    return _resolve_templates(templates, platform, home_dir, environment)
+
+
+def resolve_browser_protection_roots(
+    name: Any,
+    *,
+    platform: str = sys.platform,
+    home_dir: str | os.PathLike[str] | None = None,
+    environment: Mapping[str, str] | None = None,
+) -> list[str]:
+    """Return browser-owned paths forbidden as automation profiles.
+
+    Import discovery may search broader locations; use explicit protection
+    roots when declared, otherwise protect the browser's discovery roots.
+    """
+    source = _normalize_source(name)
+    roots = source.get("protectionRoots", source.get("roots", {}))
+    return _resolve_templates(roots.get(platform, []), platform, home_dir, environment)
+
+
+def _resolve_templates(
+    templates: Sequence[str],
+    platform: str,
+    home_dir: str | os.PathLike[str] | None,
+    environment: Mapping[str, str] | None,
+) -> list[str]:
     path_module = _path_module(platform)
     home = str(Path.home()) if home_dir is None else os.fspath(home_dir)
     env = os.environ if environment is None else environment
@@ -198,6 +224,7 @@ __all__ = [
     "find_browser_source",
     "is_single_profile_browser",
     "normalize_browser_id",
+    "resolve_browser_protection_roots",
     "resolve_browser_roots",
     "safe_storage_identity",
 ]

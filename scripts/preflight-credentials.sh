@@ -22,13 +22,10 @@
 #             /-/npm/v1/oidc/token/exchange/package/<name> -- exactly what
 #             `npm publish` does under trusted publishing. Nothing is
 #             published.
-#   - crates: crates.io has no endpoint that accepts a publish-scoped token
-#             without publishing, and /api/v1/me only serves browser sessions.
-#             It does authenticate the token before refusing it, though, so the
-#             refusal text separates a live token ("only be performed on the
-#             crates.io website") from a revoked, expired or mistyped one
-#             ("authentication failed", 401). Endpoint and crate scopes are
-#             not covered.
+#   - crates: exchange this job's OIDC token for a short-lived publish token
+#             at /api/v1/trusted_publishing/tokens, exactly as
+#             rust-lang/crates-io-auth-action does, then revoke it. The
+#             exchange validates the trusted-publisher mapping; no upload.
 #
 # Each workflow probes only the registry it publishes to:
 #   PREFLIGHT_REGISTRIES -- space- or comma-separated: pypi, npm, crates.
@@ -104,10 +101,6 @@ CURL_USER_AGENT="release-preflight (github.com/link-foundation/browser-commander
 # responses in play here and free of jq/node dependencies.
 json_string() {
   printf '%s' "$1" | sed -n "s/.*\"$2\" *: *\"\([^\"]*\)\".*/\1/p" | head -n 1
-}
-
-lowercase() {
-  printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
 }
 
 # Ask GitHub for an OIDC token with the given (already URL-encoded) audience.
@@ -258,117 +251,50 @@ check_npm() {
   return 0
 }
 
-# The [package].name from Cargo.toml, parsed section-aware: a `name` under
-# `[dependencies]` or any other table must never be mistaken for it.
-crate_name_from_manifest() {
-  [ -f Cargo.toml ] || return 1
-  awk '
-    /^\[/ { in_package = ($0 ~ /^\[package\][ \t]*(#.*)?$/) }
-    in_package && $1 == "name" && $2 == "=" {
-      gsub(/^[ \t]*name[ \t]*=[ \t]*"/, ""); gsub(/".*$/, ""); print; exit
-    }
-  ' Cargo.toml
-}
-
-# rust.yml publishes with `secrets.CARGO_TOKEN` mapped to CARGO_REGISTRY_TOKEN
-# (rust/scripts/publish-crate.mjs reads either); mirror that fallback exactly.
+# Mirror rust-lang/crates-io-auth-action: request a JWT for the registry,
+# exchange it for a short-lived publish token, then revoke it immediately.
+# The registry validates the workflow's trusted-publisher mapping during the
+# exchange. No long-lived Cargo secret or upload is needed for this probe.
 check_crates_io() {
-  local token="${CARGO_REGISTRY_TOKEN:-${CARGO_TOKEN:-}}"
-  local crate_name login response status payload owners_status owners_payload owner is_owner
+  local oidc_token response status token audience
+  local endpoint="${CRATES_API%/}/api/v1/trusted_publishing/tokens"
 
   printf 'crates.io:\n'
 
-  if [ -z "$token" ]; then
-    bad 'crates.io has no publish credential: neither CARGO_REGISTRY_TOKEN nor CARGO_TOKEN is set -- cargo publish would fail with 401'
-    return 0
-  fi
+  audience="${CRATES_API#*://}"
+  audience="${audience%/}"
+  request_oidc_token crates.io "$audience" rust-lang/crates-io-auth-action || return 0
 
-  response=$(http -A "$CURL_USER_AGENT" -H "Authorization: ${token}" "$CRATES_API/api/v1/me")
+  response=$(http -A "$CURL_USER_AGENT" -H 'Content-Type: application/json' \
+    -d "{\"jwt\": \"${oidc_token}\"}" "$endpoint")
   status="${response##*"$NEWLINE"}"
-  payload="${response%"${NEWLINE}"*}"
 
   case "$status" in
-    200)
-      login=$(json_string "$payload" login)
-      if [ -z "$login" ]; then
-        ok 'crates.io accepted the publish token (200 from /api/v1/me)'
+    200 | 201)
+      token=$(json_string "${response%"${NEWLINE}"*}" token)
+      if [ -z "$token" ]; then
+        unknown "crates.io answered ${status} to the OIDC token exchange but returned no token"
         return 0
       fi
-      ok "crates.io accepted the publish token (logged in as ${login})"
-      ;;
-    401)
-      bad 'crates.io rejected the publish token (401) -- it is malformed or was revoked; regenerate it at https://crates.io/settings/tokens and update the CARGO_TOKEN secret'
-      return 0
-      ;;
-    403)
-      # crates.io authenticates the token before /api/v1/me refuses API tokens
-      # outright, so this refusal proves the token is live; an unknown, revoked
-      # or expired token is refused earlier with "authentication failed".
-      case "$payload" in
-        *'only be performed on the crates.io website'*)
-          ok 'crates.io authenticated the publish token (/api/v1/me refuses live API tokens by design; endpoint and crate scopes are not probed)'
-          ;;
-        *'authentication failed'*)
-          bad 'crates.io rejected the publish token (403, authentication failed) -- the token is unknown, revoked or expired; regenerate it at https://crates.io/settings/tokens and update the CARGO_TOKEN secret'
-          ;;
-        *)
-          unknown "crates.io answered 403 to the /api/v1/me probe with an unrecognised reason (no verdict on the token): $(json_string "$payload" detail)"
-          ;;
+      ok 'crates.io minted a short-lived publish token via trusted publishing'
+      # As in the action's post step, revoke the token with Bearer auth. Never
+      # echo the response: even an error response might contain credentials.
+      response=$(http -A "$CURL_USER_AGENT" -X DELETE \
+        -H "Authorization: Bearer ${token}" "$endpoint")
+      status="${response##*"$NEWLINE"}"
+      case "$status" in
+        200 | 204) printf '  PASS: revoked the crates.io preflight token\n' ;;
+        *) bad "crates.io could not revoke the preflight token (${status:-unreachable}); it will expire automatically" ;;
       esac
-      return 0
+      ;;
+    400 | 401 | 403 | 404 | 422)
+      bad "crates.io refused the OIDC token exchange (${status}) -- register the trusted publisher for link-foundation/browser-commander, workflow rust.yml, with no environment; see docs/PUBLISHING.md"
       ;;
     '')
-      unknown 'crates.io unreachable during the /api/v1/me probe'
-      return 0
+      unknown 'crates.io was unreachable during the OIDC token exchange'
       ;;
     *)
-      unknown "crates.io answered ${status} to the /api/v1/me probe (no verdict on the token)"
-      return 0
-      ;;
-  esac
-
-  # A valid token belonging to an account that is not an owner of this crate
-  # passes /api/v1/me and still fails `cargo publish`. The owners endpoint is
-  # public, so this second probe is free -- but it needs the login, which only
-  # a 200 above provides.
-  crate_name=$(crate_name_from_manifest) || crate_name=''
-  if [ -z "$crate_name" ]; then
-    printf '  SKIP: no Cargo.toml in the working directory -- the ownership probe needs the crate name\n'
-    return 0
-  fi
-
-  response=$(http -A "$CURL_USER_AGENT" "$CRATES_API/api/v1/crates/${crate_name}/owners")
-  owners_status="${response##*"$NEWLINE"}"
-  owners_payload="${response%"${NEWLINE}"*}"
-
-  case "$owners_status" in
-    200)
-      is_owner=0
-      while IFS= read -r owner; do
-        [ -z "$owner" ] && continue
-        if [ "$(lowercase "$owner")" = "$(lowercase "$login")" ]; then
-          is_owner=1
-          break
-        fi
-      done <<OWNERS
-$(printf '%s' "$owners_payload" | grep -o '"login" *: *"[^"]*"' | sed 's/.*"login" *: *"//;s/"$//')
-OWNERS
-      if [ "$is_owner" -eq 1 ]; then
-        ok "${login} is an owner of ${crate_name}"
-      else
-        bad "crates.io accepted the token, but account '${login}' is not an owner of ${crate_name} -- the publish would fail"
-      fi
-      ;;
-    404)
-      # A crate name that has never been published has no owner list; the
-      # first publish creates it. /api/v1/me is the credential proof here.
-      printf '  SKIP: %s is not on crates.io yet (404 from owners) -- the ownership probe starts with the first publish\n' "$crate_name"
-      ;;
-    '')
-      unknown 'crates.io unreachable during the ownership probe'
-      ;;
-    *)
-      unknown "crates.io answered ${owners_status} to the ownership probe (no verdict on ownership)"
+      unknown "crates.io answered ${status} to the OIDC token exchange (no verdict on trusted publishing)"
       ;;
   esac
 

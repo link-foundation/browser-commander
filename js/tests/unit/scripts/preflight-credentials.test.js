@@ -5,8 +5,8 @@
  * Run 37509328334 built, tested and versioned the Python package on main and
  * only then failed at "Publish to PyPI" with `invalid-publisher` (issue #128).
  * `scripts/preflight-credentials.sh` performs the credential half of each
- * publish up front -- the OIDC exchange PyPI and npm trusted publishing do, and
- * the crates.io token check -- and the `release-preflight` job in each
+ * publish up front -- the OIDC exchanges all three registries do -- and the
+ * `release-preflight` job in each
  * language workflow gates the publishing jobs on it. These tests pin the rules
  * the workflows depend on (principle 16 of the link-foundation pipeline
  * templates): every failure is reported, `unknown` is never a pass in release
@@ -28,6 +28,7 @@ import { after, before, beforeEach, describe, it } from 'node:test';
 import { BASH_AVAILABLE, readRepoText, repoPath } from '../../helpers/repo.js';
 
 const SCRIPT = repoPath('scripts/preflight-credentials.sh');
+const scriptOptions = { skip: !BASH_AVAILABLE, timeout: 30_000 };
 
 // Values a leak would make visible: none of them may reach the output.
 const REQUEST_TOKEN = 'gh-request-token-must-not-leak';
@@ -130,7 +131,8 @@ const OIDC_OK = [200, { value: OIDC_TOKEN }];
 const MINT = 'POST /pypi/_/oidc/mint-token';
 const EXCHANGE =
   'POST /npm/-/npm/v1/oidc/token/exchange/package/@link-foundation%2Fprobe';
-const ME = 'GET /crates/api/v1/me';
+const CRATES_MINT = 'POST /crates/api/v1/trusted_publishing/tokens';
+const CRATES_REVOKE = 'DELETE /crates/api/v1/trusted_publishing/tokens';
 const INVALID_PUBLISHER = [
   422,
   {
@@ -150,7 +152,12 @@ function probePypi(answer, overrides = {}) {
   return preflight({ PREFLIGHT_REGISTRIES: 'pypi', ...overrides });
 }
 
-describe('scripts/preflight-credentials.sh', { skip: !BASH_AVAILABLE }, () => {
+function probeCrates(answer, overrides = {}) {
+  stub.routes[CRATES_MINT] = answer;
+  return preflight({ PREFLIGHT_REGISTRIES: 'crates', ...overrides });
+}
+
+describe('scripts/preflight-credentials.sh', scriptOptions, () => {
   before(async () => {
     stub.server = createServer(respond);
     stub.server.listen(0, '127.0.0.1');
@@ -318,81 +325,102 @@ describe('scripts/preflight-credentials.sh', { skip: !BASH_AVAILABLE }, () => {
     });
   });
 
-  describe('crates.io token', () => {
-    it('passes a live API token that /api/v1/me refuses by design', async () => {
-      stub.routes[ME] = [
-        403,
-        {
-          errors: [
-            {
-              detail:
-                'this action can only be performed on the crates.io website',
-            },
-          ],
-        },
-      ];
+  describe('crates.io trusted publishing', () => {
+    it('exchanges OIDC and revokes the temporary token without using a Cargo secret', async () => {
+      stub.routes[CRATES_REVOKE] = [204, ''];
 
-      const { status, output } = await preflight({
-        PREFLIGHT_REGISTRIES: 'crates',
-        CARGO_REGISTRY_TOKEN: CARGO_SECRET,
-      });
+      const { status, output } = await probeCrates(
+        [200, { token: ISSUED_TOKEN }],
+        { CARGO_REGISTRY_TOKEN: CARGO_SECRET }
+      );
 
       assert.equal(status, 0, output);
-      assert.match(output, /PASS: crates.io authenticated the publish token/);
-      assert.equal(stub.requests[0].authorization, CARGO_SECRET);
-      assert.match(stub.requests[0].userAgent, /release-preflight/);
+      assert.match(
+        output,
+        /PASS: crates.io minted a short-lived publish token/
+      );
+      const [oidc, mint, revoke] = stub.requests;
+      assert.match(oidc.url, /&audience=127\.0\.0\.1:\d+\/crates$/);
+      assert.deepEqual(JSON.parse(mint.body), { jwt: OIDC_TOKEN });
+      assert.equal(mint.authorization, '');
+      assert.equal(revoke.route, CRATES_REVOKE);
+      assert.equal(revoke.authorization, `Bearer ${ISSUED_TOKEN}`);
+      assert.equal(stub.requests.length, 3);
       assertNoSecrets(output);
     });
 
-    it('fails a release on a token crates.io does not recognise', async () => {
-      stub.routes[ME] = [
-        403,
-        { errors: [{ detail: 'authentication failed' }] },
-      ];
+    it('fails a release when no trusted publisher matches, even with a legacy secret', async () => {
+      const { status, output } = await probeCrates(
+        [403, { errors: [{ detail: 'no matching publisher' }] }],
+        { CARGO_TOKEN: CARGO_SECRET }
+      );
 
+      assert.equal(status, 1, output);
+      assert.match(
+        output,
+        /::error::release-preflight: crates.io refused the OIDC token exchange \(403\)/
+      );
+      assert.match(output, /rust\.yml/);
+      assert.match(output, /docs\/PUBLISHING\.md/);
+      assert.equal(stub.requests.length, 2);
+      assertNoSecrets(output);
+    });
+
+    it('fails when the job has no OIDC permission, with no secret fallback', async () => {
       const { status, output } = await preflight({
         PREFLIGHT_REGISTRIES: 'crates',
-        CARGO_TOKEN: CARGO_SECRET,
+        ACTIONS_ID_TOKEN_REQUEST_URL: '',
+        ACTIONS_ID_TOKEN_REQUEST_TOKEN: '',
+        CARGO_REGISTRY_TOKEN: CARGO_SECRET,
       });
 
       assert.equal(status, 1, output);
       assert.match(
         output,
-        /::error::release-preflight: crates.io rejected the publish token \(403, authentication failed\)/
+        /crates.io: no OIDC token available: .*id-token: write/
       );
-      assertNoSecrets(output);
+      assert.equal(stub.requests.length, 0);
     });
 
-    it('fails when no token is configured', async () => {
+    it('keeps missing publishers advisory on pull requests', async () => {
+      const { status, output } = await probeCrates([403, {}], {
+        PREFLIGHT_MODE: 'report',
+      });
+      assert.equal(status, 0, output);
+      assert.match(output, /::warning::release-preflight: crates.io refused/);
+      assert.doesNotMatch(output, /::error::/);
+    });
+
+    it('treats missing tokens and unavailable registries as unknown', async () => {
+      for (const answer of [
+        [200, {}],
+        [429, {}],
+        [503, {}],
+      ]) {
+        const { status, output } = await probeCrates(answer);
+        assert.equal(status, 1, output);
+        assert.match(output, /0 verified, 0 failed, 1 unknown/);
+        assert.equal(stub.requests.at(-1).route, CRATES_MINT);
+        assertNoSecrets(output);
+      }
+      const port = await closedPort();
       const { status, output } = await preflight({
         PREFLIGHT_REGISTRIES: 'crates',
+        CRATES_API: `http://127.0.0.1:${port}`,
       });
-
       assert.equal(status, 1, output);
-      assert.match(output, /crates.io has no publish credential/);
+      assert.match(output, /UNKNOWN: crates.io was unreachable/);
     });
 
-    it('checks crate ownership when the token resolves to a login', async () => {
-      writeFileSync(
-        path.join(workDir, 'Cargo.toml'),
-        '[package]\nname = "probe-crate"\n\n[dependencies]\nname = "decoy"\n'
-      );
-      stub.routes[ME] = [200, { user: { login: 'Releaser' } }];
-      const owners = 'GET /crates/api/v1/crates/probe-crate/owners';
-      const env = {
-        PREFLIGHT_REGISTRIES: 'crates',
-        CARGO_REGISTRY_TOKEN: CARGO_SECRET,
-      };
-
-      stub.routes[owners] = [200, { users: [{ login: 'releaser' }] }];
-      const owner = await preflight(env);
-      assert.equal(owner.status, 0, owner.output);
-      assert.match(owner.output, /PASS: Releaser is an owner of probe-crate/);
-
-      stub.routes[owners] = [200, { users: [{ login: 'someone-else' }] }];
-      const stranger = await preflight(env);
-      assert.equal(stranger.status, 1, stranger.output);
-      assert.match(stranger.output, /is not an owner of probe-crate/);
+    it('reports failed revocation without exposing the token', async () => {
+      stub.routes[CRATES_REVOKE] = [403, { token: ISSUED_TOKEN }];
+      const { status, output } = await probeCrates([
+        200,
+        { token: ISSUED_TOKEN },
+      ]);
+      assert.equal(status, 1, output);
+      assert.match(output, /could not revoke the preflight token/);
+      assertNoSecrets(output);
     });
   });
 
@@ -400,7 +428,7 @@ describe('scripts/preflight-credentials.sh', { skip: !BASH_AVAILABLE }, () => {
     it('reports every failure rather than stopping at the first', async () => {
       stub.routes[MINT] = INVALID_PUBLISHER;
       stub.routes[EXCHANGE] = [403, { message: 'forbidden' }];
-      stub.routes[ME] = [401, { errors: [{ detail: 'bad token' }] }];
+      stub.routes[CRATES_MINT] = [401, { errors: [{ detail: 'bad token' }] }];
       const summary = path.join(workDir, 'summary.md');
       writeFileSync(summary, '');
 
@@ -479,7 +507,7 @@ const PREFLIGHT_WORKFLOWS = [
   {
     file: 'rust.yml',
     registry: 'crates',
-    oidc: false,
+    oidc: true,
     publishers: ['auto-release', 'manual-release'],
   },
 ];

@@ -7,7 +7,7 @@ cross-language API matrix and Selenium examples.
 
 ## Installation
 
-The first PyPI release is pending trusted publisher registration. Until the
+The first PyPI release is pending [trusted publisher registration](../docs/PUBLISHING.md). Until the
 [PyPI project](https://pypi.org/project/browser-commander/) is available,
 install directly from this repository:
 

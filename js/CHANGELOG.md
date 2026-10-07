@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.26.3
+
+### Patch Changes
+
+- 796ebd8: Accept dedicated macOS application profiles under `~/Library/Application Support` by separating Safari import discovery roots from protected browser data paths. Safari, Technology Preview and Chrome default profiles remain protected.
+
 ## 0.26.2
 
 ### Patch Changes

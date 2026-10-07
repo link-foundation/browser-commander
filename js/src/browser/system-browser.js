@@ -2,7 +2,7 @@ import { constants } from 'node:fs';
 import { physicalPath } from './browser-profile-files.js';
 import {
   BROWSER_SOURCES,
-  resolveBrowserRoots,
+  resolveBrowserProtectionRoots,
   resolveBrowserExecutables,
 } from './browser-sources.js';
 import { access } from 'node:fs/promises';
@@ -46,7 +46,7 @@ export function knownDefaultUserDataDirs({
   environment = process.env,
 } = {}) {
   return BROWSER_SOURCES.flatMap((browser) =>
-    resolveBrowserRoots(browser.id, {
+    resolveBrowserProtectionRoots(browser.id, {
       platform,
       homeDir,
       environment,

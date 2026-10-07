@@ -63,6 +63,10 @@ pub struct BrowserSource {
     /// Per-platform profile-root templates keyed by `darwin`/`win32`/`linux`.
     #[serde(default)]
     pub roots: HashMap<String, Vec<String>>,
+    /// Browser-owned paths to protect when import roots search broader locations.
+    /// Falls back to `roots` when absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_roots: Option<HashMap<String, Vec<String>>>,
     /// Chromium Safe Storage identity, absent for Firefox-family browsers.
     #[serde(default)]
     pub safe_storage: Option<SafeStorageIdentity>,
@@ -265,18 +269,49 @@ pub fn resolve_browser_roots(
     home_dir: &str,
     environment: &Environment,
 ) -> Result<Vec<PathBuf>> {
-    let platform = normalize_platform(platform);
     let source = normalize_browser_source(name)?;
-    let Some(templates) = source.roots.get(platform) else {
-        return Ok(Vec::new());
+    Ok(resolve_root_templates(
+        &source.roots,
+        platform,
+        home_dir,
+        environment,
+    ))
+}
+
+/// Browser-owned paths forbidden as automation profiles. Import discovery may
+/// search broader locations; use explicit protection roots when declared.
+pub fn resolve_browser_protection_roots(
+    name: &str,
+    platform: &str,
+    home_dir: &str,
+    environment: &Environment,
+) -> Result<Vec<PathBuf>> {
+    let source = normalize_browser_source(name)?;
+    Ok(resolve_root_templates(
+        source.protection_roots.as_ref().unwrap_or(&source.roots),
+        platform,
+        home_dir,
+        environment,
+    ))
+}
+
+fn resolve_root_templates(
+    roots: &HashMap<String, Vec<String>>,
+    platform: &str,
+    home_dir: &str,
+    environment: &Environment,
+) -> Vec<PathBuf> {
+    let platform = normalize_platform(platform);
+    let Some(templates) = roots.get(platform) else {
+        return Vec::new();
     };
     let variables = template_variables(platform, home_dir, environment);
     let separator = separator(platform);
-    Ok(templates
+    templates
         .iter()
         .filter_map(|template| expand_template(template, &variables, separator))
         .map(PathBuf::from)
-        .collect())
+        .collect()
 }
 
 /// Executable paths from the shared catalogue, with PATH fallback.

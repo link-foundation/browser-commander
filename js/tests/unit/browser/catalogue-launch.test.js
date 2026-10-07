@@ -6,6 +6,7 @@ import { useTempDirectories } from '../../helpers/temp-directory.js';
 import {
   BROWSER_SOURCES,
   resolveBrowserRoots,
+  resolveBrowserProtectionRoots,
 } from '../../../src/browser/browser-sources.js';
 import {
   assertDedicatedUserDataDir,
@@ -13,8 +14,51 @@ import {
 } from '../../../src/browser/system-browser.js';
 
 const temporary = useTempDirectories('bc-catalogue-protection-');
+const macOSOptions = {
+  platform: 'darwin',
+  homeDir: '/users/test',
+  environment: {},
+};
 
 describe('catalogue launch and protection (#121)', () => {
+  it('accepts dedicated macOS application profiles under Library (#132)', () => {
+    const options = macOSOptions;
+    for (const directory of [
+      'Library/Application Support/package-registry-manager/browser-profile',
+      'Library/Safari-backup/profile',
+      'Library/Cookies-backup/profile',
+      'Library/Containers/com.apple.Safari-helper/profile',
+    ]) {
+      assert.doesNotThrow(() =>
+        assertDedicatedUserDataDir(
+          path.posix.join(options.homeDir, directory),
+          options
+        )
+      );
+    }
+  });
+
+  it('protects Safari stores and Chrome profiles on macOS (#132)', () => {
+    const options = macOSOptions;
+    for (const directory of [
+      'Library/Safari',
+      'Library/Cookies',
+      'Library/Containers/com.apple.Safari',
+      'Library/Safari Technology Preview',
+      'Library/Containers/com.apple.SafariTechnologyPreview',
+      'Library/Application Support/Google/Chrome/Default',
+    ]) {
+      const root = path.posix.join(options.homeDir, directory);
+      for (const requested of [root, path.posix.join(root, 'new-profile')]) {
+        assert.throws(
+          () => assertDedicatedUserDataDir(requested, options),
+          /dedicated.*default profile/,
+          requested
+        );
+      }
+    }
+  });
+
   it('protects a new profile beneath a symlink to a default root', async () => {
     const homeDir = await temporary();
     const options = { homeDir, environment: {} };
@@ -47,7 +91,7 @@ describe('catalogue launch and protection (#121)', () => {
     }
   });
 
-  it('protects every catalogue root and descendant profile on every OS', () => {
+  it('protects every catalogue protection root and descendant profile on every OS', () => {
     for (const platform of ['linux', 'darwin', 'win32']) {
       const options = {
         platform,
@@ -55,7 +99,11 @@ describe('catalogue launch and protection (#121)', () => {
         environment: {},
       };
       for (const browser of BROWSER_SOURCES) {
-        for (const root of resolveBrowserRoots(browser.id, options)) {
+        const roots = resolveBrowserProtectionRoots(browser.id, options);
+        if (!browser.protectionRoots) {
+          assert.deepEqual(roots, resolveBrowserRoots(browser.id, options));
+        }
+        for (const root of roots) {
           assert.throws(
             () => assertDedicatedUserDataDir(root, options),
             /dedicated.*default profile/,

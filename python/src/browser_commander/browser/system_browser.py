@@ -14,7 +14,7 @@ from typing import Any
 from .browser_sources import (
     BROWSER_SOURCES,
     resolve_browser_executables,
-    resolve_browser_roots,
+    resolve_browser_protection_roots,
 )
 
 CHANNEL_EXECUTABLE_NAMES: Mapping[str, tuple[str, ...]] = {
@@ -57,7 +57,7 @@ def known_default_user_data_dirs(
     home_dir: str | os.PathLike[str] | None = None,
     environment: Mapping[str, str] | None = None,
 ) -> list[str]:
-    """Return known default Chrome-family profile roots for an OS."""
+    """Return browser-owned paths forbidden as automation profiles for an OS."""
 
     selected_platform = platform or sys.platform
     home = os.fspath(home_dir) if home_dir is not None else str(Path.home())
@@ -66,7 +66,7 @@ def known_default_user_data_dirs(
     return [
         root
         for browser in BROWSER_SOURCES
-        for root in resolve_browser_roots(
+        for root in resolve_browser_protection_roots(
             browser["id"],
             platform=selected_platform,
             home_dir=home,

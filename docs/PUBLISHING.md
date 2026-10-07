@@ -23,9 +23,9 @@ account must add a **pending publisher** at
 `release-preflight`, `auto-release` and `manual-release` all run in
 `python.yml` with `id-token: write` and no GitHub environment. An environment
 entered on PyPI would therefore prevent the identity from matching. If the
-project already exists by the time this setup is performed, add the same
-publisher in its [publishing settings](https://pypi.org/manage/project/browser-commander/settings/publishing/)
-instead.
+project already exists by the time this setup is performed, open its Publishing
+settings and follow PyPI's [existing project instructions](https://docs.pypi.org/trusted-publishers/adding-a-publisher/)
+with the same values.
 
 After registration, re-run the failed Python workflow on `main`. A green
 **Release Preflight** proves PyPI accepted the OIDC exchange; the release job

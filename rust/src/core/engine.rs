@@ -291,6 +291,18 @@ pub trait EngineAdapter: Send + Sync {
     /// Navigate to a URL.
     async fn goto(&self, url: &str) -> Result<(), EngineError>;
 
+    /// Navigate with a caller-selected load milestone and remaining budget.
+    /// Adapters without native milestone support retain their existing load
+    /// behavior; the caller still bounds the complete operation.
+    async fn goto_with_options(
+        &self,
+        url: &str,
+        _wait_until: &str,
+        _timeout_ms: u64,
+    ) -> Result<(), EngineError> {
+        self.goto(url).await
+    }
+
     /// Query for a single element.
     async fn query_selector(&self, selector: &str) -> Result<Option<ElementInfo>, EngineError>;
 

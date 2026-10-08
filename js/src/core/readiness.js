@@ -14,6 +14,7 @@ export const READINESS_STATUS = Object.freeze({
   READY: 'ready',
   TIMED_OUT: 'timed_out',
   FAILED: 'failed',
+  INTERRUPTED: 'interrupted',
 });
 
 /**
@@ -57,7 +58,7 @@ export function isLongLivedRequest(
  * @returns {{startedAt: number, timeoutMs: number, elapsedMs: Function, remainingMs: Function, expired: Function}} Deadline handle
  */
 export function createDeadline(options = {}) {
-  const { timeout, now = () => performance.now() } = options;
+  const { timeout, now = () => performance.now(), signal } = options;
 
   if (!Number.isFinite(timeout) || timeout < 0) {
     throw new TypeError('createDeadline requires a non-negative timeout');
@@ -72,6 +73,7 @@ export function createDeadline(options = {}) {
   const remainingMs = () => Math.max(0, Math.round(timeout - elapsed()));
 
   return {
+    signal,
     startedAt,
     timeoutMs: timeout,
     elapsedMs: () => Math.round(elapsed()),
@@ -92,7 +94,22 @@ export async function sleepWithinDeadline(ms, deadline) {
   if (capped <= 0) {
     return;
   }
-  await new Promise((resolve) => setTimeout(resolve, capped));
+  await runWithinDeadline(
+    deadline,
+    () =>
+      new Promise((resolve) => {
+        const timer = setTimeout(done, capped);
+        function done() {
+          clearTimeout(timer);
+          deadline.signal?.removeEventListener('abort', done);
+          resolve();
+        }
+        deadline.signal?.addEventListener('abort', done, { once: true });
+        if (deadline.signal?.aborted) {
+          done();
+        }
+      })
+  );
 }
 
 /** Marker resolved by the expiry timer in {@link runWithinDeadline}. */
@@ -110,7 +127,14 @@ const DEADLINE_REACHED = Symbol('deadline-reached');
  * @param {Function} run - Zero-argument function returning a promise
  * @returns {Promise<{timedOut: boolean, value: *}>} Outcome, or expiry
  */
-export async function runWithinDeadline(deadline, run) {
+export async function runWithinDeadline(
+  deadline,
+  run,
+  signal = deadline?.signal
+) {
+  if (signal?.aborted) {
+    return { timedOut: false, interrupted: true };
+  }
   if (!deadline) {
     return { timedOut: false, value: await run() };
   }
@@ -127,18 +151,31 @@ export async function runWithinDeadline(deadline, run) {
   Promise.resolve(operation).catch(() => {});
 
   let timer;
+  let onAbort;
   const expiry = new Promise((resolve) => {
     timer = setTimeout(() => resolve(DEADLINE_REACHED), remaining);
   });
+  const interrupted = Symbol('interrupted');
+  const cancellation = new Promise((resolve) => {
+    onAbort = () => resolve(interrupted);
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) {
+      onAbort();
+    }
+  });
 
   try {
-    const outcome = await Promise.race([operation, expiry]);
+    const outcome = await Promise.race([operation, expiry, cancellation]);
+    if (outcome === interrupted) {
+      return { timedOut: false, interrupted: true };
+    }
     if (outcome === DEADLINE_REACHED) {
       return { timedOut: true, value: undefined };
     }
     return { timedOut: false, value: outcome };
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', onAbort);
   }
 }
 
@@ -196,7 +233,7 @@ export function stableCheck(options = {}) {
       let streak = 0;
       let lastDetail = {};
 
-      while (!deadline.expired()) {
+      while (!deadline.expired() && !deadline.signal?.aborted) {
         const { stable, detail } = normalizeSampleResult(await sample(context));
         lastDetail = detail;
 
@@ -285,6 +322,7 @@ export function networkIdleFor(options = {}) {
 
       const idle = await networkTracker.waitForNetworkIdle({
         timeout,
+        signal: deadline.signal,
         ...(idleForMs === undefined ? {} : { idleTime: idleForMs }),
       });
 
@@ -428,7 +466,7 @@ export async function runReadinessChecks(options = {}) {
   const evidence = [];
 
   for (const [index, check] of checks.entries()) {
-    if (deadline.expired() && failed.length > 0) {
+    if (deadline.signal?.aborted || (deadline.expired() && failed.length > 0)) {
       pending.push(...checks.slice(index).map((entry) => entry.name));
       break;
     }
@@ -436,7 +474,20 @@ export async function runReadinessChecks(options = {}) {
     const startedAtMs = deadline.elapsedMs();
     let outcome;
     try {
-      outcome = await check.run({ ...context, deadline });
+      const bounded = await runWithinDeadline(deadline, () =>
+        check.run({ ...context, deadline })
+      );
+      outcome =
+        bounded.timedOut || bounded.interrupted
+          ? {
+              satisfied: false,
+              detail: {
+                reason: bounded.interrupted
+                  ? 'interrupted'
+                  : 'deadline reached',
+              },
+            }
+          : bounded.value;
     } catch (error) {
       outcome = { satisfied: false, detail: { error: error.message } };
     }
@@ -460,15 +511,18 @@ export async function runReadinessChecks(options = {}) {
     }
   }
 
-  const ready = failed.length === 0 && pending.length === 0;
+  const interrupted = Boolean(deadline.signal?.aborted);
+  const ready = !interrupted && failed.length === 0 && pending.length === 0;
   const timedOut = !ready && deadline.expired();
 
   return {
-    status: ready
-      ? READINESS_STATUS.READY
-      : timedOut
-        ? READINESS_STATUS.TIMED_OUT
-        : READINESS_STATUS.FAILED,
+    status: interrupted
+      ? READINESS_STATUS.INTERRUPTED
+      : ready
+        ? READINESS_STATUS.READY
+        : timedOut
+          ? READINESS_STATUS.TIMED_OUT
+          : READINESS_STATUS.FAILED,
     ready,
     checks: { satisfied, failed, skipped, pending },
     evidence,

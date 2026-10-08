@@ -6,13 +6,17 @@
 use crate::core::constants::TIMING;
 use crate::core::engine::{EngineAdapter, EngineError};
 use crate::core::navigation::is_navigation_error;
-use crate::core::readiness::{CheckRecord, Deadline, ReadinessOutcome};
+use crate::core::readiness::{
+    run_within_deadline, CheckRecord, Deadline, DeadlineOutcome, ReadinessOutcome, ReadinessStatus,
+};
 use serde_json::json;
 use std::time::{Duration, Instant};
 
 /// Options for navigation operations.
 #[derive(Debug, Clone)]
 pub struct NavigationOptions {
+    /// Caller cancellation. Dropping the operation also releases owned waits.
+    pub signal: Option<tokio_util::sync::CancellationToken>,
     /// Wait until condition for navigation.
     pub wait_until: WaitUntil,
     /// Navigation timeout.
@@ -34,6 +38,7 @@ pub struct NavigationOptions {
 impl Default for NavigationOptions {
     fn default() -> Self {
         Self {
+            signal: None,
             wait_until: WaitUntil::DomContentLoaded,
             timeout: TIMING.navigation_timeout,
             wait_for_stable_url_before: true,
@@ -269,7 +274,15 @@ pub async fn url_stable_within(
 ) -> Result<CheckRecord, EngineError> {
     let started_at_ms = deadline.elapsed_ms();
     let mut stable_count = 0u32;
-    let mut last_url = adapter.url().await?;
+    let mut last_url = match run_within_deadline(deadline, adapter.url()).await {
+        DeadlineOutcome::Completed(result) => result?,
+        DeadlineOutcome::TimedOut => {
+            return Ok(CheckRecord::unsatisfied(
+                name,
+                json!({"reason": "deadline reached"}),
+            ))
+        }
+    };
 
     while stable_count < options.stable_checks {
         if deadline.expired() {
@@ -288,7 +301,16 @@ pub async fn url_stable_within(
 
         deadline.sleep_at_most(options.check_interval).await;
 
-        let current_url = adapter.url().await?;
+        let current_url = match run_within_deadline(deadline, adapter.url()).await {
+            DeadlineOutcome::Completed(result) => result?,
+            DeadlineOutcome::TimedOut => {
+                return Ok(CheckRecord::unsatisfied(
+                    name,
+                    json!({"reason": "deadline reached", "url": last_url}),
+                )
+                .with_timing(started_at_ms, deadline.elapsed_ms() - started_at_ms))
+            }
+        };
 
         if current_url == last_url {
             stable_count += 1;
@@ -343,12 +365,40 @@ pub async fn goto(
     url: &str,
     options: &NavigationOptions,
 ) -> Result<NavigationResult, EngineError> {
-    let start_url = adapter.url().await?;
+    let deadline = Deadline::new(options.timeout);
+    let cancellation = options.signal.clone().unwrap_or_default();
+    tokio::select! {
+        biased;
+        () = cancellation.cancelled() => Ok(stopped_navigation(&deadline, ReadinessStatus::Interrupted)),
+        result = goto_within(adapter, url, options, &deadline) => result,
+    }
+}
+
+fn stopped_navigation(deadline: &Deadline, status: ReadinessStatus) -> NavigationResult {
+    let mut readiness = ReadinessOutcome::new(deadline);
+    readiness.defer("navigation");
+    readiness = readiness.finish(deadline);
+    readiness.status = status;
+    readiness.ready = false;
+    NavigationResult::interrupted(status.to_string()).with_readiness(readiness)
+}
+
+async fn goto_within(
+    adapter: &dyn EngineAdapter,
+    url: &str,
+    options: &NavigationOptions,
+    deadline: &Deadline,
+) -> Result<NavigationResult, EngineError> {
+    let start_url = match run_within_deadline(deadline, adapter.url()).await {
+        DeadlineOutcome::Completed(result) => result?,
+        DeadlineOutcome::TimedOut => {
+            return Ok(stopped_navigation(deadline, ReadinessStatus::TimedOut))
+        }
+    };
     // One monotonic budget covers stabilization before, stabilization after and
     // verification. Each step used to get a full timeout of its own, so the
     // total wait could be several times the timeout the caller asked for.
-    let deadline = Deadline::new(options.timeout);
-    let mut readiness = ReadinessOutcome::new(&deadline);
+    let mut readiness = ReadinessOutcome::new(deadline);
 
     // Wait for URL to stabilize before navigation (if requested)
     if options.wait_for_stable_url_before {
@@ -357,12 +407,32 @@ pub async fn goto(
     }
 
     // Perform navigation
-    match adapter.goto(url).await {
-        Ok(_) => {}
-        Err(e) if is_navigation_error(&e.to_string()) => {
+    match run_within_deadline(
+        deadline,
+        adapter.goto_with_options(
+            url,
+            &options.wait_until.to_string(),
+            deadline.remaining().as_millis().max(1) as u64,
+        ),
+    )
+    .await
+    {
+        DeadlineOutcome::Completed(Ok(_)) => {}
+        DeadlineOutcome::Completed(Err(e)) if is_navigation_error(&e.to_string()) => {
             return Ok(NavigationResult::interrupted("navigation was interrupted"));
         }
-        Err(e) => return Err(e),
+        DeadlineOutcome::Completed(Err(e)) => return Err(e),
+        DeadlineOutcome::TimedOut => {
+            readiness.defer("navigation");
+            if options.wait_for_stable_url_after {
+                readiness.defer("url_stable_after");
+            }
+            if options.verify {
+                readiness.defer("verify_navigation");
+            }
+            let readiness = readiness.finish(deadline);
+            return Ok(NavigationResult::interrupted("timed_out").with_readiness(readiness));
+        }
     }
 
     // Wait for URL to stabilize after navigation (if requested)
@@ -411,7 +481,10 @@ pub async fn goto(
     }
 
     let readiness = readiness.finish(&deadline);
-    let actual_url = adapter.url().await?;
+    let actual_url = match run_within_deadline(deadline, adapter.url()).await {
+        DeadlineOutcome::Completed(result) => result?,
+        DeadlineOutcome::TimedOut => start_url,
+    };
     Ok(NavigationResult::success(actual_url).with_readiness(readiness))
 }
 
@@ -440,6 +513,45 @@ pub async fn wait_for_navigation(
 mod tests {
     use super::*;
     use crate::core::stub_engine::StubEngine;
+
+    #[tokio::test]
+    async fn engine_navigation_obeys_the_total_budget() {
+        let engine = StubEngine::fixed("about:blank").navigating_slowly(Duration::from_millis(250));
+        let options = NavigationOptions {
+            wait_for_stable_url_before: false,
+            wait_for_stable_url_after: false,
+            verify: false,
+            ..quick_options(30)
+        };
+        let start = Instant::now();
+        let result = goto(&engine, "data:text/html,ok", &options).await.unwrap();
+        assert!(start.elapsed() < Duration::from_millis(180));
+        assert!(!result.verified);
+        assert!(result.reason.unwrap().contains("timed_out"));
+    }
+
+    #[tokio::test]
+    async fn caller_cancellation_interrupts_the_operation() {
+        let engine = StubEngine::fixed("about:blank").navigating_slowly(Duration::from_millis(250));
+        let signal = tokio_util::sync::CancellationToken::new();
+        let options = NavigationOptions {
+            signal: Some(signal.clone()),
+            wait_for_stable_url_before: false,
+            ..quick_options(1000)
+        };
+        let cancellation = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+            signal.cancel();
+        });
+        let start = Instant::now();
+        let result = goto(&engine, "data:text/html,ok", &options).await.unwrap();
+        cancellation.await.unwrap();
+        assert!(start.elapsed() < Duration::from_millis(180));
+        assert_eq!(
+            result.readiness.unwrap().status,
+            ReadinessStatus::Interrupted
+        );
+    }
 
     #[test]
     fn navigation_options_default() {
@@ -551,13 +663,7 @@ mod tests {
         );
         let readiness = result.readiness.expect("readiness evidence");
         assert!(readiness.elapsed_ms >= 60);
-        assert_eq!(
-            readiness.failed,
-            vec![
-                "url_stable_before".to_string(),
-                "url_stable_after".to_string()
-            ]
-        );
+        assert_eq!(readiness.failed, vec!["url_stable_before".to_string()]);
     }
 
     #[tokio::test]
@@ -570,7 +676,14 @@ mod tests {
             .unwrap();
 
         let readiness = result.readiness.expect("readiness evidence");
-        assert_eq!(readiness.pending, vec!["verify_navigation".to_string()]);
+        assert_eq!(
+            readiness.pending,
+            vec![
+                "navigation".to_string(),
+                "url_stable_after".to_string(),
+                "verify_navigation".to_string()
+            ]
+        );
         assert!(!readiness
             .satisfied
             .contains(&"verify_navigation".to_string()));

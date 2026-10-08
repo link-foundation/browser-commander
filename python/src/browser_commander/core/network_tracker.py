@@ -182,21 +182,14 @@ class NetworkTracker:
         if idle_time is None:
             idle_time = self.idle_timeout
 
-        start_time = time.time() * 1000
+        start_time = time.monotonic() * 1000
         current_nav_id = self._navigation_id
-
-        # If already idle, wait for idle time
-        if len(self._pending_requests) == 0:
-            await asyncio.sleep(idle_time / 1000)
-            if (
-                len(self._pending_requests) == 0
-                and self._navigation_id == current_nav_id
-            ):
-                return True
+        quiet_since = start_time if not self._pending_requests else None
 
         # Poll until idle or timeout
         while True:
-            elapsed = time.time() * 1000 - start_time
+            monotonic_now = time.monotonic() * 1000
+            elapsed = monotonic_now - start_time
             if elapsed >= timeout:
                 self.log.debug(
                     lambda: (
@@ -220,15 +213,14 @@ class NetworkTracker:
                     del self._request_start_times[key]
 
             # Check if idle
-            if len(self._pending_requests) == 0:
-                await asyncio.sleep(idle_time / 1000)
-                if (
-                    len(self._pending_requests) == 0
-                    and self._navigation_id == current_nav_id
-                ):
+            if not self._pending_requests:
+                if quiet_since is None:
+                    quiet_since = monotonic_now
+                if monotonic_now - quiet_since >= idle_time:
                     return True
-
-            await asyncio.sleep(0.1)  # 100ms check interval
+            else:
+                quiet_since = None
+            await asyncio.sleep(min(25, max(0, timeout - elapsed)) / 1000)
 
     def get_pending_count(self) -> int:
         """Get current pending request count."""
@@ -244,10 +236,11 @@ class NetworkTracker:
                 urls.append(str(req))
         return urls
 
-    def on(self, event: str, callback: Callable) -> None:
+    def on(self, event: str, callback: Callable) -> Callable:
         """Add event listener."""
         if event in self._listeners:
             self._listeners[event].append(callback)
+        return lambda: self.off(event, callback)
 
     def off(self, event: str, callback: Callable) -> None:
         """Remove event listener."""

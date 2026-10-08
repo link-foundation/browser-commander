@@ -206,101 +206,54 @@ export function createNetworkTracker(options = {}) {
    * @param {number} options.idleTime - Time network must be idle (default: idleTimeout)
    * @returns {Promise<boolean>} - True if idle, false if timeout
    */
-  async function waitForNetworkIdle(opts = {}) {
-    const { timeout = 30000, idleTime = idleTimeout } = opts;
-
-    const currentNavId = navigationId;
-
-    // If already idle, wait for idle time
-    if (pendingRequests.size === 0) {
-      await new Promise((r) => setTimeout(r, idleTime));
-
-      // Check if still idle and no navigation happened
-      if (pendingRequests.size === 0 && navigationId === currentNavId) {
-        return true;
-      }
+  function waitForNetworkIdle(opts = {}) {
+    const { timeout = 30000, idleTime = idleTimeout, signal } = opts;
+    if (signal?.aborted || timeout <= 0) {
+      return false;
     }
-
+    const currentNavId = navigationId;
+    const started = performance.now();
+    let quietSince = pendingRequests.size === 0 ? started : null;
     return new Promise((resolve) => {
-      let resolved = false;
-      let checkTimer = null;
-      let timeoutTimer = null;
-
-      const cleanup = () => {
-        if (checkTimer) {
-          clearInterval(checkTimer);
-        }
-        if (timeoutTimer) {
-          clearTimeout(timeoutTimer);
-        }
-        resolved = true;
+      let timer;
+      const finish = (value) => {
+        clearTimeout(timer);
+        signal?.removeEventListener('abort', onAbort);
+        resolve(value);
       };
-
-      // Timeout handler
-      timeoutTimer = setTimeout(() => {
-        if (!resolved) {
-          cleanup();
-          log.debug(
-            () =>
-              `⚠️  Network idle timeout after ${timeout}ms (${pendingRequests.size} pending)`
-          );
-
-          // Log stuck requests
-          if (pendingRequests.size > 0) {
-            const stuckRequests = [];
-            for (const [key, req] of pendingRequests) {
-              const startTime = requestStartTimes.get(key);
-              const duration = Date.now() - startTime;
-              const url = typeof req.url === 'function' ? req.url() : req.url;
-              stuckRequests.push(
-                `  ${url.substring(0, 60)}... (${duration}ms)`
-              );
-            }
-            log.debug(() => `⚠️  Stuck requests:\n${stuckRequests.join('\n')}`);
-          }
-
-          resolve(false);
-        }
-      }, timeout);
-
-      // Check periodically for idle state
-      checkTimer = setInterval(async () => {
-        if (resolved) {
+      const onAbort = () => finish(false);
+      const sample = () => {
+        const now = performance.now();
+        if (
+          signal?.aborted ||
+          navigationId !== currentNavId ||
+          now - started >= timeout
+        ) {
+          finish(false);
           return;
         }
-
-        // Check for navigation change (abort wait)
-        if (navigationId !== currentNavId) {
-          cleanup();
-          resolve(false);
-          return;
-        }
-
-        // Check for timed out requests and remove them
-        const now = Date.now();
-        for (const [key, startTime] of requestStartTimes) {
-          if (now - startTime > requestTimeout) {
-            log.debug(() => `⚠️  Request timed out, removing: ${key}`);
+        for (const [key, requestStart] of requestStartTimes) {
+          if (Date.now() - requestStart > requestTimeout) {
             pendingRequests.delete(key);
             requestStartTimes.delete(key);
           }
         }
-
-        // Check if idle
         if (pendingRequests.size === 0) {
-          // Wait for idle time to confirm
-          await new Promise((r) => setTimeout(r, idleTime));
-
-          if (
-            !resolved &&
-            pendingRequests.size === 0 &&
-            navigationId === currentNavId
-          ) {
-            cleanup();
-            resolve(true);
+          quietSince ??= now;
+          if (now - quietSince >= idleTime) {
+            finish(true);
+            return;
           }
+        } else {
+          quietSince = null;
         }
-      }, 100);
+        timer = setTimeout(
+          sample,
+          Math.max(1, Math.min(25, timeout - (now - started)))
+        );
+      };
+      signal?.addEventListener('abort', onAbort, { once: true });
+      sample();
     });
   }
 

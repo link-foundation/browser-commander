@@ -584,6 +584,27 @@ impl EngineAdapter for PlaywrightDriverPage {
         Ok(())
     }
 
+    async fn goto_with_options(
+        &self,
+        url: &str,
+        wait_until: &str,
+        _timeout_ms: u64,
+    ) -> Result<(), EngineError> {
+        self.frame
+            .goto(FrameGotoParams {
+                url: url.to_string(),
+                wait_until: Some(match wait_until {
+                    "domcontentloaded" => LifecycleEvent::Domcontentloaded,
+                    "networkidle" => LifecycleEvent::Networkidle,
+                    _ => LifecycleEvent::Load,
+                }),
+                ..Default::default()
+            })
+            .await
+            .map_err(engine_error)?;
+        Ok(())
+    }
+
     async fn query_selector(&self, selector: &str) -> Result<Option<ElementInfo>, EngineError> {
         Ok(element_info(
             &self.call_selector(&query_one(), selector).await?,

@@ -334,6 +334,20 @@ impl EngineAdapter for NodeBridgePage {
         Ok(())
     }
 
+    async fn goto_with_options(
+        &self,
+        url: &str,
+        wait_until: &str,
+        timeout_ms: u64,
+    ) -> Result<(), EngineError> {
+        self.request(
+            "goto",
+            json!({ "url": url, "waitUntil": wait_until, "timeout": timeout_ms }),
+        )
+        .await?;
+        Ok(())
+    }
+
     async fn query_selector(&self, selector: &str) -> Result<Option<ElementInfo>, EngineError> {
         let value = self
             .request("querySelector", json!({ "selector": selector }))

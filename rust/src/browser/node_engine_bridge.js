@@ -361,7 +361,10 @@ async function handleCommand(method, params) {
     case "url":
       return ensurePage().url();
     case "goto":
-      await ensurePage().goto(params.url, { waitUntil: "load" });
+      await ensurePage().goto(params.url, {
+        waitUntil: params.waitUntil === "networkidle" ? "networkidle0" : (params.waitUntil ?? "load"),
+        ...(params.timeout === undefined ? {} : { timeout: params.timeout }),
+      });
       return null;
     case "querySelector":
       return await ensurePage().evaluate(elementInfo, params.selector);

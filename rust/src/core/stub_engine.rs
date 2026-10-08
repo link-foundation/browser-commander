@@ -21,6 +21,7 @@ pub struct StubEngine {
     url_of: Box<dyn Fn(usize) -> String + Send + Sync>,
     url_calls: AtomicUsize,
     goto_calls: Mutex<Vec<String>>,
+    goto_delay: Duration,
     evaluate_of: Box<dyn Fn(usize) -> serde_json::Value + Send + Sync>,
     evaluate_calls: AtomicUsize,
     evaluate_delay_of: EvaluateDelay,
@@ -43,6 +44,7 @@ impl StubEngine {
             url_of: Box::new(url_of),
             url_calls: AtomicUsize::new(0),
             goto_calls: Mutex::new(Vec::new()),
+            goto_delay: Duration::ZERO,
             evaluate_of: Box::new(|_| serde_json::Value::Null),
             evaluate_calls: AtomicUsize::new(0),
             evaluate_delay_of: Box::new(|_, _| Duration::ZERO),
@@ -84,6 +86,12 @@ impl StubEngine {
         self
     }
 
+    /// Simulate a finite engine navigation stall.
+    pub fn navigating_slowly(mut self, delay: Duration) -> Self {
+        self.goto_delay = delay;
+        self
+    }
+
     /// Number of times `evaluate()` was asked.
     pub fn evaluate_calls(&self) -> usize {
         self.evaluate_calls.load(Ordering::SeqCst)
@@ -113,6 +121,7 @@ impl EngineAdapter for StubEngine {
 
     async fn goto(&self, url: &str) -> Result<(), EngineError> {
         self.goto_calls.lock().unwrap().push(url.to_string());
+        tokio::time::sleep(self.goto_delay).await;
         Ok(())
     }
 

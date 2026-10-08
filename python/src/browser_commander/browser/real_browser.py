@@ -105,6 +105,7 @@ class RealBrowserOptions:
     channel: str = "chrome"
     executable_path: str | None = None
     user_data_dir: str | None = None
+    persist_session_cookies: bool | str | Path = False
     profile_directory: str = "Default"
     """Profile whose preferences are seeded, including snapshot Profile 1."""
     default_browser_check: bool | None = None
@@ -675,6 +676,9 @@ async def launch_real_browser_with_dependencies(
     if is_safari_channel(options.channel):
         return await launch_safari(options)
 
+    from browser_commander.browser.session_persistence import session_persistence_path
+
+    session_persistence_path(options)
     _validate_launch_request(options)
     try:
         executable_path = str(
@@ -795,7 +799,7 @@ async def launch_real_browser_with_dependencies(
             )
         raise
 
-    return RealBrowserResult(
+    result = RealBrowserResult(
         browser=connection.browser,
         page=connection.page,
         downloads=connection.downloads,
@@ -809,3 +813,12 @@ async def launch_real_browser_with_dependencies(
         args=launched.args,
         migration=migration,
     )
+    from browser_commander.browser.session_persistence import (
+        install_session_persistence,
+    )
+
+    try:
+        return await install_session_persistence(result, options)
+    except BaseException:
+        await close()
+        raise

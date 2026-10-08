@@ -12,6 +12,7 @@ from typing import Any, Callable
 
 from browser_commander.core.logger import Logger
 from browser_commander.core.navigation_manager import NavigationManager
+from browser_commander.core.subscriptions import subscribe_callbacks
 
 
 class ActionStoppedError(Exception):
@@ -192,13 +193,13 @@ class ActionContext:
             results.append(result)
         return results
 
-    def on_cleanup(self, callback: Callable) -> None:
+    def on_cleanup(self, callback: Callable) -> Callable:
         """Register cleanup callback.
 
         Args:
             callback: Function to call during cleanup
         """
-        self._cleanup_callbacks.append(callback)
+        return subscribe_callbacks(self._cleanup_callbacks, callback)
 
     async def cleanup(self) -> None:
         """Run all cleanup callbacks."""

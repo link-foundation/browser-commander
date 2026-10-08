@@ -1,3 +1,4 @@
+import { removeCallback, subscribeCallbacks } from './subscriptions.js';
 /**
  * NavigationManager - Centralized navigation handling
  *
@@ -16,6 +17,7 @@ import {
   runWithinDeadline,
 } from './readiness.js';
 import { createManagedNavigator } from './managed-navigation.js';
+import { navigationPhase as runNavigationPhase } from './navigation-operation.js';
 import { createReadinessWaiter } from './navigation-readiness.js';
 
 async function setManagedContent(options = {}) {
@@ -28,7 +30,7 @@ async function setManagedContent(options = {}) {
     currentUrl,
     triggerNavigationStart,
     updateCurrentUrl,
-    waitForPageReady,
+    waitForReady,
     abandonNavigation,
   } = options;
 
@@ -37,22 +39,35 @@ async function setManagedContent(options = {}) {
   }
 
   log.debug(() => '🚀 Loading in-memory HTML content');
+  const deadline = createDeadline({ timeout, signal: options.signal });
 
   try {
     // Treat document replacement as a controlled navigation so active page
     // triggers stop before the old document is discarded.
-    await triggerNavigationStart({ url: currentUrl, isExternal: false });
-    await page.setContent(html, { waitUntil, timeout });
+    await runNavigationPhase(deadline, () =>
+      triggerNavigationStart({ url: currentUrl, isExternal: false })
+    );
+    await runNavigationPhase(deadline, () =>
+      page.setContent(html, {
+        waitUntil,
+        timeout: Math.max(1, deadline.remainingMs()),
+      })
+    );
 
     // setContent normally preserves the URL, but inline scripts can navigate.
     updateCurrentUrl();
-    await waitForPageReady({ timeout, reason: 'after setContent' });
-    return true;
+    return (
+      await waitForReady({
+        deadline,
+        reason: 'after setContent',
+        checks: options.checks,
+      })
+    ).ready;
   } catch (error) {
     // Do not leave the manager in its loading state when setContent fails, but
     // do not claim the page became ready either - it did not.
     abandonNavigation('setContent failed');
-    if (isNavigationError(error)) {
+    if (error.status || isNavigationError(error)) {
       log.debug(() => '⚠️  Content loading was interrupted, recovering...');
       return false;
     }
@@ -360,7 +375,7 @@ export function createNavigationManager(options = {}) {
       currentUrl,
       triggerNavigationStart,
       updateCurrentUrl: () => (currentUrl = page.url()),
-      waitForPageReady,
+      waitForReady,
       abandonNavigation,
     });
 
@@ -420,35 +435,21 @@ export function createNavigationManager(options = {}) {
    * Will be called before next navigation
    */
   function onSessionCleanup(callback) {
-    sessionCleanupCallbacks.push(callback);
+    return subscribeCallbacks(sessionCleanupCallbacks, callback);
   }
 
   /**
    * Add event listener
    */
   function on(event, callback) {
-    if (listeners[event]) {
-      listeners[event].push(callback);
-      let removed = false;
-      return () => {
-        if (!removed) {
-          removed = true;
-          off(event, callback);
-        }
-      };
-    }
+    return subscribeCallbacks(listeners[event], callback);
   }
 
   /**
    * Remove event listener
    */
   function off(event, callback) {
-    if (listeners[event]) {
-      const index = listeners[event].indexOf(callback);
-      if (index !== -1) {
-        listeners[event].splice(index, 1);
-      }
-    }
+    removeCallback(listeners[event], callback);
   }
 
   /**

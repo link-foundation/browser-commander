@@ -58,6 +58,7 @@ async def is_enabled(
     engine: EngineType,
     selector: str | Any,
     disabled_classes: list[str] | None = None,
+    index: int | None = None,
 ) -> bool:
     """Check if element is enabled (not disabled, not loading).
 
@@ -71,7 +72,7 @@ async def is_enabled(
         True if enabled
     """
     if disabled_classes is None:
-        disabled_classes = ["magritte-button_loading"]
+        disabled_classes = ["disabled"]
 
     if not selector:
         raise ValueError("selector is required")
@@ -82,6 +83,11 @@ async def is_enabled(
             locator = (
                 page.locator(selector).first if isinstance(selector, str) else selector
             )
+
+            if index is not None:
+                locator = await get_locator_or_element(
+                    page, engine, selector, index=index
+                )
 
             # Check disabled state via JavaScript
             is_disabled = await locator.evaluate(
@@ -96,7 +102,7 @@ async def is_enabled(
             return not is_disabled
         else:
             # For Selenium
-            element = await get_locator_or_element(page, engine, selector)
+            element = await get_locator_or_element(page, engine, selector, index=index)
             if not element:
                 return False
 
@@ -111,7 +117,7 @@ async def is_enabled(
 
             # Check for disabled classes
             class_attr = element.get_attribute("class") or ""
-            return all(cls not in class_attr for cls in disabled_classes)
+            return all(cls not in class_attr.split() for cls in disabled_classes)
     except Exception as error:
         if is_navigation_error(error):
             print("Navigation detected during enabled check, returning False")

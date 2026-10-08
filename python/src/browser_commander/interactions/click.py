@@ -499,6 +499,7 @@ async def click_button(
     activation: str | None = None,
     scroll: str | None = None,
     actionability: str | None = None,
+    index: int | None = None,
 ) -> ClickResult:
     """Click a button or element (high-level with scrolling and waits).
 
@@ -558,6 +559,7 @@ async def click_button(
             engine=engine,
             selector=selector,
             timeout=timeout,
+            index=index,
         )
 
         if verbose:

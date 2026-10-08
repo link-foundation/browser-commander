@@ -48,6 +48,7 @@ class GotoResult:
     actual_url: str = ""
     reason: str = ""
     status: str = "ready"
+    readiness: Any = None
 
 
 @dataclass
@@ -384,6 +385,7 @@ async def goto(
         start_url = ""
 
     deadline = Deadline(timeout=timeout)
+    readiness = None
 
     def current_url():
         return (
@@ -411,13 +413,15 @@ async def goto(
                 ),
                 signal,
             )
+            readiness = navigation_manager.last_outcome
             if not navigated:
-                observed = navigation_manager.last_outcome
+                observed = readiness
                 return GotoResult(
                     False,
                     False,
                     current_url(),
                     status=observed.status if observed else "failed",
+                    readiness=readiness,
                 )
         else:
             if wait_for_stable_url_before and wait_for_url_stabilization_fn:
@@ -476,8 +480,15 @@ async def goto(
                 ),
                 signal,
             )
+            readiness = observed
             if not observed.ready:
-                return GotoResult(False, False, current_url(), status=observed.status)
+                return GotoResult(
+                    False,
+                    False,
+                    current_url(),
+                    status=observed.status,
+                    readiness=readiness,
+                )
         if verify:
             observed = await navigation_phase(
                 deadline,
@@ -497,8 +508,9 @@ async def goto(
                 observed.actual_url,
                 observed.reason,
                 "ready" if observed.verified else "failed",
+                readiness,
             )
-        return GotoResult(True, True, current_url())
+        return GotoResult(True, True, current_url(), readiness=readiness)
     except NavigationStoppedError as error:
         return GotoResult(False, False, current_url(), str(error), error.status)
     except Exception as error:

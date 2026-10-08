@@ -27,6 +27,7 @@ from browser_commander.core.readiness import (
     sleep_within_deadline,
     url_stable_for,
 )
+from browser_commander.core.subscriptions import subscribe_callbacks
 
 
 class NavigationManager:
@@ -58,6 +59,7 @@ class NavigationManager:
         self._last_url = ""
         self._abort_controller: asyncio.Event | None = None
         self._page_ready_task: asyncio.Task[ReadinessResult] | None = None
+        self._page_ready_key: tuple | None = None
         self._listeners: dict[str, list[Callable]] = {
             "on_navigation_start": [],
             "on_navigation_complete": [],
@@ -242,16 +244,17 @@ class NavigationManager:
                     + ([network_idle_for()] if wait_for_network_idle else [])
                 )
             )
-            self.last_outcome = await navigation_phase(
+            observed = await navigation_phase(
                 deadline,
                 lambda: self._readiness.wait_for_ready(
                     checks=policy, deadline=deadline
                 ),
                 signal,
             )
+            self.last_outcome = observed
             for fn in self._listeners["on_navigation_complete"]:
-                fn({"url": url, "ready": self.last_outcome.ready})
-            return self.last_outcome.ready
+                fn({"url": url, "ready": observed.ready})
+            return observed.ready
         finally:
             self.abandon_navigation("operation finished")
 
@@ -383,9 +386,7 @@ class NavigationManager:
 
     def on(self, event: str, callback: Callable) -> Callable:
         """Add event listener."""
-        if event in self._listeners:
-            self._listeners[event].append(callback)
-        return lambda: self.off(event, callback)
+        return subscribe_callbacks(self._listeners.get(event), callback)
 
     def off(self, event: str, callback: Callable) -> None:
         """Remove event listener."""

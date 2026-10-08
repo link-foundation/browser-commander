@@ -130,7 +130,7 @@ class BrowserCommander:
         return is_action_stopped_error(error)
 
     # ==================== Dialog Event Handling ====================
-    def on_dialog(self, handler: Any) -> None:
+    def on_dialog(self, handler: Any) -> Any:
         """Register a dialog event handler.
 
         The handler receives a dialog object with:
@@ -154,6 +154,7 @@ class BrowserCommander:
         if not self.dialog_manager:
             raise RuntimeError("on_dialog requires enable_dialog_manager=True")
         self.dialog_manager.on_dialog(handler)
+        return lambda: self.dialog_manager.off_dialog(handler)
 
     def off_dialog(self, handler: Any) -> None:
         """Remove a dialog event handler.
@@ -367,6 +368,14 @@ class BrowserCommander:
         wait_until: str = "domcontentloaded",
         timeout: int = 240000,
         verify: bool = True,
+        *,
+        wait_for_stable_url_before: bool = True,
+        wait_for_stable_url_after: bool = True,
+        wait_for_network_idle: bool = True,
+        stable_checks: int = 3,
+        check_interval: int = 1000,
+        signal: asyncio.Event | None = None,
+        checks: Any = None,
     ) -> dict:
         """Navigate to URL.
 
@@ -389,12 +398,22 @@ class BrowserCommander:
             wait_until=wait_until,
             timeout=timeout,
             verify=verify,
+            wait_for_stable_url_before=wait_for_stable_url_before,
+            wait_for_stable_url_after=wait_for_stable_url_after,
+            wait_for_network_idle=wait_for_network_idle,
+            stable_checks=stable_checks,
+            check_interval=check_interval,
+            signal=signal,
+            checks=checks,
+            network_tracker=self.network_tracker,
         )
         return {
             "navigated": result.navigated,
             "verified": result.verified,
             "actual_url": result.actual_url,
             "reason": result.reason,
+            "status": result.status,
+            "readiness": result.readiness,
         }
 
     async def wait_for_navigation(self, timeout: int | None = None) -> bool:
@@ -513,6 +532,105 @@ class BrowserCommander:
 
         return find_by_text(self.engine, text, selector, exact)
 
+    def on_navigation_start(self, handler):
+        """Subscribe until the returned remover is called."""
+        return (
+            self.navigation_manager.on("on_navigation_start", handler)
+            if self.navigation_manager
+            else lambda: None
+        )
+
+    def on_navigation_complete(self, handler):
+        """Subscribe to completion events."""
+        return (
+            self.navigation_manager.on("on_navigation_complete", handler)
+            if self.navigation_manager
+            else lambda: None
+        )
+
+    def on_url_change(self, handler):
+        """Subscribe to URL changes."""
+        return (
+            self.navigation_manager.on("on_url_change", handler)
+            if self.navigation_manager
+            else lambda: None
+        )
+
+    def on_page_ready(self, handler):
+        """Subscribe to observed readiness."""
+        return (
+            self.navigation_manager.on("on_page_ready", handler)
+            if self.navigation_manager
+            else lambda: None
+        )
+
+    async def find_toggle_button(
+        self,
+        *,
+        data_qa_selectors=None,
+        text_to_find=None,
+        element_types=None,
+        texts=None,
+    ):
+        from browser_commander.high_level.universal_logic import find_toggle_button
+
+        return await find_toggle_button(
+            self.count,
+            self.find_by_text,
+            data_qa_selectors,
+            text_to_find,
+            element_types,
+            texts,
+        )
+
+    async def set_cookies(self, cookies):
+        from browser_commander.browser.session_cookies import set_cookies
+
+        return await set_cookies(self.page, self.engine, cookies)
+
+    async def clear_cookies(self, domain=None):
+        from browser_commander.browser.session_cookies import clear_cookies
+
+        return await clear_cookies(self.page, self.engine, domain)
+
+    async def find_first(self, selectors, visible=False):
+        """Find an ordered fallback selector."""
+        from browser_commander.elements.reusable import find_first
+
+        return await find_first(self.page, self.engine, selectors, visible)
+
+    async def has_text(self, texts, normalize_whitespace=False):
+        """Search normalized page text."""
+        from browser_commander.elements.reusable import has_text
+
+        return await has_text(self.page, self.engine, texts, normalize_whitespace)
+
+    async def is_checked(self, selector, index=0):
+        """Observe a checkbox or radio."""
+        from browser_commander.elements.reusable import is_checked
+
+        return await is_checked(self.page, self.engine, selector, index)
+
+    async def check(self, selector, checked=True, index=0):
+        """Set a checkbox or radio idempotently."""
+        from browser_commander.elements.reusable import check
+
+        return await check(self.page, self.engine, selector, checked, index)
+
+    async def read_flag(self, storage_key):
+        """Read a flag without clearing it."""
+        from browser_commander.high_level.universal_logic import read_flag
+
+        return await read_flag(self.evaluate, storage_key)
+
+    async def uninstall_click_listener(self, storage_key):
+        """Remove a previously installed click listener."""
+        from browser_commander.high_level.universal_logic import (
+            uninstall_click_listener,
+        )
+
+        return await uninstall_click_listener(self.evaluate, storage_key)
+
     # ==================== Element Visibility ====================
     async def is_visible(self, selector: str) -> bool:
         """Check if element is visible.
@@ -531,6 +649,7 @@ class BrowserCommander:
         self,
         selector: str,
         disabled_classes: list[str] | None = None,
+        index: int | None = None,
     ) -> bool:
         """Check if element is enabled.
 
@@ -543,7 +662,9 @@ class BrowserCommander:
         """
         from browser_commander.elements.visibility import is_enabled
 
-        return await is_enabled(self.page, self.engine, selector, disabled_classes)
+        return await is_enabled(
+            self.page, self.engine, selector, disabled_classes, index=index
+        )
 
     async def count(self, selector: str) -> int:
         """Get element count.
@@ -607,6 +728,7 @@ class BrowserCommander:
         wait_after_click: int = 1000,
         timeout: int | None = None,
         verify: bool = True,
+        index: int | None = None,
     ) -> dict:
         """Click a button or element.
 
@@ -628,6 +750,7 @@ class BrowserCommander:
             wait_fn=lambda ms, r: self.wait(ms, r),
             log=self.log,
             selector=selector,
+            index=index,
             verbose=self._verbose,
             navigation_manager=self.navigation_manager,
             network_tracker=self.network_tracker,
@@ -771,6 +894,7 @@ class BrowserCommander:
         selector: str,
         behavior: str = "smooth",
         verify: bool = True,
+        index: int | None = None,
     ) -> dict:
         """Scroll element into view.
 
@@ -786,7 +910,7 @@ class BrowserCommander:
         from browser_commander.interactions.scroll import scroll_into_view
 
         locator_or_element = await get_locator_or_element(
-            self.page, self.engine, selector
+            self.page, self.engine, selector, index=index
         )
         result = await scroll_into_view(
             page=self.page,

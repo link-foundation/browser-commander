@@ -108,8 +108,8 @@ describe('describeAttachDifferences', () => {
 describe('snapshot attach launch option', () => {
   it('maps channels to the browser whose profile is copied', () => {
     assert.equal(snapshotBrowserForChannel('chrome'), 'chrome');
-    assert.equal(snapshotBrowserForChannel('chrome-beta'), 'chrome');
-    assert.equal(snapshotBrowserForChannel('msedge-dev'), 'edge');
+    assert.equal(snapshotBrowserForChannel('chrome-beta'), 'chrome-beta');
+    assert.equal(snapshotBrowserForChannel('msedge-dev'), 'edge-dev');
     assert.equal(snapshotBrowserForChannel('brave'), 'brave');
     assert.equal(snapshotBrowserForChannel('chromium'), 'chromium');
   });

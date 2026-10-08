@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Union
@@ -67,7 +68,11 @@ async def restore_storage_state(
     if engine == "playwright":
         context = browser if hasattr(browser, "add_cookies") else page.context
         if cookies:
-            await context.add_cookies(cookies)
+            from browser_commander.browser.session_cookies import (
+                normalize_session_cookies,
+            )
+
+            await context.add_cookies(normalize_session_cookies(cookies, engine))
         if origins:
             script = _restore_script(origins)
             await context.add_init_script(script=script)
@@ -87,7 +92,13 @@ async def restore_storage_state(
             await seed_safari_state(browser, loaded)
             return
         for cookie in cookies:
-            browser.execute_cdp_cmd("Network.setCookie", dict(cookie))
+            from browser_commander.browser.session_cookies import (
+                normalize_session_cookies,
+            )
+
+            browser.execute_cdp_cmd(
+                "Network.setCookie", normalize_session_cookies([cookie], engine)[0]
+            )
         if origins:
             script = _restore_script(origins)
             browser.execute_cdp_cmd(
@@ -118,9 +129,17 @@ async def save_storage_state(
         state = await context.storage_state()
     elif engine == "selenium":
         cookies = []
-        for raw_cookie in browser.get_cookies():
+        try:
+            raw_cookies = browser.execute_cdp_cmd("Network.getAllCookies", {}).get(
+                "cookies", []
+            )
+            if not isinstance(raw_cookies, list):
+                raw_cookies = browser.get_cookies()
+        except (AttributeError, NotImplementedError):
+            raw_cookies = browser.get_cookies()
+        for raw_cookie in raw_cookies:
             cookie = dict(raw_cookie)
-            cookie["expires"] = cookie.pop("expiry", -1)
+            cookie["expires"] = cookie.pop("expiry", cookie.get("expires", -1))
             cookies.append(cookie)
         origin = _current_origin(browser.current_url)
         origins = []
@@ -135,5 +154,21 @@ async def save_storage_state(
     else:
         raise ValueError(f"Unsupported storage-state engine: {engine}")
     if file_path is not None:
-        Path(file_path).write_text(f"{json.dumps(state, indent=2)}\n", encoding="utf-8")
+        write_restricted_state(file_path, state)
     return state
+
+
+def write_restricted_state(path: str | Path, state: dict) -> None:
+    path = Path(path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=path.parent, delete=False
+        ) as handle:
+            temporary = Path(handle.name)
+            json.dump(state, handle, indent=2)
+            handle.write("\n")
+        temporary.replace(path)
+    finally:
+        if temporary:
+            temporary.unlink(missing_ok=True)

@@ -1,4 +1,9 @@
 import { access } from 'node:fs/promises';
+import { launchFailure } from './launch-diagnostics.js';
+import {
+  installSessionPersistence,
+  sessionPersistencePath,
+} from './session-persistence.js';
 
 import { assertSupportedEngine } from './connector.js';
 import { emulateMedia } from './media.js';
@@ -302,6 +307,7 @@ export async function launchBrowserWithDependencies(
   options = {},
   dependencies = {}
 ) {
+  sessionPersistencePath(options);
   if (isSafariChannel(options.channel ?? options.browser)) {
     validateLaunchMode({
       engine: options.engine ?? 'playwright',
@@ -310,7 +316,13 @@ export async function launchBrowserWithDependencies(
     });
     return await launchSafari(options, dependencies);
   }
-  return await launchNonSafariBrowser(options, dependencies);
+  const result = await launchNonSafariBrowser(options, dependencies);
+  try {
+    return await installSessionPersistence(result, options);
+  } catch (error) {
+    await result.close();
+    throw error;
+  }
 }
 
 async function launchNonSafariBrowser(options, dependencies) {
@@ -361,13 +373,21 @@ async function launchNonSafariBrowser(options, dependencies) {
     automationParity,
     storageState: resolvedStorageState,
   };
-  const launched =
-    launch === 'engine'
-      ? await launchWithEngine(
-          { ...common, ignoreDefaultArgs, colorScheme },
-          dependencies
-        )
-      : await launchReal(common, dependencies);
+  let launched;
+  try {
+    launched =
+      launch === 'engine'
+        ? await launchWithEngine(
+            { ...common, ignoreDefaultArgs, colorScheme },
+            dependencies
+          )
+        : await launchReal(common, dependencies);
+  } catch (error) {
+    throw launchFailure(error, {
+      ...common,
+      phase: launch === 'engine' ? 'engine_launch' : 'launch',
+    });
+  }
   const { browser, page } = launched;
   if (verbose) {
     console.log(`✅ Browser launched with ${engine} engine`);

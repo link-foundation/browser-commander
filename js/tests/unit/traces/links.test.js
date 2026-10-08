@@ -544,8 +544,8 @@ describe('trace links export (issue #94)', () => {
     // The notation's formatter and parser decide whether an export can be read
     // back, so the range this package depends on and the version the tests
     // proved are the same range.
-    assert.strictEqual(manifest.dependencies['links-notation'], '^0.22.0');
-    assert.match(installed.version, /^0\.22\./);
+    assert.strictEqual(manifest.dependencies['links-notation'], '^0.23.0');
+    assert.match(installed.version, /^0\.23\./);
   });
 
   it('should export a bundle named by path as readily as an open one', async () => {

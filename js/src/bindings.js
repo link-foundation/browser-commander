@@ -3,6 +3,8 @@
  * This module provides helper functions for binding page, engine, and log to library functions.
  */
 
+import { findFirst, hasText, isChecked, check } from './elements/reusable.js';
+import { setCookies, clearCookies } from './browser/session-cookies.js';
 import { wait, evaluate, safeEvaluate } from './utilities/wait.js';
 import { getUrl, unfocusAddressBar } from './utilities/url.js';
 import {
@@ -52,6 +54,8 @@ import {
   fillTextArea,
 } from './interactions/fill.js';
 import {
+  readFlag,
+  uninstallClickListener,
   waitForUrlCondition,
   installClickListener,
   checkAndClearFlag,
@@ -116,6 +120,7 @@ export function createBoundFunctions(options = {}) {
       page,
       waitForUrlStabilization: waitForUrlStabilizationBound,
       navigationManager,
+      networkTracker,
     });
   const setContentBound = (opts) =>
     setContent({
@@ -352,6 +357,20 @@ export function createBoundFunctions(options = {}) {
     installClickListener: installClickListenerBound,
     checkAndClearFlag: checkAndClearFlagBound,
     findToggleButton: findToggleButtonBound,
+    findFirst: (opts) => findFirst({ ...opts, page, engine }),
+    hasText: (opts) => hasText({ ...opts, page, engine }),
+    isChecked: (opts) => isChecked({ ...opts, page, engine }),
+    check: (opts) => check({ ...opts, page, engine, wait: waitBound }),
+    readFlag: (opts) => readFlag({ ...opts, evaluate: evaluateBound }),
+    uninstallClickListener: (opts) =>
+      uninstallClickListener({ ...opts, evaluate: evaluateBound }),
+    setCookies: (options) =>
+      setCookies({
+        page,
+        engine,
+        cookies: Array.isArray(options) ? options : options.cookies,
+      }),
+    clearCookies: (opts = {}) => clearCookies({ ...opts, page, engine }),
 
     // PDF generation
     pdf: pdfBound,

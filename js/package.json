@@ -80,11 +80,10 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^13.0.3",
     "bplist-parser": "^0.5.0",
     "command-stream": "^1.4.0",
     "csv-parse": "^7.0.3",
-    "links-notation": "^0.22.0",
+    "links-notation": "^0.23.0",
     "log-lazy": "^1.0.4",
     "plist": "^5.0.0",
     "test-anywhere": "^0.9.1"
@@ -108,5 +107,8 @@
     "better-sqlite3@13.0.3": true,
     "node-pty": false,
     "puppeteer": false
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^13.0.3"
   }
 }

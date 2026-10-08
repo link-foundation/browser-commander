@@ -14,12 +14,16 @@ import { ProcessRunner } from 'command-stream/process-runner';
  * optional PTY and terminal-rendering modules are never loaded.
  */
 
-function runnerFor(file, args, { env, cwd, stdin = 'ignore', killGrace }) {
+function runnerFor(
+  file,
+  args,
+  { env, cwd, stdin = 'ignore', killGrace, capture = true }
+) {
   return new ProcessRunner(
     { mode: 'exec', file, args },
     {
       mirror: false,
-      capture: true,
+      capture,
       stdin,
       ...(env ? { env } : {}),
       ...(cwd ? { cwd } : {}),
@@ -102,7 +106,7 @@ export async function runCommand(file, args = [], options = {}) {
  */
 export function startProcess(file, args = [], options = {}) {
   const { env, cwd, forwardOutput = false, killGrace = 2000 } = options;
-  const runner = runnerFor(file, args, { env, cwd, killGrace });
+  const runner = runnerFor(file, args, { env, cwd, killGrace, capture: false });
   return new ManagedProcess(runner, { forwardOutput });
 }
 

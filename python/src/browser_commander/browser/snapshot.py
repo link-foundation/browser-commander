@@ -92,6 +92,7 @@ def snapshot_user_data_dir(
     profile: str = "Default",
     user_data_dir: str | Path | None = None,
     to: str | Path | None = None,
+    include: list[str] | None = None,
 ) -> dict[str, Any]:
     """Copy one live profile, folding committed SQLite WAL data into each database.
 
@@ -103,6 +104,8 @@ def snapshot_user_data_dir(
     if browser_family(browser) != "chromium":
         raise ValueError("snapshot attach requires a Chromium-family browser")
     validate_profile_name(profile)
+    if include is not None and include != ["cookies"]:
+        raise ValueError("snapshot include must be [cookies] or omitted")
     if user_data_dir is not None:
         source: Path | None = Path(user_data_dir)
     else:
@@ -170,7 +173,19 @@ def snapshot_user_data_dir(
     try:
         if (source / "Local State").exists():
             copy(Path("Local State"))
-        copy(Path(profile))
+        if include:
+            for relative in [
+                Path(profile) / "Cookies",
+                Path(profile) / "Network" / "Cookies",
+            ]:
+                if (source / relative).parent.is_symlink():
+                    report["skipped"].append(
+                        {"item": relative.as_posix(), "reason": "symlink"}
+                    )
+                elif (source / relative).is_file():
+                    copy(relative)
+        else:
+            copy(Path(profile))
         prepare_user_data_dir(target)
         prefs_path = target / profile / "Preferences"
         if prefs_path.exists():
@@ -196,6 +211,7 @@ class SnapshotOptions:
     browser: str = "chrome"
     profile: str = "Default"
     user_data_dir: str | Path | None = None
+    include: list[str] | None = None
 
 
 async def launch_snapshot(
@@ -208,6 +224,10 @@ async def launch_snapshot(
     )
 
     options = options or RealBrowserOptions(channel=source.browser)
+    if options.persist_session_cookies:
+        raise ValueError(
+            "session persistence requires a dedicated profile; snapshots are disposable"
+        )
     if options.user_data_dir or options.migrate_from:
         raise ValueError(
             "snapshot is mutually exclusive with user_data_dir and migrate_from"
@@ -225,6 +245,7 @@ async def launch_snapshot(
             browser=source.browser,
             profile=source.profile,
             user_data_dir=source.user_data_dir,
+            include=source.include,
         )
     )
     try:
@@ -240,6 +261,7 @@ async def launch_snapshot(
         result = await launch_real_browser_with_dependencies(
             replace(
                 options,
+                channel=source.browser,
                 user_data_dir=directory,
                 profile_directory=source.profile,
                 args=[f"--profile-directory={source.profile}", *options.args],

@@ -118,7 +118,7 @@ describe('browser storage state', () => {
     };
 
     assert.equal(await saveStorageState(page, '/tmp/state.json'), savedState);
-    assert.deepEqual(calls, [{ path: '/tmp/state.json' }]);
+    assert.deepEqual(calls, [undefined]);
   });
 
   it('saves Puppeteer cookies and current-origin localStorage', async () => {

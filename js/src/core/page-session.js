@@ -1,3 +1,4 @@
+import { subscribeCallbacks } from './subscriptions.js';
 /**
  * PageSession - Abstraction for page lifecycle management
  *
@@ -151,9 +152,9 @@ export function createPageSessionFactory(options = {}) {
         log.debug(
           () => `⚠️  Cannot register cleanup on inactive session "${name}"`
         );
-        return;
+        return () => {};
       }
-      cleanupCallbacks.push(callback);
+      return subscribeCallbacks(cleanupCallbacks, callback);
     }
 
     /**

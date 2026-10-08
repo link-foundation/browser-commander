@@ -44,6 +44,7 @@ async def get_locator_or_element(
     page: Any,
     engine: EngineType,
     selector: str | Any,
+    index: int | None = None,
 ) -> Any | None:
     """Get locator/element from selector (unified helper for both engines).
 
@@ -60,11 +61,16 @@ async def get_locator_or_element(
     if not selector:
         raise ValueError("selector is required")
 
+    if index is not None and (
+        isinstance(index, bool) or not isinstance(index, int) or index < 0
+    ):
+        raise ValueError("index must be a non-negative integer")
     if not isinstance(selector, str):
-        return selector  # Already a locator/element
+        return selector  # Already resolved; do not apply its index twice.
 
     if engine == "playwright":
-        return create_playwright_locator(page, selector)
+        locator = create_playwright_locator(page, selector)
+        return locator.nth(index) if index is not None else locator
     else:
         # For Selenium, find element (can return None)
         from selenium.common.exceptions import NoSuchElementException
@@ -72,6 +78,9 @@ async def get_locator_or_element(
         try:
             from selenium.webdriver.common.by import By
 
+            if index is not None:
+                matches = page.find_elements(By.CSS_SELECTOR, selector)
+                return matches[index] if index < len(matches) else None
             return page.find_element(By.CSS_SELECTOR, selector)
         except NoSuchElementException:
             return None
@@ -83,6 +92,7 @@ async def wait_for_locator_or_element(
     selector: str | Any,
     timeout: int | None = None,
     throw_on_navigation: bool = True,
+    index: int | None = None,
 ) -> Any | None:
     """Get locator/element and wait for it to be visible.
 
@@ -110,7 +120,7 @@ async def wait_for_locator_or_element(
 
     try:
         if engine == "playwright":
-            locator = await get_locator_or_element(page, engine, selector)
+            locator = await get_locator_or_element(page, engine, selector, index=index)
             # `first` handles multiple matches (Playwright strict mode). It is
             # a property in Python Playwright, not a method as in JavaScript.
             first_locator = locator.first
@@ -123,9 +133,21 @@ async def wait_for_locator_or_element(
             from selenium.webdriver.support.ui import WebDriverWait
 
             wait = WebDriverWait(page, timeout / 1000)
-            element = wait.until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, selector))
-            )
+            if index is None:
+                element = wait.until(
+                    EC.visibility_of_element_located((By.CSS_SELECTOR, selector))
+                )
+            else:
+
+                def nth_visible(driver):
+                    matches = driver.find_elements(By.CSS_SELECTOR, selector)
+                    return (
+                        matches[index]
+                        if len(matches) > index and matches[index].is_displayed()
+                        else False
+                    )
+
+                element = wait.until(nth_visible)
             return element
 
     except Exception as error:

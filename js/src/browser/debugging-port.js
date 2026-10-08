@@ -117,7 +117,7 @@ export function watchDevToolsOutput(stream, { forward = false } = {}) {
   }
   let text = '';
   let settled = null;
-  stream.on('data', (chunk) => {
+  const onData = (chunk) => {
     if (forward) {
       process.stderr.write(chunk);
     }
@@ -130,9 +130,11 @@ export function watchDevToolsOutput(stream, { forward = false } = {}) {
     if (parsed.listening) {
       settled = parsed;
     }
-  });
+  };
+  stream.on('data', onData);
   return {
     available: true,
+    dispose: () => stream.off?.('data', onData),
     state: () => settled ?? parseDevToolsOutput(text),
   };
 }

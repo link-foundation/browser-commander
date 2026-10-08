@@ -1,3 +1,4 @@
+import { readBrowserCookieSession } from './browser-cookie-session.js';
 import { localStatePathForProfile } from './browser-profile-files.js';
 import os from 'node:os';
 
@@ -126,6 +127,17 @@ function encryptionPrefix(encryptedValue) {
 }
 
 function chromiumKeyForPrefix(context, prefix) {
+  if (context.keystore === 'mock') {
+    if (context.platform === 'win32') {
+      throw new Error(
+        'Use via: browser for Windows engine mock-keystore profiles'
+      );
+    }
+    return deriveChromiumCookieKey(
+      context.platform === 'darwin' ? 'mock_password' : 'peanuts',
+      context.platform
+    );
+  }
   if (context.platform === 'linux' && prefix === 'v10') {
     return deriveChromiumCookieKey('peanuts', 'linux');
   }
@@ -279,6 +291,21 @@ export async function readBrowserCookiesWithDependencies(
     throw new TypeError('readBrowserCookies requires an options object');
   }
   const platform = dependencies.platform ?? process.platform;
+  const via =
+    options.via ??
+    (platform === 'darwin' &&
+    options.keystore !== 'mock' &&
+    browserFamily(
+      await resolveSourceBrowser(options.browser, { ...dependencies, platform })
+    ) === 'chromium'
+      ? 'browser'
+      : 'database');
+  if (!['browser', 'database', 'keychain'].includes(via)) {
+    throw new TypeError('via must be browser, database, or keychain');
+  }
+  if (via === 'browser') {
+    return readBrowserCookieSession(options, { ...dependencies, platform });
+  }
   const homeDir = dependencies.homeDir ?? os.homedir();
   const environment = dependencies.environment ?? process.env;
   const runCommand = dependencies.runCommand;
@@ -316,6 +343,7 @@ export async function readBrowserCookiesWithDependencies(
     profile: profilePath,
     domainFilter: options.domainFilter ?? null,
     ignoreDecryptionErrors: options.ignoreDecryptionErrors === true,
+    keystore: options.keystore ?? 'os',
   });
   const now = dependencies.now ?? Date.now;
   const cachedCookies = await readCookieResultCache({
@@ -348,6 +376,7 @@ export async function readBrowserCookiesWithDependencies(
       const rows = readChromiumRows(database, options.domainFilter);
       cookies = await mapChromiumRows(rows, databaseVersion, {
         browser,
+        keystore: options.keystore,
         cache,
         credentialKeys: new Map(),
         decryptWindowsDpapi:

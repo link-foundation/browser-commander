@@ -28,6 +28,7 @@ export class BrowserLaunchError extends Error {
 /** Remove paths, URL credentials/query strings and common secret assignments. */
 export function redactLaunchEvidence(value, redactor) {
   let text = String(value ?? '')
+    .replace(/\b(?:https?|wss?):\/\/[^\s"'<>]+/giu, '[url]')
     .replace(/(?:[A-Za-z]:\\|\/)(?:[^\s:;"'<>]+)/gu, '[path]')
     .replace(
       /\b(token|password|secret|authorization|cookie)\s*[=:]\s*[^\s,;]+/giu,
@@ -40,7 +41,12 @@ export function redactLaunchEvidence(value, redactor) {
       text = '[diagnostic redaction failed]';
     }
   }
-  return text.slice(-4096);
+  const bytes = Buffer.from(text, 'utf8');
+  let start = Math.max(0, bytes.length - 4096);
+  while (start < bytes.length && (bytes[start] & 0xc0) === 0x80) {
+    start++;
+  }
+  return bytes.subarray(start).toString('utf8');
 }
 
 export function launchFailure(

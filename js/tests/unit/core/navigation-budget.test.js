@@ -1,3 +1,4 @@
+// feature-parity: navigation.budget@native-typed
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNavigationManager } from '../../../src/core/navigation-manager.js';

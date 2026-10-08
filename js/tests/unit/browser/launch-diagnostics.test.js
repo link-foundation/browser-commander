@@ -1,4 +1,14 @@
+// feature-parity: launch.diagnostics@native-typed
 import { it } from 'node:test';
+import { redactLaunchEvidence } from '../../../src/browser/launch-diagnostics.js';
+
+it('diagnostics scrub URL credentials and queries and bound multibyte evidence', () => {
+  const redacted = redactLaunchEvidence(
+    'https://user:private@example.test/secret?access=private'
+  );
+  assert.doesNotMatch(redacted, /private|example\.test/);
+  assert.ok(Buffer.byteLength(redactLaunchEvidence('😀'.repeat(4096))) <= 4096);
+});
 import assert from 'node:assert/strict';
 import { launchRealBrowser } from '../../../src/browser/real-browser.js';
 

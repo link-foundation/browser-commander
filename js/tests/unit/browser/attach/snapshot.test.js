@@ -437,3 +437,36 @@ describe('snapshotUserDataDir', () => {
     await assert.rejects(stat(path.join(root, 'copy')), { code: 'ENOENT' });
   });
 });
+
+it('cookie-only snapshots include committed WAL data without history or storage', async () => {
+  const root = await makeTempDir();
+  const target = await makeTempDir();
+  await put(root, 'Local State', '{}');
+  await put(root, 'Default/History', 'private history');
+  await put(root, 'Default/Local Storage/unrelated', 'private storage');
+  await put(root, 'Default/Network/Cookies', '');
+  const writer = new BetterSqlite3(path.join(root, 'Default/Network/Cookies'));
+  writer.pragma('journal_mode=WAL');
+  writer.exec('CREATE TABLE cookies(value); INSERT INTO cookies VALUES (42)');
+  try {
+    await snapshotUserDataDir({
+      browser: 'chrome',
+      userDataDir: root,
+      to: target,
+      include: ['cookies'],
+    });
+    await assert.rejects(stat(path.join(target, 'Default/History')));
+    await assert.rejects(stat(path.join(target, 'Default/Local Storage')));
+    const copy = new BetterSqlite3(
+      path.join(target, 'Default/Network/Cookies'),
+      { readonly: true }
+    );
+    try {
+      assert.equal(copy.prepare('SELECT value FROM cookies').get().value, 42);
+    } finally {
+      copy.close();
+    }
+  } finally {
+    writer.close();
+  }
+});

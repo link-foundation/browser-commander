@@ -5,6 +5,7 @@ import {
   readdir,
   readFile,
   stat,
+  lstat,
   writeFile,
 } from 'node:fs/promises';
 import os from 'node:os';
@@ -279,6 +280,7 @@ export async function snapshotUserDataDir({
   profile = 'Default',
   userDataDir,
   to,
+  include,
   platform = process.platform,
   homeDir = os.homedir(),
   environment = process.env,
@@ -293,6 +295,16 @@ export async function snapshotUserDataDir({
     );
   }
   assertProfileName(profile);
+  if (
+    include !== undefined &&
+    (!Array.isArray(include) ||
+      include.length !== 1 ||
+      include[0] !== 'cookies')
+  ) {
+    throw new TypeError(
+      'snapshot include must be ["cookies"] or omitted for the whole profile'
+    );
+  }
   const sourceRoot =
     userDataDir ??
     browserProfileRoot(normalizedBrowser, { platform, homeDir, environment });
@@ -310,6 +322,7 @@ export async function snapshotUserDataDir({
       sourceRoot,
       profile,
       target,
+      include,
       source: { browser: normalizedBrowser, profile, userDataDir: sourceRoot },
     });
   } catch (error) {
@@ -320,7 +333,7 @@ export async function snapshotUserDataDir({
   }
 }
 
-async function copyProfile({ sourceRoot, profile, target, source }) {
+async function copyProfile({ sourceRoot, profile, target, source, include }) {
   const copier = new SnapshotCopier(sourceRoot, target);
   const warnings = [];
   const localState = await stat(path.join(sourceRoot, LOCAL_STATE_FILE)).catch(
@@ -336,7 +349,31 @@ async function copyProfile({ sourceRoot, profile, target, source }) {
         'The source has no Local State; on Windows it holds the key cookies and passwords are encrypted with, so they cannot be decrypted in the copy.',
     });
   }
-  await copier.copyDirectory(profile);
+  if (include) {
+    for (const relative of [
+      `${profile}/Cookies`,
+      `${profile}/Network/Cookies`,
+    ]) {
+      const parent = await lstat(
+        path.dirname(path.join(sourceRoot, relative))
+      ).catch(() => null);
+      if (parent?.isSymbolicLink()) {
+        copier.skipped.push({ item: relative, reason: 'symlink' });
+        continue;
+      }
+      const entry = await lstat(path.join(sourceRoot, relative)).catch(
+        () => null
+      );
+      if (entry?.isFile()) {
+        await mkdir(path.dirname(path.join(target, relative)), {
+          recursive: true,
+        });
+        await copier.copyFile(relative);
+      }
+    }
+  } else {
+    await copier.copyDirectory(profile);
+  }
   await prepareUserDataDir(target, { profileDirectory: profile });
   await markExitedCleanly(path.join(target, profile));
 

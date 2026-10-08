@@ -13,6 +13,7 @@ from typing import Any, Callable
 from browser_commander.core.constants import TIMING
 from browser_commander.core.engine_detection import EngineType
 from browser_commander.core.logger import Logger
+from browser_commander.core.subscriptions import subscribe_callbacks
 
 
 class NetworkTracker:
@@ -238,9 +239,7 @@ class NetworkTracker:
 
     def on(self, event: str, callback: Callable) -> Callable:
         """Add event listener."""
-        if event in self._listeners:
-            self._listeners[event].append(callback)
-        return lambda: self.off(event, callback)
+        return subscribe_callbacks(self._listeners.get(event), callback)
 
     def off(self, event: str, callback: Callable) -> None:
         """Remove event listener."""

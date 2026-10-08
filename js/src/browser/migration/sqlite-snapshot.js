@@ -3,9 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathExists } from './fs-utils.js';
 
-import BetterSqlite3 from 'better-sqlite3';
-
-import { openSqliteDatabase } from '../browser-cookie-database.js';
+import {
+  openSqliteDatabase,
+  backupSqliteDatabase,
+} from '../browser-cookie-database.js';
 
 /**
  * Read a Chromium SQLite database (History, Top Sites, Login Data, Web Data)
@@ -40,36 +41,13 @@ export async function withDatabaseSnapshot({ sourcePath, read }) {
   try {
     // The backup API needs to open the source. It opens read-only, so nothing
     // is written to the user's real database.
-    let source;
     try {
-      source = new BetterSqlite3(sourcePath, {
-        readonly: true,
-        fileMustExist: true,
-        timeout: 1000,
-      });
-      // Detect an exclusive lock before better-sqlite3's initial zero-page
-      // transfer can mistake SQLITE_BUSY for an empty completed backup.
-      source.pragma('schema_version');
-      let remaining = Infinity;
-      let lastProgress = Date.now();
-      await source.backup(snapshotPath, {
-        progress: ({ remainingPages }) => {
-          if (remainingPages < remaining) {
-            lastProgress = Date.now();
-          } else if (Date.now() - lastProgress >= 1000) {
-            throw new Error('SQLite backup made no progress');
-          }
-          remaining = remainingPages;
-          return 256;
-        },
-      });
+      await backupSqliteDatabase(sourcePath, snapshotPath);
     } catch (cause) {
       throw new Error(
         `Consistent SQLite snapshot unavailable for ${sourcePath}; close the source browser and retry, or supply a consistent read-only snapshot. ${cause.message}`,
         { cause }
       );
-    } finally {
-      source?.close();
     }
     return await read(snapshotPath);
   } finally {

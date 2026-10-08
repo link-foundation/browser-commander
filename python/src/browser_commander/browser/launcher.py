@@ -61,6 +61,7 @@ class LaunchOptions:
     """Who starts the browser: ``"real"`` - Browser Commander, with a
     hand-started command line - or ``"engine"`` - Playwright/Selenium."""
     user_data_dir: str | None = None
+    persist_session_cookies: bool | str | Path = False
     """Persistent profile directory. When omitted a fresh temporary profile is
     created and deleted on close."""
     default_browser_check: bool | None = None
@@ -72,6 +73,7 @@ class LaunchOptions:
     headless: bool = False
     slow_mo: int = 0
     verbose: bool = False
+    diagnostic_redactor: Callable[[str], str] | None = None
     restrictions: list[str] = field(default_factory=list)
     """Opt-in restrictions from ``launch-restrictions.json``, such as
     ``"no-extensions"`` or the ``"legacy-defaults"`` preset."""
@@ -315,6 +317,7 @@ async def _launch_real(
                 automation_parity=options.automation_parity,
                 slow_mo=options.slow_mo or None,
                 verbose=options.verbose,
+                diagnostic_redactor=options.diagnostic_redactor,
             )
         )
     )
@@ -557,6 +560,9 @@ async def launch_browser_with_dependencies(
     """
 
     dependencies = dependencies or {}
+    from browser_commander.browser.session_persistence import session_persistence_path
+
+    session_persistence_path(options)
     _validate_launch_options(options)
     from browser_commander.browser.safari_webdriver import (
         is_safari_channel,
@@ -571,11 +577,20 @@ async def launch_browser_with_dependencies(
     if verbose:
         print(f"Launching browser with {engine} engine ({options.launch})...")
 
-    launched = (
-        await _launch_with_engine(options, dependencies)
-        if options.launch == "engine"
-        else await _launch_real(options, dependencies)
-    )
+    try:
+        launched = (
+            await _launch_with_engine(options, dependencies)
+            if options.launch == "engine"
+            else await _launch_real(options, dependencies)
+        )
+    except Exception as error:
+        from browser_commander.browser.launch_diagnostics import launch_failure
+
+        raise launch_failure(
+            error,
+            phase="engine_launch" if options.launch == "engine" else "launch",
+            options=options,
+        )
     browser = launched.browser
     page = launched.page
 
@@ -626,4 +641,13 @@ async def launch_browser_with_dependencies(
         if launched.close is not None:
             await launched.close()
         raise
-    return launched
+    from browser_commander.browser.session_persistence import (
+        install_session_persistence,
+    )
+
+    try:
+        return await install_session_persistence(launched, options)
+    except BaseException:
+        if launched.close is not None:
+            await launched.close()
+        raise

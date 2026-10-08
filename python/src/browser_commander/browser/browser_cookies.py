@@ -76,6 +76,8 @@ class BrowserCookieReadOptions:
     ttl_minutes: float | None = None
     refresh: bool = False
     ignore_decryption_errors: bool = False
+    via: Literal["browser", "database", "keychain"] | None = None
+    keystore: Literal["os", "mock"] = "os"
 
 
 def _open_cookie_database(cookie_path: Path) -> sqlite3.Connection:
@@ -161,6 +163,14 @@ def _chromium_expires(value: int | str | None) -> int:
 
 def _chromium_key_for_prefix(prefix: bytes, context: dict) -> bytes:
     platform = context["platform"]
+    if context.get("keystore") == "mock":
+        if platform == "win32":
+            raise RuntimeError(
+                "Use read_browser_cookie_session for Windows mock-keystore profiles"
+            )
+        return derive_chromium_cookie_key(
+            "mock_password" if platform == "darwin" else "peanuts", platform
+        )
     if platform == "linux" and prefix == b"v10":
         return derive_chromium_cookie_key("peanuts", "linux")
     if platform in ("linux", "darwin"):
@@ -368,6 +378,7 @@ def read_browser_cookies_with_dependencies(
             "profile": str(profile_path),
             "domain_filter": options.domain_filter,
             "ignore_decryption_errors": options.ignore_decryption_errors,
+            "keystore": options.keystore,
         },
         sort_keys=True,
     )
@@ -394,6 +405,7 @@ def read_browser_cookies_with_dependencies(
             "read_safe_storage_password": read_safe_storage_password,
             "read_windows_encryption_key": read_windows_encryption_key,
             "refresh": options.refresh,
+            "keystore": options.keystore,
         },
     )
     write_cookie_result_cache(cache, identity, cookies, now=now)
@@ -402,6 +414,30 @@ def read_browser_cookies_with_dependencies(
 
 def read_browser_cookies(options: BrowserCookieReadOptions) -> list[dict]:
     """Read cookies from an installed browser profile in automation shape."""
+    via = options.via or (
+        "browser"
+        if sys.platform == "darwin"
+        and options.keystore != "mock"
+        and browser_family(resolve_source_browser(options.browser)) == "chromium"
+        else "database"
+    )
+    if via == "browser":
+        import asyncio
+        from concurrent.futures import ThreadPoolExecutor
+
+        from browser_commander.browser.browser_cookie_session import (
+            read_browser_cookie_session,
+        )
+
+        def run():
+            return asyncio.run(read_browser_cookie_session(options))
+
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return run()
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            return executor.submit(run).result()
     return read_browser_cookies_with_dependencies(options)
 
 

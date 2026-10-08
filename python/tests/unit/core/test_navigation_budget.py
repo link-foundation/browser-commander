@@ -1,3 +1,4 @@
+# feature-parity: navigation.budget@native-typed
 import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock

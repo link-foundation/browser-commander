@@ -59,16 +59,38 @@ describe('navigation manager', () => {
       assert.strictEqual(loaded, true);
       assert.strictEqual(manager.getSessionId(), 1);
       assert.strictEqual(manager.isNavigating(), false);
+      const contentTimeout = calls.find(([name]) => name === 'setContent')[2]
+        .timeout;
+      assert.ok(contentTimeout > 0 && contentTimeout <= 5000);
       assert.deepStrictEqual(calls, [
         ['cleanup'],
         ['navigationStart'],
         [
           'setContent',
           '<h1>Hi</h1>',
-          { waitUntil: 'networkidle', timeout: 5000 },
+          { waitUntil: 'networkidle', timeout: contentTimeout },
         ],
         ['pageReady'],
       ]);
+    });
+
+    it('bounds stalled content replacement and clears navigation state', async () => {
+      const page = createMockPlaywrightPage();
+      page.setContent = async () =>
+        new Promise((resolve) => setTimeout(resolve, 150));
+      const manager = createNavigationManager({
+        page,
+        engine: 'playwright',
+        log: createMockLogger(),
+      });
+      const start = performance.now();
+      assert.equal(
+        await manager.setContent({ html: '<h1>Bounded</h1>', timeout: 40 }),
+        false
+      );
+      assert.ok(performance.now() - start < 120);
+      assert.equal(manager.isNavigating(), false);
+      await new Promise((resolve) => setTimeout(resolve, 160));
     });
 
     it('should require html while accepting an empty string', async () => {

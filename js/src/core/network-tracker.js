@@ -1,3 +1,4 @@
+import { removeCallback, subscribeCallbacks } from './subscriptions.js';
 /**
  * NetworkTracker - Track all HTTP requests and wait for network idle
  *
@@ -280,21 +281,14 @@ export function createNetworkTracker(options = {}) {
    * Add event listener
    */
   function on(event, callback) {
-    if (listeners[event]) {
-      listeners[event].push(callback);
-    }
+    return subscribeCallbacks(listeners[event], callback);
   }
 
   /**
    * Remove event listener
    */
   function off(event, callback) {
-    if (listeners[event]) {
-      const index = listeners[event].indexOf(callback);
-      if (index !== -1) {
-        listeners[event].splice(index, 1);
-      }
-    }
+    removeCallback(listeners[event], callback);
   }
 
   /**

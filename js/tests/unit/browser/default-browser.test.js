@@ -119,3 +119,21 @@ describe('resolveDefaultBrowser', () => {
     assert.equal(browserForIdentifier('', 'darwin'), null);
   });
 });
+
+it('uses the modern macOS URL handler when LSHandlers is empty', async () => {
+  assert.equal(
+    await resolveDefaultBrowser({
+      platform: 'darwin',
+      runCommand: async (command) =>
+        command === 'osascript' ? 'com.google.chrome\n' : '()',
+    }),
+    'chrome'
+  );
+  assert.equal(
+    await resolveDefaultBrowser({
+      platform: 'darwin',
+      runCommand: async () => '',
+    }),
+    null
+  );
+});

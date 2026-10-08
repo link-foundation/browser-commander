@@ -695,18 +695,51 @@ export class WebDriverPage extends EventEmitter {
   // ==========================================================================
 
   async cookies() {
+    if (await this.bidi()) {
+      const state = await this.bidiCommand('storage.getCookies');
+      return state.cookies.map((cookie) => ({
+        ...cookie,
+        value: cookie.value.value,
+        expires: cookie.expiry ?? -1,
+        sameSite: cookie.sameSite?.replace(/^./u, (letter) =>
+          letter.toUpperCase()
+        ),
+      }));
+    }
     const cookies = await this.driver.manage().getCookies();
     return cookies.map(fromWebDriverCookie);
   }
 
   async setCookie(...cookies) {
     for (const cookie of cookies) {
+      if (await this.bidi()) {
+        const { expires, ...value } = cookie;
+        await this.bidiCommand('storage.setCookie', {
+          cookie: {
+            ...value,
+            value: { type: 'string', value: cookie.value },
+            sameSite: cookie.sameSite?.toLowerCase() ?? 'lax',
+            ...(expires > 0 ? { expiry: expires } : {}),
+          },
+        });
+        continue;
+      }
       await this.driver.manage().addCookie(toWebDriverCookie(cookie));
     }
   }
 
   async deleteCookie(...cookies) {
     for (const cookie of cookies) {
+      if (await this.bidi()) {
+        await this.bidiCommand('storage.deleteCookies', {
+          filter: {
+            name: cookie.name,
+            domain: cookie.domain,
+            path: cookie.path,
+          },
+        });
+        continue;
+      }
       await this.driver.manage().deleteCookie(cookie.name);
     }
   }

@@ -1,3 +1,4 @@
+import { getLocatorOrElement } from '../elements/locators.js';
 import { TIMING } from '../core/constants.js';
 import { isNavigationError } from '../core/navigation-safety.js';
 import { isActionStoppedError } from '../core/page-trigger-manager.js';
@@ -146,7 +147,7 @@ export async function scrollIntoView(options = {}) {
   const {
     page,
     engine,
-    locatorOrElement,
+    locatorOrElement: suppliedElement,
     behavior = 'smooth',
     verify = true,
     verifyFn,
@@ -154,8 +155,13 @@ export async function scrollIntoView(options = {}) {
     log = { debug: () => {} },
   } = options;
 
+  const locatorOrElement =
+    suppliedElement ??
+    (options.selector ? await getLocatorOrElement(options) : null);
   if (!locatorOrElement) {
-    throw new Error('locatorOrElement is required in options');
+    throw new Error(
+      'locatorOrElement is required (or provide selector) in options'
+    );
   }
 
   try {

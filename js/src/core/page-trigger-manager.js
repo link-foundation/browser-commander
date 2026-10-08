@@ -1,3 +1,5 @@
+import { subscribeCallbacks } from './subscriptions.js';
+
 /**
  * PageTriggerManager - Manages stoppable page triggers with proper lifecycle
  *
@@ -436,18 +438,19 @@ export function createPageTriggerManager(options = {}) {
      */
     const cleanupCallbacks = [];
     function onCleanup(callback) {
-      cleanupCallbacks.push(callback);
-      abortSignal.addEventListener(
-        'abort',
-        async () => {
-          try {
-            await callback();
-          } catch (e) {
-            log.debug(() => `⚠️  Cleanup error: ${e.message}`);
-          }
-        },
-        { once: true }
-      );
+      const unsubscribe = subscribeCallbacks(cleanupCallbacks, callback);
+      const onAbort = async () => {
+        try {
+          await callback();
+        } catch (e) {
+          log.debug(() => `⚠️  Cleanup error: ${e.message}`);
+        }
+      };
+      abortSignal.addEventListener('abort', onAbort, { once: true });
+      return () => {
+        abortSignal.removeEventListener('abort', onAbort);
+        unsubscribe();
+      };
     }
 
     // Wrap all commander methods to be abort-aware

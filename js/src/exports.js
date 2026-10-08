@@ -328,3 +328,17 @@ export {
   SafariUnsupportedError,
   openSafariSettings,
 } from './browser/safari-support.js';
+
+export { BrowserLaunchError } from './browser/launch-diagnostics.js';
+
+export { findFirst, hasText, isChecked, check } from './elements/reusable.js';
+export { setCookies, clearCookies } from './browser/session-cookies.js';
+export {
+  readFlag,
+  uninstallClickListener,
+} from './high-level/universal-logic.js';
+
+export {
+  findSiteSessions,
+  readBrowserCookieSession,
+} from './browser/browser-cookie-session.js';

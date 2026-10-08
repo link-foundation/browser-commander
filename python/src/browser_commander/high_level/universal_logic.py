@@ -90,7 +90,10 @@ async def install_click_listener(
     """
     js_code = """
     (text, key) => {
-        document.addEventListener('click', (event) => {
+        const handlers = window.__browserCommanderClickListeners ??= new Map();
+        const previous = handlers.get(key);
+        if (previous) document.removeEventListener('click', previous, true);
+        const handler = (event) => {
             let element = event.target;
             while (element && element !== document.body) {
                 const elementText = element.textContent?.trim() || '';
@@ -103,7 +106,9 @@ async def install_click_listener(
                 }
                 element = element.parentElement;
             }
-        }, true);
+        };
+        handlers.set(key, handler);
+        document.addEventListener('click', handler, true);
     }
     """
 
@@ -151,11 +156,12 @@ async def check_and_clear_flag(
 
 
 async def find_toggle_button(
-    count_fn: Callable[[str], int],
+    count_fn: Callable[[str], Any],
     find_by_text_fn: Callable[[str, str], str],
     data_qa_selectors: list[str] | None = None,
     text_to_find: str | None = None,
     element_types: list[str] | None = None,
+    texts: list[str] | None = None,
 ) -> str | None:
     """Find toggle button using multiple strategies.
 
@@ -180,12 +186,40 @@ async def find_toggle_button(
         if elem_count > 0:
             return sel
 
-    # Fallback to text search
-    if text_to_find:
+    for text in (
+        texts if texts is not None else ([text_to_find] if text_to_find else [])
+    ):
         for element_type in element_types:
-            selector = await find_by_text_fn(text_to_find, element_type)
-            elem_count = await count_fn(selector)
-            if elem_count > 0:
+            selector = await find_by_text_fn(text, element_type)
+            if await count_fn(selector) > 0:
                 return selector
 
     return None
+
+
+async def read_flag(evaluate_fn, storage_key: str) -> dict:
+    """Observe a flag without clearing it; interrupted reads have no observed value."""
+    try:
+        value = await evaluate_fn(
+            "key => sessionStorage.getItem(key) === 'true'", [storage_key]
+        )
+        return {"status": "observed", "set": bool(value)}
+    except Exception as error:
+        if is_navigation_error(error):
+            return {"status": "interrupted", "set": None}
+        raise
+
+
+async def uninstall_click_listener(evaluate_fn, storage_key: str) -> bool:
+    """Remove the retained click handler for this storage key."""
+    return bool(
+        await evaluate_fn(
+            """key => {
+        const handlers = window.__browserCommanderClickListeners;
+        const handler = handlers?.get(key);
+        if (!handler) return false;
+        document.removeEventListener('click', handler, true); handlers.delete(key); return true;
+    }""",
+            [storage_key],
+        )
+    )

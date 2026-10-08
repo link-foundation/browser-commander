@@ -5,7 +5,10 @@ from typing import Any
 
 
 def redact_launch_evidence(value: Any, redactor=None) -> str:
-    text = re.sub(r"(?:[A-Za-z]:\\|/)[^\s:;\"'<>]+", "[path]", str(value or ""))
+    text = re.sub(
+        r"\b(?:https?|wss?)://[^\s\"'<>]+", "[url]", str(value or ""), flags=re.I
+    )
+    text = re.sub(r"(?:[A-Za-z]:\\|/)[^\s:;\"'<>]+", "[path]", text)
     text = re.sub(
         r"\b(token|password|secret|authorization|cookie)\s*[=:]\s*[^\s,;]+",
         r"\1=[redacted]",
@@ -17,7 +20,7 @@ def redact_launch_evidence(value: Any, redactor=None) -> str:
             text = str(redactor(text))
         except Exception:
             text = "[diagnostic redaction failed]"
-    return text[-4096:]
+    return text.encode("utf-8")[-4096:].decode("utf-8", errors="ignore")
 
 
 class LaunchCause(RuntimeError):

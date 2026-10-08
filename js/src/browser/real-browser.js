@@ -1,4 +1,8 @@
 import { launchFailure, redactLaunchEvidence } from './launch-diagnostics.js';
+import {
+  installSessionPersistence,
+  sessionPersistencePath,
+} from './session-persistence.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { findBrowserSource } from './browser-sources.js';
@@ -188,62 +192,66 @@ export async function waitForCdpEndpoint({
   timeout = 30_000,
   fetchImplementation = globalThis.fetch,
 }) {
-  const port = assertFixedDebuggingPort(remoteDebuggingPort);
-  const endpoint = `http://${LOOPBACK_HOST}:${port}`;
-  const deadline = Date.now() + timeout;
-  while (Date.now() < deadline) {
-    const output = devToolsOutput.state();
-    let ownership = devToolsOutput.available
-      ? classifyDevToolsOwnership(output, port)
-      : 'unknown';
-    if (ownership === 'race') {
-      throw new PortRaceError(port, output.listening?.url ?? 'bind failed');
-    }
-    if (browserProcess.exitCode !== null) {
-      throw (
-        browserProcess.spawnError ??
-        Object.assign(
-          new Error(
-            `Browser exited before its DevTools endpoint was ready (exit ${browserProcess.exitCode})`
-          ),
-          { stderrTail: browserProcess.stderrTail }
-        )
-      );
-    }
-    if (ownership !== 'owned') {
-      const activePort = await readDevToolsActivePort(userDataDir);
-      if (activePort?.port === port) {
-        ownership = 'owned';
+  try {
+    const port = assertFixedDebuggingPort(remoteDebuggingPort);
+    const endpoint = `http://${LOOPBACK_HOST}:${port}`;
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      const output = devToolsOutput.state();
+      let ownership = devToolsOutput.available
+        ? classifyDevToolsOwnership(output, port)
+        : 'unknown';
+      if (ownership === 'race') {
+        throw new PortRaceError(port, output.listening?.url ?? 'bind failed');
       }
-    }
-
-    if (ownership === 'owned') {
-      let version = null;
-      try {
-        version = await fetchCdpVersion(
-          endpoint,
-          fetchImplementation,
-          Math.max(1, deadline - Date.now())
+      if (browserProcess.exitCode !== null) {
+        throw (
+          browserProcess.spawnError ??
+          Object.assign(
+            new Error(
+              `Browser exited before its DevTools endpoint was ready (exit ${browserProcess.exitCode})`
+            ),
+            { stderrTail: browserProcess.stderrTail }
+          )
         );
-      } catch {
-        // The HTTP handler can lag the listening line by a moment.
       }
-      if (version) {
-        const expected = output.listening?.url;
-        if (expected && version.webSocketDebuggerUrl !== expected) {
-          throw new PortRaceError(
-            port,
-            `port serves ${version.webSocketDebuggerUrl}, browser announced ${expected}`
-          );
+      if (ownership !== 'owned') {
+        const activePort = await readDevToolsActivePort(userDataDir);
+        if (activePort?.port === port) {
+          ownership = 'owned';
         }
-        return endpoint;
       }
+
+      if (ownership === 'owned') {
+        let version = null;
+        try {
+          version = await fetchCdpVersion(
+            endpoint,
+            fetchImplementation,
+            Math.max(1, deadline - Date.now())
+          );
+        } catch {
+          // The HTTP handler can lag the listening line by a moment.
+        }
+        if (version) {
+          const expected = output.listening?.url;
+          if (expected && version.webSocketDebuggerUrl !== expected) {
+            throw new PortRaceError(
+              port,
+              `port serves ${version.webSocketDebuggerUrl}, browser announced ${expected}`
+            );
+          }
+          return endpoint;
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    throw new Error(
+      `Timed out after ${timeout}ms waiting for the DevTools endpoint on port ${port}`
+    );
+  } finally {
+    devToolsOutput.dispose?.();
   }
-  throw new Error(
-    `Timed out after ${timeout}ms waiting for the DevTools endpoint on port ${port}`
-  );
 }
 
 function spawnWithStartProcess(executablePath, args, { env, verbose }) {
@@ -258,13 +266,19 @@ async function waitForExit(browserProcess, timeout) {
     return false;
   }
   let timer;
+  const onExit = () => resolveExit(true);
+  let resolveExit;
   const exited = await Promise.race([
-    new Promise((resolve) => browserProcess.once('exit', () => resolve(true))),
+    new Promise((resolve) => {
+      resolveExit = resolve;
+      browserProcess.once('exit', onExit);
+    }),
     new Promise((resolve) => {
       timer = setTimeout(() => resolve(false), timeout);
     }),
   ]);
   clearTimeout(timer);
+  browserProcess.removeListener?.('exit', onExit);
   return exited;
 }
 
@@ -594,6 +608,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
   options = {},
   dependencies = {}
 ) {
+  sessionPersistencePath(options);
   if (isSafariChannel(options.channel ?? options.browser)) {
     return launchSafari(options, dependencies);
   }
@@ -736,19 +751,22 @@ export async function launchAndConnectRealBrowserWithDependencies(
       closeTimeout,
       closeConnection: engine === 'selenium' ? connection.close : undefined,
     });
-    return {
-      ...connection,
-      close,
-      browserProcess,
-      cdpEndpoint: resolvedCdpEndpoint,
-      remoteDebuggingPort: launched.port,
-      executablePath,
-      userDataDir,
-      temporaryProfile,
-      args: launched.browserArgs,
-      ...(migration ? { migration } : {}),
-      ...(snapshotLaunch ? { attach: snapshotLaunch.attach } : {}),
-    };
+    return await installSessionPersistence(
+      {
+        ...connection,
+        close,
+        browserProcess,
+        cdpEndpoint: resolvedCdpEndpoint,
+        remoteDebuggingPort: launched.port,
+        executablePath,
+        userDataDir,
+        temporaryProfile,
+        args: launched.browserArgs,
+        ...(migration ? { migration } : {}),
+        ...(snapshotLaunch ? { attach: snapshotLaunch.attach } : {}),
+      },
+      options
+    );
   } catch (error) {
     if (browserProcess.exitCode === null) {
       browserProcess.kill();

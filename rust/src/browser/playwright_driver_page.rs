@@ -588,18 +588,23 @@ impl EngineAdapter for PlaywrightDriverPage {
         &self,
         url: &str,
         wait_until: &str,
-        _timeout_ms: u64,
+        timeout_ms: u64,
     ) -> Result<(), EngineError> {
         self.frame
-            .goto(FrameGotoParams {
-                url: url.to_string(),
-                wait_until: Some(match wait_until {
-                    "domcontentloaded" => LifecycleEvent::Domcontentloaded,
-                    "networkidle" => LifecycleEvent::Networkidle,
-                    _ => LifecycleEvent::Load,
-                }),
-                ..Default::default()
-            })
+            .channel()
+            .send_with_timeout::<_, FrameGotoResult>(
+                "goto",
+                &FrameGotoParams {
+                    url: url.to_string(),
+                    wait_until: Some(match wait_until {
+                        "domcontentloaded" => LifecycleEvent::Domcontentloaded,
+                        "networkidle" => LifecycleEvent::Networkidle,
+                        _ => LifecycleEvent::Load,
+                    }),
+                    ..Default::default()
+                },
+                Some(timeout_ms.max(1) as f64),
+            )
             .await
             .map_err(engine_error)?;
         Ok(())

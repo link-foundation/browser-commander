@@ -19,6 +19,58 @@ use serde_json::json;
 use tokio::{io::AsyncWriteExt, net::TcpListener};
 
 #[tokio::test]
+#[ignore = "requires Chromium and native Playwright; exercised by parity CI"]
+async fn native_playwright_navigation_forwards_the_driver_timeout() -> anyhow::Result<()> {
+    let listener = TcpListener::bind("127.0.0.1:0").await?;
+    let origin = format!("http://{}", listener.local_addr()?);
+    let server = tokio::spawn(async move {
+        let mut connections = Vec::new();
+        while let Ok((socket, _)) = listener.accept().await {
+            connections.push(socket);
+        }
+    });
+    let executable = std::env::var_os("CHROME_PATH")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| "/usr/bin/google-chrome".into());
+    let work = async {
+        let launched = launch_browser(
+            LaunchOptions::playwright()
+                .launch(LaunchMode::Engine)
+                .headless(true)
+                .sandbox(false)
+                .executable_path(executable)
+                .node_working_dir(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../js")),
+        )
+        .await?;
+        // Call the adapter directly: an outer goto budget would hide a missing
+        // timeout in the Playwright driver's request metadata.
+        let observed = tokio::time::timeout(
+            Duration::from_millis(1500),
+            launched
+                .page
+                .goto_with_options(&origin, "domcontentloaded", 150),
+        )
+        .await;
+        let closed = launched.close().await;
+        assert!(
+            observed.is_ok(),
+            "native Playwright ignored the 150 ms driver timeout"
+        );
+        assert!(
+            observed.unwrap().is_err(),
+            "stalled navigation must time out"
+        );
+        closed?;
+        Ok::<_, anyhow::Error>(())
+    };
+    let observed = tokio::time::timeout(Duration::from_secs(30), work).await;
+    server.abort();
+    let _ = server.await;
+    observed??;
+    Ok(())
+}
+
+#[tokio::test]
 #[ignore = "requires Chromium and JS engine packages; exercised by parity CI"]
 async fn reusable_helpers_and_session_cookies_across_three_engines() -> anyhow::Result<()> {
     let listener = TcpListener::bind("127.0.0.1:0").await?;

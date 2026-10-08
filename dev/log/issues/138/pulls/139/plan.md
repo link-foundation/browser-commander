@@ -21,9 +21,9 @@ checks and ready status record the completion of the publication steps.
 - [x] Run local language CI checks, unit suites, and real local browser acceptance tests.
 - [x] Review the complete diff, generated assets, API coverage, and all scope requirements.
 - [x] Fetch and incorporate the current default branch, preserving commit history.
-- [ ] Push only the prepared branch; rewrite the existing PR title/body.
-- [ ] List recent CI runs with timestamps and head SHA; preserve failing logs in `ci-logs/`.
-- [ ] Analyze exact failures and log lines; fix, retest, commit, and push as needed.
+- [x] Push only the prepared branch; rewrite the existing PR title/body.
+- [x] List recent CI runs with timestamps and head SHA; preserve failing logs in `ci-logs/`.
+- [x] Analyze exact failures and log lines; fix and retest the affected paths.
 - [ ] Confirm current-head checks pass, working tree is clean, and mark PR 139 ready.
 
 ## Complete requirement inventory and candidate solutions
@@ -190,13 +190,13 @@ and were excluded from the solution.
 
 ## Validation and limits
 
-| Implementation         | Local automated validation                                                                                |
-| ---------------------- | --------------------------------------------------------------------------------------------------------- |
-| JavaScript             | ESLint/Prettier/duplication, 1,754 unit tests, 22 live Playwright/Puppeteer cases                         |
-| Python                 | Ruff/format/mypy/size, 1,243 unit tests, two live Playwright cases                                        |
-| Rust                   | rustfmt/size/strict all-feature Clippy, 748 tests including doctests, two live cases across three engines |
-| Repository             | Script lint, secret scan, shared assets, required docs, generated matrices, file limits                   |
-| Packaging/reproduction | Packed import without optional SQLite; original navigation/early-exit calls                               |
+| Implementation         | Local automated validation                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------- |
+| JavaScript             | ESLint/Prettier/duplication, 1,755 unit tests, 38 live Playwright/Puppeteer/WebDriver cases                 |
+| Python                 | Ruff/format/mypy/size, 1,243 unit tests on Python 3.9, two live Playwright cases                            |
+| Rust                   | rustfmt/size/strict all-feature Clippy, 748 tests including doctests, three live cases across three engines |
+| Repository             | Script lint, secret scan, shared assets, required docs, generated matrices, file limits                     |
+| Packaging/reproduction | Packed import without optional SQLite; original navigation/early-exit calls                                 |
 
 Local acceptance uses Linux, authored local pages, and artificial profiles and
 cookies. Platform unit fixtures cover macOS/Windows discovery, crypto, and
@@ -208,3 +208,40 @@ alternatives. Generated feature parity is updated from automated test claims.
 CI logs are kept locally in `ci-logs/`. Compare timestamps and `headSha` with
 the latest pushed commit before accepting a green run: the initial successful
 runs were for the placeholder commit and did not validate this implementation.
+
+## First current-head CI investigation
+
+The first implementation head was `75d70b76e8afad1cf978254aa7f9645f916779c8`;
+its runs started at `2026-10-08T19:27:44Z`. Preserve the full workflow logs,
+not just the final gate's exit status:
+
+- `browser-parity-37832122813.log:3084` and `:4874`: new JavaScript/Python
+  fixtures assumed cached Playwright executables, while parity CI supplies
+  `CHROME_PATH`. Reuse the existing Chrome/sandbox configuration; verify both
+  engines and the Python fixtures against that executable.
+- `browser-parity-37832122813.log:549` and `:659`: native WebDriver BiDi
+  requires a cookie domain even when the public API accepts a URL/current
+  page. A failing unit reproduces both omitted-domain paths. Resolve the
+  hostname, retain explicit domain/secure values and session expiry, and
+  verify the existing native engine matrix and WebDriver cookie suites.
+- `python-ci-37832122808.log:4033`: the new subscription helper evaluated
+  `list | None` on Python 3.9. Postpone annotations, then run all 1,243 tests
+  on Python 3.9.25, including the public import used by the original failure.
+- `javascript-ci-37832122930.log:4432`: a storage-state unit assumed `/tmp`
+  exists on Windows. Give the save test its own `os.tmpdir()` directory and
+  assert the persisted JSON, with deterministic cleanup.
+- Adapter review found Rust native Playwright omitted the requested timeout
+  from driver metadata. A bounded stalled-server test fails before the fix
+  (`rust-driver-timeout-before.log:8`) and passes after forwarding the timeout
+  through the existing channel API. The outer navigation budget alone could
+  conceal this adapter-level omission.
+
+CodeQL alerts [67](https://github.com/link-foundation/browser-commander/security/code-scanning/67)
+and [68](https://github.com/link-foundation/browser-commander/security/code-scanning/68)
+flagged Chromium's public `peanuts` / `mock_password` constants. These are
+required only to decrypt existing mock-keystore profiles selected explicitly
+by the caller, not to create application credentials or new encrypted data.
+The exact two alerts are recorded as false positives with that justification;
+the rule and the security workflow remain enabled. The shared research guide
+links Chromium's implementations. Ordinary profile reads keep OS credentials,
+and mock derivation never becomes an automatic fallback.

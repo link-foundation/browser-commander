@@ -203,7 +203,8 @@ export async function waitForUrlStabilization(options = {}) {
       return false;
     }
 
-    if (!(await sleepWithinDeadline(checkInterval, deadline))) {
+    await sleepWithinDeadline(checkInterval, deadline);
+    if (deadline.expired() || deadline.signal?.aborted) {
       return false;
     }
     const currentUrl = page.url();

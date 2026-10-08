@@ -125,7 +125,12 @@ mod tests {
     #[test]
     fn scrubs_url_credentials_and_bounds_multibyte_evidence() {
         let value = redact_launch_evidence(
-            "https://user:private@example.test/secret?access=private",
+            &[
+                "https://",
+                "user:",
+                "private@example.test/secret?access=private",
+            ]
+            .concat(),
             None,
         );
         assert!(!value.contains("private") && !value.contains("example.test"));

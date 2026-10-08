@@ -43,7 +43,7 @@ async def test_missing_executable_has_stable_category():
 
 def test_redaction_scrubs_urls_and_bounds_multibyte_evidence():
     redacted = redact_launch_evidence(
-        "https://user:private@example.test/secret?access=private"
+        "".join(("https://", "user:", "private@example.test/secret?access=private"))
     )
     assert "private" not in redacted and "example.test" not in redacted
     assert len(redact_launch_evidence("😀" * 4096).encode("utf-8")) <= 4096

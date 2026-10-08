@@ -1,5 +1,6 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { CHROME_LAUNCH_OPTIONS } from '../helpers/e2e-browser.js';
 import { createCommander, predicate } from '../../src/index.js';
 import { sendHtml, startFixtureHost } from '../helpers/fixture-server.js';
 
@@ -34,8 +35,7 @@ for (const engine of ['playwright', 'puppeteer']) {
           sendHtml(res, '<h1 id="ready">Ready</h1>');
         });
         const { chromium } = await import('playwright');
-        // Explicit test-container configuration; the library adds no sandbox opt-out.
-        const launchOptions = { headless: true, args: ['--no-sandbox'] };
+        const launchOptions = { headless: true, ...CHROME_LAUNCH_OPTIONS };
         if (engine === 'playwright') {
           browser = await chromium.launch(launchOptions);
           page = await browser.newPage();
@@ -43,7 +43,8 @@ for (const engine of ['playwright', 'puppeteer']) {
           const { default: puppeteer } = await import('puppeteer');
           browser = await puppeteer.launch({
             ...launchOptions,
-            executablePath: chromium.executablePath(),
+            executablePath:
+              CHROME_LAUNCH_OPTIONS.executablePath ?? chromium.executablePath(),
           });
           page = await browser.newPage();
         }

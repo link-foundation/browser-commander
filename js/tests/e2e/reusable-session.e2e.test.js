@@ -10,6 +10,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { sendHtml, startFixtureHost } from '../helpers/fixture-server.js';
+import { CHROME_LAUNCH_OPTIONS } from '../helpers/e2e-browser.js';
 
 for (const engine of ['playwright', 'puppeteer']) {
   describe(
@@ -27,7 +28,7 @@ for (const engine of ['playwright', 'puppeteer']) {
           )
         );
         const { chromium } = await import('playwright');
-        const options = { headless: true, args: ['--no-sandbox'] };
+        const options = { headless: true, ...CHROME_LAUNCH_OPTIONS };
         if (engine === 'playwright') {
           browser = await chromium.launch(options);
           page = await browser.newPage();
@@ -35,7 +36,8 @@ for (const engine of ['playwright', 'puppeteer']) {
           const { default: puppeteer } = await import('puppeteer');
           browser = await puppeteer.launch({
             ...options,
-            executablePath: chromium.executablePath(),
+            executablePath:
+              CHROME_LAUNCH_OPTIONS.executablePath ?? chromium.executablePath(),
           });
           page = await browser.newPage();
         }
@@ -188,10 +190,11 @@ for (const engine of ['playwright', 'puppeteer']) {
           engine,
           launch: 'engine',
           headless: true,
-          executablePath: chromium.executablePath(),
+          ...CHROME_LAUNCH_OPTIONS,
+          executablePath:
+            CHROME_LAUNCH_OPTIONS.executablePath ?? chromium.executablePath(),
           userDataDir: directory,
           persistSessionCookies: true,
-          args: ['--no-sandbox'],
         };
         let result;
         try {

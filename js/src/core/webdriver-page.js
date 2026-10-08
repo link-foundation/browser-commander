@@ -713,10 +713,15 @@ export class WebDriverPage extends EventEmitter {
   async setCookie(...cookies) {
     for (const cookie of cookies) {
       if (await this.bidi()) {
-        const { expires, ...value } = cookie;
+        const { expires, url, ...value } = cookie;
         await this.bidiCommand('storage.setCookie', {
           cookie: {
             ...value,
+            domain:
+              cookie.domain ?? new URL(url ?? (await this.syncUrl())).hostname,
+            ...(url
+              ? { secure: cookie.secure ?? new URL(url).protocol === 'https:' }
+              : {}),
             value: { type: 'string', value: cookie.value },
             sameSite: cookie.sameSite?.toLowerCase() ?? 'lax',
             ...(expires > 0 ? { expiry: expires } : {}),

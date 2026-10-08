@@ -256,6 +256,39 @@ describe('WebDriverPage', () => {
     );
   });
 
+  it('supplies BiDi cookie domains from explicit scope, URL or current page', async () => {
+    const { page, bidi } = bidiPage({
+      driverOptions: { url: 'https://current.example.test/path' },
+    });
+    await page.syncUrl();
+    await page.setCookie(
+      { name: 'current', value: 'artificial' },
+      {
+        name: 'url',
+        value: 'artificial',
+        url: 'https://url.example.test/path',
+      },
+      { name: 'domain', value: 'artificial', domain: '.explicit.example.test' }
+    );
+    const cookies = bidi.sent
+      .filter(({ method }) => method === 'storage.setCookie')
+      .map(({ params }) => params.cookie);
+    assert.deepEqual(
+      cookies.map(({ domain }) => domain),
+      ['current.example.test', 'url.example.test', '.explicit.example.test']
+    );
+    assert.ok(cookies.every((cookie) => !('url' in cookie)));
+    assert.ok(cookies.every((cookie) => !('expiry' in cookie)));
+    assert.equal(cookies[1].secure, true);
+    await page.setCookie({
+      name: 'http',
+      value: 'artificial',
+      url: 'http://url.example.test',
+      secure: false,
+    });
+    assert.equal(bidi.sent.at(-1).params.cookie.secure, false);
+  });
+
   it('adds and removes preload scripts over BiDi', async () => {
     const { page, bidi } = bidiPage({
       responses: { 'script.addPreloadScript': { script: 'preload-1' } },

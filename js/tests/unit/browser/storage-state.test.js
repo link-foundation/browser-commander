@@ -106,6 +106,10 @@ describe('browser storage state', () => {
   });
 
   it('delegates Playwright saves to the page context', async () => {
+    temporaryDirectory = await mkdtemp(
+      path.join(os.tmpdir(), 'browser-commander-playwright-state-')
+    );
+    const filePath = path.join(temporaryDirectory, 'state.json');
     const savedState = { cookies: [], origins: [] };
     const calls = [];
     const page = {
@@ -117,8 +121,9 @@ describe('browser storage state', () => {
       }),
     };
 
-    assert.equal(await saveStorageState(page, '/tmp/state.json'), savedState);
+    assert.equal(await saveStorageState(page, filePath), savedState);
     assert.deepEqual(calls, [undefined]);
+    assert.deepEqual(JSON.parse(await readFile(filePath, 'utf8')), savedState);
   });
 
   it('saves Puppeteer cookies and current-origin localStorage', async () => {

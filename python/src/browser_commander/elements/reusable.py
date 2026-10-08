@@ -1,5 +1,7 @@
 """Ordered selectors, normalized page text, and idempotent form controls."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from browser_commander.core.engine_adapter import create_engine_adapter

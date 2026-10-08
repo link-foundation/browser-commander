@@ -1,5 +1,7 @@
 """Runtime cookies with consistent session expiry and domain boundaries."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from browser_commander.browser.migration.domains import matches_domains

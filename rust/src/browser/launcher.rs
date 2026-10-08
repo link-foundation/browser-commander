@@ -79,6 +79,7 @@ impl std::str::FromStr for LaunchMode {
 /// Options for launching a browser.
 #[derive(Debug, Clone)]
 pub struct LaunchOptions {
+    pub diagnostic_redactor: Option<super::launch_diagnostics::DiagnosticRedactor>,
     /// The browser engine to use.
     pub engine: EngineType,
     /// Native WebDriver driver selection and W3C capabilities. Common launch
@@ -89,6 +90,8 @@ pub struct LaunchOptions {
     /// Persistent profile directory. When `None` a fresh temporary profile is
     /// created for the launch and deleted by [`LaunchResult::close`].
     pub user_data_dir: Option<PathBuf>,
+    /// Explicit owner-only state file used to restore/save session cookies.
+    pub persist_session_cookies: Option<PathBuf>,
     /// Allow the disposable browser to ask to become the system default.
     pub default_browser_check: Option<bool>,
     /// Allow first-run UI in a fresh profile.
@@ -170,6 +173,7 @@ impl Default for LaunchOptions {
             webdriver: Default::default(),
             launch: LaunchMode::Real,
             user_data_dir: None,
+            persist_session_cookies: None,
             default_browser_check: None,
             first_run: false,
             preferences: serde_json::json!({}),
@@ -178,6 +182,7 @@ impl Default for LaunchOptions {
             headless: false,
             slow_mo: 0,
             verbose: false,
+            diagnostic_redactor: None,
             restrictions: Vec::new(),
             args: Vec::new(),
             extra_args: Vec::new(),
@@ -463,6 +468,7 @@ impl LaunchOptions {
             extra_args.push("--no-sandbox".to_string());
         }
         RealBrowserOptions {
+            diagnostic_redactor: self.diagnostic_redactor.clone(),
             engine: self.engine,
             channel: self.channel.clone().unwrap_or(defaults.channel.clone()),
             executable_path: self.executable_path.clone(),
@@ -628,6 +634,10 @@ impl std::fmt::Debug for LaunchResult {
 /// Returns an error if the options are invalid or the browser fails to
 /// launch. Invalid options are refused before anything is started.
 pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyhow::Error> {
+    super::session_persistence::validate(
+        options.persist_session_cookies.as_deref(),
+        options.user_data_dir.as_deref(),
+    )?;
     if options
         .channel
         .as_deref()
@@ -688,10 +698,26 @@ pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyh
             options.launch
         );
     }
-    let result = match options.launch {
+    let mut result = match options.launch {
         LaunchMode::Real => launch_real(&options).await?,
-        LaunchMode::Engine => launch_with_engine(&options).await?,
+        LaunchMode::Engine => launch_with_engine(&options).await.map_err(|error| {
+            super::launch_diagnostics::launch_failure(
+                error,
+                "engine_launch",
+                &options.real_browser_options(),
+                None,
+            )
+        })?,
     };
+    if let (Some(path), Some(closer)) = (&options.persist_session_cookies, &result.closer) {
+        match super::session_persistence::install(result.page.clone(), closer.clone(), path).await {
+            Ok(closer) => result.closer = Some(closer),
+            Err(error) => {
+                let _ = result.close().await;
+                return Err(error);
+            }
+        }
+    }
     if options.verbose {
         tracing::info!("Browser launched with {} engine", options.engine);
     }

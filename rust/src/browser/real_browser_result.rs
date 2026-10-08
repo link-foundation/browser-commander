@@ -84,6 +84,10 @@ pub(crate) async fn launch_real_browser_owned(
     options: RealBrowserOptions,
     owned_profile: bool,
 ) -> Result<RealBrowserLaunchResult> {
+    crate::browser::session_persistence::validate(
+        options.persist_session_cookies.as_deref(),
+        options.user_data_dir.as_deref(),
+    )?;
     let (connection, launched) = launch_real_browser_with_owned(
         &options,
         Arc::new(SystemLaunchHooks),
@@ -91,5 +95,21 @@ pub(crate) async fn launch_real_browser_owned(
         owned_profile,
     )
     .await?;
-    Ok(real_browser_result(connection, launched, options.headless))
+    let mut result = real_browser_result(connection, launched, options.headless);
+    if let Some(path) = &options.persist_session_cookies {
+        match crate::browser::session_persistence::install(
+            result.page.clone(),
+            result.closer.clone(),
+            path,
+        )
+        .await
+        {
+            Ok(closer) => result.closer = closer,
+            Err(error) => {
+                let _ = result.close().await;
+                return Err(error);
+            }
+        }
+    }
+    Ok(result)
 }

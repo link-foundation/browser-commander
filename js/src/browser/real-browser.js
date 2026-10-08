@@ -1,3 +1,8 @@
+import { launchFailure, redactLaunchEvidence } from './launch-diagnostics.js';
+import {
+  installSessionPersistence,
+  sessionPersistencePath,
+} from './session-persistence.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { findBrowserSource } from './browser-sources.js';
@@ -187,56 +192,66 @@ export async function waitForCdpEndpoint({
   timeout = 30_000,
   fetchImplementation = globalThis.fetch,
 }) {
-  const port = assertFixedDebuggingPort(remoteDebuggingPort);
-  const endpoint = `http://${LOOPBACK_HOST}:${port}`;
-  const deadline = Date.now() + timeout;
-  while (Date.now() < deadline) {
-    const output = devToolsOutput.state();
-    let ownership = devToolsOutput.available
-      ? classifyDevToolsOwnership(output, port)
-      : 'unknown';
-    if (ownership === 'race') {
-      throw new PortRaceError(port, output.listening?.url ?? 'bind failed');
-    }
-    if (browserProcess.exitCode !== null) {
-      throw new Error(
-        `Browser exited before its DevTools endpoint was ready (exit ${browserProcess.exitCode})`
-      );
-    }
-    if (ownership !== 'owned') {
-      const activePort = await readDevToolsActivePort(userDataDir);
-      if (activePort?.port === port) {
-        ownership = 'owned';
+  try {
+    const port = assertFixedDebuggingPort(remoteDebuggingPort);
+    const endpoint = `http://${LOOPBACK_HOST}:${port}`;
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      const output = devToolsOutput.state();
+      let ownership = devToolsOutput.available
+        ? classifyDevToolsOwnership(output, port)
+        : 'unknown';
+      if (ownership === 'race') {
+        throw new PortRaceError(port, output.listening?.url ?? 'bind failed');
       }
-    }
-
-    if (ownership === 'owned') {
-      let version = null;
-      try {
-        version = await fetchCdpVersion(
-          endpoint,
-          fetchImplementation,
-          Math.max(1, deadline - Date.now())
+      if (browserProcess.exitCode !== null) {
+        throw (
+          browserProcess.spawnError ??
+          Object.assign(
+            new Error(
+              `Browser exited before its DevTools endpoint was ready (exit ${browserProcess.exitCode})`
+            ),
+            { stderrTail: browserProcess.stderrTail }
+          )
         );
-      } catch {
-        // The HTTP handler can lag the listening line by a moment.
       }
-      if (version) {
-        const expected = output.listening?.url;
-        if (expected && version.webSocketDebuggerUrl !== expected) {
-          throw new PortRaceError(
-            port,
-            `port serves ${version.webSocketDebuggerUrl}, browser announced ${expected}`
-          );
+      if (ownership !== 'owned') {
+        const activePort = await readDevToolsActivePort(userDataDir);
+        if (activePort?.port === port) {
+          ownership = 'owned';
         }
-        return endpoint;
       }
+
+      if (ownership === 'owned') {
+        let version = null;
+        try {
+          version = await fetchCdpVersion(
+            endpoint,
+            fetchImplementation,
+            Math.max(1, deadline - Date.now())
+          );
+        } catch {
+          // The HTTP handler can lag the listening line by a moment.
+        }
+        if (version) {
+          const expected = output.listening?.url;
+          if (expected && version.webSocketDebuggerUrl !== expected) {
+            throw new PortRaceError(
+              port,
+              `port serves ${version.webSocketDebuggerUrl}, browser announced ${expected}`
+            );
+          }
+          return endpoint;
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    throw new Error(
+      `Timed out after ${timeout}ms waiting for the DevTools endpoint on port ${port}`
+    );
+  } finally {
+    devToolsOutput.dispose?.();
   }
-  throw new Error(
-    `Timed out after ${timeout}ms waiting for the DevTools endpoint on port ${port}`
-  );
 }
 
 function spawnWithStartProcess(executablePath, args, { env, verbose }) {
@@ -251,13 +266,19 @@ async function waitForExit(browserProcess, timeout) {
     return false;
   }
   let timer;
+  const onExit = () => resolveExit(true);
+  let resolveExit;
   const exited = await Promise.race([
-    new Promise((resolve) => browserProcess.once('exit', () => resolve(true))),
+    new Promise((resolve) => {
+      resolveExit = resolve;
+      browserProcess.once('exit', onExit);
+    }),
     new Promise((resolve) => {
       timer = setTimeout(() => resolve(false), timeout);
     }),
   ]);
   clearTimeout(timer);
+  browserProcess.removeListener?.('exit', onExit);
   return exited;
 }
 
@@ -369,6 +390,7 @@ async function spawnOnFreePort({
   userDataDir,
   startupTimeout,
   dependencies,
+  diagnostics,
 }) {
   const reservePort = dependencies.reservePort ?? reserveLoopbackPort;
   const spawnBrowser = dependencies.spawnBrowser ?? spawnWithStartProcess;
@@ -381,10 +403,20 @@ async function spawnOnFreePort({
       userDataDir,
       remoteDebuggingPort: port,
     });
-    const browserProcess = spawnBrowser(executablePath, browserArgs, {
-      env,
-      verbose,
-    });
+    let browserProcess;
+    try {
+      browserProcess = await spawnBrowser(executablePath, browserArgs, {
+        env,
+        verbose: false,
+      });
+    } catch (error) {
+      throw launchFailure(error, {
+        ...diagnostics,
+        phase: 'spawn',
+        executablePath,
+        userDataDir,
+      });
+    }
     try {
       const cdpEndpoint = await waitForEndpoint({
         remoteDebuggingPort: port,
@@ -397,13 +429,24 @@ async function spawnOnFreePort({
       if (browserProcess.exitCode === null) {
         browserProcess.kill();
       }
+      await waitForExit(browserProcess, 5_000);
       if (!(error instanceof PortRaceError) || attempt >= attempts) {
-        throw error;
+        throw launchFailure(error, {
+          ...diagnostics,
+          phase: 'endpoint',
+          browserProcess,
+          executablePath,
+          userDataDir,
+        });
       }
       if (verbose) {
-        console.log(`${error.message}; retrying with a new port`);
+        console.log(
+          redactLaunchEvidence(
+            `${error.message}; retrying with a new port`,
+            diagnostics?.diagnosticRedactor
+          )
+        );
       }
-      await waitForExit(browserProcess, 5_000);
     }
   }
 }
@@ -565,6 +608,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
   options = {},
   dependencies = {}
 ) {
+  sessionPersistencePath(options);
   if (isSafariChannel(options.channel ?? options.browser)) {
     return launchSafari(options, dependencies);
   }
@@ -614,10 +658,22 @@ export async function launchAndConnectRealBrowserWithDependencies(
 
   const resolveExecutable =
     dependencies.resolveExecutable ?? resolveSystemBrowserExecutable;
-  const executablePath = await resolveExecutable({
-    channel,
-    executablePath: requestedExecutablePath,
-  });
+  const launchChannel = attach?.browser ?? channel;
+  const executablePath = await Promise.resolve()
+    .then(() =>
+      resolveExecutable({
+        channel: launchChannel,
+        executablePath: requestedExecutablePath,
+      })
+    )
+    .catch((error) => {
+      throw launchFailure(error, {
+        ...options,
+        phase: 'discovery',
+        engine,
+        executablePath: requestedExecutablePath,
+      });
+    });
 
   const temporaryProfile = !requestedUserDataDir;
   const { userDataDir, snapshotLaunch } = await prepareProfile({
@@ -661,6 +717,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       userDataDir,
       startupTimeout,
       dependencies,
+      diagnostics: { engine, diagnosticRedactor: options.diagnosticRedactor },
     })
   );
   const { browserProcess, cdpEndpoint: resolvedCdpEndpoint } = launched;
@@ -694,19 +751,22 @@ export async function launchAndConnectRealBrowserWithDependencies(
       closeTimeout,
       closeConnection: engine === 'selenium' ? connection.close : undefined,
     });
-    return {
-      ...connection,
-      close,
-      browserProcess,
-      cdpEndpoint: resolvedCdpEndpoint,
-      remoteDebuggingPort: launched.port,
-      executablePath,
-      userDataDir,
-      temporaryProfile,
-      args: launched.browserArgs,
-      ...(migration ? { migration } : {}),
-      ...(snapshotLaunch ? { attach: snapshotLaunch.attach } : {}),
-    };
+    return await installSessionPersistence(
+      {
+        ...connection,
+        close,
+        browserProcess,
+        cdpEndpoint: resolvedCdpEndpoint,
+        remoteDebuggingPort: launched.port,
+        executablePath,
+        userDataDir,
+        temporaryProfile,
+        args: launched.browserArgs,
+        ...(migration ? { migration } : {}),
+        ...(snapshotLaunch ? { attach: snapshotLaunch.attach } : {}),
+      },
+      options
+    );
   } catch (error) {
     if (browserProcess.exitCode === null) {
       browserProcess.kill();
@@ -715,7 +775,14 @@ export async function launchAndConnectRealBrowserWithDependencies(
     if (temporaryProfile) {
       await removeUserDataDir(userDataDir);
     }
-    throw error;
+    throw launchFailure(error, {
+      ...options,
+      phase: 'connect',
+      engine,
+      browserProcess,
+      executablePath,
+      userDataDir,
+    });
   }
 }
 

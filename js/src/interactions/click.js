@@ -709,6 +709,7 @@ async function prepareElement(options = {}) {
     log,
     verbose = false,
     selector,
+    index,
     scrollIntoView: shouldScroll = true,
     waitAfterScroll,
     smoothScroll = true,
@@ -719,6 +720,7 @@ async function prepareElement(options = {}) {
     page,
     engine,
     selector,
+    index,
     timeout,
   });
 
@@ -982,6 +984,7 @@ export async function clickButton(options = {}) {
       log,
       verbose,
       selector,
+      index: options.index,
       scrollIntoView: activationOptions.scroll === CLICK_SCROLL.AUTO,
       waitAfterScroll,
       smoothScroll,

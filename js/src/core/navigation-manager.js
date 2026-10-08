@@ -1,3 +1,4 @@
+import { removeCallback, subscribeCallbacks } from './subscriptions.js';
 /**
  * NavigationManager - Centralized navigation handling
  *
@@ -10,7 +11,13 @@
 
 import { isNavigationError } from './navigation-safety.js';
 import { TIMING } from './constants.js';
-import { READINESS_STATUS } from './readiness.js';
+import {
+  READINESS_STATUS,
+  createDeadline,
+  runWithinDeadline,
+} from './readiness.js';
+import { createManagedNavigator } from './managed-navigation.js';
+import { navigationPhase as runNavigationPhase } from './navigation-operation.js';
 import { createReadinessWaiter } from './navigation-readiness.js';
 
 async function setManagedContent(options = {}) {
@@ -23,7 +30,7 @@ async function setManagedContent(options = {}) {
     currentUrl,
     triggerNavigationStart,
     updateCurrentUrl,
-    waitForPageReady,
+    waitForReady,
     abandonNavigation,
   } = options;
 
@@ -32,22 +39,35 @@ async function setManagedContent(options = {}) {
   }
 
   log.debug(() => '🚀 Loading in-memory HTML content');
+  const deadline = createDeadline({ timeout, signal: options.signal });
 
   try {
     // Treat document replacement as a controlled navigation so active page
     // triggers stop before the old document is discarded.
-    await triggerNavigationStart({ url: currentUrl, isExternal: false });
-    await page.setContent(html, { waitUntil, timeout });
+    await runNavigationPhase(deadline, () =>
+      triggerNavigationStart({ url: currentUrl, isExternal: false })
+    );
+    await runNavigationPhase(deadline, () =>
+      page.setContent(html, {
+        waitUntil,
+        timeout: Math.max(1, deadline.remainingMs()),
+      })
+    );
 
     // setContent normally preserves the URL, but inline scripts can navigate.
     updateCurrentUrl();
-    await waitForPageReady({ timeout, reason: 'after setContent' });
-    return true;
+    return (
+      await waitForReady({
+        deadline,
+        reason: 'after setContent',
+        checks: options.checks,
+      })
+    ).ready;
   } catch (error) {
     // Do not leave the manager in its loading state when setContent fails, but
     // do not claim the page became ready either - it did not.
     abandonNavigation('setContent failed');
-    if (isNavigationError(error)) {
+    if (error.status || isNavigationError(error)) {
       log.debug(() => '⚠️  Content loading was interrupted, recovering...');
       return false;
     }
@@ -77,6 +97,7 @@ export function createNavigationManager(options = {}) {
   let navigationStartTime = null;
   let navigationPromise = null;
   let navigationResolve = null;
+  const state = { activeOperation: null, lastOutcome: null };
 
   // Session tracking
   let sessionId = 0;
@@ -182,6 +203,10 @@ export function createNavigationManager(options = {}) {
     }
     sessionCleanupCallbacks = [];
 
+    if (details.signal?.aborted) {
+      return;
+    }
+
     // Start new session
     sessionId++;
     isNavigating = true;
@@ -210,12 +235,14 @@ export function createNavigationManager(options = {}) {
 
     // If external navigation, wait for it to complete
     if (isExternal) {
-      await waitForPageReady({ reason: 'external navigation' });
+      await waitForPageReady({
+        reason: 'external navigation',
+        timeout: config.networkIdleTimeout,
+      });
     }
   }
 
   // Track if a readiness wait is currently running to prevent concurrent calls
-  let pageReadyPromise = null;
 
   const { waitForReady } = createReadinessWaiter({
     page,
@@ -250,22 +277,9 @@ export function createNavigationManager(options = {}) {
   async function waitForPageReady(opts = {}) {
     const { reason = 'page ready' } = opts;
 
-    // Concurrent callers join the in-flight wait instead of racing a second
-    // deadline against the first.
-    if (pageReadyPromise) {
-      log.debug(
-        () => `⏳ Waiting for existing page ready operation (${reason})...`
-      );
-      return pageReadyPromise;
-    }
-
-    pageReadyPromise = waitForReady(opts).then((result) => result.ready);
-
-    try {
-      return await pageReadyPromise;
-    } finally {
-      pageReadyPromise = null;
-    }
+    // Independent policies and deadlines cannot safely share a readiness wait.
+    log.debug(() => `Waiting for page ready (${reason})`);
+    return (await waitForReady(opts)).ready;
   }
 
   /**
@@ -343,36 +357,15 @@ export function createNavigationManager(options = {}) {
    * @param {number} options.timeout - Navigation timeout
    * @returns {Promise<boolean>} - True if navigation succeeded
    */
-  async function navigate(opts = {}) {
-    const { url, waitUntil = 'domcontentloaded', timeout = 60000 } = opts;
-
-    if (!url) {
-      throw new Error('url is required in options');
-    }
-
-    log.debug(() => `🚀 Navigating to: ${url}`);
-
-    try {
-      // Trigger navigation start
-      await triggerNavigationStart({ url, isExternal: false });
-
-      // Perform navigation
-      await page.goto(url, { waitUntil, timeout });
-
-      // Update current URL
-      currentUrl = page.url();
-
-      // Wait for page to be fully ready
-      return await waitForPageReady({ timeout, reason: 'after goto' });
-    } catch (error) {
-      if (isNavigationError(error)) {
-        log.debug(() => '⚠️  Navigation was interrupted, recovering...');
-        abandonNavigation('navigation interrupted');
-        return false;
-      }
-      throw error;
-    }
-  }
+  const navigate = createManagedNavigator({
+    page,
+    state,
+    config,
+    waitForReady,
+    triggerNavigationStart,
+    updateCurrentUrl: () => (currentUrl = page.url()),
+    abandonNavigation,
+  });
 
   const setContent = (opts = {}) =>
     setManagedContent({
@@ -382,7 +375,7 @@ export function createNavigationManager(options = {}) {
       currentUrl,
       triggerNavigationStart,
       updateCurrentUrl: () => (currentUrl = page.url()),
-      waitForPageReady,
+      waitForReady,
       abandonNavigation,
     });
 
@@ -399,23 +392,15 @@ export function createNavigationManager(options = {}) {
       return true; // Already ready
     }
 
-    // Create a promise that resolves when navigation completes
     if (!navigationPromise) {
       navigationPromise = new Promise((resolve) => {
         navigationResolve = resolve;
-
-        // Timeout handler
-        setTimeout(() => {
-          if (isNavigating) {
-            log.debug(() => '⚠️  waitForNavigation timeout');
-            abandonNavigation('waitForNavigation timeout');
-            resolve(false);
-          }
-        }, timeout);
       });
     }
-
-    return await navigationPromise;
+    const deadline =
+      opts.deadline ?? createDeadline({ timeout, signal: opts.signal });
+    const outcome = await runWithinDeadline(deadline, () => navigationPromise);
+    return !outcome.timedOut && !outcome.interrupted && outcome.value;
   }
 
   /**
@@ -450,28 +435,21 @@ export function createNavigationManager(options = {}) {
    * Will be called before next navigation
    */
   function onSessionCleanup(callback) {
-    sessionCleanupCallbacks.push(callback);
+    return subscribeCallbacks(sessionCleanupCallbacks, callback);
   }
 
   /**
    * Add event listener
    */
   function on(event, callback) {
-    if (listeners[event]) {
-      listeners[event].push(callback);
-    }
+    return subscribeCallbacks(listeners[event], callback);
   }
 
   /**
    * Remove event listener
    */
   function off(event, callback) {
-    if (listeners[event]) {
-      const index = listeners[event].indexOf(callback);
-      if (index !== -1) {
-        listeners[event].splice(index, 1);
-      }
-    }
+    removeCallback(listeners[event], callback);
   }
 
   /**
@@ -486,6 +464,7 @@ export function createNavigationManager(options = {}) {
    * Stop listening for navigation events
    */
   function stopListening() {
+    state.activeOperation?.controller.abort();
     page.off('framenavigated', handleFrameNavigation);
     log.debug(() => '🔌 Navigation manager stopped');
   }
@@ -500,6 +479,10 @@ export function createNavigationManager(options = {}) {
   return {
     // Navigation
     navigate,
+    cancelNavigation: () => {
+      state.activeOperation?.controller.abort();
+      abandonNavigation('caller stopped navigation');
+    },
     setContent,
     waitForNavigation,
     waitForPageReady,
@@ -507,6 +490,7 @@ export function createNavigationManager(options = {}) {
 
     // State
     isNavigating: () => isNavigating,
+    getLastOutcome: () => state.lastOutcome,
     getCurrentUrl: () => currentUrl,
     getSessionId: () => sessionId,
 

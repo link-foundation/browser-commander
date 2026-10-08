@@ -113,7 +113,7 @@ class DialogManager:
             except Exception:
                 self.log.debug(lambda: "⚠️  Failed to auto-dismiss dialog")
 
-    def on_dialog(self, handler: Callable) -> None:
+    def on_dialog(self, handler: Callable) -> Callable[[], None]:
         """Add a dialog event handler.
 
         The handler receives a dialog object with:
@@ -130,9 +130,18 @@ class DialogManager:
         if not callable(handler):
             raise TypeError("Dialog handler must be callable")
         self._handlers.append(handler)
+        removed = False
+
+        def unregister():
+            nonlocal removed
+            if not removed:
+                removed = True
+                self.off_dialog(handler)
+
         self.log.debug(
             lambda: f"🔌 Dialog handler registered (total: {len(self._handlers)})"
         )
+        return unregister
 
     def off_dialog(self, handler: Callable) -> None:
         """Remove a dialog event handler.

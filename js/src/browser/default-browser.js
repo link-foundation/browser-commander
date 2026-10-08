@@ -68,16 +68,40 @@ function parseMacLaunchServicesHandler(output) {
 }
 
 async function resolveDarwinDefault(runCommand, environment) {
-  const output = await runCommand(
-    'defaults',
-    [
-      'read',
-      'com.apple.LaunchServices/com.apple.launchservices.secure',
-      'LSHandlers',
-    ],
-    environment
+  const output = await Promise.resolve()
+    .then(() =>
+      runCommand(
+        'defaults',
+        [
+          'read',
+          'com.apple.LaunchServices/com.apple.launchservices.secure',
+          'LSHandlers',
+        ],
+        environment
+      )
+    )
+    .catch(() => '');
+  const legacy = browserForIdentifier(
+    parseMacLaunchServicesHandler(output),
+    'darwin'
   );
-  return browserForIdentifier(parseMacLaunchServicesHandler(output), 'darwin');
+  if (legacy) {
+    return legacy;
+  }
+  try {
+    const script =
+      "ObjC.import('AppKit'); var app = $.NSWorkspace.sharedWorkspace.URLForApplicationToOpenURL($.NSURL.URLWithString('https://example.invalid')); app ? ObjC.unwrap($.NSBundle.bundleWithURL(app).bundleIdentifier) : ''";
+    return browserForIdentifier(
+      await runCommand(
+        'osascript',
+        ['-l', 'JavaScript', '-e', script],
+        environment
+      ),
+      'darwin'
+    );
+  } catch {
+    return null;
+  }
 }
 
 async function resolveLinuxDefault(runCommand, environment) {

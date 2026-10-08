@@ -89,16 +89,27 @@ def parse_windows_prog_id(output: str) -> str | None:
 def _resolve_darwin_default(
     run_command: RunCommand, environment: Mapping[str, str]
 ) -> str | None:
-    output = run_command(
-        "defaults",
-        [
-            "read",
-            "com.apple.LaunchServices/com.apple.launchservices.secure",
-            "LSHandlers",
-        ],
-        environment,
-    )
-    return browser_for_identifier(parse_mac_launch_services_handler(output), "darwin")
+    output = ""
+    with suppress(Exception):
+        output = run_command(
+            "defaults",
+            [
+                "read",
+                "com.apple.LaunchServices/com.apple.launchservices.secure",
+                "LSHandlers",
+            ],
+            environment,
+        )
+    legacy = browser_for_identifier(parse_mac_launch_services_handler(output), "darwin")
+    if legacy:
+        return legacy
+    with suppress(Exception):
+        script = "ObjC.import('AppKit'); var app = $.NSWorkspace.sharedWorkspace.URLForApplicationToOpenURL($.NSURL.URLWithString('https://example.invalid')); app ? ObjC.unwrap($.NSBundle.bundleWithURL(app).bundleIdentifier) : ''"
+        return browser_for_identifier(
+            run_command("osascript", ["-l", "JavaScript", "-e", script], environment),
+            "darwin",
+        )
+    return None
 
 
 def _resolve_linux_default(

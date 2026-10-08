@@ -77,28 +77,25 @@ pub async fn install_click_listener(
     storage_key: &str,
 ) -> Result<bool, EngineError> {
     let script = format!(
-        r#"
-        (function() {{
-            document.addEventListener('click', (event) => {{
-                let element = event.target;
-                while (element && element !== document.body) {{
-                    const elementText = element.textContent?.trim() || '';
-                    if (elementText === '{}' ||
-                        ((element.tagName === 'A' || element.tagName === 'BUTTON') &&
-                         elementText.includes('{}'))) {{
-                        console.log('[Click Listener] Detected click on {} button!');
-                        window.sessionStorage.setItem('{}', 'true');
-                        break;
-                    }}
-                    element = element.parentElement;
+        r#"(() => {{
+        const key = {key}, text = {text};
+        const listeners = window.__browserCommanderClickListeners ??= new Map();
+        const previous = listeners.get(key);
+        if (previous) document.removeEventListener('click', previous, true);
+        const handler = event => {{
+            let element = event.target;
+            while (element && element !== document.body) {{
+                const value = element.textContent?.trim() ?? '';
+                if (value === text || (['A', 'BUTTON'].includes(element.tagName) && value.includes(text))) {{
+                    sessionStorage.setItem(key, 'true'); break;
                 }}
-            }}, true);
-        }})()
-        "#,
-        button_text.replace('\'', "\\'"),
-        button_text.replace('\'', "\\'"),
-        button_text.replace('\'', "\\'"),
-        storage_key.replace('\'', "\\'")
+                element = element.parentElement;
+            }}
+        }};
+        listeners.set(key, handler); document.addEventListener('click', handler, true); return true;
+    }})()"#,
+        key = serde_json::json!(storage_key),
+        text = serde_json::json!(button_text)
     );
 
     match adapter.evaluate(&script).await {
@@ -207,6 +204,64 @@ pub async fn find_toggle_button(
         }
     }
 
+    Ok(None)
+}
+
+/// A successful false observation is distinct from an interrupted read.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FlagRead {
+    Observed(bool),
+    Interrupted,
+}
+
+pub async fn read_flag(
+    adapter: &dyn EngineAdapter,
+    storage_key: &str,
+) -> Result<FlagRead, EngineError> {
+    let script = format!(
+        "sessionStorage.getItem({}) === 'true'",
+        serde_json::json!(storage_key)
+    );
+    match adapter.evaluate(&script).await {
+        Ok(value) => Ok(FlagRead::Observed(value.as_bool().unwrap_or(false))),
+        Err(error) if is_navigation_error(&error.to_string()) => Ok(FlagRead::Interrupted),
+        Err(error) => Err(error),
+    }
+}
+
+pub async fn uninstall_click_listener(
+    adapter: &dyn EngineAdapter,
+    storage_key: &str,
+) -> Result<bool, EngineError> {
+    let script = format!(
+        r#"(() => {{
+        const key = {}, listeners = window.__browserCommanderClickListeners;
+        const handler = listeners?.get(key); if (!handler) return false;
+        document.removeEventListener('click', handler, true); listeners.delete(key); return true;
+    }})()"#,
+        serde_json::json!(storage_key)
+    );
+    match adapter.evaluate(&script).await {
+        Ok(value) => Ok(value.as_bool().unwrap_or(false)),
+        Err(error) if is_navigation_error(&error.to_string()) => Ok(false),
+        Err(error) => Err(error),
+    }
+}
+
+pub async fn find_toggle_button_with_texts(
+    adapter: &dyn EngineAdapter,
+    selectors: &[&str],
+    texts: &[&str],
+    element_types: &[&str],
+) -> Result<Option<String>, EngineError> {
+    if let Some(found) = crate::elements::find_first(adapter, selectors, false).await? {
+        return Ok(Some(found));
+    }
+    for text in texts {
+        if let Some(found) = find_toggle_button(adapter, &[], Some(text), element_types).await? {
+            return Ok(Some(found));
+        }
+    }
     Ok(None)
 }
 

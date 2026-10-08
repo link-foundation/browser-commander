@@ -119,9 +119,39 @@ pub async fn save_storage_state(
     if let Some(path) = file_path {
         let mut encoded = serde_json::to_vec_pretty(&state)?;
         encoded.push(b'\n');
-        std::fs::write(path, encoded)?;
+        write_restricted_bytes(path, &encoded)?;
     }
     Ok(state)
+}
+
+pub(crate) fn write_restricted_state(path: &Path, state: &StorageState) -> anyhow::Result<()> {
+    write_restricted_bytes(path, &serde_json::to_vec_pretty(state)?)
+}
+
+fn write_restricted_bytes(path: &Path, bytes: &[u8]) -> anyhow::Result<()> {
+    use std::io::Write;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    let temporary = path.with_file_name(format!(
+        ".browser-commander-{}-{}.tmp",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    ));
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let written = (|| {
+        let mut file = options.open(&temporary)?;
+        file.write_all(bytes)?;
+        drop(file);
+        std::fs::rename(&temporary, path)
+    })();
+    let _ = std::fs::remove_file(&temporary);
+    written.map_err(Into::into)
 }
 
 #[cfg(test)]

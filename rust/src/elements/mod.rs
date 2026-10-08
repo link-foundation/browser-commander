@@ -6,8 +6,10 @@
 //! - Extracting element content
 
 pub mod content;
+pub mod reusable;
 pub mod selectors;
 pub mod visibility;
+pub use reusable::{check, find_first, has_text, is_checked};
 
 pub use content::{
     get_attribute, input_value, is_element_empty, text_content, truncate_for_preview,

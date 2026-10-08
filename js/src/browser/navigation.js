@@ -5,6 +5,7 @@
  * the NavigationManager for backwards compatibility.
  */
 
+import { navigationPhase } from '../core/navigation-operation.js';
 import { TIMING } from '../core/constants.js';
 import { isNavigationError } from '../core/navigation-safety.js';
 import { isActionStoppedError } from '../core/page-trigger-manager.js';
@@ -13,6 +14,8 @@ import {
   createDeadline,
   networkIdleFor,
   runReadinessChecks,
+  runWithinDeadline,
+  sleepWithinDeadline,
   urlStableFor,
 } from '../core/readiness.js';
 
@@ -102,17 +105,30 @@ export async function verifyNavigation(options = {}) {
     log = { debug: () => {} },
   } = options;
 
-  const startTime = Date.now();
+  const deadline =
+    options.deadline ?? createDeadline({ timeout, signal: options.signal });
+  const verificationEnd = performance.now() + timeout;
+  const budget = {
+    ...deadline,
+    remainingMs: () =>
+      Math.max(
+        0,
+        Math.min(deadline.remainingMs(), verificationEnd - performance.now())
+      ),
+    expired: () => deadline.expired() || performance.now() >= verificationEnd,
+  };
   let attempts = 0;
   let lastResult = { verified: false, actualUrl: '', reason: '' };
 
-  while (Date.now() - startTime < timeout) {
+  while (!budget.expired() && !budget.signal?.aborted) {
     attempts++;
-    lastResult = await verifyFn({
-      page,
-      expectedUrl,
-      startUrl,
-    });
+    const probe = await runWithinDeadline(budget, () =>
+      verifyFn({ page, expectedUrl, startUrl })
+    );
+    if (probe.timedOut || probe.interrupted) {
+      break;
+    }
+    lastResult = probe.value;
 
     if (lastResult.verified) {
       log.debug(
@@ -128,7 +144,7 @@ export async function verifyNavigation(options = {}) {
     }
 
     // Wait before next retry
-    await new Promise((resolve) => setTimeout(resolve, retryInterval));
+    await sleepWithinDeadline(retryInterval, budget);
   }
 
   log.debug(
@@ -158,7 +174,7 @@ export async function waitForUrlStabilization(options = {}) {
   const {
     page,
     log,
-    wait,
+    wait: _wait,
     navigationManager,
     stableChecks = 3,
     checkInterval = 1000,
@@ -168,25 +184,29 @@ export async function waitForUrlStabilization(options = {}) {
 
   // If NavigationManager is available, delegate to it
   if (navigationManager) {
-    return navigationManager.waitForPageReady({ timeout, reason });
+    return navigationManager.waitForPageReady({ ...options, timeout, reason });
   }
 
   // Legacy polling-based approach
   log.debug(() => `⏳ Waiting for URL to stabilize (${reason})...`);
   let stableCount = 0;
   let lastUrl = page.url();
-  const startTime = Date.now();
+  const deadline =
+    options.deadline ?? createDeadline({ timeout, signal: options.signal });
 
   while (stableCount < stableChecks) {
     // Check timeout
-    if (Date.now() - startTime > timeout) {
+    if (deadline.expired() || deadline.signal?.aborted) {
       log.debug(
         () => `⚠️  URL stabilization timeout after ${timeout}ms (${reason})`
       );
       return false;
     }
 
-    await wait({ ms: checkInterval, reason: 'checking URL stability' });
+    await sleepWithinDeadline(checkInterval, deadline);
+    if (deadline.expired() || deadline.signal?.aborted) {
+      return false;
+    }
     const currentUrl = page.url();
 
     if (currentUrl === lastUrl) {
@@ -207,6 +227,70 @@ export async function waitForUrlStabilization(options = {}) {
 
   log.debug(() => `✅ URL stabilized (${reason})`);
   return true;
+}
+
+async function legacyGotoReadiness(options, deadline) {
+  const {
+    page,
+    url,
+    waitForUrlStabilization: stabilizeFn,
+    waitUntil,
+    waitForStableUrlBefore,
+    waitForStableUrlAfter,
+    waitForNetworkIdle,
+    stableChecks,
+    checkInterval,
+    checks,
+  } = options;
+  if (waitForStableUrlBefore && stabilizeFn) {
+    await navigationPhase(deadline, () =>
+      stabilizeFn({
+        stableChecks,
+        checkInterval,
+        timeout: deadline.remainingMs(),
+        deadline,
+        reason: 'before navigation',
+      })
+    );
+  }
+  await navigationPhase(deadline, () =>
+    page.goto(url, {
+      waitUntil,
+      timeout: Math.max(1, deadline.remainingMs()),
+    })
+  );
+  const readiness = checks ?? [
+    ...(waitForStableUrlAfter
+      ? [
+          urlStableFor({
+            intervalMs: checkInterval,
+            stableForMs: checkInterval,
+            consecutiveSamples: stableChecks,
+          }),
+        ]
+      : []),
+    ...(waitForNetworkIdle ? [networkIdleFor()] : []),
+  ];
+  return runReadinessChecks({
+    checks: readiness,
+    deadline,
+    context: { page, networkTracker: options.networkTracker },
+  });
+}
+
+function navigationFailureStatus(error, signal) {
+  if (signal?.aborted) {
+    return 'interrupted';
+  }
+  if (error.status) {
+    return error.status;
+  }
+  if (error.name === 'TimeoutError') {
+    return 'timed_out';
+  }
+  return isNavigationError(error) || isActionStoppedError(error)
+    ? 'interrupted'
+    : null;
 }
 
 /**
@@ -232,14 +316,13 @@ export async function waitForUrlStabilization(options = {}) {
 export async function goto(options = {}) {
   const {
     page,
-    waitForUrlStabilization: stabilizeFn,
     navigationManager,
     log = { debug: () => {} },
     url,
     waitUntil = 'domcontentloaded',
     waitForStableUrlBefore = true,
     waitForStableUrlAfter = true,
-    waitForNetworkIdle: _waitForNetworkIdle = true,
+    waitForNetworkIdle = true,
     stableChecks = 3,
     checkInterval = 1000,
     timeout = 240000,
@@ -252,103 +335,95 @@ export async function goto(options = {}) {
     throw new Error('url is required in options');
   }
 
+  const { signal, checks } = options;
+  const deadline = options.deadline ?? createDeadline({ timeout, signal });
   const startUrl = page.url();
-
-  // If NavigationManager is available, use it for full navigation handling
-  if (navigationManager) {
-    try {
-      const navigated = await navigationManager.navigate({
-        url,
-        waitUntil,
-        timeout,
-      });
-
-      // Verify navigation if requested
-      if (verify && navigated) {
-        const verificationResult = await verifyNavigation({
+  try {
+    let outcome;
+    if (navigationManager) {
+      const result = await navigationPhase(deadline, () =>
+        navigationManager.navigate({
+          url,
+          waitUntil,
+          timeout,
+          deadline,
+          signal,
+          checks,
+          waitForStableUrlBefore,
+          waitForStableUrlAfter,
+          waitForNetworkIdle,
+          stableChecks,
+          checkInterval,
+          returnOutcome: true,
+        })
+      );
+      outcome =
+        typeof result === 'boolean'
+          ? { ready: result, status: result ? 'ready' : 'failed' }
+          : result;
+    } else {
+      outcome = await legacyGotoReadiness(
+        {
+          ...options,
+          waitUntil,
+          waitForStableUrlBefore,
+          waitForStableUrlAfter,
+          waitForNetworkIdle,
+          stableChecks,
+          checkInterval,
+        },
+        deadline
+      );
+    }
+    if (!outcome.ready) {
+      return {
+        navigated: false,
+        verified: false,
+        actualUrl: page.url(),
+        status: outcome.status,
+        readiness: outcome,
+      };
+    }
+    if (verify) {
+      const verified = await navigationPhase(deadline, () =>
+        verifyNavigation({
           page,
           expectedUrl: url,
           startUrl,
           verifyFn,
-          timeout: verificationTimeout,
+          timeout: Math.min(verificationTimeout, deadline.remainingMs()),
           log,
-        });
-
-        return {
-          navigated: true,
-          verified: verificationResult.verified,
-          actualUrl: verificationResult.actualUrl,
-          reason: verificationResult.reason,
-        };
-      }
-
-      return { navigated, verified: navigated, actualUrl: page.url() };
-    } catch (error) {
-      if (isNavigationError(error) || isActionStoppedError(error)) {
-        // Navigation was stopped by page trigger or navigation error
-        // This is not a failure - it means another action took over
-        return {
-          navigated: false,
-          verified: false,
-          reason: 'navigation stopped/interrupted',
-        };
-      }
-      throw error;
-    }
-  }
-
-  // Legacy approach without NavigationManager
-  try {
-    // Wait for URL to stabilize BEFORE navigation (to avoid interrupting natural redirects)
-    if (waitForStableUrlBefore && stabilizeFn) {
-      await stabilizeFn({
-        stableChecks,
-        checkInterval,
-        reason: 'before navigation',
-      });
-    }
-
-    // Navigate to the URL
-    await page.goto(url, { waitUntil, timeout });
-
-    // Wait for URL to stabilize AFTER navigation (to ensure all redirects are complete)
-    if (waitForStableUrlAfter && stabilizeFn) {
-      await stabilizeFn({
-        stableChecks,
-        checkInterval,
-        reason: 'after navigation',
-      });
-    }
-
-    // Verify navigation if requested
-    if (verify) {
-      const verificationResult = await verifyNavigation({
-        page,
-        expectedUrl: url,
-        startUrl,
-        verifyFn,
-        timeout: verificationTimeout,
-        log,
-      });
-
+          deadline: {
+            ...deadline,
+            remainingMs: () =>
+              Math.min(verificationTimeout, deadline.remainingMs()),
+          },
+        })
+      );
       return {
         navigated: true,
-        verified: verificationResult.verified,
-        actualUrl: verificationResult.actualUrl,
-        reason: verificationResult.reason,
+        ...verified,
+        status: verified.verified ? 'ready' : 'failed',
+        readiness: outcome,
       };
     }
-
-    return { navigated: true, verified: true, actualUrl: page.url() };
+    return {
+      navigated: true,
+      verified: true,
+      actualUrl: page.url(),
+      status: 'ready',
+      readiness: outcome,
+    };
   } catch (error) {
-    if (isNavigationError(error) || isActionStoppedError(error)) {
-      console.log(
-        '⚠️  Navigation was interrupted/stopped, recovering gracefully'
-      );
+    const status = navigationFailureStatus(error, signal);
+    if (status) {
+      navigationManager?.cancelNavigation?.();
       return {
         navigated: false,
         verified: false,
-        reason: 'navigation interrupted/stopped',
+        actualUrl: page.url(),
+        status,
+        reason: error.message,
       };
     }
     throw error;

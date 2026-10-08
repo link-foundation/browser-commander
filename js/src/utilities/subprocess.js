@@ -14,12 +14,16 @@ import { ProcessRunner } from 'command-stream/process-runner';
  * optional PTY and terminal-rendering modules are never loaded.
  */
 
-function runnerFor(file, args, { env, cwd, stdin = 'ignore', killGrace }) {
+function runnerFor(
+  file,
+  args,
+  { env, cwd, stdin = 'ignore', killGrace, capture = true }
+) {
   return new ProcessRunner(
     { mode: 'exec', file, args },
     {
       mirror: false,
-      capture: true,
+      capture,
       stdin,
       ...(env ? { env } : {}),
       ...(cwd ? { cwd } : {}),
@@ -102,7 +106,7 @@ export async function runCommand(file, args = [], options = {}) {
  */
 export function startProcess(file, args = [], options = {}) {
   const { env, cwd, forwardOutput = false, killGrace = 2000 } = options;
-  const runner = runnerFor(file, args, { env, cwd, killGrace });
+  const runner = runnerFor(file, args, { env, cwd, killGrace, capture: false });
   return new ManagedProcess(runner, { forwardOutput });
 }
 
@@ -136,6 +140,8 @@ export class ManagedProcess {
     this.runner = runner;
     this.exitCode = null;
     this.signalCode = null;
+    this.stderrTail = '';
+    this.spawnError = null;
     this.stdout = new OutputChannel();
     this.stderr = new OutputChannel();
     this.exitListeners = new Set();
@@ -146,6 +152,7 @@ export class ManagedProcess {
       this.stdout.emit(chunk);
     });
     runner.on('stderr', (chunk) => {
+      this.stderrTail = (this.stderrTail + String(chunk)).slice(-8192);
       if (forwardOutput) {
         process.stderr.write(chunk);
       }
@@ -153,9 +160,13 @@ export class ManagedProcess {
     });
     runner.start();
     this.exited = Promise.resolve(runner)
-      .catch((error) => ({ code: error?.code ?? 1 }))
+      .catch((error) => {
+        this.spawnError = error;
+        return { code: error?.code ?? 1 };
+      })
       .then((result) => {
         this.exitCode = typeof result.code === 'number' ? result.code : 1;
+        this.signalCode = result.signal ?? null;
         for (const listener of this.exitListeners) {
           listener(this.exitCode);
         }

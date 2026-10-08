@@ -98,6 +98,8 @@ class ReadinessWaiter:
         timeout: int = TIMING["NETWORK_IDLE_TIMEOUT"],
         reason: str = "page ready",
         checks: Sequence[ReadinessCheck] | None = None,
+        deadline: Deadline | None = None,
+        observe_only: bool = False,
     ) -> ReadinessResult:
         """Wait for the page to be ready and report exactly what was observed.
 
@@ -115,7 +117,7 @@ class ReadinessWaiter:
         """
         self.log.debug(lambda: f"Waiting for page ready ({reason})...")
 
-        deadline = Deadline(timeout=timeout)
+        deadline = deadline or Deadline(timeout=timeout)
         result = await run_readiness_checks(
             checks=(
                 checks
@@ -138,11 +140,11 @@ class ReadinessWaiter:
         result.url = self.get_url()
 
         if result.ready:
-            if self.on_ready:
+            if self.on_ready and not observe_only:
                 self.on_ready()
             self.log.debug(lambda: f"Page ready after {result.elapsed_ms}ms ({reason})")
         else:
-            if self.on_not_ready:
+            if self.on_not_ready and not observe_only:
                 self.on_not_ready()
             self.log.debug(
                 lambda: (

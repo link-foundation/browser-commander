@@ -134,6 +134,31 @@
           "title": "Typed rejection of Safari network interception, tracing and PDF"
         }
       ]
+    },
+    {
+      "title": "Navigation and reusable sessions",
+      "features": [
+        {
+          "id": "navigation.budget",
+          "title": "Navigation policy, deadline and cancellation"
+        },
+        {
+          "id": "launch.diagnostics",
+          "title": "Bounded redacted launch diagnostics"
+        },
+        {
+          "id": "elements.reusable",
+          "title": "Ordered text/selectors and indexed controls"
+        },
+        {
+          "id": "sessions.runtime",
+          "title": "Runtime cross-origin cookie management"
+        },
+        {
+          "id": "sessions.workflow",
+          "title": "Cookie-only session discovery and opt-in persistence"
+        }
+      ]
     }
   ]
 }

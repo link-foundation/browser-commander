@@ -249,3 +249,5 @@ for Clippy. A single slow hook can be skipped for one commit with
 ## License
 
 [UNLICENSE](LICENSE)
+
+See [navigation budgets, launch diagnostics, reusable helpers and sessions](docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.

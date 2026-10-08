@@ -19,6 +19,30 @@ type Aes128CbcEncryptor = cbc::Encryptor<Aes128>;
 /// The IV Chrome uses for every AES-128-CBC (`v10`/`v11`) cookie value.
 const CHROME_CBC_IV: [u8; 16] = [0x20; 16];
 
+#[tokio::test]
+async fn session_discovery_reuses_firefox_database_reader() -> anyhow::Result<()> {
+    let directory = TempDir::new("firefox-session-discovery")?;
+    let profile = create_firefox_profile(directory.path())?;
+    let source = browser_commander::SessionSource {
+        browser: "firefox".into(),
+        path: profile,
+        engine: browser_commander::EngineType::Playwright,
+        launch: browser_commander::LaunchMode::Real,
+    };
+    let results = browser_commander::find_site_sessions(
+        &["example.org".into()],
+        &[source],
+        browser_commander::RealBrowserOptions::default(),
+        None,
+    )
+    .await?;
+    assert_eq!(results.len(), 1);
+    assert!(results[0].error.is_none(), "{:?}", results[0].error);
+    assert_eq!(results[0].cookies[0]["name"], "firefox-session");
+    assert_eq!(results[0].logged_in, None);
+    Ok(())
+}
+
 // The fixtures pass an empty environment: GitHub's Linux runners set
 // XDG_CONFIG_HOME, which would otherwise move Chrome's root out of the fixture home.
 #[test]

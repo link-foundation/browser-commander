@@ -20,6 +20,8 @@ use super::real_browser::{launch_real_browser_owned, RealBrowserLaunchResult, Re
 /// Source of a snapshot. The source browser may remain open throughout.
 #[derive(Debug, Clone)]
 pub struct SnapshotOptions {
+    /// Omission copies the supported profile; `Some(["cookies"])` limits data.
+    pub include: Option<Vec<String>>,
     /// Chromium-family browser (`chrome`, `edge`, `brave` or `chromium`).
     pub browser: String,
     /// On-disk profile name, such as `Default` or `Profile 1`.
@@ -31,6 +33,7 @@ pub struct SnapshotOptions {
 impl Default for SnapshotOptions {
     fn default() -> Self {
         Self {
+            include: None,
             browser: "chrome".into(),
             profile: "Default".into(),
             user_data_dir: None,
@@ -222,6 +225,13 @@ pub fn snapshot_user_data_dir(
     options: &SnapshotOptions,
     to: Option<&Path>,
 ) -> Result<SnapshotReport> {
+    if options
+        .include
+        .as_ref()
+        .is_some_and(|include| include != &["cookies"])
+    {
+        return Err(anyhow!("snapshot include must be [cookies] or omitted"));
+    }
     let browser = normalize_cookie_browser(&options.browser)?;
     if browser_family(browser)? != "chromium" {
         return Err(anyhow!(
@@ -277,7 +287,24 @@ pub fn snapshot_user_data_dir(
         if report.source.user_data_dir.join("Local State").exists() {
             copy_item(Path::new("Local State"), &mut report)?;
         }
-        copy_item(Path::new(&options.profile), &mut report)?;
+        match &options.include {
+            None => copy_item(Path::new(&options.profile), &mut report)?,
+            Some(include) if include == &["cookies"] => {
+                for relative in [
+                    format!("{}/Cookies", options.profile),
+                    format!("{}/Network/Cookies", options.profile),
+                ] {
+                    let relative = Path::new(&relative);
+                    let source = report.source.user_data_dir.join(relative);
+                    if source.parent().is_some_and(|p| p.is_symlink()) {
+                        skip(&mut report, relative, "symlink", None);
+                    } else if source.exists() {
+                        copy_item(relative, &mut report)?;
+                    }
+                }
+            }
+            Some(_) => return Err(anyhow!("snapshot include must be [cookies] or omitted")),
+        }
         prepare_user_data_dir(&report.target)?;
         let preferences = report.target.join(&options.profile).join("Preferences");
         let mut prefs: Value = if preferences.exists() {
@@ -357,6 +384,11 @@ pub async fn launch_snapshot(
     source: SnapshotOptions,
     mut options: RealBrowserOptions,
 ) -> Result<SnapshotLaunchResult> {
+    if options.persist_session_cookies.is_some() {
+        return Err(anyhow!(
+            "session persistence requires an explicit dedicated profile; snapshots are disposable"
+        ));
+    }
     if options.user_data_dir.is_some() || options.migrate_from.is_some() {
         return Err(anyhow!(
             "snapshot is mutually exclusive with user_data_dir and migrate_from"
@@ -373,6 +405,9 @@ pub async fn launch_snapshot(
         ));
     }
     let profile = source.profile.clone();
+    options.channel = super::browser_sources::find_browser_source(&source.browser)
+        .map(|s| s.id.clone())
+        .unwrap_or_else(|| source.browser.clone());
     // If this future is cancelled, dropping the task result removes the copy.
     let mut owned = copy_owned_snapshot(source).await?;
     options.user_data_dir = Some(owned.report.target.clone());

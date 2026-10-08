@@ -440,8 +440,7 @@ async fn real_launch_reports_a_missing_executable() {
     let err = launch_browser(options).await.unwrap_err();
 
     assert!(
-        err.to_string()
-            .contains("/nonexistent/browser-commander/chrome"),
+        err.to_string().contains("missing_executable"),
         "unexpected message: {err}"
     );
 }

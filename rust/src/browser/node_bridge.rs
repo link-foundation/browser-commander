@@ -334,6 +334,20 @@ impl EngineAdapter for NodeBridgePage {
         Ok(())
     }
 
+    async fn goto_with_options(
+        &self,
+        url: &str,
+        wait_until: &str,
+        timeout_ms: u64,
+    ) -> Result<(), EngineError> {
+        self.request(
+            "goto",
+            json!({ "url": url, "waitUntil": wait_until, "timeout": timeout_ms }),
+        )
+        .await?;
+        Ok(())
+    }
+
     async fn query_selector(&self, selector: &str) -> Result<Option<ElementInfo>, EngineError> {
         let value = self
             .request("querySelector", json!({ "selector": selector }))
@@ -455,6 +469,12 @@ impl EngineAdapter for NodeBridgePage {
 
     async fn export_storage_state(&self) -> Result<Value, EngineError> {
         self.request("exportStorageState", json!({})).await
+    }
+
+    async fn delete_cookies(&self, cookies: Vec<Value>) -> Result<(), EngineError> {
+        self.request("deleteCookies", json!({"cookies": cookies}))
+            .await?;
+        Ok(())
     }
 
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {

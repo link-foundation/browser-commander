@@ -291,6 +291,18 @@ pub trait EngineAdapter: Send + Sync {
     /// Navigate to a URL.
     async fn goto(&self, url: &str) -> Result<(), EngineError>;
 
+    /// Navigate with a caller-selected load milestone and remaining budget.
+    /// Adapters without native milestone support retain their existing load
+    /// behavior; the caller still bounds the complete operation.
+    async fn goto_with_options(
+        &self,
+        url: &str,
+        _wait_until: &str,
+        _timeout_ms: u64,
+    ) -> Result<(), EngineError> {
+        self.goto(url).await
+    }
+
     /// Query for a single element.
     async fn query_selector(&self, selector: &str) -> Result<Option<ElementInfo>, EngineError>;
 
@@ -381,6 +393,14 @@ pub trait EngineAdapter: Send + Sync {
             "portable storage state is unavailable for the {} engine",
             self.engine_type()
         )))
+    }
+
+    /// Delete exact cookie identities, including HttpOnly cookies.
+    async fn delete_cookies(&self, _cookies: Vec<serde_json::Value>) -> Result<(), EngineError> {
+        Err(EngineError::Unsupported {
+            browser: self.engine_type().to_string(),
+            feature: "context cookie deletion".into(),
+        })
     }
 
     /// Take a screenshot.

@@ -1,3 +1,4 @@
+import { findBrowserSource } from '../browser-sources.js';
 import { resolveRestrictions } from '../restrictions.js';
 import { describeAttachDifferences } from './differences.js';
 import { snapshotUserDataDir } from './snapshot.js';
@@ -19,13 +20,13 @@ const KEYSTORE_BYPASS_SWITCHES = ['--use-mock-keychain', '--password-store='];
  * @returns {string}
  */
 export function snapshotBrowserForChannel(channel) {
-  if (channel.startsWith('msedge')) {
-    return 'edge';
+  const source = findBrowserSource(channel);
+  if (!source || source.family !== 'chromium') {
+    throw new TypeError(
+      `Snapshot channel must identify a Chromium browser: ${channel}`
+    );
   }
-  if (channel === 'brave' || channel === 'chromium') {
-    return channel;
-  }
-  return 'chrome';
+  return source.id;
 }
 
 /**
@@ -122,6 +123,7 @@ export async function prepareSnapshotLaunch({
     browser,
     profile,
     userDataDir: attach.userDataDir,
+    ...(attach.include ? { include: attach.include } : {}),
   });
   const warnings = [
     ...(report.warnings ?? []),

@@ -14,8 +14,18 @@ from typing import Any, Callable
 
 from browser_commander.core.constants import TIMING
 from browser_commander.core.logger import Logger
+from browser_commander.core.navigation_operation import (
+    NavigationStoppedError,
+    navigation_phase,
+)
 from browser_commander.core.navigation_safety import is_navigation_error
 from browser_commander.core.page_trigger_manager import is_action_stopped_error
+from browser_commander.core.readiness import (
+    Deadline,
+    network_idle_for,
+    run_readiness_checks,
+    url_stable_for,
+)
 
 
 @dataclass
@@ -37,6 +47,8 @@ class GotoResult:
     verified: bool
     actual_url: str = ""
     reason: str = ""
+    status: str = "ready"
+    readiness: Any = None
 
 
 @dataclass
@@ -324,6 +336,9 @@ async def goto(
     verify: bool = True,
     verify_fn: Callable | None = None,
     verification_timeout: int | None = None,
+    signal: asyncio.Event | None = None,
+    checks=None,
+    network_tracker=None,
 ) -> GotoResult:
     """Navigate to URL with full wait for page ready.
 
@@ -369,122 +384,144 @@ async def goto(
     else:
         start_url = ""
 
-    # If NavigationManager is available, use it for full navigation handling
-    if navigation_manager:
-        try:
-            navigated = await navigation_manager.navigate(url, wait_until, timeout)
+    deadline = Deadline(timeout=timeout)
+    readiness = None
 
-            # Verify navigation if requested
-            if verify and navigated:
-                verification_result = await verify_navigation(
+    def current_url():
+        return (
+            (page.url() if callable(page.url) else page.url)
+            if hasattr(page, "url")
+            else page.current_url
+        )
+
+    try:
+        if navigation_manager:
+            navigated = await navigation_phase(
+                deadline,
+                lambda: navigation_manager.navigate(
+                    url,
+                    wait_until,
+                    timeout,
+                    deadline=deadline,
+                    signal=signal,
+                    checks=checks,
+                    wait_for_stable_url_before=wait_for_stable_url_before,
+                    wait_for_stable_url_after=wait_for_stable_url_after,
+                    wait_for_network_idle=wait_for_network_idle,
+                    stable_checks=stable_checks,
+                    check_interval=check_interval,
+                ),
+                signal,
+            )
+            readiness = navigation_manager.last_outcome
+            if not navigated:
+                observed = readiness
+                return GotoResult(
+                    False,
+                    False,
+                    current_url(),
+                    status=observed.status if observed else "failed",
+                    readiness=readiness,
+                )
+        else:
+            if wait_for_stable_url_before and wait_for_url_stabilization_fn:
+                await navigation_phase(
+                    deadline,
+                    lambda: wait_for_url_stabilization_fn(
+                        stable_checks=stable_checks,
+                        check_interval=check_interval,
+                        reason="before navigation",
+                    ),
+                    signal,
+                )
+            if hasattr(page, "goto"):
+                await navigation_phase(
+                    deadline,
+                    lambda: page.goto(
+                        url,
+                        wait_until=wait_until,
+                        timeout=max(1, deadline.remaining_ms()),
+                    ),
+                    signal,
+                )
+            else:
+                page.set_page_load_timeout(max(0.001, deadline.remaining_ms() / 1000))
+                await navigation_phase(
+                    deadline, lambda: asyncio.to_thread(page.get, url), signal
+                )
+            policy = (
+                checks
+                if checks is not None
+                else (
+                    (
+                        [
+                            url_stable_for(
+                                stable_for_ms=check_interval,
+                                interval_ms=check_interval,
+                                consecutive_samples=stable_checks,
+                            )
+                        ]
+                        if wait_for_stable_url_after
+                        else []
+                    )
+                    + ([network_idle_for()] if wait_for_network_idle else [])
+                )
+            )
+            observed = await navigation_phase(
+                deadline,
+                lambda: run_readiness_checks(
+                    policy,
+                    deadline,
+                    {
+                        "page": page,
+                        "get_url": current_url,
+                        "network_tracker": network_tracker,
+                    },
+                ),
+                signal,
+            )
+            readiness = observed
+            if not observed.ready:
+                return GotoResult(
+                    False,
+                    False,
+                    current_url(),
+                    status=observed.status,
+                    readiness=readiness,
+                )
+        if verify:
+            observed = await navigation_phase(
+                deadline,
+                lambda: verify_navigation(
                     page=page,
                     expected_url=url,
                     start_url=start_url,
                     verify_fn=verify_fn,
-                    timeout=verification_timeout,
+                    timeout=min(verification_timeout, deadline.remaining_ms()),
                     log=log,
-                )
-
-                return GotoResult(
-                    navigated=True,
-                    verified=verification_result.verified,
-                    actual_url=verification_result.actual_url,
-                    reason=verification_result.reason,
-                )
-
-            # Get current URL for result
-            if hasattr(page, "url"):
-                current_url = page.url() if callable(page.url) else page.url
-            elif hasattr(page, "current_url"):
-                current_url = page.current_url
-            else:
-                current_url = ""
-
+                ),
+                signal,
+            )
             return GotoResult(
-                navigated=navigated,
-                verified=navigated,
-                actual_url=current_url,
+                True,
+                observed.verified,
+                observed.actual_url,
+                observed.reason,
+                "ready" if observed.verified else "failed",
+                readiness,
             )
-
-        except Exception as error:
-            if is_navigation_error(error) or is_action_stopped_error(error):
-                # Navigation was stopped by page trigger or navigation error
-                return GotoResult(
-                    navigated=False,
-                    verified=False,
-                    reason="navigation stopped/interrupted",
-                )
-            raise
-
-    # Legacy approach without NavigationManager
-    try:
-        # Wait for URL to stabilize BEFORE navigation
-        if wait_for_stable_url_before and wait_for_url_stabilization_fn:
-            await wait_for_url_stabilization_fn(
-                stable_checks=stable_checks,
-                check_interval=check_interval,
-                reason="before navigation",
-            )
-
-        # Navigate to the URL
-        if hasattr(page, "goto"):
-            # Playwright
-            await page.goto(url, wait_until=wait_until, timeout=timeout)
-        elif hasattr(page, "get"):
-            # Selenium
-            page.get(url)
-        else:
-            raise ValueError("Unknown page type - cannot navigate")
-
-        # Wait for URL to stabilize AFTER navigation
-        if wait_for_stable_url_after and wait_for_url_stabilization_fn:
-            await wait_for_url_stabilization_fn(
-                stable_checks=stable_checks,
-                check_interval=check_interval,
-                reason="after navigation",
-            )
-
-        # Verify navigation if requested
-        if verify:
-            verification_result = await verify_navigation(
-                page=page,
-                expected_url=url,
-                start_url=start_url,
-                verify_fn=verify_fn,
-                timeout=verification_timeout,
-                log=log,
-            )
-
-            return GotoResult(
-                navigated=True,
-                verified=verification_result.verified,
-                actual_url=verification_result.actual_url,
-                reason=verification_result.reason,
-            )
-
-        # Get current URL for result
-        if hasattr(page, "url"):
-            current_url = page.url() if callable(page.url) else page.url
-        elif hasattr(page, "current_url"):
-            current_url = page.current_url
-        else:
-            current_url = ""
-
-        return GotoResult(
-            navigated=True,
-            verified=True,
-            actual_url=current_url,
-        )
-
+        return GotoResult(True, True, current_url(), readiness=readiness)
+    except NavigationStoppedError as error:
+        return GotoResult(False, False, current_url(), str(error), error.status)
     except Exception as error:
         if is_navigation_error(error) or is_action_stopped_error(error):
-            print("Navigation was interrupted/stopped, recovering gracefully")
             return GotoResult(
-                navigated=False,
-                verified=False,
-                reason="navigation interrupted/stopped",
+                False, False, current_url(), "navigation interrupted", "interrupted"
             )
         raise
+    finally:
+        if navigation_manager:
+            navigation_manager.abandon_navigation("operation finished")
 
 
 async def wait_for_navigation(

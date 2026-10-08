@@ -745,3 +745,5 @@ The Python implementation follows the same architecture as the JavaScript versio
 ## License
 
 [UNLICENSE](../LICENSE)
+
+See [navigation budgets, launch diagnostics, reusable helpers and sessions](../docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.

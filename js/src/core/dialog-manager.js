@@ -111,6 +111,13 @@ export function createDialogManager(options = {}) {
     }
     handlers.push(handler);
     log.debug(() => `🔌 Dialog handler registered (total: ${handlers.length})`);
+    let removed = false;
+    return () => {
+      if (!removed) {
+        removed = true;
+        offDialog(handler);
+      }
+    };
   }
 
   /**

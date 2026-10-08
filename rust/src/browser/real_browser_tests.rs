@@ -470,7 +470,13 @@ async fn does_not_retry_a_port_the_caller_chose() {
 
     let error = launch(&options, &hooks).await.unwrap_err();
 
-    assert!(error.downcast_ref::<PortRaceError>().is_some());
+    assert_eq!(
+        error
+            .downcast_ref::<crate::browser::launch_diagnostics::BrowserLaunchError>()
+            .unwrap()
+            .category,
+        "port_race"
+    );
     assert_eq!(hooks.calls(), ["wait 9555"]);
     assert_eq!(hooks.process(0).kill_count(), 1);
 }
@@ -487,7 +493,13 @@ async fn gives_up_after_the_configured_port_attempts() {
 
     let error = launch(&options, &hooks).await.unwrap_err();
 
-    assert!(error.downcast_ref::<PortRaceError>().is_some());
+    assert_eq!(
+        error
+            .downcast_ref::<crate::browser::launch_diagnostics::BrowserLaunchError>()
+            .unwrap()
+            .category,
+        "port_race"
+    );
     assert_eq!(hooks.calls(), ["wait 40011", "wait 40012"]);
 }
 

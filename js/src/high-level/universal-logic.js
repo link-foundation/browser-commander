@@ -101,26 +101,29 @@ export async function installClickListener(options = {}) {
 
   const result = await safeEvaluate({
     fn: (text, key) => {
-      document.addEventListener(
-        'click',
-        (event) => {
-          let element = event.target;
-          while (element && element !== document.body) {
-            const elementText = element.textContent?.trim() || '';
-            if (
-              elementText === text ||
-              ((element.tagName === 'A' || element.tagName === 'BUTTON') &&
-                elementText.includes(text))
-            ) {
-              console.log(`[Click Listener] Detected click on ${text} button!`);
-              window.sessionStorage.setItem(key, 'true');
-              break;
-            }
-            element = element.parentElement;
+      window.__browserCommanderClickListeners ??= new Map();
+      const previous = window.__browserCommanderClickListeners.get(key);
+      if (previous) {
+        document.removeEventListener('click', previous, true);
+      }
+      const listener = (event) => {
+        let element = event.target;
+        while (element && element !== document.body) {
+          const elementText = element.textContent?.trim() || '';
+          if (
+            elementText === text ||
+            ((element.tagName === 'A' || element.tagName === 'BUTTON') &&
+              elementText.includes(text))
+          ) {
+            console.log(`[Click Listener] Detected click on ${text} button!`);
+            window.sessionStorage.setItem(key, 'true');
+            break;
           }
-        },
-        true
-      );
+          element = element.parentElement;
+        }
+      };
+      window.__browserCommanderClickListeners.set(key, listener);
+      document.addEventListener('click', listener, true);
     },
     args: [buttonText, storageKey],
   });
@@ -176,6 +179,7 @@ export async function findToggleButton(options = {}) {
     findByText,
     dataQaSelectors = [],
     textToFind,
+    texts = textToFind ? [textToFind] : [],
     elementTypes = ['button', 'a', 'span'],
   } = options;
 
@@ -188,10 +192,10 @@ export async function findToggleButton(options = {}) {
   }
 
   // Fallback to text search
-  if (textToFind) {
+  for (const text of texts) {
     for (const elementType of elementTypes) {
       const selector = await findByText({
-        text: textToFind,
+        text,
         selector: elementType,
       });
       const elemCount = await count({ selector });
@@ -202,4 +206,36 @@ export async function findToggleButton(options = {}) {
   }
 
   return null;
+}
+
+/** Read without clearing; interruption is distinct from an unset flag. */
+export async function readFlag({ evaluate, storageKey } = {}) {
+  try {
+    const set = await evaluate({
+      fn: (key) => window.sessionStorage.getItem(key) === 'true',
+      args: [storageKey],
+    });
+    return { status: 'observed', set };
+  } catch (error) {
+    if (isNavigationError(error)) {
+      return { status: 'interrupted', set: null };
+    }
+    throw error;
+  }
+}
+
+/** Uninstall only the click listener installed for this storage key. */
+export function uninstallClickListener({ evaluate, storageKey } = {}) {
+  return evaluate({
+    fn: (key) => {
+      const listener = window.__browserCommanderClickListeners?.get(key);
+      if (!listener) {
+        return false;
+      }
+      document.removeEventListener('click', listener, true);
+      window.__browserCommanderClickListeners.delete(key);
+      return true;
+    },
+    args: [storageKey],
+  });
 }

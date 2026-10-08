@@ -116,9 +116,21 @@ fn resolve_darwin_default(
             "LSHandlers",
         ],
         environment,
-    )?;
-    Ok(parse_mac_launch_services_handler(&output)
-        .and_then(|identifier| browser_for_identifier(&identifier, "darwin")))
+    )
+    .unwrap_or_default();
+    let legacy = parse_mac_launch_services_handler(&output)
+        .and_then(|identifier| browser_for_identifier(&identifier, "darwin"));
+    if legacy.is_some() {
+        return Ok(legacy);
+    }
+    let script = "ObjC.import('AppKit'); var app = $.NSWorkspace.sharedWorkspace.URLForApplicationToOpenURL($.NSURL.URLWithString('https://example.invalid')); app ? ObjC.unwrap($.NSBundle.bundleWithURL(app).bundleIdentifier) : ''";
+    Ok(run_command(
+        "osascript",
+        &["-l", "JavaScript", "-e", script],
+        environment,
+    )
+    .ok()
+    .and_then(|id| browser_for_identifier(&id, "darwin")))
 }
 
 fn resolve_linux_default(
@@ -217,6 +229,21 @@ mod tests {
             output,
         )]);
         assert_eq!(resolve("darwin", &run_command), Some("chrome"));
+    }
+
+    #[test]
+    fn modern_macos_handler_resolves_when_legacy_handlers_are_empty() {
+        let runner: RunCommand = Arc::new(|command, _, _| {
+            Ok(if command == "osascript" {
+                "com.google.chrome"
+            } else {
+                "()"
+            }
+            .into())
+        });
+        assert_eq!(resolve("darwin", &runner), Some("chrome"));
+        let empty: RunCommand = Arc::new(|_, _, _| Ok(String::new()));
+        assert_eq!(resolve("darwin", &empty), None);
     }
 
     #[test]

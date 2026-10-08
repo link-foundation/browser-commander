@@ -198,6 +198,7 @@ async def scroll_into_view(
     verify_fn: Callable | None = None,
     verification_timeout: int | None = None,
     log: Logger | None = None,
+    index: int | None = None,
 ) -> ScrollResult:
     """Scroll element into view (low-level, does not check if scroll is needed).
 
@@ -219,6 +220,12 @@ async def scroll_into_view(
 
     if not locator_or_element:
         raise ValueError("locator_or_element is required")
+    if isinstance(locator_or_element, str) or index is not None:
+        from browser_commander.elements.locators import get_locator_or_element
+
+        locator_or_element = await get_locator_or_element(
+            page, engine, locator_or_element, index=index
+        )
 
     try:
         scroll_js = """

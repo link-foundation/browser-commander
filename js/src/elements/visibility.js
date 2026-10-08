@@ -19,7 +19,7 @@ export async function isVisible(options = {}) {
 
   try {
     if (engine === 'playwright') {
-      const locator = await getLocatorOrElement({ page, engine, selector });
+      const locator = await getLocatorOrElement(options);
       try {
         await locator.waitFor({
           state: 'visible',
@@ -30,7 +30,7 @@ export async function isVisible(options = {}) {
         return false;
       }
     } else {
-      const element = await getLocatorOrElement({ page, engine, selector });
+      const element = await getLocatorOrElement(options);
       if (!element) {
         return false;
       }
@@ -56,16 +56,11 @@ export async function isVisible(options = {}) {
  * @param {Object} options.page - Browser page object
  * @param {string} options.engine - Engine type ('playwright' or 'puppeteer')
  * @param {string|Object} options.selector - CSS selector or locator
- * @param {Array<string>} options.disabledClasses - Additional CSS classes that indicate disabled state (default: ['magritte-button_loading'])
+ * @param {Array<string>} options.disabledClasses - Additional CSS classes that indicate disabled state (default: ['disabled'])
  * @returns {Promise<boolean>} - True if enabled
  */
 export async function isEnabled(options = {}) {
-  const {
-    page,
-    engine,
-    selector,
-    disabledClasses = ['magritte-button_loading'],
-  } = options;
+  const { page, engine, selector, disabledClasses = ['disabled'] } = options;
 
   if (!selector) {
     throw new Error('selector is required in options');
@@ -76,7 +71,7 @@ export async function isEnabled(options = {}) {
       // For Playwright, use locator API
       const locator =
         typeof selector === 'string'
-          ? page.locator(selector).first()
+          ? (await getLocatorOrElement(options)).first()
           : selector;
       return await locator.evaluate((el, classes) => {
         const isDisabled =
@@ -87,7 +82,7 @@ export async function isEnabled(options = {}) {
       }, disabledClasses);
     } else {
       // For Puppeteer (selector should already be normalized by withTextSelectorSupport wrapper)
-      const element = await getLocatorOrElement({ page, engine, selector });
+      const element = await getLocatorOrElement(options);
       if (!element) {
         return false;
       }

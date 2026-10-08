@@ -20,6 +20,8 @@ pub enum ReadinessStatus {
     TimedOut,
     /// A check reported, within budget, that it was not satisfied.
     Failed,
+    /// The caller cancelled the operation before it completed.
+    Interrupted,
 }
 
 impl fmt::Display for ReadinessStatus {
@@ -28,6 +30,7 @@ impl fmt::Display for ReadinessStatus {
             ReadinessStatus::Ready => write!(f, "ready"),
             ReadinessStatus::TimedOut => write!(f, "timed_out"),
             ReadinessStatus::Failed => write!(f, "failed"),
+            ReadinessStatus::Interrupted => write!(f, "interrupted"),
         }
     }
 }

@@ -215,16 +215,16 @@ export function makeBrowserCommander(options = {}) {
     // Subscribe to navigation events (legacy API)
     onNavigationStart: navigationManager
       ? (fn) => navigationManager.on('onNavigationStart', fn)
-      : () => {},
+      : () => () => {},
     onNavigationComplete: navigationManager
       ? (fn) => navigationManager.on('onNavigationComplete', fn)
-      : () => {},
+      : () => () => {},
     onUrlChange: navigationManager
       ? (fn) => navigationManager.on('onUrlChange', fn)
-      : () => {},
+      : () => () => {},
     onPageReady: navigationManager
       ? (fn) => navigationManager.on('onPageReady', fn)
-      : () => {},
+      : () => () => {},
 
     // Abort handling - check these to stop operations when navigation occurs
     shouldAbort: navigationManager

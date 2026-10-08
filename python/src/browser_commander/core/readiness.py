@@ -28,6 +28,7 @@ class ReadinessStatus:
     TIMED_OUT = "timed_out"
     #: A check reported, within budget, that it was not satisfied.
     FAILED = "failed"
+    INTERRUPTED = "interrupted"
 
 
 #: Request classes that never go idle on their own. Waiting for them is waiting
@@ -552,7 +553,14 @@ async def run_readiness_checks(
 
         started_at_ms = deadline.elapsed_ms()
         try:
-            outcome = await check.run(check_context)
+            bounded = await run_within_deadline(
+                deadline, lambda check=check: check.run(check_context)
+            )
+            outcome = (
+                CheckOutcome(detail={"reason": "deadline reached"})
+                if bounded.timed_out
+                else bounded.value
+            )
         except Exception as error:
             outcome = CheckOutcome(detail={"error": str(error)})
 

@@ -474,7 +474,9 @@ async def test_does_not_retry_a_port_the_caller_chose() -> None:
         attempts += 1
         raise PortRaceError(9555, "taken")
 
-    with pytest.raises(PortRaceError):
+    from browser_commander.browser.launch_diagnostics import BrowserLaunchError
+
+    with pytest.raises(BrowserLaunchError) as failure:
         await launch_real_browser_with_dependencies(
             RealBrowserOptions(remote_debugging_port=9555, close_timeout=50),
             resolve_executable=_executable,
@@ -482,6 +484,7 @@ async def test_does_not_retry_a_port_the_caller_chose() -> None:
             wait_for_endpoint=wait_for_endpoint,
             connect=_connected(),
         )
+    assert failure.value.category == "port_race"
     assert attempts == 1
 
 

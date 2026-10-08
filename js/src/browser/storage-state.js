@@ -1,4 +1,6 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, rename, rm } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { normalizeSessionCookies } from './session-cookies.js';
 
 /**
  * Load a Playwright-compatible storage state from a JSON path or object.
@@ -91,7 +93,9 @@ export async function restorePuppeteerStorageState({ page, storageState }) {
 
   const cookies = storageState.cookies ?? [];
   if (cookies.length > 0) {
-    await page.setCookie(...cookies);
+    const context = page.browserContext?.();
+    const target = typeof context?.setCookie === 'function' ? context : page;
+    await target.setCookie(...normalizeSessionCookies(cookies, 'puppeteer'));
   }
 
   const origins = storageState.origins ?? [];
@@ -115,7 +119,7 @@ export async function restorePlaywrightStorageState({ context, storageState }) {
 
   const cookies = storageState.cookies ?? [];
   if (cookies.length > 0) {
-    await context.addCookies(cookies);
+    await context.addCookies(normalizeSessionCookies(cookies, 'playwright'));
   }
 
   const origins = storageState.origins ?? [];
@@ -137,7 +141,11 @@ function readCurrentLocalStorage() {
 }
 
 async function collectPuppeteerStorageState(page) {
-  const cookies = await page.cookies();
+  const context = page.browserContext?.();
+  const cookies =
+    typeof context?.cookies === 'function'
+      ? await context.cookies()
+      : await page.cookies();
   const pageUrl = page.url();
   const origin = new URL(pageUrl).origin;
   const origins = [];
@@ -161,7 +169,11 @@ async function collectPuppeteerStorageState(page) {
 export async function saveStorageState(page, filePath) {
   const context = typeof page.context === 'function' ? page.context() : null;
   if (typeof context?.storageState === 'function') {
-    return context.storageState(filePath ? { path: filePath } : undefined);
+    const state = await context.storageState();
+    if (filePath) {
+      await writeRestrictedState(filePath, state);
+    }
+    return state;
   }
 
   if (
@@ -174,7 +186,21 @@ export async function saveStorageState(page, filePath) {
 
   const storageState = await collectPuppeteerStorageState(page);
   if (filePath) {
-    await writeFile(filePath, `${JSON.stringify(storageState, null, 2)}\n`);
+    await writeRestrictedState(filePath, storageState);
   }
   return storageState;
+}
+
+/** Replace state atomically with an owner-only file, without following a destination symlink. */
+export async function writeRestrictedState(filePath, state) {
+  const temporary = `${filePath}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporary, `${JSON.stringify(state, null, 2)}\n`, {
+      mode: 0o600,
+      flag: 'wx',
+    });
+    await rename(temporary, filePath);
+  } finally {
+    await rm(temporary, { force: true });
+  }
 }

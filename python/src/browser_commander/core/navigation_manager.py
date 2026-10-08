@@ -16,14 +16,18 @@ from typing import Any, Callable
 from browser_commander.core.constants import TIMING
 from browser_commander.core.engine_detection import EngineType
 from browser_commander.core.logger import Logger
+from browser_commander.core.navigation_operation import navigation_phase
 from browser_commander.core.navigation_readiness import ReadinessWaiter
 from browser_commander.core.network_tracker import NetworkTracker
 from browser_commander.core.readiness import (
     Deadline,
     ReadinessCheck,
     ReadinessResult,
+    network_idle_for,
     sleep_within_deadline,
+    url_stable_for,
 )
+from browser_commander.core.subscriptions import subscribe_callbacks
 
 
 class NavigationManager:
@@ -49,11 +53,13 @@ class NavigationManager:
         self.log = log
         self.network_tracker = network_tracker
 
+        self.last_outcome = None
         self._is_listening = False
         self._is_navigating = False
         self._last_url = ""
         self._abort_controller: asyncio.Event | None = None
         self._page_ready_task: asyncio.Task[ReadinessResult] | None = None
+        self._page_ready_key: tuple | None = None
         self._listeners: dict[str, list[Callable]] = {
             "on_navigation_start": [],
             "on_navigation_complete": [],
@@ -104,6 +110,12 @@ class NavigationManager:
             return
 
         self._is_listening = False
+
+        if self._abort_controller:
+            self._abort_controller.set()
+        if self._page_ready_task and not self._page_ready_task.done():
+            self._page_ready_task.cancel()
+        self.abandon_navigation("listeners stopped")
 
         if self.engine == "playwright":
             self.page.remove_listener("framenavigated", self._on_frame_navigated)
@@ -165,6 +177,15 @@ class NavigationManager:
         url: str,
         wait_until: str = "domcontentloaded",
         timeout: int = TIMING["NAVIGATION_TIMEOUT"],
+        *,
+        deadline=None,
+        signal=None,
+        checks=None,
+        wait_for_stable_url_before=False,
+        wait_for_stable_url_after=True,
+        wait_for_network_idle=True,
+        stable_checks=1,
+        check_interval=200,
     ) -> bool:
         """Navigate to URL with full wait handling.
 
@@ -176,31 +197,66 @@ class NavigationManager:
         Returns:
             True if navigation completed successfully
         """
+        deadline = deadline or Deadline(timeout=timeout)
         self._is_navigating = True
 
+        def stable():
+            return url_stable_for(
+                stable_for_ms=check_interval,
+                interval_ms=check_interval,
+                consecutive_samples=stable_checks,
+            )
+
         try:
+            if wait_for_stable_url_before:
+                before = await navigation_phase(
+                    deadline,
+                    lambda: self._readiness.wait_for_ready(
+                        checks=[stable()], deadline=deadline, observe_only=True
+                    ),
+                    signal,
+                )
+                if not before.ready:
+                    self.last_outcome = before
+                    return False
             if self.engine == "playwright":
-                await self.page.goto(url, wait_until=wait_until, timeout=timeout)
+                await navigation_phase(
+                    deadline,
+                    lambda: self.page.goto(
+                        url,
+                        wait_until=wait_until,
+                        timeout=max(1, deadline.remaining_ms()),
+                    ),
+                    signal,
+                )
             else:
-                self.page.set_page_load_timeout(timeout / 1000)
-                self.page.get(url)
-
-            # Wait for page to be ready. A failed wait leaves the navigation
-            # closed out but does not emit a ready page.
-            ready = await self.wait_for_page_ready(timeout=timeout)
-            if not ready:
-                self.abandon_navigation("page did not become ready")
-
-            # Notify completion
+                self.page.set_page_load_timeout(
+                    max(0.001, deadline.remaining_ms() / 1000)
+                )
+                await navigation_phase(
+                    deadline, lambda: asyncio.to_thread(self.page.get, url), signal
+                )
+            policy = (
+                checks
+                if checks is not None
+                else (
+                    ([stable()] if wait_for_stable_url_after else [])
+                    + ([network_idle_for()] if wait_for_network_idle else [])
+                )
+            )
+            observed = await navigation_phase(
+                deadline,
+                lambda: self._readiness.wait_for_ready(
+                    checks=policy, deadline=deadline
+                ),
+                signal,
+            )
+            self.last_outcome = observed
             for fn in self._listeners["on_navigation_complete"]:
-                fn({"url": url})
-
-            return True
-
-        except Exception as e:
-            self.abandon_navigation("navigation interrupted")
-            self.log.debug(lambda _e=e: f"Navigation error: {_e}")
-            raise
+                fn({"url": url, "ready": observed.ready})
+            return observed.ready
+        finally:
+            self.abandon_navigation("operation finished")
 
     async def wait_for_navigation(
         self,
@@ -291,21 +347,25 @@ class NavigationManager:
         Returns:
             The structured readiness result
         """
-        if self._page_ready_task and not self._page_ready_task.done():
-            self.log.debug(lambda: f"Joining in-flight page ready wait ({reason})")
+        key = (timeout, reason, id(checks))
+        if (
+            self._page_ready_task
+            and not self._page_ready_task.done()
+            and self._page_ready_key == key
+        ):
             return await asyncio.shield(self._page_ready_task)
-
-        self._page_ready_task = asyncio.ensure_future(
+        task = asyncio.create_task(
             self._readiness.wait_for_ready(
-                timeout=timeout,
-                reason=reason,
-                checks=checks,
+                timeout=timeout, reason=reason, checks=checks
             )
         )
+        self._page_ready_task = task
+        self._page_ready_key = key
         try:
-            return await self._page_ready_task
+            return await task
         finally:
-            self._page_ready_task = None
+            if self._page_ready_task is task:
+                self._page_ready_task = None
 
     async def wait_for_page_ready(
         self,
@@ -324,10 +384,9 @@ class NavigationManager:
         result = await self.wait_for_readiness(timeout=timeout, reason=reason)
         return result.ready
 
-    def on(self, event: str, callback: Callable) -> None:
+    def on(self, event: str, callback: Callable) -> Callable:
         """Add event listener."""
-        if event in self._listeners:
-            self._listeners[event].append(callback)
+        return subscribe_callbacks(self._listeners.get(event), callback)
 
     def off(self, event: str, callback: Callable) -> None:
         """Remove event listener."""

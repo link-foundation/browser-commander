@@ -97,27 +97,51 @@ export function createReadinessWaiter(options = {}) {
 
     log.debug(() => `⏳ Waiting for page ready (${reason})...`);
 
-    const deadline = createDeadline({ timeout });
-    const result = await runReadinessChecks({
-      checks: checks ?? defaultReadinessChecks(config),
-      deadline,
-      context: {
-        page,
-        engine,
-        log,
-        networkTracker,
-        getAdapter,
-        onUrlSample,
-      },
-    });
-
+    const controller = new AbortController();
+    const parentSignal = opts.deadline?.signal ?? opts.signal;
+    const signal = parentSignal
+      ? AbortSignal.any([parentSignal, controller.signal])
+      : controller.signal;
+    const deadline = {
+      ...(opts.deadline ?? createDeadline({ timeout })),
+      signal,
+    };
+    const notify = () =>
+      !opts.observeOnly &&
+      !parentSignal?.aborted &&
+      (opts.shouldNotify?.() ?? true);
+    let result;
+    try {
+      result = await runReadinessChecks({
+        checks: checks ?? defaultReadinessChecks(config),
+        deadline,
+        context: {
+          page,
+          engine,
+          log,
+          networkTracker,
+          getAdapter,
+          onUrlSample: (url) => {
+            if (notify()) {
+              onUrlSample?.(url);
+            }
+          },
+        },
+      });
+    } finally {
+      controller.abort();
+    }
     const outcome = { ...result, reason, ...getState() };
 
     if (outcome.ready) {
-      onReady();
+      if (notify()) {
+        onReady();
+      }
       log.debug(() => `✅ Page ready after ${outcome.elapsedMs}ms (${reason})`);
     } else {
-      onNotReady();
+      if (notify()) {
+        onNotReady();
+      }
       log.debug(
         () =>
           `⚠️  Page not ready (${reason}): ${outcome.status} after ` +

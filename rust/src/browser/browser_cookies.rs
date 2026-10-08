@@ -53,6 +53,8 @@ pub struct BrowserCookie {
 /// Options for [`read_browser_cookies`].
 #[derive(Clone)]
 pub struct BrowserCookieReadOptions {
+    pub via: Option<String>,
+    pub keystore: String,
     /// Installed browser name, or `default`/`auto` for the system default.
     pub browser: String,
     /// Optional on-disk or display profile name.
@@ -109,6 +111,8 @@ impl BrowserCookieReadOptions {
     /// Create options for one installed browser.
     pub fn new(browser: impl Into<String>) -> Self {
         Self {
+            via: None,
+            keystore: "os".into(),
             browser: browser.into(),
             profile: None,
             profile_dir: None,
@@ -218,6 +222,7 @@ struct OperationKeyCache {
 }
 
 struct CookieDecryptionState<'a> {
+    mock_keystore: bool,
     cache: &'a NormalizedCookieCache,
     operation_keys: OperationKeyCache,
 }
@@ -357,6 +362,21 @@ fn chromium_key_for_prefix(
     refresh: bool,
     state: &mut CookieDecryptionState<'_>,
 ) -> Result<Vec<u8>> {
+    if state.mock_keystore {
+        if platform == "win32" {
+            return Err(anyhow!(
+                "Use browser-backed reading for Windows mock-keystore profiles"
+            ));
+        }
+        return derive_chromium_cookie_key(
+            if platform == "darwin" {
+                "mock_password"
+            } else {
+                "peanuts"
+            },
+            platform,
+        );
+    }
     if platform == "linux" && prefix == b"v10" {
         // Chromium's legacy Linux v10 format uses this public fallback secret;
         // a different value would make existing source cookies unreadable.
@@ -469,6 +489,7 @@ fn read_chromium_cookies(
     let version = read_database_version(database);
     let mut cookies = Vec::new();
     let mut state = CookieDecryptionState {
+        mock_keystore: options.keystore == "mock",
         cache,
         operation_keys: OperationKeyCache::default(),
     };
@@ -498,6 +519,28 @@ fn read_chromium_cookies(
 
 /// Read cookies from an installed Chrome, Edge, Brave, Chromium, or Firefox profile.
 pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec<BrowserCookie>> {
+    let browser_backed = options.via.as_deref() == Some("browser")
+        || (options.via.is_none()
+            && options.platform == "darwin"
+            && options.keystore != "mock"
+            && browser_family(resolve_source_browser(
+                &options.browser,
+                &options.platform,
+                &options.environment,
+                options.run_command.as_ref(),
+            )?)? == "chromium");
+    if browser_backed {
+        return std::thread::spawn(move || {
+            tokio::runtime::Runtime::new()?.block_on(
+                super::browser_cookie_session::read_browser_cookie_session(
+                    options,
+                    super::real_browser::RealBrowserOptions::default(),
+                ),
+            )
+        })
+        .join()
+        .map_err(|_| anyhow!("browser-backed cookie reader panicked"))?;
+    }
     let browser = resolve_source_browser(
         &options.browser,
         &options.platform,
@@ -535,6 +578,7 @@ pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec
         "profile": profile_path,
         "domainFilter": options.domain_filter,
         "ignoreDecryptionErrors": options.ignore_decryption_errors,
+        "keystore": options.keystore,
     }))?;
     if let Some(values) = read_cookie_result_cache(&cache, &identity, options.refresh) {
         return values

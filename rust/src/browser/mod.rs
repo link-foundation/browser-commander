@@ -7,8 +7,12 @@
 mod browser_cookie_cache;
 mod browser_cookie_credentials;
 mod browser_cookie_crypto;
+pub mod browser_cookie_session;
 mod browser_cookie_sources;
 mod browser_cookies;
+pub use browser_cookie_session::{
+    find_site_sessions, read_browser_cookie_session, SessionSource, SessionValidator, SiteSession,
+};
 pub mod browser_process;
 mod browser_profile_files;
 mod browser_profiles;
@@ -22,6 +26,7 @@ pub mod debugging_port;
 mod default_browser;
 mod engine_launch;
 pub mod extension_relay;
+pub mod launch_diagnostics;
 mod launch_executable;
 pub mod launcher;
 pub mod media;
@@ -38,8 +43,11 @@ pub mod restrictions;
 pub mod safari;
 mod safari_cookies;
 mod safari_profiles;
+pub mod session_cookies;
+mod session_persistence;
 pub mod snapshot;
 pub mod storage_state;
+pub use session_cookies::{clear_cookies, set_cookies};
 pub mod system_browser;
 pub mod webdriver;
 

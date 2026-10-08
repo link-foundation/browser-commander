@@ -40,6 +40,7 @@ on:
       - 'rust/src/**'
       - 'rust/tests/storage_state_smoke.rs'
       - 'rust/tests/snapshot.rs'
+      - 'rust/tests/reusable_session.rs'
       - 'rust/tests/parity.rs'
       - 'rust/tests/webdriver*.rs'
       - 'rust/tests/playwright_driver.rs'
@@ -385,7 +386,7 @@ jobs:
         shell: bash
         run: |
           bash ../scripts/run-with-budget-warning.sh 600 "Rust native snapshots and parity" \
-            cargo test --locked --test snapshot --test parity --test webdriver --test playwright_driver --test puppeteer_bridge --test trace_record_real_browser -- --ignored --nocapture
+            cargo test --locked --test reusable_session --test snapshot --test parity --test webdriver --test playwright_driver --test puppeteer_bridge --test trace_record_real_browser -- --ignored --nocapture
       - name: Launch Python snapshot copies and record a Python trace
         env:
           RUN_E2E: 'true'
@@ -393,7 +394,7 @@ jobs:
         shell: bash
         run: |
           bash scripts/run-with-budget-warning.sh 180 "Python native snapshot launches" \
-            python -m pytest python/tests/e2e/test_snapshot.py python/tests/e2e/test_puppeteer_bridge.py python/tests/e2e/test_trace_recording.py python/tests/e2e/test_engine_matrix.py -v
+            python -m pytest python/tests/e2e/test_reusable_session.py python/tests/e2e/test_snapshot.py python/tests/e2e/test_puppeteer_bridge.py python/tests/e2e/test_trace_recording.py python/tests/e2e/test_engine_matrix.py -v
       - name: Launch headful Python browsers under Xvfb
         # These two launch a visible window, so without a display they skip --
         # and a skipped pytest run exits zero. Until issue #128 no workflow ran
@@ -461,7 +462,7 @@ jobs:
         shell: bash
         run: |
           bash ../scripts/run-with-budget-warning.sh 1200 "Engine lifecycle suites" \
-            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/click-readiness.e2e.test.js tests/e2e/downloads.e2e.test.js tests/e2e/traces.e2e.test.js 2>&1 | tee engine-suites.log'
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/navigation-budget.e2e.test.js tests/e2e/reusable-session.e2e.test.js tests/e2e/click-readiness.e2e.test.js tests/e2e/downloads.e2e.test.js tests/e2e/traces.e2e.test.js 2>&1 | tee engine-suites.log'
 
       - name: Fail on a suite that asserted nothing
         run: |

@@ -37,7 +37,10 @@ export function createPlaywrightLocator(options = {}) {
  * @returns {Promise<Object|null>} - Locator for Playwright, Element for Puppeteer (can be null)
  */
 export async function getLocatorOrElement(options = {}) {
-  const { page, engine, selector } = options;
+  const { page, engine, selector, index } = options;
+  if (index !== undefined && (!Number.isInteger(index) || index < 0)) {
+    throw new TypeError('index must be a non-negative integer');
+  }
 
   if (!selector) {
     throw new Error('selector is required in options');
@@ -47,10 +50,13 @@ export async function getLocatorOrElement(options = {}) {
   }
 
   if (engine === 'playwright') {
-    return createPlaywrightLocator({ page, selector });
+    const locator = createPlaywrightLocator({ page, selector });
+    return index === undefined ? locator : locator.nth(index);
   } else {
     // For Puppeteer, return element (can be null if doesn't exist)
-    return await page.$(selector);
+    return index === undefined
+      ? await page.$(selector)
+      : ((await page.$$(selector))[index] ?? null);
   }
 }
 
@@ -81,15 +87,39 @@ export async function waitForLocatorOrElement(options = {}) {
 
   try {
     if (engine === 'playwright') {
-      const locator = await getLocatorOrElement({ page, engine, selector });
+      const locator = await getLocatorOrElement(options);
       // Use .first() to handle multiple matches (Playwright strict mode)
       const firstLocator = locator.first();
       await firstLocator.waitFor({ state: 'visible', timeout });
       return firstLocator;
     } else {
+      if (typeof selector !== 'string') {
+        await waitForVisible({ engine, locatorOrElement: selector, timeout });
+        return selector;
+      }
+      if (options.index !== undefined && typeof selector === 'string') {
+        if (!Number.isInteger(options.index) || options.index < 0) {
+          throw new TypeError('index must be a non-negative integer');
+        }
+        await page.waitForFunction(
+          (sel, index) => {
+            const element = document.querySelectorAll(sel)[index];
+            return (
+              element &&
+              element.getBoundingClientRect().width > 0 &&
+              element.getBoundingClientRect().height > 0 &&
+              window.getComputedStyle(element).visibility !== 'hidden'
+            );
+          },
+          { timeout },
+          selector,
+          options.index
+        );
+        return getLocatorOrElement(options);
+      }
       // Puppeteer: wait for selector to be visible (returns first match by default)
       await page.waitForSelector(selector, { visible: true, timeout });
-      const element = await page.$(selector);
+      const element = await getLocatorOrElement(options);
       if (!element) {
         throw new Error(`Element not found after waiting: ${selector}`);
       }

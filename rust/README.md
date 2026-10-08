@@ -672,3 +672,5 @@ println!("User data dir: {:?}", result.browser.user_data_dir);
 ## License
 
 [UNLICENSE](../LICENSE)
+
+See [navigation budgets, launch diagnostics, reusable helpers and sessions](../docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.

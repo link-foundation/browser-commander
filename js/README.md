@@ -1063,3 +1063,5 @@ See [src/ARCHITECTURE.md](src/ARCHITECTURE.md) for detailed architecture documen
 ## License
 
 [UNLICENSE](../LICENSE)
+
+See [navigation budgets, launch diagnostics, reusable helpers and sessions](../docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.

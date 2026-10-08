@@ -71,6 +71,14 @@ pub use browser::webdriver::{
     launch_webdriver, launch_webdriver_snapshot, ManagedWebDriver, WebDriverBrowser,
     WebDriverClient, WebDriverOptions, WebDriverSnapshotResult,
 };
+pub use browser::{
+    clear_cookies, find_site_sessions, read_browser_cookie_session, set_cookies, SessionSource,
+    SessionValidator, SiteSession,
+};
+pub use elements::{check, find_first, has_text, is_checked};
+pub use high_level::{
+    find_toggle_button_with_texts, read_flag, uninstall_click_listener, FlagRead,
+};
 pub use parity::{measure_parity, measure_session_parity, MeasureParityOptions, ParityReport};
 
 // Re-export commonly used items at crate root
@@ -205,3 +213,6 @@ pub mod prelude {
         wait, wait_with_cancel, WaitResult,
     };
 }
+
+pub use browser::launch_diagnostics::{BrowserLaunchError, DiagnosticRedactor};
+pub use elements::visibility::is_enabled_at;

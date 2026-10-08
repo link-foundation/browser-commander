@@ -29,6 +29,7 @@ impl std::fmt::Display for ScrollBehavior {
 /// Options for scroll operations.
 #[derive(Debug, Clone)]
 pub struct ScrollOptions {
+    pub index: Option<usize>,
     /// The scroll behavior (smooth or instant).
     pub behavior: ScrollBehavior,
     /// Whether to verify the scroll operation.
@@ -46,6 +47,7 @@ pub struct ScrollOptions {
 impl Default for ScrollOptions {
     fn default() -> Self {
         Self {
+            index: None,
             behavior: ScrollBehavior::Smooth,
             verify: true,
             verification_timeout: TIMING.verification_timeout,
@@ -112,6 +114,9 @@ pub async fn scroll_into_view(
     selector: &str,
     options: &ScrollOptions,
 ) -> Result<ScrollResult, EngineError> {
+    let resolved =
+        crate::elements::reusable::indexed_selector(adapter, selector, options.index).await?;
+    let selector = resolved.as_str();
     adapter.scroll_into_view(selector).await?;
 
     if options.verify {
@@ -184,6 +189,13 @@ pub async fn scroll_into_view_if_needed(
     selector: &str,
     options: &ScrollOptions,
 ) -> Result<ScrollResult, EngineError> {
+    let resolved =
+        crate::elements::reusable::indexed_selector(adapter, selector, options.index).await?;
+    let selector = resolved.as_str();
+    let options = &ScrollOptions {
+        index: None,
+        ..options.clone()
+    };
     // Check if element is already visible
     let is_visible = adapter.is_visible(selector).await?;
 

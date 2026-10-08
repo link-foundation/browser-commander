@@ -27,6 +27,8 @@ use std::time::Duration;
 /// Options for click operations.
 #[derive(Debug, Clone)]
 pub struct ClickOptions {
+    /// Zero-based CSS match; omission retains the first match.
+    pub index: Option<usize>,
     /// Whether to scroll the element into view before clicking.
     pub scroll_into_view: bool,
     /// Scroll behavior (smooth or instant).
@@ -47,6 +49,7 @@ pub struct ClickOptions {
 impl Default for ClickOptions {
     fn default() -> Self {
         Self {
+            index: None,
             scroll_into_view: true,
             scroll_behavior: ScrollBehavior::Smooth,
             wait_after_scroll: TIMING.default_wait_after_scroll,
@@ -323,6 +326,9 @@ pub async fn click_element(
     selector: &str,
     options: &ClickOptions,
 ) -> Result<ClickResult, EngineError> {
+    let resolved =
+        crate::elements::reusable::indexed_selector(adapter, selector, options.index).await?;
+    let selector = resolved.as_str();
     // One monotonic budget covers probing, dispatch and verification, so a
     // click cannot quietly cost several times the timeout the caller asked for.
     let deadline = Deadline::new(options.timeout);
@@ -583,6 +589,9 @@ pub async fn click_button(
     selector: &str,
     options: &ClickOptions,
 ) -> Result<ClickResult, EngineError> {
+    let resolved =
+        crate::elements::reusable::indexed_selector(adapter, selector, options.index).await?;
+    let selector = resolved.as_str();
     // Scrolling, clicking, verifying and the settle wait all come out of one
     // budget; before it was shared, each started a timer of its own and a
     // button click could cost several times the timeout the caller asked for.
@@ -612,6 +621,7 @@ pub async fn click_button(
 
     // Perform the click with whatever is left of the shared budget.
     let remaining = ClickOptions {
+        index: None,
         timeout: deadline.remaining(),
         ..options.clone()
     };

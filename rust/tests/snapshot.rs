@@ -9,6 +9,45 @@ use browser_commander::{snapshot_user_data_dir, SnapshotOptions};
 use rusqlite::{Connection, OpenFlags};
 use serde_json::json;
 
+#[tokio::test]
+async fn cookie_only_snapshot_folds_wal_and_excludes_unrelated_data() -> anyhow::Result<()> {
+    let source = create_temporary_user_data_dir(None)?;
+    fs::create_dir_all(source.join("Default"))?;
+    fs::write(source.join("Local State"), "{}")?;
+    fs::write(source.join("Default/History"), "unrelated")?;
+    let database = Connection::open(source.join("Default/Cookies"))?;
+    database.execute_batch(
+        "PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0;
+        CREATE TABLE cookies(value TEXT); INSERT INTO cookies VALUES ('committed');
+        BEGIN IMMEDIATE; INSERT INTO cookies VALUES ('uncommitted');",
+    )?;
+    let report = snapshot_user_data_dir(
+        &SnapshotOptions {
+            include: Some(vec!["cookies".into()]),
+            user_data_dir: Some(source.clone()),
+            ..Default::default()
+        },
+        None,
+    )?;
+    let copied = Connection::open_with_flags(
+        report.target.join("Default/Cookies"),
+        OpenFlags::SQLITE_OPEN_READ_ONLY,
+    )?;
+    assert_eq!(
+        copied.query_row("SELECT count(*) FROM cookies", [], |row| row
+            .get::<_, i64>(0))?,
+        1
+    );
+    assert!(report.target.join("Local State").exists());
+    assert!(!report.target.join("Default/History").exists());
+    assert!(!report.target.join("Default/Cookies-wal").exists());
+    drop(copied);
+    drop(database);
+    remove_user_data_dir(&source).await?;
+    remove_user_data_dir(&report.target).await?;
+    Ok(())
+}
+
 // feature-parity: attach.snapshot@native-typed
 #[tokio::test]
 async fn live_wal_snapshot_preserves_source_and_selected_profile() -> anyhow::Result<()> {

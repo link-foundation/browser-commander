@@ -167,6 +167,61 @@ impl EngineAdapter for ChromiumoxidePage {
         Ok(())
     }
 
+    async fn goto_with_options(
+        &self,
+        url: &str,
+        wait_until: &str,
+        timeout_ms: u64,
+    ) -> Result<(), EngineError> {
+        use chromiumoxide::cdp::browser_protocol::{
+            network::{EventLoadingFailed, EventLoadingFinished, EventRequestWillBeSent},
+            page::NavigateParams,
+        };
+        use futures::StreamExt;
+        let mut started = self
+            .page
+            .event_listener::<EventRequestWillBeSent>()
+            .await
+            .map_err(to_engine_error)?;
+        let mut finished = self
+            .page
+            .event_listener::<EventLoadingFinished>()
+            .await
+            .map_err(to_engine_error)?;
+        let mut failed = self
+            .page
+            .event_listener::<EventLoadingFailed>()
+            .await
+            .map_err(to_engine_error)?;
+        let operation = async {
+            let response = self
+                .page
+                .execute(NavigateParams::new(url))
+                .await
+                .map_err(to_engine_error)?;
+            if let Some(error) = response.result.error_text {
+                return Err(EngineError::Browser(error));
+            }
+            let mut pending = std::collections::HashSet::new();
+            let mut quiet = std::time::Instant::now();
+            loop {
+                tokio::select! {
+                    Some(event) = started.next() => { pending.insert(event.request_id.clone()); quiet = std::time::Instant::now(); }
+                    Some(event) = finished.next() => { pending.remove(&event.request_id); quiet = std::time::Instant::now(); }
+                    Some(event) = failed.next() => { pending.remove(&event.request_id); quiet = std::time::Instant::now(); }
+                    _ = tokio::time::sleep(std::time::Duration::from_millis(25)) => {
+                        let state = self.evaluate("document.readyState").await?;
+                        let ready = if wait_until == "domcontentloaded" { state == "interactive" || state == "complete" } else { state == "complete" };
+                        if ready && (wait_until != "networkidle" || (pending.is_empty() && quiet.elapsed() >= std::time::Duration::from_millis(500))) { return Ok(()); }
+                    }
+                }
+            }
+        };
+        tokio::time::timeout(std::time::Duration::from_millis(timeout_ms), operation)
+            .await
+            .map_err(|_| EngineError::Timeout("navigation milestone".into()))?
+    }
+
     async fn query_selector(&self, selector: &str) -> Result<Option<ElementInfo>, EngineError> {
         match self.page.find_element(selector).await {
             Ok(element) => {
@@ -393,6 +448,14 @@ impl EngineAdapter for ChromiumoxidePage {
     }
 
     async fn restore_storage_state(&self, value: serde_json::Value) -> Result<(), EngineError> {
+        let mut value = value;
+        if let Some(cookies) = value["cookies"].as_array() {
+            value["cookies"] =
+                serde_json::json!(super::session_cookies::normalize_session_cookies(
+                    cookies.clone(),
+                    EngineType::Chromiumoxide
+                ));
+        }
         use chromiumoxide::cdp::browser_protocol::network::CookieParam;
 
         let state: StorageState = serde_json::from_value(value).map_err(to_engine_error)?;
@@ -467,6 +530,20 @@ impl EngineAdapter for ChromiumoxidePage {
             vec![origin]
         };
         Ok(serde_json::json!({ "cookies": cookies, "origins": origins }))
+    }
+
+    async fn delete_cookies(&self, cookies: Vec<serde_json::Value>) -> Result<(), EngineError> {
+        use chromiumoxide::cdp::browser_protocol::network::DeleteCookiesParams;
+        for cookie in cookies {
+            let params = DeleteCookiesParams::builder()
+                .name(cookie["name"].as_str().unwrap_or(""))
+                .domain(cookie["domain"].as_str().unwrap_or(""))
+                .path(cookie["path"].as_str().unwrap_or("/"))
+                .build()
+                .map_err(to_engine_error)?;
+            self.page.execute(params).await.map_err(to_engine_error)?;
+        }
+        Ok(())
     }
 
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {

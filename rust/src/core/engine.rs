@@ -395,6 +395,14 @@ pub trait EngineAdapter: Send + Sync {
         )))
     }
 
+    /// Delete exact cookie identities, including HttpOnly cookies.
+    async fn delete_cookies(&self, _cookies: Vec<serde_json::Value>) -> Result<(), EngineError> {
+        Err(EngineError::Unsupported {
+            browser: self.engine_type().to_string(),
+            feature: "context cookie deletion".into(),
+        })
+    }
+
     /// Take a screenshot.
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError>;
 

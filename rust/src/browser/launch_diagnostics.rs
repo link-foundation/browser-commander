@@ -1,4 +1,5 @@
 //! Stable launch failures with bounded, scrubbed evidence.
+// feature-parity: launch.diagnostics@native-typed
 use std::fmt;
 use std::sync::Arc;
 
@@ -13,25 +14,26 @@ impl fmt::Debug for DiagnosticRedactor {
 }
 
 pub fn redact_launch_evidence(value: &str, redactor: Option<&DiagnosticRedactor>) -> String {
+    let urls = regex::Regex::new(r#"(?i)\b(?:https?|wss?)://[^\s"'<>]+"#).unwrap();
     let paths = regex::Regex::new(r#"(?:[A-Za-z]:\\|/)[^\s:;"'<>]+"#).unwrap();
     let secrets =
         regex::Regex::new(r"(?i)\b(token|password|secret|authorization|cookie)\s*[=:]\s*[^\s,;]+")
             .unwrap();
     let value = secrets
-        .replace_all(&paths.replace_all(value, "[path]"), "$1=[redacted]")
+        .replace_all(
+            &paths.replace_all(&urls.replace_all(value, "[url]"), "[path]"),
+            "$1=[redacted]",
+        )
         .into_owned();
     let value = match redactor {
         Some(redactor) => (redactor.0)(&value),
         None => value,
     };
-    value
-        .chars()
-        .rev()
-        .take(4096)
-        .collect::<String>()
-        .chars()
-        .rev()
-        .collect()
+    let mut start = value.len().saturating_sub(4096);
+    while !value.is_char_boundary(start) {
+        start += 1;
+    }
+    value[start..].to_string()
 }
 
 #[derive(Debug)]
@@ -72,6 +74,9 @@ pub(crate) fn launch_failure(
     options: &super::real_browser::RealBrowserOptions,
     process: Option<&super::BrowserProcess>,
 ) -> anyhow::Error {
+    if error.is::<BrowserLaunchError>() {
+        return error;
+    }
     let text = error.to_string();
     let lower = text.to_lowercase();
     let category = if error.downcast_ref::<super::PortRaceError>().is_some() {
@@ -117,6 +122,15 @@ pub(crate) fn launch_failure(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn scrubs_url_credentials_and_bounds_multibyte_evidence() {
+        let value = redact_launch_evidence(
+            "https://user:private@example.test/secret?access=private",
+            None,
+        );
+        assert!(!value.contains("private") && !value.contains("example.test"));
+        assert!(redact_launch_evidence(&"😀".repeat(4096), None).len() <= 4096);
+    }
     #[test]
     fn bounds_and_scrubs_evidence_and_preserves_safe_cause() {
         let options = super::super::real_browser::RealBrowserOptions::default();

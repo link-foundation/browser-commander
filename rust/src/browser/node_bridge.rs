@@ -471,6 +471,12 @@ impl EngineAdapter for NodeBridgePage {
         self.request("exportStorageState", json!({})).await
     }
 
+    async fn delete_cookies(&self, cookies: Vec<Value>) -> Result<(), EngineError> {
+        self.request("deleteCookies", json!({"cookies": cookies}))
+            .await?;
+        Ok(())
+    }
+
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {
         decode_base64(self.string_request("screenshot", json!({})).await?)
     }

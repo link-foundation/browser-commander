@@ -88,6 +88,36 @@ impl EngineAdapter for ManagedWebDriver {
     async fn goto(&self, url: &str) -> Result<(), EngineError> {
         self.client.goto(url).await.map_err(error)
     }
+    async fn goto_with_options(
+        &self,
+        url: &str,
+        wait_until: &str,
+        timeout_ms: u64,
+    ) -> Result<(), EngineError> {
+        if wait_until == "networkidle" {
+            return Err(EngineError::Unsupported {
+                browser: "fantoccini".into(),
+                feature: "network-idle navigation milestone".into(),
+            });
+        }
+        let operation = async {
+            if let Some(bidi) = &self.bidi {
+                let context = String::from(self.client.window().await.map_err(error)?);
+                bidi.send("browsingContext.navigate", json!({"context":context,"url":url,"wait": if wait_until == "domcontentloaded" { "interactive" } else { "complete" }})).await.map_err(error)?;
+                Ok(())
+            } else if wait_until == "load" {
+                self.goto(url).await
+            } else {
+                Err(EngineError::Unsupported {
+                    browser: "fantoccini".into(),
+                    feature: "DOMContentLoaded navigation requires WebDriver BiDi".into(),
+                })
+            }
+        };
+        tokio::time::timeout(Duration::from_millis(timeout_ms), operation)
+            .await
+            .map_err(|_| EngineError::Timeout("navigation milestone".into()))?
+    }
     async fn query_selector(&self, selector: &str) -> Result<Option<ElementInfo>, EngineError> {
         Ok(self.elements(selector).await?.into_iter().next())
     }
@@ -255,6 +285,19 @@ impl EngineAdapter for ManagedWebDriver {
     }
     async fn export_storage_state(&self) -> Result<Value, EngineError> {
         serde_json::to_value(self.save_state().await.map_err(error)?).map_err(error)
+    }
+    async fn delete_cookies(&self, cookies: Vec<Value>) -> Result<(), EngineError> {
+        for cookie in cookies {
+            if let Some(bidi) = &self.bidi {
+                bidi.send("storage.deleteCookies", json!({"filter":{"name":cookie["name"],"domain":cookie["domain"],"path":cookie["path"]}})).await.map_err(error)?;
+            } else {
+                self.client
+                    .delete_cookie(cookie["name"].as_str().unwrap_or(""))
+                    .await
+                    .map_err(error)?;
+            }
+        }
+        Ok(())
     }
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {
         self.client.screenshot().await.map_err(error)

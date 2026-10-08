@@ -3,6 +3,7 @@
 //! This module provides high-level navigation utilities with
 //! verification and stabilization support.
 
+// feature-parity: navigation.budget@native-typed
 use crate::core::constants::TIMING;
 use crate::core::engine::{EngineAdapter, EngineError};
 use crate::core::navigation::is_navigation_error;
@@ -189,22 +190,28 @@ pub async fn verify_navigation_within(
     let budget = options.verification_timeout.min(deadline.remaining());
     let start_time = Instant::now();
     let mut attempts = 0u32;
+    let probe_deadline = Deadline::new(budget);
+    let mut final_url = String::new();
 
     while start_time.elapsed() < budget {
         attempts += 1;
 
-        let actual_url = match adapter.url().await {
-            Ok(url) => url,
-            Err(e) if is_navigation_error(&e.to_string()) => {
-                return Ok(NavigationVerificationResult {
-                    verified: false,
-                    actual_url: String::new(),
-                    reason: "error during verification".to_string(),
-                    attempts,
-                });
-            }
-            Err(e) => return Err(e),
+        let actual_url = match run_within_deadline(&probe_deadline, adapter.url()).await {
+            DeadlineOutcome::TimedOut => break,
+            DeadlineOutcome::Completed(result) => match result {
+                Ok(url) => url,
+                Err(e) if is_navigation_error(&e.to_string()) => {
+                    return Ok(NavigationVerificationResult {
+                        verified: false,
+                        actual_url: String::new(),
+                        reason: "error during verification".to_string(),
+                        attempts,
+                    });
+                }
+                Err(e) => return Err(e),
+            },
         };
+        final_url.clone_from(&actual_url);
 
         // If expected URL is provided, verify it matches
         if let Some(expected) = expected_url {
@@ -241,7 +248,7 @@ pub async fn verify_navigation_within(
     }
 
     // Final check
-    let actual_url = adapter.url().await?;
+    let actual_url = final_url;
 
     Ok(NavigationVerificationResult {
         verified: false,
@@ -402,7 +409,7 @@ async fn goto_within(
 
     // Wait for URL to stabilize before navigation (if requested)
     if options.wait_for_stable_url_before {
-        let record = url_stable_within(adapter, options, &deadline, "url_stable_before").await?;
+        let record = url_stable_within(adapter, options, deadline, "url_stable_before").await?;
         readiness.record(record);
     }
 
@@ -437,7 +444,7 @@ async fn goto_within(
 
     // Wait for URL to stabilize after navigation (if requested)
     if options.wait_for_stable_url_after {
-        let record = url_stable_within(adapter, options, &deadline, "url_stable_after").await?;
+        let record = url_stable_within(adapter, options, deadline, "url_stable_after").await?;
         readiness.record(record);
     }
 
@@ -450,8 +457,7 @@ async fn goto_within(
         } else {
             let started_at_ms = deadline.elapsed_ms();
             let verification =
-                verify_navigation_within(adapter, Some(url), &start_url, options, &deadline)
-                    .await?;
+                verify_navigation_within(adapter, Some(url), &start_url, options, deadline).await?;
             let detail = json!({
                 "actualUrl": verification.actual_url,
                 "reason": verification.reason,
@@ -464,7 +470,7 @@ async fn goto_within(
             }
             .with_timing(started_at_ms, deadline.elapsed_ms() - started_at_ms);
             readiness.record(record);
-            let readiness = readiness.finish(&deadline);
+            let readiness = readiness.finish(deadline);
 
             return Ok(NavigationResult {
                 navigated: true,
@@ -480,7 +486,7 @@ async fn goto_within(
         }
     }
 
-    let readiness = readiness.finish(&deadline);
+    let readiness = readiness.finish(deadline);
     let actual_url = match run_within_deadline(deadline, adapter.url()).await {
         DeadlineOutcome::Completed(result) => result?,
         DeadlineOutcome::TimedOut => start_url,
@@ -502,10 +508,18 @@ pub async fn wait_for_navigation(
     adapter: &dyn EngineAdapter,
     timeout_ms: u64,
 ) -> Result<bool, EngineError> {
-    match adapter.wait_for_navigation(timeout_ms).await {
-        Ok(_) => Ok(true),
-        Err(e) if is_navigation_error(&e.to_string()) => Ok(false),
-        Err(e) => Err(e),
+    match tokio::time::timeout(
+        Duration::from_millis(timeout_ms),
+        adapter.wait_for_navigation(timeout_ms),
+    )
+    .await
+    {
+        Err(_) => Ok(false),
+        Ok(result) => match result {
+            Ok(_) => Ok(true),
+            Err(e) if is_navigation_error(&e.to_string()) => Ok(false),
+            Err(e) => Err(e),
+        },
     }
 }
 

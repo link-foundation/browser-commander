@@ -267,7 +267,7 @@ async function restoreStorageState(state) {
       );
     }
   } else {
-    if (cookies.length) await page.setCookie(...cookies);
+    if (cookies.length) await page.browserContext().setCookie(...cookies.map(({expires, ...cookie}) => ({ ...cookie, ...(expires > 0 ? {expires} : {}) })));
     if (origins.length) {
       await page.evaluateOnNewDocument(restoreOriginLocalStorage, origins);
       await page.evaluate(restoreOriginLocalStorage, origins);
@@ -277,7 +277,7 @@ async function restoreStorageState(state) {
 
 async function exportStorageState() {
   if (engineName === "playwright") return context.storageState();
-  const cookies = await page.cookies();
+  const cookies = await page.browserContext().cookies();
   const origin = new URL(page.url()).origin;
   const origins = [];
   if (origin !== "null") {
@@ -350,6 +350,11 @@ async function handleCommand(method, params) {
       return await handleConnect(params);
     case "restoreStorageState":
       await restoreStorageState(params.state);
+      return null;
+    case "deleteCookies":
+      if (engineName === "playwright") {
+        for (const {name, domain, path} of params.cookies) await context.clearCookies({name, domain, path});
+      } else await page.browserContext().deleteCookie(...params.cookies);
       return null;
     case "exportStorageState":
       return await exportStorageState();

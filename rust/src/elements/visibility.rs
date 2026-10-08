@@ -50,7 +50,21 @@ pub async fn is_visible(adapter: &dyn EngineAdapter, selector: &str) -> Result<b
 ///
 /// `true` if the element is enabled, `false` otherwise
 pub async fn is_enabled(adapter: &dyn EngineAdapter, selector: &str) -> Result<bool, EngineError> {
-    adapter.is_enabled(selector).await
+    is_enabled_at(adapter, selector, None, &["disabled"]).await
+}
+
+pub async fn is_enabled_at(
+    adapter: &dyn EngineAdapter,
+    selector: &str,
+    index: Option<usize>,
+    disabled_classes: &[&str],
+) -> Result<bool, EngineError> {
+    let selector = crate::elements::reusable::indexed_selector(adapter, selector, index).await?;
+    if !adapter.is_enabled(&selector).await? {
+        return Ok(false);
+    }
+    let value = adapter.evaluate(&format!("(() => {{ const el = document.querySelector({}); return Boolean(el) && !{}.some(c => el.classList.contains(c)); }})()", serde_json::json!(selector), serde_json::json!(disabled_classes))).await?;
+    Ok(value.as_bool().unwrap_or(false))
 }
 
 /// Count the number of elements matching a selector.

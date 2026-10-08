@@ -11,7 +11,7 @@
 //! let mut manager = DialogManager::new();
 //!
 //! // Register a handler that dismisses all dialogs
-//! manager.on_dialog(|event| {
+//! let _remove = manager.on_dialog(|event| {
 //!     // In real usage, you would call event.dismiss() on the actual dialog object
 //!     println!("Dialog: {} - {}", event.dialog_type, event.message);
 //! });
@@ -119,7 +119,7 @@ pub type DialogHandler = Arc<dyn Fn(&DialogEvent) + Send + Sync>;
 ///
 /// let mut manager = DialogManager::new();
 ///
-/// manager.on_dialog(|event| {
+/// let _remove = manager.on_dialog(|event| {
 ///     println!("Got dialog: {:?} - {}", event.dialog_type, event.message);
 /// });
 ///
@@ -166,12 +166,22 @@ impl DialogManager {
     /// # Arguments
     ///
     /// * `handler` - A function that receives a [`DialogEvent`] reference.
-    pub fn on_dialog<F>(&mut self, handler: F)
+    pub fn on_dialog<F>(&mut self, handler: F) -> impl Fn() + Send + Sync + 'static
     where
         F: Fn(&DialogEvent) + Send + Sync + 'static,
     {
         let mut handlers = self.handlers.lock().expect("lock poisoned");
-        handlers.push(Arc::new(handler));
+        let handler: DialogHandler = Arc::new(handler);
+        handlers.push(handler.clone());
+        let registry = Arc::downgrade(&self.handlers);
+        move || {
+            if let Some(registry) = registry.upgrade() {
+                registry
+                    .lock()
+                    .expect("lock poisoned")
+                    .retain(|existing| !Arc::ptr_eq(existing, &handler));
+            }
+        }
     }
 
     /// Remove all registered dialog handlers.
@@ -195,7 +205,7 @@ impl DialogManager {
     ///
     /// * `event` - The dialog event to dispatch.
     pub fn dispatch(&self, event: &DialogEvent) {
-        let handlers = self.handlers.lock().expect("lock poisoned");
+        let handlers = self.handlers.lock().expect("lock poisoned").clone();
         for handler in handlers.iter() {
             handler(event);
         }
@@ -276,18 +286,37 @@ mod tests {
     #[test]
     fn dialog_manager_on_dialog() {
         let mut manager = DialogManager::new();
-        manager.on_dialog(|_event| {});
+        let _remove = manager.on_dialog(|_event| {});
         assert_eq!(manager.handler_count(), 1);
 
-        manager.on_dialog(|_event| {});
+        let _remove = manager.on_dialog(|_event| {});
         assert_eq!(manager.handler_count(), 2);
+    }
+
+    #[test]
+    fn dialog_removers_are_idempotent_and_preserve_other_handlers() {
+        let mut manager = DialogManager::new();
+        let first = manager.on_dialog(|_| {});
+        let observed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let callback_count = observed.clone();
+        let second = manager.on_dialog(move |_| {
+            callback_count.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        });
+        first();
+        first();
+        assert_eq!(manager.handler_count(), 1);
+        manager.dispatch(&DialogEvent::new(DialogType::Alert, "fixture", None));
+        assert_eq!(observed.load(std::sync::atomic::Ordering::SeqCst), 1);
+        second();
+        second();
+        assert_eq!(manager.handler_count(), 0);
     }
 
     #[test]
     fn dialog_manager_clear_handlers() {
         let mut manager = DialogManager::new();
-        manager.on_dialog(|_event| {});
-        manager.on_dialog(|_event| {});
+        let _remove = manager.on_dialog(|_event| {});
+        let _remove = manager.on_dialog(|_event| {});
         assert_eq!(manager.handler_count(), 2);
 
         manager.clear_dialog_handlers();
@@ -300,7 +329,7 @@ mod tests {
         let called = Arc::new(Mutex::new(false));
         let called_clone = called.clone();
 
-        manager.on_dialog(move |event| {
+        let _remove = manager.on_dialog(move |event| {
             *called_clone.lock().unwrap() = true;
             assert_eq!(event.message, "Test dialog");
             assert_eq!(event.dialog_type, DialogType::Alert);
@@ -318,12 +347,12 @@ mod tests {
         let count = Arc::new(Mutex::new(0u32));
 
         let count1 = count.clone();
-        manager.on_dialog(move |_| {
+        let _remove = manager.on_dialog(move |_| {
             *count1.lock().unwrap() += 1;
         });
 
         let count2 = count.clone();
-        manager.on_dialog(move |_| {
+        let _remove = manager.on_dialog(move |_| {
             *count2.lock().unwrap() += 1;
         });
 
@@ -344,7 +373,7 @@ mod tests {
     #[test]
     fn dialog_manager_is_cloneable() {
         let mut manager = DialogManager::new();
-        manager.on_dialog(|_| {});
+        let _remove = manager.on_dialog(|_| {});
 
         let cloned = manager.clone();
         assert_eq!(cloned.handler_count(), 1);

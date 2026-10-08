@@ -22,7 +22,13 @@ async def test_reusable_helpers_and_context_cookies():
     from playwright.async_api import async_playwright
 
     async with async_playwright() as driver:
-        browser = await driver.chromium.launch(headless=True, args=["--no-sandbox"])
+        browser = await driver.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get("CHROME_PATH"),
+            args=["--no-sandbox"]
+            if os.environ.get("CHROME_NO_SANDBOX") == "true"
+            else [],
+        )
         try:
             page = await browser.new_page()
             await page.goto(
@@ -87,9 +93,10 @@ async def test_session_cookie_persistence_across_engine_launches(tmp_path):
         engine="playwright",
         launch="engine",
         headless=True,
+        executable_path=os.environ.get("CHROME_PATH"),
         user_data_dir=str(tmp_path),
         persist_session_cookies=True,
-        args=["--no-sandbox"],
+        args=["--no-sandbox"] if os.environ.get("CHROME_NO_SANDBOX") == "true" else [],
     )
     result = await launch_browser(options)
     try:

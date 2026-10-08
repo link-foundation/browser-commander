@@ -136,6 +136,8 @@ export class ManagedProcess {
     this.runner = runner;
     this.exitCode = null;
     this.signalCode = null;
+    this.stderrTail = '';
+    this.spawnError = null;
     this.stdout = new OutputChannel();
     this.stderr = new OutputChannel();
     this.exitListeners = new Set();
@@ -146,6 +148,7 @@ export class ManagedProcess {
       this.stdout.emit(chunk);
     });
     runner.on('stderr', (chunk) => {
+      this.stderrTail = (this.stderrTail + String(chunk)).slice(-8192);
       if (forwardOutput) {
         process.stderr.write(chunk);
       }
@@ -153,9 +156,13 @@ export class ManagedProcess {
     });
     runner.start();
     this.exited = Promise.resolve(runner)
-      .catch((error) => ({ code: error?.code ?? 1 }))
+      .catch((error) => {
+        this.spawnError = error;
+        return { code: error?.code ?? 1 };
+      })
       .then((result) => {
         this.exitCode = typeof result.code === 'number' ? result.code : 1;
+        this.signalCode = result.signal ?? null;
         for (const listener of this.exitListeners) {
           listener(this.exitCode);
         }

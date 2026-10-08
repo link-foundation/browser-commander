@@ -32,6 +32,9 @@ use crate::browser::connector::ConnectOptions;
 use crate::browser::debugging_port::{
     assert_fixed_debugging_port, reserve_loopback_port, DevToolsOutputWatcher, PortRaceError,
 };
+use crate::browser::launch_diagnostics::{
+    launch_failure, redact_launch_evidence, DiagnosticRedactor,
+};
 use crate::browser::launcher::Browser;
 use crate::browser::migration::{
     migrate_profile, MigrateProfileOptions, MigrationSource, MigrationSummary,
@@ -76,6 +79,7 @@ const FANTOCCINI_OVER_CDP: &str =
 /// Options for launching an installed browser and attaching over CDP.
 #[derive(Debug, Clone)]
 pub struct RealBrowserOptions {
+    pub diagnostic_redactor: Option<DiagnosticRedactor>,
     /// Browser Commander engine used after the browser starts.
     pub engine: EngineType,
     /// Installed Chrome-family channel to discover.
@@ -199,6 +203,7 @@ impl Default for RealBrowserOptions {
             migrate_password_csv: None,
             migrate_include_payment_cards: false,
             verbose: false,
+            diagnostic_redactor: None,
             node_executable: None,
             node_working_dir: None,
             downloads: DownloadSetting::Off,
@@ -774,11 +779,12 @@ async fn spawn_on_free_port(
         };
         let args = browser_args(options, user_data_dir, port)?;
         if options.verbose {
-            tracing::info!(executable = %executable_path.display(), ?args, "starting installed browser");
+            tracing::info!("starting installed browser");
         }
         let spawned = hooks
-            .spawn_browser(executable_path, &args, env.clone(), options.verbose)
-            .await?;
+            .spawn_browser(executable_path, &args, env.clone(), false)
+            .await
+            .map_err(|error| launch_failure(error, "spawn", options, None))?;
         let waited = hooks
             .wait_for_endpoint(CdpEndpointRequest {
                 remote_debugging_port: port,
@@ -798,14 +804,22 @@ async fn spawn_on_free_port(
                 })
             }
             Err(error) => {
+                let retry = error.downcast_ref::<PortRaceError>().is_some() && attempt < attempts;
+                let failure = launch_failure(error, "endpoint", options, Some(&spawned.process));
                 spawned.process.kill();
-                if error.downcast_ref::<PortRaceError>().is_none() || attempt >= attempts {
-                    return Err(error);
+                spawned.process.wait_timeout(RACE_EXIT_WAIT).await;
+                if !retry {
+                    return Err(failure);
                 }
                 if options.verbose {
-                    tracing::info!("{error}; retrying with a new port");
+                    tracing::info!(
+                        "{}; retrying with a new port",
+                        redact_launch_evidence(
+                            &failure.to_string(),
+                            options.diagnostic_redactor.as_ref()
+                        )
+                    );
                 }
-                spawned.process.wait_timeout(RACE_EXIT_WAIT).await;
                 attempt += 1;
             }
         }
@@ -827,7 +841,9 @@ where
     if let Some(state) = &options.storage_state {
         state.load()?;
     }
-    let executable_path = hooks.resolve_executable(options)?;
+    let executable_path = hooks
+        .resolve_executable(options)
+        .map_err(|error| launch_failure(error, "discovery", options, None))?;
     let temporary_profile = options.user_data_dir.is_none() || owned_profile;
     let user_data_dir = match &options.user_data_dir {
         Some(user_data_dir) => {
@@ -923,12 +939,13 @@ where
     let connection = match connection {
         Ok(connection) => connection,
         Err(error) => {
+            let failure = launch_failure(error, "connect", options, Some(&process));
             process.kill();
             process.wait_timeout(options.close_timeout).await;
             if temporary_profile {
                 let _ = remove_user_data_dir(&user_data_dir).await;
             }
-            return Err(error);
+            return Err(failure);
         }
     };
 

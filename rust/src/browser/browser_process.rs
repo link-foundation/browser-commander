@@ -25,9 +25,15 @@ pub(crate) trait ProcessControl: Send + Sync {
     fn exit_code(&self) -> Option<i32>;
     fn kill(&self) -> bool;
     fn exited(&self) -> ExitFuture;
+    fn stderr_tail(&self) -> String {
+        String::new()
+    }
 }
 
 impl ProcessControl for ManagedProcess {
+    fn stderr_tail(&self) -> String {
+        ManagedProcess::stderr_tail(self)
+    }
     fn pid(&self) -> Option<u32> {
         ManagedProcess::pid(self)
     }
@@ -64,6 +70,9 @@ pub struct BrowserProcess {
 }
 
 impl BrowserProcess {
+    pub fn stderr_tail(&self) -> String {
+        self.inner.stderr_tail()
+    }
     pub(crate) fn from_control(inner: Arc<dyn ProcessControl>) -> Self {
         Self { inner }
     }

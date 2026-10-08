@@ -262,6 +262,7 @@ class ManagedProcess:
         self._escalation: asyncio.TimerHandle | None = None
         self.stdout = OutputChannel()
         self.stderr = OutputChannel()
+        self.stderr_tail = ""
         loop = asyncio.get_running_loop()
         self._readers = [
             loop.create_task(
@@ -289,6 +290,8 @@ class ManagedProcess:
             except (OSError, ValueError):
                 data = b""
             chunk = decoder.decode(data, final=not data)
+            if channel is self.stderr:
+                self.stderr_tail = (self.stderr_tail + chunk)[-8192:]
             if not data:
                 if chunk:
                     with contextlib.suppress(Exception):

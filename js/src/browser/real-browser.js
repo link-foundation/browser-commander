@@ -1,3 +1,4 @@
+import { launchFailure, redactLaunchEvidence } from './launch-diagnostics.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { findBrowserSource } from './browser-sources.js';
@@ -199,8 +200,14 @@ export async function waitForCdpEndpoint({
       throw new PortRaceError(port, output.listening?.url ?? 'bind failed');
     }
     if (browserProcess.exitCode !== null) {
-      throw new Error(
-        `Browser exited before its DevTools endpoint was ready (exit ${browserProcess.exitCode})`
+      throw (
+        browserProcess.spawnError ??
+        Object.assign(
+          new Error(
+            `Browser exited before its DevTools endpoint was ready (exit ${browserProcess.exitCode})`
+          ),
+          { stderrTail: browserProcess.stderrTail }
+        )
       );
     }
     if (ownership !== 'owned') {
@@ -369,6 +376,7 @@ async function spawnOnFreePort({
   userDataDir,
   startupTimeout,
   dependencies,
+  diagnostics,
 }) {
   const reservePort = dependencies.reservePort ?? reserveLoopbackPort;
   const spawnBrowser = dependencies.spawnBrowser ?? spawnWithStartProcess;
@@ -381,10 +389,20 @@ async function spawnOnFreePort({
       userDataDir,
       remoteDebuggingPort: port,
     });
-    const browserProcess = spawnBrowser(executablePath, browserArgs, {
-      env,
-      verbose,
-    });
+    let browserProcess;
+    try {
+      browserProcess = await spawnBrowser(executablePath, browserArgs, {
+        env,
+        verbose: false,
+      });
+    } catch (error) {
+      throw launchFailure(error, {
+        ...diagnostics,
+        phase: 'spawn',
+        executablePath,
+        userDataDir,
+      });
+    }
     try {
       const cdpEndpoint = await waitForEndpoint({
         remoteDebuggingPort: port,
@@ -397,13 +415,24 @@ async function spawnOnFreePort({
       if (browserProcess.exitCode === null) {
         browserProcess.kill();
       }
+      await waitForExit(browserProcess, 5_000);
       if (!(error instanceof PortRaceError) || attempt >= attempts) {
-        throw error;
+        throw launchFailure(error, {
+          ...diagnostics,
+          phase: 'endpoint',
+          browserProcess,
+          executablePath,
+          userDataDir,
+        });
       }
       if (verbose) {
-        console.log(`${error.message}; retrying with a new port`);
+        console.log(
+          redactLaunchEvidence(
+            `${error.message}; retrying with a new port`,
+            diagnostics?.diagnosticRedactor
+          )
+        );
       }
-      await waitForExit(browserProcess, 5_000);
     }
   }
 }
@@ -614,10 +643,22 @@ export async function launchAndConnectRealBrowserWithDependencies(
 
   const resolveExecutable =
     dependencies.resolveExecutable ?? resolveSystemBrowserExecutable;
-  const executablePath = await resolveExecutable({
-    channel,
-    executablePath: requestedExecutablePath,
-  });
+  const launchChannel = attach?.browser ?? channel;
+  const executablePath = await Promise.resolve()
+    .then(() =>
+      resolveExecutable({
+        channel: launchChannel,
+        executablePath: requestedExecutablePath,
+      })
+    )
+    .catch((error) => {
+      throw launchFailure(error, {
+        ...options,
+        phase: 'discovery',
+        engine,
+        executablePath: requestedExecutablePath,
+      });
+    });
 
   const temporaryProfile = !requestedUserDataDir;
   const { userDataDir, snapshotLaunch } = await prepareProfile({
@@ -661,6 +702,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       userDataDir,
       startupTimeout,
       dependencies,
+      diagnostics: { engine, diagnosticRedactor: options.diagnosticRedactor },
     })
   );
   const { browserProcess, cdpEndpoint: resolvedCdpEndpoint } = launched;
@@ -715,7 +757,14 @@ export async function launchAndConnectRealBrowserWithDependencies(
     if (temporaryProfile) {
       await removeUserDataDir(userDataDir);
     }
-    throw error;
+    throw launchFailure(error, {
+      ...options,
+      phase: 'connect',
+      engine,
+      browserProcess,
+      executablePath,
+      userDataDir,
+    });
   }
 }
 

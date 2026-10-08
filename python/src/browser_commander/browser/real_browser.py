@@ -31,6 +31,10 @@ from browser_commander.browser.debugging_port import (
     reserve_loopback_port,
     watch_dev_tools_output,
 )
+from browser_commander.browser.launch_diagnostics import (
+    launch_failure,
+    redact_launch_evidence,
+)
 from browser_commander.browser.launcher import LaunchResult
 from browser_commander.browser.profile_directory import (
     configure_user_data_dir,
@@ -143,6 +147,7 @@ class RealBrowserOptions:
     seed_cookies: list[dict[str, Any]] = field(default_factory=list)
     storage_state: StorageStateInput = None
     verbose: bool = False
+    diagnostic_redactor: Callable[[str], str] | None = None
     downloads: bool | Mapping[str, Any] | None = None
     """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
     ``persist`` and ``conflict``."""
@@ -559,11 +564,12 @@ async def _spawn_on_free_port(
             extra_args=options.extra_args,
             automation_parity=options.automation_parity,
         )
-        browser_process = await _resolve(
-            spawn_browser(
-                executable_path, browser_args, env=env, verbose=options.verbose
+        try:
+            browser_process = await _resolve(
+                spawn_browser(executable_path, browser_args, env=env, verbose=False)
             )
-        )
+        except Exception as error:
+            raise launch_failure(error, phase="spawn", options=options)
         try:
             cdp_endpoint = await _resolve(
                 wait_for_endpoint(
@@ -576,12 +582,23 @@ async def _spawn_on_free_port(
             return _Launched(browser_process, str(cdp_endpoint), port, browser_args)
         except BaseException as error:
             _kill(browser_process)
+            await _wait_for_exit(browser_process, options.close_timeout)
             if not isinstance(error, PortRaceError) or attempt >= attempts:
-                if not isinstance(error, PortRaceError):
-                    await _wait_for_exit(browser_process, options.close_timeout)
+                if isinstance(error, Exception):
+                    raise launch_failure(
+                        error,
+                        phase="endpoint",
+                        options=options,
+                        process=browser_process,
+                    )
                 raise
             if options.verbose:
-                print(f"{error}; retrying with a new port")
+                print(
+                    redact_launch_evidence(
+                        f"{error}; retrying with a new port",
+                        options.diagnostic_redactor,
+                    )
+                )
             await _wait_for_exit(browser_process, 5_000)
 
 
@@ -659,14 +676,16 @@ async def launch_real_browser_with_dependencies(
         return await launch_safari(options)
 
     _validate_launch_request(options)
-    executable_path = str(
-        await _resolve(
-            resolve_executable(
-                channel=options.channel,
-                executable_path=options.executable_path,
+    try:
+        executable_path = str(
+            await _resolve(
+                resolve_executable(
+                    channel=options.channel, executable_path=options.executable_path
+                )
             )
         )
-    )
+    except Exception as error:
+        raise launch_failure(error, phase="discovery", options=options)
 
     temporary_profile = not options.user_data_dir or owned_profile
     user_data_dir = (
@@ -765,11 +784,15 @@ async def launch_real_browser_with_dependencies(
             close_timeout=options.close_timeout,
             cleanup_profile=cleanup_profile,
         )
-    except BaseException:
+    except BaseException as error:
         _kill(browser_process)
         await _wait_for_exit(browser_process, options.close_timeout)
         if temporary_profile:
             await cleanup_profile()
+        if isinstance(error, Exception):
+            raise launch_failure(
+                error, phase="connect", options=options, process=browser_process
+            )
         raise
 
     return RealBrowserResult(

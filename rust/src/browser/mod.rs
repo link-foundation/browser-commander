@@ -22,6 +22,7 @@ pub mod debugging_port;
 mod default_browser;
 mod engine_launch;
 pub mod extension_relay;
+pub mod launch_diagnostics;
 mod launch_executable;
 pub mod launcher;
 pub mod media;

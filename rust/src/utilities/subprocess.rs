@@ -293,6 +293,7 @@ fn emit(listeners: &ListenerList, chunk: &[u8]) {
 /// Dropping the handle asks command-stream to stop the process; call
 /// [`kill`](Self::kill) and [`wait`](Self::wait) for deterministic cleanup.
 pub struct ManagedProcess {
+    stderr_tail: Arc<Mutex<Vec<u8>>>,
     file: String,
     pid: Option<u32>,
     exit: watch::Receiver<Option<i32>>,
@@ -313,6 +314,12 @@ impl fmt::Debug for ManagedProcess {
 }
 
 impl ManagedProcess {
+    pub fn stderr_tail(&self) -> String {
+        self.stderr_tail
+            .lock()
+            .map(|v| String::from_utf8_lossy(&v).into_owned())
+            .unwrap_or_default()
+    }
     /// Operating system process id.
     pub fn pid(&self) -> Option<u32> {
         self.pid
@@ -454,6 +461,8 @@ pub async fn start_process<S: AsRef<str>>(
     let forward = options.forward_output;
     let pump_stdout = Arc::clone(&stdout);
     let pump_stderr = Arc::clone(&stderr);
+    let stderr_tail = Arc::new(Mutex::new(Vec::new()));
+    let pump_tail = Arc::clone(&stderr_tail);
 
     tokio::spawn(async move {
         let mut code = None;
@@ -468,6 +477,11 @@ pub async fn start_process<S: AsRef<str>>(
                         emit(&pump_stdout, &data);
                     }
                     Some(OutputChunk::Stderr(data)) => {
+                        if let Ok(mut tail) = pump_tail.lock() {
+                            tail.extend_from_slice(&data);
+                            let extra = tail.len().saturating_sub(8192);
+                            tail.drain(..extra);
+                        }
                         if forward {
                             let _ = std::io::stderr().write_all(&data);
                         }
@@ -486,6 +500,7 @@ pub async fn start_process<S: AsRef<str>>(
     });
 
     Ok(ManagedProcess {
+        stderr_tail,
         file: file.to_owned(),
         pid: Some(pid),
         exit: exit_rx,

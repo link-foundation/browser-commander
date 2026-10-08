@@ -405,7 +405,7 @@ describe('launchAndConnectRealBrowser', () => {
             },
           }
         ),
-      PortRaceError
+      (error) => error.category === 'port_race' && error.phase === 'endpoint'
     );
     assert.equal(attempts, 1);
   });

@@ -1,0 +1,236 @@
+[
+  {
+    "body": "Long continuous traces stop recording once the bundle reaches `maxBundleBytes`: every later checkpoint and mutation batch is dropped.\n\n### Evidence (browser-commander 0.26.3; `src/traces/` is identical in 0.27.0)\n\nA 9-hour continuous trace of an hh.ru automation run with the 256 MB default logged 15 `dropped` events with reason `size-limit`, for example:\n\n- `mutations/0018.ndjson`: 26,380,842 bytes\n- `checkpoints/0021.html`: 3,240,623 bytes\n\nPart of the size comes from the mutation records: each attribute or live-state record carries `target.html`, up to 4000 characters of the target's outerHTML. On a busy page a single interval between checkpoints reaches 26\u201327 MB of ndjson.\n\n### Suggestions\n\n- Omit or deduplicate `target.html` in attribute and live-state records, since the path already identifies the element.\n- Rotate or compress, or cap each interval with a truncation marker, instead of dropping everything once the bundle is full.\n- Document the limit and what happens when it is reached.\n- Add `input[type=hidden]` to `DEFAULT_REDACT_SELECTORS`: CSRF tokens in hidden inputs are kept in checkpoint HTML unless the caller adds the selector.\n\n### Workaround in the consumer\n\nhh-job-application-automation raises the limit to 1 GB and redacts hidden inputs in its trace options (`src/tracing.mjs`).\n\nRelated: #140\n",
+    "number": 148,
+    "title": "Long traces hit maxBundleBytes and then drop every checkpoint and mutation; mutation records repeat target outerHTML",
+    "url": "https://github.com/link-foundation/browser-commander/issues/148",
+    "comments": [
+      {
+        "url": "https://api.github.com/repos/link-foundation/browser-commander/issues/comments/6098951487",
+        "html_url": "https://github.com/link-foundation/browser-commander/issues/148#issuecomment-6098951487",
+        "issue_url": "https://api.github.com/repos/link-foundation/browser-commander/issues/148",
+        "id": 6098951487,
+        "node_id": "IC_kwDOQYTTi88AAAABa4adPw",
+        "user": {
+          "login": "konard",
+          "id": 1431904,
+          "node_id": "MDQ6VXNlcjE0MzE5MDQ=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/1431904?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/konard",
+          "html_url": "https://github.com/konard",
+          "followers_url": "https://api.github.com/users/konard/followers",
+          "following_url": "https://api.github.com/users/konard/following{/other_user}",
+          "gists_url": "https://api.github.com/users/konard/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/konard/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/konard/subscriptions",
+          "organizations_url": "https://api.github.com/users/konard/orgs",
+          "repos_url": "https://api.github.com/users/konard/repos",
+          "events_url": "https://api.github.com/users/konard/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/konard/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "created_at": "2026-10-10T15:12:40Z",
+        "updated_at": "2026-10-10T15:12:40Z",
+        "body": "Still reproducible in **0.28.0**: every attribute, childList and live-state record repeats `target.html` (`page-capture.js:380-395`), giving an 8,632-byte record for one 500-character append and 424 KB for 50. The new rotation and gzip limit disk use but keep the repetition, and rotation deletes old segments (filed separately). Workaround kept: maxBundleBytes 1 GB.",
+        "author_association": "MEMBER",
+        "pin": null,
+        "reactions": {
+          "url": "https://api.github.com/repos/link-foundation/browser-commander/issues/comments/6098951487/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "performed_via_github_app": null,
+        "minimized": null
+      }
+    ]
+  },
+  {
+    "body": "`assertDedicatedUserDataDir` \u2192 `physicalPath()` (`src/browser/browser-profile-files.js:13-31`) tolerates only ENOENT/ENOTDIR. Under Bun 1.4.2 on macOS, `fs.lstatSync` and `fs.realpathSync` on `~/Library/Safari` and `~/Library/Containers/com.apple.Safari` fail with EPERM (privacy-protected), while `fs.statSync` and Node's `realpathSync` work.\n\n### Reproduction\n```sh\nbun -e \"import('browser-commander').then(m=>m.connectOrLaunch({userDataDir:'/tmp/x', remoteDebuggingPort:9397}))\"\n# EPERM: operation not permitted, lstat '/Users/<me>/Library/Safari'\n```\n\n### Expected\nEPERM/EACCES are treated like an unresolvable path (keep the plain path); a Bun test covers it.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 149,
+    "title": "connectOrLaunch with userDataDir throws EPERM under Bun on macOS (physicalPath on ~/Library/Safari)",
+    "url": "https://github.com/link-foundation/browser-commander/issues/149",
+    "comments": []
+  },
+  {
+    "body": "`connector.js:203-205` throws `RangeError: No tab matches the requested targetId/URL` when the remembered tab is gone; on reuse, `persistent-session.js open()` passes `metadata.targetId`. The process then never exits, because `connectPlaywright` does not close the `chromium.connectOverCDP` connection on error.\n\n### Reproduction\n`connectOrLaunch` \u2192 `detach()` \u2192 close that tab via `/json/close/<id>` \u2192 `connectOrLaunch` again: it throws and the process hangs.\n\n### Expected\n- Fall back to the visible or first tab, or open one, when the remembered tab is gone.\n- Close the CDP connection on any failure.\n- Allow a ranked list of URL matchers for choosing the tab.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 150,
+    "title": "A stale remembered targetId makes connectOrLaunch throw and leak the CDP connection",
+    "url": "https://github.com/link-foundation/browser-commander/issues/150",
+    "comments": []
+  },
+  {
+    "body": "Three gaps for long-lived kept-open sessions:\n\n1. **No adoption of an existing browser:** `open()` throws \"Debugging port belongs to another browser/profile\" when the metadata file is missing (`persistent-session.js:113-120`), so a browser the caller started earlier (or with an older version) cannot be adopted.\n2. **Idle measured by navigations only:** `lastActive` updates only on `framenavigated`/`touch()`, so a controller attached for longer than the idle timeout without navigating gets its browser closed. Please also count a still-attached controller as activity.\n3. **Single tab only at attach:** `singleTab` applies at attach time; please add an option to close tabs opened later.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 151,
+    "title": "Kept-open sessions: cannot adopt a running browser, idle counts only navigations, singleTab only at attach",
+    "url": "https://github.com/link-foundation/browser-commander/issues/151",
+    "comments": []
+  },
+  {
+    "body": "Trace network recording leaks secrets:\n\n- `traces/network.js:175` stores request bodies as text, `:228` stores response bodies as base64, so `privacy.redactPatterns` cannot apply to responses.\n- `redaction.js:105-126` applies only patterns and the callback; no redaction of form/JSON/multipart fields by name.\n- Header redaction is limited to cookie/authorization/set-cookie plus x-api-key/x-auth-token/x-csrf-token.\n\n### Reproduction\n`network: { bodies: true, har: true }` with a JSON POST `{password, _xsrf}`, a `?xsrf=` query, an `X-Xsrftoken` header and an HTML hidden token input: the values appear in `events.ndjson(.gz)`, `network.har` and `trace.lino`.\n\n### Expected\n- Redact form/JSON/multipart fields by name (password, token, csrf, xsrf, otp\u2026).\n- Store text bodies as UTF-8; skip binary bodies and record their size.\n- Match header names by pattern (`*token*`, `*csrf*`, `*xsrf*`).\n- Add `xsrf`/`_xsrf`/`csrf` to the default redacted query parameters and `input[type=hidden]` to the default redact selectors.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 152,
+    "title": "Trace network leaks secrets: no field-name redaction, response bodies stored base64, narrow header list",
+    "url": "https://github.com/link-foundation/browser-commander/issues/152",
+    "comments": []
+  },
+  {
+    "body": "- **No redaction in DOM output:** `checkpoints.js:71-76` and `mutation-stream.js:198` write raw content; embedded `<meta name=csrf-token>` and `xsrfToken` values leak into `checkpoints/*.html`, `mutations/*.ndjson` and `trace.lino` (`dom: 'full'`). `privacy.redactPatterns`/`redact` are not applied there.\n- **links.dom cost grows with the trace:** `links.js:639` calls `readTrace(bundle)` on every checkpoint and every 500 ms drain (`recorder.js:354-363`); `reader.js:161` re-reads the whole interval file; `seenDom` grows without limit (`links.js:586`); snapshots are uncapped.\n\n### Expected\nApply redaction to checkpoints and mutation batches; append only new batches; cap snapshots and intervals with truncation markers.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 153,
+    "title": "DOM traces: redaction not applied to checkpoints and mutations; links.dom re-reads the whole bundle every drain",
+    "url": "https://github.com/link-foundation/browser-commander/issues/153",
+    "comments": [
+      {
+        "url": "https://api.github.com/repos/link-foundation/browser-commander/issues/comments/6101054671",
+        "html_url": "https://github.com/link-foundation/browser-commander/issues/153#issuecomment-6101054671",
+        "issue_url": "https://api.github.com/repos/link-foundation/browser-commander/issues/153",
+        "id": 6101054671,
+        "node_id": "IC_kwDOQYTTi88AAAABa6a0zw",
+        "user": {
+          "login": "konard",
+          "id": 1431904,
+          "node_id": "MDQ6VXNlcjE0MzE5MDQ=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/1431904?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/konard",
+          "html_url": "https://github.com/konard",
+          "followers_url": "https://api.github.com/users/konard/followers",
+          "following_url": "https://api.github.com/users/konard/following{/other_user}",
+          "gists_url": "https://api.github.com/users/konard/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/konard/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/konard/subscriptions",
+          "organizations_url": "https://api.github.com/users/konard/orgs",
+          "repos_url": "https://api.github.com/users/konard/repos",
+          "events_url": "https://api.github.com/users/konard/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/konard/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "created_at": "2026-10-10T18:57:54Z",
+        "updated_at": "2026-10-10T18:57:54Z",
+        "body": "Confirmed independently with browser-commander 0.28.0 / Playwright 1.64.0 / Node 24.18.0 in an isolated headless page. A self-authored HTML div contains only QA_PRIVATE_SENTINEL, screenshots are disabled, and privacy.redactPatterns is [/QA_PRIVATE_SENTINEL/gu]. The checkpoint captures the public control text but its HTML payload still contains the sentinel. The probe scans only checkpoint HTML, not the manifest privacy configuration that necessarily stores the pattern itself. No credentials, real site contents, personal browser state or contact data are involved. The reproducible manual probe is experiments/revalidation-browser-trace-privacy.mjs in konard/vietnam-accomodation-search; a validation commit will link it shortly. Real audit trace artifacts remain private while this redaction gap is unresolved.",
+        "author_association": "MEMBER",
+        "pin": null,
+        "reactions": {
+          "url": "https://api.github.com/repos/link-foundation/browser-commander/issues/comments/6101054671/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "performed_via_github_app": null,
+        "minimized": null
+      },
+      {
+        "url": "https://api.github.com/repos/link-foundation/browser-commander/issues/comments/6101087039",
+        "html_url": "https://github.com/link-foundation/browser-commander/issues/153#issuecomment-6101087039",
+        "issue_url": "https://api.github.com/repos/link-foundation/browser-commander/issues/153",
+        "id": 6101087039,
+        "node_id": "IC_kwDOQYTTi88AAAABa6czPw",
+        "user": {
+          "login": "konard",
+          "id": 1431904,
+          "node_id": "MDQ6VXNlcjE0MzE5MDQ=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/1431904?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/konard",
+          "html_url": "https://github.com/konard",
+          "followers_url": "https://api.github.com/users/konard/followers",
+          "following_url": "https://api.github.com/users/konard/following{/other_user}",
+          "gists_url": "https://api.github.com/users/konard/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/konard/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/konard/subscriptions",
+          "organizations_url": "https://api.github.com/users/konard/orgs",
+          "repos_url": "https://api.github.com/users/konard/repos",
+          "events_url": "https://api.github.com/users/konard/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/konard/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "created_at": "2026-10-10T19:01:26Z",
+        "updated_at": "2026-10-10T19:01:26Z",
+        "body": "Reproduction is now committed: https://github.com/konard/vietnam-accomodation-search/blob/e189ecc157a99ca62a9a5a95994a6355651ab741/experiments/revalidation-browser-trace-privacy.mjs . Run with the installed 0.28.0 / Playwright 1.64.0 dependencies. Positive HTML capture control passes; configured sentinel redaction fails. Only self-authored content is used and checkpoint HTML alone is inspected.",
+        "author_association": "MEMBER",
+        "pin": null,
+        "reactions": {
+          "url": "https://api.github.com/repos/link-foundation/browser-commander/issues/comments/6101087039/reactions",
+          "total_count": 0,
+          "+1": 0,
+          "-1": 0,
+          "laugh": 0,
+          "hooray": 0,
+          "confused": 0,
+          "heart": 0,
+          "rocket": 0,
+          "eyes": 0
+        },
+        "performed_via_github_app": null,
+        "minimized": null
+      }
+    ]
+  },
+  {
+    "body": "With `limits.rotate: { maxBytes: 65536 }`, a 424,157-byte mutation drain was dropped and no new segment was opened: rotation only checks at 80% on a 100 ms timer (`rolling.js:64`). `maxSegments` defaults to 4 and the oldest segments are deleted (`rolling.js:9, 47-51`). The rolling handle has no `links`, and its `path` points at the root.\n\n### Expected\n- Rotate before a write that does not fit.\n- Offer keep-all or compress-old retention instead of deleting.\n- Return the same handle shape as `startTrace`.\n\nRelated: #148. Environment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 154,
+    "title": "Trace rotation drops oversized writes and deletes old segments by default",
+    "url": "https://github.com/link-foundation/browser-commander/issues/154",
+    "comments": []
+  },
+  {
+    "body": "`managed-navigation.js:73-90` handles only status, `isNavigationError` and TimeoutError; `net::ERR_ABORTED` is not among the `navigation-safety.js:59-90` patterns (unchanged since 0.27.0).\n\n### Reproduction\nStart `goto(A)` without awaiting it, then `goto(B)`: the first call rejects with `page.goto: net::ERR_ABORTED`. (Seen live: a page trigger and a handler both return to a list after a form is sent.)\n\n### Expected\nAn \"interrupted\" outcome (or a navigation error that `isNavigationError` recognizes) instead of a raw error.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 155,
+    "title": "goto replaced by another navigation throws raw net::ERR_ABORTED",
+    "url": "https://github.com/link-foundation/browser-commander/issues/155",
+    "comments": []
+  },
+  {
+    "body": "`page-trigger-manager.js:314-322, 361-370`: with the new default `concurrency: 'skip'`, an action that outlives the 10 s stop grace keeps the slot, so every later trigger is skipped (0.27 cleared it), and a `domcontentloaded` start that arrives while the previous action is stopping is dropped.\n\n### Expected\n- Document the change as breaking.\n- Offer a per-trigger slot or a queued start.\n- Tests for `restart` and this race.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 156,
+    "title": "Trigger concurrency 'skip' (new default) silently changes 0.27 behaviour; DOM-ready starts can be lost",
+    "url": "https://github.com/link-foundation/browser-commander/issues/156",
+    "comments": []
+  },
+  {
+    "body": "`commander-features.js:70-72` and `overlays.js:14-16`: overlay dismissal runs before every interaction with `click({timeout:1000})` and no catch, so an overlay error fails that interaction. It checks only the first match, reports nothing, and has no tests.\n\n### Expected\nCatch errors and report them through a callback; use the first visible match; add tests.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 157,
+    "title": "Overlay dismissal runs before every interaction and its errors fail that interaction",
+    "url": "https://github.com/link-foundation/browser-commander/issues/157",
+    "comments": []
+  },
+  {
+    "body": "- `import('browser-commander')` exposes `screenshot`, `startRecording`, `encodeAnimation`, `encodeVideo` and `renderTraceViewer`, but `renderTrace` and `summarizeTrace` are `undefined` (only `cli/commands.js` uses them).\n- The README links `../docs/capture-and-debugging.md`, `navigation-launch-and-sessions.md` and `feature-parity.md` (README lines 5, 122, 805, 1071), which the npm package does not include.\n- `readyOn`, `concurrency` and `overlays` are not documented in the package.\n\nEnvironment: browser-commander 0.28.0, playwright 1.64.0, Bun 1.4.2, macOS, Chrome 155. Found while upgrading hh-job-application-automation (which keeps a local workaround until this is fixed).\n",
+    "number": 158,
+    "title": "renderTrace/summarizeTrace not exported; README links docs not shipped in the package",
+    "url": "https://github.com/link-foundation/browser-commander/issues/158",
+    "comments": []
+  },
+  {
+    "body": "Browser Commander 0.28.0 fails to reconnect to an existing headed Chrome 155.0.8059.39 CDP process after its last page/window has closed. Playwright is 1.64.0.\n\nObserved error:\n\n```text\nbrowserType.connectOverCDP: Protocol error (Browser.setDownloadBehavior): Browser context management is not supported.\n```\n\nThe process and loopback endpoint were alive, but Target.getTargets returned an empty list. A public Playwright connectOverCDP call with noDefaults:true connected successfully. Creating one page in the existing default context restored normal Browser Commander connection; no website navigation or profile replacement was necessary.\n\nThe Browser Commander connector buildPlaywrightConnectOptions currently forwards only slowMo, timeout and headers. It does not forward noDefaults, so callers cannot select the documented Playwright option through connectBrowser.\n\nExpected: support noDefaults forwarding and handle a still-live zero-page real-browser process without failing before a page can be created. Add a regression covering headed real Chrome reconnect with zero targets and preserve profile/window ownership.\n\n[Playwright documented option](https://playwright.dev/docs/api/class-browsertype#browser-type-connect-over-cdp-option-no-defaults). Our consumer adds a narrow workaround: on this exact error only, connect without default overrides, create a page only if none exists, disconnect, then reconnect through Browser Commander.\n\nDuplicate searches for Browser.setDownloadBehavior, context management and noDefaults found no matching report; closed issue97 concerns managed downloads in non-default contexts and appears different.\n",
+    "number": 159,
+    "title": "CDP reconnect fails for zero-page headed Chrome; noDefaults option is not forwarded",
+    "url": "https://github.com/link-foundation/browser-commander/issues/159",
+    "comments": []
+  },
+  {
+    "body": "<!-- hive-mind-solve-repository-mode -->\n\n## Objective\n\nAddress every open issue listed below in [link-foundation/browser-commander](https://github.com/link-foundation/browser-commander) with a **single pull request**.\n\nThis issue was generated automatically by `/solve https://github.com/link-foundation/browser-commander` (repository mode). Native sub-issues and the complete closing-reference block below jointly define the required scope.\n\n## Scope\n\n- Open issues found in the repository: 12\n- Issues requested in this single pull request: 12\n- Issues selected for native sub-issue attachment: 12\n- GitHub sub-issue limit per parent issue: 100\n\n## Issues to address\n\n- [ ] #148 Long traces hit maxBundleBytes and then drop every checkpoint and mutation; mutation records repeat target outerHTML \u2014 opened 2026-10-10\n- [ ] #149 connectOrLaunch with userDataDir throws EPERM under Bun on macOS (physicalPath on ~/Library/Safari) \u2014 opened 2026-10-10\n- [ ] #150 A stale remembered targetId makes connectOrLaunch throw and leak the CDP connection \u2014 opened 2026-10-10\n- [ ] #151 Kept-open sessions: cannot adopt a running browser, idle counts only navigations, singleTab only at attach \u2014 opened 2026-10-10\n- [ ] #152 Trace network leaks secrets: [REDACTED] field-name redaction, response bodies stored base64, narrow header list \u2014 opened 2026-10-10\n- [ ] #153 DOM traces: redaction not applied to checkpoints and mutations; links.dom re-reads the whole bundle every drain \u2014 opened 2026-10-10\n- [ ] #154 Trace rotation drops oversized writes and deletes old segments by default \u2014 opened 2026-10-10\n- [ ] #155 goto replaced by another navigation throws raw net::ERR_ABORTED \u2014 opened 2026-10-10\n- [ ] #156 Trigger concurrency 'skip' (new default) silently changes 0.27 behaviour; DOM-ready starts can be lost \u2014 opened 2026-10-10\n- [ ] #157 Overlay dismissal runs before every interaction and its errors fail that interaction \u2014 opened 2026-10-10\n- [ ] #158 renderTrace/summarizeTrace not exported; README links docs not shipped in the package \u2014 opened 2026-10-10\n- [ ] #159 CDP reconnect fails for zero-page headed Chrome; noDefaults option is not forwarded \u2014 opened 2026-10-10\n\n## Requirements\n\n1. Read every issue listed above (including its comments) and fully implement what it asks for.\n2. Do all of the work in this single pull request. Do not defer any listed issue to a follow-up pull request.\n3. The pull request description **must** close this issue and **every** issue listed above, so that merging the pull request closes all of them at once.\n4. GitHub requires the full closing syntax for each issue: one keyword per issue. `Fixes #1, #2` only closes `#1`. Use the block below verbatim (plus `Fixes #<this issue>` for this issue).\n5. If an issue turns out to be already resolved or not reproducible, say so explicitly in the pull request description \u2014 but still keep its closing reference so it is closed on merge.\n\n## Required closing references in the pull request description\n\n```\nFixes #148\nFixes #149\nFixes #150\nFixes #151\nFixes #152\nFixes #153\nFixes #154\nFixes #155\nFixes #156\nFixes #157\nFixes #158\nFixes #159\n```\n",
+    "number": 160,
+    "title": "Address all 12 open issues in link-foundation/browser-commander",
+    "url": "https://github.com/link-foundation/browser-commander/issues/160",
+    "comments": []
+  }
+]

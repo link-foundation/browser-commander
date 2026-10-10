@@ -239,3 +239,11 @@ path. In `serve --stdio`/`run`, use `record.start` and `record.stop` with a sess
 Offline trace render uses checkpoint screenshots; optional trace recording stores
 `recording.<format>` alongside them. Movie render launches a temporary headless
 Playwright encoder page, or uses the caller's explicit ffmpeg backend.
+
+## Privacy and continuous trace limits
+
+Continuous traces now rotate at the bundle limit and retain all segments unless
+`maxSegments` is explicit. Mutation targets are compact identities; snapshot and
+interval caps report truncation. See [trace and session hardening](trace-session-hardening.md)
+for defaults, structured-body privacy, heartbeat/adoption options, overlay reports,
+and the trigger concurrency migration.

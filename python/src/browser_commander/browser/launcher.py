@@ -92,6 +92,9 @@ class LaunchOptions:
     executable_path: str | None = None
     remote_debugging_port: int | None = None
     keep_open: bool = False
+    adopt_existing: bool = False
+    close_new_tabs: bool = False
+    no_defaults: bool | None = None
     idle_timeout_ms: int = 30 * 60 * 1000
     """Fixed CDP port for the real launch; a free one is reserved when omitted."""
     color_scheme: ColorScheme | None = None

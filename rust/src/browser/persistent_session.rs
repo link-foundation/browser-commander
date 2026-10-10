@@ -59,6 +59,7 @@ pub struct PersistentSession {
     metadata: Value,
     detached: bool,
     closed: bool,
+    heartbeat: Option<tokio::task::JoinHandle<()>>,
 }
 impl PersistentSession {
     pub fn page(&self) -> &Arc<dyn EngineAdapter> {
@@ -75,12 +76,17 @@ impl PersistentSession {
     }
     pub async fn detach(&mut self) -> anyhow::Result<()> {
         if !self.detached {
-            self.touch().await?;
+            if let Some(heartbeat) = self.heartbeat.take() {
+                heartbeat.abort();
+                let _ = heartbeat.await;
+            }
+            let touched = self.touch().await;
             if let Some(downloads) = &self.connection.downloads {
                 downloads.dispose().await;
             }
             self.page().detach().await?;
             self.detached = true;
+            touched?;
         }
         Ok(())
     }
@@ -108,11 +114,16 @@ impl PersistentSession {
             .target_id()
             .await?
             .or_else(|| self.metadata["targetId"].as_str().map(str::to_owned));
-        self.page().detach().await?;
         let mut options = self.options.clone();
+        options.fallback = target_id.is_none();
         options.target_id = target_id.or_else(|| if url.is_none() { remembered } else { None });
         options.url = url;
-        self.connection = connect_browser(options).await?;
+        let replacement = connect_browser(options).await?;
+        if let Err(error) = self.page().detach().await {
+            let _ = replacement.page.detach().await;
+            return Err(error.into());
+        }
+        self.connection = replacement;
         self.touch().await?;
         Ok(self.page().clone())
     }
@@ -133,8 +144,29 @@ pub async fn connect_or_launch(options: PersistentOptions) -> anyhow::Result<Per
     let mut connection_options = options.connection;
     connection_options.ws_endpoint = None;
     connection_options.cdp_endpoint = metadata["cdpEndpoint"].as_str().map(str::to_owned);
-    connection_options.target_id = metadata["targetId"].as_str().map(str::to_owned);
+    if connection_options.target_id.is_none() {
+        connection_options.target_id = metadata["targetId"].as_str().map(str::to_owned);
+        connection_options.fallback = true;
+    }
     let connection = connect_browser(connection_options.clone()).await?;
+    let mut heartbeat_metadata = metadata.clone();
+    heartbeat_metadata["operation"] = json!("touch");
+    heartbeat_metadata["closeNewTabs"] = options.launch["closeNewTabs"].clone();
+    heartbeat_metadata
+        .as_object_mut()
+        .unwrap()
+        .remove("targetId");
+    let interval = (options.idle_timeout / 3)
+        .min(Duration::from_secs(30))
+        .max(Duration::from_millis(20));
+    let heartbeat = tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(interval).await;
+            if let Err(error) = worker(heartbeat_metadata.clone()).await {
+                tracing::debug!(%error, "persistent heartbeat failed");
+            }
+        }
+    });
     Ok(PersistentSession {
         connection,
         reused: metadata["reused"] == true,
@@ -142,5 +174,14 @@ pub async fn connect_or_launch(options: PersistentOptions) -> anyhow::Result<Per
         metadata,
         detached: false,
         closed: false,
+        heartbeat: Some(heartbeat),
     })
+}
+
+impl Drop for PersistentSession {
+    fn drop(&mut self) {
+        if let Some(heartbeat) = self.heartbeat.take() {
+            heartbeat.abort();
+        }
+    }
 }

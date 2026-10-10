@@ -35,6 +35,9 @@ class ConnectOptions:
     target_id: str | None = None
     url: Any = None
     single_tab: bool = False
+    fallback: bool = False
+    no_defaults: bool | None = None
+    url_matchers: list[Any] = field(default_factory=list)
     """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
     ``persist`` and ``conflict``."""
 
@@ -70,6 +73,16 @@ def _default_create_selenium(chrome_options: Any) -> Any:
     return webdriver.Chrome(options=chrome_options)
 
 
+def matches_url(matcher: Any, url: str) -> bool:
+    return bool(
+        matcher(url)
+        if callable(matcher)
+        else matcher.search(url)
+        if hasattr(matcher, "search")
+        else matcher == url
+    )
+
+
 async def pick_foreground_page(
     pages: Sequence[Any], options: ConnectOptions | None = None
 ) -> Any:
@@ -100,22 +113,41 @@ async def pick_foreground_page(
                 with contextlib.suppress(Exception):
                     await session.detach()
     selected = None
-    if options and (options.target_id or options.url):
-        for page in pages:
-            if options.target_id and targets.get(id(page)) != options.target_id:
-                continue
-            matcher = options.url
-            if matcher and not (
-                matcher(page.url)
-                if callable(matcher)
-                else matcher.search(page.url)
-                if hasattr(matcher, "search")
-                else matcher == page.url
-            ):
-                continue
-            selected = page
-            break
-        if selected is None:
+    matchers = (
+        (
+            options.url_matchers
+            or (
+                options.url
+                if isinstance(options.url, list)
+                else [options.url]
+                if options.url
+                else []
+            )
+        )
+        if options
+        else []
+    )
+    if options and (options.target_id or matchers):
+        candidates = (
+            [page for page in pages if targets.get(id(page)) == options.target_id]
+            if options.target_id
+            else list(pages)
+        )
+        eligible = candidates if candidates or not options.fallback else list(pages)
+        selected = (
+            next(
+                (
+                    page
+                    for matcher in matchers
+                    for page in eligible
+                    if matches_url(matcher, page.url)
+                ),
+                None,
+            )
+            if matchers
+            else next(iter(candidates), None)
+        )
+        if selected is None and not options.fallback:
             raise ValueError("No tab matches the requested target_id/URL")
     for page in [] if selected is not None else pages:
         evaluate = getattr(page, "evaluate", None)
@@ -153,10 +185,24 @@ async def _connect_playwright(
     if options.headers is not None:
         connect_options["headers"] = options.headers
 
+    if options.no_defaults is not None:
+        connect_options["no_defaults"] = options.no_defaults
+    browser = None
     try:
-        browser = await playwright.chromium.connect_over_cdp(
-            endpoint, **connect_options
-        )
+        try:
+            browser = await playwright.chromium.connect_over_cdp(
+                endpoint, **connect_options
+            )
+        except Exception as error:
+            if (
+                options.no_defaults is not None
+                or "Browser.setDownloadBehavior" not in str(error)
+                or "Browser context management is not supported" not in str(error)
+            ):
+                raise
+            browser = await playwright.chromium.connect_over_cdp(
+                endpoint, **connect_options, no_defaults=True
+            )
         if not browser.contexts:
             msg = "Connected Playwright browser has no default context"
             raise RuntimeError(msg)
@@ -169,6 +215,9 @@ async def _connect_playwright(
         if options.seed_cookies:
             await context.add_cookies(options.seed_cookies)
     except BaseException:
+        if browser is not None:
+            with contextlib.suppress(Exception):
+                await browser.close()
         await _stop_playwright(playwright)
         raise
     _stop_playwright_on_close(browser, playwright)
@@ -217,42 +266,55 @@ async def _connect_selenium(
     chrome_options = Options()
     chrome_options.debugger_address = _debugger_address(endpoint)
     browser = create_selenium(chrome_options)
-    if options.target_id or options.url or options.single_tab:
-        original = browser.current_window_handle
-        selected = original
-        if options.target_id or options.url:
-            selected = None
-            for handle in browser.window_handles:
-                if options.target_id and handle not in (
-                    options.target_id,
-                    "CDwindow-" + options.target_id,
-                ):
-                    continue
-                browser.switch_to.window(handle)
-                actual = browser.current_url
-                match = (
-                    options.url(actual)
-                    if callable(options.url)
-                    else options.url.search(actual)
-                    if hasattr(options.url, "search")
-                    else actual == options.url
-                )
-                if options.url and not match:
-                    continue
-                selected = handle
-                break
-            if selected is None:
-                browser.switch_to.window(original)
-                raise ValueError("No tab matches the requested target_id or URL")
+    try:
+        handles = list(browser.window_handles)
+        original = browser.current_window_handle if handles else None
+        tabs = []
+        for handle in handles:
+            browser.switch_to.window(handle)
+            tabs.append((handle, browser.current_url))
+        candidates = [
+            tab
+            for tab in tabs
+            if not options.target_id
+            or tab[0] in (options.target_id, "CDwindow-" + options.target_id)
+        ]
+        if not candidates and options.fallback:
+            candidates = tabs
+        matchers = options.url_matchers or ([options.url] if options.url else [])
+        selected = next(
+            (
+                handle
+                for matcher in matchers
+                for handle, url in candidates
+                if matches_url(matcher, url)
+            ),
+            None,
+        )
+        if (
+            selected is None
+            and (options.target_id or matchers)
+            and not options.fallback
+        ):
+            raise ValueError("No tab matches the requested target_id or URL")
+        if selected is None:
+            selected = candidates[0][0] if candidates else original
+        if selected is None:
+            browser.switch_to.new_window("tab")
+            selected = browser.current_window_handle
         if options.single_tab:
-            for handle in list(browser.window_handles):
+            for handle in handles:
                 if handle != selected:
                     browser.switch_to.window(handle)
                     browser.close()
         browser.switch_to.window(selected)
-    await restore_storage_state("selenium", browser, browser, options.storage_state)
-    for cookie in options.seed_cookies:
-        browser.execute_cdp_cmd("Network.setCookie", cookie)
+        await restore_storage_state("selenium", browser, browser, options.storage_state)
+        for cookie in options.seed_cookies:
+            browser.execute_cdp_cmd("Network.setCookie", cookie)
+    except BaseException:
+        with contextlib.suppress(Exception):
+            browser.quit()
+        raise
     return LaunchResult(browser=browser, page=browser)
 
 
@@ -292,10 +354,18 @@ async def connect_browser_with_dependencies(
 
     # An attached browser gets the same managed lifecycle as a launched one:
     # the manager is built from the browser and page, not from how we got them.
-    result.downloads = await attach_downloads(
-        engine=options.engine,
-        browser=result.browser,
-        page=result.page,
-        downloads=options.downloads,
-    )
+    try:
+        result.downloads = await attach_downloads(
+            engine=options.engine,
+            browser=result.browser,
+            page=result.page,
+            downloads=options.downloads,
+        )
+    except BaseException:
+        with contextlib.suppress(Exception):
+            if options.engine == "playwright":
+                await result.browser.close()
+            else:
+                result.browser.quit()
+        raise
     return result

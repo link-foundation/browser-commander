@@ -26,7 +26,11 @@ pub(super) async fn pick_foreground_page(
                 method: "Target.getTargetInfo".into(),
                 params: None,
             })
-            .await?;
+            .await;
+        if info.is_err() {
+            let _ = session.detach().await;
+        }
+        let info = info?;
         targets.insert(
             page.guid().to_string(),
             info.result["targetInfo"]["targetId"]
@@ -43,36 +47,47 @@ pub(super) async fn pick_foreground_page(
         session.detach().await?;
         result?;
     }
-    if options.target_id.is_some() || options.url.is_some() {
-        for page in &pages {
-            if options
-                .target_id
-                .as_ref()
-                .is_some_and(|id| targets.get(page.guid()) != Some(id))
-            {
-                continue;
-            }
+    let mut matchers = options.url_matchers.clone();
+    if let Some(url) = &options.url {
+        matchers.insert(0, url.clone());
+    }
+    if options.target_id.is_some() || !matchers.is_empty() {
+        let target_exists = pages
+            .iter()
+            .any(|page| targets.get(page.guid()) == options.target_id.as_ref());
+        let eligible: Vec<_> = pages
+            .iter()
+            .filter(|page| {
+                options.target_id.is_none()
+                    || (options.fallback && !target_exists)
+                    || targets.get(page.guid()) == options.target_id.as_ref()
+            })
+            .collect();
+        let mut candidates = Vec::new();
+        for page in eligible {
             let frame: Frame = connection.object(&page.initializer()?.main_frame)?;
             let url = evaluate(&frame, "location.href", None, &Value::Null).await?;
-            if options
-                .url
-                .as_ref()
-                .is_some_and(|expected| url.as_str() != Some(expected.as_str()))
-            {
-                continue;
+            let rank = if matchers.is_empty() {
+                Some(0)
+            } else {
+                matchers
+                    .iter()
+                    .position(|expected| url.as_str() == Some(expected.as_str()))
+            };
+            if let Some(rank) = rank {
+                candidates.push((rank, page));
             }
-            if options.single_tab {
-                for other in &pages {
-                    if other.guid() != page.guid() {
-                        other.close(PageCloseParams::default()).await?;
-                    }
-                }
-            }
-            return Ok(Some(page.clone()));
         }
-        return Err(ProtocolError::Driver(
-            "No tab matches the requested targetId/URL".into(),
-        ));
+        candidates.sort_by_key(|(rank, _)| *rank);
+        if let Some((_, page)) = candidates.first() {
+            close_other_pages(&pages, page, options.single_tab).await?;
+            return Ok(Some((*page).clone()));
+        }
+        if !options.fallback {
+            return Err(ProtocolError::Driver(
+                "No tab matches the requested targetId/URL".into(),
+            ));
+        }
     }
     for page in &pages {
         let frame: Frame = connection.object(&page.initializer()?.main_frame)?;
@@ -103,4 +118,47 @@ async fn close_other_pages(
         }
     }
     Ok(())
+}
+
+/// Retry only the unsupported existing-context override when the option was omitted.
+pub(super) async fn connect_over_cdp(
+    driver: &crate::playwright::PlaywrightDriver,
+    options: &PlaywrightConnect,
+) -> Result<BrowserTypeConnectOverCDPResult, ProtocolError> {
+    let chromium = super::chromium(driver)?;
+    let mut params = BrowserTypeConnectOverCDPParams {
+        endpoint_url: Some(options.endpoint.clone()),
+        slow_mo: (options.slow_mo > 0).then_some(options.slow_mo as f64),
+        no_defaults: options.no_defaults,
+        ..Default::default()
+    };
+    let timeout = options
+        .timeout
+        .map(super::millis)
+        .unwrap_or(super::ACTION_TIMEOUT_MS);
+    let attempt = chromium
+        .channel()
+        .send_with_timeout::<_, BrowserTypeConnectOverCDPResult>(
+            "connectOverCDP",
+            &params,
+            Some(timeout),
+        )
+        .await;
+    let result = match attempt {
+        Err(error)
+            if options.no_defaults.is_none()
+                && error.to_string().contains("Browser.setDownloadBehavior")
+                && error
+                    .to_string()
+                    .contains("Browser context management is not supported") =>
+        {
+            params.no_defaults = Some(true);
+            chromium
+                .channel()
+                .send_with_timeout("connectOverCDP", &params, Some(timeout))
+                .await?
+        }
+        result => result?,
+    };
+    Ok(result)
 }

@@ -31,6 +31,7 @@ pub enum NavigationError {
 
 /// Common error messages that indicate a navigation error.
 const NAVIGATION_ERROR_PATTERNS: &[&str] = &[
+    "net::err_aborted",
     "navigat", // Matches "navigation", "navigated", etc.
     "detached",
     "context was destroyed",

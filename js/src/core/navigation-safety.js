@@ -65,6 +65,7 @@ export function isNavigationError(error) {
   }
 
   const navigationErrorPatterns = [
+    'net::ERR_ABORTED',
     'Execution context was destroyed',
     'detached Frame',
     'Target closed',

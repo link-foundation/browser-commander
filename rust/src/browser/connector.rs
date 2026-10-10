@@ -59,6 +59,12 @@ pub struct ConnectOptions {
     pub url: Option<String>,
     /// Close every other tab after selecting the requested tab.
     pub single_tab: bool,
+    /// Prefer ranked exact URLs before visibility when a remembered target is gone.
+    pub url_matchers: Vec<String>,
+    /// Permit fallback when the requested target/URL is absent.
+    pub fallback: bool,
+    /// Skip Playwright's defaults in the attached browser's default context.
+    pub no_defaults: Option<bool>,
 }
 
 impl Default for ConnectOptions {
@@ -79,6 +85,9 @@ impl Default for ConnectOptions {
             target_id: None,
             url: None,
             single_tab: false,
+            url_matchers: Vec::new(),
+            fallback: false,
+            no_defaults: None,
         }
     }
 }
@@ -350,6 +359,9 @@ async fn connect_node_engine(
                     target_id: options.target_id.clone(),
                     url: options.url.clone(),
                     single_tab: options.single_tab,
+                    url_matchers: options.url_matchers.clone(),
+                    fallback: options.fallback,
+                    no_defaults: options.no_defaults,
                 };
                 let page = PlaywrightDriverPage::connect_with(driver, connect).await?;
                 return Ok(NodeEngine::Driver(page));
@@ -387,20 +399,32 @@ async fn connect_chromiumoxide(
         }
     });
 
-    if !options.seed_cookies.is_empty() {
-        let cookies = options
-            .seed_cookies
-            .iter()
-            .cloned()
-            .map(serde_json::from_value::<CookieParam>)
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|error| anyhow::anyhow!("invalid seed cookie: {error}"))?;
-        browser.set_cookies(cookies).await?;
-    }
+    let selected = async {
+        if !options.seed_cookies.is_empty() {
+            let cookies = options
+                .seed_cookies
+                .iter()
+                .cloned()
+                .map(serde_json::from_value::<CookieParam>)
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|error| anyhow::anyhow!("invalid seed cookie: {error}"))?;
+            browser.set_cookies(cookies).await?;
+        }
 
-    let page = match pick_foreground_page(browser.pages().await?, &options).await? {
-        Some(page) => page,
-        None => browser.new_page("about:blank").await?,
+        let page = match pick_foreground_page(browser.pages().await?, &options).await? {
+            Some(page) => page,
+            None => browser.new_page("about:blank").await?,
+        };
+        Ok::<_, anyhow::Error>(page)
+    }
+    .await;
+    let page = match selected {
+        Ok(page) => page,
+        Err(error) => {
+            handler_task.abort();
+            let _ = handler_task.await;
+            return Err(error);
+        }
     };
     let engine = options.engine;
     let adapter = ChromiumoxidePage::new(page, browser, handler_task, PathBuf::new());
@@ -411,7 +435,7 @@ async fn connect_chromiumoxide(
             .restore_storage_state(serde_json::to_value(state)?)
             .await
         {
-            let _ = adapter.close().await;
+            let _ = adapter.detach().await;
             return Err(error.into());
         }
     }
@@ -419,7 +443,10 @@ async fn connect_chromiumoxide(
     // A failure here is fatal rather than best-effort: a half-applied profile
     // describes a machine that does not exist, which is louder than none.
     if let Some(profile) = settings.fingerprint {
-        apply_fingerprint(&adapter, profile, ApplyOptions::default()).await?;
+        if let Err(error) = apply_fingerprint(&adapter, profile, ApplyOptions::default()).await {
+            let _ = adapter.detach().await;
+            return Err(error.into());
+        }
         if options.verbose {
             tracing::info!("Fingerprint profile applied");
         }
@@ -436,9 +463,13 @@ async fn connect_chromiumoxide(
     // downloads are managed even when a person starts them from the window
     // rather than from automation. That is the point of managing a *connected*
     // browser at all.
-    let downloads = attach_downloads(engine, &adapter, options.downloads.clone())
-        .await
-        .map_err(|error| anyhow::anyhow!("{error}"))?;
+    let downloads = match attach_downloads(engine, &adapter, options.downloads.clone()).await {
+        Ok(downloads) => downloads,
+        Err(error) => {
+            let _ = adapter.detach().await;
+            return Err(anyhow::anyhow!("{error}"));
+        }
+    };
 
     Ok(LaunchResult::attached(
         Browser {
@@ -468,20 +499,33 @@ async fn pick_foreground_page(
             .await?;
     }
     let mut selected = None;
+    let mut matchers = options.url_matchers.clone();
+    if let Some(url) = &options.url {
+        matchers.insert(0, url.clone());
+    }
+    let target_exists = pages
+        .iter()
+        .any(|page| Some(page.target_id().as_ref()) == options.target_id.as_deref());
+    let mut ranked = Vec::new();
     for page in &pages {
-        if options
-            .target_id
-            .as_ref()
-            .is_some_and(|id| page.target_id().as_ref() != id)
-        {
+        if options.target_id.as_ref().is_some_and(|id| {
+            page.target_id().as_ref() != id && !(options.fallback && !target_exists)
+        }) {
             continue;
         }
-        if options.url.is_some() && page.url().await?.as_ref() != options.url.as_ref() {
+        if options.target_id.is_some() || !matchers.is_empty() {
+            let url = page.url().await?;
+            let rank = if matchers.is_empty() {
+                Some(0)
+            } else {
+                matchers
+                    .iter()
+                    .position(|matcher| url.as_ref() == Some(matcher))
+            };
+            if let Some(rank) = rank {
+                ranked.push((rank, page.clone()));
+            }
             continue;
-        }
-        if options.target_id.is_some() || options.url.is_some() {
-            selected = Some(page.clone());
-            break;
         }
         let state = page
             .evaluate("document.visibilityState")
@@ -493,8 +537,30 @@ async fn pick_foreground_page(
             break;
         }
     }
-    if selected.is_none() && (options.target_id.is_some() || options.url.is_some()) {
+    ranked.sort_by_key(|(rank, _)| *rank);
+    if let Some((_, page)) = ranked.into_iter().next() {
+        selected = Some(page);
+    }
+    if selected.is_none()
+        && (options.target_id.is_some() || !matchers.is_empty())
+        && !options.fallback
+    {
         anyhow::bail!("No tab matches the requested targetId/URL");
+    }
+    if selected.is_none() && options.fallback {
+        for page in &pages {
+            if page
+                .evaluate("document.visibilityState")
+                .await
+                .ok()
+                .and_then(|result| result.into_value::<String>().ok())
+                .as_deref()
+                == Some("visible")
+            {
+                selected = Some(page.clone());
+                break;
+            }
+        }
     }
     selected = selected.or_else(|| pages.first().cloned());
     if options.single_tab {

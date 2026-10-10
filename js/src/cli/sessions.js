@@ -124,10 +124,11 @@ export function buildLaunchOptions(params = {}) {
  * CDP-connected `Browser` as `connectedBrowser`; the engine launch returns a
  * persistent context whose `browser()` is null. Puppeteer returns a Browser.
  */
-export function sessionFromLaunch(engine, launched) {
+export function sessionFromLaunch(engine, launched, { keepOpen = false } = {}) {
   engine = launched.engine ?? engine;
   const playwright = engine === 'playwright';
   const handle = launched.browser;
+  const persistent = keepOpen && Boolean(launched.detach);
   return {
     engine,
     browser: playwright
@@ -139,8 +140,8 @@ export function sessionFromLaunch(engine, launched) {
     page: launched.page,
     driver: launched.driver ?? (engine === 'selenium' ? handle : null),
     args: launched.args ?? [],
-    close: () => (launched.detach ? launched.detach() : launched.close()),
-    persistent: Boolean(launched.detach),
+    close: () => (persistent ? launched.detach() : launched.close()),
+    persistent,
     connected: false,
   };
 }

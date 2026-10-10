@@ -28,7 +28,7 @@ async function launchSession(state, params) {
   const options = buildLaunchOptions(params);
   const launched = await state.dependencies.launchBrowser(options);
   const session = state.sessions.add(
-    sessionFromLaunch(options.engine, launched)
+    sessionFromLaunch(options.engine, launched, options)
   );
   return {
     session,

@@ -148,6 +148,12 @@ the shared CLI exposes the same commands as JavaScript and Python.
 - Session shutdown regressions reject CDP errors, ignore unrelated events and
   await remote disconnection. The CLI browser test verifies that the debugging
   endpoint is gone after shutdown, rather than accepting an early acknowledgement.
+- Dispatcher lifecycle regressions cover both engines with and without
+  `keepOpen`. Normal launched sessions close their browser even when it offers
+  `detach`; persistent sessions disconnect. The combined Node 24 CLI/API suite
+  reproduces the former post-assertion process hang and verifies normal exit.
+- `experiments/issue-146/ci-hang-diagnostics.mjs` is an optional, bounded preload
+  for inspecting child-process and pipe resources left after a browser suite.
 
 The final image artifacts in `docs/screenshots/issue-146*` demonstrate capture
 output. This change adds capture APIs rather than altering a rendered UI; its

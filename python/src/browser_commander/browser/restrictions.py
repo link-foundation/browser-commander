@@ -55,6 +55,7 @@ class ResolvedRestrictions:
     ids: list[str] = field(default_factory=list)
     args: list[str] = field(default_factory=list)
     env: dict[str, str] = field(default_factory=dict)
+    preferences: dict[str, Any] = field(default_factory=dict)
 
 
 def assert_string_array(value: Any, name: str) -> list[str]:
@@ -78,7 +79,9 @@ def _expand(names: Sequence[str]) -> list[str]:
     return list(dict.fromkeys(ids))
 
 
-def resolve_restrictions(names: Sequence[str] | None = None) -> ResolvedRestrictions:
+def resolve_restrictions(
+    names: Sequence[str] | None = None, *, disable_features: Sequence[str] = ()
+) -> ResolvedRestrictions:
     """Resolve restriction names (and preset names) into switches and environment.
 
     Raises:
@@ -87,7 +90,8 @@ def resolve_restrictions(names: Sequence[str] | None = None) -> ResolvedRestrict
 
     ids = _expand([] if names is None else names)
     args: list[str] = []
-    disable_features: list[str] = []
+    features = assert_string_array(disable_features, "disable_features")
+    preferences: dict[str, Any] = {}
     env: dict[str, str] = {}
     for restriction_id in ids:
         restriction = _BY_ID.get(restriction_id)
@@ -99,11 +103,17 @@ def resolve_restrictions(names: Sequence[str] | None = None) -> ResolvedRestrict
             )
             raise ValueError(msg)
         args.extend(restriction.get("args", []))
-        disable_features.extend(restriction.get("disableFeatures", []))
+        features.extend(restriction.get("disableFeatures", []))
+        for key, value in restriction.get("preferences", {}).items():
+            preferences[key] = (
+                {**preferences.get(key, {}), **value}
+                if isinstance(value, dict)
+                else value
+            )
         env.update(restriction.get("env", {}))
-    if disable_features:
-        args.append(f"--disable-features={','.join(disable_features)}")
-    return ResolvedRestrictions(ids=ids, args=args, env=env)
+    if features:
+        args.append(f"--disable-features={','.join(dict.fromkeys(features))}")
+    return ResolvedRestrictions(ids=ids, args=args, env=env, preferences=preferences)
 
 
 _LIST_SWITCHES = (

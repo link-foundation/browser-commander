@@ -201,7 +201,7 @@ def test_catalogue_and_presets() -> None:
 def test_resolves_a_preset_into_switches_and_environment() -> None:
     resolved = resolve_restrictions(["legacy-launch-browser"])
     assert "--no-first-run" in resolved.args
-    assert "--disable-features=Translate" in resolved.args
+    assert "--disable-features=SessionRestoreInfobar,Translate" in resolved.args
     assert resolved.env == {
         "GOOGLE_API_KEY": "no",
         "GOOGLE_DEFAULT_CLIENT_ID": "no",

@@ -26,6 +26,7 @@ export function resolveChromeArgs({
   extraArgs = [],
   ignoreDefaultArgs = [],
   restrictions = [],
+  disableFeatures = [],
 } = {}) {
   assertStringArray(args, 'args');
   assertStringArray(extraArgs, 'extraArgs');
@@ -41,7 +42,7 @@ export function resolveChromeArgs({
 
   return {
     args: mergeFeatureSwitches([
-      ...resolveRestrictions(restrictions).args,
+      ...resolveRestrictions(restrictions, { disableFeatures }).args,
       ...args,
       ...extraArgs,
     ]),

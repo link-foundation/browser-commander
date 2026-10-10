@@ -106,6 +106,26 @@ export async function configureUserDataDir(
 ) {
   assertObject(preferences, 'preferences');
   assertObject(localState, 'localState');
+  for (const key of [
+    'session.restore_on_startup',
+    'session.startup_urls',
+    'homepage',
+    'homepage_is_newtabpage',
+    'browser.show_home_button',
+    'extensions.settings',
+    'default_search_provider_data',
+  ]) {
+    let value = preferences;
+    for (const part of key.split('.')) {
+      value = value?.[part];
+    }
+    if (value !== undefined || Object.hasOwn(preferences, key)) {
+      process.emitWarning(
+        `Chrome protects ${key} in Secure Preferences and may reset this value. Use browser settings or managed policy to set it.`,
+        { code: 'PROTECTED_CHROME_PREFERENCE' }
+      );
+    }
+  }
   if (
     defaultBrowserCheck !== undefined &&
     typeof defaultBrowserCheck !== 'boolean'

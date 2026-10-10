@@ -20,6 +20,7 @@ pub const CHROME_ARGS: &[&str] = &[
     "--no-first-run",
     "--no-default-browser-check",
     "--disable-crash-restore",
+    "--disable-features=SessionRestoreInfobar",
 ];
 
 /// Timing constants for browser operations.

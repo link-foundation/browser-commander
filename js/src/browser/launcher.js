@@ -14,6 +14,7 @@ import {
 } from './launch-options.js';
 import {
   createTemporaryUserDataDir,
+  configureUserDataDir,
   removeUserDataDir,
 } from './profile-directory.js';
 import { launchRealBrowser } from './real-browser.js';
@@ -168,6 +169,7 @@ async function launchWithEngine(options, dependencies) {
     extraArgs,
     ignoreDefaultArgs,
     restrictions,
+    disableFeatures: options.disableFeatures,
   });
   const restrictionEnv = resolveRestrictions(restrictions).env;
   const childEnv =
@@ -177,6 +179,13 @@ async function launchWithEngine(options, dependencies) {
   const temporaryProfile = !requestedUserDataDir;
   const userDataDir =
     requestedUserDataDir ?? (await createTemporaryUserDataDir());
+  await configureUserDataDir(userDataDir, {
+    preferences: {
+      ...resolveRestrictions(restrictions).preferences,
+      ...options.preferences,
+    },
+    localState: options.localState,
+  });
   const engineModule = await (
     dependencies.loadEngineModule ?? loadEngine[engine]
   )();
@@ -355,7 +364,13 @@ async function launchNonSafariBrowser(options, dependencies) {
     }
   }
   // Validate arguments before anything is started or written to disk.
-  resolveChromeArgs({ args, extraArgs, ignoreDefaultArgs, restrictions });
+  resolveChromeArgs({
+    args,
+    extraArgs,
+    ignoreDefaultArgs,
+    restrictions,
+    disableFeatures: options.disableFeatures,
+  });
   const resolvedStorageState = await loadStorageState(storageState);
 
   if (verbose) {

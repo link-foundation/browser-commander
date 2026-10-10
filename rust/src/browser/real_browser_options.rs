@@ -19,6 +19,7 @@ impl Default for RealBrowserOptions {
             port_attempts: DEFAULT_PORT_ATTEMPTS,
             headless: false,
             restrictions: Vec::new(),
+            disable_features: Vec::new(),
             args: Vec::new(),
             extra_args: Vec::new(),
             ignore_default_args: Vec::new(),

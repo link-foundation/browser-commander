@@ -202,7 +202,11 @@ describe('launchBrowser', () => {
       assert.equal(options.env.GOOGLE_API_KEY, 'no');
       assert.equal(process.env.GOOGLE_API_KEY, googleBefore);
       assert.ok(options.args.includes('--no-first-run'));
-      assert.ok(options.args.includes('--disable-features=Translate'));
+      assert.ok(
+        options.args.includes(
+          '--disable-features=SessionRestoreInfobar,Translate'
+        )
+      );
       await result.close();
     });
 

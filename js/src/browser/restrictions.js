@@ -73,11 +73,14 @@ function expand(names) {
  * @param {string[]} [names]
  * @returns {{ids: string[], args: string[], env: Object<string,string>}}
  */
-export function resolveRestrictions(names = []) {
+export function resolveRestrictions(names = [], options = {}) {
   const ids = expand(names);
   const args = [];
-  const disableFeatures = [];
+  const disableFeatures = [
+    ...assertStringArray(options.disableFeatures ?? [], 'disableFeatures'),
+  ];
   const env = {};
+  const preferences = {};
   for (const id of ids) {
     const restriction = LAUNCH_RESTRICTIONS.find((entry) => entry.id === id);
     if (!restriction) {
@@ -91,11 +94,17 @@ export function resolveRestrictions(names = []) {
     args.push(...(restriction.args ?? []));
     disableFeatures.push(...(restriction.disableFeatures ?? []));
     Object.assign(env, restriction.env ?? {});
+    for (const [key, value] of Object.entries(restriction.preferences ?? {})) {
+      preferences[key] =
+        value && typeof value === 'object'
+          ? { ...preferences[key], ...value }
+          : value;
+    }
   }
   if (disableFeatures.length > 0) {
-    args.push(`--disable-features=${disableFeatures.join(',')}`);
+    args.push(`--disable-features=${[...new Set(disableFeatures)].join(',')}`);
   }
-  return { ids, args, env };
+  return { ids, args, env, preferences };
 }
 
 const LIST_SWITCHES = [

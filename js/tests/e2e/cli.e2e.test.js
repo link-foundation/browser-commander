@@ -165,7 +165,12 @@ for (const engine of ENGINES) {
             const metadata = JSON.parse(await readFile(file, 'utf8'));
             await closeRemoteBrowser(metadata.webSocketDebuggerUrl);
             await assert.rejects(fetch(`${launched.cdpEndpoint}/json/version`));
-            await rm(launched.userDataDir, { recursive: true, force: true });
+            // Chrome finishes flushing its profile after closing CDP.
+            await rm(launched.userDataDir, {
+              recursive: true,
+              force: true,
+              maxRetries: 5,
+            });
           }
         }
       }

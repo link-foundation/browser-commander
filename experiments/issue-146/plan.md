@@ -86,6 +86,17 @@ Work is confined to branch issue-146-c162424fb5ec and existing PR 147.
 After pushing, inspect fresh CI runs again and mark PR 147 ready only after all
 latest-commit workflows pass.
 
+## Readiness CI investigation
+
+- [x] Confirm browser-parity run 38056379381 starts after commit ccf82af and uses that SHA.
+- [x] Download the full log and inspect the unexpected readiness status at lines 5051–5083.
+- [x] Reproduce the timer/rounded-clock race in a bounded Node 24 browser probe and deterministic JavaScript/Python tests before fixing it.
+- [x] Preserve timer expiry across both readiness runners; review the native Rust deadline path.
+- [x] Run focused readiness tests and all 20 real-browser probe attempts after the fix.
+- [x] Run complete local suites/checks and the Node 24 engine lifecycle CI command: 1,791 JavaScript tests, 1,269 Python tests and all 72 real-browser cases pass.
+
+Commit/push this fix and verify fresh CI; final CI status is tracked on PR 147.
+
 ## Research and alternatives
 
 See [the complete requirement-by-requirement research](../../docs/issue-146-analysis.md) and [API guide](../../docs/capture-and-debugging.md). Related merged work: PR 139 (navigation/session APIs), PR 111 (profile preferences), PR 96 (traces), PR 125/127 (WebDriver/Safari).

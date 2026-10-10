@@ -12,3 +12,4 @@ Close ordinary launched CLI browsers even when their connection supports detach;
 only explicitly kept-open sessions survive dispatcher cleanup.
 Add stable viewport capture with native-view CDP, viewport-only engine fallbacks
 and displayed-window regression coverage; document full-page compositor effects.
+Preserve readiness timer expiry when the rounded clock still reports budget.

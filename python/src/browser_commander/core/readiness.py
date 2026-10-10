@@ -545,9 +545,10 @@ async def run_readiness_checks(
     """
     result = ReadinessResult(status=ReadinessStatus.READY, ready=True)
     check_context = {**(context or {}), "deadline": deadline}
+    deadline_reached = False
 
     for index, check in enumerate(checks):
-        if deadline.expired() and result.failed:
+        if deadline_reached or (deadline.expired() and result.failed):
             result.pending.extend(entry.name for entry in checks[index:])
             break
 
@@ -556,6 +557,9 @@ async def run_readiness_checks(
             bounded = await run_within_deadline(
                 deadline, lambda check=check: check.run(check_context)
             )
+            # A timer can expire before the rounded clock reports zero budget.
+            # Preserve that outcome instead of reclassifying it as a failure.
+            deadline_reached |= bounded.timed_out
             outcome = (
                 CheckOutcome(detail={"reason": "deadline reached"})
                 if bounded.timed_out
@@ -587,7 +591,7 @@ async def run_readiness_checks(
 
     if result.ready:
         result.status = ReadinessStatus.READY
-    elif deadline.expired():
+    elif deadline_reached or deadline.expired():
         result.status = ReadinessStatus.TIMED_OUT
     else:
         result.status = ReadinessStatus.FAILED

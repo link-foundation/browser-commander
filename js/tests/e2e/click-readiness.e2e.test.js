@@ -216,7 +216,7 @@ describe(
         });
 
         assert.strictEqual(result.ready, false);
-        assert.strictEqual(result.status, 'timed_out');
+        assert.strictEqual(result.status, 'timed_out', JSON.stringify(result));
         assert.ok(
           elapsed < 6000,
           `the wait took ${elapsed}ms for a 1500ms budget`

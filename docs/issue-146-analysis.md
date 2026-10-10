@@ -197,3 +197,20 @@ The upstream `v1` ref resolves to `e2a55d2ffb04f378e9626c28d38b36d230d1e12f`;
 all references in docs, parity, Rust and Safari workflows now use that commit.
 The [audit's documented remedy](https://docs.zizmor.sh/audits/#ref-version-mismatch)
 is to make the pin and comment agree, preserving the existing security policy.
+
+The next [browser-parity run](https://github.com/link-foundation/browser-commander/actions/runs/38056379381/job/114225646702)
+found a readiness deadline race: the 1,500 ms never-idle test returned `failed`
+instead of `timed_out` (`ci-logs/browser-parity-38056379381.log`, lines 5051–5083).
+The bounded Node 24 experiment `experiments/issue-146/readiness-deadline.mjs`
+reproduces this with `deadline reached` evidence and an elapsed time of 1,499 ms.
+The readiness runner discarded the timer's expiry result and sampled its rounded
+monotonic clock again. [Node timers do not promise exact callback timing](https://nodejs.org/api/timers.html#settimeoutcallback-delay-args);
+[asyncio callbacks may also run early](https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.call_later).
+Deterministic JavaScript and Python regressions freeze the fractional remaining
+budget while the real timer expires; both fail before the fix. Both runners now
+retain the timeout outcome and leave subsequent checks pending. Early check
+failures and cancellation keep their distinct statuses. The real-browser probe
+then passes all 20 bounded attempts, and the original E2E assertion includes
+structured evidence to make any future CI failure diagnosable. Rust's native
+deadline path was checked separately: it uses unrounded `Duration` budgets and
+explicit timeout enum variants, rather than these rounded-millisecond runners.

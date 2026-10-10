@@ -75,6 +75,17 @@ Work is confined to branch issue-146-c162424fb5ec and existing PR 147.
 - [x] targetId and URL matcher selection, remembered automation target and best-effort foreground detection.
 - [x] Explicit singleTab closes other tabs only when requested; apply selection to all language connectors and Node bridges.
 
+## Final workflow audit investigation
+
+- [x] List fresh runs with timestamps and confirm they follow commit `818e4fd`.
+- [x] Preserve and inspect `ci-logs/ci-policy-38055848960.log`: 11 stale action pin/version-comment mismatches, lines 662–674.
+- [x] Reproduce the 11 findings with authenticated zizmor 1.30.1 and verify upstream's current `v1` commit.
+- [x] Update every affected reference across documentation, parity, Rust and Safari workflows.
+- [x] Rerun the authenticated local audit and workflow checks.
+
+After pushing, inspect fresh CI runs again and mark PR 147 ready only after all
+latest-commit workflows pass.
+
 ## Research and alternatives
 
 See [the complete requirement-by-requirement research](../../docs/issue-146-analysis.md) and [API guide](../../docs/capture-and-debugging.md). Related merged work: PR 139 (navigation/session APIs), PR 111 (profile preferences), PR 96 (traces), PR 125/127 (WebDriver/Safari).

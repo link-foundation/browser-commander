@@ -184,6 +184,16 @@ activating screenshot helper; its Node bridge also now forwards typed options.
   for inspecting child-process and pipe resources left after a browser suite.
 
 The final image artifacts in `docs/screenshots/issue-146*` demonstrate capture
-output. This change adds capture APIs rather than altering a rendered UI; its
-visual regression assertion is that live DOM content is identical before and
-after capture.
+output and the already scrolled browser window before/after stable viewport
+capture. Regressions verify both unchanged live DOM content and independent
+displayed pixels throughout capture.
+
+The workflow edit also exposed 11 stale `dtolnay/rust-toolchain` action pins in
+the [CI policy run](https://github.com/link-foundation/browser-commander/actions/runs/38055848960).
+Its preserved log (`ci-logs/ci-policy-38055848960.log`, lines 662–674) reports
+`ref-version-mismatch` and exit 13: the pinned commit no longer matches the `v1`
+comment. The authenticated local zizmor 1.30.1 audit reproduces all 11 findings.
+The upstream `v1` ref resolves to `e2a55d2ffb04f378e9626c28d38b36d230d1e12f`;
+all references in docs, parity, Rust and Safari workflows now use that commit.
+The [audit's documented remedy](https://docs.zizmor.sh/audits/#ref-version-mismatch)
+is to make the pin and comment agree, preserving the existing security policy.

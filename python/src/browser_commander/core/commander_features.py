@@ -1,34 +1,54 @@
 """Opt-in debug traces and known overlays, sharing the commander lifecycle."""
 
 import asyncio
+import inspect
 import os
 from functools import wraps
 
 INTERACTIONS = {"click_button", "click_element", "fill_text_area", "check", "press_key"}
 
 
-async def dismiss_overlays(commander, overlays):
-    dismissed = []
+async def dismiss_overlays(commander, overlays, on_dismiss=None):
+    reports = []
     for entry in overlays or []:
-        selector = entry if isinstance(entry, str) else entry["selector"]
-        if commander.engine == "playwright":
-            locator = commander.page.locator(selector).first
-            if await locator.is_visible():
-                await locator.click(timeout=1000)
-                dismissed.append(selector)
-        else:
-            from browser_commander.core.engine_adapter import create_engine_adapter
+        options = {"selector": entry} if isinstance(entry, str) else entry
+        selector = options["selector"]
+        report = {"selector": selector, "status": "absent"}
+        timeout = float(options.get("timeout", 1000) or 1000) / 1000
 
-            adapter = create_engine_adapter(commander.page, commander.engine)
-            from browser_commander.elements.visibility import is_visible
+        async def dismiss(selector=selector, options=options, report=report):
+            if commander.engine == "playwright":
+                matches = commander.page.locator(selector)
+                for index in range(await matches.count()):
+                    locator = matches.nth(index)
+                    if await locator.is_visible():
+                        await locator.click(timeout=options.get("timeout", 1000))
+                        report["status"] = "dismissed"
+                        break
+            else:
+                from browser_commander.core.engine_adapter import create_engine_adapter
 
-            element = await adapter.query_selector(selector)
-            if element is not None and await is_visible(
-                page=commander.page, engine=commander.engine, selector=selector
-            ):
-                await adapter.click(element)
-                dismissed.append(selector)
-    return dismissed
+                adapter = create_engine_adapter(commander.page, commander.engine)
+                for element in await adapter.query_selector_all(selector):
+                    if element.is_displayed():
+                        await adapter.click(element)
+                        report["status"] = "dismissed"
+                        break
+
+        try:
+            await asyncio.wait_for(dismiss(), timeout=timeout)
+        except Exception as error:
+            report.update(status="error", error=error)
+        reports.append(report)
+        for callback in (options.get("on_dismiss"), on_dismiss):
+            if callable(callback):
+                try:
+                    value = callback(report)
+                    if inspect.isawaitable(value):
+                        await asyncio.wait_for(value, timeout=timeout)
+                except Exception:
+                    pass
+    return [report["selector"] for report in reports if report["status"] == "dismissed"]
 
 
 def attach_commander_features(commander, options):
@@ -83,7 +103,11 @@ def attach_commander_features(commander, options):
                 await session.touch()
             await ensure_debug()
             if name in INTERACTIONS:
-                await dismiss_overlays(commander, options.get("overlays"))
+                await dismiss_overlays(
+                    commander,
+                    options.get("overlays"),
+                    options.get("on_overlay_dismiss"),
+                )
             return await method(*args, **kwargs)
 
         return action
@@ -103,7 +127,9 @@ def attach_commander_features(commander, options):
 
     commander.destroy = finish
     commander.dismiss_overlays = lambda overlays=None: dismiss_overlays(
-        commander, overlays or options.get("overlays")
+        commander,
+        overlays or options.get("overlays"),
+        options.get("on_overlay_dismiss"),
     )
 
     async def reuse_page(**selection):

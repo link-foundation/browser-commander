@@ -182,6 +182,23 @@ export function createPageTriggerManager(options = {}) {
   let isActionRunning = false,
     isStopping = false;
   let startQueue = Promise.resolve();
+  let pendingStart = null;
+  let destroyed = false;
+
+  function drainPending() {
+    if (destroyed || isActionRunning || isStopping || !pendingStart) {
+      return;
+    }
+    const pending = pendingStart;
+    pendingStart = null;
+    if (
+      triggers.includes(pending.trigger) &&
+      (!pending.commander.page?.url ||
+        pending.commander.page.url() === pending.url)
+    ) {
+      void startAction(pending.url, pending.commander, pending.readyOn);
+    }
+  }
 
   /**
    * Register a page trigger
@@ -208,7 +225,7 @@ export function createPageTriggerManager(options = {}) {
     ) {
       throw new RangeError(`Unknown trigger readyOn: ${readyOn}`);
     }
-    if (!['skip', 'restart'].includes(concurrency)) {
+    if (!['skip', 'restart', 'queue'].includes(concurrency)) {
       throw new RangeError(`Unknown trigger concurrency: ${concurrency}`);
     }
 
@@ -242,6 +259,9 @@ export function createPageTriggerManager(options = {}) {
       const index = triggers.indexOf(triggerConfig);
       if (index !== -1) {
         triggers.splice(index, 1);
+        if (pendingStart?.trigger === triggerConfig) {
+          pendingStart = null;
+        }
         log.debug(() => `📋 Unregistered page trigger: "${name}"`);
       }
     };
@@ -298,7 +318,7 @@ export function createPageTriggerManager(options = {}) {
     }
 
     // Wait for action to finish (with timeout)
-    const timeoutMs = 10000; // 10 second max wait
+    const timeoutMs = options.stopGraceMs ?? 10000;
     let stopTimer;
     const timeoutPromise = new Promise((resolve) => {
       stopTimer = setTimeout(() => {
@@ -337,6 +357,7 @@ export function createPageTriggerManager(options = {}) {
     }
 
     log.debug(() => '✅ Action stopped');
+    drainPending();
   }
 
   /**
@@ -345,6 +366,9 @@ export function createPageTriggerManager(options = {}) {
    * @param {Object} commander - BrowserCommander instance
    */
   function startAction(url, commander, readyOn = 'networkidle') {
+    if (destroyed) {
+      return Promise.resolve();
+    }
     // Create context for condition checking
     const conditionCtx = {
       url,
@@ -359,14 +383,18 @@ export function createPageTriggerManager(options = {}) {
       return Promise.resolve();
     }
     if (isActionRunning) {
-      if (matchingTrigger.concurrency === 'skip') {
+      if (
+        matchingTrigger.concurrency === 'skip' &&
+        !isStopping &&
+        !currentAbortController?.signal.aborted
+      ) {
         return Promise.resolve();
       }
-      return stopCurrentAction().then(() => {
-        if (!isActionRunning) {
-          return startAction(url, commander, readyOn);
-        }
-      });
+      // One latest start bounds memory while preserving readiness during stop.
+      pendingStart = { url, commander, readyOn, trigger: matchingTrigger };
+      return matchingTrigger.concurrency === 'restart'
+        ? stopCurrentAction()
+        : Promise.resolve();
     }
 
     log.debug(() => `🚀 Starting action "${matchingTrigger.name}" for: ${url}`);
@@ -377,12 +405,15 @@ export function createPageTriggerManager(options = {}) {
     isActionRunning = true;
 
     // Create action context
-    const context = createActionContext({
-      url,
-      abortSignal: currentAbortController.signal,
-      commander,
-      triggerName: matchingTrigger.name,
-    });
+    const context = createActionContext(
+      {
+        url,
+        abortSignal: currentAbortController.signal,
+        commander,
+        triggerName: matchingTrigger.name,
+      },
+      log
+    );
 
     // Run action
     actionPromise = (async () => {
@@ -411,6 +442,7 @@ export function createPageTriggerManager(options = {}) {
           isActionRunning = false;
           currentTrigger = null;
           currentAbortController = null;
+          globalThis.queueMicrotask(drainPending);
         }
       }
     })();
@@ -423,130 +455,12 @@ export function createPageTriggerManager(options = {}) {
    * @param {Object} options
    * @returns {Object} - Action context
    */
-  function createActionContext(options) {
-    const { url, abortSignal, commander, triggerName } = options;
-
-    /**
-     * Check if stopped and throw if so
-     */
-    function checkStopped() {
-      if (abortSignal.aborted) {
-        throw new ActionStoppedError(`Action "${triggerName}" stopped`);
-      }
-    }
-
-    /**
-     * Wrap async function to check abort before and after
-     */
-    function wrapAsync(fn) {
-      return async (...args) => {
-        checkStopped();
-        const result = await fn(...args);
-        checkStopped();
-        return result;
-      };
-    }
-
-    /**
-     * Create abort-aware loop helper
-     * Use this instead of for/while loops for stoppability
-     */
-    async function forEach(items, callback) {
-      for (let i = 0; i < items.length; i++) {
-        checkStopped();
-        await callback(items[i], i, items);
-      }
-    }
-
-    /**
-     * Wait with abort support
-     */
-    async function wait(ms) {
-      checkStopped();
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(resolve, ms);
-        abortSignal.addEventListener(
-          'abort',
-          () => {
-            clearTimeout(timeout);
-            reject(new ActionStoppedError());
-          },
-          { once: true }
-        );
-      });
-    }
-
-    /**
-     * Register cleanup callback (called when action stops)
-     */
-    const cleanupCallbacks = [];
-    function onCleanup(callback) {
-      const unsubscribe = subscribeCallbacks(cleanupCallbacks, callback);
-      const onAbort = async () => {
-        try {
-          await callback();
-        } catch (e) {
-          log.debug(() => `⚠️  Cleanup error: ${e.message}`);
-        }
-      };
-      abortSignal.addEventListener('abort', onAbort, { once: true });
-      return () => {
-        abortSignal.removeEventListener('abort', onAbort);
-        unsubscribe();
-      };
-    }
-
-    // Wrap all commander methods to be abort-aware
-    const wrappedCommander = {};
-    for (const [key, value] of Object.entries(commander)) {
-      if (
-        typeof value === 'function' &&
-        key !== 'destroy' &&
-        key !== 'pageTrigger'
-      ) {
-        wrappedCommander[key] = wrapAsync(value);
-      } else {
-        wrappedCommander[key] = value;
-      }
-    }
-
-    return {
-      // URL this action is running for
-      url,
-
-      // Abort signal - use with fetch() or custom abort logic
-      abortSignal,
-
-      // Check if action should stop
-      isStopped: () => abortSignal.aborted,
-
-      // Throw if stopped - call this in loops
-      checkStopped,
-
-      // Abort-aware iteration helper
-      forEach,
-
-      // Abort-aware wait
-      wait,
-
-      // Register cleanup callback
-      onCleanup,
-
-      // Wrapped commander - all methods throw ActionStoppedError if stopped
-      commander: wrappedCommander,
-
-      // Original commander (use carefully)
-      rawCommander: commander,
-
-      // Trigger name for debugging
-      triggerName,
-    };
-  }
 
   /**
    * Handle navigation start - stop current action first
    */
   async function onNavigationStart() {
+    pendingStart = null;
     await stopCurrentAction();
   }
 
@@ -586,13 +500,18 @@ export function createPageTriggerManager(options = {}) {
   /**
    * Cleanup
    */
-  const destroy = createTriggerDestroy({
+  const cleanup = createTriggerDestroy({
     subscriptions,
     getQueue: () => startQueue,
     stopCurrentAction,
     triggers,
     log,
   });
+  const destroy = async () => {
+    destroyed = true;
+    pendingStart = null;
+    await cleanup();
+  };
 
   return {
     pageTrigger,
@@ -650,5 +569,125 @@ function createTriggerDestroy({
     await stopCurrentAction();
     triggers.length = 0;
     log.debug(() => '📋 PageTriggerManager destroyed');
+  };
+}
+
+function createActionContext(options, log) {
+  const { url, abortSignal, commander, triggerName } = options;
+
+  /**
+   * Check if stopped and throw if so
+   */
+  function checkStopped() {
+    if (abortSignal.aborted) {
+      throw new ActionStoppedError(`Action "${triggerName}" stopped`);
+    }
+  }
+
+  /**
+   * Wrap async function to check abort before and after
+   */
+  function wrapAsync(fn) {
+    return async (...args) => {
+      checkStopped();
+      const result = await fn(...args);
+      checkStopped();
+      return result;
+    };
+  }
+
+  /**
+   * Create abort-aware loop helper
+   * Use this instead of for/while loops for stoppability
+   */
+  async function forEach(items, callback) {
+    for (let i = 0; i < items.length; i++) {
+      checkStopped();
+      await callback(items[i], i, items);
+    }
+  }
+
+  /**
+   * Wait with abort support
+   */
+  async function wait(ms) {
+    checkStopped();
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(resolve, ms);
+      abortSignal.addEventListener(
+        'abort',
+        () => {
+          clearTimeout(timeout);
+          reject(new ActionStoppedError());
+        },
+        { once: true }
+      );
+    });
+  }
+
+  /**
+   * Register cleanup callback (called when action stops)
+   */
+  const cleanupCallbacks = [];
+  function onCleanup(callback) {
+    const unsubscribe = subscribeCallbacks(cleanupCallbacks, callback);
+    const onAbort = async () => {
+      try {
+        await callback();
+      } catch (e) {
+        log.debug(() => `⚠️  Cleanup error: ${e.message}`);
+      }
+    };
+    abortSignal.addEventListener('abort', onAbort, { once: true });
+    return () => {
+      abortSignal.removeEventListener('abort', onAbort);
+      unsubscribe();
+    };
+  }
+
+  // Wrap all commander methods to be abort-aware
+  const wrappedCommander = {};
+  for (const [key, value] of Object.entries(commander)) {
+    if (
+      typeof value === 'function' &&
+      key !== 'destroy' &&
+      key !== 'pageTrigger'
+    ) {
+      wrappedCommander[key] = wrapAsync(value);
+    } else {
+      wrappedCommander[key] = value;
+    }
+  }
+
+  return {
+    // URL this action is running for
+    url,
+
+    // Abort signal - use with fetch() or custom abort logic
+    abortSignal,
+
+    // Check if action should stop
+    isStopped: () => abortSignal.aborted,
+
+    // Throw if stopped - call this in loops
+    checkStopped,
+
+    // Abort-aware iteration helper
+    forEach,
+
+    // Abort-aware wait
+    wait,
+
+    // Register cleanup callback
+    onCleanup,
+
+    // Wrapped commander - all methods throw ActionStoppedError if stopped
+    commander: wrappedCommander,
+
+    // Original commander (use carefully)
+    rawCommander: commander,
+
+    // Trigger name for debugging
+    triggerName,
   };
 }

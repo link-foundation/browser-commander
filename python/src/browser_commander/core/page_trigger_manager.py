@@ -235,6 +235,9 @@ class PageTriggerManager:
         self._subscriptions: list[tuple[Any, str, Callable]] = []
         self._in_flight: dict[int, asyncio.Task] = {}
         self._trigger_lock = asyncio.Lock()
+        self._pending: dict[int, tuple[str, str]] = {}
+        self._contexts: dict[int, ActionContext] = {}
+        self._destroyed = False
 
     def initialize(self, commander: Any) -> None:
         """Initialize with commander reference.
@@ -258,6 +261,8 @@ class PageTriggerManager:
                 self._subscriptions.append((page, ready_on, listener))
 
     def _schedule(self, url: str, ready_on: str) -> None:
+        if self._destroyed:
+            return
         task = asyncio.create_task(self._check_triggers(url, ready_on))
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.discard)
@@ -268,6 +273,7 @@ class PageTriggerManager:
     def _on_url_change(self, event: dict) -> None:
         """Handle URL change event."""
         new_url = event["new_url"]
+        self._pending.clear()
 
         # Stop all active actions
         for ctx in self._active_actions:
@@ -291,14 +297,38 @@ class PageTriggerManager:
             if trigger["ready_on"] == ready_on and condition(url):
                 previous = self._in_flight.get(id(trigger))
                 if previous is not None and not previous.done():
-                    if trigger["concurrency"] == "skip":
+                    context = self._contexts.get(id(trigger))
+                    stopping = context is not None and context._abort_signal.is_set()
+                    if trigger["concurrency"] == "skip" and not stopping:
                         continue
-                    previous.cancel()
-                    await asyncio.gather(previous, return_exceptions=True)
+                    self._pending[id(trigger)] = (url, ready_on)
+                    if trigger["concurrency"] == "restart":
+                        if context is not None:
+                            context._abort_signal.set()
+                        previous.cancel()
+                    continue
                 task = asyncio.create_task(self._run_trigger(trigger, url))
                 self._in_flight[id(trigger)] = task
                 self._background_tasks.add(task)
                 task.add_done_callback(self._background_tasks.discard)
+                task.add_done_callback(
+                    lambda completed, item=trigger: self._trigger_done(completed, item)
+                )
+
+    def _trigger_done(self, task: asyncio.Task, trigger: dict) -> None:
+        if self._in_flight.get(id(trigger)) is task:
+            self._in_flight.pop(id(trigger), None)
+            self._start_pending(trigger)
+
+    def _start_pending(self, trigger: dict) -> None:
+        pending = self._pending.pop(id(trigger), None)
+        if (
+            pending
+            and trigger in self._triggers
+            and not self._destroyed
+            and self.navigation_manager._get_current_url() == pending[0]
+        ):
+            self._schedule(*pending)
 
     async def _run_trigger(self, trigger: dict, url: str) -> None:
         """Run a trigger's action.
@@ -320,6 +350,7 @@ class PageTriggerManager:
             commander=self._commander,
         )
         self._active_actions.append(ctx)
+        self._contexts[id(trigger)] = ctx
 
         try:
             await action(ctx)
@@ -331,6 +362,9 @@ class PageTriggerManager:
             await ctx.cleanup()
             if ctx in self._active_actions:
                 self._active_actions.remove(ctx)
+            self._contexts.pop(id(trigger), None)
+            self._in_flight.pop(id(trigger), None)
+            self._start_pending(trigger)
 
     def page_trigger(self, config: dict) -> None:
         """Register a page trigger.
@@ -348,7 +382,7 @@ class PageTriggerManager:
         concurrency = config.get("concurrency", "skip")
         if ready_on not in {"urlchange", "domcontentloaded", "load", "networkidle"}:
             raise ValueError(f"Unknown ready_on: {ready_on}")
-        if concurrency not in {"skip", "restart"}:
+        if concurrency not in {"skip", "restart", "queue"}:
             raise ValueError(f"Unknown concurrency: {concurrency}")
 
         if not condition or not action:
@@ -371,6 +405,8 @@ class PageTriggerManager:
 
     async def destroy(self) -> None:
         """Clean up and stop all actions."""
+        self._destroyed = True
+        self._pending.clear()
         # Stop all active actions
         for ctx in self._active_actions:
             ctx._abort_signal.set()

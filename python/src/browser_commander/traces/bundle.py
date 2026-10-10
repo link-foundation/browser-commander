@@ -101,9 +101,11 @@ def open_private_file(path: str | os.PathLike[str], flags: int) -> int:
     return os.open(path, flags | getattr(os, "O_BINARY", 0), TRACE_FILE_MODE)
 
 
-def write_private_file(path: Path, data: bytes) -> None:
+def write_private_file(path: Path, data: bytes, *, append: bool = False) -> None:
     """Write a file readable by its owner only."""
-    descriptor = open_private_file(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    descriptor = open_private_file(
+        path, os.O_WRONLY | os.O_CREAT | (os.O_APPEND if append else os.O_TRUNC)
+    )
     with os.fdopen(descriptor, "wb") as handle:
         handle.write(data)
 
@@ -272,7 +274,7 @@ class TraceBundle:
         return record
 
     def write_member(
-        self, member: str, contents: bytes | bytearray | str
+        self, member: str, contents: bytes | bytearray | str, *, append: bool = False
     ) -> dict[str, Any] | None:
         """Write one member of the bundle.
 
@@ -284,7 +286,9 @@ class TraceBundle:
             ``{member, bytes}``, or None when it was dropped
         """
         data = _bytes_of(contents)
-        if not self._fits(len(data)):
+        target = Path(self.root, member)
+        previous = target.stat().st_size if append and target.exists() else 0
+        if not self._fits(len(data)) or previous + len(data) > self.max_resource_bytes:
             self.drop(
                 {
                     "reason": TraceDropReason.SIZE_LIMIT,
@@ -294,10 +298,9 @@ class TraceBundle:
             )
             return None
 
-        target = Path(self.root, member)
         try:
             make_directories(target.parent)
-            write_private_file(target, data)
+            write_private_file(target, data, append=append)
         except OSError as error:
             self.drop(
                 {
@@ -365,7 +368,7 @@ class TraceBundle:
             return None
         member = f"{TraceFiles.MUTATIONS_DIR}/{sequence_name(index)}.ndjson"
         body = "\n".join(dumps(batch) for batch in batches) + "\n"
-        result = self.write_member(member, body)
+        result = self.write_member(member, body, append=True)
         if result:
             self.counts["mutationBatches"] += len(batches)
         return result["member"] if result else None

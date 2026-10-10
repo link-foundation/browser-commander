@@ -68,6 +68,10 @@ from browser_commander.browser.parity import (
     read_browser_version_page,
 )
 from browser_commander.browser.pdf import pdf
+from browser_commander.browser.persistent_session import (
+    PersistentSession,
+    connect_or_launch,
+)
 from browser_commander.browser.profile_directory import (
     create_temporary_user_data_dir,
     prepare_user_data_dir,
@@ -119,6 +123,7 @@ __all__ = [
     "LaunchOptions",
     "LaunchResult",
     "NavigationVerificationResult",
+    "PersistentSession",
     "PortRaceError",
     "RealBrowserOptions",
     "RealBrowserResult",
@@ -140,6 +145,7 @@ __all__ = [
     "classify_differences",
     "compare_command_lines",
     "connect_browser",
+    "connect_or_launch",
     "create_temporary_user_data_dir",
     "default_navigation_verification",
     "emulate_media",

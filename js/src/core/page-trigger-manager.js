@@ -170,7 +170,8 @@ export function createPageTriggerManager(options = {}) {
   }
 
   // Registered triggers
-  const triggers = [];
+  const triggers = [],
+    subscriptions = [];
 
   // Current action state
   let currentTrigger = null;
@@ -178,8 +179,9 @@ export function createPageTriggerManager(options = {}) {
   let actionPromise = null;
   let actionStopPromise = null;
   let actionStopResolve = null;
-  let isActionRunning = false;
-  let isStopping = false;
+  let isActionRunning = false,
+    isStopping = false;
+  let startQueue = Promise.resolve();
 
   /**
    * Register a page trigger
@@ -191,7 +193,24 @@ export function createPageTriggerManager(options = {}) {
    * @returns {Function} - Unregister function
    */
   function pageTrigger(config) {
-    const { condition, action, name = 'unnamed', priority = 0 } = config;
+    const {
+      condition,
+      action,
+      name = 'unnamed',
+      priority = 0,
+      readyOn = 'networkidle',
+      concurrency = 'skip',
+    } = config;
+    if (
+      !['urlchange', 'domcontentloaded', 'load', 'networkidle'].includes(
+        readyOn
+      )
+    ) {
+      throw new RangeError(`Unknown trigger readyOn: ${readyOn}`);
+    }
+    if (!['skip', 'restart'].includes(concurrency)) {
+      throw new RangeError(`Unknown trigger concurrency: ${concurrency}`);
+    }
 
     if (typeof condition !== 'function') {
       throw new Error('condition must be a function');
@@ -205,6 +224,8 @@ export function createPageTriggerManager(options = {}) {
       action,
       name,
       priority,
+      readyOn,
+      concurrency,
     };
 
     triggers.push(triggerConfig);
@@ -234,7 +255,7 @@ export function createPageTriggerManager(options = {}) {
   function findMatchingTrigger(ctx) {
     for (const config of triggers) {
       try {
-        if (config.condition(ctx)) {
+        if (config.readyOn === ctx.readyOn && config.condition(ctx)) {
           return config;
         }
       } catch (e) {
@@ -278,8 +299,9 @@ export function createPageTriggerManager(options = {}) {
 
     // Wait for action to finish (with timeout)
     const timeoutMs = 10000; // 10 second max wait
+    let stopTimer;
     const timeoutPromise = new Promise((resolve) => {
-      setTimeout(() => {
+      stopTimer = setTimeout(() => {
         log.debug(
           () =>
             `⚠️  Action "${currentTrigger?.name}" did not stop gracefully within ${timeoutMs}ms`
@@ -289,6 +311,16 @@ export function createPageTriggerManager(options = {}) {
     });
 
     await Promise.race([actionPromise, timeoutPromise]);
+    clearTimeout(stopTimer);
+    // An action can ignore cancellation. Keep it in flight until it settles,
+    // so a second form handler can never race it after the grace period.
+    if (isActionRunning) {
+      isStopping = false;
+      actionStopResolve?.();
+      actionStopPromise = null;
+      actionStopResolve = null;
+      return;
+    }
 
     // Cleanup
     isActionRunning = false;
@@ -312,11 +344,12 @@ export function createPageTriggerManager(options = {}) {
    * @param {string} url - URL to start action for
    * @param {Object} commander - BrowserCommander instance
    */
-  function startAction(url, commander) {
+  function startAction(url, commander, readyOn = 'networkidle') {
     // Create context for condition checking
     const conditionCtx = {
       url,
       commander,
+      readyOn,
     };
 
     // Find matching trigger
@@ -324,6 +357,16 @@ export function createPageTriggerManager(options = {}) {
     if (!matchingTrigger) {
       log.debug(() => `📋 No trigger registered for: ${url}`);
       return Promise.resolve();
+    }
+    if (isActionRunning) {
+      if (matchingTrigger.concurrency === 'skip') {
+        return Promise.resolve();
+      }
+      return stopCurrentAction().then(() => {
+        if (!isActionRunning) {
+          return startAction(url, commander, readyOn);
+        }
+      });
     }
 
     log.debug(() => `🚀 Starting action "${matchingTrigger.name}" for: ${url}`);
@@ -510,36 +553,32 @@ export function createPageTriggerManager(options = {}) {
   /**
    * Handle page ready - start matching action
    */
-  async function onPageReady({ url }, commander) {
-    await startAction(url, commander);
-  }
-
   /**
    * Check if an action is currently running
    */
-  function isRunning() {
-    return isActionRunning;
-  }
+  const isRunning = () => isActionRunning;
 
   /**
    * Get current trigger name
    */
-  function getCurrentTriggerName() {
-    return currentTrigger?.name || null;
-  }
+  const getCurrentTriggerName = () => currentTrigger?.name || null;
 
   /**
    * Initialize - connect to navigation manager
    * @param {Object} commander - BrowserCommander instance
    */
   function initialize(commander) {
-    // Stop action before navigation starts
-    navigationManager.on('onBeforeNavigate', onNavigationStart);
-
-    // Start action when page is ready
-    navigationManager.on('onPageReady', (event) =>
-      onPageReady(event, commander)
-    );
+    subscribeReadiness({
+      commander,
+      navigationManager,
+      subscriptions,
+      onNavigationStart,
+      enqueue: (url, readyOn) => {
+        startQueue = startQueue.then(() =>
+          startAction(url, commander, readyOn)
+        );
+      },
+    });
 
     log.debug(() => '📋 PageTriggerManager initialized');
   }
@@ -547,12 +586,13 @@ export function createPageTriggerManager(options = {}) {
   /**
    * Cleanup
    */
-  async function destroy() {
-    await stopCurrentAction();
-    triggers.length = 0;
-    navigationManager.off('onBeforeNavigate', onNavigationStart);
-    log.debug(() => '📋 PageTriggerManager destroyed');
-  }
+  const destroy = createTriggerDestroy({
+    subscriptions,
+    getQueue: () => startQueue,
+    stopCurrentAction,
+    triggers,
+    log,
+  });
 
   return {
     pageTrigger,
@@ -565,5 +605,50 @@ export function createPageTriggerManager(options = {}) {
     // Export error class and checker
     ActionStoppedError,
     isActionStoppedError,
+  };
+}
+
+function subscribeReadiness({
+  commander,
+  navigationManager,
+  subscriptions,
+  onNavigationStart,
+  enqueue,
+}) {
+  function subscribe(source, event, listener) {
+    source?.on?.(event, listener);
+    subscriptions.push(() => source?.off?.(event, listener));
+  }
+  subscribe(navigationManager, 'onBeforeNavigate', onNavigationStart);
+  subscribe(navigationManager, 'onPageReady', (event) =>
+    enqueue(event.url, 'networkidle')
+  );
+  // onNavigationStart happens after old actions have been stopped. Using
+  // onUrlChange here would start an action that cleanup immediately aborts.
+  subscribe(navigationManager, 'onNavigationStart', (event) =>
+    enqueue(event.url, 'urlchange')
+  );
+  for (const readyOn of ['domcontentloaded', 'load']) {
+    subscribe(commander.page, readyOn, () =>
+      enqueue(commander.page.url(), readyOn)
+    );
+  }
+}
+
+function createTriggerDestroy({
+  subscriptions,
+  getQueue,
+  stopCurrentAction,
+  triggers,
+  log,
+}) {
+  return async () => {
+    for (const unsubscribe of subscriptions.splice(0)) {
+      unsubscribe();
+    }
+    await getQueue();
+    await stopCurrentAction();
+    triggers.length = 0;
+    log.debug(() => '📋 PageTriggerManager destroyed');
   };
 }

@@ -7,6 +7,7 @@ import {
 
 import { assertSupportedEngine } from './connector.js';
 import { emulateMedia } from './media.js';
+import { reserveLoopbackPort } from './debugging-port.js';
 import {
   buildPlaywrightLaunchOptions,
   buildPuppeteerLaunchOptions,
@@ -316,6 +317,15 @@ export async function launchBrowserWithDependencies(
   options = {},
   dependencies = {}
 ) {
+  if (options.keepOpen) {
+    const { connectOrLaunch } = await import('./persistent-session.js');
+    return connectOrLaunch({
+      ...options,
+      userDataDir: options.userDataDir ?? (await createTemporaryUserDataDir()),
+      remoteDebuggingPort:
+        options.remoteDebuggingPort ?? (await reserveLoopbackPort()),
+    });
+  }
   sessionPersistencePath(options);
   if (isSafariChannel(options.channel ?? options.browser)) {
     validateLaunchMode({

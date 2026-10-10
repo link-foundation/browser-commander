@@ -257,9 +257,11 @@ export function createNavigationManager(options = {}) {
         log.debug(() => `🔄 Redirect detected: ${url}`);
       }
     },
-    onReady: () => {
+    onReady: (readyOn) => {
       finishNavigationTracking({ ready: true });
-      emitPageReady();
+      if (readyOn === 'networkidle') {
+        emitPageReady();
+      }
     },
     onNotReady: () => finishNavigationTracking({ ready: false }),
   });

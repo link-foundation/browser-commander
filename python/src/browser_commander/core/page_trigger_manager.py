@@ -232,6 +232,9 @@ class PageTriggerManager:
         self._active_actions: list[ActionContext] = []
         self._commander: Any = None
         self._background_tasks: set[asyncio.Task] = set()
+        self._subscriptions: list[tuple[Any, str, Callable]] = []
+        self._in_flight: dict[int, asyncio.Task] = {}
+        self._trigger_lock = asyncio.Lock()
 
     def initialize(self, commander: Any) -> None:
         """Initialize with commander reference.
@@ -243,6 +246,24 @@ class PageTriggerManager:
 
         # Subscribe to URL changes
         self.navigation_manager.on("on_url_change", self._on_url_change)
+        self.navigation_manager.on("on_page_ready", self._on_page_ready)
+        page = getattr(commander, "page", None)
+        if page is not None and hasattr(page, "on"):
+            for ready_on in ("domcontentloaded", "load"):
+
+                def listener(*args, level=ready_on):
+                    self._schedule(self.navigation_manager._get_current_url(), level)
+
+                page.on(ready_on, listener)
+                self._subscriptions.append((page, ready_on, listener))
+
+    def _schedule(self, url: str, ready_on: str) -> None:
+        task = asyncio.create_task(self._check_triggers(url, ready_on))
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    def _on_page_ready(self, event: dict) -> None:
+        self._schedule(event["url"], "networkidle")
 
     def _on_url_change(self, event: dict) -> None:
         """Handle URL change event."""
@@ -253,11 +274,13 @@ class PageTriggerManager:
             ctx._abort_signal.set()
 
         # Check triggers for new URL
-        task = asyncio.create_task(self._check_triggers(new_url))
-        self._background_tasks.add(task)
-        task.add_done_callback(self._background_tasks.discard)
+        self._schedule(new_url, "urlchange")
 
-    async def _check_triggers(self, url: str) -> None:
+    async def _check_triggers(self, url: str, ready_on: str = "networkidle") -> None:
+        async with self._trigger_lock:
+            await self._check_triggers_locked(url, ready_on)
+
+    async def _check_triggers_locked(self, url: str, ready_on: str) -> None:
         """Check and run matching triggers for URL.
 
         Args:
@@ -265,8 +288,17 @@ class PageTriggerManager:
         """
         for trigger in self._triggers:
             condition = trigger["condition"]
-            if condition(url):
-                await self._run_trigger(trigger, url)
+            if trigger["ready_on"] == ready_on and condition(url):
+                previous = self._in_flight.get(id(trigger))
+                if previous is not None and not previous.done():
+                    if trigger["concurrency"] == "skip":
+                        continue
+                    previous.cancel()
+                    await asyncio.gather(previous, return_exceptions=True)
+                task = asyncio.create_task(self._run_trigger(trigger, url))
+                self._in_flight[id(trigger)] = task
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
 
     async def _run_trigger(self, trigger: dict, url: str) -> None:
         """Run a trigger's action.
@@ -312,6 +344,12 @@ class PageTriggerManager:
         condition = config.get("condition")
         action = config.get("action")
         name = config.get("name", "unnamed")
+        ready_on = config.get("ready_on", config.get("readyOn", "networkidle"))
+        concurrency = config.get("concurrency", "skip")
+        if ready_on not in {"urlchange", "domcontentloaded", "load", "networkidle"}:
+            raise ValueError(f"Unknown ready_on: {ready_on}")
+        if concurrency not in {"skip", "restart"}:
+            raise ValueError(f"Unknown concurrency: {concurrency}")
 
         if not condition or not action:
             msg = "page_trigger requires 'condition' and 'action'"
@@ -326,6 +364,8 @@ class PageTriggerManager:
                 "condition": condition,
                 "action": action,
                 "name": name,
+                "ready_on": ready_on,
+                "concurrency": concurrency,
             }
         )
 
@@ -341,3 +381,12 @@ class PageTriggerManager:
 
         # Unsubscribe from events
         self.navigation_manager.off("on_url_change", self._on_url_change)
+        self.navigation_manager.off("on_page_ready", self._on_page_ready)
+        for page, event, listener in self._subscriptions:
+            remover = getattr(page, "off", None) or page.remove_listener
+            remover(event, listener)
+        self._subscriptions.clear()
+        tasks = list(self._background_tasks)
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)

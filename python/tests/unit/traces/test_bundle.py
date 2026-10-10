@@ -246,6 +246,20 @@ def test_counts_what_it_wrote_in_the_manifest(tmp_path: Path) -> None:
     assert manifest["outcome"] == TraceOutcome.COMPLETE
 
 
+def test_retains_every_periodic_drain_in_an_interval(tmp_path: Path) -> None:
+    bundle = _open(tmp_path)
+    try:
+        bundle.write_mutations(1, [{"records": ["first"]}])
+        bundle.write_mutations(1, [{"records": ["second"]}])
+        lines = Path(bundle.root, "mutations/0001.ndjson").read_text().splitlines()
+        assert [json.loads(line) for line in lines] == [
+            {"records": ["first"]},
+            {"records": ["second"]},
+        ]
+    finally:
+        bundle.abort()
+
+
 def test_records_a_dropped_member_even_under_a_tiny_resource_limit(
     tmp_path: Path,
 ) -> None:

@@ -9,6 +9,7 @@ same bundle answers the same questions in either language.
 
 from __future__ import annotations
 
+import gzip
 import json
 import os
 from dataclasses import dataclass, field
@@ -38,7 +39,11 @@ def _read_if_present(path: Path) -> str | None:
     try:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        return None
+        try:
+            with gzip.open(str(path) + ".gz", "rt", encoding="utf8") as stream:
+                return stream.read()
+        except FileNotFoundError:
+            return None
 
 
 @dataclass
@@ -222,6 +227,10 @@ def read_trace(bundle_path: str | os.PathLike[str]) -> Trace:
         ValueError: When the manifest is unreadable or written by a newer format
     """
     root = Path(bundle_path).resolve()
+    if (root / "segments.json").exists():
+        from .rolling import read_rolling
+
+        return read_rolling(root, json.loads((root / "segments.json").read_text()))
     manifest_body = _read_if_present(root / TraceFiles.MANIFEST)
     events_body = _read_if_present(root / TraceFiles.EVENTS)
 

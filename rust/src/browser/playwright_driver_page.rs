@@ -25,6 +25,9 @@ pub const ACTION_TIMEOUT_MS: f64 = 30_000.0;
 pub const LAUNCH_TIMEOUT_MS: f64 = 180_000.0;
 const VERSION_PAGE_TIMEOUT_MS: f64 = 10_000.0;
 
+mod selection;
+use selection::pick_foreground_page;
+
 /// What to launch: the browser command line has already been resolved.
 #[derive(Debug, Clone, Default)]
 pub struct PlaywrightLaunch {
@@ -71,6 +74,9 @@ pub struct PlaywrightConnect {
     pub seed_cookies: Vec<Value>,
     /// Emulated on the picked page, best-effort.
     pub color_scheme: Option<String>,
+    pub target_id: Option<String>,
+    pub url: Option<String>,
+    pub single_tab: bool,
 }
 
 /// [`EngineAdapter`] backed by the official Playwright driver.
@@ -174,7 +180,7 @@ impl PlaywrightDriverPage {
                 })?,
         };
         let pages = connection.children::<Page>(context.guid());
-        let page = match pick_foreground_page(connection, pages).await? {
+        let page = match pick_foreground_page(connection, &context, pages, &options).await? {
             Some(page) => page,
             None => connection.object(&context.new_page().await?.page)?,
         };
@@ -321,23 +327,6 @@ fn launch_params(
         user_data_dir: options.user_data_dir.to_string_lossy().into_owned(),
         slow_mo: (options.slow_mo > 0).then_some(options.slow_mo as f64),
     })
-}
-
-/// A fresh profile can open a tab that takes the foreground after startup,
-/// so the visible tab wins over the first one.
-async fn pick_foreground_page(
-    connection: &crate::playwright::Connection,
-    pages: Vec<Page>,
-) -> Result<Option<Page>, ProtocolError> {
-    for page in &pages {
-        let frame: Frame = connection.object(&page.initializer()?.main_frame)?;
-        match evaluate(&frame, "document.visibilityState", None, &Value::Null).await {
-            Ok(state) if state == "visible" => return Ok(Some(page.clone())),
-            Ok(_) => {}
-            Err(error) => tracing::debug!(%error, "visibilityState failed"),
-        }
-    }
-    Ok(pages.into_iter().next())
 }
 
 async fn evaluate(
@@ -564,8 +553,21 @@ const VERSION_PAGE_READY: &str = r#"() => document.getElementById("command_line"
 
 #[async_trait]
 impl EngineAdapter for PlaywrightDriverPage {
+    async fn detach(&self) -> Result<(), EngineError> {
+        if self.launched {
+            return Err(EngineError::Unsupported {
+                browser: "playwright".into(),
+                feature: "detach an engine launch".into(),
+            });
+        }
+        self.close().await
+    }
     fn engine_type(&self) -> EngineType {
         EngineType::Playwright
+    }
+
+    async fn document_identity(&self) -> Result<Option<serde_json::Value>, EngineError> {
+        self.evaluate("performance.timeOrigin").await.map(Some)
     }
 
     async fn url(&self) -> Result<String, EngineError> {
@@ -845,6 +847,20 @@ impl EngineAdapter for PlaywrightDriverPage {
             .screenshot(Default::default())
             .await
             .map_err(engine_error)?;
+        decode_binary(&shot.binary)
+    }
+
+    async fn screenshot_with_options(
+        &self,
+        options: &crate::capture::ScreenshotOptions,
+    ) -> Result<Vec<u8>, EngineError> {
+        options.validate()?;
+        if options.format == crate::capture::ScreenshotFormat::Webp {
+            return Err(crate::capture::unsupported(self, "WebP screenshot"));
+        }
+        let params = serde_json::from_value(options.native())
+            .map_err(|e| EngineError::Browser(e.to_string()))?;
+        let shot = self.page.screenshot(params).await.map_err(engine_error)?;
         decode_binary(&shot.binary)
     }
 

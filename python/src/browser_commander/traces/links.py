@@ -594,7 +594,9 @@ def _open(trace: Trace | str | os.PathLike[str]) -> Trace:
 
 
 def trace_links(
-    trace: Trace | str | os.PathLike[str], include: Iterable[str] | None = None
+    trace: Trace | str | os.PathLike[str],
+    include: Iterable[str] | None = None,
+    dom: Any = None,
 ) -> list[Link]:
     """Build the links of a whole trace, in the order they are written.
 
@@ -624,6 +626,7 @@ def trace_links(
         )
     for event in opened.events:
         links.extend(_links_for_event(event, sections))
+    links.extend(dom_links(opened, dom))
     if "control-diffs" in sections:
         links.extend(_control_diff_links(opened))
     if "trace" in sections:
@@ -698,7 +701,10 @@ class TraceLinksSink:
         include: Iterable[str] | None = None,
         bundle_path: str | None = None,
         about: Mapping[str, Any] | None = None,
+        dom: Any = None,
     ) -> None:
+        self._dom, self._bundle_path = dom, bundle_path
+        self._seen_dom: set[tuple[Any, ...]] = set()
         self.path = resolve_links_output(output)
         self._sections = chosen_sections(list(include) if include is not None else None)
         self.problems: list[dict[str, Any]] = []
@@ -734,6 +740,14 @@ class TraceLinksSink:
         if not event:
             return
         self._append(_links_for_event(event, self._sections))
+        if (
+            self._dom
+            and self._bundle_path
+            and event.get("kind") in {"checkpoint", "mutations"}
+        ):
+            self._append(
+                dom_links(read_trace(self._bundle_path), self._dom, self._seen_dom)
+            )
 
     def close(
         self,
@@ -793,4 +807,102 @@ def open_trace_links(
     Returns:
         The sink
     """
-    return TraceLinksSink(output, include=include, bundle_path=bundle_path, about=about)
+    return TraceLinksSink(
+        output,
+        include=include,
+        bundle_path=bundle_path,
+        about=about,
+        dom=about.pop("dom", None),
+    )
+
+
+def dom_links(trace, dom, seen=None):
+    def link(name, values):
+        return Link(name, _links(*values))
+
+    if not dom:
+        return []
+    seen = seen if seen is not None else set()
+    links = []
+    for checkpoint in trace.checkpoints:
+        key: tuple[Any, ...] = ("checkpoint", checkpoint.index)
+        if key in seen:
+            continue
+        seen.add(key)
+        value = (
+            (trace.state(checkpoint.index) or {}).get("text")
+            if dom == "text"
+            else trace.html(checkpoint.index)
+        )
+        links.append(
+            link(
+                "dom-text" if dom == "text" else "dom-snapshot",
+                [
+                    _field("checkpoint", checkpoint.index),
+                    _field("text" if dom == "text" else "html", value),
+                ],
+            )
+        )
+    for event in trace.events:
+        if event.get("kind") != "mutations":
+            continue
+        for batch in trace.mutations(event["checkpoint"]):
+            key = (
+                event.get("member"),
+                batch.get("frameId"),
+                batch.get("sequence"),
+                batch.get("at"),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            for record in batch.get("records", []):
+                if dom != "text":
+                    links.append(
+                        link(
+                            "dom-mutation",
+                            [
+                                _field("at", batch.get("at")),
+                                _field("record", dumps(record)),
+                            ],
+                        )
+                    )
+                    continue
+                target = record.get("target", {})
+                if target.get("visible") is False:
+                    continue
+                if record["kind"] in {"attributes", "characterData"}:
+                    links.append(
+                        link(
+                            "attribute-changed"
+                            if record["kind"] == "attributes"
+                            else "text-changed",
+                            [
+                                _field("at", batch.get("at")),
+                                _field("path", target.get("path", "")),
+                                _field("attribute", record.get("attribute")),
+                                _field("before", record.get("before")),
+                                _field("after", record.get("after")),
+                            ],
+                        )
+                    )
+                if record["kind"] == "childList":
+                    for change in ("added", "removed"):
+                        for node in record.get(change, []):
+                            if node.get("visible") is not False and node.get("text"):
+                                links.append(
+                                    link(
+                                        "text-" + change,
+                                        [
+                                            _field("at", batch.get("at")),
+                                            _field(
+                                                "path",
+                                                node.get(
+                                                    "path", target.get("path", "")
+                                                ),
+                                            ),
+                                            _field("text", node["text"]),
+                                        ],
+                                    )
+                                )
+    return links

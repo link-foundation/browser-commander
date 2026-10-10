@@ -14,6 +14,7 @@ every value is serialized the way ``JSON.stringify`` serializes it.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import os
 import shutil
@@ -21,6 +22,7 @@ import traceback
 from collections.abc import Mapping
 from typing import Any, Callable
 
+from browser_commander.capture import Recording
 from browser_commander.core.logger import Logger
 
 from .bundle import (
@@ -35,7 +37,9 @@ from .identity import create_trace_identity
 from .jsonfmt import UNDEFINED, coalesce, iso_timestamp, js_string, js_truthy
 from .links import TraceLinksSink, open_trace_links
 from .mutation_stream import MutationStream
+from .network import NetworkRecorder, write_har
 from .observers import attach_timeline_observers
+from .reader import read_trace
 from .redaction import (
     REDACTED,
     normalize_privacy_options,
@@ -89,6 +93,9 @@ _OPTIONS = frozenset(
         "privacy",
         "limits",
         "links",
+        "network",
+        "video",
+        "checkpoint_on_navigation",
         "strict",
         "capture_timeout_ms",
         "commander_version",
@@ -138,7 +145,7 @@ def _normalize_links(links: Any) -> dict[str, Any] | None:
         output = os.fspath(output)
     if not isinstance(output, str) or output == "":
         raise ValueError("trace links require an output path")
-    return {"output": output, "include": links.get("include")}
+    return {"output": output, "include": links.get("include"), "dom": links.get("dom")}
 
 
 def _error_stack(error: Any) -> str | None:
@@ -189,6 +196,8 @@ class TraceRecorder:
         privacy: Any,
         limits: Any,
         links: Any,
+        network: Any,
+        video: Any,
         strict: bool,
         capture_timeout_ms: float | None,
         commander_version: str | None,
@@ -196,6 +205,11 @@ class TraceRecorder:
         now: Callable[[], float] | None,
         monotonic: Callable[[], float] | None,
     ) -> None:
+        self._network_options = network
+        self._network = NetworkRecorder(page, network, self.record, _note_through(log))
+        self._video_options = video
+        self._video: Recording | None = None
+        self._links_dom = links.get("dom") if isinstance(links, Mapping) else None
         self.mode = _normalize_mode(mode)
         dom = {_DOM_KEYS.get(key, key): value for key, value in dict(dom or {}).items()}
         self._dom = {**DEFAULT_DOM_OPTIONS, **dom}
@@ -241,6 +255,7 @@ class TraceRecorder:
                 self._links_sink = open_trace_links(
                     links_options["output"],
                     include=links_options["include"],
+                    dom=links_options["dom"],
                     bundle_path=self._bundle.root,
                     schemaVersion=TRACE_SCHEMA_VERSION,
                     mode=self.mode,
@@ -254,6 +269,10 @@ class TraceRecorder:
 
         self._stopped: dict[str, Any] | None = None
         self._stopping = False
+        self._stop_task: asyncio.Task[dict[str, Any]] | None = None
+        self._periodic: asyncio.Task[None] | None = None
+        self._navigation_tasks: set[asyncio.Task[Any]] = set()
+        self._capture_lock = asyncio.Lock()
         self._checkpoint_index = 0
         self._checkpoints: list[dict[str, Any]] = []
         self._detachers: list[Callable[[], Any]] = []
@@ -275,6 +294,15 @@ class TraceRecorder:
             self._links_sink.event(event)
 
     async def _start(self) -> None:
+        self._network.start()
+        if self._video_options:
+            from browser_commander.capture import start_recording
+
+            self._video = await start_recording(
+                self._page,
+                self._engine or "playwright",
+                **({} if self._video_options is True else self._video_options),
+            )
         self._detachers = attach_timeline_observers(
             commander=self._commander,
             driver=self._driver,
@@ -311,6 +339,16 @@ class TraceRecorder:
             await self.checkpoint(
                 name, actor="recorder", reason=TraceCheckpointReason.INITIAL
             )
+
+        if self._dom.get("mutations"):
+
+            async def drain_periodically() -> None:
+                while True:
+                    await asyncio.sleep(0.5)
+                    async with self._capture_lock:
+                        await self._mutations.drain(self._checkpoint_index)
+
+            self._periodic = asyncio.create_task(drain_periodically())
 
     # ------------------------------------------------------------------ state
 
@@ -399,6 +437,12 @@ class TraceRecorder:
             return None
 
     async def checkpoint(
+        self, name: str, actor: str | None = None, reason: str | None = None
+    ) -> dict[str, Any]:
+        async with self._capture_lock:
+            return await self._checkpoint(name, actor, reason)
+
+    async def _checkpoint(
         self,
         name: str,
         actor: str | None = None,
@@ -440,6 +484,10 @@ class TraceRecorder:
                         "html": self._dom.get("html"),
                         "liveControlState": self._dom.get("liveControlState"),
                         "openShadowRoots": self._dom.get("openShadowRoots"),
+                        "captureText": self._links_dom == "text",
+                        "ignoreSelectors": self._dom.get(
+                            "ignoreSelectors", self._dom.get("ignore_selectors", [])
+                        ),
                         "maxHtmlBytes": coalesce(self._limits.get("maxHtmlBytes"), 0),
                     },
                 ),
@@ -509,9 +557,59 @@ class TraceRecorder:
             ``{path, manifest, checkpoints, problems, links}``, plus
             ``discarded`` when the bundle was removed
         """
-        if self._stopped is not None:
-            return self._stopped
+        if self._stop_task is None:
+            self._stop_task = asyncio.create_task(self._finish_stop(discard, error))
+        return await asyncio.shield(self._stop_task)
 
+    async def _finish_stop(self, discard: bool, error: Any) -> dict[str, Any]:
+        try:
+            return await self._finish_stop_inner(discard, error)
+        except BaseException:
+            await self._abort()
+            raise
+
+    async def _abort(self) -> None:
+        self._stopping = True
+        if self._periodic:
+            self._periodic.cancel()
+            await asyncio.gather(self._periodic, return_exceptions=True)
+        with contextlib.suppress(Exception):
+            await self._network.stop()
+        if self._video:
+            with contextlib.suppress(Exception):
+                await self._video.stop()
+        with contextlib.suppress(Exception):
+            await self._mutations.stop()
+        for detach in reversed(self._detachers):
+            with contextlib.suppress(Exception):
+                detached = detach()
+                if hasattr(detached, "__await__"):
+                    await detached
+        self._detachers = []
+        if self._links_sink:
+            self._links_sink.discard()
+        self._bundle.abort()
+
+    async def _finish_stop_inner(self, discard: bool, error: Any) -> dict[str, Any]:
+        if self._periodic:
+            self._periodic.cancel()
+            await asyncio.gather(self._periodic, return_exceptions=True)
+        for detach in reversed(self._detachers):
+            try:
+                detached = detach()
+                if hasattr(detached, "__await__"):
+                    await detached
+            except Exception as detach_error:
+                self.note(f"could not detach a listener: {error_message(detach_error)}")
+        self._detachers = []
+        if self._navigation_tasks:
+            await asyncio.gather(*self._navigation_tasks)
+        await self._network.stop()
+        if self._video:
+            recording = await self._video.stop()
+            self._bundle.write_member(
+                "recording." + recording["format"], recording["bytes"]
+            )
         await self._mutations.drain(self._checkpoint_index)
         if error is not None:
             self.record(
@@ -572,6 +670,17 @@ class TraceRecorder:
         if self._links_sink is not None:
             self._links_sink.close(manifest, self._bundle.root)
 
+        if (
+            self._network_options
+            and isinstance(self._network_options, Mapping)
+            and self._network_options.get("har")
+        ):
+            target = self._network_options["har"]
+            write_har(
+                self._bundle.root,
+                read_trace(self._bundle.root).events,
+                target if isinstance(target, str) else None,
+            )
         result: dict[str, Any] = {
             "path": self._bundle.root,
             "manifest": manifest,
@@ -583,6 +692,10 @@ class TraceRecorder:
             "links": self.links,
         }
         self._stopped = result
+        if self._limits.get("gzip"):
+            from .storage import gzip_trace
+
+            gzip_trace(self._bundle.root)
 
         if discard:
             shutil.rmtree(self._bundle.root, ignore_errors=True)
@@ -617,6 +730,17 @@ async def start_trace(
         TypeError: For an unknown option
         ValueError: For an invalid mode, event source or output
     """
+    if (options.get("limits") or {}).get("rotate"):
+        from typing import cast
+
+        from .rolling import start_rolling
+
+        return cast(
+            "TraceRecorder",
+            await start_rolling(
+                {**options, "commander": commander, "page": page}, start_trace
+            ),
+        )
     unknown = sorted(set(options) - _OPTIONS)
     if unknown:
         raise TypeError(f"unknown trace option(s): {', '.join(unknown)}")
@@ -640,6 +764,8 @@ async def start_trace(
         privacy=options.get("privacy") or {},
         limits=options.get("limits") or {},
         links=options.get("links"),
+        network=options.get("network", False),
+        video=options.get("video", False),
         strict=bool(options.get("strict", False)),
         capture_timeout_ms=options.get("capture_timeout_ms", DEFAULT_CAPTURE_TIMEOUT),
         commander_version=options.get("commander_version"),
@@ -649,11 +775,22 @@ async def start_trace(
     )
     try:
         await recorder._start()
+        if options.get("checkpoint_on_navigation"):
+
+            def capture_navigation(*_args: Any) -> None:
+                task = asyncio.create_task(
+                    recorder.checkpoint(
+                        "navigation", actor="recorder", reason="navigation"
+                    )
+                )
+                recorder._navigation_tasks.add(task)
+                task.add_done_callback(recorder._navigation_tasks.discard)
+
+            page.on("load", capture_navigation)
+            recorder._detachers.append(
+                lambda: page.remove_listener("load", capture_navigation)
+            )
     except BaseException:
-        # A start that failed leaves nothing listening and nothing open.
-        for detach in reversed(recorder._detachers):
-            with contextlib.suppress(Exception):
-                detach()
-        recorder._bundle.abort()
+        await recorder._abort()
         raise
     return recorder

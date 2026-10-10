@@ -91,6 +91,8 @@ class LaunchOptions:
     ``"brave"`` or ``"chromium"``."""
     executable_path: str | None = None
     remote_debugging_port: int | None = None
+    keep_open: bool = False
+    idle_timeout_ms: int = 30 * 60 * 1000
     """Fixed CDP port for the real launch; a free one is reserved when omitted."""
     color_scheme: ColorScheme | None = None
     automation_parity: bool = True
@@ -564,7 +566,12 @@ async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
         ValueError: If the engine, launch mode or a restriction is invalid
     """
 
-    return await launch_browser_with_dependencies(options or LaunchOptions())
+    options = options or LaunchOptions()
+    if options.keep_open:
+        from browser_commander.browser.persistent_session import connect_or_launch
+
+        return await connect_or_launch(options)  # type: ignore[return-value]
+    return await launch_browser_with_dependencies(options)
 
 
 async def launch_browser_with_dependencies(

@@ -51,6 +51,8 @@
 //! - [`high_level`] - High-level DRY utilities
 
 pub mod browser;
+pub mod capture;
+mod capture_encoding;
 pub mod core;
 pub mod downloads;
 pub mod elements;

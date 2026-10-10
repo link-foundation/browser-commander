@@ -80,6 +80,10 @@ from browser_commander.browser.parity import (
     read_browser_version_page,
 )
 from browser_commander.browser.pdf import pdf
+from browser_commander.browser.persistent_session import (
+    PersistentSession,
+    connect_or_launch,
+)
 from browser_commander.browser.profile_directory import (
     create_temporary_user_data_dir,
     prepare_user_data_dir,
@@ -114,6 +118,14 @@ from browser_commander.browser.snapshot import (
 from browser_commander.browser.storage_state import (
     load_storage_state,
     save_storage_state,
+)
+from browser_commander.capture import (
+    Recording,
+    ScreenshotOptions,
+    UnsupportedCaptureError,
+    encode_animation,
+    screenshot,
+    start_recording,
 )
 from browser_commander.core.constants import CHROME_ARGS, TIMING
 
@@ -405,6 +417,7 @@ __all__ = [
     # Page trigger system
     "PageTriggerManager",
     "ParsedNdjson",
+    "PersistentSession",
     "PlaywrightAdapter",
     "PortRaceError",
     "ReadinessCheck",
@@ -412,6 +425,7 @@ __all__ = [
     "ReadinessStatus",
     "RealBrowserOptions",
     "RealBrowserResult",
+    "Recording",
     "RelayAddress",
     "RelayEvent",
     "RelayExtension",
@@ -421,6 +435,7 @@ __all__ = [
     "SafariSetupError",
     "SafariUnsupportedError",
     "SavedDownload",
+    "ScreenshotOptions",
     "ScrollConstraintError",
     "ScrollResult",
     "ScrollVerificationResult",
@@ -434,6 +449,7 @@ __all__ = [
     "TraceFiles",
     "TraceMode",
     "TraceOutcome",
+    "UnsupportedCaptureError",
     "WaitAfterActionResult",
     "WaitResult",
     "all_conditions",
@@ -461,6 +477,7 @@ __all__ = [
     "click_element",
     "compare_command_lines",
     "connect_browser",
+    "connect_or_launch",
     "count",
     "create_cdp_session",
     "create_download_manager",
@@ -481,6 +498,7 @@ __all__ = [
     "disables_automation_controlled",
     "dom_stable_for",
     "emulate_media",
+    "encode_animation",
     "evaluate",
     "extension_directory",
     "fill_text_area",
@@ -563,6 +581,7 @@ __all__ = [
     "safe_operation",
     "save_download",
     "save_storage_state",
+    "screenshot",
     # Scroll interactions
     "scroll_into_view",
     "scroll_into_view_if_needed",
@@ -570,6 +589,7 @@ __all__ = [
     "snapshot_user_data_dir",
     "stable_check",
     "start_process",
+    "start_recording",
     # Element content
     "text_content",
     "type_text",

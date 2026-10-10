@@ -128,6 +128,7 @@ async def count(
     page: Any,
     engine: EngineType,
     selector: str | Any,
+    visible: bool = False,
 ) -> int:
     """Get element count.
 
@@ -164,11 +165,17 @@ async def count(
             return result
 
         if engine == "playwright":
+            if visible:
+                return await page.locator(selector).evaluate_all(
+                    "elements => elements.filter(el => el.getClientRects().length && el.checkVisibility({visibilityProperty:true})).length"
+                )
             return await page.locator(selector).count()
         else:
             from selenium.webdriver.common.by import By
 
             elements = page.find_elements(By.CSS_SELECTOR, selector)
+            if visible:
+                return sum(element.is_displayed() for element in elements)
             return len(elements)
     except Exception as error:
         if is_navigation_error(error):

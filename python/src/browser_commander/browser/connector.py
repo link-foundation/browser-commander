@@ -32,6 +32,9 @@ class ConnectOptions:
     storage_state: StorageStateInput = None
     verbose: bool = False
     downloads: bool | Mapping[str, Any] | None = None
+    target_id: str | None = None
+    url: Any = None
+    single_tab: bool = False
     """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
     ``persist`` and ``conflict``."""
 
@@ -67,7 +70,9 @@ def _default_create_selenium(chrome_options: Any) -> Any:
     return webdriver.Chrome(options=chrome_options)
 
 
-async def pick_foreground_page(pages: Sequence[Any]) -> Any:
+async def pick_foreground_page(
+    pages: Sequence[Any], options: ConnectOptions | None = None
+) -> Any:
     """Pick the tab that is on screen.
 
     A browser attached after it started can already have several tabs - a
@@ -80,7 +85,39 @@ async def pick_foreground_page(pages: Sequence[Any]) -> Any:
         The visible page, else the first page, else ``None`` for no pages.
     """
 
+    targets = {}
     for page in pages:
+        session = None
+        try:
+            session = await page.context.new_cdp_session(page)
+            info = await session.send("Target.getTargetInfo")
+            targets[id(page)] = info["targetInfo"]["targetId"]
+            await session.send("Emulation.setFocusEmulationEnabled", {"enabled": False})
+        except Exception:
+            pass
+        finally:
+            if session is not None:
+                with contextlib.suppress(Exception):
+                    await session.detach()
+    selected = None
+    if options and (options.target_id or options.url):
+        for page in pages:
+            if options.target_id and targets.get(id(page)) != options.target_id:
+                continue
+            matcher = options.url
+            if matcher and not (
+                matcher(page.url)
+                if callable(matcher)
+                else matcher.search(page.url)
+                if hasattr(matcher, "search")
+                else matcher == page.url
+            ):
+                continue
+            selected = page
+            break
+        if selected is None:
+            raise ValueError("No tab matches the requested target_id/URL")
+    for page in [] if selected is not None else pages:
         evaluate = getattr(page, "evaluate", None)
         if not callable(evaluate):
             continue
@@ -91,8 +128,15 @@ async def pick_foreground_page(pages: Sequence[Any]) -> Any:
         except Exception:
             state = None
         if state == "visible":
-            return page
-    return pages[0] if pages else None
+            selected = page
+            break
+    if selected is None and pages:
+        selected = pages[0]
+    if options and options.single_tab and selected is not None:
+        for page in pages:
+            if page is not selected:
+                await page.close()
+    return selected
 
 
 async def _connect_playwright(
@@ -117,7 +161,10 @@ async def _connect_playwright(
             msg = "Connected Playwright browser has no default context"
             raise RuntimeError(msg)
         context = browser.contexts[0]
-        page = await pick_foreground_page(context.pages) or await context.new_page()
+        page = (
+            await pick_foreground_page(context.pages, options)
+            or await context.new_page()
+        )
         await restore_storage_state("playwright", context, page, options.storage_state)
         if options.seed_cookies:
             await context.add_cookies(options.seed_cookies)
@@ -170,6 +217,39 @@ async def _connect_selenium(
     chrome_options = Options()
     chrome_options.debugger_address = _debugger_address(endpoint)
     browser = create_selenium(chrome_options)
+    if options.target_id or options.url or options.single_tab:
+        original = browser.current_window_handle
+        selected = original
+        if options.target_id or options.url:
+            selected = None
+            for handle in browser.window_handles:
+                if options.target_id and handle not in (
+                    options.target_id,
+                    "CDwindow-" + options.target_id,
+                ):
+                    continue
+                browser.switch_to.window(handle)
+                actual = browser.current_url
+                match = (
+                    options.url(actual)
+                    if callable(options.url)
+                    else options.url.search(actual)
+                    if hasattr(options.url, "search")
+                    else actual == options.url
+                )
+                if options.url and not match:
+                    continue
+                selected = handle
+                break
+            if selected is None:
+                browser.switch_to.window(original)
+                raise ValueError("No tab matches the requested target_id or URL")
+        if options.single_tab:
+            for handle in list(browser.window_handles):
+                if handle != selected:
+                    browser.switch_to.window(handle)
+                    browser.close()
+        browser.switch_to.window(selected)
     await restore_storage_state("selenium", browser, browser, options.storage_state)
     for cookie in options.seed_cookies:
         browser.execute_cdp_cmd("Network.setCookie", cookie)

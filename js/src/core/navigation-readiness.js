@@ -12,6 +12,7 @@ import {
   networkIdleFor,
   runReadinessChecks,
   urlStableFor,
+  stableCheck,
 } from './readiness.js';
 
 /**
@@ -113,7 +114,7 @@ export function createReadinessWaiter(options = {}) {
     let result;
     try {
       result = await runReadinessChecks({
-        checks: checks ?? defaultReadinessChecks(config),
+        checks: checks ?? checksForReadiness(opts.readyOn, config),
         deadline,
         context: {
           page,
@@ -135,7 +136,7 @@ export function createReadinessWaiter(options = {}) {
 
     if (outcome.ready) {
       if (notify()) {
-        onReady();
+        onReady(opts.readyOn ?? 'networkidle');
       }
       log.debug(() => `✅ Page ready after ${outcome.elapsedMs}ms (${reason})`);
     } else {
@@ -154,4 +155,31 @@ export function createReadinessWaiter(options = {}) {
   }
 
   return { waitForReady, getAdapter };
+}
+
+export function checksForReadiness(readyOn = 'networkidle', config) {
+  if (readyOn === 'networkidle') {
+    return defaultReadinessChecks(config);
+  }
+  if (readyOn === 'urlchange') {
+    return [];
+  }
+  if (!['domcontentloaded', 'load'].includes(readyOn)) {
+    throw new RangeError(`Unknown readyOn: ${readyOn}`);
+  }
+  return [
+    stableCheck({
+      name: readyOn,
+      stableForMs: 0,
+      intervalMs: 50,
+      sample: async ({ page }) => {
+        const state = await page.evaluate(() => document.readyState);
+        return {
+          stable:
+            readyOn === 'load' ? state === 'complete' : state !== 'loading',
+          detail: { state },
+        };
+      },
+    }),
+  ];
 }

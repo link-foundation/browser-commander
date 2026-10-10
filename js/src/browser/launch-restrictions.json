@@ -3,16 +3,12 @@
     {
       "id": "no-first-run",
       "description": "Skip first-run UI with the switch instead of the First Run sentinel file Browser Commander already writes.",
-      "args": [
-        "--no-first-run"
-      ]
+      "args": ["--no-first-run"]
     },
     {
       "id": "no-default-browser-check",
       "description": "Hide the \"Chrome isn't your default browser\" infobar that a hand-started Chrome shows.",
-      "args": [
-        "--no-default-browser-check"
-      ]
+      "args": ["--no-default-browser-check"]
     },
     {
       "id": "no-crash-restore",
@@ -22,30 +18,22 @@
         "--hide-crash-restore-bubble",
         "--disable-crash-restore"
       ],
-      "disableFeatures": [
-        "SessionRestoreInfobar"
-      ]
+      "disableFeatures": ["SessionRestoreInfobar"]
     },
     {
       "id": "no-infobars",
       "description": "Legacy switch; current Chrome ignores it and still shows the unsupported-flag infobar.",
-      "args": [
-        "--disable-infobars"
-      ]
+      "args": ["--disable-infobars"]
     },
     {
       "id": "basic-password-store",
       "description": "Store passwords and cookie keys unencrypted instead of in libsecret/KWallet. Real-profile data cannot be decrypted or migrated.",
-      "args": [
-        "--password-store=basic"
-      ]
+      "args": ["--password-store=basic"]
     },
     {
       "id": "mock-keychain",
       "description": "Use a mock macOS Keychain. Real-profile data cannot be decrypted or migrated.",
-      "args": [
-        "--use-mock-keychain"
-      ]
+      "args": ["--use-mock-keychain"]
     },
     {
       "id": "no-extensions",
@@ -59,9 +47,7 @@
     {
       "id": "no-sync",
       "description": "Disable Chrome sync.",
-      "args": [
-        "--disable-sync"
-      ]
+      "args": ["--disable-sync"]
     },
     {
       "id": "no-google-services",
@@ -75,9 +61,7 @@
     {
       "id": "no-translate",
       "description": "Disable the Translate feature and its bubble.",
-      "disableFeatures": [
-        "Translate"
-      ],
+      "disableFeatures": ["Translate"],
       "preferences": {
         "translate": {
           "enabled": false
@@ -87,37 +71,27 @@
     {
       "id": "no-component-update",
       "description": "Disable component updates (Widevine, CRLSets, Safe Browsing lists).",
-      "args": [
-        "--disable-component-update"
-      ]
+      "args": ["--disable-component-update"]
     },
     {
       "id": "no-background-networking",
       "description": "Disable background networking such as variations and update checks.",
-      "args": [
-        "--disable-background-networking"
-      ]
+      "args": ["--disable-background-networking"]
     },
     {
       "id": "no-popup-blocking",
       "description": "Never block popups; pages can observe this.",
-      "args": [
-        "--disable-popup-blocking"
-      ]
+      "args": ["--disable-popup-blocking"]
     },
     {
       "id": "no-phishing-detection",
       "description": "Disable client-side phishing detection.",
-      "args": [
-        "--disable-client-side-phishing-detection"
-      ]
+      "args": ["--disable-client-side-phishing-detection"]
     },
     {
       "id": "no-https-upgrades",
       "description": "Disable automatic HTTPS upgrades.",
-      "disableFeatures": [
-        "HttpsUpgrades"
-      ]
+      "disableFeatures": ["HttpsUpgrades"]
     },
     {
       "id": "no-media-router",
@@ -131,9 +105,7 @@
     {
       "id": "no-lens",
       "description": "Disable the Lens overlay.",
-      "disableFeatures": [
-        "LensOverlay"
-      ]
+      "disableFeatures": ["LensOverlay"]
     },
     {
       "id": "no-background-throttling",
@@ -147,23 +119,17 @@
     {
       "id": "no-back-forward-cache",
       "description": "Disable the back/forward cache; pageshow.persisted is always false.",
-      "args": [
-        "--disable-back-forward-cache"
-      ]
+      "args": ["--disable-back-forward-cache"]
     },
     {
       "id": "srgb-color-profile",
       "description": "Force the sRGB colour profile; changes rendered colours.",
-      "args": [
-        "--force-color-profile=srgb"
-      ]
+      "args": ["--force-color-profile=srgb"]
     },
     {
       "id": "start-maximized",
       "description": "Start with a maximized window.",
-      "args": [
-        "--start-maximized"
-      ]
+      "args": ["--start-maximized"]
     },
     {
       "id": "no-save-bubbles",

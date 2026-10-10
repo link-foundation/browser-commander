@@ -1,6 +1,6 @@
 import { TIMING } from '../core/constants.js';
 import { isNavigationError } from '../core/navigation-safety.js';
-import { getLocatorOrElement } from './locators.js';
+import { getLocatorOrElement, requireSelector } from './locators.js';
 
 /**
  * Check if element is visible
@@ -13,9 +13,7 @@ import { getLocatorOrElement } from './locators.js';
 export async function isVisible(options = {}) {
   const { page, engine, selector } = options;
 
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
+  requireSelector(selector);
 
   try {
     if (engine === 'playwright') {
@@ -62,9 +60,7 @@ export async function isVisible(options = {}) {
 export async function isEnabled(options = {}) {
   const { page, engine, selector, disabledClasses = ['disabled'] } = options;
 
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
+  requireSelector(selector);
 
   try {
     if (engine === 'playwright') {
@@ -119,9 +115,7 @@ export async function isEnabled(options = {}) {
 export async function count(options = {}) {
   const { page, engine, selector } = options;
 
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
+  requireSelector(selector);
 
   try {
     // Handle Puppeteer text selectors
@@ -150,9 +144,37 @@ export async function count(options = {}) {
     }
 
     if (engine === 'playwright') {
+      if (options.visible) {
+        return await page
+          .locator(selector)
+          .evaluateAll(
+            (elements) =>
+              elements.filter(
+                (element) =>
+                  element.getClientRects().length > 0 &&
+                  element.checkVisibility({ visibilityProperty: true })
+              ).length
+          );
+      }
       return await page.locator(selector).count();
     } else {
       const elements = await page.$$(selector);
+      if (options.visible) {
+        let visible = 0;
+        for (const element of elements) {
+          if (
+            await page.evaluate(
+              (element) =>
+                element.getClientRects().length > 0 &&
+                element.checkVisibility({ visibilityProperty: true }),
+              element
+            )
+          ) {
+            visible += 1;
+          }
+        }
+        return visible;
+      }
       return elements.length;
     }
   } catch (error) {

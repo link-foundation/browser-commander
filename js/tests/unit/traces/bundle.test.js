@@ -232,6 +232,22 @@ describe('trace bundle writer (issue #87)', () => {
     assert.strictEqual(manifest.outcome, TRACE_OUTCOME.COMPLETE);
   });
 
+  it('retains every periodic drain in the same checkpoint interval', async () => {
+    const bundle = await open();
+    await bundle.writeMutations(1, [{ records: ['first'] }]);
+    await bundle.writeMutations(1, [{ records: ['second'] }]);
+    const lines = (
+      await fs.readFile(path.join(bundle.root, 'mutations/0001.ndjson'), 'utf8')
+    )
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.deepStrictEqual(lines, [
+      { records: ['first'] },
+      { records: ['second'] },
+    ]);
+  });
+
   it('should record a dropped member even under a tiny resource limit', async () => {
     // The record of a gap must not be the next thing that falls through it.
     const bundle = await open({ limits: { maxResourceBytes: 16 } });

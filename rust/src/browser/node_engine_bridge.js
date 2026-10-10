@@ -1,4 +1,4 @@
-import readline from "node:readline";
+import readline from 'node:readline';
 
 let engineName = null;
 let browser = null;
@@ -13,7 +13,7 @@ const rl = readline.createInterface({
 
 function log(message) {
   if (verbose) {
-    console.error(`[browser-commander:${engineName ?? "bridge"}] ${message}`);
+    console.error(`[browser-commander:${engineName ?? 'bridge'}] ${message}`);
   }
 }
 
@@ -22,7 +22,7 @@ function serializeResult(value) {
 }
 
 function compactObject(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return value;
   }
 
@@ -32,7 +32,7 @@ function compactObject(value) {
     .filter(([, entryValue]) => {
       return (
         !entryValue ||
-        typeof entryValue !== "object" ||
+        typeof entryValue !== 'object' ||
         Array.isArray(entryValue) ||
         Object.keys(entryValue).length > 0
       );
@@ -47,7 +47,9 @@ function send(response) {
 
 function ensurePage() {
   if (!page) {
-    throw new Error("Browser page is not initialized. Send launch or connect first.");
+    throw new Error(
+      'Browser page is not initialized. Send launch or connect first.'
+    );
   }
   return page;
 }
@@ -55,7 +57,7 @@ function ensurePage() {
 function chromeArgs(params) {
   const args = [...(params.args ?? [])];
   if (params.sandbox === false) {
-    for (const flag of ["--no-sandbox", "--disable-setuid-sandbox"]) {
+    for (const flag of ['--no-sandbox', '--disable-setuid-sandbox']) {
       if (!args.includes(flag)) {
         args.push(flag);
       }
@@ -88,18 +90,65 @@ function browserEnv(params) {
 // A fresh profile can open a tab (What's New, a welcome page) that takes the
 // foreground after startup, so the tab the person would be looking at wins
 // over the first one in creation order.
-async function pickForegroundPage(pages) {
-  for (const candidate of pages) {
+async function pickForegroundPage(pages, options = {}) {
+  const targets = new Map();
+  // Playwright emulates focus on every attached tab. Remove the emulation
+  // before observing visibility; DevTools target order has no active-tab flag.
+  for (const page of pages) {
+    let session;
     try {
-      const state = await candidate.evaluate(() => document.visibilityState);
-      if (state === "visible") {
-        return candidate;
-      }
-    } catch (error) {
-      log(`visibilityState failed: ${error.message}`);
+      session =
+        (await page.context?.().newCDPSession?.(page)) ??
+        (await page.target?.().createCDPSession?.());
+      if (!session) continue;
+      const { targetInfo } = await session.send('Target.getTargetInfo');
+      targets.set(page, targetInfo.targetId);
+      await session.send('Emulation.setFocusEmulationEnabled', {
+        enabled: false,
+      });
+    } catch {
+      // Non-Chromium engines do not expose CDP. Explicit URL matching still
+      // works there, and normal visibility is not affected by this emulation.
+    } finally {
+      await session?.detach?.().catch(() => {});
     }
   }
-  return pages[0];
+  let selected;
+  if (options.targetId || options.url) {
+    selected = pages.find((page) => {
+      if (options.targetId && targets.get(page) !== options.targetId)
+        return false;
+      const url = page.url();
+      const matcher = options.url;
+      if (matcher instanceof RegExp) {
+        matcher.lastIndex = 0;
+        return matcher.test(url);
+      }
+      if (typeof matcher === 'function') return matcher(url);
+      return !matcher || matcher === url;
+    });
+    if (!selected)
+      throw new RangeError('No tab matches the requested targetId/URL');
+  }
+  if (!selected) {
+    for (const page of pages) {
+      if (typeof page?.evaluate !== 'function') {
+        continue;
+      }
+      const state = await page
+        .evaluate(() => document.visibilityState)
+        .catch(() => null);
+      if (state === 'visible') {
+        selected = page;
+        break;
+      }
+    }
+  }
+  selected ??= pages[0];
+  if (options.singleTab && selected) {
+    for (const page of pages) if (page !== selected) await page.close();
+  }
+  return selected;
 }
 
 function elementInfo(selector) {
@@ -111,8 +160,8 @@ function elementInfo(selector) {
   const rect = el.getBoundingClientRect();
   const style = window.getComputedStyle(el);
   const isVisible =
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
+    style.display !== 'none' &&
+    style.visibility !== 'hidden' &&
     rect.width > 0 &&
     rect.height > 0;
 
@@ -126,7 +175,7 @@ function elementInfo(selector) {
 }
 
 async function launchPlaywright(params) {
-  const { chromium } = await import("playwright");
+  const { chromium } = await import('playwright');
   const contextOptions = {
     headless: params.headless,
     slowMo: params.slowMo,
@@ -152,7 +201,7 @@ async function launchPlaywright(params) {
 
   context = await chromium.launchPersistentContext(
     params.userDataDir,
-    contextOptions,
+    contextOptions
   );
   const pages = context.pages();
   page = pages[0] ?? (await context.newPage());
@@ -160,7 +209,7 @@ async function launchPlaywright(params) {
 }
 
 async function launchPuppeteer(params) {
-  const puppeteer = await import("puppeteer");
+  const puppeteer = await import('puppeteer');
   const launchOptions = {
     headless: params.headless,
     slowMo: params.slowMo,
@@ -192,27 +241,27 @@ async function launchPuppeteer(params) {
 }
 
 async function connectPlaywright(params) {
-  const { chromium } = await import("playwright");
+  const { chromium } = await import('playwright');
   browser = await chromium.connectOverCDP(
     params.cdpEndpoint ?? params.wsEndpoint,
     compactObject({
       slowMo: params.slowMo,
       timeout: params.timeout,
-    }),
+    })
   );
   context = browser.contexts()[0];
   if (!context) {
-    throw new Error("Connected browser did not expose a default context");
+    throw new Error('Connected browser did not expose a default context');
   }
   const pages = context.pages();
-  page = (await pickForegroundPage(pages)) ?? (await context.newPage());
+  page = (await pickForegroundPage(pages, params)) ?? (await context.newPage());
   if (params.seedCookies?.length) {
     await context.addCookies(params.seedCookies);
   }
 }
 
 async function connectPuppeteer(params) {
-  const puppeteer = await import("puppeteer");
+  const puppeteer = await import('puppeteer');
   browser = await puppeteer.default.connect({
     ...compactObject({
       browserURL: params.cdpEndpoint,
@@ -224,7 +273,7 @@ async function connectPuppeteer(params) {
     defaultViewport: null,
   });
   const pages = await browser.pages();
-  page = (await pickForegroundPage(pages)) ?? (await browser.newPage());
+  page = (await pickForegroundPage(pages, params)) ?? (await browser.newPage());
   if (params.seedCookies?.length) {
     await page.setCookie(...params.seedCookies);
   }
@@ -232,20 +281,20 @@ async function connectPuppeteer(params) {
 
 async function applyColorScheme(colorScheme) {
   const currentPage = ensurePage();
-  if (engineName === "playwright") {
+  if (engineName === 'playwright') {
     await currentPage.emulateMedia({ colorScheme });
   } else {
     await currentPage.emulateMediaFeatures(
       colorScheme === null
         ? []
-        : [{ name: "prefers-color-scheme", value: colorScheme }],
+        : [{ name: 'prefers-color-scheme', value: colorScheme }]
     );
   }
 }
 
 function restoreOriginLocalStorage(origins) {
   const entry = origins.find(
-    (item) => item.origin === globalThis.location.origin,
+    (item) => item.origin === globalThis.location.origin
   );
   if (!entry) return;
   for (const item of entry.localStorage) {
@@ -256,18 +305,28 @@ function restoreOriginLocalStorage(origins) {
 async function restoreStorageState(state) {
   const cookies = state.cookies ?? [];
   const origins = state.origins ?? [];
-  if (engineName === "playwright") {
+  if (engineName === 'playwright') {
     if (cookies.length) await context.addCookies(cookies);
     if (origins.length) {
       await context.addInitScript(restoreOriginLocalStorage, origins);
       await Promise.all(
-        context.pages().map((current) =>
-          current.evaluate(restoreOriginLocalStorage, origins),
-        ),
+        context
+          .pages()
+          .map((current) =>
+            current.evaluate(restoreOriginLocalStorage, origins)
+          )
       );
     }
   } else {
-    if (cookies.length) await page.browserContext().setCookie(...cookies.map(({expires, ...cookie}) => ({ ...cookie, ...(expires > 0 ? {expires} : {}) })));
+    if (cookies.length)
+      await page
+        .browserContext()
+        .setCookie(
+          ...cookies.map(({ expires, ...cookie }) => ({
+            ...cookie,
+            ...(expires > 0 ? { expires } : {}),
+          }))
+        );
     if (origins.length) {
       await page.evaluateOnNewDocument(restoreOriginLocalStorage, origins);
       await page.evaluate(restoreOriginLocalStorage, origins);
@@ -276,16 +335,16 @@ async function restoreStorageState(state) {
 }
 
 async function exportStorageState() {
-  if (engineName === "playwright") return context.storageState();
+  if (engineName === 'playwright') return context.storageState();
   const cookies = await page.browserContext().cookies();
   const origin = new URL(page.url()).origin;
   const origins = [];
-  if (origin !== "null") {
+  if (origin !== 'null') {
     const localStorage = await page.evaluate(() =>
       Array.from({ length: globalThis.localStorage.length }, (_, index) => {
         const name = globalThis.localStorage.key(index);
         return { name, value: globalThis.localStorage.getItem(name) };
-      }),
+      })
     );
     origins.push({ origin, localStorage });
   }
@@ -296,9 +355,9 @@ async function handleLaunch(params) {
   engineName = params.engine;
   verbose = Boolean(params.verbose);
 
-  if (engineName === "playwright") {
+  if (engineName === 'playwright') {
     await launchPlaywright(params);
-  } else if (engineName === "puppeteer") {
+  } else if (engineName === 'puppeteer') {
     await launchPuppeteer(params);
   } else {
     throw new Error(`Unsupported bridge engine: ${engineName}`);
@@ -317,9 +376,9 @@ async function handleConnect(params) {
   engineName = params.engine;
   verbose = Boolean(params.verbose);
 
-  if (engineName === "playwright") {
+  if (engineName === 'playwright') {
     await connectPlaywright(params);
-  } else if (engineName === "puppeteer") {
+  } else if (engineName === 'puppeteer') {
     await connectPuppeteer(params);
   } else {
     throw new Error(`Unsupported bridge engine: ${engineName}`);
@@ -344,43 +403,56 @@ async function handleConnect(params) {
 
 async function handleCommand(method, params) {
   switch (method) {
-    case "launch":
+    case 'launch':
       return await handleLaunch(params);
-    case "connect":
+    case 'connect':
       return await handleConnect(params);
-    case "restoreStorageState":
+    case 'restoreStorageState':
       await restoreStorageState(params.state);
       return null;
-    case "deleteCookies":
-      if (engineName === "playwright") {
-        for (const {name, domain, path} of params.cookies) await context.clearCookies({name, domain, path});
+    case 'deleteCookies':
+      if (engineName === 'playwright') {
+        for (const { name, domain, path } of params.cookies)
+          await context.clearCookies({ name, domain, path });
       } else await page.browserContext().deleteCookie(...params.cookies);
       return null;
-    case "exportStorageState":
+    case 'exportStorageState':
       return await exportStorageState();
-    case "close":
+    case 'close':
       if (browser) {
         await browser.close();
       }
       return null;
-    case "url":
+    case 'detach':
+      if (browser) await (engineName === 'playwright' ? browser.close() : browser.disconnect());
+      browser = null;
+      return null;
+    case 'targetId': {
+      const cdp = engineName === 'playwright' ? await context.newCDPSession(page) : await page.target().createCDPSession();
+      try {return (await cdp.send('Target.getTargetInfo')).targetInfo.targetId;}
+      finally {await cdp.detach();}
+    }
+    case 'url':
       return ensurePage().url();
-    case "goto":
+    case 'goto':
       await ensurePage().goto(params.url, {
-        waitUntil: params.waitUntil === "networkidle" ? "networkidle0" : (params.waitUntil ?? "load"),
+        waitUntil:
+          params.waitUntil === 'networkidle'
+            ? 'networkidle0'
+            : (params.waitUntil ?? 'load'),
         ...(params.timeout === undefined ? {} : { timeout: params.timeout }),
       });
       return null;
-    case "querySelector":
+    case 'querySelector':
       return await ensurePage().evaluate(elementInfo, params.selector);
-    case "querySelectorAll":
+    case 'querySelectorAll':
       return await ensurePage().evaluate((selector) => {
         return Array.from(document.querySelectorAll(selector), (el) => {
           const rect = el.getBoundingClientRect();
           const style = window.getComputedStyle(el);
           const isVisible =
-            style.display !== "none" &&
-            style.visibility !== "hidden" &&
+            style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
             rect.width > 0 &&
             rect.height > 0;
 
@@ -395,64 +467,64 @@ async function handleCommand(method, params) {
           };
         });
       }, params.selector);
-    case "count":
+    case 'count':
       return await ensurePage().evaluate(
         (selector) => document.querySelectorAll(selector).length,
-        params.selector,
+        params.selector
       );
-    case "click":
+    case 'click':
       await ensurePage().click(params.selector);
       return null;
-    case "fill":
-      if (engineName === "playwright") {
+    case 'fill':
+      if (engineName === 'playwright') {
         await ensurePage().fill(params.selector, params.text);
       } else {
         await ensurePage().$eval(
           params.selector,
           (el, text) => {
             el.value = text;
-            el.dispatchEvent(new Event("input", { bubbles: true }));
-            el.dispatchEvent(new Event("change", { bubbles: true }));
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
           },
-          params.text,
+          params.text
         );
       }
       return null;
-    case "typeText":
+    case 'typeText':
       await ensurePage().focus(params.selector);
       await ensurePage().keyboard.type(params.text);
       return null;
-    case "textContent":
+    case 'textContent':
       return await ensurePage().evaluate((selector) => {
         const el = document.querySelector(selector);
         return el ? el.textContent : null;
       }, params.selector);
-    case "inputValue":
+    case 'inputValue':
       return await ensurePage().evaluate((selector) => {
         const el = document.querySelector(selector);
-        return el && "value" in el ? el.value : null;
+        return el && 'value' in el ? el.value : null;
       }, params.selector);
-    case "getAttribute":
+    case 'getAttribute':
       return await ensurePage().evaluate(
         ({ selector, attribute }) => {
           const el = document.querySelector(selector);
           return el ? el.getAttribute(attribute) : null;
         },
-        { selector: params.selector, attribute: params.attribute },
+        { selector: params.selector, attribute: params.attribute }
       );
-    case "isVisible":
+    case 'isVisible':
       return Boolean(
-        (await ensurePage().evaluate(elementInfo, params.selector))?.isVisible,
+        (await ensurePage().evaluate(elementInfo, params.selector))?.isVisible
       );
-    case "isEnabled":
+    case 'isEnabled':
       return await ensurePage().evaluate((selector) => {
         const el = document.querySelector(selector);
         return el ? !el.disabled : false;
       }, params.selector);
-    case "waitForSelector":
-      if (engineName === "playwright") {
+    case 'waitForSelector':
+      if (engineName === 'playwright') {
         await ensurePage().waitForSelector(params.selector, {
-          state: "visible",
+          state: 'visible',
           timeout: params.timeoutMs,
         });
       } else {
@@ -462,21 +534,22 @@ async function handleCommand(method, params) {
         });
       }
       return null;
-    case "scrollIntoView":
+    case 'scrollIntoView':
       await ensurePage().evaluate((selector) => {
         const el = document.querySelector(selector);
         if (!el) {
           throw new Error(`Element not found: ${selector}`);
         }
-        el.scrollIntoView({ block: "center", inline: "center" });
+        el.scrollIntoView({ block: 'center', inline: 'center' });
       }, params.selector);
       return null;
-    case "readBrowserVersionPage": {
+    case 'readBrowserVersionPage': {
       const versionPage = await (context ?? browser).newPage();
       try {
-        await versionPage.goto("chrome://version");
-        const ready = () => document.getElementById("command_line")?.textContent;
-        if (engineName === "playwright") {
+        await versionPage.goto('chrome://version');
+        const ready = () =>
+          document.getElementById('command_line')?.textContent;
+        if (engineName === 'playwright') {
           await versionPage.waitForFunction(ready, null, { timeout: 10000 });
         } else {
           await versionPage.waitForFunction(ready, { timeout: 10000 });
@@ -486,39 +559,39 @@ async function handleCommand(method, params) {
         await versionPage.close();
       }
     }
-    case "evaluate":
+    case 'evaluate':
       return serializeResult(await ensurePage().evaluate(params.script));
-    case "screenshot":
-      return Buffer.from(await ensurePage().screenshot()).toString("base64");
-    case "pdf":
+    case 'screenshot':
+      return Buffer.from(await ensurePage().screenshot()).toString('base64');
+    case 'pdf':
       return Buffer.from(
-        await ensurePage().pdf(compactObject(params)),
-      ).toString("base64");
-    case "bringToFront":
+        await ensurePage().pdf(compactObject(params))
+      ).toString('base64');
+    case 'bringToFront':
       await ensurePage().bringToFront();
       return null;
-    case "waitForNavigation":
-      if (engineName === "playwright") {
-        await ensurePage().waitForLoadState("load", {
+    case 'waitForNavigation':
+      if (engineName === 'playwright') {
+        await ensurePage().waitForLoadState('load', {
           timeout: params.timeoutMs,
         });
       } else {
         await ensurePage().waitForNavigation({
           timeout: params.timeoutMs,
-          waitUntil: "load",
+          waitUntil: 'load',
         });
       }
       return null;
-    case "keyboardPress":
+    case 'keyboardPress':
       await ensurePage().keyboard.press(params.key);
       return null;
-    case "keyboardType":
+    case 'keyboardType':
       await ensurePage().keyboard.type(params.text);
       return null;
-    case "keyboardDown":
+    case 'keyboardDown':
       await ensurePage().keyboard.down(params.key);
       return null;
-    case "keyboardUp":
+    case 'keyboardUp':
       await ensurePage().keyboard.up(params.key);
       return null;
     default:
@@ -526,7 +599,7 @@ async function handleCommand(method, params) {
   }
 }
 
-rl.on("line", async (line) => {
+rl.on('line', async (line) => {
   let request;
   try {
     request = JSON.parse(line);
@@ -541,7 +614,7 @@ rl.on("line", async (line) => {
   }
 });
 
-process.on("SIGTERM", async () => {
+process.on('SIGTERM', async () => {
   try {
     if (browser) {
       await browser.close();

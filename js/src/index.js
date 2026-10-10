@@ -18,3 +18,5 @@ export {
 
 // Re-export all public APIs from exports module
 export * from './exports.js';
+export * from './capture/index.js';
+export { connectOrLaunch } from './browser/persistent-session.js';

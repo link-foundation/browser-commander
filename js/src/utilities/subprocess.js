@@ -1,5 +1,37 @@
 import { ProcessRunner } from 'command-stream/process-runner';
 
+/** Start an explicitly persistent process, with no parent-owned pipes or signal forwarding. */
+export async function startDetachedProcess(file, args = [], options = {}) {
+  const runner = runnerFor(file, args, { ...options, capture: false });
+  runner.start();
+  await new Promise((resolve, reject) => {
+    runner.child.once('spawn', resolve);
+    runner.child.once('error', reject);
+  });
+  const child = runner.child;
+  // command-stream 1.x starts noninteractive children in their own process
+  // group. Release its controller-owned cancellation registry while retaining
+  // the child's exit listeners. Keep this adapter isolated until it exposes a
+  // public detach operation; normal subprocesses retain managed cancellation.
+  runner._child = null;
+  runner._abortController = null;
+  runner.finished = true;
+  runner._cleanup();
+  Promise.resolve(runner).catch(() => {});
+  child.stderrTail = '';
+  child.stderr?.on('data', (chunk) => {
+    child.stderrTail = (child.stderrTail + String(chunk)).slice(-8192);
+  });
+  child.on('error', (error) => {
+    child.spawnError = error;
+  });
+  child.unref();
+  child.stdout?.unref?.();
+  child.stderr?.unref?.();
+  child.stdin?.unref?.();
+  return child;
+}
+
 /**
  * Every subprocess Browser Commander starts - browsers, WebDriver servers, the
  * engine bridge, credential tools (`security`, `secret-tool`, `kwallet-query`,

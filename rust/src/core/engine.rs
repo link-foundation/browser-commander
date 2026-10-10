@@ -214,6 +214,11 @@ pub struct PreClickState {
 /// record.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TraceEngineEvent {
+    /// Opt-in redacted network metadata.
+    Network {
+        kind: String,
+        payload: serde_json::Value,
+    },
     /// A frame committed a navigation.
     Navigated {
         /// Whether it was the top-level frame.
@@ -308,6 +313,11 @@ pub trait EngineAdapter: Send + Sync {
 
     /// Query for all matching elements.
     async fn query_selector_all(&self, selector: &str) -> Result<Vec<ElementInfo>, EngineError>;
+
+    /// Document identity for recognizing same-URL navigations. Test adapters may omit it.
+    async fn document_identity(&self) -> Result<Option<serde_json::Value>, EngineError> {
+        Ok(None)
+    }
 
     /// Count matching elements.
     async fn count(&self, selector: &str) -> Result<usize, EngineError>;
@@ -406,6 +416,18 @@ pub trait EngineAdapter: Send + Sync {
     /// Take a screenshot.
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError>;
 
+    /// Capture with typed options; unsupported capabilities are never ignored.
+    async fn screenshot_with_options(
+        &self,
+        options: &crate::capture::ScreenshotOptions,
+    ) -> Result<Vec<u8>, EngineError> {
+        options.validate()?;
+        if options != &crate::capture::ScreenshotOptions::default() {
+            return Err(crate::capture::unsupported(self, "screenshot options"));
+        }
+        self.screenshot().await
+    }
+
     /// Generate a PDF of the current page.
     ///
     /// Only supported by Chromium-based engines (chromiumoxide).
@@ -454,8 +476,31 @@ pub trait EngineAdapter: Send + Sync {
 
     /// A stream of page activity for a trace recorder, or `None` when the
     /// engine does not report any (the default).
+    /// Opt-in network events; unsupported engines fail before a bundle opens.
+    async fn trace_network_events(
+        &self,
+        _options: crate::traces::network::NetworkTraceOptions,
+    ) -> Result<BoxStream<'static, TraceEngineEvent>, EngineError> {
+        Err(EngineError::Unsupported {
+            browser: self.engine_type().to_string(),
+            feature: "network tracing".into(),
+        })
+    }
+
     async fn trace_events(&self) -> Option<BoxStream<'static, TraceEngineEvent>> {
         None
+    }
+
+    /// Disconnect a controller without terminating the externally managed browser.
+    async fn detach(&self) -> Result<(), EngineError> {
+        Err(EngineError::Unsupported {
+            browser: self.engine_type().to_string(),
+            feature: "detach".into(),
+        })
+    }
+
+    async fn target_id(&self) -> Result<Option<String>, EngineError> {
+        Ok(None)
     }
 }
 

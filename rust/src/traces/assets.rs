@@ -22,6 +22,8 @@ pub struct CaptureAssets {
     pub drain_mutations: String,
     /// `function stopMutationRecorderInPage(globalName)`.
     pub stop_mutation_recorder: String,
+    /// Browser-native video encoding on a detached canvas.
+    pub encode_video: String,
 }
 
 /// The viewer's stylesheet and script.

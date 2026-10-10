@@ -44,6 +44,9 @@ const LAUNCH_PASSTHROUGH = Object.freeze([
   'driverPath',
   'bidi',
   'seedCookies',
+  'disableFeatures',
+  'keepOpen',
+  'idleTimeoutMs',
 ]);
 
 /** Validate an engine name, defaulting to Playwright. */
@@ -130,11 +133,14 @@ export function sessionFromLaunch(engine, launched) {
     browser: playwright
       ? (launched.connectedBrowser ?? handle?.browser?.() ?? null)
       : handle,
-    context: playwright ? handle : (handle?.defaultBrowserContext?.() ?? null),
+    context: playwright
+      ? (launched.page?.context?.() ?? handle)
+      : (handle?.defaultBrowserContext?.() ?? null),
     page: launched.page,
     driver: launched.driver ?? (engine === 'selenium' ? handle : null),
     args: launched.args ?? [],
-    close: () => launched.close(),
+    close: () => (launched.detach ? launched.detach() : launched.close()),
+    persistent: Boolean(launched.detach),
     connected: false,
   };
 }
@@ -205,6 +211,7 @@ export class SessionTable {
       this.latest = [...this.sessions.keys()].at(-1) ?? null;
     }
     await session.trace?.stop?.().catch(() => {});
+    await session.recording?.stop?.().catch(() => {});
     await session.close();
   }
 

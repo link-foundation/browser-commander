@@ -35,7 +35,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["cryptography>=50.0.2"]
+dependencies = ["cryptography>=50.0.2", "Pillow>=10.4"]
 
 [project.scripts]
 browser-commander = "browser_commander.cli:main"

@@ -34,6 +34,14 @@ pub(crate) struct MutationStream {
 }
 
 impl MutationStream {
+    pub fn ignore_selectors(&mut self, selectors: &[String]) {
+        if let Json::Object(options) = &mut self.recorder_options {
+            options.insert(
+                "ignoreSelectors",
+                Json::Array(selectors.iter().map(Json::from).collect()),
+            );
+        }
+    }
     /// `enabled` is the resolved `dom.mutations`.
     pub fn new(
         enabled: bool,

@@ -1,5 +1,9 @@
-import { isNavigationError } from '../core/navigation-safety.js';
-import { createPlaywrightLocator } from './locators.js';
+import {
+  isNavigationError,
+  waitNavigationState,
+  recoverWaitError,
+} from '../core/navigation-safety.js';
+import { createPlaywrightLocator, requireSelector } from './locators.js';
 
 /**
  * Query single element
@@ -9,67 +13,38 @@ import { createPlaywrightLocator } from './locators.js';
  * @param {string} options.selector - CSS selector
  * @returns {Promise<Object|null>} - Element handle or null
  */
-export async function querySelector(options = {}) {
-  const { page, engine, selector } = options;
-
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
-
-  try {
-    if (engine === 'playwright') {
-      const locator = createPlaywrightLocator({ page, selector }).first();
-      const count = await locator.count();
-      return count > 0 ? locator : null;
-    } else {
-      return await page.$(selector);
-    }
-  } catch (error) {
-    if (isNavigationError(error)) {
-      console.log(
-        '⚠️  Navigation detected during querySelector, returning null'
-      );
-      return null;
-    }
-    throw error;
-  }
+export function querySelector(options = {}) {
+  return queryElements(options, true);
 }
 
-/**
- * Query all elements
- * @param {Object} options - Configuration options
- * @param {Object} options.page - Browser page object
- * @param {string} options.engine - Engine type ('playwright' or 'puppeteer')
- * @param {string} options.selector - CSS selector
- * @returns {Promise<Array>} - Array of element handles
- */
-export async function querySelectorAll(options = {}) {
+/** Return every matching element with the same navigation recovery as querySelector. */
+export function querySelectorAll(options = {}) {
+  return queryElements(options, false);
+}
+
+async function queryElements(options, single) {
+  requireSelector(options.selector);
   const { page, engine, selector } = options;
-
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
-
   try {
-    if (engine === 'playwright') {
-      const locator = createPlaywrightLocator({ page, selector });
-      const count = await locator.count();
-      const elements = [];
-      for (let i = 0; i < count; i++) {
-        elements.push(locator.nth(i));
-      }
-      return elements;
-    } else {
-      return await page.$$(selector);
+    if (engine !== 'playwright') {
+      return single ? await page.$(selector) : await page.$$(selector);
     }
+    const matching = createPlaywrightLocator({ page, selector });
+    const locator = single ? matching.first() : matching;
+    const total = await locator.count();
+    return single
+      ? total > 0
+        ? locator
+        : null
+      : Array.from({ length: total }, (_, index) => locator.nth(index));
   } catch (error) {
-    if (isNavigationError(error)) {
-      console.log(
-        '⚠️  Navigation detected during querySelectorAll, returning empty array'
-      );
-      return [];
+    if (!isNavigationError(error)) {
+      throw error;
     }
-    throw error;
+    console.log(
+      `⚠️  Navigation detected during ${single ? 'querySelector' : 'querySelectorAll'}, recovering gracefully`
+    );
+    return single ? null : [];
   }
 }
 
@@ -175,9 +150,7 @@ function parsePlaywrightTextSelector(selector) {
 export async function normalizeSelector(options = {}) {
   const { page, engine, selector } = options;
 
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
+  requireSelector(selector);
 
   // DEFENSIVE: Validate selector type - must be string or Puppeteer text selector object
   // Arrays and other invalid types should be rejected to prevent downstream querySelectorAll errors
@@ -360,19 +333,11 @@ export function withTextSelectorSupport(fn, engine, page) {
  * @returns {Promise<boolean>} - True if selector found, false on navigation
  */
 export async function waitForSelector(options = {}) {
-  const {
-    page,
-    engine,
-    selector,
-    visible = true,
-    timeout = 5000,
-    throwOnNavigation = true,
-  } = options;
+  const { page, engine, selector, visible = true, timeout = 5000 } = options;
 
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
+  requireSelector(selector);
 
+  const initial = waitNavigationState(page, options.navigationManager);
   try {
     if (engine === 'playwright') {
       const locator = createPlaywrightLocator({ page, selector });
@@ -384,16 +349,7 @@ export async function waitForSelector(options = {}) {
       await page.waitForSelector(selector, { visible, timeout });
     }
     return true;
-  } catch (error) {
-    if (isNavigationError(error)) {
-      console.log(
-        '⚠️  Navigation detected during waitForSelector, recovering gracefully'
-      );
-      if (throwOnNavigation) {
-        throw error;
-      }
-      return false;
-    }
-    throw error;
+  } catch (caught) {
+    return recoverWaitError(caught, options, initial, 'waitForSelector', false);
   }
 }

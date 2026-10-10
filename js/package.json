@@ -83,10 +83,13 @@
     "bplist-parser": "^0.5.0",
     "command-stream": "^1.4.0",
     "csv-parse": "^7.0.3",
+    "gifenc": "^1.0.3",
     "links-notation": "^0.23.0",
     "log-lazy": "^1.0.4",
     "plist": "^5.0.0",
-    "test-anywhere": "^0.9.1"
+    "test-anywhere": "^0.9.1",
+    "upng-js": "^2.1.0",
+    "webp-wasm": "^1.0.6"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

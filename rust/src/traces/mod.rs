@@ -29,6 +29,7 @@
 //! options.links = Some(TraceLinksOptions {
 //!     output: "./traces/run.lino".into(),
 //!     include: None,
+//!     dom: None,
 //! });
 //! let recorder = start_trace(Arc::new(AdapterTracePage::new(page)), options).await?;
 //! recorder.checkpoint("after-login").await?;
@@ -45,14 +46,19 @@
 
 pub mod assets;
 pub mod bundle;
+mod dom_links;
 pub mod identity;
 pub mod jsonfmt;
 pub mod links;
 pub mod mutation_stream;
+pub mod network;
 pub mod page;
 mod raw_reader;
 pub mod reader;
 pub mod recorder;
+pub mod rolling;
+mod storage;
+pub use rolling::{start_rolling_trace, RollingTraceRecorder, RotationOptions};
 mod recorder_options;
 pub mod redaction;
 pub mod retention;

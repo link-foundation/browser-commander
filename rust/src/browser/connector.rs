@@ -53,6 +53,12 @@ pub struct ConnectOptions {
     /// somebody else started downloads files the same way — including the ones
     /// a person clicks by hand. See [`downloads`](crate::downloads).
     pub downloads: DownloadSetting,
+    /// Attach to an exact DevTools target instead of inferring foreground.
+    pub target_id: Option<String>,
+    /// Attach to a tab with this exact URL.
+    pub url: Option<String>,
+    /// Close every other tab after selecting the requested tab.
+    pub single_tab: bool,
 }
 
 impl Default for ConnectOptions {
@@ -70,6 +76,9 @@ impl Default for ConnectOptions {
             node_executable: None,
             node_working_dir: None,
             downloads: DownloadSetting::Off,
+            target_id: None,
+            url: None,
+            single_tab: false,
         }
     }
 }
@@ -338,6 +347,9 @@ async fn connect_node_engine(
                     timeout: options.timeout,
                     seed_cookies: options.seed_cookies.clone(),
                     color_scheme: color_scheme.map(|cs| cs.as_str().to_string()),
+                    target_id: options.target_id.clone(),
+                    url: options.url.clone(),
+                    single_tab: options.single_tab,
                 };
                 let page = PlaywrightDriverPage::connect_with(driver, connect).await?;
                 return Ok(NodeEngine::Driver(page));
@@ -386,7 +398,7 @@ async fn connect_chromiumoxide(
         browser.set_cookies(cookies).await?;
     }
 
-    let page = match pick_foreground_page(browser.pages().await?).await {
+    let page = match pick_foreground_page(browser.pages().await?, &options).await? {
         Some(page) => page,
         None => browser.new_page("about:blank").await?,
     };
@@ -446,18 +458,55 @@ async fn connect_chromiumoxide(
 /// does not list them in a stable order. Driving a background tab would make
 /// `document.hidden` true where a person's first navigation sees a visible
 /// page, so the visible tab wins and the first tab is the fallback.
-async fn pick_foreground_page(pages: Vec<chromiumoxide::Page>) -> Option<chromiumoxide::Page> {
+async fn pick_foreground_page(
+    pages: Vec<chromiumoxide::Page>,
+    options: &ConnectOptions,
+) -> anyhow::Result<Option<chromiumoxide::Page>> {
+    use chromiumoxide::cdp::browser_protocol::emulation::SetFocusEmulationEnabledParams;
     for page in &pages {
+        page.execute(SetFocusEmulationEnabledParams::new(false))
+            .await?;
+    }
+    let mut selected = None;
+    for page in &pages {
+        if options
+            .target_id
+            .as_ref()
+            .is_some_and(|id| page.target_id().as_ref() != id)
+        {
+            continue;
+        }
+        if options.url.is_some() && page.url().await?.as_ref() != options.url.as_ref() {
+            continue;
+        }
+        if options.target_id.is_some() || options.url.is_some() {
+            selected = Some(page.clone());
+            break;
+        }
         let state = page
             .evaluate("document.visibilityState")
             .await
             .ok()
             .and_then(|result| result.into_value::<String>().ok());
         if state.as_deref() == Some("visible") {
-            return Some(page.clone());
+            selected = Some(page.clone());
+            break;
         }
     }
-    pages.into_iter().next()
+    if selected.is_none() && (options.target_id.is_some() || options.url.is_some()) {
+        anyhow::bail!("No tab matches the requested targetId/URL");
+    }
+    selected = selected.or_else(|| pages.first().cloned());
+    if options.single_tab {
+        if let Some(selected) = &selected {
+            for page in &pages {
+                if page.target_id() != selected.target_id() {
+                    page.clone().close().await?;
+                }
+            }
+        }
+    }
+    Ok(selected)
 }
 
 #[cfg(test)]

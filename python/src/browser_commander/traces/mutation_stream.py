@@ -52,6 +52,9 @@ class MutationStream:
         self.enabled = bool(dom_options.get("mutations"))
         self.options = {
             "globalName": self._global,
+            "ignoreSelectors": dom_options.get(
+                "ignoreSelectors", dom_options.get("ignore_selectors", [])
+            ),
             "redactSelectors": privacy.redact_selectors,
             "redacted": REDACTED,
             "maxQueued": coalesce(

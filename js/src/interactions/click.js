@@ -40,7 +40,9 @@ function waitInterruptedByNavigation({
   preparationFinished,
 }) {
   const timedOut =
-    error.name === 'TimeoutError' || /timeout|timed out/i.test(error.message);
+    error.name === 'TimeoutError' ||
+    error.name === 'NavigationInterruptedError' ||
+    /timeout|timed out/i.test(error.message);
   const navigationChanged =
     page.url() !== startUrl ||
     (startSessionId !== undefined &&

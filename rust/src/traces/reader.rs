@@ -166,7 +166,7 @@ pub struct Trace {
 }
 
 fn read_if_present(path: &Path) -> Result<Option<String>, TraceError> {
-    match fs::read_to_string(path) {
+    match super::storage::read_text(path) {
         Ok(body) => Ok(Some(body)),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(source) => Err(TraceError::Io {
@@ -287,6 +287,9 @@ fn rebuild_manifest(events: &[Value]) -> TraceManifest {
 /// version than this reader knows.
 pub fn read_trace(bundle_path: impl AsRef<Path>) -> Result<Trace, TraceError> {
     let root = absolute(bundle_path.as_ref());
+    if root.join("segments.json").is_file() {
+        return read_rolling(&root);
+    }
     let manifest_body = read_if_present(&root.join(TraceFiles::MANIFEST))?;
     let events_body = read_if_present(&root.join(TraceFiles::EVENTS))?;
 
@@ -340,8 +343,86 @@ pub fn read_trace(bundle_path: impl AsRef<Path>) -> Result<Trace, TraceError> {
     })
 }
 
+fn read_rolling(root: &Path) -> Result<Trace, TraceError> {
+    let file = root.join("segments.json");
+    let index: Value =
+        serde_json::from_str(&fs::read_to_string(&file).map_err(|source| TraceError::Io {
+            path: file.clone(),
+            source,
+        })?)
+        .map_err(|_| TraceError::MemberUnreadable { path: file.clone() })?;
+    let mut result: Option<Trace> = None;
+    for segment in index["segments"]
+        .as_array()
+        .ok_or_else(|| TraceError::MemberUnreadable { path: file.clone() })?
+    {
+        let name = segment
+            .as_str()
+            .filter(|name| {
+                name.strip_prefix("segment-")
+                    .is_some_and(|n| !n.is_empty() && n.bytes().all(|c| c.is_ascii_digit()))
+            })
+            .ok_or_else(|| TraceError::MemberUnreadable { path: file.clone() })?;
+        let mut opened = read_trace(root.join(name))?;
+        let offset = result
+            .as_ref()
+            .map(|r| r.checkpoints.len() as u32)
+            .unwrap_or(0);
+        for checkpoint in &mut opened.checkpoints {
+            checkpoint.index = checkpoint.index.map(|n| n + offset);
+            for value in checkpoint.members.values_mut() {
+                if let Some(path) = value.as_str() {
+                    *value = Value::String(format!("{name}/{path}"));
+                }
+            }
+        }
+        for event in &mut opened.events {
+            event["segment"] = Value::String(name.to_owned());
+            if event["kind"] == "checkpoint" {
+                if let Some(index) = event["index"].as_u64() {
+                    event["originalIndex"] = Value::from(index);
+                    event["index"] = Value::from(index + u64::from(offset));
+                }
+            }
+            if event["kind"] == "mutations" {
+                if let Some(index) = event["checkpoint"].as_u64() {
+                    event["checkpoint"] = Value::from(index + u64::from(offset));
+                }
+            }
+        }
+        if let Some(result) = &mut result {
+            result.truncated |= opened.truncated;
+            result.manifest = opened.manifest;
+            result.events.extend(opened.events);
+            result.checkpoints.extend(opened.checkpoints);
+        } else {
+            opened.path = root.to_path_buf();
+            result = Some(opened);
+        }
+    }
+    result.ok_or_else(|| TraceError::NotFound {
+        path: root.to_path_buf(),
+    })
+}
+
 impl Trace {
     fn checkpoint_member(&self, index: u32, suffix: &str) -> PathBuf {
+        if let Some(event) = self.events.iter().find(|e| {
+            e["kind"] == "checkpoint"
+                && e["index"].as_u64() == Some(u64::from(index))
+                && e.get("segment").is_some()
+        }) {
+            return self
+                .path
+                .join(event["segment"].as_str().unwrap_or(""))
+                .join(TraceFiles::CHECKPOINTS_DIR)
+                .join(format!(
+                    "{}{suffix}",
+                    sequence_name(
+                        event["originalIndex"].as_u64().unwrap_or(u64::from(index)) as u32
+                    )
+                ));
+        }
         self.path
             .join(TraceFiles::CHECKPOINTS_DIR)
             .join(format!("{}{suffix}", sequence_name(index)))
@@ -386,8 +467,22 @@ impl Trace {
     ///
     /// Returns an error when the member exists but cannot be read.
     pub fn mutations(&self, index: u32) -> Result<Vec<Value>, TraceError> {
-        let member = self
-            .path
+        let (root, index) = self
+            .events
+            .iter()
+            .find(|e| {
+                e["kind"] == "checkpoint"
+                    && e["index"].as_u64() == Some(u64::from(index))
+                    && e.get("segment").is_some()
+            })
+            .map(|event| {
+                (
+                    self.path.join(event["segment"].as_str().unwrap_or("")),
+                    event["originalIndex"].as_u64().unwrap_or(u64::from(index)) as u32,
+                )
+            })
+            .unwrap_or((self.path.clone(), index));
+        let member = root
             .join(TraceFiles::MUTATIONS_DIR)
             .join(format!("{}.ndjson", sequence_name(index)));
         Ok(parse_ndjson(read_if_present(&member)?.as_deref()).records)

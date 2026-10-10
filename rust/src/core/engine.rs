@@ -422,7 +422,10 @@ pub trait EngineAdapter: Send + Sync {
         options: &crate::capture::ScreenshotOptions,
     ) -> Result<Vec<u8>, EngineError> {
         options.validate()?;
-        if options != &crate::capture::ScreenshotOptions::default() {
+        let mut native = options.clone();
+        // WebDriver's default screenshot is the existing viewport.
+        native.stable_viewport = false;
+        if native != crate::capture::ScreenshotOptions::default() {
             return Err(crate::capture::unsupported(self, "screenshot options"));
         }
         self.screenshot().await

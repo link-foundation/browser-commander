@@ -576,7 +576,9 @@ impl EngineAdapter for ChromiumoxidePage {
         use crate::capture::{
             ScreenshotAnimations, ScreenshotCaret, ScreenshotFormat, ScreenshotScale,
         };
-        use chromiumoxide::cdp::browser_protocol::page::{CaptureScreenshotFormat, Viewport};
+        use chromiumoxide::cdp::browser_protocol::page::{
+            CaptureScreenshotFormat, CaptureScreenshotParams, Viewport,
+        };
         use chromiumoxide::page::ScreenshotParams;
         options.validate()?;
         if options.hide_scrollbars
@@ -598,6 +600,38 @@ impl EngineAdapter for ChromiumoxidePage {
             ScreenshotFormat::Jpeg => CaptureScreenshotFormat::Jpeg,
             ScreenshotFormat::Webp => CaptureScreenshotFormat::Webp,
         };
+        if options.stable_viewport {
+            if options.scale == ScreenshotScale::Css {
+                return Err(crate::capture::unsupported(
+                    self,
+                    "stable viewport CSS scale",
+                ));
+            }
+            let params = CaptureScreenshotParams {
+                format: Some(format),
+                quality: options.quality.map(i64::from),
+                from_surface: Some(false),
+                capture_beyond_viewport: Some(false),
+                ..Default::default()
+            };
+            // Page::screenshot activates the tab; send the capture command directly.
+            let response = match self.page.execute(params.clone()).await {
+                Ok(response) => response,
+                Err(error) if error.to_string().contains("Unable to capture screenshot") => self
+                    .page
+                    .execute(CaptureScreenshotParams {
+                        from_surface: Some(true),
+                        ..params
+                    })
+                    .await
+                    .map_err(to_engine_error)?,
+                Err(error) => return Err(to_engine_error(error)),
+            };
+            use base64::Engine as _;
+            return base64::engine::general_purpose::STANDARD
+                .decode(&response.data)
+                .map_err(|error| EngineError::Browser(error.to_string()));
+        }
         let mut builder = ScreenshotParams::builder()
             .format(format)
             .full_page(options.full_page)

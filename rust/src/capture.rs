@@ -53,6 +53,7 @@ pub struct ScreenshotClip {
 pub struct ScreenshotOptions {
     pub path: Option<PathBuf>,
     pub full_page: bool,
+    pub stable_viewport: bool,
     pub selector: Option<String>,
     pub clip: Option<ScreenshotClip>,
     pub format: ScreenshotFormat,
@@ -68,6 +69,19 @@ pub struct ScreenshotOptions {
 }
 impl ScreenshotOptions {
     pub fn validate(&self) -> Result<(), EngineError> {
+        if self.stable_viewport
+            && (self.full_page
+                || self.selector.is_some()
+                || self.clip.is_some()
+                || self.omit_background
+                || self.hide_scrollbars
+                || self.hide_caret
+                || self.disable_animations
+                || self.animations != ScreenshotAnimations::Allow
+                || self.caret != ScreenshotCaret::Initial)
+        {
+            return Err(EngineError::Browser("stable_viewport requires the unmodified viewport: no region, background or visual styling options".into()));
+        }
         if self.quality.is_some_and(|quality| quality > 100)
             || (self.quality.is_some() && self.format == ScreenshotFormat::Png)
         {
@@ -99,6 +113,9 @@ impl ScreenshotOptions {
         let mut value = json!({"type":self.format,"fullPage":self.full_page,"scale":self.scale,"omitBackground":self.omit_background,
             "animations": if self.disable_animations {ScreenshotAnimations::Disabled} else {self.animations},
             "caret": ScreenshotCaret::Initial});
+        if self.stable_viewport {
+            value["stableViewport"] = json!(true);
+        }
         if let Some(quality) = self.quality {
             value["quality"] = json!(quality);
         }
@@ -380,6 +397,14 @@ impl Drop for Recording {
 mod tests {
     use super::*;
     use crate::core::stub_engine::StubEngine;
+    #[test]
+    fn stable_viewport_rejects_full_page() {
+        let options: ScreenshotOptions = serde_json::from_value(json!({
+            "stableViewport": true, "fullPage": true
+        }))
+        .unwrap();
+        assert!(options.validate().is_err());
+    }
     #[tokio::test]
     async fn unsupported_options_are_explicit() {
         let engine = StubEngine::fixed("about:blank");

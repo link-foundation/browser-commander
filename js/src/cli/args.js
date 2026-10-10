@@ -62,6 +62,7 @@ const CAPTURE_OPTIONS = {
 const SCREENSHOT_OPTIONS = {
   ...PAGE_OPTIONS,
   'full-page': FLAG,
+  'stable-viewport': FLAG,
   selector: STRING,
   clip: STRING,
   format: STRING,

@@ -25,6 +25,7 @@ pub const ACTION_TIMEOUT_MS: f64 = 30_000.0;
 pub const LAUNCH_TIMEOUT_MS: f64 = 180_000.0;
 const VERSION_PAGE_TIMEOUT_MS: f64 = 10_000.0;
 
+mod capture;
 mod selection;
 use selection::pick_foreground_page;
 
@@ -857,6 +858,11 @@ impl EngineAdapter for PlaywrightDriverPage {
         options.validate()?;
         if options.format == crate::capture::ScreenshotFormat::Webp {
             return Err(crate::capture::unsupported(self, "WebP screenshot"));
+        }
+        if options.stable_viewport {
+            if let Some(bytes) = capture::stable_viewport(self, options).await? {
+                return Ok(bytes);
+            }
         }
         let params = serde_json::from_value(options.native())
             .map_err(|e| EngineError::Browser(e.to_string()))?;

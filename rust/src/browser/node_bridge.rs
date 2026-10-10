@@ -509,6 +509,12 @@ impl EngineAdapter for NodeBridgePage {
         options: &crate::capture::ScreenshotOptions,
     ) -> Result<Vec<u8>, EngineError> {
         options.validate()?;
+        if options.stable_viewport && options.scale == crate::capture::ScreenshotScale::Css {
+            return Err(crate::capture::unsupported(
+                self,
+                "stable viewport CSS scale",
+            ));
+        }
         if options.format == crate::capture::ScreenshotFormat::Webp {
             return Err(crate::capture::unsupported(self, "WebP screenshot"));
         }

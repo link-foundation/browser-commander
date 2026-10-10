@@ -2,7 +2,8 @@
 
 Issue [146](https://github.com/link-foundation/browser-commander/issues/146) is an
 umbrella for six issues. All seven descriptions and all their comments were read;
-none had comments when investigated on 2026-10-10. This document records each
+none had comments at the initial investigation on 2026-10-10. A final reread
+found [the later stable-viewport report](https://github.com/link-foundation/browser-commander/issues/142#issuecomment-6097318324), which is included below. This document records each
 requirement, plausible alternatives, the chosen implementation and its validation.
 All changes belong to PR [147](https://github.com/link-foundation/browser-commander/pull/147).
 
@@ -81,6 +82,33 @@ the shared CLI exposes the same commands as JavaScript and Python.
 | quiet-ui group: restore/crash, translation, default browser, passwords/cards, automation banner where applicable, promos/what's-new | Scattered flags versus a named preset: compose existing restrictions with new restore/translation handling in the shared catalogue.                                | Shared catalogue byte equality and preset tests.          |
 
 ### Issue 142: capture in every language and engine
+
+The later comment reports a visible-window flash after raw full-page capture,
+with 252 unchanged geometry samples; its cause is unconfirmed. The additional
+requirements are a stable-viewport API, bounded engine fallbacks, displayed-pixel
+regression coverage, and full-page visual-side-effect documentation. Alternatives
+are native surface capture, engine viewport capture, or Chromium native-view
+capture. `stableViewport`/`stable_viewport` selects native-view CDP capture with
+`fromSurface:false` and `captureBeyondViewport:false`; headless view failure and
+non-CDP engines fall back only to viewport capture. Explicit viewport emulation
+also uses the engine viewport path: a real-browser probe at device scale 2 showed
+that native-view capture returned 320×200 instead of the emulated 640×400; failing
+regressions now guard the fallback and correct CSS/device dimensions. No automatic scrolling,
+resizing, activation, or capture-time styling is used in this mode. Regions and
+visual styling options are rejected. JS/Python/Rust and the shared CLI implement
+the contract. Minimal regressions fail before implementation; the Xvfb fixture
+samples displayed page pixels independently through Pillow/XCB as well as
+in-page geometry. This verifies the Linux fixture, not the cause or absence of
+every possible transient on macOS. Native Rust bypasses Chromiumoxide's
+activating screenshot helper; its Node bridge also now forwards typed options.
+
+| Later-comment requirement                                      | Alternatives and chosen plan                                                                                                                                                                        | Verification                                                                                                                                   |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Documented stable viewport API across engines                  | Raw CDP helper versus a public option: expose `stableViewport`/`stable_viewport` and `--stable-viewport` through the existing capture facade.                                                       | JS/Python missing-mode regressions and Rust serialized-option validation.                                                                      |
+| Capture the existing native view with bounded fallbacks        | Surface capture versus native-view CDP: use `fromSurface:false`, `captureBeyondViewport:false`; unsupported/headless/emulated modes use viewport-only engine capture.                               | Protocol option assertions, genuine-error and detachment controls, Firefox/BiDi mocks, real PNG/JPEG/WebP scaling and all three Rust adapters. |
+| Avoid hidden scroll-to-top, viewport resize and tab activation | Temporary repositioning versus separate views: stable mode captures the already scrolled page and rejects region/full-page/style changes. Applications can scroll normally before the next capture. | Intermediate geometry stays unchanged after animated scrolling; native Rust bypasses the activating helper.                                    |
+| Check watched-window/compositor behavior, not only geometry    | Engine screenshots versus independent displayed-pixel sampling: observe 120 Xvfb frames through Pillow/XCB during four captures.                                                                    | Zero changed displayed samples; before/after native-window evidence committed and the probe runs in CI.                                        |
+| Document full-page visual effects and uncertainty              | Claim a reproduced DOM jump versus describe the evidence: document possible full-page compositor effects and separate-view usage, without attributing the reported macOS flash.                     | API guide links the report and distinguishes geometry from displayed pixels and Linux verification from macOS.                                 |
 
 | Requirement                                                            | Alternatives considered and chosen plan                                                                                                                                          | Verification                                                                          |
 | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |

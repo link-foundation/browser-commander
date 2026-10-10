@@ -47,6 +47,43 @@ async def main():
                 assert await page.locator("body").inner_html() == before
                 await page.locator("button").evaluate("el => el.style.color = 'red'")
                 second = await screenshot(page)
+                viewport_page = await browser.new_page(
+                    viewport={"width": 320, "height": 200},
+                    device_scale_factor=2,
+                )
+                try:
+                    await viewport_page.set_content(
+                        '<div style="height:2500px">viewport</div>'
+                    )
+                    await viewport_page.evaluate("window.scrollTo(0, 1000)")
+                    geometry = "() => [scrollX, scrollY, innerWidth, innerHeight]"
+                    viewport_before = await viewport_page.evaluate(geometry)
+                    for fmt in ("png", "jpeg", "webp"):
+                        for scale, size in (
+                            ("device", (640, 400)),
+                            ("css", (320, 200)),
+                        ):
+                            data = await screenshot(
+                                viewport_page,
+                                stable_viewport=True,
+                                format=fmt,
+                                scale=scale,
+                            )
+                            with Image.open(io.BytesIO(data)) as image:
+                                assert (
+                                    image.size == size and image.format.lower() == fmt
+                                ), (
+                                    f"{fmt}/{scale}: expected {size}, got {image.size} {image.format}"
+                                )
+                            assert (
+                                await viewport_page.evaluate(geometry)
+                                == viewport_before
+                            )
+                    print(
+                        "stable viewport: PNG/JPEG/WebP, device/CSS scale and geometry verified"
+                    )
+                finally:
+                    await viewport_page.close()
                 for fmt in ("gif", "apng", "webp"):
                     data = encode_animation([first, second], format=fmt)
                     with Image.open(io.BytesIO(data)) as image:
@@ -57,13 +94,17 @@ async def main():
                 recording = await recorder.stop()
                 assert recording["bytes"][:4] == b"\x1aE\xdf\xa3"
                 trace = await start_trace(
-                    page=page, output=Path(output) / "trace", mode="continuous",
+                    page=page,
+                    output=Path(output) / "trace",
+                    mode="continuous",
                     network={"har": True, "bodies": True, "max_body_bytes": 8},
                     links={"output": str(Path(output) / "trace.lino"), "dom": "text"},
                 )
                 url = f"http://127.0.0.1:{server.server_port}"
                 await page.goto(url)
-                await page.evaluate("fetch('/', {headers:{Authorization:'fixture-'+'private'}})")
+                await page.evaluate(
+                    "fetch('/', {headers:{Authorization:'fixture-'+'private'}})"
+                )
                 await trace.stop()
                 events = read_trace(Path(output) / "trace").events
                 assert any(event["kind"] == "network.response" for event in events)
@@ -77,12 +118,14 @@ async def main():
             with socket.socket() as reservation:
                 reservation.bind(("127.0.0.1", 0))
                 port = reservation.getsockname()[1]
-            options = dict(
-                user_data_dir=str(Path(output) / "profile"),
-                remote_debugging_port=port, idle_timeout_ms=30000,
-                executable_path=pw.chromium.executable_path,
-                headless=True, args=["--no-sandbox"],
-            )
+            options = {
+                "user_data_dir": str(Path(output) / "profile"),
+                "remote_debugging_port": port,
+                "idle_timeout_ms": 30000,
+                "executable_path": pw.chromium.executable_path,
+                "headless": True,
+                "args": ["--no-sandbox"],
+            }
             session = await connect_or_launch(**options)
             try:
                 await session.page.goto("data:text/html,<p>remembered python tab</p>")
@@ -100,5 +143,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    os.environ.setdefault("BROWSER_COMMANDER_JS_CLI", str(Path("js/bin/browser-commander.js").resolve()))
+    os.environ.setdefault(
+        "BROWSER_COMMANDER_JS_CLI", str(Path("js/bin/browser-commander.js").resolve())
+    )
     asyncio.run(main())

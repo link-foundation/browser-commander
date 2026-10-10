@@ -1,6 +1,7 @@
 # Issue 146 implementation and verification plan
 
-All six child issues and their comments were read on 2026-10-10; no comments exist.
+All six child issues and their comments were read on 2026-10-10. A later comment
+on issue 142 added the stable-viewport requirements below during final review.
 Work is confined to branch issue-146-c162424fb5ec and existing PR 147.
 
 1. [x] Read issues 140–146, PR conversation, inline reviews, review decisions, repository guidance and recent merged PRs.
@@ -41,6 +42,10 @@ Work is confined to branch issue-146-c162424fb5ec and existing PR 147.
 - [x] quiet-ui group suppresses restore/crash, translation, default-browser, passwords/cards, automation banner, promos and what's-new.
 
 ### 142: capture across all engines/languages
+
+- [x] Later comment: expose stable-viewport capture in JS/Python/Rust/CLI; use native-view CDP and bounded viewport-only engine fallbacks.
+- [x] Reject modes that reposition or restyle the visible page; document full-page compositor side effects and platform limits.
+- [x] Reproduce missing-mode/validation failures before implementation; add displayed-window pixel sampling plus intermediate geometry and viewport-image decode checks to CI.
 
 - [x] Typed unified screenshot options: path, fullPage, selector/element, clip, png/jpeg/webp, quality, css/device scale, transparency, animations and caret; bytes/file result; typed unsupported errors.
 - [x] Typed Rust Engine screenshot options and Python public API.

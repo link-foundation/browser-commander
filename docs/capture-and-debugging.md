@@ -30,6 +30,39 @@ const movie = await recording.stop(); // repeated stops share the result
 Run [the complete recording example](../examples/capture-session.mjs) to capture
 a short GIF from an existing commander page.
 
+## Stable viewport capture in a visible browser
+
+Use `commander.screenshot({ stableViewport: true })` (Python
+`ScreenshotOptions(stable_viewport=True)`, Rust `stable_viewport: true`, CLI
+`screenshot viewport.png --stable-viewport`) to capture the current view.
+Chromium first uses [CDP view capture](https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-captureScreenshot)
+with `fromSurface:false` and `captureBeyondViewport:false`. Headless Chromium's
+`Unable to capture screenshot` error falls back to viewport capture; non-CDP
+Firefox/BiDi, WebDriver and explicit engine viewport emulation use their engine's
+viewport screenshot. Chromium native-view capture bypasses emulated pixel density,
+so emulated viewports use that fallback to preserve image dimensions. Other errors
+propagate and CDP sessions always detach. Native Rust's Chromium fallback sends
+surface capture directly without activating the page. Native Rust stable capture
+supports device scale; CSS scale fails explicitly. JS stable JPEG CSS scaling
+also fails explicitly on the CDP path; PNG/WebP resizing happens after capture.
+
+This mode never requests scrolling, viewport resizing, tab activation or a
+full-page fallback. It rejects selector/element/clip/full-page, transparency and
+visual clean-capture options because these may alter the visible page. Awaiting
+fonts remains available. It cannot prevent a page's own animation or guarantee
+the absence of all platform-specific compositor behavior.
+
+`fullPage` uses the engine's full-page pipeline, which may change compositor or
+viewport state temporarily in a watched window. Unchanged JavaScript scroll and
+viewport geometry does not prove unchanged displayed pixels. For a visible
+session, capture separate stable views after normal application scrolling;
+BrowserCommander does not introduce hidden scroll-to-top/resize transitions.
+See [the downstream report](https://github.com/link-foundation/browser-commander/issues/142#issuecomment-6097318324).
+The bounded `experiments/issue-146/watch-viewport.py` CI regression samples 120
+displayed frames independently of the capture API and samples intermediate
+geometry around four captures after animated scrolling. Linux/Xvfb passed with
+zero changed displayed samples; the reported macOS transient is unconfirmed.
+
 Python exposes `ScreenshotOptions`, `screenshot`, `start_recording` and
 `encode_animation` from `browser_commander`; option names use snake_case.
 
@@ -64,7 +97,7 @@ let bytes = screenshot(page.as_ref(), &ScreenshotOptions {
 | Python Selenium         | Viewport/element/clip; PNG/JPEG/WebP through Pillow                            | CSS scaling; unsupported clean/full-page/alpha options fail explicitly           | Image/frame sampling; movies explicitly unsupported                                          |
 | Rust Chromiumoxide      | Native PNG/JPEG/WebP, element clip/full page/PNG alpha                         | CSS scale with clip; clean styles and unclipped CSS scale explicitly unsupported | Image/frame recording; browser WebM/MP4 when supported                                       |
 | Rust native Playwright  | PNG/JPEG; other capabilities checked explicitly                                | Native screenshot protocol options; WebP explicitly unsupported                  | Frame sampling and browser codec-dependent movies                                            |
-| Rust Node bridge        | Uses the shared JS capture facade                                              | Matches the underlying JS engine                                                 | Matches the underlying JS engine                                                             |
+| Rust Node bridge        | Native PNG/JPEG options and stable view capture; WebP explicitly unsupported   | Playwright protocol styles; Puppeteer clean/CSS scale explicitly unsupported     | Frame recording and browser codec-dependent movies                                           |
 | Rust native WebDriver   | PNG through the default typed adapter; advanced options explicitly unsupported | Explicit capability errors                                                       | Frame fallback; unavailable codecs explicitly unsupported                                    |
 
 GIF/APNG/animated WebP encode in process: gifenc/UPNG/webp-wasm in JS, Pillow

@@ -12,6 +12,7 @@ from typing import Any, Literal, cast
 
 from PIL import Image
 
+from browser_commander.capture_viewport import capture_stable_viewport
 from browser_commander.core.engine_adapter import create_engine_adapter
 
 
@@ -30,6 +31,7 @@ class UnsupportedCaptureError(RuntimeError):
 class ScreenshotOptions:
     path: str | Path | None = None
     full_page: bool = False
+    stable_viewport: bool = False
     selector: str | None = None
     clip: dict[str, float] | None = None
     format: Literal["png", "jpeg", "webp"] = "png"
@@ -100,7 +102,35 @@ async def screenshot(
         "initial",
     }:
         raise ValueError("invalid animations/caret")
-    if engine == "playwright":
+    if opts["stable_viewport"]:
+        if (
+            any(
+                opts[key]
+                for key in (
+                    "full_page",
+                    "selector",
+                    "clip",
+                    "omit_background",
+                    "hide_scrollbars",
+                    "hide_caret",
+                    "disable_animations",
+                )
+            )
+            or opts.get("element")
+            or opts["animations"] != "allow"
+            or opts["caret"] != "initial"
+        ):
+            raise ValueError(
+                "stable_viewport requires the unmodified viewport: no region, background or visual styling options"
+            )
+        if engine not in {"playwright", "puppeteer", "selenium"}:
+            raise UnsupportedCaptureError("stable viewport", engine)
+        if opts["wait_for_fonts"]:
+            if engine == "selenium":
+                raise UnsupportedCaptureError("wait_for_fonts", engine)
+            await page.evaluate("() => document.fonts.ready.then(() => true)")
+        data = await capture_stable_viewport(page, engine, opts)
+    elif engine == "playwright":
         if opts["wait_for_fonts"]:
             await page.evaluate("() => document.fonts.ready.then(() => true)")
         native = {

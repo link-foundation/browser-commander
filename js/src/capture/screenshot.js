@@ -3,11 +3,13 @@ import path from 'node:path';
 import webp from 'webp-wasm';
 import { decodePng, encodePng, resizeFrame } from './encoding.js';
 import { UnsupportedCaptureError } from './errors.js';
+import { captureStableViewport, validateStableViewport } from './viewport.js';
 
 /**
  * @typedef {Object} ScreenshotOptions
  * @property {string} [path]
  * @property {boolean} [fullPage]
+ * @property {boolean} [stableViewport] Capture only the existing view without visual styling.
  * @property {string} [selector]
  * @property {Object} [element]
  * @property {{x:number,y:number,width:number,height:number}} [clip]
@@ -58,6 +60,21 @@ export async function screenshot(options = {}) {
   const css = captureStyle(options, animations, caret);
   if (options.waitForFonts) {
     await page.evaluate(() => document.fonts.ready.then(() => true));
+  }
+  if (options.stableViewport) {
+    if (engine === 'playwright') {
+      native.scale = scale;
+      native.caret = 'initial';
+    }
+    const captured = await captureStableViewport(page, engine, native);
+    return finishScreenshot(captured.bytes, {
+      page,
+      engine: captured.engine,
+      scale,
+      format,
+      quality,
+      output,
+    });
   }
   let styleId;
   if (engine === 'playwright') {
@@ -182,6 +199,7 @@ function validateScreenshot(options) {
   const animations =
     options.animations ?? (options.disableAnimations ? 'disabled' : 'allow');
   const caret = options.caret ?? (options.hideCaret ? 'hide' : 'initial');
+  validateStableViewport(options, animations, caret);
   if (
     !['allow', 'disabled'].includes(animations) ||
     !['hide', 'initial'].includes(caret)

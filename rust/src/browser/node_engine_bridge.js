@@ -319,14 +319,12 @@ async function restoreStorageState(state) {
     }
   } else {
     if (cookies.length)
-      await page
-        .browserContext()
-        .setCookie(
-          ...cookies.map(({ expires, ...cookie }) => ({
-            ...cookie,
-            ...(expires > 0 ? { expires } : {}),
-          }))
-        );
+      await page.browserContext().setCookie(
+        ...cookies.map(({ expires, ...cookie }) => ({
+          ...cookie,
+          ...(expires > 0 ? { expires } : {}),
+        }))
+      );
     if (origins.length) {
       await page.evaluateOnNewDocument(restoreOriginLocalStorage, origins);
       await page.evaluate(restoreOriginLocalStorage, origins);
@@ -424,13 +422,22 @@ async function handleCommand(method, params) {
       }
       return null;
     case 'detach':
-      if (browser) await (engineName === 'playwright' ? browser.close() : browser.disconnect());
+      if (browser)
+        await (engineName === 'playwright'
+          ? browser.close()
+          : browser.disconnect());
       browser = null;
       return null;
     case 'targetId': {
-      const cdp = engineName === 'playwright' ? await context.newCDPSession(page) : await page.target().createCDPSession();
-      try {return (await cdp.send('Target.getTargetInfo')).targetInfo.targetId;}
-      finally {await cdp.detach();}
+      const cdp =
+        engineName === 'playwright'
+          ? await context.newCDPSession(page)
+          : await page.target().createCDPSession();
+      try {
+        return (await cdp.send('Target.getTargetInfo')).targetInfo.targetId;
+      } finally {
+        await cdp.detach();
+      }
     }
     case 'url':
       return ensurePage().url();
@@ -561,8 +568,46 @@ async function handleCommand(method, params) {
     }
     case 'evaluate':
       return serializeResult(await ensurePage().evaluate(params.script));
-    case 'screenshot':
-      return Buffer.from(await ensurePage().screenshot()).toString('base64');
+    case 'screenshot': {
+      const options = compactObject(params);
+      if (options.stableViewport) {
+        delete options.stableViewport;
+        const current = ensurePage();
+        const viewport =
+          engineName === 'playwright'
+            ? current.viewportSize()
+            : current.viewport();
+        if (viewport) {
+          return Buffer.from(await current.screenshot(options)).toString(
+            'base64'
+          );
+        }
+        const session =
+          engineName === 'playwright'
+            ? await current.context().newCDPSession(current)
+            : await current.createCDPSession();
+        try {
+          const result = await session.send('Page.captureScreenshot', {
+            format: options.type ?? 'png',
+            fromSurface: false,
+            captureBeyondViewport: false,
+            ...(options.quality === undefined
+              ? {}
+              : { quality: options.quality }),
+          });
+          return result.data;
+        } catch (error) {
+          if (!/Unable to capture screenshot/i.test(error.message)) {
+            throw error;
+          }
+        } finally {
+          await session.detach();
+        }
+      }
+      return Buffer.from(await ensurePage().screenshot(options)).toString(
+        'base64'
+      );
+    }
     case 'pdf':
       return Buffer.from(
         await ensurePage().pdf(compactObject(params))

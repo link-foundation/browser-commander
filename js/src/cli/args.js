@@ -33,6 +33,8 @@ const BROWSER_OPTIONS = Object.freeze({
   'first-run': FLAG,
   'driver-path': STRING,
   bidi: FLAG,
+  'remote-debugging-port': STRING,
+  'idle-timeout-ms': STRING,
 });
 
 /** Options accepted by every page command. */
@@ -41,7 +43,39 @@ const PAGE_OPTIONS = Object.freeze({
   'cdp-endpoint': STRING,
   'server-url': STRING,
   url: STRING,
+  'target-id': STRING,
+  'single-tab': FLAG,
 });
+
+const CAPTURE_OPTIONS = {
+  format: STRING,
+  quality: STRING,
+  fps: STRING,
+  scale: STRING,
+  loop: STRING,
+  palette: STRING,
+  dither: FLAG,
+  optimize: FLAG,
+  ffmpeg: STRING,
+  size: STRING,
+};
+const SCREENSHOT_OPTIONS = {
+  ...PAGE_OPTIONS,
+  'full-page': FLAG,
+  'stable-viewport': FLAG,
+  selector: STRING,
+  clip: STRING,
+  format: STRING,
+  quality: STRING,
+  scale: STRING,
+  'omit-background': FLAG,
+  animations: STRING,
+  caret: STRING,
+  'hide-scrollbars': FLAG,
+  'hide-caret': FLAG,
+  'disable-animations': FLAG,
+  'wait-for-fonts': FLAG,
+};
 
 /**
  * Every command: its positional argument names and its options.
@@ -66,12 +100,36 @@ export const COMMANDS = Object.freeze({
   eval: { positionals: ['expression'], options: PAGE_OPTIONS },
   screenshot: {
     positionals: ['path'],
-    options: { ...PAGE_OPTIONS, 'full-page': FLAG },
+    options: SCREENSHOT_OPTIONS,
   },
   pdf: { positionals: ['path'], options: PAGE_OPTIONS },
   'trace start': { positionals: [], options: { ...PAGE_OPTIONS, out: STRING } },
   'trace stop': { positionals: [], options: { out: STRING } },
   'trace view': { positionals: ['dir'], options: { out: STRING } },
+  'trace summarize': {
+    positionals: ['dir'],
+    options: { from: STRING, to: STRING, grep: STRING },
+  },
+  'trace render': {
+    positionals: ['dir'],
+    options: { ...CAPTURE_OPTIONS, out: STRING, from: STRING, to: STRING },
+  },
+  'record start': {
+    positionals: [],
+    options: {
+      ...PAGE_OPTIONS,
+      ...CAPTURE_OPTIONS,
+      out: STRING,
+      'max-frames': STRING,
+      'max-bytes': STRING,
+      'max-duration-ms': STRING,
+    },
+  },
+  'record stop': { positionals: [], options: { out: STRING } },
+  gif: {
+    positionals: [],
+    options: { ...CAPTURE_OPTIONS, frame: STRINGS, out: STRING },
+  },
   'cookies import': {
     positionals: [],
     options: {
@@ -255,6 +313,13 @@ export function launchParams(options) {
     firstRun: options.firstRun,
     driverPath: options.driverPath,
     bidi: options.bidi,
+    keepOpen: options.keepOpen,
+    remoteDebuggingPort: integerOption(
+      options,
+      'remoteDebuggingPort',
+      'launch'
+    ),
+    idleTimeoutMs: integerOption(options, 'idleTimeoutMs', 'launch'),
   };
   return Object.fromEntries(
     Object.entries(params).filter(([, value]) => value !== undefined)

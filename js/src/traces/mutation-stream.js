@@ -63,6 +63,7 @@ export function createMutationStream(options) {
     globalName: RECORDER_GLOBAL,
     redactSelectors: privacyOptions.redactSelectors,
     redacted: REDACTED,
+    ignoreSelectors: domOptions.ignoreSelectors ?? [],
     maxQueued: limits.maxQueuedMutations ?? DEFAULT_MAX_QUEUED_MUTATIONS,
     liveState: domOptions.liveState !== false,
   };

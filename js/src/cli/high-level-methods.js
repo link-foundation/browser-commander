@@ -7,6 +7,10 @@
  * dispatcher state built by `createDispatcher()`.
  */
 import path from 'node:path';
+import {
+  screenshot as captureScreenshot,
+  startRecording,
+} from '../capture/index.js';
 
 import { invalidParams, requireString } from './rpc-error.js';
 import {
@@ -24,7 +28,7 @@ async function launchSession(state, params) {
   const options = buildLaunchOptions(params);
   const launched = await state.dependencies.launchBrowser(options);
   const session = state.sessions.add(
-    sessionFromLaunch(options.engine, launched)
+    sessionFromLaunch(options.engine, launched, options)
   );
   return {
     session,
@@ -48,6 +52,9 @@ async function connectSession(state, params) {
   const connected = await state.dependencies.connectBrowser({
     engine,
     ...endpoint,
+    ...(params.targetId ? { targetId: params.targetId } : {}),
+    ...(params.urlMatcher ? { url: params.urlMatcher } : {}),
+    ...(params.singleTab !== undefined ? { singleTab: params.singleTab } : {}),
     ...(params.driverPath ? { driverPath: params.driverPath } : {}),
     ...(params.bidi !== undefined ? { bidi: params.bidi } : {}),
   });
@@ -111,10 +118,38 @@ async function capture(params, write) {
 }
 
 function screenshot(state, params) {
-  const { page } = sessionOf(state, params);
+  const { page, engine } = sessionOf(state, params);
   return capture(params, (options) =>
-    page.screenshot({ ...options, fullPage: params.fullPage === true })
+    captureScreenshot({ ...params, ...options, page, engine })
   );
+}
+
+async function recordStart(state, params) {
+  const session = sessionOf(state, params);
+  if (session.recording) {
+    throw invalidParams('A recording is already active');
+  }
+  session.recording = await startRecording({
+    ...params,
+    page: session.page,
+    engine: session.engine,
+  });
+  return { recording: true };
+}
+async function recordStop(state, params) {
+  const session = sessionOf(state, params);
+  if (!session.recording) {
+    throw invalidParams('No recording is active');
+  }
+  const recording = session.recording;
+  session.recording = null;
+  const result = await recording.stop(params);
+  return {
+    path: result.path,
+    bytes: result.bytes?.length ?? 0,
+    frames: result.frames.length,
+    truncated: result.truncated,
+  };
 }
 
 function pdf(state, params) {
@@ -340,6 +375,8 @@ export const HIGH_LEVEL_METHODS = Object.freeze({
   'page.pdf': pdf,
   'trace.start': traceStart,
   'trace.stop': traceStop,
+  'record.start': recordStart,
+  'record.stop': recordStop,
   'cookies.import': importCookies,
   'cookies.sources': cookieSources,
   'profile.migrate': migrateProfile,

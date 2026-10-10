@@ -45,11 +45,58 @@ async function connectSelenium(options, dependencies) {
         ...options,
         debuggerAddress: new URL(options.cdpEndpoint).host,
       });
+  await selectWebDriverTab(connected.driver, options);
   return {
     ...connected,
     browser: connected.driver,
     disconnect: connected.close,
   };
+}
+
+async function selectWebDriverTab(driver, options) {
+  if (!driver?.getAllWindowHandles) {
+    return;
+  }
+  const original = await driver.getWindowHandle();
+  const handles = await driver.getAllWindowHandles();
+  let selected = original;
+  if (options.targetId || options.url) {
+    selected = null;
+    for (const handle of handles) {
+      if (
+        options.targetId &&
+        handle !== options.targetId &&
+        handle !== `CDwindow-${options.targetId}`
+      ) {
+        continue;
+      }
+      await driver.switchTo().window(handle);
+      const url = await driver.getCurrentUrl();
+      if (
+        options.url &&
+        !(typeof options.url === 'function'
+          ? options.url(url)
+          : options.url instanceof RegExp
+            ? options.url.test(url)
+            : url === options.url)
+      ) {
+        continue;
+      }
+      selected = handle;
+      break;
+    }
+    if (!selected) {
+      await driver.switchTo().window(original);
+      throw new Error('No tab matches the requested targetId or URL');
+    }
+  }
+  if (options.singleTab) {
+    for (const handle of handles.filter((handle) => handle !== selected)) {
+      await driver.switchTo().window(handle);
+      await driver.close();
+    }
+  }
+  await driver.switchTo().window(selected);
 }
 
 function addDefinedOptions(options, values) {
@@ -111,19 +158,75 @@ async function prepareStorageState({ storageState, seedCookies }) {
  * @param {Object[]} pages - Engine page handles
  * @returns {Promise<Object|undefined>}
  */
-export async function pickForegroundPage(pages) {
+export async function pickForegroundPage(pages, options = {}) {
+  const targets = new Map();
+  // Playwright emulates focus on every attached tab. Remove the emulation
+  // before observing visibility; DevTools target order has no active-tab flag.
   for (const page of pages) {
-    if (typeof page?.evaluate !== 'function') {
-      continue;
-    }
-    const state = await page
-      .evaluate(() => document.visibilityState)
-      .catch(() => null);
-    if (state === 'visible') {
-      return page;
+    let session;
+    try {
+      session =
+        (await page.context?.().newCDPSession?.(page)) ??
+        (await page.target?.().createCDPSession?.());
+      if (!session) {
+        continue;
+      }
+      const { targetInfo } = await session.send('Target.getTargetInfo');
+      targets.set(page, targetInfo.targetId);
+      await session.send('Emulation.setFocusEmulationEnabled', {
+        enabled: false,
+      });
+    } catch {
+      // Non-Chromium engines do not expose CDP. Explicit URL matching still
+      // works there, and normal visibility is not affected by this emulation.
+    } finally {
+      await session?.detach?.().catch(() => {});
     }
   }
-  return pages[0];
+  let selected;
+  if (options.targetId || options.url) {
+    selected = pages.find((page) => {
+      if (options.targetId && targets.get(page) !== options.targetId) {
+        return false;
+      }
+      const url = page.url();
+      const matcher = options.url;
+      if (matcher instanceof RegExp) {
+        matcher.lastIndex = 0;
+        return matcher.test(url);
+      }
+      if (typeof matcher === 'function') {
+        return matcher(url);
+      }
+      return !matcher || matcher === url;
+    });
+    if (!selected) {
+      throw new RangeError('No tab matches the requested targetId/URL');
+    }
+  }
+  if (!selected) {
+    for (const page of pages) {
+      if (typeof page?.evaluate !== 'function') {
+        continue;
+      }
+      const state = await page
+        .evaluate(() => document.visibilityState)
+        .catch(() => null);
+      if (state === 'visible') {
+        selected = page;
+        break;
+      }
+    }
+  }
+  selected ??= pages[0];
+  if (options.singleTab && selected) {
+    for (const page of pages) {
+      if (page !== selected) {
+        await page.close();
+      }
+    }
+  }
+  return selected;
 }
 
 async function connectPlaywright({ options, loadPlaywright, storageState }) {
@@ -138,10 +241,11 @@ async function connectPlaywright({ options, loadPlaywright, storageState }) {
     throw new Error('Connected Playwright browser has no default context');
   }
   const page =
-    (await pickForegroundPage(context.pages())) ?? (await context.newPage());
+    (await pickForegroundPage(context.pages(), options)) ??
+    (await context.newPage());
 
   await restorePlaywrightStorageState({ context, storageState });
-  return { browser, page };
+  return { browser, page, detach: browser.close?.bind(browser) };
 }
 
 async function connectPuppeteer({ options, loadPuppeteer, storageState }) {
@@ -151,11 +255,11 @@ async function connectPuppeteer({ options, loadPuppeteer, storageState }) {
     buildPuppeteerConnectOptions(options)
   );
   const page =
-    (await pickForegroundPage(await browser.pages())) ??
+    (await pickForegroundPage(await browser.pages(), options)) ??
     (await browser.newPage());
 
   await restorePuppeteerStorageState({ page, storageState });
-  return { browser, page };
+  return { browser, page, detach: browser.disconnect?.bind(browser) };
 }
 
 /**

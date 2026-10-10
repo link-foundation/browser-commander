@@ -44,6 +44,9 @@ const LAUNCH_PASSTHROUGH = Object.freeze([
   'driverPath',
   'bidi',
   'seedCookies',
+  'disableFeatures',
+  'keepOpen',
+  'idleTimeoutMs',
 ]);
 
 /** Validate an engine name, defaulting to Playwright. */
@@ -121,20 +124,24 @@ export function buildLaunchOptions(params = {}) {
  * CDP-connected `Browser` as `connectedBrowser`; the engine launch returns a
  * persistent context whose `browser()` is null. Puppeteer returns a Browser.
  */
-export function sessionFromLaunch(engine, launched) {
+export function sessionFromLaunch(engine, launched, { keepOpen = false } = {}) {
   engine = launched.engine ?? engine;
   const playwright = engine === 'playwright';
   const handle = launched.browser;
+  const persistent = keepOpen && Boolean(launched.detach);
   return {
     engine,
     browser: playwright
       ? (launched.connectedBrowser ?? handle?.browser?.() ?? null)
       : handle,
-    context: playwright ? handle : (handle?.defaultBrowserContext?.() ?? null),
+    context: playwright
+      ? (launched.page?.context?.() ?? handle)
+      : (handle?.defaultBrowserContext?.() ?? null),
     page: launched.page,
     driver: launched.driver ?? (engine === 'selenium' ? handle : null),
     args: launched.args ?? [],
-    close: () => launched.close(),
+    close: () => (persistent ? launched.detach() : launched.close()),
+    persistent,
     connected: false,
   };
 }
@@ -205,6 +212,7 @@ export class SessionTable {
       this.latest = [...this.sessions.keys()].at(-1) ?? null;
     }
     await session.trace?.stop?.().catch(() => {});
+    await session.recording?.stop?.().catch(() => {});
     await session.close();
   }
 

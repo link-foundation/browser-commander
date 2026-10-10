@@ -17,7 +17,8 @@
         "--disable-session-crashed-bubble",
         "--hide-crash-restore-bubble",
         "--disable-crash-restore"
-      ]
+      ],
+      "disableFeatures": ["SessionRestoreInfobar"]
     },
     {
       "id": "no-infobars",
@@ -60,7 +61,12 @@
     {
       "id": "no-translate",
       "description": "Disable the Translate feature and its bubble.",
-      "disableFeatures": ["Translate"]
+      "disableFeatures": ["Translate"],
+      "preferences": {
+        "translate": {
+          "enabled": false
+        }
+      }
     },
     {
       "id": "no-component-update",
@@ -124,6 +130,24 @@
       "id": "start-maximized",
       "description": "Start with a maximized window.",
       "args": ["--start-maximized"]
+    },
+    {
+      "id": "no-save-bubbles",
+      "description": "Suppress password and payment-card saving bubbles and browser promos.",
+      "disableFeatures": [
+        "AutofillSaveCardUi",
+        "ChromeWhatsNewUI",
+        "PromotionalTabs"
+      ],
+      "preferences": {
+        "credentials_enable_service": false,
+        "profile": {
+          "password_manager_enabled": false
+        },
+        "autofill": {
+          "credit_card_enabled": false
+        }
+      }
     }
   ],
   "presets": {
@@ -142,6 +166,13 @@
       "no-default-browser-check",
       "no-google-services",
       "no-translate"
+    ],
+    "quiet-ui": [
+      "no-first-run",
+      "no-default-browser-check",
+      "no-crash-restore",
+      "no-translate",
+      "no-save-bubbles"
     ]
   }
 }

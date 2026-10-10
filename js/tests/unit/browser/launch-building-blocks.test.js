@@ -73,7 +73,11 @@ describe('launch restrictions', () => {
       GOOGLE_DEFAULT_CLIENT_ID: 'no',
       GOOGLE_DEFAULT_CLIENT_SECRET: 'no',
     });
-    assert.ok(resolved.args.includes('--disable-features=Translate'));
+    assert.ok(
+      resolved.args.includes(
+        '--disable-features=SessionRestoreInfobar,Translate'
+      )
+    );
     assert.ok(LAUNCH_RESTRICTION_PRESETS['legacy-launch-browser']);
   });
 

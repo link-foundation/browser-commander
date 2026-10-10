@@ -11,10 +11,8 @@
 //! waits for that task to write what had already arrived, so a record written
 //! by a call always follows the page activity that came before it.
 
-use std::fmt::Display;
 use std::fs;
-use std::future::Future;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError, Weak};
 
 use futures::stream::BoxStream;
@@ -43,6 +41,8 @@ pub use super::recorder_options::{
     TraceResult, TraceScreenshots, TraceStopOptions, DEFAULT_CAPTURE_TIMEOUT_MS,
 };
 
+mod api;
+
 /// Event sources reported by the engine rather than by the recorder's caller.
 const PAGE_SOURCES: [&str; 6] = [
     "navigation",
@@ -69,6 +69,9 @@ struct Settings {
     commander_version: Option<String>,
     started_at: String,
     root: PathBuf,
+    gzip: bool,
+    har: bool,
+    checkpoint_on_navigation: bool,
 }
 
 /// What changes while the trace runs; never held across an `await`.
@@ -92,6 +95,9 @@ struct Inner {
     operations: tokio::sync::Mutex<()>,
     flush: Option<mpsc::UnboundedSender<FlushRequest>>,
     pump: Mutex<Option<JoinHandle<()>>>,
+    periodic: Mutex<Option<JoinHandle<()>>>,
+    video: tokio::sync::Mutex<Option<crate::capture::Recording>>,
+    video_format: String,
 }
 
 /// A running trace; cheap to clone, and every clone is the same trace.
@@ -188,6 +194,19 @@ pub async fn start_trace(
         None => (mode == TraceMode::CONTINUOUS).then(|| "initial".to_string()),
     };
 
+    let network_events = if let Some(network) = &options.network {
+        Some(page.network_events(network.clone()).await?)
+    } else {
+        None
+    };
+    let video = if let Some(video) = options.video.clone() {
+        let adapter = page
+            .adapter()
+            .ok_or_else(|| invalid("page does not support video capture"))?;
+        Some(crate::capture::start_recording(adapter, video).await?)
+    } else {
+        None
+    };
     let mut bundle = Bundle::open(
         &options.output,
         &options.limits,
@@ -208,7 +227,7 @@ pub async fn start_trace(
             started_at: Some(Json::from(started_at.as_str())),
             commander_version: Some(Json::from(options.commander_version.clone())),
         };
-        bundle.links = Some(LinksSink::open(links, header).map_err(invalid)?);
+        bundle.links = Some(LinksSink::open(links, header, &bundle.root).map_err(invalid)?);
     }
 
     let capture = JsonObject::new()
@@ -218,17 +237,27 @@ pub async fn start_trace(
         .with("html", dom.html)
         .with("liveControlState", dom.live_control_state)
         .with("openShadowRoots", dom.open_shadow_roots)
+        .with("ignoreSelectors", strings(&options.ignore_selectors))
+        .with(
+            "captureText",
+            options
+                .links
+                .as_ref()
+                .and_then(|links| links.dom.as_deref())
+                == Some("text"),
+        )
         .with("maxHtmlBytes", options.limits.max_html_bytes.unwrap_or(0));
-    let stream = MutationStream::new(
+    let mut stream = MutationStream::new(
         mutations,
         &privacy.redact_selectors,
         options.limits.max_queued_mutations,
         dom.live_state,
         options.capture_timeout_ms,
     );
+    stream.ignore_selectors(&options.ignore_selectors);
 
     // The observers attach before anything is recorded, as in JavaScript.
-    let page_events = if PAGE_SOURCES
+    let mut page_events = if PAGE_SOURCES
         .iter()
         .any(|source| events.iter().any(|e| e == source))
     {
@@ -236,6 +265,12 @@ pub async fn start_trace(
     } else {
         None
     };
+    if let Some(network) = network_events {
+        page_events = Some(match page_events {
+            Some(events) => futures::stream::select(events, network).boxed(),
+            None => network,
+        });
+    }
     let (flush, flushes) = match page_events {
         Some(_) => {
             let (sender, receiver) = mpsc::unbounded_channel();
@@ -262,6 +297,9 @@ pub async fn start_trace(
             commander_version: options.commander_version,
             started_at,
             root,
+            gzip: options.gzip,
+            har: options.network.as_ref().is_some_and(|n| n.har),
+            checkpoint_on_navigation: options.checkpoint_on_navigation,
         },
         mutations: stream,
         state: Mutex::new(State {
@@ -276,6 +314,14 @@ pub async fn start_trace(
         operations: tokio::sync::Mutex::new(()),
         flush,
         pump: Mutex::new(None),
+        periodic: Mutex::new(None),
+        video: tokio::sync::Mutex::new(video),
+        video_format: options
+            .video
+            .as_ref()
+            .and_then(|v| v.encoding["format"].as_str())
+            .unwrap_or("webm")
+            .to_owned(),
     });
     if let (Some(events), Some(flushes)) = (page_events, flushes) {
         let task = tokio::spawn(pump(Arc::downgrade(&inner), events, flushes));
@@ -310,6 +356,33 @@ pub async fn start_trace(
         inner
             .checkpoint(&name, "recorder", TraceCheckpointReason::INITIAL)
             .await?;
+    }
+    if mutations || inner.settings.checkpoint_on_navigation {
+        let weak = Arc::downgrade(&inner);
+        let mut navigation = inner.lock().identity.navigation_id();
+        let task = tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                let Some(inner) = weak.upgrade() else { return };
+                let _operation = inner.operations.lock().await;
+                if inner.lock().stopped {
+                    return;
+                }
+                let index = inner.lock().checkpoint_index;
+                let _ = inner.drain(index).await;
+                let current = inner.lock().identity.navigation_id();
+                if inner.settings.checkpoint_on_navigation && current != navigation {
+                    navigation = current;
+                    let _ = inner
+                        .checkpoint("navigation", "recorder", "navigation")
+                        .await;
+                }
+            }
+        });
+        *inner
+            .periodic
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner) = Some(task);
     }
     Ok(TraceRecorder { inner })
 }
@@ -411,6 +484,12 @@ impl Inner {
     fn on_page_event(&self, event: TraceEngineEvent) {
         let mut state = self.lock();
         let (source, kind, payload) = match event {
+            TraceEngineEvent::Network { kind, payload } => {
+                if let Json::Object(payload) = Json::from(payload) {
+                    let _ = self.record_locked(&mut state, &kind, &payload);
+                }
+                return;
+            }
             TraceEngineEvent::Navigated { main_frame, url } => {
                 if !self.records("navigation") {
                     return;
@@ -663,6 +742,22 @@ impl Inner {
         if let Some(result) = self.lock().result.clone() {
             return Ok(result);
         }
+        if let Some(task) = self
+            .periodic
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .take()
+        {
+            task.abort();
+        }
+        if let Some(mut video) = self.video.lock().await.take() {
+            let recording = video.stop().await?;
+            if let Some(bytes) = recording.bytes {
+                self.lock()
+                    .bundle
+                    .write_member(&format!("recording.{}", self.video_format), &bytes)?;
+            }
+        }
         let index = self.lock().checkpoint_index;
         self.drain(index).await?;
         let init_script = {
@@ -741,6 +836,12 @@ impl Inner {
             links: sink.as_ref().map(|sink| sink.path.clone()),
             discarded: false,
         };
+        if settings.har {
+            super::network::write_har(&settings.root)?;
+        }
+        if settings.gzip {
+            super::storage::gzip_trace(&settings.root)?;
+        }
         if options.discard {
             let _ = fs::remove_dir_all(&settings.root);
             // An export of a bundle that no longer exists points at nothing.
@@ -754,163 +855,16 @@ impl Inner {
     }
 }
 
-impl TraceRecorder {
-    /// The bundle directory.
-    pub fn path(&self) -> &Path {
-        &self.inner.settings.root
-    }
-
-    /// The trace's mode.
-    pub fn mode(&self) -> &str {
-        &self.inner.settings.mode
-    }
-
-    /// The Links Notation export, when one is being written.
-    pub fn links(&self) -> Option<PathBuf> {
-        let state = self.inner.lock();
-        match &state.result {
-            Some(result) => result.links.clone(),
-            None => state.bundle.links.as_ref().map(|sink| sink.path.clone()),
-        }
-    }
-
-    /// Whether [`TraceRecorder::stop`] has run.
-    pub fn stopped(&self) -> bool {
-        self.inner.lock().stopped
-    }
-
-    /// The checkpoints taken so far.
-    pub fn checkpoints(&self) -> Vec<JsonObject> {
-        self.inner.lock().checkpoints.clone()
-    }
-
-    /// Capture a checkpoint taken by the automation.
-    ///
-    /// # Errors
-    ///
-    /// Fails after [`TraceRecorder::stop`], or when a strict trace drops
-    /// something.
-    pub async fn checkpoint(&self, name: &str) -> Result<JsonObject, TraceRecordError> {
-        self.checkpoint_with(name, TraceCheckpointOptions::default())
-            .await
-    }
-
-    /// Capture a checkpoint; `{index, name, actor, reason, url, truncated, members}`.
-    ///
-    /// # Errors
-    ///
-    /// As [`TraceRecorder::checkpoint`].
-    pub async fn checkpoint_with(
-        &self,
-        name: &str,
-        options: TraceCheckpointOptions,
-    ) -> Result<JsonObject, TraceRecordError> {
-        let _operation = self.inner.operations.lock().await;
-        self.inner.flush().await;
-        let actor = options.actor.as_deref().unwrap_or("automation");
-        let reason = options
-            .reason
-            .as_deref()
-            .unwrap_or(TraceCheckpointReason::CHECKPOINT);
-        self.inner.checkpoint(name, actor, reason).await
-    }
-
-    /// Record something a caller cares about on the same timeline; the record
-    /// written, or `None` once the trace has stopped.
-    ///
-    /// # Errors
-    ///
-    /// Fails when a strict trace drops the record.
-    pub async fn event(
-        &self,
-        name: &str,
-        data: JsonObject,
-    ) -> Result<Option<JsonObject>, TraceRecordError> {
-        let _operation = self.inner.operations.lock().await;
-        self.inner.flush().await;
-        let mut payload = JsonObject::new()
-            .with("action", name)
-            .with("actor", "caller");
-        payload.extend_from(&data);
-        self.inner.record(TraceEvent::INTERACTION, &payload)
-    }
-
-    /// Run one interaction and record it, as a traced commander method is.
-    ///
-    /// `target` is the selector or URL acted on; typed text never belongs
-    /// there. The interaction is recorded only when the trace records the
-    /// `interaction` source, and the work's own outcome is returned unchanged.
-    pub async fn traced<T, E, F>(&self, action: &str, target: Option<&str>, work: F) -> Result<T, E>
-    where
-        E: Display,
-        F: Future<Output = Result<T, E>>,
-    {
-        if !self.inner.records("interaction") {
-            return work.await;
-        }
-        let (started, action_id) = {
-            let mut state = self.inner.lock();
-            (state.bundle.now_ms(), state.identity.next_action_id())
-        };
-        let outcome = work.await;
-        self.inner.flush().await;
-        let mut state = self.inner.lock();
-        let duration = state.bundle.now_ms() - started;
-        let mut payload = JsonObject::new()
-            .with("actionId", action_id)
-            .with("action", action)
-            .with("target", Json::from(target))
-            .with("durationMs", duration)
-            .with("ok", outcome.is_ok());
-        if let Err(error) = &outcome {
-            payload.insert("error", error.to_string());
-        }
-        // The interaction's own result matters more than its record.
-        let _ = self
-            .inner
-            .record_locked(&mut state, TraceEvent::INTERACTION, &payload);
-        outcome
-    }
-
-    /// Stop recording and write the manifest; calling it again returns the
-    /// first result.
-    ///
-    /// # Errors
-    ///
-    /// Fails when the manifest cannot be written or a strict trace drops
-    /// something.
-    pub async fn stop(&self) -> Result<TraceResult, TraceRecordError> {
-        self.stop_with(TraceStopOptions::default()).await
-    }
-
-    /// [`TraceRecorder::stop`], discarding the bundle or recording the error
-    /// the run ended with.
-    ///
-    /// # Errors
-    ///
-    /// As [`TraceRecorder::stop`].
-    pub async fn stop_with(
-        &self,
-        options: TraceStopOptions,
-    ) -> Result<TraceResult, TraceRecordError> {
-        let _operation = self.inner.operations.lock().await;
-        self.inner.flush().await;
-        self.inner.stop(options).await
-    }
-}
-
-impl std::fmt::Debug for TraceRecorder {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TraceRecorder")
-            .field("path", &self.inner.settings.root)
-            .field("mode", &self.inner.settings.mode)
-            .field("stopped", &self.stopped())
-            .finish()
-    }
-}
-
 impl Drop for Inner {
     fn drop(&mut self) {
         self.stop_pump();
+        if let Some(task) = self
+            .periodic
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .take()
+        {
+            task.abort();
+        }
     }
 }

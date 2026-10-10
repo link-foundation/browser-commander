@@ -122,7 +122,7 @@ Features: `engines.cli-matrix`.
 | Click / fill / type text                | Supported             | Supported            | Supported          | Supported              | Supported             |
 | Scroll into view                        | Supported             | Supported            | Supported          | Supported              | Supported             |
 | Evaluate JavaScript                     | Supported             | Supported            | Supported          | Supported              | Supported             |
-| Screenshot                              | Supported             | Supported            | Supported          | Supported              | Supported             |
+| Raw PNG screenshot                      | Supported             | Supported            | Supported          | Supported              | Supported             |
 | PDF                                     | Supported             | Supported            | Supported          | Supported              | Supported             |
 | Keyboard press/type/down/up             | Supported             | Supported            | Supported          | Supported              | Supported             |
 | Bring page to front                     | Supported             | Supported            | Supported          | Supported              | Supported             |
@@ -286,6 +286,10 @@ lifecycle - click, capture, close the browser, read the file back - because the
 unit tests stage files by hand.
 
 ## Portable Traces
+
+Raw PNG support does not imply parity for element/full-page capture, WebP,
+transparency, CSS scaling or movies. The [capture capability table](capture-and-debugging.md#engine-capabilities)
+lists native support and explicit unsupported options for every adapter.
 
 A trace is one versioned directory (`manifest.json`, an ordered NDJSON
 timeline, per-checkpoint DOM snapshots and the mutation batches between them),

@@ -54,6 +54,7 @@ class NavigationManager:
         self.network_tracker = network_tracker
 
         self.last_outcome = None
+        self.network_idle_timeout = TIMING["NAVIGATION_TIMEOUT"]
         self._is_listening = False
         self._is_navigating = False
         self._last_url = ""
@@ -80,6 +81,7 @@ class NavigationManager:
     def configure(
         self,
         redirect_stabilization_time: int | None = None,
+        network_idle_timeout: int | None = None,
     ) -> None:
         """Adjust navigation configuration.
 
@@ -88,6 +90,10 @@ class NavigationManager:
         """
         if redirect_stabilization_time is not None:
             self._readiness.redirect_stabilization_time = redirect_stabilization_time
+        if network_idle_timeout is not None:
+            if network_idle_timeout <= 0:
+                raise ValueError("network_idle_timeout must be positive")
+            self.network_idle_timeout = network_idle_timeout
 
     def start_listening(self) -> None:
         """Start listening for navigation events."""
@@ -333,6 +339,7 @@ class NavigationManager:
         timeout: int = TIMING["NAVIGATION_TIMEOUT"],
         reason: str = "page ready",
         checks: Sequence[ReadinessCheck] | None = None,
+        observe_only: bool = False,
     ) -> ReadinessResult:
         """Wait for the page to be ready and return the full evidence.
 
@@ -347,6 +354,10 @@ class NavigationManager:
         Returns:
             The structured readiness result
         """
+        if observe_only:
+            return await self._readiness.wait_for_ready(
+                timeout=timeout, reason=reason, checks=checks, observe_only=True
+            )
         key = (timeout, reason, id(checks))
         if (
             self._page_ready_task
@@ -369,8 +380,9 @@ class NavigationManager:
 
     async def wait_for_page_ready(
         self,
-        timeout: int = TIMING["NAVIGATION_TIMEOUT"],
+        timeout: int | None = None,
         reason: str = "page ready",
+        ready_on: str = "networkidle",
     ) -> bool:
         """Wait for page to be fully ready (URL settled + network idle).
 
@@ -381,7 +393,30 @@ class NavigationManager:
         Returns:
             True only when every readiness check was satisfied
         """
-        result = await self.wait_for_readiness(timeout=timeout, reason=reason)
+        timeout = self.network_idle_timeout if timeout is None else timeout
+        checks = None
+        if ready_on == "urlchange":
+            checks = []
+        elif ready_on in {"domcontentloaded", "load"}:
+            from browser_commander.core.readiness import stable_check
+
+            async def sample(context):
+                from browser_commander.core.engine_adapter import create_engine_adapter
+
+                state = await create_engine_adapter(
+                    self.page, self.engine
+                ).evaluate_on_page("() => document.readyState")
+                return state == "complete" if ready_on == "load" else state != "loading"
+
+            checks = [stable_check(ready_on, sample, stable_for_ms=0, interval_ms=50)]
+        elif ready_on != "networkidle":
+            raise ValueError(f"Unknown ready_on: {ready_on}")
+        result = await self.wait_for_readiness(
+            timeout=timeout,
+            reason=reason,
+            checks=checks,
+            observe_only=ready_on != "networkidle",
+        )
         return result.ready
 
     def on(self, event: str, callback: Callable) -> Callable:

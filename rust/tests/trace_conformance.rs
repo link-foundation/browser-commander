@@ -271,6 +271,7 @@ fn options_for(scenario: &Json, output: &Path) -> TraceOptions {
         trace.links = Some(TraceLinksOptions {
             output: output.join("trace.lino"),
             include: None,
+            dom: None,
         });
     }
     trace.clock = TraceClock::fixed(

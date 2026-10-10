@@ -13,6 +13,18 @@ Key features:
 
 from __future__ import annotations
 
+from browser_commander.browser.persistent_session import (
+    PersistentSession,
+    connect_or_launch,
+)
+from browser_commander.capture import (
+    Recording,
+    ScreenshotOptions,
+    UnsupportedCaptureError,
+    encode_animation,
+    screenshot,
+    start_recording,
+)
 from browser_commander.exports import (
     # Core utilities
     ALL_DATA_CLASSES,
@@ -291,6 +303,7 @@ __all__ = [
     "NetworkTracker",
     # Page trigger system
     "PageTriggerManager",
+    "PersistentSession",
     "PlaywrightAdapter",
     "PortRaceError",
     "ReadinessCheck",
@@ -298,6 +311,7 @@ __all__ = [
     "ReadinessStatus",
     "RealBrowserOptions",
     "RealBrowserResult",
+    "Recording",
     "RelayAddress",
     "RelayEvent",
     "RelayExtension",
@@ -306,6 +320,7 @@ __all__ = [
     "RelayTab",
     "SafariSetupError",
     "SafariUnsupportedError",
+    "ScreenshotOptions",
     "ScrollConstraintError",
     "ScrollResult",
     "ScrollVerificationResult",
@@ -313,6 +328,7 @@ __all__ = [
     "SeleniumLocatorWrapper",
     "SeleniumTextSelector",
     "SnapshotOptions",
+    "UnsupportedCaptureError",
     "WaitAfterActionResult",
     "WaitResult",
     "all_conditions",
@@ -339,6 +355,7 @@ __all__ = [
     "click_element",
     "compare_command_lines",
     "connect_browser",
+    "connect_or_launch",
     "count",
     "create_cdp_session",
     "create_engine_adapter",
@@ -357,6 +374,7 @@ __all__ = [
     "disables_automation_controlled",
     "dom_stable_for",
     "emulate_media",
+    "encode_animation",
     "evaluate",
     "extension_directory",
     "fill_text_area",
@@ -428,6 +446,7 @@ __all__ = [
     "safe_evaluate",
     "safe_operation",
     "save_storage_state",
+    "screenshot",
     # Scroll interactions
     "scroll_into_view",
     "scroll_into_view_if_needed",
@@ -435,6 +454,7 @@ __all__ = [
     "snapshot_user_data_dir",
     "stable_check",
     "start_process",
+    "start_recording",
     # Element content
     "text_content",
     "unfocus_address_bar",

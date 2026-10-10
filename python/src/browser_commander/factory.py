@@ -38,6 +38,7 @@ class BrowserCommander:
         enable_navigation_manager: bool = True,
         enable_dialog_manager: bool = True,
         downloads: Any = None,
+        **features: Any,
     ) -> None:
         """Initialize browser commander.
 
@@ -51,6 +52,16 @@ class BrowserCommander:
                 such as the one ``launch_browser()`` returned (issue #88)
         """
         self.page = page
+        self._recordings: list[Any] = []
+        self._features = features
+        self._initial_options = {
+            **features,
+            "verbose": verbose,
+            "enable_network_tracking": enable_network_tracking,
+            "enable_navigation_manager": enable_navigation_manager,
+            "enable_dialog_manager": enable_dialog_manager,
+            "downloads": downloads,
+        }
         # Managed downloads (issue #88). Present once a manager is attached,
         # either by passing the one ``launch_browser()`` returned or by calling
         # ``configure_downloads()`` on an existing commander.
@@ -66,7 +77,7 @@ class BrowserCommander:
                 page=page,
                 engine=self.engine,
                 log=self.log,
-                idle_timeout=30000,
+                idle_timeout=features.get("network_idle_for_ms", 30000),
             )
             self.network_tracker.start_tracking()
 
@@ -92,6 +103,9 @@ class BrowserCommander:
                 network_tracker=self.network_tracker,
             )
             self.navigation_manager.start_listening()
+            self.navigation_manager.configure(
+                network_idle_timeout=features.get("network_idle_timeout")
+            )
 
             # Create PageTriggerManager
             self.page_trigger_manager = PageTriggerManager(
@@ -99,6 +113,9 @@ class BrowserCommander:
                 log=self.log,
             )
             self.page_trigger_manager.initialize(self)
+        from browser_commander.core.commander_features import attach_commander_features
+
+        attach_commander_features(self, features)
 
     # ==================== URL Condition Helpers ====================
     @staticmethod
@@ -250,6 +267,25 @@ class BrowserCommander:
         return await start_trace(self, **options)
 
     # ==================== Lifecycle ====================
+    async def screenshot(self, **options: Any) -> bytes:
+        from browser_commander.capture import screenshot
+
+        return await screenshot(
+            self.page, self.engine, **{**self._features.get("capture", {}), **options}
+        )
+
+    async def start_recording(self, **options: Any) -> Any:
+        from browser_commander.capture import start_recording
+
+        recording = await start_recording(self.page, self.engine, **options)
+        self._recordings.append(recording)
+        return recording
+
+    def gif(self, frames: list[Any], **options: Any) -> bytes:
+        from browser_commander.capture import encode_animation
+
+        return encode_animation(frames, format="gif", **options)
+
     async def destroy(self) -> None:
         """Clean up all resources."""
         # Downloads are disposed first: disposing waits for bytes still being
@@ -257,6 +293,8 @@ class BrowserCommander:
         # should still find the file.
         if self.downloads is not None:
             await self.downloads.dispose()
+        await asyncio.gather(*(recording.stop() for recording in self._recordings))
+        self._recordings.clear()
 
         if self.page_trigger_manager:
             await self.page_trigger_manager.destroy()
@@ -435,8 +473,9 @@ class BrowserCommander:
 
     async def wait_for_page_ready(
         self,
-        timeout: int = 30000,
+        timeout: int | None = None,
         reason: str = "page ready",
+        ready_on: str = "networkidle",
     ) -> bool:
         """Wait for page to be fully ready.
 
@@ -457,6 +496,7 @@ class BrowserCommander:
             wait_fn=lambda ms, r: self.wait(ms, r),
             timeout=timeout,
             reason=reason,
+            ready_on=ready_on,
         )
 
     # ==================== Element Selection ====================
@@ -666,7 +706,7 @@ class BrowserCommander:
             self.page, self.engine, selector, disabled_classes, index=index
         )
 
-    async def count(self, selector: str) -> int:
+    async def count(self, selector: str, visible: bool = False) -> int:
         """Get element count.
 
         Args:
@@ -677,7 +717,7 @@ class BrowserCommander:
         """
         from browser_commander.elements.visibility import count
 
-        return await count(self.page, self.engine, selector)
+        return await count(self.page, self.engine, selector, visible=visible)
 
     # ==================== Element Content ====================
     async def text_content(self, selector: str) -> str | None:
@@ -930,6 +970,7 @@ def make_browser_commander(
     enable_navigation_manager: bool = True,
     enable_dialog_manager: bool = True,
     downloads: Any = None,
+    **features: Any,
 ) -> BrowserCommander:
     """Create a browser commander instance for a specific page.
 
@@ -951,4 +992,5 @@ def make_browser_commander(
         enable_navigation_manager=enable_navigation_manager,
         enable_dialog_manager=enable_dialog_manager,
         downloads=downloads,
+        **features,
     )

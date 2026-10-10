@@ -221,7 +221,7 @@ async def test_engine_launch_passes_restriction_environment_to_the_browser_only(
     assert options["env"]["GOOGLE_API_KEY"] == "no"
     assert "GOOGLE_API_KEY" not in os.environ
     assert "--no-first-run" in options["args"]
-    assert "--disable-features=Translate" in options["args"]
+    assert "--disable-features=SessionRestoreInfobar,Translate" in options["args"]
     assert result.close is not None
     await result.close()
 

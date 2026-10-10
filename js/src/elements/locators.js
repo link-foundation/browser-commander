@@ -1,5 +1,8 @@
 import { TIMING } from '../core/constants.js';
-import { isNavigationError } from '../core/navigation-safety.js';
+import {
+  waitNavigationState,
+  recoverWaitError,
+} from '../core/navigation-safety.js';
 
 /**
  * Helper to create Playwright locator from selector string
@@ -9,12 +12,16 @@ import { isNavigationError } from '../core/navigation-safety.js';
  * @param {string} options.selector - CSS selector
  * @returns {Object} - Playwright locator
  */
-export function createPlaywrightLocator(options = {}) {
-  const { page, selector } = options;
-
+export function requireSelector(selector) {
   if (!selector) {
     throw new Error('selector is required in options');
   }
+}
+
+export function createPlaywrightLocator(options = {}) {
+  const { page, selector } = options;
+
+  requireSelector(selector);
   // Check if selector has :nth-of-type(n) pattern
   const nthOfTypeMatch = selector.match(/^(.+):nth-of-type\((\d+)\)$/);
 
@@ -42,9 +49,7 @@ export async function getLocatorOrElement(options = {}) {
     throw new TypeError('index must be a non-negative integer');
   }
 
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
+  requireSelector(selector);
   if (typeof selector !== 'string') {
     return selector; // Already a locator/element
   }
@@ -73,18 +78,12 @@ export async function getLocatorOrElement(options = {}) {
  * @throws {Error} - If element not found or not visible within timeout (unless navigation error and throwOnNavigation is false)
  */
 export async function waitForLocatorOrElement(options = {}) {
-  const {
-    page,
-    engine,
-    selector,
-    timeout = TIMING.DEFAULT_TIMEOUT,
-    throwOnNavigation = true,
-  } = options;
+  requireSelector(options.selector);
+  const { page, engine, selector } = options;
+  const timeout =
+    options.timeout === undefined ? TIMING.DEFAULT_TIMEOUT : options.timeout;
 
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
-
+  const initial = waitNavigationState(page, options.navigationManager);
   try {
     if (engine === 'playwright') {
       const locator = await getLocatorOrElement(options);
@@ -125,17 +124,14 @@ export async function waitForLocatorOrElement(options = {}) {
       }
       return element;
     }
-  } catch (error) {
-    if (isNavigationError(error)) {
-      console.log(
-        '⚠️  Navigation detected during waitForLocatorOrElement, recovering gracefully'
-      );
-      if (throwOnNavigation) {
-        throw error;
-      }
-      return null;
-    }
-    throw error;
+  } catch (caught) {
+    return recoverWaitError(
+      caught,
+      options,
+      initial,
+      'waitForLocatorOrElement',
+      null
+    );
   }
 }
 
@@ -179,9 +175,7 @@ export async function waitForVisible(options = {}) {
 export function locator(options = {}) {
   const { page, engine, selector } = options;
 
-  if (!selector) {
-    throw new Error('selector is required in options');
-  }
+  requireSelector(selector);
 
   if (engine === 'playwright') {
     return createPlaywrightLocator({ page, selector });

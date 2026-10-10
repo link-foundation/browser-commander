@@ -160,6 +160,14 @@ jobs:
           PYTHONPATH=python/src xvfb-run -a --server-args="-screen 0 1360x900x24" \
             python experiments/issue-110/capture-infobar.py
 
+      - name: Verify stable viewport in the displayed browser window
+        working-directory: .
+        shell: bash
+        run: |
+          bash scripts/run-with-budget-warning.sh 60 "Stable viewport displayed-pixel regression" \
+            xvfb-run -a --server-args="-screen 0 900x700x24" \
+            python experiments/issue-146/watch-viewport.py
+
       - name: Run WebDriver suite under Xvfb
         # The selenium engine drives the same Chrome through chromedriver
         # (issue #104). launchWebDriver() finds a chromedriver on PATH or asks
@@ -239,7 +247,7 @@ jobs:
         run: python -m pip install -e ./python
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # v1
         with:
           toolchain: stable
 
@@ -311,7 +319,7 @@ jobs:
       - name: Install browser engines
         working-directory: js
         run: npm ci --ignore-scripts
-      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # v1
         with:
           toolchain: stable
       - name: Cache Cargo build
@@ -359,7 +367,7 @@ jobs:
           python-version: '3.13'
       - name: Install Python test dependencies
         run: python -m pip install -e './python[dev]'
-      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # v1
         with:
           toolchain: stable
       - name: Cache Cargo build

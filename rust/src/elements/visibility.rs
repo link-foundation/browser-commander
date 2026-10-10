@@ -138,6 +138,19 @@ pub fn needs_scrolling(
     !is_visible || !is_within_threshold
 }
 
+/// Count matching elements, optionally filtering by rendered visibility.
+pub async fn count_visible(
+    adapter: &dyn EngineAdapter,
+    selector: &str,
+    visible: bool,
+) -> Result<usize, EngineError> {
+    if !visible {
+        return count(adapter, selector).await;
+    }
+    let value = adapter.evaluate(&format!("Array.from(document.querySelectorAll({})).filter(el => {{const style=getComputedStyle(el);const rect=el.getBoundingClientRect();return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0;}}).length",serde_json::json!(selector))).await?;
+    Ok(value.as_u64().unwrap_or_default() as usize)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

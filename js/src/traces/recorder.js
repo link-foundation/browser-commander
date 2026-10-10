@@ -1,3 +1,5 @@
+import { abortTraceStart } from './start-cleanup.js';
+import { createTraceStop } from './stop.js';
 /**
  * The trace recorder (issue #87).
  *
@@ -7,28 +9,23 @@
  * request, so every caller does not have to.
  */
 
-import { captureSnapshotInPage } from './page-capture.js';
+import { createCheckpointRecorder } from './checkpoints.js';
 import { openTraceBundle } from './bundle.js';
 import { openTraceLinks } from './links.js';
 import { createTraceIdentity } from './identity.js';
 import { withDeadline } from './deadline.js';
 import { createMutationStream } from './mutation-stream.js';
 import { attachTimelineObservers } from './observers.js';
+import { attachNetwork, validateNetworkOptions } from './network.js';
+import { startRecording } from '../capture/recording.js';
+import { normalizePrivacyOptions, redactValue } from './redaction.js';
 import {
-  normalizePrivacyOptions,
-  redactUrl,
-  redactValue,
-  REDACTED,
-} from './redaction.js';
-import {
-  createManifest,
   DEFAULT_CAPTURE_TIMEOUT,
   TRACE_CHECKPOINT_REASON,
   TRACE_DROP_REASON,
   TRACE_EVENT,
   TRACE_EVENT_SOURCES,
   TRACE_MODE,
-  TRACE_OUTCOME,
   TRACE_SCHEMA_VERSION,
 } from './schema.js';
 
@@ -92,27 +89,51 @@ function validateLinksOptions(links) {
  * @param {Object} options - Recorder options, see `commander.startTrace()`
  * @returns {Promise<Object>} The running trace
  */
+function normalizeTraceOptions(options) {
+  return {
+    ...options,
+    page: options.page ?? options.commander?.page,
+    mode: options.mode ?? TRACE_MODE.CHECKPOINTS,
+    screenshots: options.screenshots ?? 'checkpoints',
+    dom: options.dom ?? {},
+    privacy: options.privacy ?? {},
+    limits: options.limits ?? {},
+    links: options.links ?? null,
+    network: options.network ?? false,
+    strict: options.strict ?? false,
+    captureTimeoutMs: options.captureTimeoutMs ?? DEFAULT_CAPTURE_TIMEOUT,
+    commanderVersion: options.commanderVersion ?? null,
+    log: options.log ?? options.commander?.log,
+    now: options.now ?? (() => Date.now()),
+  };
+}
+
 export async function startTrace(options = {}) {
+  if (options.limits?.rotate) {
+    const { startRollingTrace } = await import('./rolling.js');
+    return startRollingTrace(options, startTrace);
+  }
   requireTraceSupport(options);
   const {
     commander,
-    page = commander?.page,
+    page,
     output,
-    mode = TRACE_MODE.CHECKPOINTS,
+    mode,
     initialCheckpoint,
-    screenshots = 'checkpoints',
-    dom = {},
+    screenshots,
+    dom,
     events,
-    privacy = {},
-    limits = {},
-    links = null,
-    strict = false,
-    captureTimeoutMs = DEFAULT_CAPTURE_TIMEOUT,
-    commanderVersion = null,
-    log = commander?.log,
-    now = () => Date.now(),
+    privacy,
+    limits,
+    links,
+    network,
+    strict,
+    captureTimeoutMs,
+    commanderVersion,
+    log,
+    now,
     monotonic,
-  } = options;
+  } = normalizeTraceOptions(options);
 
   if (!page) {
     throw new Error('startTrace requires a page or a commander');
@@ -139,8 +160,6 @@ export async function startTrace(options = {}) {
   // added to it uninvited. Passing a string names the base checkpoint.
   const baseCheckpoint =
     initialCheckpoint ?? recorderMode === TRACE_MODE.CONTINUOUS;
-  const baseCheckpointName =
-    typeof baseCheckpoint === 'string' ? baseCheckpoint : 'initial';
 
   // The Links Notation export is a second view of the same records, written
   // as they are recorded (issue #94), so a run that is killed leaves a
@@ -157,21 +176,27 @@ export async function startTrace(options = {}) {
   });
   const startedAt = new Date(now()).toISOString();
 
-  if (links) {
-    linksSink = await openTraceLinks({
-      output: links.output,
-      include: links.include,
-      bundlePath: bundle.root,
-      schemaVersion: TRACE_SCHEMA_VERSION,
-      mode: recorderMode,
-      engine,
-      startedAt,
-      commanderVersion,
-    });
+  try {
+    if (links) {
+      linksSink = await openTraceLinks({
+        output: links.output,
+        include: links.include,
+        dom: links.dom,
+        bundlePath: bundle.root,
+        schemaVersion: TRACE_SCHEMA_VERSION,
+        mode: recorderMode,
+        engine,
+        startedAt,
+        commanderVersion,
+      });
+    }
+  } catch (error) {
+    await bundle.abort();
+    throw error;
   }
 
   let stopped = false;
-  let checkpointIndex = 0;
+  const captureState = { index: 0 };
   const checkpoints = [];
 
   const note = (message) => log?.debug?.(`[trace] ${message}`);
@@ -199,7 +224,7 @@ export async function startTrace(options = {}) {
   async function evaluateInPage(fn, argument) {
     // Both engines take `(fn, arg)`; the commander's own evaluate already
     // normalizes the difference, and is used when it is available.
-    if (commander?.evaluate) {
+    if (commander?.evaluate && typeof page.evaluate !== 'function') {
       return await commander.evaluate(fn, argument);
     }
     return await page.evaluate(fn, argument);
@@ -243,233 +268,184 @@ export async function startTrace(options = {}) {
     }
   }
 
-  /**
-   * Capture a named checkpoint.
-   *
-   * @param {string} name - What this moment is
-   * @param {Object} [checkpointOptions] - `{actor, reason, screenshots}`
-   * @returns {Promise<Object|null>} `{index, name, members}`
-   */
-  async function checkpoint(name, checkpointOptions = {}) {
-    if (stopped) {
-      throw new Error('this trace has already been stopped');
-    }
+  const checkpoint = createCheckpointRecorder({
+    isStopped: () => Boolean(stopped),
+    captureState,
+    mutations,
+    evaluateInPage,
+    privacyOptions,
+    domOptions,
+    links,
+    limits,
+    captureTimeoutMs,
+    bundle,
+    screenshot,
+    checkpoints,
+    record,
+  });
 
-    const { actor = 'automation', reason = 'checkpoint' } = checkpointOptions;
-    const index = ++checkpointIndex;
-
-    // Mutations are drained first so the batches belong to the interval that
-    // ended here, not to the one that starts now.
-    await mutations.drain(index - 1 > 0 ? index - 1 : 0);
-
-    let captured = null;
-    try {
-      captured = await withDeadline(
-        evaluateInPage(captureSnapshotInPage, {
-          redactSelectors: privacyOptions.redactSelectors,
-          redactAttributes: privacyOptions.redactAttributes,
-          redacted: REDACTED,
-          html: domOptions.html,
-          liveControlState: domOptions.liveControlState,
-          openShadowRoots: domOptions.openShadowRoots,
-          maxHtmlBytes: limits.maxHtmlBytes ?? 0,
-        }),
-        captureTimeoutMs,
-        'trace checkpoint capture'
-      );
-    } catch (error) {
-      await bundle.drop({
-        reason: /closed/i.test(error.message)
-          ? TRACE_DROP_REASON.PAGE_CLOSED
-          : TRACE_DROP_REASON.CAPTURE_FAILED,
-        member: `checkpoints/${index}`,
-        detail: error.message,
-      });
-    }
-
-    const shot = await screenshot(reason);
-    const state = captured?.state
-      ? redactValue(captured.state, privacyOptions)
-      : null;
-
-    const members = await bundle.writeCheckpoint({
-      index,
-      html: captured?.html ?? undefined,
-      state: state ? { ...state, name, actor, reason } : undefined,
-      screenshot: shot ?? undefined,
+  let detachers = [],
+    detachNetwork = async () => {},
+    video = null;
+  try {
+    detachers = attachTimelineObservers({
+      commander,
+      page,
+      eventSources,
+      record,
+      note,
+      identity,
+      now,
     });
+    detachNetwork = attachNetwork({ page, network, record, note });
+    video = options.video
+      ? await startRecording({
+          page,
+          engine,
+          ...(options.video === true ? {} : options.video),
+        })
+      : null;
+    let navigationCapture = Promise.resolve();
+    if (options.checkpointOnNavigation) {
+      const captureNavigation = () => {
+        navigationCapture = navigationCapture
+          .then(() =>
+            stopped
+              ? null
+              : checkpoint('navigation', {
+                  reason: 'navigation',
+                  actor: 'recorder',
+                })
+          )
+          .catch((error) => note(error.message));
+      };
+      page.on('load', captureNavigation);
+      detachers.push(() => page.off('load', captureNavigation));
+    }
 
-    const entry = {
-      index,
-      name,
-      actor,
-      reason,
-      url: state ? redactUrl(state.url, privacyOptions) : null,
-      truncated: Boolean(captured?.truncated),
-      members,
-    };
-    checkpoints.push(entry);
-    await record(TRACE_EVENT.CHECKPOINT, entry);
+    // Registered before the first record, so a navigation that starts in the same
+    // tick as the trace does is still recorded from its first mutation.
+    const detachInitScript = await mutations.installPersistent();
+    if (detachInitScript) {
+      detachers.push(detachInitScript);
+    }
 
-    // The init script covers every document created from here on; this covers
-    // a frame that was attached without one, which is cheap because installing
-    // over a recorder that is already observing does nothing.
+    await record(TRACE_EVENT.TRACE_START, {
+      mode: recorderMode,
+      engine,
+      dom: domOptions,
+      events: eventSources,
+      initialCheckpoint: Boolean(baseCheckpoint),
+    });
     await mutations.install();
 
-    return entry;
-  }
-
-  const detachers = attachTimelineObservers({
-    commander,
-    page,
-    eventSources,
-    record,
-    note,
-    identity,
-    now,
-  });
-
-  // Registered before the first record, so a navigation that starts in the same
-  // tick as the trace does is still recorded from its first mutation.
-  const detachInitScript = await mutations.installPersistent();
-  if (detachInitScript) {
-    detachers.push(detachInitScript);
-  }
-
-  await record(TRACE_EVENT.TRACE_START, {
-    mode: recorderMode,
-    engine,
-    dom: domOptions,
-    events: eventSources,
-    initialCheckpoint: Boolean(baseCheckpoint),
-  });
-  await mutations.install();
-
-  if (baseCheckpoint) {
-    await checkpoint(baseCheckpointName, {
-      actor: 'recorder',
-      reason: TRACE_CHECKPOINT_REASON.INITIAL,
-    });
-  }
-
-  /**
-   * Stop recording and write the manifest.
-   *
-   * @param {Object} [stopOptions] - `{outcome, discard, error}`
-   * @returns {Promise<Object>} `{path, manifest, checkpoints}`
-   */
-  async function stop(stopOptions = {}) {
-    if (stopped) {
-      return stopped;
+    if (baseCheckpoint) {
+      await checkpoint(
+        typeof baseCheckpoint === 'string' ? baseCheckpoint : 'initial',
+        {
+          actor: 'recorder',
+          reason: TRACE_CHECKPOINT_REASON.INITIAL,
+        }
+      );
     }
-    const { discard = false, error = null } = stopOptions;
 
-    await mutations.drain(checkpointIndex);
-    if (error) {
-      await record(TRACE_EVENT.PAGE_ERROR, {
-        message: error.message ?? String(error),
-        stack: error.stack ?? null,
-        fatal: true,
+    let drainTask;
+    if (domOptions.mutations) {
+      const timer = setInterval(() => {
+        if (!drainTask) {
+          drainTask = mutations
+            .drain(captureState.index)
+            .catch((error) => note(error.message))
+            .finally(() => {
+              drainTask = null;
+            });
+        }
+      }, 500);
+      timer.unref?.();
+      detachers.push(async () => {
+        clearInterval(timer);
+        await drainTask;
       });
     }
-    await record(TRACE_EVENT.TRACE_STOP, { discarded: discard });
-    stopped = true;
 
-    // The documents that exist stop observing here; the engine's init-script
-    // registration is removed with the detachers below.
-    await mutations.stop();
-
-    for (const detach of detachers.reverse()) {
-      try {
-        await detach();
-      } catch (detachError) {
-        note(`could not detach a listener: ${detachError.message}`);
-      }
-    }
-
-    const manifest = await bundle.close(
-      createManifest({
-        mode: recorderMode,
-        startedAt,
-        stoppedAt: new Date(now()).toISOString(),
-        outcome: TRACE_OUTCOME.COMPLETE,
-        commanderVersion,
-        engine,
-        dom: domOptions,
-        events: eventSources,
-        replay: {
-          checkpoints: true,
-          mutations: Boolean(domOptions.mutations),
-          childListPositions: Boolean(domOptions.mutations),
-          liveState:
-            Boolean(domOptions.mutations) && domOptions.liveState !== false,
-          identifiers: true,
-        },
-        privacy: {
-          redactSelectors: privacyOptions.redactSelectors,
-          redactAttributes: privacyOptions.redactAttributes,
-          redactQueryParams: privacyOptions.redactQueryParams,
-          hasCallback: Boolean(privacyOptions.redact),
-        },
-        limits,
-      })
-    );
-
-    // Closed after the manifest, because the closing link reports the outcome
-    // the manifest settled on, and the control diffs are read back out of the
-    // finished bundle rather than kept in memory for the length of a run.
-    if (linksSink) {
-      await linksSink.close({ manifest, bundlePath: bundle.root });
-    }
-
-    const result = {
-      path: bundle.root,
-      manifest,
-      checkpoints: [...checkpoints],
-      problems: [...bundle.problems, ...(linksSink?.problems ?? [])],
-      links: linksSink?.path ?? null,
-    };
-    stopped = result;
-
-    if (discard) {
-      const fs = await import('node:fs/promises');
-      await fs.rm(bundle.root, { recursive: true, force: true });
-      // An export of a bundle that no longer exists points at nothing.
-      await linksSink?.discard();
-      result.discarded = true;
-    }
-
-    return result;
-  }
-
-  return {
-    path: bundle.root,
-    links: linksSink?.path ?? null,
-    mode: recorderMode,
-    checkpoint,
     /**
-     * Record an event a caller cares about on the same timeline.
+     * Stop recording and write the manifest.
      *
-     * @param {string} name - What happened
-     * @param {Object} [data] - Details, redacted before writing
-     * @returns {Promise<Object|null>} The written event
+     * @param {Object} [stopOptions] - `{outcome, discard, error}`
+     * @returns {Promise<Object>} `{path, manifest, checkpoints}`
      */
-    event: (name, data = {}) =>
-      record(TRACE_EVENT.INTERACTION, {
-        action: name,
-        actor: 'caller',
-        ...data,
-      }),
-    stop,
-    get stopped() {
-      return Boolean(stopped);
-    },
-    get checkpoints() {
-      return [...checkpoints];
-    },
-  };
+    const stop = createTraceStop({
+      getStopped: () => stopped,
+      setStopped: (value) => {
+        stopped = value;
+      },
+      options,
+      detachers,
+      navigationCapture: () => navigationCapture,
+      video,
+      detachNetwork,
+      mutations,
+      captureState,
+      record,
+      note,
+      bundle,
+      recorderMode,
+      startedAt,
+      now,
+      commanderVersion,
+      engine,
+      domOptions,
+      eventSources,
+      privacyOptions,
+      limits,
+      linksSink,
+      network,
+      checkpoints,
+    });
+
+    return {
+      path: bundle.root,
+      links: linksSink?.path ?? null,
+      mode: recorderMode,
+      get bytesWritten() {
+        return bundle.bytesWritten;
+      },
+      checkpoint,
+      /**
+       * Record an event a caller cares about on the same timeline.
+       *
+       * @param {string} name - What happened
+       * @param {Object} [data] - Details, redacted before writing
+       * @returns {Promise<Object|null>} The written event
+       */
+      event: (name, data = {}) =>
+        record(TRACE_EVENT.INTERACTION, {
+          action: name,
+          actor: 'caller',
+          ...data,
+        }),
+      stop,
+      get stopped() {
+        return Boolean(stopped);
+      },
+      get checkpoints() {
+        return [...checkpoints];
+      },
+    };
+  } catch (error) {
+    await abortTraceStart({
+      detachers,
+      detachNetwork,
+      video,
+      mutations,
+      linksSink,
+      bundle,
+    });
+    throw error;
+  }
 }
 
 function requireTraceSupport(options) {
+  validateNetworkOptions(options.network);
   (options.page ?? options.commander?.page)?.requireFeature?.('tracing');
 }

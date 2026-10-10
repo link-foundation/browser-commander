@@ -103,6 +103,7 @@ export function buildRealBrowserArgs({
   remoteDebuggingPort,
   headless = false,
   restrictions = [],
+  disableFeatures = [],
   args = [],
   extraArgs = [],
   automationParity = true,
@@ -127,7 +128,7 @@ export function buildRealBrowserArgs({
     `--user-data-dir=${userDataDir}`,
     `--remote-debugging-port=${remoteDebuggingPort}`,
     ...(headless ? ['--headless=new'] : []),
-    ...resolveRestrictions(restrictions).args,
+    ...resolveRestrictions(restrictions, { disableFeatures }).args,
     ...customArgs,
   ]);
   if (
@@ -642,6 +643,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
   const argOptions = {
     headless,
     restrictions,
+    disableFeatures: options.disableFeatures,
     args,
     extraArgs,
     automationParity,
@@ -700,7 +702,10 @@ export async function launchAndConnectRealBrowserWithDependencies(
   await removingTemporaryProfileOnError(profile, () =>
     configureUserDataDir(userDataDir, {
       defaultBrowserCheck,
-      preferences,
+      preferences: {
+        ...resolveRestrictions(restrictions).preferences,
+        ...preferences,
+      },
       localState,
       profileDirectory: attach?.profile ?? 'Default',
     })

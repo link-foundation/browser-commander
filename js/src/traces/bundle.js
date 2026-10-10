@@ -181,10 +181,17 @@ export async function openTraceBundle(options = {}) {
    * @param {string|Buffer} contents - What to write
    * @returns {Promise<Object|null>} `{member, bytes}` or null when dropped
    */
-  async function writeMember(member, contents) {
+  async function writeMember(member, contents, { append = false } = {}) {
     const data = Buffer.isBuffer(contents) ? contents : Buffer.from(contents);
+    const target = path.join(root, member);
+    const previous = append
+      ? await fs.stat(target).then(
+          (value) => value.size,
+          () => 0
+        )
+      : 0;
 
-    if (!fits(data.length)) {
+    if (!fits(data.length) || previous + data.length > maxResourceBytes) {
       await drop({
         reason: TRACE_DROP_REASON.SIZE_LIMIT,
         member,
@@ -193,13 +200,15 @@ export async function openTraceBundle(options = {}) {
       return null;
     }
 
-    const target = path.join(root, member);
     try {
       await fs.mkdir(path.dirname(target), {
         recursive: true,
         mode: TRACE_DIRECTORY_MODE,
       });
-      await fs.writeFile(target, data, { mode: TRACE_FILE_MODE });
+      await fs.writeFile(target, data, {
+        mode: TRACE_FILE_MODE,
+        flag: append ? 'a' : 'w',
+      });
       written += data.length;
       return { member, bytes: data.length };
     } catch (error) {
@@ -267,7 +276,7 @@ export async function openTraceBundle(options = {}) {
     }
     const member = `${TRACE_FILES.MUTATIONS_DIR}/${sequenceName(index)}.ndjson`;
     const body = `${batches.map((batch) => JSON.stringify(batch)).join('\n')}\n`;
-    const result = await writeMember(member, body);
+    const result = await writeMember(member, body, { append: true });
     if (result) {
       counts.mutationBatches += batches.length;
     }

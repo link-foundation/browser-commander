@@ -427,6 +427,27 @@ describe('readiness', () => {
       assert.strictEqual(result.ready, false);
     });
 
+    it('should preserve timer expiry while a fractional clock budget remains', async () => {
+      const clock = createFakeClock();
+      const deadline = createDeadline({ timeout: 20, now: clock.now });
+      // The timer and monotonic clock can disagree by a fraction of a
+      // millisecond. Freeze that disagreement to reproduce it every time.
+      clock.advance(19.4);
+      const result = await runReadinessChecks({
+        checks: [
+          { name: 'never', run: () => new Promise(() => {}) },
+          ok('unreached'),
+        ],
+        deadline,
+      });
+
+      assert.strictEqual(deadline.expired(), false);
+      assert.strictEqual(result.status, READINESS_STATUS.TIMED_OUT);
+      assert.strictEqual(result.ready, false);
+      assert.deepStrictEqual(result.checks.pending, ['unreached']);
+      assert.strictEqual(result.evidence[0].detail.reason, 'deadline reached');
+    });
+
     it('should report elapsed and total budget on the result', async () => {
       const clock = createFakeClock();
       const deadline = createDeadline({ timeout: 800, now: clock.now });

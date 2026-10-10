@@ -5,7 +5,6 @@
 //! order included, so they read through here instead. The rules are the same:
 //! a missing manifest is rebuilt and a half-written last line ends the timeline.
 
-use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -28,8 +27,8 @@ pub(crate) struct RawTrace {
 }
 
 fn read_if_present(path: &Path) -> Result<Option<String>, TraceError> {
-    match fs::read(path) {
-        Ok(bytes) => Ok(Some(String::from_utf8_lossy(&bytes).into_owned())),
+    match super::storage::read_text(path) {
+        Ok(body) => Ok(Some(body)),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(source) => Err(TraceError::Io {
             path: path.to_path_buf(),

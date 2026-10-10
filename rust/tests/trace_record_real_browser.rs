@@ -24,6 +24,76 @@ const APP_PAGE: &str = "data:text/html,<title>app</title>\
 
 const TYPED: &str = "typed in the browser";
 
+#[tokio::test]
+#[ignore]
+async fn native_capture_and_recording_decode_in_a_real_browser() -> anyhow::Result<()> {
+    use browser_commander::capture::{
+        screenshot, start_recording, RecordingOptions, ScreenshotFormat, ScreenshotOptions,
+    };
+    use image::GenericImageView;
+    let result = launch_real_browser(
+        RealBrowserOptions::chromiumoxide()
+            .executable_path(chrome())
+            .headless(true)
+            .startup_timeout(Duration::from_secs(20))
+            .with_args(vec!["--no-sandbox".into()]),
+    )
+    .await?;
+    let page = result.page.clone();
+    page.goto(APP_PAGE).await?;
+    let before = page.evaluate("() => document.body.innerHTML").await?;
+    for format in [
+        ScreenshotFormat::Png,
+        ScreenshotFormat::Jpeg,
+        ScreenshotFormat::Webp,
+    ] {
+        let bytes = screenshot(
+            page.as_ref(),
+            &ScreenshotOptions {
+                selector: Some("#name".into()),
+                format,
+                ..Default::default()
+            },
+        )
+        .await?;
+        let decoded = image::load_from_memory(&bytes)?;
+        assert!(decoded.dimensions().0 > 0);
+        assert_eq!(
+            page.evaluate("() => document.body.innerHTML").await?,
+            before
+        );
+    }
+    let mut recording = start_recording(
+        page.clone(),
+        RecordingOptions {
+            max_frames: 2,
+            encoding: serde_json::json!({"format":"gif"}),
+            ..Default::default()
+        },
+    )
+    .await?;
+    tokio::time::sleep(Duration::from_millis(150)).await;
+    let movie = recording.stop().await?;
+    assert_eq!(&movie.bytes.as_ref().unwrap()[..6], b"GIF89a");
+    assert_eq!(recording.stop().await?.bytes, movie.bytes);
+    assert_eq!(
+        page.evaluate("() => document.body.innerHTML").await?,
+        before
+    );
+    page.evaluate("() => { const b=document.createElement('button'); b.id='dismiss'; b.onclick=()=>b.remove(); document.body.append(b); }").await?;
+    assert_eq!(
+        browser_commander::interactions::dismiss_overlays(page.as_ref(), &["#absent", "#dismiss"])
+            .await?,
+        vec!["#dismiss"]
+    );
+    assert_eq!(
+        page.evaluate("() => document.body.innerHTML").await?,
+        before
+    );
+    result.close().await?;
+    Ok(())
+}
+
 /// Assembled rather than written out, so a secret scanner does not mistake
 /// the fixture for a leak.
 fn secret() -> String {
@@ -87,6 +157,7 @@ async fn a_continuous_trace_of_a_real_page_reads_back() -> anyhow::Result<()> {
     options.links = Some(TraceLinksOptions {
         output: dir.join("trace.lino"),
         include: None,
+        dom: None,
     });
     let page = Arc::new(AdapterTracePage::new(result.page.clone()));
     let trace = start_trace(page, options).await?;

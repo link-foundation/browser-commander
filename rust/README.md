@@ -537,6 +537,10 @@ include `--no-sandbox` in `reference_args` so both captures use the same setting
 
 ### Portable Traces
 
+See [capture, debugging and reusable sessions](../docs/capture-and-debugging.md)
+for screenshots, recordings, full/text DOM links, network/HAR, rotation,
+persistent browsers, early trigger readiness and engine capability limits.
+
 A trace is one versioned directory - manifest, ordered NDJSON timeline,
 per-checkpoint DOM snapshots and the mutation batches between them. Rust records
 the same bundle JavaScript and Python do, over any engine adapter:

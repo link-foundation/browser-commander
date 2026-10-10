@@ -15,6 +15,7 @@ export const CHROME_ARGS = [
   '--no-first-run',
   '--no-default-browser-check',
   '--disable-crash-restore',
+  '--disable-features=SessionRestoreInfobar',
 ];
 
 /**

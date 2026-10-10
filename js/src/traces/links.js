@@ -429,6 +429,7 @@ export async function traceLinks(trace, options = {}) {
   if (sections.has('control-diffs')) {
     links.push(...(await controlDiffLinks(opened)));
   }
+  links.push(...(await domLinks(opened, options.dom)));
 
   if (sections.has('trace')) {
     links.push(
@@ -467,6 +468,63 @@ async function controlDiffLinks(opened) {
     }
   }
 
+  return links;
+}
+
+/** Self-contained DOM and mutation records in Links Notation. */
+async function domLinks(opened, dom, seen = new Set()) {
+  if (!dom) {
+    return [];
+  }
+  const links = [];
+  for (const checkpoint of opened.checkpoints) {
+    if (dom === 'text') {
+      const state = await opened.state(checkpoint.index);
+      if (state?.text) {
+        links.push(
+          new Link('dom-text', [
+            field('checkpoint', checkpoint.index),
+            field('text', state.text),
+          ])
+        );
+      }
+    } else {
+      links.push(
+        new Link('dom-snapshot', [
+          field('checkpoint', checkpoint.index),
+          field('html', await opened.html(checkpoint.index)),
+        ])
+      );
+    }
+  }
+  for (const event of opened.events.filter(
+    (event) => event.kind === 'mutations'
+  )) {
+    const batches = (await opened.mutations(event.checkpoint)).filter(
+      (batch) => {
+        const key = `${event.member}:${batch.frameId}:${batch.sequence}:${batch.at}`;
+        if (seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      }
+    );
+    for (const batch of batches) {
+      for (const record of batch.records ?? []) {
+        if (dom !== 'text') {
+          links.push(
+            new Link('dom-mutation', [
+              field('at', batch.at),
+              field('record', JSON.stringify(record)),
+            ])
+          );
+        } else {
+          links.push(...textMutationLinks(record, batch));
+        }
+      }
+    }
+  }
   return links;
 }
 
@@ -521,10 +579,11 @@ export async function writeTraceLinks(trace, output, options = {}) {
  * @returns {Promise<Object>} The sink
  */
 export async function openTraceLinks(options = {}) {
-  const { output, include, bundlePath, ...about } = options;
+  const { output, include, dom, bundlePath, ...about } = options;
   const file = await resolveOutput(output);
   const sections = chosenSections(include);
   const problems = [];
+  const seenDom = new Set();
 
   await fs.mkdir(path.dirname(file), { recursive: true });
   const handle = await fs.open(file, 'w', 0o600);
@@ -572,6 +631,24 @@ export async function openTraceLinks(options = {}) {
         return;
       }
       await append(linksForEvent(event, sections));
+      if (
+        dom &&
+        bundlePath &&
+        [TRACE_EVENT.CHECKPOINT, TRACE_EVENT.MUTATIONS].includes(event.kind)
+      ) {
+        const opened = await readTrace(bundlePath);
+        await append(
+          await domLinks(
+            {
+              ...opened,
+              checkpoints: event.kind === TRACE_EVENT.CHECKPOINT ? [event] : [],
+              events: event.kind === TRACE_EVENT.MUTATIONS ? [event] : [],
+            },
+            dom,
+            seenDom
+          )
+        );
+      }
     },
     /**
      * Finish the export.
@@ -593,6 +670,7 @@ export async function openTraceLinks(options = {}) {
           problems.push({ member: file, detail: error.message });
         }
       }
+
       if (sections.has('trace')) {
         links.push(
           traceResultLink(closing.manifest, {
@@ -620,4 +698,42 @@ export async function openTraceLinks(options = {}) {
       await fs.rm(file, { force: true });
     },
   };
+}
+
+function textMutationLinks(record, batch) {
+  if (record.target?.visible === false) {
+    return [];
+  }
+  const links = [];
+  const target = record.target?.path ?? '';
+  if (record.kind === 'attributes' || record.kind === 'characterData') {
+    links.push(
+      new Link(
+        record.kind === 'attributes' ? 'attribute-changed' : 'text-changed',
+        [
+          field('at', batch.at),
+          field('path', target),
+          field('attribute', record.attribute ?? null),
+          field('before', record.before),
+          field('after', record.after),
+        ]
+      )
+    );
+  }
+  if (record.kind === 'childList') {
+    for (const change of ['added', 'removed']) {
+      for (const node of record[change] ?? []) {
+        if (node.visible !== false && node.text) {
+          links.push(
+            new Link(`text-${change}`, [
+              field('at', batch.at),
+              field('path', node.path ?? target),
+              field('text', node.text),
+            ])
+          );
+        }
+      }
+    }
+  }
+  return links;
 }

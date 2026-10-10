@@ -550,6 +550,7 @@ async def click_button(
 
     start_url = _current_url(page)
     start_session_id = None
+    preparation_finished = False
     if navigation_manager is not None and hasattr(navigation_manager, "get_session_id"):
         start_session_id = navigation_manager.get_session_id()
 
@@ -604,6 +605,7 @@ async def click_button(
         if resolved_scroll is None:
             resolved_scroll = ClickScroll.AUTO if scroll_into_view else ClickScroll.NONE
 
+        preparation_finished = True
         click_result = await click_element(
             page=page,
             engine=engine,
@@ -704,7 +706,16 @@ async def click_button(
         return click_result
 
     except Exception as error:
-        if is_interrupted(error):
+        timed_out = (
+            isinstance(error, TimeoutError) or type(error).__name__ == "TimeoutError"
+        )
+        navigation_changed = _current_url(page) != start_url or (
+            start_session_id is not None
+            and navigation_manager.get_session_id() != start_session_id
+        )
+        if is_interrupted(error) or (
+            timed_out and navigation_changed and not preparation_finished
+        ):
             log.debug(
                 lambda: (
                     "Navigation/stop interrupted click_button, recovering gracefully"

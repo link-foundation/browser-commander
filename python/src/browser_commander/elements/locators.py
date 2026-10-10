@@ -11,7 +11,11 @@ from typing import Any
 
 from browser_commander.core.constants import TIMING
 from browser_commander.core.engine_detection import EngineType
-from browser_commander.core.navigation_safety import is_navigation_error
+from browser_commander.core.navigation_safety import (
+    classify_wait_error,
+    is_navigation_error,
+    wait_navigation_url,
+)
 
 
 def create_playwright_locator(page: Any, selector: str) -> Any:
@@ -118,6 +122,7 @@ async def wait_for_locator_or_element(
     if not selector:
         raise ValueError("selector is required")
 
+    initial_url = wait_navigation_url(page)
     try:
         if engine == "playwright":
             locator = await get_locator_or_element(page, engine, selector, index=index)
@@ -151,13 +156,14 @@ async def wait_for_locator_or_element(
             return element
 
     except Exception as error:
+        error = classify_wait_error(error, page, initial_url)
         if is_navigation_error(error):
             print(
                 "Navigation detected during wait_for_locator_or_element, "
                 "recovering gracefully"
             )
             if throw_on_navigation:
-                raise
+                raise error
             return None
         raise
 

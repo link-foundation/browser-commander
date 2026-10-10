@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import time
+import warnings
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
@@ -94,6 +95,24 @@ def configure_user_data_dir(
     if local_state is not None and not isinstance(local_state, Mapping):
         raise TypeError("local_state must be a JSON object")
     overrides = _plain(preferences or {})
+    for key in (
+        "session.restore_on_startup",
+        "session.startup_urls",
+        "homepage",
+        "homepage_is_newtabpage",
+        "browser.show_home_button",
+        "extensions.settings",
+        "default_search_provider_data",
+    ):
+        value = overrides
+        for part in key.split("."):
+            value = value.get(part) if isinstance(value, dict) else None
+        if value is not None or key in overrides:
+            warnings.warn(
+                f"Chrome protects {key} in Secure Preferences and may reset it. Use browser settings or managed policy.",
+                UserWarning,
+                stacklevel=2,
+            )
     if default_browser_check is not None:
         browser = overrides.get("browser", {})
         if not isinstance(browser, dict):

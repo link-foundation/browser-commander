@@ -44,6 +44,9 @@ pub struct LaunchRestriction {
     /// Environment for the browser process only.
     #[serde(default)]
     pub env: BTreeMap<String, String>,
+    /// Preferences seeded before starting the browser.
+    #[serde(default)]
+    pub preferences: serde_json::Map<String, serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -102,6 +105,8 @@ pub struct ResolvedRestrictions {
     pub args: Vec<String>,
     /// Environment for the browser process only.
     pub env: HashMap<String, String>,
+    /// Preferences seeded before starting the browser.
+    pub preferences: serde_json::Value,
 }
 
 fn expand<S: AsRef<str>>(names: &[S]) -> Vec<String> {
@@ -128,6 +133,7 @@ pub fn resolve_restrictions<S: AsRef<str>>(names: &[S]) -> Result<ResolvedRestri
     let mut args = Vec::new();
     let mut disable_features = Vec::new();
     let mut env = HashMap::new();
+    let mut preferences = serde_json::json!({});
     for id in &ids {
         let Some(restriction) = launch_restrictions().iter().find(|entry| &entry.id == id) else {
             let expected: Vec<&str> = launch_restrictions()
@@ -145,6 +151,10 @@ pub fn resolve_restrictions<S: AsRef<str>>(names: &[S]) -> Result<ResolvedRestri
             ));
         };
         args.extend(restriction.args.iter().cloned());
+        merge_preferences(
+            &mut preferences,
+            &serde_json::Value::Object(restriction.preferences.clone()),
+        );
         disable_features.extend(restriction.disable_features.iter().cloned());
         env.extend(
             restriction
@@ -156,7 +166,42 @@ pub fn resolve_restrictions<S: AsRef<str>>(names: &[S]) -> Result<ResolvedRestri
     if !disable_features.is_empty() {
         args.push(format!("--disable-features={}", disable_features.join(",")));
     }
-    Ok(ResolvedRestrictions { ids, args, env })
+    Ok(ResolvedRestrictions {
+        ids,
+        args,
+        env,
+        preferences,
+    })
+}
+
+/// Deep merge Chrome preference objects; caller values take precedence.
+pub fn merge_preferences(target: &mut serde_json::Value, source: &serde_json::Value) {
+    match (target, source) {
+        (serde_json::Value::Object(target), serde_json::Value::Object(source)) => {
+            for (key, value) in source {
+                merge_preferences(
+                    target.entry(key.clone()).or_insert(serde_json::Value::Null),
+                    value,
+                );
+            }
+        }
+        (target, source) => *target = source.clone(),
+    }
+}
+
+/// Resolve restrictions with extra feature names, deduplicating the resulting switch.
+pub fn resolve_restrictions_with_features<S: AsRef<str>>(
+    names: &[S],
+    features: &[String],
+) -> Result<ResolvedRestrictions> {
+    let mut resolved = resolve_restrictions(names)?;
+    if !features.is_empty() {
+        resolved
+            .args
+            .push(format!("--disable-features={}", features.join(",")));
+    }
+    resolved.args = merge_feature_switches(&resolved.args);
+    Ok(resolved)
 }
 
 const LIST_SWITCHES: &[&str] = &[
@@ -211,6 +256,25 @@ pub fn merge_feature_switches<S: AsRef<str>>(args: &[S]) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn quiet_ui_merges_features_and_seeds_preferences() {
+        let result = resolve_restrictions_with_features(
+            &["quiet-ui"],
+            &["Custom".into(), "Translate".into()],
+        )
+        .unwrap();
+        let features: Vec<_> = result
+            .args
+            .iter()
+            .filter(|arg| arg.starts_with("--disable-features="))
+            .collect();
+        assert_eq!(features.len(), 1);
+        assert!(features[0].contains("SessionRestoreInfobar"));
+        assert!(features[0].contains("Custom"));
+        assert_eq!(features[0].matches("Translate").count(), 1);
+        assert_eq!(result.preferences["translate"]["enabled"], false);
+    }
 
     #[test]
     fn resolves_restrictions_and_presets() {

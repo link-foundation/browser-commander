@@ -5,19 +5,19 @@ on:
     branches:
       - main
     paths:
-      - "README.md"
-      - "docs/**"
-      - "js/**"
-      - "rust/**"
-      - ".github/workflows/docs.yml"
+      - 'README.md'
+      - 'docs/**'
+      - 'js/**'
+      - 'rust/**'
+      - '.github/workflows/docs.yml'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - "README.md"
-      - "docs/**"
-      - "js/**"
-      - "rust/**"
-      - ".github/workflows/docs.yml"
+      - 'README.md'
+      - 'docs/**'
+      - 'js/**'
+      - 'rust/**'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -47,18 +47,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "24.x"
+          node-version: '24.x'
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # v1
         with:
           toolchain: stable
 
       - name: Install JavaScript dependencies
         working-directory: js
         env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
-          PUPPETEER_SKIP_DOWNLOAD: "true"
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
         run: npm ci --ignore-scripts
 
       - name: Generate JavaScript API docs
@@ -69,7 +69,7 @@ jobs:
         working-directory: rust
         shell: bash
         env:
-          RUSTDOCFLAGS: "-D warnings"
+          RUSTDOCFLAGS: '-D warnings'
         # The budget, not `timeout-minutes`, owns this step's deadline: a job
         # killed by `timeout-minutes` is reported as cancelled rather than
         # failed. See docs/CI-TIMEOUT-BUDGETS.md.

@@ -77,6 +77,32 @@ async fn attach_all_cdp_engines_to_system_chrome() -> anyhow::Result<()> {
         // Whoever started the browser owns it: closing an attached result
         // leaves it running.
         assert_eq!(result.launch, None);
+        for format in [
+            browser_commander::capture::ScreenshotFormat::Png,
+            browser_commander::capture::ScreenshotFormat::Jpeg,
+        ] {
+            let bytes = browser_commander::capture::screenshot(
+                result.page.as_ref(),
+                &browser_commander::capture::ScreenshotOptions {
+                    stable_viewport: true,
+                    format,
+                    ..Default::default()
+                },
+            )
+            .await?;
+            let dimensions = image::load_from_memory(&bytes)?;
+            assert!(
+                dimensions.width() > 0 && dimensions.height() > 0,
+                "{engine} stable viewport is decodable"
+            );
+            if format == browser_commander::capture::ScreenshotFormat::Jpeg {
+                assert_eq!(
+                    image::guess_format(&bytes)?,
+                    image::ImageFormat::Jpeg,
+                    "{engine} must honor screenshot format"
+                );
+            }
+        }
         result.close().await?;
         assert!(child.0.try_wait()?.is_none(), "{engine} closed the browser");
     }

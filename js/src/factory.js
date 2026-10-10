@@ -22,7 +22,7 @@ import {
 } from './core/page-trigger-manager.js';
 import { createBoundFunctions } from './bindings.js';
 import { attachDownloads } from './downloads/attach.js';
-import { startTrace } from './traces/recorder.js';
+import { attachCommanderFeatures } from './core/commander-features.js';
 import { createCdpSession } from './browser/cdp-session.js';
 
 /**
@@ -66,7 +66,7 @@ export function makeBrowserCommander(options = {}) {
       page,
       engine,
       log,
-      idleTimeout: 30000, // Wait 30 seconds without requests before considering network idle
+      idleTimeout: options.networkIdleForMs ?? 30000, // Wait 30 seconds without requests before considering network idle
     });
     networkTracker.startTracking();
   }
@@ -92,6 +92,7 @@ export function makeBrowserCommander(options = {}) {
       log,
       networkTracker,
     });
+    navigationManager.configure(navigationOptions(options));
     navigationManager.startListening();
 
     // Create PageSession factory
@@ -159,7 +160,6 @@ export function makeBrowserCommander(options = {}) {
 
     // All bound functions
     ...boundFunctions,
-
     // Managed downloads (issue #88). Present once a manager is attached,
     // either by passing the one launchBrowser() returned or by calling
     // configureDownloads() on an existing commander.
@@ -191,15 +191,6 @@ export function makeBrowserCommander(options = {}) {
      * @returns {Promise<Object>} {send, on, once, off, detach, session, engine}
      */
     createCdpSession: () => createCdpSession(page, { engine }),
-
-    /**
-     * Start recording a privacy-aware trace of this session (issue #87).
-     *
-     * @param {Object} [traceOptions] - {output, mode, screenshots, dom, events, privacy, limits}
-     * @returns {Promise<Object>} The running trace: {checkpoint, event, stop}
-     */
-    startTrace: (traceOptions = {}) =>
-      startTrace({ commander, page, log, ...traceOptions }),
 
     // Lifecycle
     destroy,
@@ -295,5 +286,15 @@ export function makeBrowserCommander(options = {}) {
     pageTriggerManager.initialize(commander);
   }
 
+  attachCommanderFeatures(commander, options, makeBrowserCommander);
   return commander;
+}
+
+function navigationOptions(options) {
+  return {
+    ...(options.navigationManager ?? {}),
+    ...(options.networkIdleTimeout === undefined
+      ? {}
+      : { networkIdleTimeout: options.networkIdleTimeout }),
+  };
 }

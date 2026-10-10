@@ -111,6 +111,8 @@ pub struct LaunchOptions {
     /// Opt-in restrictions from `launch-restrictions.json`, such as
     /// `no-extensions` or the `legacy-defaults` preset (issue #103).
     pub restrictions: Vec<String>,
+    /// Additional Chrome features to disable, merged into one switch.
+    pub disable_features: Vec<String>,
     /// Additional Chrome arguments.
     pub args: Vec<String>,
     /// Additional Chrome arguments appended after the compatibility `args`.
@@ -184,6 +186,7 @@ impl Default for LaunchOptions {
             verbose: false,
             diagnostic_redactor: None,
             restrictions: Vec::new(),
+            disable_features: Vec::new(),
             args: Vec::new(),
             extra_args: Vec::new(),
             ignore_default_args: Vec::new(),
@@ -393,7 +396,11 @@ impl LaunchOptions {
     ///
     /// Returns an error for an unknown restriction.
     pub fn all_chrome_args(&self) -> anyhow::Result<Vec<String>> {
-        let mut args = resolve_restrictions(&self.restrictions)?.args;
+        let mut args = crate::browser::restrictions::resolve_restrictions_with_features(
+            &self.restrictions,
+            &self.disable_features,
+        )?
+        .args;
         args.extend(self.args.iter().cloned());
         args.extend(self.extra_args.iter().cloned());
         let args = merge_feature_switches(&args);
@@ -481,6 +488,7 @@ impl LaunchOptions {
             remote_debugging_port: self.remote_debugging_port,
             headless: self.headless,
             restrictions: self.restrictions.clone(),
+            disable_features: self.disable_features.clone(),
             args: self.args.clone(),
             extra_args,
             env: self.env.clone(),

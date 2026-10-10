@@ -464,9 +464,14 @@ export async function runReadinessChecks(options = {}) {
   const skipped = [];
   const pending = [];
   const evidence = [];
+  let deadlineReached = false;
 
   for (const [index, check] of checks.entries()) {
-    if (deadline.signal?.aborted || (deadline.expired() && failed.length > 0)) {
+    if (
+      deadlineReached ||
+      deadline.signal?.aborted ||
+      (deadline.expired() && failed.length > 0)
+    ) {
       pending.push(...checks.slice(index).map((entry) => entry.name));
       break;
     }
@@ -477,6 +482,9 @@ export async function runReadinessChecks(options = {}) {
       const bounded = await runWithinDeadline(deadline, () =>
         check.run({ ...context, deadline })
       );
+      // Timer callbacks and the rounded monotonic clock can disagree briefly.
+      // Once expiry ends a wait, another clock sample must not undo it.
+      deadlineReached ||= bounded.timedOut;
       outcome =
         bounded.timedOut || bounded.interrupted
           ? {
@@ -513,7 +521,7 @@ export async function runReadinessChecks(options = {}) {
 
   const interrupted = Boolean(deadline.signal?.aborted);
   const ready = !interrupted && failed.length === 0 && pending.length === 0;
-  const timedOut = !ready && deadline.expired();
+  const timedOut = !ready && (deadlineReached || deadline.expired());
 
   return {
     status: interrupted

@@ -366,6 +366,29 @@ class TestRunReadinessChecks:
         assert result.failed == ["never"]
         assert result.pending == ["unreached"]
 
+    async def test_preserves_timer_expiry_with_fractional_clock_budget(self):
+        clock = FakeClock()
+        deadline = Deadline(timeout=20, now=clock.now)
+        clock.advance(19.4)
+
+        async def never(_context: dict[str, Any]) -> CheckOutcome:
+            await asyncio.Event().wait()
+            return CheckOutcome(satisfied=True)
+
+        result = await run_readiness_checks(
+            checks=[
+                ReadinessCheck(name="never", run=never),
+                predicate(fn=lambda _c: True, name="unreached"),
+            ],
+            deadline=deadline,
+        )
+
+        assert deadline.expired() is False
+        assert result.status == ReadinessStatus.TIMED_OUT
+        assert result.ready is False
+        assert result.pending == ["unreached"]
+        assert result.evidence[0].detail["reason"] == "deadline reached"
+
     async def test_a_skipped_check_does_not_block_readiness(self):
         result = await run_readiness_checks(
             checks=[network_idle_for()],

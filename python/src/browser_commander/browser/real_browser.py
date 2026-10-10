@@ -125,6 +125,7 @@ class RealBrowserOptions:
     port_attempts: int = 3
     """Launch attempts when a reserved port is lost to a race."""
     headless: bool = False
+    disable_features: list[str] = field(default_factory=list)
     restrictions: list[str] = field(default_factory=list)
     """Opt-in restrictions from ``launch-restrictions.json``, such as
     ``"no-extensions"`` or the ``"legacy-defaults"`` preset."""
@@ -190,6 +191,7 @@ def build_real_browser_args(
     remote_debugging_port: int,
     headless: bool = False,
     restrictions: list[str] | None = None,
+    disable_features: list[str] | None = None,
     args: list[str] | None = None,
     extra_args: list[str] | None = None,
     automation_parity: bool = True,
@@ -232,7 +234,9 @@ def build_real_browser_args(
             f"--user-data-dir={os.fspath(user_data_dir)}",
             f"--remote-debugging-port={remote_debugging_port}",
             *(["--headless=new"] if headless else []),
-            *resolve_restrictions(restrictions).args,
+            *resolve_restrictions(
+                restrictions, disable_features=disable_features or []
+            ).args,
             *custom_args,
         ]
     )
@@ -524,6 +528,7 @@ def _validate_launch_request(options: RealBrowserOptions) -> None:
         remote_debugging_port=options.remote_debugging_port or 1,
         headless=options.headless,
         restrictions=options.restrictions,
+        disable_features=options.disable_features,
         args=options.args,
         extra_args=options.extra_args,
         automation_parity=options.automation_parity,
@@ -561,6 +566,7 @@ async def _spawn_on_free_port(
             remote_debugging_port=port,
             headless=options.headless,
             restrictions=options.restrictions,
+            disable_features=options.disable_features,
             args=options.args,
             extra_args=options.extra_args,
             automation_parity=options.automation_parity,
@@ -713,7 +719,10 @@ async def launch_real_browser_with_dependencies(
         configure_user_data_dir(
             user_data_dir,
             default_browser_check=options.default_browser_check,
-            preferences=options.preferences,
+            preferences={
+                **resolve_restrictions(options.restrictions).preferences,
+                **(options.preferences or {}),
+            },
             local_state=options.local_state,
             profile_directory=options.profile_directory,
         )

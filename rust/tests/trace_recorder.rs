@@ -79,6 +79,13 @@ impl TracePage for FakePage {
         Ok(Some(b"png".to_vec()))
     }
 
+    async fn network_events(
+        &self,
+        _options: browser_commander::traces::network::NetworkTraceOptions,
+    ) -> Result<BoxStream<'static, TraceEngineEvent>, browser_commander::core::EngineError> {
+        Ok(futures::stream::empty().boxed())
+    }
+
     async fn events(&self) -> Option<BoxStream<'static, TraceEngineEvent>> {
         let receiver = self.events.lock().unwrap().take()?;
         Some(
@@ -377,6 +384,7 @@ async fn discarding_removes_the_bundle_and_its_export() {
     options.links = Some(TraceLinksOptions {
         output: dir.join("trace.lino"),
         include: None,
+        dom: None,
     });
     let trace = start_trace(page, options).await.unwrap();
     assert_eq!(trace.links(), Some(dir.join("trace.lino")));
@@ -484,4 +492,93 @@ async fn trace_settings_that_do_not_record_still_run_the_work() {
     .await;
     assert!(matches!(refused, Err(TraceRecordError::Invalid(_))));
     fs::remove_dir_all(dir).ok();
+}
+
+#[tokio::test]
+async fn bounded_rotation_and_gzip_are_readable() {
+    use browser_commander::traces::{start_rolling_trace, RotationOptions};
+    let dir = scratch("rotation");
+    let mut options = TraceOptions::new(dir.join("rolling"));
+    options.gzip = true;
+    options.screenshots = TraceScreenshots::Off;
+    let trace = start_rolling_trace(
+        Arc::new(FakePage::default()),
+        options,
+        RotationOptions {
+            max_bytes: 2048,
+            max_segments: 2,
+        },
+    )
+    .await
+    .unwrap();
+    for _ in 0..5 {
+        trace
+            .event("large", JsonObject::new().with("value", "a".repeat(700)))
+            .await
+            .unwrap();
+    }
+    let first = trace.stop().await.unwrap();
+    let second = trace.stop().await.unwrap();
+    assert_eq!(first, second);
+    let index: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(first.path.join("segments.json")).unwrap())
+            .unwrap();
+    assert_eq!(index["segments"].as_array().unwrap().len(), 2);
+    let opened = read_trace(&first.path).unwrap();
+    assert!(opened.events.iter().any(|e| e["action"] == "large"));
+    for segment in index["segments"].as_array().unwrap() {
+        assert!(first
+            .path
+            .join(segment.as_str().unwrap())
+            .join("events.ndjson.gz")
+            .is_file());
+    }
+    fs::remove_dir_all(dir).unwrap();
+}
+
+#[tokio::test]
+async fn network_records_are_exported_to_har_and_links() {
+    use browser_commander::traces::network::NetworkTraceOptions;
+    let dir = scratch("network");
+    let (sender, receiver) = mpsc::unbounded_channel();
+    let page = Arc::new(FakePage::default());
+    *page.events.lock().unwrap() = Some(receiver);
+    // Engines redact/filter before emitting; the recorder retains the same payload in both exports.
+    let mut options = TraceOptions::new(dir.join("bundle"));
+    options.network = Some(NetworkTraceOptions {
+        har: true,
+        ..Default::default()
+    });
+    options.links = Some(TraceLinksOptions {
+        output: dir.join("trace.lino"),
+        include: None,
+        dom: None,
+    });
+    let trace = start_trace(page, options).await.unwrap();
+    sender.send(TraceEngineEvent::Network {kind:"network.request".into(),payload:serde_json::json!({"requestId":"1","method":"GET","url":"https://example.test/api","resourceType":"fetch","headers":{"authorization":"[redacted]"}})}).unwrap();
+    sender.send(TraceEngineEvent::Network {kind:"network.response".into(),payload:serde_json::json!({"requestId":"1","method":"GET","url":"https://example.test/api","resourceType":"fetch","status":200,"headers":{},"contentType":"text/plain","body":{"size":2,"data":"b2s=","truncated":false}})}).unwrap();
+    trace.stop().await.unwrap();
+    let har: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(trace.path().join("network.har")).unwrap())
+            .unwrap();
+    assert_eq!(har["log"]["entries"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        har["log"]["entries"][0]["response"]["content"]["text"],
+        "b2s="
+    );
+    let opened = read_trace(trace.path()).unwrap();
+    assert!(opened
+        .events
+        .iter()
+        .any(|e| e["kind"] == "network.response"));
+    assert!(fs::read_to_string(dir.join("trace.lino"))
+        .unwrap()
+        .contains("network.response"));
+    assert!(NetworkTraceOptions {
+        resource_types: vec!["fetch".into()],
+        url_pattern: Some("/api".into()),
+        ..Default::default()
+    }
+    .allows("https://example.test/api", "fetch"));
+    fs::remove_dir_all(dir).unwrap();
 }

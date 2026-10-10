@@ -149,8 +149,23 @@ fn js_selector_call(selector: &str, body: &str) -> String {
 
 #[async_trait]
 impl EngineAdapter for ChromiumoxidePage {
+    async fn detach(&self) -> Result<(), EngineError> {
+        self.browser.lock().await.take();
+        if let Some(task) = self.handler_task.lock().await.take() {
+            task.abort();
+            let _ = task.await;
+        }
+        Ok(())
+    }
+    async fn target_id(&self) -> Result<Option<String>, EngineError> {
+        Ok(Some(self.page.target_id().as_ref().to_string()))
+    }
     fn engine_type(&self) -> EngineType {
         EngineType::Chromiumoxide
+    }
+
+    async fn document_identity(&self) -> Result<Option<serde_json::Value>, EngineError> {
+        self.evaluate("performance.timeOrigin").await.map(Some)
     }
 
     async fn url(&self) -> Result<String, EngineError> {
@@ -554,6 +569,99 @@ impl EngineAdapter for ChromiumoxidePage {
             .map_err(to_engine_error)
     }
 
+    async fn screenshot_with_options(
+        &self,
+        options: &crate::capture::ScreenshotOptions,
+    ) -> Result<Vec<u8>, EngineError> {
+        use crate::capture::{
+            ScreenshotAnimations, ScreenshotCaret, ScreenshotFormat, ScreenshotScale,
+        };
+        use chromiumoxide::cdp::browser_protocol::page::{
+            CaptureScreenshotFormat, CaptureScreenshotParams, Viewport,
+        };
+        use chromiumoxide::page::ScreenshotParams;
+        options.validate()?;
+        if options.hide_scrollbars
+            || options.hide_caret
+            || options.disable_animations
+            || options.animations != ScreenshotAnimations::Allow
+            || options.caret != ScreenshotCaret::Initial
+        {
+            return Err(crate::capture::unsupported(self, "clean screenshot"));
+        }
+        if options.omit_background && options.format != ScreenshotFormat::Png {
+            return Err(crate::capture::unsupported(
+                self,
+                "transparent non-PNG screenshot",
+            ));
+        }
+        let format = match options.format {
+            ScreenshotFormat::Png => CaptureScreenshotFormat::Png,
+            ScreenshotFormat::Jpeg => CaptureScreenshotFormat::Jpeg,
+            ScreenshotFormat::Webp => CaptureScreenshotFormat::Webp,
+        };
+        if options.stable_viewport {
+            if options.scale == ScreenshotScale::Css {
+                return Err(crate::capture::unsupported(
+                    self,
+                    "stable viewport CSS scale",
+                ));
+            }
+            let params = CaptureScreenshotParams {
+                format: Some(format),
+                quality: options.quality.map(i64::from),
+                from_surface: Some(false),
+                capture_beyond_viewport: Some(false),
+                ..Default::default()
+            };
+            // Page::screenshot activates the tab; send the capture command directly.
+            let response = match self.page.execute(params.clone()).await {
+                Ok(response) => response,
+                Err(error) if error.to_string().contains("Unable to capture screenshot") => self
+                    .page
+                    .execute(CaptureScreenshotParams {
+                        from_surface: Some(true),
+                        ..params
+                    })
+                    .await
+                    .map_err(to_engine_error)?,
+                Err(error) => return Err(to_engine_error(error)),
+            };
+            use base64::Engine as _;
+            return base64::engine::general_purpose::STANDARD
+                .decode(&response.data)
+                .map_err(|error| EngineError::Browser(error.to_string()));
+        }
+        let mut builder = ScreenshotParams::builder()
+            .format(format)
+            .full_page(options.full_page)
+            .omit_background(options.omit_background);
+        if let Some(quality) = options.quality {
+            builder = builder.quality(i64::from(quality));
+        }
+        if let Some(clip) = options.clip {
+            let scale = if options.scale == ScreenshotScale::Css {
+                let value = self.evaluate("() => window.devicePixelRatio").await?;
+                1.0 / value.as_f64().unwrap_or(1.0)
+            } else {
+                1.0
+            };
+            builder = builder.clip(Viewport {
+                x: clip.x,
+                y: clip.y,
+                width: clip.width,
+                height: clip.height,
+                scale,
+            });
+        } else if options.scale == ScreenshotScale::Css {
+            return Err(crate::capture::unsupported(self, "CSS scale without clip"));
+        }
+        self.page
+            .screenshot(builder.build())
+            .await
+            .map_err(to_engine_error)
+    }
+
     async fn pdf(&self, options: PdfOptions) -> Result<Vec<u8>, EngineError> {
         let mut builder = PrintToPdfParams::builder().print_background(options.print_background);
         if let Some(scale) = options.scale {
@@ -690,6 +798,12 @@ impl EngineAdapter for ChromiumoxidePage {
         chromiumoxide_trace::remove_init_script(&self.page, identifier).await
     }
 
+    async fn trace_network_events(
+        &self,
+        options: crate::traces::network::NetworkTraceOptions,
+    ) -> Result<BoxStream<'static, TraceEngineEvent>, EngineError> {
+        super::chromiumoxide_network::observe(&self.page, options).await
+    }
     async fn trace_events(&self) -> Option<BoxStream<'static, TraceEngineEvent>> {
         chromiumoxide_trace::trace_events(&self.page).await
     }

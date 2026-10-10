@@ -566,8 +566,9 @@ async def wait_for_page_ready(
     network_tracker: Any | None = None,
     log: Logger | None = None,
     wait_fn: Callable[[int, str], Any] | None = None,
-    timeout: int = 30000,
+    timeout: int | None = None,
     reason: str = "page ready",
+    ready_on: str = "networkidle",
 ) -> bool:
     """Wait for page to be fully ready (DOM loaded + network idle + no redirects).
 
@@ -596,8 +597,22 @@ async def wait_for_page_ready(
 
     # If NavigationManager is available, delegate to it
     if navigation_manager:
-        return await navigation_manager.wait_for_page_ready(timeout, reason)
+        if ready_on == "networkidle":
+            return await navigation_manager.wait_for_page_ready(timeout, reason)
+        return await navigation_manager.wait_for_page_ready(
+            timeout, reason, ready_on=ready_on
+        )
+    if ready_on != "networkidle":
+        from browser_commander.core.engine_detection import detect_engine
+        from browser_commander.core.navigation_manager import NavigationManager
 
+        manager = NavigationManager(page, detect_engine(page), log or Logger())
+        try:
+            return await manager.wait_for_page_ready(timeout, reason, ready_on=ready_on)
+        finally:
+            manager.stop_listening()
+
+    timeout = 30000 if timeout is None else timeout
     # Fallback: use network tracker directly if available
     if network_tracker:
         log.debug(lambda: f"Waiting for page ready ({reason})...")

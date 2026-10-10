@@ -30,6 +30,8 @@ pub struct TraceLinksOptions {
     pub output: PathBuf,
     /// Sections to write; `None` writes all of [`TRACE_LINKS_SECTIONS`].
     pub include: Option<Vec<String>>,
+    /// Include full DOM content (`full`) or visible text changes (`text`).
+    pub dom: Option<String>,
 }
 
 /// Why an export could not be produced.
@@ -59,7 +61,7 @@ pub(crate) struct Link {
 }
 
 impl Link {
-    fn new(id: impl Into<String>, values: Vec<Link>) -> Self {
+    pub(crate) fn new(id: impl Into<String>, values: Vec<Link>) -> Self {
         Self {
             id: id.into(),
             values,
@@ -164,7 +166,7 @@ fn leaf(value: &Json) -> Link {
     Link::new(encode_link_text(value), Vec::new())
 }
 
-fn field(name: &str, value: Option<&Json>) -> Option<Link> {
+pub(crate) fn field(name: &str, value: Option<&Json>) -> Option<Link> {
     match value {
         None | Some(Json::Null) => None,
         Some(value) => Some(Link::new(name, vec![leaf(value)])),
@@ -521,11 +523,18 @@ pub(crate) struct LinksSink {
     pub problems: Vec<TraceProblem>,
     sections: Vec<String>,
     file: Option<File>,
+    dom: Option<String>,
+    root: PathBuf,
+    seen_dom: std::collections::HashSet<String>,
 }
 
 impl LinksSink {
     /// Open the export and write its header.
-    pub fn open(options: &TraceLinksOptions, about: LinksHeader) -> Result<Self, String> {
+    pub fn open(
+        options: &TraceLinksOptions,
+        about: LinksHeader,
+        root: &Path,
+    ) -> Result<Self, String> {
         let path = resolve_output(&options.output)?;
         let sections = chosen_sections(options.include.as_deref())?;
         create_parent(&path).map_err(|error| error.to_string())?;
@@ -535,6 +544,9 @@ impl LinksSink {
             problems: Vec::new(),
             sections,
             file: Some(file),
+            dom: options.dom.clone(),
+            root: root.to_path_buf(),
+            seen_dom: std::collections::HashSet::new(),
         };
         if has(&sink.sections, "trace") {
             sink.append(&[header_link(&about)]);
@@ -560,7 +572,15 @@ impl LinksSink {
 
     /// Write the links of one event as it is recorded.
     pub fn event(&mut self, event: &JsonObject) {
-        let links = links_for_event(event, &self.sections);
+        let mut links = links_for_event(event, &self.sections);
+        if let Some(dom) = &self.dom {
+            links.extend(super::dom_links::event_links(
+                &self.root,
+                event,
+                dom,
+                &mut self.seen_dom,
+            ));
+        }
         self.append(&links);
     }
 

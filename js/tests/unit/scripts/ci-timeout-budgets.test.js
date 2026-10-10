@@ -202,6 +202,7 @@ describe('CI execution budgets', () => {
       'parity.yml engine-suites Engine lifecycle suites',
       'parity.yml fixture-suites React fixture suites',
       'parity.yml parity Fingerprint parity suite',
+      'parity.yml parity Stable viewport displayed-pixel regression',
       'parity.yml parity WebDriver suite',
       'parity.yml snapshots Python headful real-browser launches',
       'parity.yml snapshots Python native snapshot launches',

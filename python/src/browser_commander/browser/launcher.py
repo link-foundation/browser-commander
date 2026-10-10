@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Callable, Literal
 
 from browser_commander.browser.profile_directory import (
+    configure_user_data_dir,
     create_temporary_user_data_dir,
     remove_user_data_dir,
 )
@@ -74,6 +75,7 @@ class LaunchOptions:
     slow_mo: int = 0
     verbose: bool = False
     diagnostic_redactor: Callable[[str], str] | None = None
+    disable_features: list[str] = field(default_factory=list)
     restrictions: list[str] = field(default_factory=list)
     """Opt-in restrictions from ``launch-restrictions.json``, such as
     ``"no-extensions"`` or the ``"legacy-defaults"`` preset."""
@@ -89,6 +91,8 @@ class LaunchOptions:
     ``"brave"`` or ``"chromium"``."""
     executable_path: str | None = None
     remote_debugging_port: int | None = None
+    keep_open: bool = False
+    idle_timeout_ms: int = 30 * 60 * 1000
     """Fixed CDP port for the real launch; a free one is reserved when omitted."""
     color_scheme: ColorScheme | None = None
     automation_parity: bool = True
@@ -140,6 +144,7 @@ def resolve_chrome_args(
     extra_args: list[str] | None = None,
     ignore_default_args: bool | list[str] | None = None,
     restrictions: list[str] | None = None,
+    disable_features: list[str] | None = None,
 ) -> list[str]:
     """Resolve the switches Browser Commander adds: restrictions, then args.
 
@@ -153,7 +158,9 @@ def resolve_chrome_args(
     del ignore_default_args
     return merge_feature_switches(
         [
-            *resolve_restrictions(restrictions).args,
+            *resolve_restrictions(
+                restrictions, disable_features=disable_features or []
+            ).args,
             *assert_string_array([] if args is None else args, "args"),
             *assert_string_array(
                 [] if extra_args is None else extra_args, "extra_args"
@@ -277,6 +284,7 @@ def _validate_launch_options(options: LaunchOptions) -> None:
         args=options.args,
         extra_args=options.extra_args,
         restrictions=options.restrictions,
+        disable_features=options.disable_features,
     )
 
 
@@ -305,12 +313,16 @@ async def _launch_real(
                 user_data_dir=options.user_data_dir,
                 default_browser_check=options.default_browser_check,
                 first_run=options.first_run,
-                preferences=options.preferences,
+                preferences={
+                    **resolve_restrictions(options.restrictions).preferences,
+                    **(options.preferences or {}),
+                },
                 local_state=options.local_state,
                 storage_state=options.storage_state,
                 remote_debugging_port=options.remote_debugging_port,
                 headless=options.headless,
                 restrictions=list(options.restrictions),
+                disable_features=list(options.disable_features),
                 args=list(options.args),
                 extra_args=list(options.extra_args),
                 env=options.env,
@@ -398,6 +410,7 @@ async def _launch_with_engine(
         args=options.args,
         extra_args=options.extra_args,
         restrictions=options.restrictions,
+        disable_features=options.disable_features,
     )
     if options.automation_parity:
         chrome_args = apply_automation_parity_args(chrome_args)
@@ -415,6 +428,14 @@ async def _launch_with_engine(
         else str(options.user_data_dir)
     )
 
+    configure_user_data_dir(
+        user_data_dir,
+        preferences={
+            **resolve_restrictions(options.restrictions).preferences,
+            **(options.preferences or {}),
+        },
+        local_state=options.local_state,
+    )
     browser: Any = None
     playwright: Any = None
     try:
@@ -545,7 +566,12 @@ async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
         ValueError: If the engine, launch mode or a restriction is invalid
     """
 
-    return await launch_browser_with_dependencies(options or LaunchOptions())
+    options = options or LaunchOptions()
+    if options.keep_open:
+        from browser_commander.browser.persistent_session import connect_or_launch
+
+        return await connect_or_launch(options)  # type: ignore[return-value]
+    return await launch_browser_with_dependencies(options)
 
 
 async def launch_browser_with_dependencies(

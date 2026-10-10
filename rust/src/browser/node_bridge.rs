@@ -291,6 +291,9 @@ fn connect_params(options: &ConnectOptions, color_scheme: Option<&ColorScheme>) 
         "protocolTimeout": duration_millis(options.protocol_timeout),
         "seedCookies": options.seed_cookies,
         "verbose": options.verbose,
+        "targetId": options.target_id,
+        "url": options.url,
+        "singleTab": options.single_tab,
     })
 }
 
@@ -321,8 +324,28 @@ impl Drop for NodeBridgePage {
 
 #[async_trait]
 impl EngineAdapter for NodeBridgePage {
+    async fn detach(&self) -> Result<(), EngineError> {
+        self.request("detach", json!({})).await?;
+        let mut inner = self.inner.lock().await;
+        let _ = inner.child.start_kill();
+        if let Some(task) = self.stderr_task.lock().await.take() {
+            task.abort();
+        }
+        Ok(())
+    }
+    async fn target_id(&self) -> Result<Option<String>, EngineError> {
+        Ok(self
+            .request("targetId", json!({}))
+            .await?
+            .as_str()
+            .map(str::to_owned))
+    }
     fn engine_type(&self) -> EngineType {
         self.engine
+    }
+
+    async fn document_identity(&self) -> Result<Option<serde_json::Value>, EngineError> {
+        self.evaluate("performance.timeOrigin").await.map(Some)
     }
 
     async fn url(&self) -> Result<String, EngineError> {
@@ -479,6 +502,36 @@ impl EngineAdapter for NodeBridgePage {
 
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {
         decode_base64(self.string_request("screenshot", json!({})).await?)
+    }
+
+    async fn screenshot_with_options(
+        &self,
+        options: &crate::capture::ScreenshotOptions,
+    ) -> Result<Vec<u8>, EngineError> {
+        options.validate()?;
+        if options.stable_viewport && options.scale == crate::capture::ScreenshotScale::Css {
+            return Err(crate::capture::unsupported(
+                self,
+                "stable viewport CSS scale",
+            ));
+        }
+        if options.format == crate::capture::ScreenshotFormat::Webp {
+            return Err(crate::capture::unsupported(self, "WebP screenshot"));
+        }
+        if self.engine_type() == EngineType::Puppeteer
+            && (options.hide_scrollbars
+                || options.hide_caret
+                || options.disable_animations
+                || options.animations != crate::capture::ScreenshotAnimations::Allow
+                || options.caret != crate::capture::ScreenshotCaret::Initial
+                || options.scale == crate::capture::ScreenshotScale::Css)
+        {
+            return Err(crate::capture::unsupported(
+                self,
+                "clean/CSS-scale screenshot",
+            ));
+        }
+        decode_base64(self.string_request("screenshot", options.native()).await?)
     }
 
     async fn pdf(&self, options: PdfOptions) -> Result<Vec<u8>, EngineError> {

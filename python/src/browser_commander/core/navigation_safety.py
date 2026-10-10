@@ -11,6 +11,21 @@ class NavigationError(Exception):
     pass
 
 
+def wait_navigation_url(page: Any) -> Any:
+    url = getattr(page, "url", getattr(page, "current_url", None))
+    return url() if callable(url) else url
+
+
+def classify_wait_error(error: Exception, page: Any, initial: Any) -> Exception:
+    if is_timeout_error(error):
+        try:
+            if wait_navigation_url(page) != initial:
+                return NavigationError("Navigation interrupted the element wait")
+        except Exception:
+            pass
+    return error
+
+
 def is_navigation_error(error: Exception) -> bool:
     """Check if an error is a navigation-related error.
 

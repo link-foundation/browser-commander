@@ -22,6 +22,110 @@ import { createDispatcher } from './dispatcher.js';
 import { DEFAULT_DEPENDENCIES } from './modules.js';
 import { runScript } from './script.js';
 import { serveStdio } from './serve.js';
+import { encodeAnimation } from '../capture/index.js';
+import { renderTrace, summarizeTrace } from '../traces/render.js';
+
+function mediaOptions(options) {
+  const result = { ...options };
+  for (const key of [
+    'quality',
+    'fps',
+    'loop',
+    'palette',
+    'maxFrames',
+    'maxBytes',
+    'maxDurationMs',
+  ]) {
+    if (options[key] !== undefined) {
+      result[key] = Number(options[key]);
+    }
+  }
+  if (
+    options.scale !== undefined &&
+    !['css', 'device'].includes(options.scale)
+  ) {
+    result.scale = Number(options.scale);
+  }
+  for (const key of ['clip', 'size']) {
+    if (options[key]) {
+      try {
+        result[key] = JSON.parse(options[key]);
+      } catch {
+        throw new UsageError(`${key} must be a JSON object`);
+      }
+    }
+  }
+  return result;
+}
+
+async function gif(parsed) {
+  const target = path.resolve(requireOption(parsed.options, 'out', 'gif'));
+  const bytes = await encodeAnimation(parsed.options.frame ?? [], {
+    ...mediaOptions(parsed.options),
+    path: target,
+  });
+  return done({ path: target, bytes: bytes.length });
+}
+async function traceSummarize(parsed) {
+  return done(await summarizeTrace(parsed.args.dir, parsed.options));
+}
+async function traceRender(parsed) {
+  const target = path.resolve(
+    requireOption(parsed.options, 'out', 'trace render')
+  );
+  const options = { ...mediaOptions(parsed.options), path: target };
+  let browser;
+  try {
+    if (
+      ['webm', 'mp4', 'mov'].includes(
+        options.format ?? path.extname(target).slice(1)
+      ) &&
+      !options.ffmpeg
+    ) {
+      const { chromium } = await import('playwright');
+      browser = await chromium.launch({ headless: true });
+      options.page = await browser.newPage();
+    }
+    const bytes = await renderTrace(parsed.args.dir, options);
+    return done({ path: target, bytes: bytes.length });
+  } finally {
+    await browser?.close();
+  }
+}
+function recordStart(parsed, io) {
+  const target = path.resolve(
+    requireOption(parsed.options, 'out', 'record start')
+  );
+  const marker = `${target}.stop`;
+  return withPageSession(parsed, io, async (session, dispatcher) => {
+    await rm(marker, { force: true });
+    await dispatcher.dispatch('record.start', {
+      session,
+      ...mediaOptions(parsed.options),
+      format: parsed.options.format ?? path.extname(target).slice(1),
+      path: target,
+    });
+    let stopped = false;
+    try {
+      io.print({ recording: target });
+      await waitForStop({
+        signals: io.signals,
+        extra: [markerAppears(marker, () => stopped)],
+      });
+      return done(await dispatcher.dispatch('record.stop', { session }));
+    } finally {
+      stopped = true;
+      await rm(marker, { force: true });
+    }
+  });
+}
+async function recordStop(parsed) {
+  const target = path.resolve(
+    requireOption(parsed.options, 'out', 'record stop')
+  );
+  await writeFile(`${target}.stop`, '', { mode: 0o600 });
+  return done({ recording: target, stopRequested: true });
+}
 
 /** Where `trace stop` asks a running `trace start` to finish. */
 export const TRACE_STOP_MARKER = '.stop';
@@ -80,6 +184,8 @@ async function withPageSession(parsed, io, work, { skipUrl = false } = {}) {
         ? await dispatcher.dispatch('session.connect', {
             cdpEndpoint: options.cdpEndpoint,
             engine: options.engine,
+            targetId: options.targetId,
+            singleTab: options.singleTab,
             ...(options.serverUrl ? { serverUrl: options.serverUrl } : {}),
             ...(options.driverPath ? { driverPath: options.driverPath } : {}),
             ...(options.bidi !== undefined ? { bidi: options.bidi } : {}),
@@ -145,7 +251,7 @@ async function launch(parsed, io) {
       args: session.args,
       ...(opened.attach ? { attach: opened.attach } : {}),
     };
-    if (!parsed.options.keepOpen) {
+    if (!parsed.options.keepOpen || session.persistent) {
       return done(document);
     }
     io.print(document);
@@ -342,13 +448,18 @@ export const COMMAND_HANDLERS = Object.freeze({
     expression: args.expression,
   })),
   screenshot: pageCommand('page.screenshot', ({ args, options }) => ({
+    ...mediaOptions(options),
     path: args.path,
-    fullPage: options.fullPage === true,
   })),
   pdf: pageCommand('page.pdf', ({ args }) => ({ path: args.path })),
   'trace start': traceStart,
   'trace stop': traceStop,
   'trace view': traceView,
+  'trace summarize': traceSummarize,
+  'trace render': traceRender,
+  'record start': recordStart,
+  'record stop': recordStop,
+  gif,
   'cookies import': pageCommand('cookies.import', ({ options }) => ({
     from: requireOption(options, 'from', 'cookies import'),
     profile: options.profile,

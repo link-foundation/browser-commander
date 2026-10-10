@@ -589,6 +589,28 @@ pub async fn click_button(
     selector: &str,
     options: &ClickOptions,
 ) -> Result<ClickResult, EngineError> {
+    let url_before = adapter.url().await.ok();
+    let document_before = adapter.document_identity().await.ok().flatten();
+    let result = click_button_inner(adapter, selector, options).await;
+    let timed_out = matches!(&result, Err(EngineError::Timeout(_)))
+        || matches!(&result, Ok(result) if result.status == ClickStatus::TimedOut && !result.dispatched);
+    let navigated = timed_out
+        && (url_before.is_some() && adapter.url().await.ok() != url_before
+            || document_before.is_some()
+                && adapter.document_identity().await.ok().flatten() != document_before);
+    if timed_out && navigated {
+        return Ok(ClickResult::navigation(
+            "navigation interrupted element preparation",
+        ));
+    }
+    result
+}
+
+async fn click_button_inner(
+    adapter: &dyn EngineAdapter,
+    selector: &str,
+    options: &ClickOptions,
+) -> Result<ClickResult, EngineError> {
     let resolved =
         crate::elements::reusable::indexed_selector(adapter, selector, options.index).await?;
     let selector = resolved.as_str();
@@ -644,6 +666,28 @@ mod tests {
 
     /// A budget far shorter than any engine's own probe timeout.
     const MS_150: Duration = Duration::from_millis(150);
+
+    #[tokio::test]
+    async fn navigation_during_preparation_timeout_is_interrupted() {
+        let adapter = StubEngine::scripted(|call| {
+            if call == 0 {
+                "https://example.com/before".into()
+            } else {
+                "https://example.com/after".into()
+            }
+        })
+        .evaluating_slowly(|_, _| Duration::from_millis(100));
+        let options = ClickOptions {
+            scroll_into_view: false,
+            verify: false,
+            timeout: Duration::from_millis(10),
+            ..Default::default()
+        };
+        let result = click_button(&adapter, "#target", &options).await.unwrap();
+        assert_eq!(result.status, ClickStatus::Interrupted);
+        assert!(result.navigated);
+        assert!(!result.dispatched);
+    }
 
     #[test]
     fn click_options_default() {

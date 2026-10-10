@@ -31,6 +31,25 @@ function isInterrupted(error) {
   return isNavigationError(error) || isActionStoppedError(error);
 }
 
+function waitInterruptedByNavigation({
+  error,
+  page,
+  navigationManager,
+  startUrl,
+  startSessionId,
+  preparationFinished,
+}) {
+  const timedOut =
+    error.name === 'TimeoutError' ||
+    error.name === 'NavigationInterruptedError' ||
+    /timeout|timed out/i.test(error.message);
+  const navigationChanged =
+    page.url() !== startUrl ||
+    (startSessionId !== undefined &&
+      navigationManager?.getSessionId?.() !== startSessionId);
+  return timedOut && navigationChanged && !preparationFinished;
+}
+
 /**
  * Read the target element's observable state under the click's own budget.
  *
@@ -975,6 +994,7 @@ export async function clickButton(options = {}) {
 
   const startUrl = page.url();
   const startSessionId = navigationManager?.getSessionId?.();
+  let preparationFinished = false;
 
   try {
     const prepareResult = await prepareElement({
@@ -1012,6 +1032,7 @@ export async function clickButton(options = {}) {
       });
     }
 
+    preparationFinished = true;
     const clickResult = await clickElement({
       page,
       engine,
@@ -1055,6 +1076,29 @@ export async function clickButton(options = {}) {
       actionId,
     });
   } catch (error) {
+    if (
+      waitInterruptedByNavigation({
+        error,
+        page,
+        navigationManager,
+        startUrl,
+        startSessionId,
+        preparationFinished,
+      })
+    ) {
+      return makeClickResult({
+        status: CLICK_STATUS.INTERRUPTED,
+        dispatched: false,
+        effect: CLICK_EFFECT.NOT_OBSERVED,
+        navigated: true,
+        reason: 'navigation interrupted the element wait before the click',
+        evidence: [
+          evidence('interrupted', { message: error.message, phase: 'prepare' }),
+        ],
+        elapsedMs: elapsed(),
+        actionId,
+      });
+    }
     if (isInterrupted(error)) {
       log.debug(
         () =>

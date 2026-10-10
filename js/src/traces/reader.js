@@ -7,8 +7,8 @@
  * than rejected.
  */
 
-import fs from 'node:fs/promises';
 import path from 'node:path';
+import { readTraceText } from './storage.js';
 import {
   assertReadableManifest,
   createManifest,
@@ -18,15 +18,8 @@ import {
   TRACE_OUTCOME,
 } from './schema.js';
 
-async function readIfPresent(file) {
-  try {
-    return await fs.readFile(file, 'utf8');
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return null;
-    }
-    throw error;
-  }
+function readIfPresent(file) {
+  return readTraceText(file);
 }
 
 /**
@@ -64,6 +57,11 @@ export function parseNdjson(body) {
  */
 export async function readTrace(bundlePath) {
   const root = path.resolve(bundlePath);
+  const segments = await readIfPresent(path.join(root, 'segments.json'));
+  if (segments) {
+    const { readRollingTrace } = await import('./rolling.js');
+    return readRollingTrace(root, JSON.parse(segments), readTrace);
+  }
   const manifestBody = await readIfPresent(
     path.join(root, TRACE_FILES.MANIFEST)
   );

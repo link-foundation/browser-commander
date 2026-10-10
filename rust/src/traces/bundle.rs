@@ -288,7 +288,7 @@ pub(crate) fn resolve_path(path: &Path) -> PathBuf {
 pub(crate) struct Bundle {
     pub root: PathBuf,
     events: Option<File>,
-    written: u64,
+    pub(crate) written: u64,
     sequence: u64,
     dropped: u64,
     checkpoints: u64,
@@ -444,17 +444,31 @@ impl Bundle {
         member: &str,
         data: &[u8],
     ) -> Result<Option<String>, TraceRecordError> {
+        self.write_member_mode(member, data, false)
+    }
+
+    fn write_member_mode(
+        &mut self,
+        member: &str,
+        data: &[u8],
+        append: bool,
+    ) -> Result<Option<String>, TraceRecordError> {
         let length = data.len() as u64;
-        if length > self.max_resource || self.written + length > self.max_bundle {
+        let target = self.root.join(member);
+        let previous = if append {
+            fs::metadata(&target).map(|value| value.len()).unwrap_or(0)
+        } else {
+            0
+        };
+        if previous + length > self.max_resource || self.written + length > self.max_bundle {
             let detail = format!("{length} bytes");
             self.drop_record(TraceDropReason::SIZE_LIMIT, Some(member), Some(&detail))?;
             return Ok(None);
         }
-        let target = self.root.join(member);
         let outcome = target
             .parent()
             .map_or(Ok(()), create_dir)
-            .and_then(|()| write_private(&target, data));
+            .and_then(|()| open_private(&target, append)?.write_all(data));
         match outcome {
             Ok(()) => {
                 self.written += length;
@@ -526,7 +540,7 @@ impl Bundle {
             .collect::<Vec<_>>()
             .join("\n");
         body.push('\n');
-        let written = self.write_member(&member, body.as_bytes())?;
+        let written = self.write_member_mode(&member, body.as_bytes(), true)?;
         if written.is_some() {
             self.mutation_batches += batches.len() as u64;
         }
@@ -534,6 +548,10 @@ impl Bundle {
     }
 
     /// Write the manifest and close the timeline.
+    pub(crate) fn abort(&mut self) {
+        self.events.take();
+    }
+
     pub fn close(&mut self, mut manifest: JsonObject) -> Result<JsonObject, TraceRecordError> {
         let counts = JsonObject::new()
             .with("checkpoints", self.checkpoints)
@@ -558,6 +576,29 @@ impl Bundle {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn retains_periodic_drains_in_the_same_interval() {
+        let dir = std::env::temp_dir().join(format!(
+            "bc-periodic-{}-{}",
+            std::process::id(),
+            iso_timestamp((TraceClock::default().now)()).replace(':', "")
+        ));
+        let mut bundle =
+            Bundle::open(&dir, &TraceLimits::default(), false, TraceClock::default()).unwrap();
+        bundle
+            .write_mutations(1, &[Json::String("first".into())])
+            .unwrap();
+        bundle
+            .write_mutations(1, &[Json::String("second".into())])
+            .unwrap();
+        assert_eq!(
+            fs::read_to_string(dir.join("mutations/0001.ndjson")).unwrap(),
+            "\"first\"\n\"second\"\n"
+        );
+        bundle.abort();
+        fs::remove_dir_all(dir).unwrap();
+    }
 
     #[test]
     fn timestamps_match_javascript() {

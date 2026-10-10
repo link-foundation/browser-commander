@@ -32,6 +32,7 @@ export function captureSnapshotInPage(options) {
     html: wantHtml = true,
     liveControlState = true,
     openShadowRoots = true,
+    ignoreSelectors = [],
     maxHtmlBytes = 0,
   } = options || {};
 
@@ -147,35 +148,91 @@ export function captureSnapshotInPage(options) {
     } else if (secret) {
       copy.textContent = redacted;
     }
-    if (original.shadowRoot && openShadowRoots) {
+    if (!secret && original.shadowRoot && openShadowRoots) {
       // Shadow content is not serialized by `outerHTML`; a declarative
       // template keeps it in the same document the viewer renders.
       const template = document.createElement('template');
       template.setAttribute('shadowrootmode', 'open');
-      template.innerHTML = original.shadowRoot.innerHTML;
+      for (const child of original.shadowRoot.childNodes) {
+        {
+          const cloned = cloneWithState(child);
+          if (cloned) {
+            template.content.appendChild(cloned);
+          }
+        }
+      }
       copy.appendChild(template);
     }
+  };
+
+  const cloneWithState = (original) => {
+    if (
+      original.nodeType === 1 &&
+      ignoreSelectors.some((selector) => original.matches(selector))
+    ) {
+      return null;
+    }
+    const copy = original.cloneNode(false);
+    if (original.nodeType !== 1) {
+      return copy;
+    }
+    const secret = isSecret(original);
+    if (!secret) {
+      for (const child of original.childNodes) {
+        {
+          const cloned = cloneWithState(child);
+          if (cloned) {
+            copy.appendChild(cloned);
+          }
+        }
+      }
+    }
+    carryLiveState(original, copy, secret);
+    return copy;
   };
 
   let html = null;
   let truncated = false;
   if (wantHtml) {
-    const clone = document.documentElement.cloneNode(true);
-    const originals = document.documentElement.querySelectorAll('*');
-    const copies = clone.querySelectorAll('*');
-    for (let index = 0; index < originals.length; index++) {
-      const copy = copies[index];
-      if (!copy) {
-        break;
-      }
-      carryLiveState(originals[index], copy, isSecret(originals[index]));
-    }
+    const clone = cloneWithState(document.documentElement);
 
-    html = `<!DOCTYPE html>\n${clone.outerHTML}`;
+    html = `<!DOCTYPE html>\n${clone?.outerHTML ?? ''}`;
     if (maxHtmlBytes > 0 && html.length > maxHtmlBytes) {
       html = html.slice(0, maxHtmlBytes);
       truncated = true;
     }
+  }
+
+  const visibleText = [];
+  const collectText = (node) => {
+    if (node.nodeType === 3 && node.parentElement) {
+      const parent = node.parentElement;
+      if (
+        !parent.getClientRects().length ||
+        window.getComputedStyle(parent).visibility === 'hidden' ||
+        ignoreSelectors.some((selector) => parent.closest(selector))
+      ) {
+        return;
+      }
+      const secret = redactSelectors.some((selector) =>
+        parent.closest(selector)
+      );
+      if (node.nodeValue.trim()) {
+        visibleText.push(
+          `${cssPath(parent)}: ${secret ? redacted : node.nodeValue.trim()}`
+        );
+      }
+    } else {
+      for (const child of node.childNodes ?? []) {
+        collectText(child);
+      }
+      if (node.shadowRoot && openShadowRoots) {
+        collectText(node.shadowRoot);
+      }
+    }
+  };
+  if (options?.captureText) {
+    collectText(document.documentElement);
   }
 
   return {
@@ -190,6 +247,7 @@ export function captureSnapshotInPage(options) {
         ? cssPath(document.activeElement)
         : null,
       controls,
+      ...(options?.captureText ? { text: visibleText.join('\n') } : {}),
       frames: [...document.querySelectorAll('iframe, frame')].map((frame) => ({
         path: cssPath(frame),
         src: frame.getAttribute('src'),
@@ -225,6 +283,7 @@ export function installMutationRecorderInPage(options) {
     redactSelectors = [],
     redacted = '[redacted]',
     maxQueued = 5000,
+    ignoreSelectors = [],
     liveState = true,
   } = options || {};
 
@@ -244,19 +303,38 @@ export function installMutationRecorderInPage(options) {
     mainFrame: window.top === window,
   };
 
-  const isSecret = (node) => {
+  const matchesAny = (node, selectors) => {
     const element =
       node && node.nodeType === 1 ? node : node && node.parentElement;
     if (!element || !element.matches) {
       return false;
     }
-    return redactSelectors.some((selector) => {
+    return selectors.some((selector) => {
       try {
         return element.matches(selector) || element.closest(selector) !== null;
       } catch {
         return false;
       }
     });
+  };
+  const isSecret = (node) => matchesAny(node, redactSelectors);
+  const isIgnored = (node) => matchesAny(node, ignoreSelectors);
+  const sanitized = (node) => {
+    const clone = node.cloneNode(true);
+    for (const selector of ignoreSelectors) {
+      for (const element of clone.querySelectorAll(selector)) {
+        element.remove();
+      }
+    }
+    for (const selector of redactSelectors) {
+      for (const element of clone.querySelectorAll(selector)) {
+        element.textContent = redacted;
+        if (element.hasAttribute('value')) {
+          element.setAttribute('value', redacted);
+        }
+      }
+    }
+    return clone;
   };
 
   // A path the viewer can look the node up by: replay needs to find the same
@@ -288,12 +366,16 @@ export function installMutationRecorderInPage(options) {
   };
 
   const describe = (node) => {
-    if (!node) {
+    if (!node || isIgnored(node)) {
       return null;
     }
     if (node.nodeType === 3) {
       return {
         type: 'text',
+        visible: node.parentElement
+          ? node.parentElement.getClientRects().length > 0 &&
+            window.getComputedStyle(node.parentElement).visibility !== 'hidden'
+          : true,
         path: pathOf(node.parentElement),
         text: isSecret(node) ? redacted : String(node.nodeValue).slice(0, 2000),
       };
@@ -301,12 +383,19 @@ export function installMutationRecorderInPage(options) {
     if (node.nodeType !== 1) {
       return { type: 'node', nodeType: node.nodeType };
     }
+    const clone = sanitized(node);
     return {
       type: 'element',
       tag: node.localName,
       id: node.id || null,
       path: pathOf(node),
-      html: isSecret(node) ? redacted : String(node.outerHTML).slice(0, 4000),
+      html: isSecret(node) ? redacted : String(clone.outerHTML).slice(0, 4000),
+      text: isSecret(node)
+        ? redacted
+        : String(clone.textContent).slice(0, 2000),
+      visible:
+        node.getClientRects().length > 0 &&
+        window.getComputedStyle(node).visibility !== 'hidden',
     };
   };
 
@@ -364,41 +453,43 @@ export function installMutationRecorderInPage(options) {
       return;
     }
     push({
-      records: records.map((record) => {
-        const entry = {
-          kind: record.type,
-          target: describe(record.target),
-        };
-        if (record.type === 'attributes') {
-          entry.attribute = record.attributeName;
-          const secret =
-            isSecret(record.target) ||
-            redactSelectors.includes(record.attributeName);
-          entry.before = secret ? redacted : record.oldValue;
-          entry.after =
-            secret || !record.target.getAttribute
+      records: records
+        .filter((record) => !isIgnored(record.target))
+        .map((record) => {
+          const entry = {
+            kind: record.type,
+            target: describe(record.target),
+          };
+          if (record.type === 'attributes') {
+            entry.attribute = record.attributeName;
+            const secret =
+              isSecret(record.target) ||
+              redactSelectors.includes(record.attributeName);
+            entry.before = secret ? redacted : record.oldValue;
+            entry.after =
+              secret || !record.target.getAttribute
+                ? redacted
+                : record.target.getAttribute(record.attributeName);
+          } else if (record.type === 'characterData') {
+            entry.before = isSecret(record.target) ? redacted : record.oldValue;
+            entry.after = isSecret(record.target)
               ? redacted
-              : record.target.getAttribute(record.attributeName);
-        } else if (record.type === 'characterData') {
-          entry.before = isSecret(record.target) ? redacted : record.oldValue;
-          entry.after = isSecret(record.target)
-            ? redacted
-            : record.target.nodeValue;
-        } else {
-          // Where a node went is as much of the change as what it was:
-          // appending every addition to the end replays an insertion before a
-          // sibling in the wrong place, and drops moves and removals entirely.
-          entry.added = [...record.addedNodes].map((node) =>
-            describeAt(node, record)
-          );
-          entry.removed = [...record.removedNodes].map((node) =>
-            describeAt(node, record)
-          );
-          entry.previous = describe(record.previousSibling);
-          entry.next = describe(record.nextSibling);
-        }
-        return entry;
-      }),
+              : record.target.nodeValue;
+          } else {
+            // Where a node went is as much of the change as what it was:
+            // appending every addition to the end replays an insertion before a
+            // sibling in the wrong place, and drops moves and removals entirely.
+            entry.added = [...record.addedNodes]
+              .filter((node) => !isIgnored(node))
+              .map((node) => describeAt(node, record));
+            entry.removed = [...record.removedNodes]
+              .filter((node) => !isIgnored(node))
+              .map((node) => describeAt(node, record));
+            entry.previous = describe(record.previousSibling);
+            entry.next = describe(record.nextSibling);
+          }
+          return entry;
+        }),
     });
   });
 
@@ -470,7 +561,7 @@ export function installMutationRecorderInPage(options) {
 
     const onValue = (event) => {
       const element = event.target;
-      if (!element || element.nodeType !== 1) {
+      if (!element || element.nodeType !== 1 || isIgnored(element)) {
         return;
       }
       if (element.type === 'checkbox' || element.type === 'radio') {

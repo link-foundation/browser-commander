@@ -115,6 +115,8 @@ pub struct RealBrowserOptions {
     /// `no-extensions` or the `legacy-defaults` preset. See
     /// [`restrictions`](super::restrictions).
     pub restrictions: Vec<String>,
+    /// Additional Chrome features to disable, merged into one switch.
+    pub disable_features: Vec<String>,
     /// Additional browser arguments.
     pub args: Vec<String>,
     /// Additional browser arguments appended after the compatibility `args`.
@@ -276,7 +278,13 @@ pub(crate) fn browser_args(
     if options.headless {
         arguments.push("--headless=new".to_string());
     }
-    arguments.extend(resolve_restrictions(&options.restrictions)?.args);
+    arguments.extend(
+        crate::browser::restrictions::resolve_restrictions_with_features(
+            &options.restrictions,
+            &options.disable_features,
+        )?
+        .args,
+    );
     arguments.extend(options.args.iter().cloned());
     arguments.extend(options.extra_args.iter().cloned());
     let arguments = merge_feature_switches(&arguments);
@@ -624,11 +632,13 @@ where
     } else {
         (None, Vec::new())
     };
+    let mut preferences = resolve_restrictions(&options.restrictions)?.preferences;
+    crate::browser::restrictions::merge_preferences(&mut preferences, &options.preferences);
     if let Err(error) = configure_user_data_dir_for_profile(
         &user_data_dir,
         &options.profile_directory,
         options.default_browser_check,
-        &options.preferences,
+        &preferences,
         &options.local_state,
     ) {
         if temporary_profile {

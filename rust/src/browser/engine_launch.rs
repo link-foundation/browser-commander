@@ -166,10 +166,13 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
             || options.webdriver.browser == WebDriverBrowser::Chrome
         {
             prepare_user_data_dir_with_first_run(&user_data_dir, options.first_run)?;
+            let mut preferences =
+                super::restrictions::resolve_restrictions(&options.restrictions)?.preferences;
+            super::restrictions::merge_preferences(&mut preferences, &options.preferences);
             configure_user_data_dir(
                 &user_data_dir,
                 options.default_browser_check,
-                &options.preferences,
+                &preferences,
                 &options.local_state,
             )?;
         }

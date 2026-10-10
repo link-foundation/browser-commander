@@ -78,6 +78,8 @@ pub struct TraceOptions {
     pub screenshots: TraceScreenshots,
     /// What checkpoints capture.
     pub dom: TraceDomOptions,
+    /// Omit these selectors and their descendants from snapshots and mutations.
+    pub ignore_selectors: Vec<String>,
     /// Event sources to record, from [`TRACE_EVENT_SOURCES`](super::TRACE_EVENT_SOURCES); `None` records
     /// all of them and an empty list none.
     pub events: Option<Vec<String>>,
@@ -89,6 +91,14 @@ pub struct TraceOptions {
     pub links: Option<TraceLinksOptions>,
     /// Fail instead of recording a `dropped` event.
     pub strict: bool,
+    /// Gzip closed timeline and mutation members.
+    pub gzip: bool,
+    /// Opt-in network metadata, bounded bodies and HAR.
+    pub network: Option<super::network::NetworkTraceOptions>,
+    /// Bounded optional session recording embedded in the bundle.
+    pub video: Option<crate::capture::RecordingOptions>,
+    /// Checkpoint after a main-frame navigation.
+    pub checkpoint_on_navigation: bool,
     /// Budget for one capture in milliseconds; `0` means none.
     pub capture_timeout_ms: u64,
     /// Written to the manifest; this crate's version unless set.
@@ -100,6 +110,22 @@ pub struct TraceOptions {
 }
 
 impl TraceOptions {
+    /// Continuous DOM text, network/HAR and navigation checkpoints in one configuration.
+    pub fn debug(output: impl Into<PathBuf>) -> Self {
+        let mut options = Self::new(output);
+        options.mode = "continuous".into();
+        options.links = Some(super::links::TraceLinksOptions {
+            output: options.output.join("trace.lino"),
+            include: None,
+            dom: Some("text".into()),
+        });
+        options.network = Some(super::network::NetworkTraceOptions {
+            har: true,
+            ..Default::default()
+        });
+        options.checkpoint_on_navigation = true;
+        options
+    }
     /// Options that record into `output`, with every default.
     pub fn new(output: impl Into<PathBuf>) -> Self {
         Self {
@@ -108,11 +134,16 @@ impl TraceOptions {
             initial_checkpoint: None,
             screenshots: TraceScreenshots::default(),
             dom: TraceDomOptions::default(),
+            ignore_selectors: Vec::new(),
             events: None,
             privacy: TracePrivacyOptions::default(),
             limits: TraceLimits::default(),
             links: None,
             strict: false,
+            gzip: false,
+            network: None,
+            video: None,
+            checkpoint_on_navigation: false,
             capture_timeout_ms: DEFAULT_CAPTURE_TIMEOUT_MS,
             commander_version: Some(env!("CARGO_PKG_VERSION").to_string()),
             engine: None,

@@ -156,6 +156,20 @@ pub fn configure_user_data_dir_for_profile(
         ));
     }
     let mut overrides = preferences.clone();
+    for key in [
+        "session.restore_on_startup",
+        "session.startup_urls",
+        "homepage",
+        "homepage_is_newtabpage",
+        "browser.show_home_button",
+        "extensions.settings",
+        "default_search_provider_data",
+    ] {
+        let pointer = format!("/{}", key.replace('.', "/"));
+        if preferences.pointer(&pointer).is_some() || preferences.get(key).is_some() {
+            tracing::warn!(preference = key, "Chrome protects this value in Secure Preferences and may reset it; use browser settings or managed policy");
+        }
+    }
     if let Some(browser) = overrides.get("browser") {
         if !browser.is_object() {
             return Err(anyhow!("preferences.browser must be a JSON object"));

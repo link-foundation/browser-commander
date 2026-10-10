@@ -121,6 +121,31 @@ describe('dispatcher: high-level methods', () => {
     assert.deepEqual(pages[0].calls, [['fill', '#q', 'v']]);
   });
 
+  for (const engine of ['playwright', 'puppeteer']) {
+    for (const keepOpen of [false, true]) {
+      it(`closes ${engine} launches with detach support according to keepOpen=${keepOpen}`, async () => {
+        const { dependencies, launches } = createFakeDependencies();
+        const launchBrowser = dependencies.launchBrowser;
+        let detached = false;
+        const dispatcher = createDispatcher({
+          dependencies: {
+            ...dependencies,
+            launchBrowser: async (options) => ({
+              ...(await launchBrowser(options)),
+              detach: async () => {
+                detached = true;
+              },
+            }),
+          },
+        });
+        await dispatcher.dispatch('session.launch', { engine, keepOpen });
+        await dispatcher.close();
+        assert.equal(launches[0].closed, !keepOpen);
+        assert.equal(detached, keepOpen);
+      });
+    }
+  }
+
   it('connects without closing the browser', async () => {
     const { dispatcher, connections } = setup();
 

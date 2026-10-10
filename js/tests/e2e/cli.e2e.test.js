@@ -15,6 +15,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
+import { readFile, rm } from 'node:fs/promises';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { ProcessRunner } from 'command-stream/process-runner';
@@ -23,6 +25,10 @@ import { normalizeRunOutput } from '../../../tests/cli-contract/normalize.mjs';
 import { runCommand } from '../../src/utilities/subprocess.js';
 import { SANDBOX_ARGS } from '../helpers/e2e-browser.js';
 import { repoPath } from '../helpers/repo.js';
+import {
+  closeRemoteBrowser,
+  SESSION_METADATA,
+} from '../../src/browser/persistent-session.js';
 
 const BIN = fileURLToPath(
   new URL('../../bin/browser-commander.js', import.meta.url)
@@ -124,8 +130,9 @@ for (const engine of ENGINES) {
       E2E,
       async () => {
         const { runner, printed } = startKeptOpenBrowser(engine);
+        let launched;
         try {
-          const launched = await printed;
+          launched = await printed;
           assert.match(launched.cdpEndpoint, /^http:\/\/127\.0\.0\.1:\d+$/u);
           const attach = [
             '--cdp-endpoint',
@@ -153,6 +160,18 @@ for (const engine of ENGINES) {
         } finally {
           runner.kill('SIGTERM');
           await Promise.resolve(runner).catch(() => {});
+          if (launched?.userDataDir) {
+            const file = path.join(launched.userDataDir, SESSION_METADATA);
+            const metadata = JSON.parse(await readFile(file, 'utf8'));
+            await closeRemoteBrowser(metadata.webSocketDebuggerUrl);
+            await assert.rejects(fetch(`${launched.cdpEndpoint}/json/version`));
+            // Chrome finishes flushing its profile after closing CDP.
+            await rm(launched.userDataDir, {
+              recursive: true,
+              force: true,
+              maxRetries: 5,
+            });
+          }
         }
       }
     );

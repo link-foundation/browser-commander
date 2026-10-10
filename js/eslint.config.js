@@ -142,6 +142,17 @@ export default [
     },
   },
   {
+    // Browser init scripts are serialized as one self-contained function.
+    // Keep its DOM/redaction helpers inside the payload.
+    files: ['src/traces/page-capture.js'],
+    rules: {
+      'max-lines-per-function': [
+        'warn',
+        { max: 350, skipBlankLines: true, skipComments: true },
+      ],
+    },
+  },
+  {
     // Test files have different requirements
     files: ['tests/**/*.js', '**/*.test.js'],
     rules: {

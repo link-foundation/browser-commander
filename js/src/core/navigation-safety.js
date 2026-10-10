@@ -8,7 +8,58 @@
  * @param {Error} error - The error to check
  * @returns {boolean} - True if this is a navigation error
  */
+export class NavigationInterruptedError extends Error {
+  constructor(cause) {
+    super('Navigation interrupted the element wait', { cause });
+    this.name = 'NavigationInterruptedError';
+  }
+}
+
+export function waitNavigationState(page, manager) {
+  return { url: page.url?.(), session: manager?.getSessionId?.() };
+}
+
+export function classifyWaitError(error, page, manager, initial) {
+  if (!isTimeoutError(error)) {
+    return error;
+  }
+  try {
+    const current = waitNavigationState(page, manager);
+    if (current.url !== initial.url || current.session !== initial.session) {
+      return new NavigationInterruptedError(error);
+    }
+  } catch {
+    // Keep the original timeout when the page identity is unavailable.
+  }
+  return error;
+}
+
+export function recoverWaitError(
+  caught,
+  options,
+  initial,
+  operation,
+  fallback
+) {
+  const error = classifyWaitError(
+    caught,
+    options.page,
+    options.navigationManager,
+    initial
+  );
+  if (!isNavigationError(error) || options.throwOnNavigation !== false) {
+    throw error;
+  }
+  console.log(
+    `⚠️  Navigation detected during ${operation}, recovering gracefully`
+  );
+  return fallback;
+}
+
 export function isNavigationError(error) {
+  if (error instanceof NavigationInterruptedError) {
+    return true;
+  }
   if (!error || !error.message) {
     return false;
   }

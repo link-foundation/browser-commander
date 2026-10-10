@@ -802,6 +802,10 @@ failed or cancelled download raises the failure rather than returning a path.
 
 ### Portable Traces
 
+See [capture, debugging and reusable sessions](../docs/capture-and-debugging.md)
+for screenshots, recordings, full/text DOM links, network/HAR, rotation,
+persistent browsers, early trigger readiness and engine capability limits.
+
 `startTrace()` records a session into a schema-versioned bundle any of the three
 languages can read - the manifest, an ordered NDJSON timeline, per-checkpoint
 DOM snapshots and the mutation batches between them:

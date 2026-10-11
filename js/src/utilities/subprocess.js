@@ -9,7 +9,7 @@ export async function startDetachedProcess(file, args = [], options = {}) {
     runner.child.once('error', reject);
   });
   const child = runner.child;
-  // command-stream 1.x starts noninteractive children in their own process
+  // command-stream starts noninteractive children in their own process
   // group. Release its controller-owned cancellation registry while retaining
   // the child's exit listeners. Keep this adapter isolated until it exposes a
   // public detach operation; normal subprocesses retain managed cancellation.

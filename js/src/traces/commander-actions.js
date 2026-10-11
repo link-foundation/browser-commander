@@ -15,7 +15,18 @@ function labelActionInPage(argument, elementOptions) {
       actions.splice(index, 1);
     }
   } else {
-    actions.push({ ...marker, element: elementOptions ? argument : null });
+    const focused =
+      !marker.selector && marker.types.includes('keydown')
+        ? document.activeElement
+        : null;
+    actions.push({
+      ...marker,
+      element: elementOptions
+        ? argument
+        : focused !== document.body && focused !== document.documentElement
+          ? focused
+          : null,
+    });
   }
 }
 
@@ -54,7 +65,7 @@ export function observeCommanderActions({
           types: /^(click|check)/.test(name)
             ? ['pointerdown', 'click', 'submit', 'contextmenu']
             : /^(fill|typeText|pressKey)/.test(name)
-              ? ['keydown', 'submit']
+              ? ['keydown', 'submit', 'click']
               : [],
         };
         const element = args[0]?.locatorOrElement ?? args[0]?.selector;
@@ -62,7 +73,10 @@ export function observeCommanderActions({
           try {
             if (marker.types.length) {
               const config = { marker, remove };
-              const frames = remove ? framesOf(page) : [];
+              const frames =
+                remove || (!marker.selector && marker.types.includes('keydown'))
+                  ? framesOf(page)
+                  : [];
               const target = element?.first?.() ?? element;
               const work = frames.length
                 ? Promise.all(

@@ -8,6 +8,12 @@ import { makeBrowserCommander } from '../../src/factory.js';
 import { readTrace } from '../../src/traces/reader.js';
 import { launchE2EBrowser } from '../helpers/e2e-browser.js';
 
+async function activateWithCommander(page, commander) {
+  await commander.click({ selector: '#save', waitAfter: false, verify: false });
+  await page.focus('#typed');
+  await commander.pressKey({ key: 'Enter' });
+}
+
 for (const engine of ['playwright', 'puppeteer']) {
   it(
     `records a person's actions and their failed request with ${engine}`,
@@ -87,11 +93,7 @@ for (const engine of ['playwright', 'puppeteer']) {
               'PRIVATE_TEXTAREA_SENTINEL')
         );
         await page.click('#save');
-        await commander.click({
-          selector: '#save',
-          waitAfter: false,
-          verify: false,
-        });
+        await activateWithCommander(page, commander);
         await commander.destroy();
         const trace = await readTrace(output),
           actions = trace.events.filter(
@@ -135,22 +137,28 @@ for (const engine of ['playwright', 'puppeteer']) {
         assert.ok(actions.some((event) => event.action === 'contextmenu'));
         assert.equal(
           actions.filter((event) => event.source === 'commander').length,
-          1
+          2
+        );
+        assert.equal(
+          actions.filter(
+            (event) =>
+              event.source === 'user' &&
+              event.action === 'click' &&
+              event.target.path === '#save'
+          ).length,
+          2
         );
         assert.doesNotMatch(
           JSON.stringify(actions),
           /PRIVATE_(TYPED|TEXTAREA)_SENTINEL/
         );
         const failed = trace.events.find(
-          (event) => event.kind === 'network.response' && event.status === 500
-        );
+            (event) => event.kind === 'network.response' && event.status === 500
+          ),
+          links = await fs.readFile(path.join(output, 'trace.lino'), 'utf8');
         assert.equal(failed.method, 'DELETE');
         assert.equal(failed.body, undefined, 'network bodies remain opt-in');
         assert.ok(clicks[0].sequence < failed.sequence);
-        const links = await fs.readFile(
-          path.join(output, 'trace.lino'),
-          'utf8'
-        );
         assert.match(links, /source: user/);
         assert.match(links, /dom-snapshot/);
         assert.match(links, /dom-mutation/);

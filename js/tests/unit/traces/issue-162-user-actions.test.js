@@ -46,6 +46,7 @@ function documentFixture(options = {}) {
     window,
     location: { href: 'https://example.test/' },
     document: {
+      activeElement: target,
       addEventListener: (name, listener) => listeners.set(name, listener),
       removeEventListener: (name) => listeners.delete(name),
     },
@@ -66,7 +67,7 @@ function documentFixture(options = {}) {
       type,
       isTrusted: true,
       target,
-      composedPath: () => [target],
+      composedPath: () => [extras.target ?? target],
       ...extras,
     });
   const evaluate = (fn, argument, element = null) => {
@@ -78,6 +79,19 @@ function documentFixture(options = {}) {
     );
   };
   return { window, target, listeners, fire, evaluate, state: window.recorder };
+}
+
+function observeActions(commander, evaluate, name) {
+  const recorded = [];
+  const detach = observeCommanderActions({
+    commander,
+    page: { evaluate },
+    names: [name],
+    targetOf: interactionTarget,
+    now: () => 0,
+    record: async (kind, event) => recorded.push({ kind, ...event }),
+  });
+  return { recorded, detach };
 }
 
 it('records only trusted actions and non-text keys, and stops listeners', () => {
@@ -131,20 +145,36 @@ it('attributes element-handle input to the commander and removes its marker', as
     evaluate: (fn, argument) => evaluate(fn, argument, target),
   };
   const commander = { clickElement: async () => fire('click') };
-  const recorded = [];
-  const detach = observeCommanderActions({
+  const { recorded, detach } = observeActions(
     commander,
-    page: { evaluate },
-    names: ['clickElement'],
-    targetOf: interactionTarget,
-    now: () => 0,
-    record: async (kind, event) => recorded.push({ kind, ...event }),
-  });
+    evaluate,
+    'clickElement'
+  );
   try {
     await commander.clickElement({ locatorOrElement: element });
     assert.equal(state.queue.length, 0);
     assert.equal(recorded[0].source, 'commander');
     assert.equal(window.__browserCommanderActions__.length, 0);
+  } finally {
+    detach();
+  }
+});
+
+it('attributes keyboard activation clicks to the commander without suppressing other controls', async () => {
+  const { fire, state, evaluate, target } = documentFixture();
+  target.contains = (node) => node === target;
+  const commander = {
+    pressKey: async () => {
+      fire('keydown', { key: 'Enter' });
+      fire('click', { detail: 0 });
+      fire('click', { target: { ...target, closest: () => null } });
+    },
+  };
+  const { recorded, detach } = observeActions(commander, evaluate, 'pressKey');
+  try {
+    await commander.pressKey({ key: 'Enter' });
+    assert.equal(state.queue.length, 1);
+    assert.equal(recorded[0].source, 'commander');
   } finally {
     detach();
   }

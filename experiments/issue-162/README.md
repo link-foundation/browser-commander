@@ -26,6 +26,11 @@ submit, contextmenu, synthetic-event exclusion and commander source attribution.
 Typed input/textarea sentinels must not appear in action records. Response bodies
 remain absent unless requested.
 
+Commander Enter also activates the form's Save button. The browser regression
+checks that this click is not mislabeled as user input. A minimal VM regression
+failed with two user actions before the focused-control marker fix, then passed
+with only the unrelated manual click remaining.
+
 The unit regressions also bound queues to two entries, verify overflow counts,
 private-target redaction and listener cleanup, preserve explicit recording
 opt-outs, keep launch opt-outs when a commander adopts the page, attribute element

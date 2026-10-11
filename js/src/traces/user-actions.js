@@ -193,6 +193,11 @@ export function installUserActionRecorderInPage(options) {
           return (
             action.element === target ||
             action.element.contains(target) ||
+            (event.type === 'click' &&
+              event.detail === 0 &&
+              action.types.includes('keydown') &&
+              action.element.form &&
+              action.element.form === target.form) ||
             (event.type === 'submit' && target.contains(action.element))
           );
         }

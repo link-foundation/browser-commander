@@ -109,11 +109,7 @@ impl PersistentSession {
         if self.detached {
             anyhow::bail!("Persistent controller is detached");
         }
-        let remembered = self
-            .page()
-            .target_id()
-            .await?
-            .or_else(|| self.metadata["targetId"].as_str().map(str::to_owned));
+        let remembered = preferred_target(self.page().target_id().await, &self.metadata)?;
         let mut options = self.options.clone();
         options.fallback = target_id.is_none();
         options.target_id = target_id.or_else(|| if url.is_none() { remembered } else { None });
@@ -183,5 +179,36 @@ impl Drop for PersistentSession {
         if let Some(heartbeat) = self.heartbeat.take() {
             heartbeat.abort();
         }
+    }
+}
+
+fn preferred_target(
+    queried: Result<Option<String>, crate::core::engine::EngineError>,
+    metadata: &Value,
+) -> anyhow::Result<Option<String>> {
+    let current = match queried {
+        Ok(target) => target,
+        Err(error) => {
+            tracing::debug!(%error, "remembered page target is unavailable");
+            None
+        }
+    };
+    Ok(current.or_else(|| metadata["targetId"].as_str().map(str::to_owned)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn closed_page_target_queries_fall_back_to_remembered_selection() {
+        let queried = Err(crate::core::engine::EngineError::Navigation(
+            "Target page has been closed".into(),
+        ));
+        let metadata = json!({"targetId": "remembered"});
+        assert_eq!(
+            preferred_target(queried, &metadata).unwrap(),
+            Some("remembered".into())
+        );
     }
 }

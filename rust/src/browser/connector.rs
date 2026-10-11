@@ -445,7 +445,7 @@ async fn connect_chromiumoxide(
     if let Some(profile) = settings.fingerprint {
         if let Err(error) = apply_fingerprint(&adapter, profile, ApplyOptions::default()).await {
             let _ = adapter.detach().await;
-            return Err(error.into());
+            return Err(error);
         }
         if options.verbose {
             tracing::info!("Fingerprint profile applied");

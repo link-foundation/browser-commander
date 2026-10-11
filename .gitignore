@@ -1,6 +1,7 @@
 # Logs
 logs
 ci-logs/
+browser-commander-traces/
 *.log
 npm-debug.log*
 yarn-debug.log*

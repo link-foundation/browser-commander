@@ -8,6 +8,7 @@ import {
 import { assertSupportedEngine } from './connector.js';
 import { emulateMedia } from './media.js';
 import { reserveLoopbackPort } from './debugging-port.js';
+import { attachLaunchDebug } from '../traces/debug-session.js';
 import {
   buildPlaywrightLaunchOptions,
   buildPuppeteerLaunchOptions,
@@ -319,12 +320,16 @@ export async function launchBrowserWithDependencies(
 ) {
   if (options.keepOpen) {
     const { connectOrLaunch } = await import('./persistent-session.js');
-    return connectOrLaunch({
-      ...options,
-      userDataDir: options.userDataDir ?? (await createTemporaryUserDataDir()),
-      remoteDebuggingPort:
-        options.remoteDebuggingPort ?? (await reserveLoopbackPort()),
-    });
+    return attachLaunchDebug(
+      await connectOrLaunch({
+        ...options,
+        userDataDir:
+          options.userDataDir ?? (await createTemporaryUserDataDir()),
+        remoteDebuggingPort:
+          options.remoteDebuggingPort ?? (await reserveLoopbackPort()),
+      }),
+      options
+    );
   }
   sessionPersistencePath(options);
   if (isSafariChannel(options.channel ?? options.browser)) {
@@ -333,11 +338,17 @@ export async function launchBrowserWithDependencies(
       launch: options.launch ?? 'real',
       attach: options.attach,
     });
-    return await launchSafari(options, dependencies);
+    return attachLaunchDebug(
+      await launchSafari(options, dependencies),
+      options
+    );
   }
   const result = await launchNonSafariBrowser(options, dependencies);
   try {
-    return await installSessionPersistence(result, options);
+    return await attachLaunchDebug(
+      await installSessionPersistence(result, options),
+      options
+    );
   } catch (error) {
     await result.close();
     throw error;

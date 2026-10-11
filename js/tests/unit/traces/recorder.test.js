@@ -45,6 +45,9 @@ describe('trace recorder (issue #87)', () => {
       commander,
       page,
       output: path.join(directory.path, 'run'),
+      mode: TRACE_MODE.CHECKPOINTS,
+      network: false,
+      links: false,
       ...traceOptions,
     });
 
@@ -332,7 +335,7 @@ describe('trace recorder (issue #87)', () => {
       // before a freshly navigated document's own scripts do.
       assert.deepStrictEqual(
         page.state.initScripts.map((script) => script.name),
-        ['installMutationRecorderInPage']
+        ['installMutationRecorderInPage', 'installUserActionRecorderInPage']
       );
     });
 

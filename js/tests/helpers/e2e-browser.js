@@ -66,12 +66,13 @@ export const CHROME_LAUNCH_OPTIONS = {
  * @returns {Promise<{browser: Object, page: Object, downloads: Object, cleanup: Function}>} The launched browser and a `cleanup` that closes it and removes the profile
  */
 export async function launchE2EBrowser(options = {}) {
-  const { engine, downloadDirectory } = options;
+  const { engine, downloadDirectory, debug = false } = options;
 
   // The default launch creates a fresh temporary profile and deletes it on
   // close, so the helper no longer manages one itself.
   const launched = await launchBrowser({
     engine,
+    debug,
     headless: process.env.HEADLESS !== 'false',
     ...CHROME_LAUNCH_OPTIONS,
     ...(downloadDirectory

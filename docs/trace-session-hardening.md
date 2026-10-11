@@ -92,6 +92,10 @@ in the existing default context. Explicit `targetId` remains strict unless
 `fallback: true` is supplied. JS/Python accept strings, regular expressions,
 and predicates; Rust's typed matcher list contains URL strings. Connections
 are detached when selection, restoration, or lifecycle initialization fails.
+An explicitly supplied URL list takes precedence over an implicit remembered
+target, even while that target is still open. During reuse, pass `urlMatchers`
+in JavaScript, `url_matchers` in Python, or call Rust's
+`reuse_page_matching(None, ordered_urls)`.
 
 `connectBrowser({ noDefaults: true })` forwards Playwright's context override
 option; explicit `false` is preserved. With the option omitted, only the exact

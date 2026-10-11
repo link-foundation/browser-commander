@@ -134,7 +134,10 @@ async function open(options, file, endpoint) {
       ...options,
       cdpEndpoint: endpoint,
       targetId:
-        options.targetId ?? (!options.url ? metadata.targetId : undefined),
+        options.targetId ??
+        (!options.url && !options.urlMatchers?.length
+          ? metadata.targetId
+          : undefined),
       fallback: !options.targetId,
     });
     return { session, metadata, reused: true, adopted };
@@ -327,7 +330,9 @@ async function lifecycle(
           (await pickForegroundPage(pages, {
             targetId:
               selection.targetId ??
-              (!selection.url ? metadata.targetId : undefined),
+              (!selection.url && !selection.urlMatchers?.length
+                ? metadata.targetId
+                : undefined),
             fallback: !selection.targetId,
             ...selection,
           })) ??

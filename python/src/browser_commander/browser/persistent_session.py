@@ -112,7 +112,7 @@ class PersistentSession:
                     self._context.pages,
                     ConnectOptions(
                         target_id=target_id
-                        or (None if url else self.metadata["targetId"]),
+                        or (None if url or url_matchers else self.metadata["targetId"]),
                         url=url,
                         url_matchers=url_matchers or [],
                         fallback=target_id is None,

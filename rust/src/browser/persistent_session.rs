@@ -68,7 +68,7 @@ impl PersistentSession {
     pub async fn touch(&self) -> anyhow::Result<()> {
         let mut payload = self.metadata.clone();
         payload["operation"] = json!("touch");
-        if let Some(target) = self.page().target_id().await? {
+        if let Some(target) = preferred_target(self.page().target_id().await, &self.metadata)? {
             payload["targetId"] = json!(target);
         }
         worker(payload).await?;
@@ -106,14 +106,34 @@ impl PersistentSession {
         target_id: Option<String>,
         url: Option<String>,
     ) -> anyhow::Result<Arc<dyn EngineAdapter>> {
+        let mut options = self.options.clone();
+        options.fallback = target_id.is_none();
+        options.target_id = target_id;
+        options.url = url;
+        self.replace_page(options).await
+    }
+    /// Select a reusable page with URLs ordered from most to least preferred.
+    pub async fn reuse_page_matching(
+        &mut self,
+        target_id: Option<String>,
+        url_matchers: Vec<String>,
+    ) -> anyhow::Result<Arc<dyn EngineAdapter>> {
+        let mut options = self.options.clone();
+        options.fallback = target_id.is_none();
+        options.target_id = target_id;
+        options.url = None;
+        options.url_matchers = url_matchers;
+        self.replace_page(options).await
+    }
+    async fn replace_page(
+        &mut self,
+        mut options: ConnectOptions,
+    ) -> anyhow::Result<Arc<dyn EngineAdapter>> {
         if self.detached {
             anyhow::bail!("Persistent controller is detached");
         }
         let remembered = preferred_target(self.page().target_id().await, &self.metadata)?;
-        let mut options = self.options.clone();
-        options.fallback = target_id.is_none();
-        options.target_id = target_id.or_else(|| if url.is_none() { remembered } else { None });
-        options.url = url;
+        apply_remembered_target(&mut options, remembered);
         let replacement = connect_browser(options).await?;
         if let Err(error) = self.page().detach().await {
             let _ = replacement.page.detach().await;
@@ -140,10 +160,10 @@ pub async fn connect_or_launch(options: PersistentOptions) -> anyhow::Result<Per
     let mut connection_options = options.connection;
     connection_options.ws_endpoint = None;
     connection_options.cdp_endpoint = metadata["cdpEndpoint"].as_str().map(str::to_owned);
-    if connection_options.target_id.is_none() {
-        connection_options.target_id = metadata["targetId"].as_str().map(str::to_owned);
-        connection_options.fallback = true;
-    }
+    apply_remembered_target(
+        &mut connection_options,
+        metadata["targetId"].as_str().map(str::to_owned),
+    );
     let connection = connect_browser(connection_options.clone()).await?;
     let mut heartbeat_metadata = metadata.clone();
     heartbeat_metadata["operation"] = json!("touch");
@@ -196,6 +216,15 @@ fn preferred_target(
     Ok(current.or_else(|| metadata["targetId"].as_str().map(str::to_owned)))
 }
 
+fn apply_remembered_target(options: &mut ConnectOptions, remembered: Option<String>) {
+    if options.target_id.is_none() {
+        options.fallback = true;
+        if options.url.is_none() && options.url_matchers.is_empty() {
+            options.target_id = remembered;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -210,5 +239,19 @@ mod tests {
             preferred_target(queried, &metadata).unwrap(),
             Some("remembered".into())
         );
+    }
+
+    #[test]
+    fn ranked_urls_override_a_live_remembered_target() {
+        let mut options = ConnectOptions {
+            url_matchers: vec![
+                "https://preferred.test".into(),
+                "https://remembered.test".into(),
+            ],
+            ..Default::default()
+        };
+        apply_remembered_target(&mut options, Some("remembered".into()));
+        assert!(options.target_id.is_none());
+        assert!(options.fallback);
     }
 }

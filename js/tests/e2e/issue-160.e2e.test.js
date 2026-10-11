@@ -179,12 +179,29 @@ it(
       originalOwner = JSON.parse(
         await fs.readFile(path.join(userDataDir, SESSION_METADATA), 'utf8')
       );
+      const originalUrl = session.page.url();
+      const preferred = await session.browser.contexts()[0].newPage();
+      await preferred.goto('data:text/html,<p>preferred tab</p>');
+      const preferredUrl = preferred.url();
+      assert.ok(
+        (await session.reusePage({
+          urlMatchers: [preferredUrl, originalUrl],
+        })) === preferred,
+        'ranked URL matchers must override the remembered target'
+      );
+      await session.detach();
+      session = await connectOrLaunch({
+        ...settings,
+        urlMatchers: [originalUrl, preferredUrl],
+      });
+      assert.equal(session.page.url(), originalUrl);
       await session.detach();
       await fs.rm(path.join(userDataDir, SESSION_METADATA));
       session = await connectOrLaunch({
         ...settings,
         adoptExisting: true,
         closeNewTabs: true,
+        singleTab: true,
       });
       assert.equal(session.adopted, true);
       const selected = session.page;

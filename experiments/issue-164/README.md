@@ -24,6 +24,12 @@ high findings through the reported braces chain; `npm ci --ignore-scripts`
 against the repository lock reported zero vulnerabilities. This demonstrates
 the dependency-resolution regression without running a stack-exhaustion payload.
 
+After changing the manifest to `command-stream: ^2.0.2` and regenerating the
+lock, the same fresh-consumer check selects 2.0.2, exits 0 and reports zero
+vulnerabilities. Both the original locked 1.4.0 and the updated 2.0.2 pass all
+seven subprocess contracts. These results were obtained on 2026-10-11 with
+Node 26.11.1 and npm 11.20.0.
+
 Command Stream [2.0.2 registry metadata](https://registry.npmjs.org/command-stream/2.0.2)
 omits ShellJS and preserves `command-stream/process-runner`. Its Node >=22.0.0
 requirement fits Browser Commander's existing >=22.12.0 minimum. Inspection of
@@ -45,3 +51,21 @@ separate launcher process. A finite Node child writes a marker after three
 seconds: the launcher must exit before the marker exists, and the child must
 still create it afterwards. Tests have ten-second suite limits, clean up child
 processes and temporary files, and never access a browser or website.
+
+The browser-backed capture fixture runs through the existing E2E framework:
+
+```sh
+cd js
+RUN_E2E=true CHROME_PATH=/usr/bin/google-chrome CHROME_NO_SANDBOX=true \
+  node scripts/run-tests.mjs --reporter tap tests/e2e/capture.e2e.test.js
+```
+
+It launches Playwright, Puppeteer and Selenium sequentially and checks stable
+viewport focus/scroll preservation, PNG/JPEG/WebP screenshots, GIF/APNG/animated
+WebP, and browser-native WebM. Each recording is limited to two 120×100 frames,
+one MiB and three seconds; each engine case has a sixty-second test limit and
+always closes its browser. The Browser Parity workflow includes this fixture in
+its engine suite. `CHROME_NO_SANDBOX` is needed only in containers without a
+usable sandbox, following the existing shared browser helper.
+Selenium enables BiDi explicitly so its documented JPEG capture path is
+exercised as well as PNG and WebP.

@@ -144,6 +144,11 @@ jobs:
       - name: Audit current lock
         run: npm audit --package-lock-only --audit-level=high
 
+      # The published range can resolve differently from this repository's
+      # lock (issue #164). Audit a fresh consumer of the actual packed package.
+      - name: Audit fresh packed consumer
+        run: bash ../experiments/issue-164/audit-consumer.sh
+
   cargo-audit:
     name: Cargo audit
     runs-on: ubuntu-24.04

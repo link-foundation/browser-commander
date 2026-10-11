@@ -205,7 +205,20 @@ continues to return `null`/`None`.
 require its native build. Node's built-in SQLite handles supported reads; online
 backup requires Node 22.16 or later. Older runtimes need the optional addon for
 SQLite workflows and receive an installation hint when it is unavailable.
-`links-notation` uses the compatible `^0.23.0` range.
+`links-notation` uses `^0.25.2`. A consumer that also depends on 0.25.2 can share
+one installed copy after refreshing its lockfile (and running `npm dedupe` if an
+existing installation retains a nested copy); no dependency override is needed.
+The `Link`, `Parser`, `StreamParser` and `formatLinks` APIs used by trace exports
+remain compatible, and the existing cross-language golden export is unchanged.
+
+Existing `.lino` traces remain readable. New exports may use Links Notation's
+versioned UTF-8 literals (`~1{...}`) for empty or control-character values, and
+quote Unicode whitespace and literal-looking text such as `~1{61}`. Consumers
+using an older parser should upgrade it to 0.25.2 before reading new exports.
+The bundle schema and trace link fields remain unchanged; continue applying
+`decodeLinkText` to parsed scalar IDs to reverse the trace-specific escapes.
+The exporter also preserves lone JavaScript UTF-16 surrogates as `\ud800`–
+`\udfff` escapes instead of passing invalid Unicode to the formatter.
 
 Use Bun **1.4.2 or later** for real-browser Playwright CDP attachment. The consumer
 reported a timeout on Bun 1.2.20 and success on 1.4.2; this is a tested minimum,

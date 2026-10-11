@@ -84,7 +84,7 @@
     "command-stream": "^2.0.2",
     "csv-parse": "^7.0.3",
     "gifenc": "^1.0.3",
-    "links-notation": "^0.23.0",
+    "links-notation": "^0.25.2",
     "log-lazy": "^1.0.4",
     "plist": "^5.0.0",
     "test-anywhere": "^0.9.1",

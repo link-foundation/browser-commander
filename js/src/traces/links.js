@@ -107,11 +107,11 @@ const HEAD_FIELDS = new Set([
 /**
  * Make one value safe to write as a link.
  *
- * Links Notation 0.20 quotes a value with whichever quote character the value
- * does not contain, and its parser does not read escapes, so a value holding
- * both quote characters cannot be read back. Newlines are worse: they would
- * split one record across lines. Both are encoded here, reversibly, rather
- * than dropped, so the export loses nothing the bundle holds.
+ * Keep the representation's legacy escapes even though current Links Notation
+ * can quote both quote characters. Newlines must not split a record across
+ * lines. Lone UTF-16 surrogates are escaped too: the notation requires valid
+ * Unicode, but JavaScript trace strings can hold individual surrogate units.
+ * All these encodings are reversible, so the export loses no scalar text.
  *
  * @param {*} value - Any scalar from a trace record
  * @returns {string} Text that survives a format and parse round trip
@@ -122,9 +122,13 @@ export function encodeLinkText(value) {
     .replaceAll('\\', '\\\\')
     .replaceAll('\n', '\\n')
     .replaceAll('\r', '\\r')
-    .replaceAll('\t', '\\t');
-  // Only a value that holds both quote characters is unquotable, so only that
-  // value pays for the ugliness of an escaped quote.
+    .replaceAll('\t', '\\t')
+    // Unicode mode matches lone surrogates without splitting valid pairs.
+    .replace(
+      /[\ud800-\udfff]/gu,
+      (unit) => `\\u${unit.charCodeAt(0).toString(16)}`
+    );
+  // Preserve the existing encoding for values holding both quote characters.
   return escaped.includes("'") && escaped.includes('"')
     ? escaped.replaceAll('"', '\\u0022')
     : escaped;
@@ -139,8 +143,9 @@ export function encodeLinkText(value) {
 export function decodeLinkText(text) {
   const decoded = { '\\': '\\', n: '\n', r: '\r', t: '\t', u0022: '"' };
   return String(text).replace(
-    /\\(\\|n|r|t|u0022)/g,
-    (match, code) => decoded[code]
+    /\\(\\|n|r|t|u0022|ud[89a-f][0-9a-f]{2})/g,
+    (match, code) =>
+      decoded[code] ?? String.fromCharCode(Number.parseInt(code.slice(1), 16))
   );
 }
 

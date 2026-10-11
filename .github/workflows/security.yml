@@ -149,6 +149,9 @@ jobs:
       - name: Audit fresh packed consumer
         run: bash ../experiments/issue-164/audit-consumer.sh
 
+      - name: Check shared Links Notation consumer
+        run: bash ../experiments/issue-168/check-consumer.sh
+
   cargo-audit:
     name: Cargo audit
     runs-on: ubuntu-24.04

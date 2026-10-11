@@ -123,6 +123,28 @@ describe('opt-in recording policy (issue #166)', { timeout: 15000 }, () => {
     });
   });
 
+  it('leaves later explicit traces intact when debug teardown repeats', async () => {
+    await fixture(async ({ root, page, commander, configureDebug }) => {
+      await configureDebug({ directory: root, retain: false });
+      await commander.stopDebug();
+      const first = await commander.startTrace({
+        output: path.join(root, 'first-explicit'),
+      });
+      await commander.stopDebug();
+      const second = await commander.startTrace({
+        output: path.join(root, 'second-explicit'),
+      });
+      await first.stop();
+      await second.stop();
+      let captures = 0;
+      page.evaluate = async () => {
+        captures += 1;
+      };
+      await commander.click('#after-teardown');
+      assert.equal(captures, 0, 'stopped traces must leave no input labels');
+    });
+  });
+
   it('refuses to discard a caller-supplied output directory', async () => {
     await fixture(async ({ root, commander }) => {
       attachCommanderFeatures(commander, { debug: { output: root } }, () => {});

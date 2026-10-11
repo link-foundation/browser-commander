@@ -141,6 +141,10 @@ export function observeCommanderActions({
         commander[name] = original;
       }
     }
-    commanders.delete(commander);
+    // A repeated teardown may belong to an older, already stopped recording.
+    // Preserve observers installed by a newer explicit trace on this commander.
+    if (commanders.get(commander) === state) {
+      commanders.delete(commander);
+    }
   };
 }

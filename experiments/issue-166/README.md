@@ -40,6 +40,9 @@ The same test exposed an engine-close RPC that can remain pending after the
 browser is interrupted. `real-browser.test.js` reproduces that with a never-settled
 engine close; it timed out before the fix. Applying the existing close timeout
 to that RPC lets owned-process/profile cleanup finish without increasing budgets.
+The policy suite also reproduces repeated debug teardown removing a newer trace's
+observer registry, leaving input-label capture active after explicit traces stop.
+Cleanup now removes only the registry owned by that observer generation.
 Abrupt termination and accumulated retained sessions require the
 application's own evidence-root retention policy. Explicit trace features and
 the complete action/DOM/network capture tests from issue #162 remain supported.

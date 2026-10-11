@@ -65,7 +65,7 @@ function describeTraces(engine) {
         engine,
         downloadDirectory,
       }));
-      commander = makeBrowserCommander({ page, downloads });
+      commander = makeBrowserCommander({ page, downloads, debug: false });
     });
 
     beforeEach(async () => {
@@ -91,6 +91,9 @@ function describeTraces(engine) {
       commander.startTrace({
         output: path.join(artifacts, `run-${++runs}`),
         screenshots: false,
+        mode: 'checkpoints',
+        network: false,
+        links: false,
         ...options,
       });
 

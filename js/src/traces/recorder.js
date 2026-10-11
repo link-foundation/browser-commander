@@ -16,10 +16,13 @@ import { openTraceLinks } from './links.js';
 import { createTraceIdentity } from './identity.js';
 import { withDeadline } from './deadline.js';
 import { createMutationStream } from './mutation-stream.js';
-import { attachTimelineObservers } from './observers.js';
+import { createUserActionStream } from './user-actions.js';
+import { startTraceDrain } from './drain-timer.js';
+import { attachRecorderObservers } from './observers.js';
 import { attachNetwork, validateNetworkOptions } from './network.js';
 import { startRecording } from '../capture/recording.js';
 import { normalizePrivacyOptions, redactValue } from './redaction.js';
+import path from 'node:path';
 import {
   DEFAULT_CAPTURE_TIMEOUT,
   TRACE_CHECKPOINT_REASON,
@@ -94,13 +97,19 @@ function normalizeTraceOptions(options) {
   return {
     ...options,
     page: options.page ?? options.commander?.page,
-    mode: options.mode ?? TRACE_MODE.CHECKPOINTS,
+    mode: options.mode ?? TRACE_MODE.CONTINUOUS,
     screenshots: options.screenshots ?? 'checkpoints',
     dom: options.dom ?? {},
     privacy: options.privacy ?? {},
     limits: options.limits ?? {},
-    links: options.links ?? null,
-    network: options.network ?? false,
+    links:
+      options.links === false || options.links === null
+        ? null
+        : (options.links ?? {
+            output: path.join(options.output ?? '', 'trace.lino'),
+            dom: 'full',
+          }),
+    network: options.network ?? { har: true },
     strict: options.strict ?? false,
     captureTimeoutMs: options.captureTimeoutMs ?? DEFAULT_CAPTURE_TIMEOUT,
     commanderVersion: options.commanderVersion ?? null,
@@ -110,6 +119,7 @@ function normalizeTraceOptions(options) {
 }
 
 export async function startTrace(options = {}) {
+  options = normalizeTraceOptions(options);
   if (options.limits?.rotate) {
     const { startRollingTrace } = await import('./rolling.js');
     return startRollingTrace(options, startTrace);
@@ -151,8 +161,8 @@ export async function startTrace(options = {}) {
   // Otherwise a rejected start (for example `links: {}`) strands the bundle's
   // events handle because no running trace is returned for the caller to stop.
   validateLinksOptions(links);
-  const engine = commander?.engine ?? null;
-  const identity = createTraceIdentity({ page });
+  const engine = commander?.engine ?? null,
+    identity = createTraceIdentity({ page });
 
   // A continuous trace records changes, and a change is only meaningful against
   // something. Taking the base snapshot automatically is the safe default,
@@ -243,6 +253,18 @@ export async function startTrace(options = {}) {
     captureTimeoutMs,
     evaluateInPage,
   });
+  const userActions = createUserActionStream({
+    page,
+    record,
+    identity,
+    note,
+    privacyOptions,
+    limits,
+    enabled: eventSources.includes('interaction'),
+    ignoreSelectors: domOptions.ignoreSelectors,
+    evaluateInPage,
+    captureTimeoutMs,
+  });
 
   async function screenshot(reason) {
     const wanted =
@@ -289,7 +311,7 @@ export async function startTrace(options = {}) {
     detachNetwork = async () => {},
     video = null;
   try {
-    detachers = attachTimelineObservers({
+    const observers = attachRecorderObservers({
       commander,
       page,
       eventSources,
@@ -298,6 +320,7 @@ export async function startTrace(options = {}) {
       identity,
       now,
     });
+    detachers = observers.detachers;
     detachNetwork = attachNetwork({
       page,
       network,
@@ -344,7 +367,11 @@ export async function startTrace(options = {}) {
       events: eventSources,
       initialCheckpoint: Boolean(baseCheckpoint),
     });
-    await mutations.install();
+    await Promise.all([mutations.install(), userActions.install()]);
+    detachers.push(async () => {
+      await userActions.drain();
+      await userActions.stop();
+    });
 
     if (baseCheckpoint) {
       await checkpoint(
@@ -356,23 +383,10 @@ export async function startTrace(options = {}) {
       );
     }
 
-    let drainTask;
-    if (domOptions.mutations) {
-      const timer = setInterval(() => {
-        if (!drainTask) {
-          drainTask = mutations
-            .drain(captureState.index)
-            .catch((error) => note(error.message))
-            .finally(() => {
-              drainTask = null;
-            });
-        }
-      }, 500);
-      timer.unref?.();
-      detachers.push(async () => {
-        clearInterval(timer);
-        await drainTask;
-      });
+    if (domOptions.mutations || eventSources.includes('interaction')) {
+      detachers.push(
+        startTraceDrain({ mutations, userActions, captureState, note })
+      );
     }
 
     /**
@@ -424,6 +438,7 @@ export async function startTrace(options = {}) {
         return bundle.bytesWritten;
       },
       checkpoint,
+      attachCommander: observers.attachCommander,
       /**
        * Record an event a caller cares about on the same timeline.
        *
@@ -460,6 +475,12 @@ export async function startTrace(options = {}) {
 
 function requireTraceSupport(options) {
   validateNetworkOptions(options.network);
+  const maxQueued = options.limits.maxQueuedUserActions ?? 5000;
+  if (!Number.isSafeInteger(maxQueued) || maxQueued < 1) {
+    throw new RangeError(
+      'maxQueuedUserActions must be a positive safe integer'
+    );
+  }
   (options.page ?? options.commander?.page)?.requireFeature?.('tracing');
 }
 

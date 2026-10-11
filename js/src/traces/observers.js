@@ -8,11 +8,49 @@
  */
 
 import { TRACE_EVENT } from './schema.js';
+import { observeCommanderActions } from './commander-actions.js';
+
+/** Keep page observations when a launched trace is adopted by a commander. */
+export function attachRecorderObservers(options) {
+  const ownerSources = ['interaction', 'dialog', 'download', 'navigation'];
+  const detachers = attachTimelineObservers({
+    ...options,
+    commander: null,
+    eventSources: options.eventSources.filter(
+      (source) => !ownerSources.includes(source)
+    ),
+  });
+  let commanderDetachers = [],
+    attachedCommander,
+    hasCommander = false;
+  const attachCommander = (commander) => {
+    if (hasCommander && commander === attachedCommander) {
+      return;
+    }
+    hasCommander = true;
+    attachedCommander = commander;
+    for (const detach of commanderDetachers) {
+      detach();
+    }
+    commanderDetachers = attachTimelineObservers({
+      ...options,
+      commander,
+      eventSources: options.eventSources.filter((source) =>
+        ownerSources.includes(source)
+      ),
+    });
+  };
+  attachCommander(options.commander);
+  detachers.push(() => commanderDetachers.forEach((detach) => detach()));
+  return { detachers, attachCommander };
+}
 
 /** Commander methods recorded as interactions while a trace is running. */
 export const TRACED_INTERACTIONS = Object.freeze([
   'click',
   'clickButton',
+  'clickElement',
+  'check',
   'fill',
   'fillTextArea',
   'goto',
@@ -231,51 +269,17 @@ export function attachTimelineObservers(options) {
     };
   });
 
-  subscribe('interaction', () => {
-    if (!commander) {
-      return null;
-    }
-    const originals = new Map();
-    for (const name of TRACED_INTERACTIONS) {
-      const original = commander[name];
-      if (typeof original !== 'function') {
-        continue;
-      }
-      originals.set(name, original);
-      commander[name] = async (...args) => {
-        const startedMs = now();
-        const target = interactionTarget(args[0]);
-        // Named before the call, so everything the action causes can be traced
-        // back to it even when the action itself ends in an exception.
-        const actionId = identity?.nextActionId() ?? null;
-        try {
-          const result = await original(...args);
-          await record(TRACE_EVENT.INTERACTION, {
-            actionId,
-            action: name,
-            target,
-            durationMs: now() - startedMs,
-            ok: true,
-          });
-          return result;
-        } catch (error) {
-          await record(TRACE_EVENT.INTERACTION, {
-            actionId,
-            action: name,
-            target,
-            durationMs: now() - startedMs,
-            ok: false,
-            error: error.message,
-          });
-          throw error;
-        }
-      };
-    }
-    return () => {
-      for (const [name, original] of originals) {
-        commander[name] = original;
-      }
-    };
-  });
+  subscribe('interaction', () =>
+    observeCommanderActions({
+      commander,
+      page,
+      names: TRACED_INTERACTIONS,
+      targetOf: interactionTarget,
+      record,
+      identity,
+      now,
+      note,
+    })
+  );
   return detachers;
 }

@@ -816,6 +816,13 @@ See [capture, debugging and reusable sessions](https://github.com/link-foundatio
 for screenshots, recordings, full/text DOM links, network/HAR, rotation,
 persistent browsers, early trigger readiness and engine capability limits.
 
+JavaScript commanders and browser launches record complete sessions by default
+under `./browser-commander-traces/`, including trusted user actions, DOM changes,
+network metadata and `trace.lino`. Await `commander.ready` before using its raw
+page, and call `commander.destroy()` or the launch's `close()` to finish the files.
+Use `debug: false` or `BROWSER_COMMANDER_DEBUG=0` to opt out; `debug: { output }`
+chooses the directory. `commander.tracePath` exposes its path.
+
 `startTrace()` records a session into a schema-versioned bundle any of the three
 languages can read - the manifest, an ordered NDJSON timeline, per-checkpoint
 DOM snapshots and the mutation batches between them:

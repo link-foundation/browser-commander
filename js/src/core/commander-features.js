@@ -1,4 +1,7 @@
 import { startTrace } from '../traces/recorder.js';
+import { debugEnabled, ensureDebugSession } from '../traces/debug-session.js';
+import { observeCommanderActions } from '../traces/commander-actions.js';
+import { TRACED_INTERACTIONS, interactionTarget } from '../traces/observers.js';
 import { touchSessionPage } from '../browser/persistent-session.js';
 import { dismissOverlays } from '../interactions/overlays.js';
 import {
@@ -15,7 +18,7 @@ const INTERACTIONS = new Set([
   'pressKey',
 ]);
 
-/** Bind capture, persistence and opt-in debugging to the commander lifecycle. */
+/** Bind capture, persistence and automatic debugging to the commander lifecycle. */
 export function attachCommanderFeatures(commander, options, recreate) {
   const { page, engine } = commander;
   const managed = new Set();
@@ -46,24 +49,10 @@ export function attachCommanderFeatures(commander, options, recreate) {
     });
   commander.startTrace = async (traceOptions = {}) =>
     track(await startTrace({ commander, page, ...traceOptions }));
-  const output =
-    options.debug?.output ??
-    options.output ??
-    process.env.BROWSER_COMMANDER_TRACE;
-  let debug;
-  const ensureDebug = async () => {
-    if (!output || (!options.debug && !process.env.BROWSER_COMMANDER_TRACE)) {
-      return;
-    }
-    debug ??= commander.startTrace({
-      output,
-      mode: 'continuous',
-      network: { har: true },
-      links: { output: `${output}.links`, dom: 'text' },
-      checkpointOnNavigation: true,
-    });
-    await debug;
-  };
+  let debugSession;
+  let detachActions;
+  commander.tracePath = null;
+  const ensureDebug = () => commander.ready;
   for (const name of [...INTERACTIONS, 'goto', 'evaluate', 'count']) {
     const method = commander[name];
     if (!method) {
@@ -81,10 +70,10 @@ export function attachCommanderFeatures(commander, options, recreate) {
   const destroy = commander.destroy;
   commander.destroy = async () => {
     try {
-      if (debug) {
-        await debug;
-      }
+      await commander.ready;
+      await debugSession?.stop();
       await Promise.all([...managed].map((item) => item.stop()));
+      detachActions?.();
     } finally {
       await destroy();
     }
@@ -104,7 +93,21 @@ export function attachCommanderFeatures(commander, options, recreate) {
     touchSessionPage(selected);
     return selected;
   };
-  if (options.debug || process.env.BROWSER_COMMANDER_TRACE) {
-    commander.ready = ensureDebug();
+  if (debugEnabled({ ...options, page })) {
+    detachActions = observeCommanderActions({
+      commander,
+      page,
+      names: TRACED_INTERACTIONS,
+      targetOf: interactionTarget,
+    });
   }
+  commander.ready = ensureDebugSession({
+    ...options,
+    page,
+    engine,
+    commander,
+  }).then((session) => {
+    debugSession = session;
+    commander.tracePath = session?.path ?? null;
+  });
 }

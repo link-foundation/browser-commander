@@ -177,7 +177,9 @@ function runNodeTests(options, testFiles) {
     process.execPath,
     buildNodeTestArgs(options, testFiles),
     {
-      env: { ...process.env, ...options.env },
+      // Most fixtures exercise unrelated APIs with incomplete fake pages. The
+      // default-recording regressions explicitly unset this harness opt-out.
+      env: { BROWSER_COMMANDER_DEBUG: '0', ...process.env, ...options.env },
       stdio: 'inherit',
     }
   );

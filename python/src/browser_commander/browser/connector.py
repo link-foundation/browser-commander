@@ -83,6 +83,18 @@ def matches_url(matcher: Any, url: str) -> bool:
     )
 
 
+def _url_matchers(options: ConnectOptions | None) -> list[Any]:
+    if options is None:
+        return []
+    return options.url_matchers or (
+        options.url
+        if isinstance(options.url, list)
+        else [options.url]
+        if options.url
+        else []
+    )
+
+
 async def pick_foreground_page(
     pages: Sequence[Any], options: ConnectOptions | None = None
 ) -> Any:
@@ -113,20 +125,7 @@ async def pick_foreground_page(
                 with contextlib.suppress(Exception):
                     await session.detach()
     selected = None
-    matchers = (
-        (
-            options.url_matchers
-            or (
-                options.url
-                if isinstance(options.url, list)
-                else [options.url]
-                if options.url
-                else []
-            )
-        )
-        if options
-        else []
-    )
+    matchers = _url_matchers(options)
     if options and (options.target_id or matchers):
         candidates = (
             [page for page in pages if targets.get(id(page)) == options.target_id]
@@ -279,17 +278,24 @@ async def _connect_selenium(
             if not options.target_id
             or tab[0] in (options.target_id, "CDwindow-" + options.target_id)
         ]
+        requested = candidates[0][0] if options.target_id and candidates else None
         if not candidates and options.fallback:
             candidates = tabs
-        matchers = options.url_matchers or ([options.url] if options.url else [])
-        selected = next(
-            (
-                handle
-                for matcher in matchers
-                for handle, url in candidates
-                if matches_url(matcher, url)
-            ),
-            None,
+        matchers = _url_matchers(options)
+        selected = (
+            next(
+                (
+                    handle
+                    for matcher in matchers
+                    for handle, url in candidates
+                    if matches_url(matcher, url)
+                ),
+                None,
+            )
+            if matchers
+            else requested
+            if options.target_id
+            else original
         )
         if (
             selected is None
@@ -298,7 +304,7 @@ async def _connect_selenium(
         ):
             raise ValueError("No tab matches the requested target_id or URL")
         if selected is None:
-            selected = candidates[0][0] if candidates else original
+            selected = original if original in handles else next(iter(handles), None)
         if selected is None:
             browser.switch_to.new_window("tab")
             selected = browser.current_window_handle

@@ -166,3 +166,47 @@ async def test_no_defaults_recovers_context_management_error():
     )
     assert result.page is page
     assert connect.await_args.kwargs == {"no_defaults": True}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("selection", "expected"),
+    [
+        ({"target_id": "second"}, "CDwindow-second"),
+        ({"url": ["https://second.test", "https://first.test"]}, "CDwindow-second"),
+        (
+            {"url_matchers": ["https://second.test", "https://first.test"]},
+            "CDwindow-second",
+        ),
+        ({}, "CDwindow-second"),
+        (
+            {"target_id": "gone", "fallback": True, "url": ["https://second.test"]},
+            "CDwindow-second",
+        ),
+    ],
+)
+async def test_selenium_selection_preserves_explicit_ranked_and_current_tabs(
+    selection, expected
+):
+    driver = MagicMock()
+    urls = {
+        "CDwindow-first": "https://first.test",
+        "CDwindow-second": "https://second.test",
+    }
+    driver.window_handles = list(urls)
+    driver.current_window_handle = "CDwindow-second"
+
+    def switch(handle):
+        driver.current_window_handle = handle
+        driver.current_url = urls[handle]
+
+    driver.switch_to.window.side_effect = switch
+    result = await connect_browser_with_dependencies(
+        ConnectOptions(
+            engine="selenium", cdp_endpoint="http://127.0.0.1:9222", **selection
+        ),
+        create_selenium=MagicMock(return_value=driver),
+    )
+    assert result.page is driver
+    assert driver.current_window_handle == expected
+    driver.quit.assert_not_called()

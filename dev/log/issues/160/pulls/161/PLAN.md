@@ -8,13 +8,17 @@ All work belongs to PR https://github.com/link-foundation/browser-commander/pull
 - [x] Trace every requirement through JavaScript, Python and Rust, including shared browser scripts, CLI options, docs, readers and replay.
 - [x] Research primary upstream documentation and existing components; record sources, alternatives and decisions.
 - [x] Create minimal failing regression tests before implementing each defect; use bounded experiments in `experiments/issue-160/` where needed.
-- [ ] Implement and commit independently useful steps after relevant local checks.
-- [ ] Run full local suites and repository checks, and browser integration checks for lifecycle/navigation/trace changes.
+- [x] Implement and commit independently useful steps after relevant local checks.
+- [x] Run full local suites and repository checks, and browser integration checks for lifecycle/navigation/trace changes.
 - [x] Prepare release fragments according to the existing automated release workflows.
-- [ ] Fetch/merge current main, review the complete PR diff for regressions and scope, push only the prepared branch.
+- [x] Fetch current main, verify it is already an ancestor, and review the complete local diff for regressions and scope.
+- [ ] Push only the prepared branch and review the published PR diff.
 - [ ] Replace WIP title/body, document reproduction and automated validation, include all thirteen separate closing references.
 - [ ] Verify CI runs match the latest SHA and timestamp; preserve non-passing logs in `ci-logs/`, investigate errors with line references, fix and rerun.
 - [ ] Confirm clean working tree, passing latest CI and consistent code/tests/docs, then mark PR 161 ready.
+
+This checklist records the state before the implementation push. Final remote
+validation and readiness are reported in PR 161 against the pushed commit SHA.
 
 ## Complete requirement matrix and candidate solutions
 
@@ -40,7 +44,7 @@ All work belongs to PR https://github.com/link-foundation/browser-commander/pull
 ### #151: persistent browser lifecycle
 
 11. Offer explicit adoption of an already-running loopback browser when metadata is absent; verify requested profile identity before assigning ownership. Alternative blind adoption is inappropriate because close would affect an unrelated browser.
-12. Keep attached controllers active even without navigations; update metadata using bounded heartbeat and stop it on detach/disconnect.
+12. Keep attached controllers active even without navigations; update metadata using bounded heartbeat and stop it on detach.
 13. Offer ongoing enforcement that closes subsequently opened tabs; clean up listeners/tasks on detach and preserve selected tab.
 
 ### #152: network privacy

@@ -48,6 +48,7 @@ _LIMIT_KEYS = {
     "max_event_bytes": "maxEventBytes",
     "max_html_bytes": "maxHtmlBytes",
     "max_queued_mutations": "maxQueuedMutations",
+    "max_mutation_bytes": "maxMutationBytes",
 }
 
 
@@ -133,6 +134,7 @@ class TraceBundle:
         now: Callable[[], float] | None = None,
         monotonic: Callable[[], float] | None = None,
         on_event: Callable[[dict[str, Any]], Any] | None = None,
+        next_sequence: Callable[[], int] | None = None,
     ) -> None:
         if not isinstance(output, (str, os.PathLike)) or str(output) == "":
             raise ValueError("trace output must be a path")
@@ -144,6 +146,7 @@ class TraceBundle:
         self._now = now or default_now
         self._monotonic = monotonic or default_monotonic
         self._on_event = on_event
+        self._sequence_allocator = next_sequence
         self.max_bundle_bytes = _limit(
             limits, "maxBundleBytes", DEFAULT_MAX_BUNDLE_BYTES
         )
@@ -151,6 +154,12 @@ class TraceBundle:
             limits, "maxResourceBytes", DEFAULT_MAX_RESOURCE_BYTES
         )
         self.max_event_bytes = _limit(limits, "maxEventBytes", self.max_resource_bytes)
+        self._max_mutation_bytes = min(
+            _limit(limits, "maxMutationBytes", 4 * 1024 * 1024), self.max_resource_bytes
+        )
+        self._mutation_index: int | None = None
+        self._mutation_bytes = 0
+        self._mutation_truncated = False
 
         make_directories(Path(self.root))
         self._events = open_private_file(
@@ -160,8 +169,8 @@ class TraceBundle:
         self._written = 0
         self._sequence = 0
         self._dropped = 0
-        self.counts = {"checkpoints": 0, "events": 0, "mutationBatches": 0}
-        self.problems: list[dict[str, Any]] = []
+        self._counts = {"checkpoints": 0, "events": 0, "mutationBatches": 0}
+        self._problems: list[dict[str, Any]] = []
 
     @property
     def dropped(self) -> int:
@@ -227,6 +236,8 @@ class TraceBundle:
             "monotonicMs": js_round(self._monotonic()),
         }
         record.update(event)
+        if self._sequence_allocator is not None:
+            record["sequence"] = self._sequence_allocator()
         line = (dumps(record) + "\n").encode("utf-8", "surrogatepass")
         size = len(line)
 
@@ -354,6 +365,18 @@ class TraceBundle:
         self.counts["checkpoints"] += 1
         return members
 
+    @property
+    def counts(self) -> dict[str, int]:
+        return self._counts
+
+    @property
+    def problems(self) -> list[dict[str, Any]]:
+        return self._problems
+
+    @property
+    def mutation_truncated(self) -> bool:
+        return self._mutation_truncated
+
     def write_mutations(self, index: int, batches: list[Any]) -> str | None:
         """Write one checkpoint's mutation batches.
 
@@ -366,11 +389,48 @@ class TraceBundle:
         """
         if not batches:
             return None
+        if index != self._mutation_index:
+            self._mutation_index = index
+            self._mutation_bytes = 0
+            self._mutation_truncated = False
+        if self.mutation_truncated:
+            return None
         member = f"{TraceFiles.MUTATIONS_DIR}/{sequence_name(index)}.ndjson"
-        body = "\n".join(dumps(batch) for batch in batches) + "\n"
+        lines = []
+        for batch in batches:
+            line = dumps(batch) + "\n"
+            if (
+                self._mutation_bytes + len(line.encode()) + 256
+                > self._max_mutation_bytes
+            ):
+                self._mutation_truncated = True
+                marker = (
+                    dumps(
+                        {
+                            "records": [
+                                {
+                                    "kind": "truncated",
+                                    "reason": "mutation interval size limit",
+                                }
+                            ]
+                        }
+                    )
+                    + "\n"
+                )
+                if (
+                    self._mutation_bytes + len(marker.encode())
+                    <= self._max_mutation_bytes
+                ):
+                    lines.append(marker)
+                break
+            self._mutation_bytes += len(line.encode())
+            lines.append(line)
+        if not lines:
+            return None
+        body = "".join(lines)
         result = self.write_member(member, body, append=True)
         if result:
-            self.counts["mutationBatches"] += len(batches)
+            self.counts["mutationBatches"] += len(lines)
         return result["member"] if result else None
 
     def write_artifact(
@@ -453,6 +513,17 @@ def open_trace_bundle(
     Returns:
         The bundle writer
     """
+    if (limits or {}).get("rotate"):
+        from .rolling_bundle import RollingBundle
+
+        return RollingBundle(
+            output,
+            limits=normalize_limits(limits),
+            strict=strict,
+            now=now,
+            monotonic=monotonic,
+            on_event=on_event,
+        )
     return TraceBundle(
         output,
         strict=strict,

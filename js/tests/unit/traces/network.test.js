@@ -10,9 +10,15 @@ import {
   createFakePage,
 } from '../../helpers/trace-fixtures.js';
 
+async function networkFixture() {
+  return {
+    output: await fs.mkdtemp(path.join(os.tmpdir(), 'commander-network-')),
+    page: createFakePage(),
+  };
+}
+
 it('records filtered network metadata and bounded redacted bodies in HAR', async () => {
-  const output = await fs.mkdtemp(path.join(os.tmpdir(), 'commander-network-'));
-  const page = createFakePage();
+  const { output, page } = await networkFixture();
   try {
     const trace = await startTrace({
       commander: createFakeCommander(page),
@@ -55,7 +61,7 @@ it('records filtered network metadata and bounded redacted bodies in HAR', async
       await fs.readFile(path.join(output, 'network.har'), 'utf8')
     );
     assert.equal(har.log.entries.length, 1);
-    assert.equal(har.log.entries[0].response.content.text, 'YWJjZA==');
+    assert.equal(har.log.entries[0].response.content.text, 'abcd');
     assert.equal(har.log.entries[0].response.content._truncated, true);
   } finally {
     await fs.rm(output, { recursive: true, force: true });
@@ -91,6 +97,52 @@ it('rejected video startup removes every installed observer', async () => {
       UnsupportedCaptureError
     );
     assert.equal(listeners.size, 0);
+  } finally {
+    await fs.rm(output, { recursive: true, force: true });
+  }
+});
+
+it('omits binary bytes while preserving reported original size without buffering', async () => {
+  const { output, page } = await networkFixture();
+  try {
+    const trace = await startTrace({
+      commander: createFakeCommander(page),
+      output,
+      initialCheckpoint: false,
+      network: { bodies: true, har: true },
+    });
+    const request = {
+      url: () => 'https://example.test/binary',
+      method: () => 'GET',
+      resourceType: () => 'fetch',
+      headers: () => ({}),
+      sizes: async () => ({ responseBodySize: 1234 }),
+    };
+    page.emit('request', request);
+    page.emit('response', {
+      request: () => request,
+      status: () => 200,
+      headers: () => ({ 'content-type': 'application/octet-stream' }),
+      body: async () => {
+        assert.fail('binary body must not be buffered');
+      },
+    });
+    await trace.stop();
+    const events = (
+      await fs.readFile(path.join(output, 'events.ndjson'), 'utf8')
+    )
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.deepEqual(
+      events.find((event) => event.kind === 'network.response').body,
+      { size: 1234, omitted: 'binary' }
+    );
+    const har = JSON.parse(
+      await fs.readFile(path.join(output, 'network.har'), 'utf8')
+    );
+    assert.equal(har.log.entries[0].response.content.size, 1234);
+    assert.equal(har.log.entries[0].response.content.text, undefined);
   } finally {
     await fs.rm(output, { recursive: true, force: true });
   }

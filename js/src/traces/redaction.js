@@ -13,6 +13,7 @@ export const REDACTED = '[redacted]';
 /** Controls whose value is a secret unless the caller says otherwise. */
 export const DEFAULT_REDACT_SELECTORS = Object.freeze([
   'input[type=password]',
+  'input[type=hidden]',
   '[data-private]',
   '[data-bc-redact]',
 ]);
@@ -42,7 +43,73 @@ export const DEFAULT_REDACT_QUERY_PARAMS = Object.freeze([
   'session',
   'signature',
   'token',
+  'csrf',
+  'xsrf',
+  '_xsrf',
 ]);
+
+/** Match names rather than values, including framework-specific token names. */
+export function sensitiveName(name, privacy) {
+  return (
+    Boolean(privacy.useDefaults) &&
+    /password|passwd|token|csrf|xsrf|otp|secret|api[_-]?key|authorization/i.test(
+      name
+    )
+  );
+}
+
+function redactFields(value, privacy) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => redactFields(entry, privacy));
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [
+        key,
+        sensitiveName(key, privacy) ? REDACTED : redactFields(entry, privacy),
+      ])
+    );
+  }
+  return value;
+}
+
+function redactStructuredText(value, privacy) {
+  if (!privacy.useDefaults) {
+    return value;
+  }
+  try {
+    const parsed = JSON.parse(value);
+    if (parsed && typeof parsed === 'object') {
+      return JSON.stringify(redactFields(parsed, privacy));
+    }
+  } catch {
+    /* HTML, forms and script assignments are handled below. */
+  }
+  return value
+    .replace(
+      /(\b(?:["']?[\w-]+["']?)\s*[:=]\s*)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\d+(?:\.\d+)?)/g,
+      (match, prefix) =>
+        sensitiveName(prefix, privacy)
+          ? `${prefix}${JSON.stringify(REDACTED)}`
+          : match
+    )
+    .replace(/(^|[&?])([^=&\s]+)=([^&\s]*)/g, (match, start, key) => {
+      let name = key;
+      try {
+        name = decodeURIComponent(key.replaceAll('+', ' '));
+      } catch {
+        /* Keep malformed names. */
+      }
+      return sensitiveName(name, privacy)
+        ? `${start}${key}=${REDACTED}`
+        : match;
+    })
+    .replace(
+      /(Content-Disposition:[^\r\n]*?;\s*name="([^"]+)"[^\r\n]*\r?\n(?:[^\r\n]+\r?\n)*\r?\n)([\s\S]*?)(?=\r?\n--)/gi,
+      (match, header, name) =>
+        sensitiveName(name, privacy) ? `${header}${REDACTED}` : match
+    );
+}
 
 function lowerSet(values) {
   return [...new Set(values.map((value) => String(value).toLowerCase()))];
@@ -75,6 +142,7 @@ export function normalizePrivacyOptions(privacy = {}) {
   }
 
   return {
+    useDefaults,
     redactSelectors: lowerSet([
       ...(useDefaults ? DEFAULT_REDACT_SELECTORS : []),
       ...redactSelectors,
@@ -107,7 +175,8 @@ export function redactText(value, privacy, context = {}) {
     return value;
   }
 
-  let text = value;
+  let text =
+    context.kind === 'url' ? value : redactStructuredText(value, privacy);
   for (const pattern of privacy.redactPatterns || []) {
     // A caller's regex may be stateful; resetting keeps one trace's output
     // from depending on the previous record's match position.
@@ -148,7 +217,10 @@ export function redactUrl(url, privacy) {
       parsed.password = parsed.password ? REDACTED : '';
     }
     for (const key of [...parsed.searchParams.keys()]) {
-      if (privacy.redactQueryParams.includes(key.toLowerCase())) {
+      if (
+        privacy.redactQueryParams.includes(key.toLowerCase()) ||
+        sensitiveName(key, privacy)
+      ) {
         parsed.searchParams.set(key, REDACTED);
       }
     }
@@ -157,7 +229,10 @@ export function redactUrl(url, privacy) {
       const fragment = new URLSearchParams(parsed.hash.slice(1));
       let changed = false;
       for (const key of [...fragment.keys()]) {
-        if (privacy.redactQueryParams.includes(key.toLowerCase())) {
+        if (
+          privacy.redactQueryParams.includes(key.toLowerCase()) ||
+          sensitiveName(key, privacy)
+        ) {
           fragment.set(key, REDACTED);
           changed = true;
         }
@@ -190,9 +265,11 @@ export function redactHeaders(headers, privacy) {
 
   const result = {};
   for (const [name, value] of Object.entries(headers)) {
-    result[name] = privacy.redactAttributes.includes(name.toLowerCase())
-      ? REDACTED
-      : redactText(String(value), privacy, { kind: 'header', name });
+    result[name] =
+      privacy.redactAttributes.includes(name.toLowerCase()) ||
+      sensitiveName(name, privacy)
+        ? REDACTED
+        : redactText(String(value), privacy, { kind: 'header', name });
   }
   return result;
 }
@@ -209,6 +286,12 @@ export function redactHeaders(headers, privacy) {
  * @returns {*} The value with strings redacted
  */
 export function redactValue(value, privacy, key = '') {
+  if (
+    sensitiveName(key, privacy) ||
+    privacy.redactAttributes.includes(key.toLowerCase())
+  ) {
+    return REDACTED;
+  }
   if (typeof value === 'string') {
     if (privacy.redactAttributes.includes(key.toLowerCase())) {
       return REDACTED;

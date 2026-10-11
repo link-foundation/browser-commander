@@ -71,6 +71,7 @@ struct Settings {
     root: PathBuf,
     gzip: bool,
     har: bool,
+    network_limit: usize,
     checkpoint_on_navigation: bool,
 }
 
@@ -165,6 +166,14 @@ pub async fn start_trace(
 ) -> Result<TraceRecorder, TraceRecordError> {
     page.require_feature("tracing")?;
     let mode = normalize_mode(&options.mode)?;
+    let lazy_rotation = mode == TraceMode::CONTINUOUS && options.limits.rotation.is_none();
+    let mut writer_limits = options.limits.clone();
+    if lazy_rotation {
+        writer_limits.rotation = Some(super::rolling::RotationOptions {
+            max_bytes: options.limits.max_bundle_bytes.unwrap_or(256 * 1024 * 1024),
+            max_segments: 0,
+        });
+    }
     let dom = options.dom;
     let mutations = match dom.mutations {
         Some(false) => false,
@@ -209,9 +218,10 @@ pub async fn start_trace(
     };
     let mut bundle = Bundle::open(
         &options.output,
-        &options.limits,
+        &writer_limits,
         options.strict,
         options.clock,
+        lazy_rotation,
     )?;
     let started_at = bundle.now_iso();
     if let Some(links) = &options.links {
@@ -233,6 +243,7 @@ pub async fn start_trace(
     let capture = JsonObject::new()
         .with("redactSelectors", strings(&privacy.redact_selectors))
         .with("redactAttributes", strings(&privacy.redact_attributes))
+        .with("useDefaults", privacy.use_defaults)
         .with("redacted", REDACTED)
         .with("html", dom.html)
         .with("liveControlState", dom.live_control_state)
@@ -246,7 +257,10 @@ pub async fn start_trace(
                 .and_then(|links| links.dom.as_deref())
                 == Some("text"),
         )
-        .with("maxHtmlBytes", options.limits.max_html_bytes.unwrap_or(0));
+        .with(
+            "maxHtmlBytes",
+            options.limits.max_html_bytes.unwrap_or(4 * 1024 * 1024),
+        );
     let mut stream = MutationStream::new(
         mutations,
         &privacy.redact_selectors,
@@ -255,6 +269,7 @@ pub async fn start_trace(
         options.capture_timeout_ms,
     );
     stream.ignore_selectors(&options.ignore_selectors);
+    stream.privacy_attributes(&privacy.redact_attributes, privacy.use_defaults);
 
     // The observers attach before anything is recorded, as in JavaScript.
     let mut page_events = if PAGE_SOURCES
@@ -299,6 +314,10 @@ pub async fn start_trace(
             root,
             gzip: options.gzip,
             har: options.network.as_ref().is_some_and(|n| n.har),
+            network_limit: options
+                .network
+                .as_ref()
+                .map_or(1024 * 1024, |n| n.max_body_bytes),
             checkpoint_on_navigation: options.checkpoint_on_navigation,
         },
         mutations: stream,
@@ -458,7 +477,20 @@ impl Inner {
         // say so without moving the field.
         let mut event = JsonObject::new().with("kind", kind);
         event.extend_from(&state.identity.owner());
-        event.extend_from(&redact_object(payload, &self.settings.privacy));
+        let mut payload = redact_object(payload, &self.settings.privacy);
+        if kind.starts_with("network.") {
+            if let Some(data) = payload.get("postData").and_then(Json::as_str) {
+                payload.insert("postData", bounded_text(data, self.settings.network_limit));
+            }
+            if let Some(body) = payload.get("body").and_then(Json::as_object) {
+                let mut body = body.clone();
+                if let Some(data) = body.get("data").and_then(Json::as_str) {
+                    body.insert("data", bounded_text(data, self.settings.network_limit));
+                }
+                payload.insert("body", body);
+            }
+        }
+        event.extend_from(&payload);
         state.bundle.append_event(event, true)
     }
 
@@ -605,12 +637,20 @@ impl Inner {
                 Some(&detail),
             )?;
         }
-        if let Some(member) = state.bundle.write_mutations(index, &drained.batches)? {
+        if let Some(member) = state.bundle.write_mutations(
+            index,
+            &drained
+                .batches
+                .iter()
+                .map(|batch| super::redaction::redact_value(batch, &self.settings.privacy, ""))
+                .collect::<Vec<_>>(),
+        )? {
             let payload = JsonObject::new()
                 .with("member", member)
                 .with("batches", drained.batches.len())
                 .with("checkpoint", index)
-                .with("frames", drained.frames);
+                .with("frames", drained.frames)
+                .with("truncated", state.bundle.mutation_truncated);
             self.record_locked(&mut state, TraceEvent::MUTATIONS, &payload)?;
         }
         Ok(())
@@ -691,7 +731,8 @@ impl Inner {
         let html = captured
             .as_ref()
             .and_then(|captured| captured.get("html"))
-            .and_then(Json::as_str);
+            .and_then(Json::as_str)
+            .map(|html| super::redaction::redact_text(html, privacy, "dom", Some("html")));
         let named = state.as_ref().map(|state| {
             let mut named = state.clone();
             named.insert("name", name);
@@ -703,10 +744,12 @@ impl Inner {
         // A block, not `drop()`: the guard must be gone before the `await`.
         let entry = {
             let mut locked = self.lock();
-            let members =
-                locked
-                    .bundle
-                    .write_checkpoint(index, html, named.as_ref(), shot.as_deref())?;
+            let members = locked.bundle.write_checkpoint(
+                index,
+                html.as_deref(),
+                named.as_ref(),
+                shot.as_deref(),
+            )?;
             let mut entry = JsonObject::new()
                 .with("index", index)
                 .with("name", name)
@@ -853,6 +896,14 @@ impl Inner {
         state.result = Some(result.clone());
         Ok(result)
     }
+}
+
+fn bounded_text(value: &str, limit: usize) -> String {
+    let mut end = value.len().min(limit);
+    while !value.is_char_boundary(end) {
+        end -= 1;
+    }
+    value[..end].into()
 }
 
 impl Drop for Inner {

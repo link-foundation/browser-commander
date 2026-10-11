@@ -1,6 +1,6 @@
 import { captureSnapshotInPage } from './page-capture.js';
 import { withDeadline } from './deadline.js';
-import { redactValue, redactUrl, REDACTED } from './redaction.js';
+import { redactText, redactValue, redactUrl, REDACTED } from './redaction.js';
 import { TRACE_EVENT, TRACE_DROP_REASON } from './schema.js';
 export function createCheckpointRecorder({
   isStopped,
@@ -42,13 +42,14 @@ export function createCheckpointRecorder({
         evaluateInPage(captureSnapshotInPage, {
           redactSelectors: privacyOptions.redactSelectors,
           redactAttributes: privacyOptions.redactAttributes,
+          useDefaults: privacyOptions.useDefaults,
           redacted: REDACTED,
           html: domOptions.html,
           liveControlState: domOptions.liveControlState,
           openShadowRoots: domOptions.openShadowRoots,
           ignoreSelectors: domOptions.ignoreSelectors ?? [],
           captureText: links?.dom === 'text',
-          maxHtmlBytes: limits.maxHtmlBytes ?? 0,
+          maxHtmlBytes: limits.maxHtmlBytes ?? 4 * 1024 * 1024,
         }),
         captureTimeoutMs,
         'trace checkpoint capture'
@@ -70,7 +71,10 @@ export function createCheckpointRecorder({
 
     const members = await bundle.writeCheckpoint({
       index,
-      html: captured?.html ?? undefined,
+      html: redactText(captured?.html, privacyOptions, {
+        kind: 'dom',
+        name: 'html',
+      }),
       state: state ? { ...state, name, actor, reason } : undefined,
       screenshot: shot ?? undefined,
     });

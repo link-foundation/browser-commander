@@ -46,7 +46,10 @@ pub(crate) fn headers(value: &Value) -> Value {
                     "set-cookie",
                 ]
                 .contains(&key.as_str())
-                {
+                    || super::redaction::sensitive_name(
+                        &key,
+                        &super::redaction::NormalizedPrivacy::default(),
+                    ) {
                     json!("[redacted]")
                 } else {
                     value.clone()
@@ -55,6 +58,15 @@ pub(crate) fn headers(value: &Value) -> Value {
             })
             .collect(),
     )
+}
+pub(crate) fn text_body(content_type: &str) -> bool {
+    let mime = content_type.to_lowercase();
+    mime.starts_with("text/")
+        || mime.contains("json")
+        || mime.contains("xml")
+        || mime.contains("javascript")
+        || mime.contains("x-www-form-urlencoded")
+        || mime.contains("multipart/form-data")
 }
 fn har_headers(value: &Value) -> Value {
     json!(value.as_object().into_iter().flatten().map(|(name,value)|json!({"name":name,"value":value.as_str().map(str::to_owned).unwrap_or_else(||value.to_string())})).collect::<Vec<_>>())
@@ -75,7 +87,7 @@ pub(crate) fn write_har(root: &std::path::Path) -> Result<(), super::TraceRecord
         let response_start = timing["responseStart"].as_f64().unwrap_or(0.0);
         let response_end = timing["responseEnd"].as_f64().unwrap_or(0.0);
         let mut content=json!({"size":response["body"]["size"].as_u64().unwrap_or(0),"mimeType":response["contentType"].as_str().unwrap_or("")});
-        if !response["body"].is_null() {content["text"]=response["body"]["data"].clone();content["encoding"]=json!("base64");content["_truncated"]=response["body"]["truncated"].clone();}
+        if response["body"]["data"].is_string() {content["text"]=response["body"]["data"].clone();if response["body"]["encoding"] != "utf8" {content["encoding"]=json!("base64");}content["_truncated"]=response["body"]["truncated"].clone();}
         let mut req=json!({"method":request["method"],"url":request["url"],"httpVersion":"HTTP/1.1","headers":har_headers(&request["headers"]),"cookies":[],"queryString":[],"headersSize":-1,"bodySize":-1});
         if let Some(data)=request["postData"].as_str() {req["postData"]=json!({"mimeType":request["headers"]["content-type"].as_str().unwrap_or(""),"text":data});}
         json!({"startedDateTime":request["at"],"time":response["timing"]["responseEnd"].as_f64().unwrap_or(0.0),"request":req,"response":{"status":response["status"],"statusText":response["statusText"],"httpVersion":"HTTP/1.1","headers":har_headers(&response["headers"]),"cookies":[],"redirectURL":"","headersSize":-1,"bodySize":response["body"]["size"].as_i64().unwrap_or(-1),"content":content},"cache":{},"timings":{"send":0,"wait":(response_start-request_start).max(0.0),"receive":(response_end-response_start).max(0.0)},"_resourceType":response["resourceType"]})

@@ -134,6 +134,7 @@ export function createTraceStop(context) {
       checkpoints: [...checkpoints],
       problems: [...bundle.problems, ...(linksSink?.problems ?? [])],
       links: linksSink?.path ?? null,
+      ...(bundle.segments?.length ? { segments: bundle.segments } : {}),
     };
     setStopped(result);
 

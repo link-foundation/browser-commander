@@ -43,6 +43,7 @@ export async function openTraceBundle(options = {}) {
     now = () => Date.now(),
     monotonic = () => performance.now(),
     onEvent = null,
+    nextSequence = null,
   } = options;
 
   if (typeof output !== 'string' || output === '') {
@@ -70,6 +71,9 @@ export async function openTraceBundle(options = {}) {
   let dropped = 0;
   const counts = { checkpoints: 0, events: 0, mutationBatches: 0 };
   const problems = [];
+  let mutationIndex = null;
+  let mutationBytes = 0;
+  let mutationTruncated = false;
 
   /** Close the timeline exactly once, after every queued append. */
   function closeEvents() {
@@ -117,11 +121,13 @@ export async function openTraceBundle(options = {}) {
    * @returns {Promise<Object|null>} The event as written
    */
   async function appendEvent(event, { retry = true } = {}) {
+    const number = nextSequence?.() ?? ++sequence;
     const record = {
-      sequence: ++sequence,
+      sequence: number,
       at: new Date(now()).toISOString(),
       monotonicMs: Math.round(monotonic()),
       ...event,
+      ...(nextSequence ? { sequence: number } : {}),
     };
     const line = `${JSON.stringify(record)}\n`;
     const bytes = Buffer.byteLength(line);
@@ -275,10 +281,39 @@ export async function openTraceBundle(options = {}) {
       return null;
     }
     const member = `${TRACE_FILES.MUTATIONS_DIR}/${sequenceName(index)}.ndjson`;
-    const body = `${batches.map((batch) => JSON.stringify(batch)).join('\n')}\n`;
+    if (mutationIndex !== index) {
+      mutationIndex = index;
+      mutationBytes = 0;
+      mutationTruncated = false;
+    }
+    if (mutationTruncated) {
+      return null;
+    }
+    const ceiling = Math.min(
+      limits.maxMutationBytes ?? 4 * 1024 * 1024,
+      maxResourceBytes
+    );
+    const lines = [];
+    for (const batch of batches) {
+      const line = `${JSON.stringify(batch)}\n`;
+      if (mutationBytes + Buffer.byteLength(line) + 256 > ceiling) {
+        mutationTruncated = true;
+        const marker = `${JSON.stringify({ records: [{ kind: 'truncated', reason: 'mutation interval size limit' }] })}\n`;
+        if (mutationBytes + Buffer.byteLength(marker) <= ceiling) {
+          lines.push(marker);
+        }
+        break;
+      }
+      lines.push(line);
+      mutationBytes += Buffer.byteLength(line);
+    }
+    if (!lines.length) {
+      return null;
+    }
+    const body = lines.join('');
     const result = await writeMember(member, body, { append: true });
     if (result) {
-      counts.mutationBatches += batches.length;
+      counts.mutationBatches += lines.length;
     }
     return result ? result.member : null;
   }
@@ -318,6 +353,9 @@ export async function openTraceBundle(options = {}) {
     },
     get bytesWritten() {
       return written;
+    },
+    get mutationTruncated() {
+      return mutationTruncated;
     },
     appendEvent,
     writeMember,

@@ -28,6 +28,7 @@ export function captureSnapshotInPage(options) {
   const {
     redactSelectors = [],
     redactAttributes = [],
+    useDefaults = true,
     redacted = '[redacted]',
     html: wantHtml = true,
     liveControlState = true,
@@ -121,6 +122,13 @@ export function captureSnapshotInPage(options) {
   // `<input>` otherwise shows the value the server sent, not the one the user
   // typed.
   const carryLiveState = (original, copy, secret) => {
+    if (
+      useDefaults &&
+      original.localName === 'meta' &&
+      /token|csrf|xsrf|secret/i.test(original.getAttribute('name') || '')
+    ) {
+      copy.setAttribute('content', redacted);
+    }
     for (const attribute of redactAttributes) {
       if (copy.hasAttribute && copy.hasAttribute(attribute)) {
         copy.setAttribute(attribute, redacted);
@@ -197,8 +205,13 @@ export function captureSnapshotInPage(options) {
     const clone = cloneWithState(document.documentElement);
 
     html = `<!DOCTYPE html>\n${clone?.outerHTML ?? ''}`;
-    if (maxHtmlBytes > 0 && html.length > maxHtmlBytes) {
-      html = html.slice(0, maxHtmlBytes);
+    const encoded = new globalThis.TextEncoder().encode(html);
+    if (maxHtmlBytes > 0 && encoded.length > maxHtmlBytes) {
+      const marker = '<!-- trace HTML truncated -->';
+      const prefix = new globalThis.TextDecoder().decode(
+        encoded.slice(0, Math.max(0, maxHtmlBytes - marker.length - 3))
+      );
+      html = `${prefix}${marker}`;
       truncated = true;
     }
   }
@@ -281,6 +294,8 @@ export function installMutationRecorderInPage(options) {
   const {
     globalName = '__browserCommanderTrace__',
     redactSelectors = [],
+    redactAttributes = [],
+    useDefaults = true,
     redacted = '[redacted]',
     maxQueued = 5000,
     ignoreSelectors = [],
@@ -296,8 +311,6 @@ export function installMutationRecorderInPage(options) {
     queue: [],
     dropped: 0,
     sequence: 0,
-    // Every document gets its own name, so a batch drained from an iframe is
-    // never mistaken for one drained from the page that holds it.
     frameId: `frame-${Math.random().toString(36).slice(2, 10)}`,
     frameName: window.name || null,
     mainFrame: window.top === window,
@@ -317,7 +330,11 @@ export function installMutationRecorderInPage(options) {
       }
     });
   };
-  const isSecret = (node) => matchesAny(node, redactSelectors);
+  const isSecret = (node) =>
+    matchesAny(node, redactSelectors) ||
+    (useDefaults &&
+      node?.localName === 'meta' &&
+      /token|csrf|xsrf|secret|password/i.test(node.getAttribute('name') ?? ''));
   const isIgnored = (node) => matchesAny(node, ignoreSelectors);
   const sanitized = (node) => {
     const clone = node.cloneNode(true);
@@ -334,6 +351,20 @@ export function installMutationRecorderInPage(options) {
         }
       }
     }
+    for (const element of [clone, ...clone.querySelectorAll('*')]) {
+      for (const attribute of redactAttributes) {
+        if (element.hasAttribute(attribute)) {
+          element.setAttribute(attribute, redacted);
+        }
+      }
+      if (
+        useDefaults &&
+        element.localName === 'meta' &&
+        /token|csrf|xsrf|secret/i.test(element.getAttribute('name') || '')
+      ) {
+        element.setAttribute('content', redacted);
+      }
+    }
     return clone;
   };
 
@@ -346,11 +377,9 @@ export function installMutationRecorderInPage(options) {
         steps.unshift(`#${at.id}`);
         break;
       }
-      const siblings = at.parentElement
-        ? [...at.parentElement.children].filter(
-            (c) => c.localName === at.localName
-          )
-        : [];
+      const siblings = [...(at.parentElement?.children ?? [])].filter(
+        (c) => c.localName === at.localName
+      );
       const nth =
         siblings.length > 1 ? `:nth-of-type(${siblings.indexOf(at) + 1})` : '';
       steps.unshift(at.localName + nth);
@@ -396,6 +425,23 @@ export function installMutationRecorderInPage(options) {
       visible:
         node.getClientRects().length > 0 &&
         window.getComputedStyle(node).visibility !== 'hidden',
+    };
+  };
+
+  // Mutation targets identify an existing node. Only additions need markup.
+  const identify = (node) => {
+    if (!node || isIgnored(node)) {
+      return null;
+    }
+    const element = node.nodeType === 1 ? node : node.parentElement;
+    return {
+      type: node.nodeType === 3 ? 'text' : 'element',
+      path: pathOf(element),
+      tag: element?.localName,
+      id: element?.id || null,
+      visible:
+        Boolean(element?.getClientRects().length) &&
+        window.getComputedStyle(element).visibility !== 'hidden',
     };
   };
 
@@ -458,13 +504,15 @@ export function installMutationRecorderInPage(options) {
         .map((record) => {
           const entry = {
             kind: record.type,
-            target: describe(record.target),
+            target: identify(record.target),
           };
           if (record.type === 'attributes') {
             entry.attribute = record.attributeName;
             const secret =
               isSecret(record.target) ||
-              redactSelectors.includes(record.attributeName);
+              redactAttributes.includes(record.attributeName) ||
+              (useDefaults &&
+                /token|csrf|xsrf|secret|password/i.test(record.attributeName));
             entry.before = secret ? redacted : record.oldValue;
             entry.after =
               secret || !record.target.getAttribute
@@ -485,8 +533,8 @@ export function installMutationRecorderInPage(options) {
             entry.removed = [...record.removedNodes]
               .filter((node) => !isIgnored(node))
               .map((node) => describeAt(node, record));
-            entry.previous = describe(record.previousSibling);
-            entry.next = describe(record.nextSibling);
+            entry.previous = identify(record.previousSibling);
+            entry.next = identify(record.nextSibling);
           }
           return entry;
         }),
@@ -511,7 +559,6 @@ export function installMutationRecorderInPage(options) {
     // into a field and then leaving it fires `input` for each keystroke and
     // `change` for the value it ended at, and a checkbox fires both for the
     // one click. Replaying a state that is already on screen shows nothing, so
-    // a repeat of what this element last reported is not recorded.
     const repeats = (element, property, after) => {
       const seen = lastLive.get(element) || {};
       const asText = JSON.stringify(after === undefined ? null : after);
@@ -526,16 +573,13 @@ export function installMutationRecorderInPage(options) {
     const liveEntry = (target, property, after, before) => ({
       kind: 'live-state',
       property,
-      target: describe(target),
+      target: identify(target),
       before: before === undefined ? null : before,
       after,
     });
 
     const pushLive = (entry) => {
-      // Scrolling fires far more often than it changes anything worth
-      // replaying, so consecutive scrolls of one element collapse into the
-      // position it ended at. Every other property keeps each step, because
-      // "stepwise replay must show each state" (issue #93).
+      // Consecutive scrolls collapse; other state changes retain each step.
       const last = state.queue[state.queue.length - 1];
       const only = last && last.records.length === 1 ? last.records[0] : null;
       if (
@@ -608,7 +652,7 @@ export function installMutationRecorderInPage(options) {
       pushLive({
         kind: 'live-state',
         property: 'scroll',
-        target: scrolling ? describe(scrolling) : null,
+        target: scrolling ? identify(scrolling) : null,
         before: null,
         after: scrolling
           ? { top: scrolling.scrollTop, left: scrolling.scrollLeft }

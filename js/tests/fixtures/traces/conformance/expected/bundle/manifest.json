@@ -36,6 +36,7 @@
   "privacy": {
     "redactSelectors": [
       "input[type=password]",
+      "input[type=hidden]",
       "[data-private]",
       "[data-bc-redact]"
     ],
@@ -61,6 +62,9 @@
       "session",
       "signature",
       "token",
+      "csrf",
+      "xsrf",
+      "_xsrf",
       "ticket"
     ],
     "hasCallback": false

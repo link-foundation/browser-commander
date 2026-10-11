@@ -17,8 +17,12 @@ use super::jsonfmt::{Json, JsonObject};
 pub const REDACTED: &str = "[redacted]";
 
 /// Elements whose values the in-page capture never reads.
-pub const DEFAULT_REDACT_SELECTORS: [&str; 3] =
-    ["input[type=password]", "[data-private]", "[data-bc-redact]"];
+pub const DEFAULT_REDACT_SELECTORS: [&str; 4] = [
+    "input[type=password]",
+    "input[type=hidden]",
+    "[data-private]",
+    "[data-bc-redact]",
+];
 
 /// Field and header names whose values are always replaced.
 pub const DEFAULT_REDACT_ATTRIBUTES: [&str; 7] = [
@@ -32,7 +36,7 @@ pub const DEFAULT_REDACT_ATTRIBUTES: [&str; 7] = [
 ];
 
 /// Query and fragment parameters whose values are always replaced.
-pub const DEFAULT_REDACT_QUERY_PARAMS: [&str; 12] = [
+pub const DEFAULT_REDACT_QUERY_PARAMS: [&str; 15] = [
     "access_token",
     "api_key",
     "apikey",
@@ -45,6 +49,9 @@ pub const DEFAULT_REDACT_QUERY_PARAMS: [&str; 12] = [
     "session",
     "signature",
     "token",
+    "csrf",
+    "xsrf",
+    "_xsrf",
 ];
 
 /// What a custom redaction callback is shown.
@@ -117,6 +124,8 @@ pub struct NormalizedPrivacy {
     pub redact_patterns: Vec<Regex>,
     /// The caller's callback.
     pub redact: Option<RedactCallback>,
+    /// Apply safe field-name and structured-body defaults.
+    pub use_defaults: bool,
 }
 
 impl fmt::Debug for NormalizedPrivacy {
@@ -181,7 +190,63 @@ pub fn normalize_privacy_options(
             .map(|pattern| Regex::new(pattern))
             .collect::<Result<_, _>>()?,
         redact: privacy.redact.clone(),
+        use_defaults,
     })
+}
+
+/// Secret field names, including framework-specific prefixes and suffixes.
+pub fn sensitive_name(name: &str, privacy: &NormalizedPrivacy) -> bool {
+    static PATTERN: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
+    privacy.use_defaults
+        && PATTERN
+            .get_or_init(|| {
+                Regex::new(
+                    r"(?i)password|passwd|token|csrf|xsrf|otp|secret|api[_-]?key|authorization",
+                )
+                .expect("constant regex")
+            })
+            .is_match(name)
+}
+
+fn structured_text(value: &str, privacy: &NormalizedPrivacy) -> String {
+    if !privacy.use_defaults {
+        return value.to_owned();
+    }
+    if let Ok(parsed @ (Json::Object(_) | Json::Array(_))) = Json::parse(value) {
+        return redact_value(&parsed, privacy, "").to_compact();
+    }
+    static ASSIGNMENT: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
+    static FORM: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
+    static MULTIPART: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
+    let text = ASSIGNMENT
+        .get_or_init(|| {
+            Regex::new(r#"(\b(?:["']?[\w-]+["']?)\s*[:=]\s*)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\d+(?:\.\d+)?)"#)
+                .expect("constant regex")
+        })
+        .replace_all(value, |c: &regex::Captures<'_>| {
+            if sensitive_name(&c[1], privacy) {
+                format!("{}\"{}\"", &c[1], REDACTED)
+            } else {
+                c[0].to_owned()
+            }
+        })
+        .into_owned();
+    let text = FORM
+        .get_or_init(|| Regex::new(r"(^|[&?])([^=&\s]+)=([^&\s]*)").expect("constant regex"))
+        .replace_all(&text, |c: &regex::Captures<'_>| {
+            let key = form_urlencoded::parse(format!("{}=", &c[2]).as_bytes())
+                .next()
+                .map(|(key, _)| key.into_owned())
+                .unwrap_or_default();
+            if sensitive_name(&key, privacy) {
+                format!("{}{}={}", &c[1], &c[2], REDACTED)
+            } else {
+                c[0].to_owned()
+            }
+        })
+        .into_owned();
+    MULTIPART.get_or_init(|| Regex::new(r#"(?i)(Content-Disposition:[^\r\n]*?;\s*name="([^"]+)"[^\r\n]*\r?\n(?:[^\r\n]+\r?\n)*\r?\n)([\s\S]*?)(\r?\n--)"#).expect("constant regex"))
+        .replace_all(&text, |c: &regex::Captures<'_>| if sensitive_name(&c[2], privacy) {format!("{}{}{}", &c[1], REDACTED, &c[4])} else {c[0].to_owned()}).into_owned()
 }
 
 /// Replace every pattern match, then let the callback have its say.
@@ -194,7 +259,11 @@ pub fn redact_text(
     if value.is_empty() {
         return String::new();
     }
-    let mut text = value.to_string();
+    let mut text = if kind == "url" {
+        value.to_owned()
+    } else {
+        structured_text(value, privacy)
+    };
     for pattern in &privacy.redact_patterns {
         text = pattern.replace_all(&text, NoExpand(REDACTED)).into_owned();
     }
@@ -220,7 +289,9 @@ fn redact_params(body: &str, privacy: &NormalizedPrivacy) -> Option<String> {
     let keys: Vec<String> = pairs.iter().map(|(key, _)| key.clone()).collect();
     let mut changed = false;
     for key in keys {
-        if !privacy.redact_query_params.contains(&key.to_lowercase()) {
+        if !privacy.redact_query_params.contains(&key.to_lowercase())
+            && !sensitive_name(&key, privacy)
+        {
             continue;
         }
         changed = true;
@@ -296,6 +367,9 @@ fn names_a_url(key: &str) -> bool {
 
 /// Redact every string inside a value, by the name of the field holding it.
 pub fn redact_value(value: &Json, privacy: &NormalizedPrivacy, key: &str) -> Json {
+    if sensitive_name(key, privacy) || privacy.redact_attributes.contains(&key.to_lowercase()) {
+        return Json::from(REDACTED);
+    }
     match value {
         Json::String(text) => {
             if privacy.redact_attributes.contains(&key.to_lowercase()) {
@@ -342,7 +416,9 @@ mod tests {
     fn defaults_are_additive_and_lower_cased() {
         let privacy = privacy();
         assert_eq!(privacy.redact_query_params.last().unwrap(), "ticket");
-        assert_eq!(privacy.redact_query_params.len(), 13);
+        for name in ["token", "csrf", "xsrf", "_xsrf", "ticket"] {
+            assert!(privacy.redact_query_params.iter().any(|key| key == name));
+        }
     }
 
     #[test]
@@ -372,5 +448,20 @@ mod tests {
             redact_value(&value, &privacy, "").to_compact(),
             r#"{"authorization":"[redacted]","pageUrl":"https://a.example/?token=[redacted]","list":["[redacted]"]}"#
         );
+    }
+    #[test]
+    fn structured_bodies_and_escaped_assignments_do_not_leak() {
+        let privacy = NormalizedPrivacy::default();
+        for text in [
+            r#"{"password":"PRIVATE_A","nested":{"otp":123456},"public":"visible"}"#,
+            "password=PRIVATE_A&public=visible",
+            "--b\r\nContent-Disposition: form-data; name=\"password\"; filename=\"public.txt\"\r\n\r\nPRIVATE_A\r\n--b--\r\n",
+            r#"<script>const xsrfToken="PRIVATE_A\"PRIVATE_B"; const otp=123456;</script>"#,
+        ] {
+            let result = redact_text(text, &privacy, "field", Some("postData"));
+            assert!(!result.contains("PRIVATE_A"), "{result}");
+            assert!(!result.contains("PRIVATE_B"), "{result}");
+            assert!(!result.contains("123456"), "{result}");
+        }
     }
 }

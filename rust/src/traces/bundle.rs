@@ -70,10 +70,14 @@ pub struct TraceLimits {
     pub max_resource_bytes: Option<u64>,
     /// Ceiling for one timeline line (the resource ceiling).
     pub max_event_bytes: Option<u64>,
-    /// Markup kept per checkpoint before it is truncated (unlimited).
+    /// Markup kept per checkpoint before it is truncated (4 MiB).
     pub max_html_bytes: Option<u64>,
     /// Mutation records the page queues between drains (5000).
     pub max_queued_mutations: Option<u64>,
+    /// Mutation bytes kept per checkpoint interval (4 MiB).
+    pub max_mutation_bytes: Option<u64>,
+    /// Rotate before writes; zero max_segments retains all segments.
+    pub rotation: Option<super::rolling::RotationOptions>,
 }
 
 impl TraceLimits {
@@ -86,6 +90,7 @@ impl TraceLimits {
             ("maxEventBytes", self.max_event_bytes),
             ("maxHtmlBytes", self.max_html_bytes),
             ("maxQueuedMutations", self.max_queued_mutations),
+            ("maxMutationBytes", self.max_mutation_bytes),
         ] {
             if let Some(value) = value {
                 limits.insert(name, value);
@@ -284,9 +289,22 @@ pub(crate) fn resolve_path(path: &Path) -> PathBuf {
     resolved
 }
 
+type BaseCheckpoint = (u32, Option<String>, Option<JsonObject>, Option<Vec<u8>>);
+
 /// The bundle being written.
 pub(crate) struct Bundle {
     pub root: PathBuf,
+    pub active_root: PathBuf,
+    rotation: Option<super::rolling::RotationOptions>,
+    pub segments: Vec<String>,
+    segment_number: u64,
+    pinned: Option<&'static str>,
+    base: Option<BaseCheckpoint>,
+    base_event: Option<JsonObject>,
+    mutation_interval: Option<u32>,
+    mutation_bytes: u64,
+    pub mutation_truncated: bool,
+    max_mutation: u64,
     events: Option<File>,
     pub(crate) written: u64,
     sequence: u64,
@@ -294,6 +312,7 @@ pub(crate) struct Bundle {
     checkpoints: u64,
     event_count: u64,
     mutation_batches: u64,
+    segment_start: (u64, u64, u64, u64),
     pub problems: Vec<TraceProblem>,
     strict: bool,
     max_bundle: u64,
@@ -309,6 +328,7 @@ impl Bundle {
         limits: &TraceLimits,
         strict: bool,
         clock: TraceClock,
+        lazy_rotation: bool,
     ) -> Result<Self, TraceRecordError> {
         if output.as_os_str().is_empty() {
             return Err(TraceRecordError::Invalid(
@@ -320,9 +340,42 @@ impl Bundle {
             .max_resource_bytes
             .unwrap_or(DEFAULT_MAX_RESOURCE_BYTES);
         create_dir(&root)?;
-        let events = open_private(&root.join(TraceFiles::EVENTS), true)?;
+        let active_root = if limits.rotation.is_some() && !lazy_rotation {
+            root.join("segment-000001")
+        } else {
+            root.clone()
+        };
+        create_dir(&active_root)?;
+        let segments = if limits.rotation.is_some() && !lazy_rotation {
+            vec!["segment-000001".to_string()]
+        } else {
+            Vec::new()
+        };
+        if !segments.is_empty() {
+            write_private(
+                &root.join("segments.json"),
+                serde_json::json!({"segments":segments})
+                    .to_string()
+                    .as_bytes(),
+            )?;
+        }
+        let events = open_private(&active_root.join(TraceFiles::EVENTS), true)?;
         Ok(Self {
             root,
+            active_root,
+            rotation: limits.rotation,
+            segments,
+            segment_number: 1,
+            pinned: None,
+            base: None,
+            base_event: None,
+            mutation_interval: None,
+            mutation_bytes: 0,
+            mutation_truncated: false,
+            max_mutation: limits
+                .max_mutation_bytes
+                .unwrap_or(4 * 1024 * 1024)
+                .min(max_resource),
             events: Some(events),
             written: 0,
             sequence: 0,
@@ -330,14 +383,120 @@ impl Bundle {
             checkpoints: 0,
             event_count: 0,
             mutation_batches: 0,
+            segment_start: (0, 0, 0, 0),
             problems: Vec::new(),
             strict,
-            max_bundle: limits.max_bundle_bytes.unwrap_or(DEFAULT_MAX_BUNDLE_BYTES),
+            max_bundle: if limits.rotation.is_some() {
+                u64::MAX
+            } else {
+                limits.max_bundle_bytes.unwrap_or(DEFAULT_MAX_BUNDLE_BYTES)
+            },
             max_resource,
             max_event: limits.max_event_bytes.unwrap_or(max_resource),
             clock,
             links: None,
         })
+    }
+
+    fn prepare(&mut self, bytes: u64, carry: bool) -> Result<(), TraceRecordError> {
+        let Some(bounds) = self.rotation else {
+            return Ok(());
+        };
+        if self.pinned.is_some()
+            || self.written == 0
+            || self.written.saturating_add(bytes) <= bounds.max_bytes
+        {
+            return Ok(());
+        }
+        let manifest = create_manifest(ManifestParts {
+            mode: "continuous".into(),
+            outcome: "complete".into(),
+            stopped_at: Some(self.now_iso()),
+            ..ManifestParts::default()
+        });
+        self.close_segment(&manifest)?;
+        if self.segments.is_empty() {
+            let name = "segment-000001";
+            let destination = self.root.join(name);
+            create_dir(&destination)?;
+            for member in [
+                "events.ndjson",
+                "manifest.json",
+                "checkpoints",
+                "mutations",
+                "artifacts",
+                "viewer.html",
+            ] {
+                let source = self.root.join(member);
+                if source.exists() {
+                    fs::rename(source, destination.join(member))?;
+                }
+            }
+            self.segments.push(name.into());
+        }
+        self.segment_number += 1;
+        let name = format!("segment-{:06}", self.segment_number);
+        self.active_root = self.root.join(&name);
+        create_dir(&self.active_root)?;
+        self.events = Some(open_private(
+            &self.active_root.join(TraceFiles::EVENTS),
+            true,
+        )?);
+        self.written = 0;
+        self.segment_start = (
+            self.checkpoints,
+            self.event_count,
+            self.mutation_batches,
+            self.dropped,
+        );
+        self.mutation_interval = None;
+        self.segments.push(name);
+        if bounds.max_segments > 0 && self.segments.len() > bounds.max_segments {
+            fs::remove_dir_all(self.root.join(self.segments.remove(0)))?;
+        }
+        let temporary = self.root.join("segments.json.tmp");
+        write_private(
+            &temporary,
+            serde_json::json!({"segments":self.segments})
+                .to_string()
+                .as_bytes(),
+        )?;
+        fs::rename(temporary, self.root.join("segments.json"))?;
+        if carry {
+            if let (Some((index, html, state, shot)), Some(mut event)) =
+                (self.base.clone(), self.base_event.clone())
+            {
+                let members =
+                    self.write_checkpoint(index, html.as_deref(), state.as_ref(), shot.as_deref())?;
+                event.insert("members", members);
+                event.insert("reason", "rotation-base");
+                self.append_event(event, true)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn close_segment(&mut self, manifest: &JsonObject) -> Result<(), TraceRecordError> {
+        if let Some(mut file) = self.events.take() {
+            file.flush()?;
+        }
+        let mut manifest = manifest.clone();
+        manifest.insert(
+            "counts",
+            JsonObject::new()
+                .with("checkpoints", self.checkpoints - self.segment_start.0)
+                .with("events", self.event_count - self.segment_start.1)
+                .with(
+                    "mutationBatches",
+                    self.mutation_batches - self.segment_start.2,
+                ),
+        );
+        manifest.insert("dropped", self.dropped - self.segment_start.3);
+        write_private(
+            &self.active_root.join(TraceFiles::MANIFEST),
+            format!("{}\n", Json::Object(manifest).to_pretty()).as_bytes(),
+        )?;
+        Ok(())
     }
 
     pub fn now_iso(&self) -> String {
@@ -390,6 +549,10 @@ impl Bundle {
         event: JsonObject,
         retry: bool,
     ) -> Result<Option<JsonObject>, TraceRecordError> {
+        self.prepare(
+            Json::Object(event.clone()).to_compact().len() as u64 + 256,
+            true,
+        )?;
         self.sequence += 1;
         let mut record = JsonObject::new()
             .with("sequence", self.sequence)
@@ -421,7 +584,16 @@ impl Bundle {
                 self.written += bytes;
                 self.event_count += 1;
                 if let Some(links) = self.links.as_mut() {
+                    links.set_root(&self.active_root);
                     links.event(&record);
+                }
+                let kind = record.get("kind").and_then(Json::as_str).unwrap_or("");
+                if kind == "checkpoint" {
+                    self.base_event = Some(record.clone());
+                }
+                if kind == "checkpoint" || (kind == "mutations" && self.pinned == Some("mutations"))
+                {
+                    self.pinned = None;
                 }
                 Ok(Some(record))
             }
@@ -454,7 +626,8 @@ impl Bundle {
         append: bool,
     ) -> Result<Option<String>, TraceRecordError> {
         let length = data.len() as u64;
-        let target = self.root.join(member);
+        self.prepare(length, true)?;
+        let target = self.active_root.join(member);
         let previous = if append {
             fs::metadata(&target).map(|value| value.len()).unwrap_or(0)
         } else {
@@ -493,6 +666,18 @@ impl Bundle {
         state: Option<&JsonObject>,
         screenshot: Option<&[u8]>,
     ) -> Result<JsonObject, TraceRecordError> {
+        let size = html.map_or(0, str::len)
+            + state.map_or(0, |state| Json::Object(state.clone()).to_compact().len())
+            + screenshot.map_or(0, <[u8]>::len)
+            + 1024;
+        self.prepare(size as u64, false)?;
+        self.pinned = Some("checkpoint");
+        self.base = Some((
+            index,
+            html.map(str::to_owned),
+            state.cloned(),
+            screenshot.map(<[u8]>::to_vec),
+        ));
         let name = sequence_name(index);
         let dir = TraceFiles::CHECKPOINTS_DIR;
         let mut members = JsonObject::new();
@@ -534,15 +719,45 @@ impl Bundle {
             TraceFiles::MUTATIONS_DIR,
             sequence_name(index)
         );
-        let mut body = batches
-            .iter()
-            .map(Json::to_compact)
-            .collect::<Vec<_>>()
-            .join("\n");
-        body.push('\n');
+        self.prepare(
+            batches
+                .iter()
+                .map(|batch| batch.to_compact().len() as u64 + 1)
+                .sum::<u64>()
+                + 256,
+            true,
+        )?;
+        if self.mutation_interval != Some(index) {
+            self.mutation_interval = Some(index);
+            self.mutation_bytes = 0;
+            self.mutation_truncated = false;
+        }
+        if self.mutation_truncated {
+            return Ok(None);
+        }
+        let mut body = String::new();
+        for batch in batches {
+            let line = format!("{}\n", batch.to_compact());
+            if self.mutation_bytes + line.len() as u64 + 256 > self.max_mutation {
+                self.mutation_truncated = true;
+                let marker = "{\"records\":[{\"kind\":\"truncated\",\"reason\":\"mutation interval size limit\"}]}\n";
+                if self.mutation_bytes + marker.len() as u64 <= self.max_mutation {
+                    body.push_str(marker);
+                }
+                break;
+            }
+            self.mutation_bytes += line.len() as u64;
+            body.push_str(&line);
+        }
+        if body.is_empty() {
+            return Ok(None);
+        }
+        if self.pinned != Some("checkpoint") {
+            self.pinned = Some("mutations");
+        }
         let written = self.write_member_mode(&member, body.as_bytes(), true)?;
         if written.is_some() {
-            self.mutation_batches += batches.len() as u64;
+            self.mutation_batches += body.lines().count() as u64;
         }
         Ok(written)
     }
@@ -564,11 +779,25 @@ impl Bundle {
         if self.dropped > 0 && complete {
             manifest.insert("outcome", TraceOutcome::PARTIAL);
         }
-        if let Some(mut file) = self.events.take() {
-            file.flush()?;
+        self.close_segment(&manifest)?;
+        for name in &self.segments {
+            let file = self.root.join(name).join(TraceFiles::MANIFEST);
+            let prior = Json::parse(&fs::read_to_string(&file)?).map_err(|error| {
+                TraceRecordError::Invalid(format!("invalid segment manifest: {error}"))
+            })?;
+            let mut segment = manifest.clone();
+            if let Some(prior) = prior.as_object() {
+                for key in ["counts", "dropped"] {
+                    if let Some(value) = prior.get(key) {
+                        segment.insert(key, value.clone());
+                    }
+                }
+            }
+            write_private(
+                &file,
+                format!("{}\n", Json::Object(segment).to_pretty()).as_bytes(),
+            )?;
         }
-        let body = format!("{}\n", Json::Object(manifest.clone()).to_pretty());
-        write_private(&self.root.join(TraceFiles::MANIFEST), body.as_bytes())?;
         Ok(manifest)
     }
 }
@@ -584,8 +813,14 @@ mod tests {
             std::process::id(),
             iso_timestamp((TraceClock::default().now)()).replace(':', "")
         ));
-        let mut bundle =
-            Bundle::open(&dir, &TraceLimits::default(), false, TraceClock::default()).unwrap();
+        let mut bundle = Bundle::open(
+            &dir,
+            &TraceLimits::default(),
+            false,
+            TraceClock::default(),
+            false,
+        )
+        .unwrap();
         bundle
             .write_mutations(1, &[Json::String("first".into())])
             .unwrap();
@@ -609,6 +844,122 @@ mod tests {
         assert_eq!(iso_timestamp(0.0), "1970-01-01T00:00:00.000Z");
         assert_eq!(iso_timestamp(951_782_400_123.9), "2000-02-29T00:00:00.123Z");
         assert_eq!(iso_timestamp(-1.0), "1969-12-31T23:59:59.999Z");
+    }
+
+    #[test]
+    fn interval_truncation_keeps_marker_and_next_interval() {
+        let dir = std::env::temp_dir().join(format!(
+            "bc-bundle-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let mut bundle = Bundle::open(
+            &dir,
+            &TraceLimits {
+                max_mutation_bytes: Some(512),
+                ..TraceLimits::default()
+            },
+            false,
+            TraceClock::default(),
+            false,
+        )
+        .unwrap();
+        bundle
+            .write_mutations(
+                1,
+                &[Json::String("first".into()), Json::String("x".repeat(1000))],
+            )
+            .unwrap();
+        assert!(bundle.mutation_truncated);
+        assert!(bundle
+            .write_mutations(1, &[Json::String("ignored".into())])
+            .unwrap()
+            .is_none());
+        let first = fs::read_to_string(dir.join("mutations/0001.ndjson")).unwrap();
+        assert!(first.len() <= 512);
+        assert!(first.contains("truncated"));
+        bundle
+            .write_mutations(2, &[Json::String("next".into())])
+            .unwrap();
+        assert!(!bundle.mutation_truncated);
+        assert!(fs::read_to_string(dir.join("mutations/0002.ndjson"))
+            .unwrap()
+            .contains("next"));
+        bundle.abort();
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn rotated_manifests_count_their_own_events() {
+        let dir = std::env::temp_dir().join(format!(
+            "bc-bundle-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let mut bundle = Bundle::open(
+            &dir,
+            &TraceLimits {
+                rotation: Some(super::super::rolling::RotationOptions {
+                    max_bytes: 1024,
+                    max_segments: 0,
+                }),
+                ..TraceLimits::default()
+            },
+            false,
+            TraceClock::default(),
+            false,
+        )
+        .unwrap();
+        for index in 0..8 {
+            bundle
+                .append_event(
+                    JsonObject::new()
+                        .with("kind", "test")
+                        .with("index", index)
+                        .with("payload", "x".repeat(1500)),
+                    true,
+                )
+                .unwrap();
+        }
+        let aggregate = bundle
+            .close(create_manifest(ManifestParts {
+                outcome: "complete".into(),
+                ..ManifestParts::default()
+            }))
+            .unwrap();
+        assert_eq!(
+            aggregate
+                .get("counts")
+                .unwrap()
+                .as_object()
+                .unwrap()
+                .get("events"),
+            Some(&Json::from(8))
+        );
+        assert_eq!(bundle.segments.len(), 8);
+        for name in &bundle.segments {
+            let value =
+                Json::parse(&fs::read_to_string(dir.join(name).join("manifest.json")).unwrap())
+                    .unwrap();
+            assert_eq!(
+                value
+                    .as_object()
+                    .unwrap()
+                    .get("counts")
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .get("events"),
+                Some(&Json::from(1))
+            );
+        }
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

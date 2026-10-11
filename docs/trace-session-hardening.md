@@ -59,7 +59,7 @@ Textual response bodies use UTF-8 and retain original byte size; binary payloads
 are omitted. Body capture is opt-in and defaults to a 1 MiB cap. HAR accepts the
 UTF-8 records and legacy base64 records. Bundle and links writers consume the
 same redacted records. Incremental DOM links read only newly written members
-and retain a bounded deduplication set. `privacy.useDefaults: false` explicitly
+and retain only the current mutation member and read offset. `privacy.useDefaults: false` explicitly
 disables the default field/selector rules; caller rules remain active.
 
 ## Attached and persistent browsers

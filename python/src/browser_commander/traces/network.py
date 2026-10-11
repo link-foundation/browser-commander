@@ -3,25 +3,28 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import json
 import re
 from pathlib import Path
 from typing import Any
 from weakref import WeakKeyDictionary
 
+from .redaction import normalize_privacy_options, redact_text
+from .redaction import redact_headers as private_headers
+
 PRIVATE_HEADERS = {"cookie", "set-cookie", "authorization", "proxy-authorization"}
 
 
 def redact_headers(headers):
-    return {
-        key.lower(): "[redacted]" if key.lower() in PRIVATE_HEADERS else value
-        for key, value in headers.items()
-    }
+    return private_headers(
+        {key.lower(): value for key, value in headers.items()},
+        normalize_privacy_options(),
+    )
 
 
 class NetworkRecorder:
-    def __init__(self, page, options, record, note):
+    def __init__(self, page, options, record, note, privacy=None):
+        self.privacy = privacy or normalize_privacy_options()
         self.page, self.options, self.record, self.note = (
             page,
             ({} if options is True else options or {}),
@@ -78,7 +81,15 @@ class NetworkRecorder:
             and request.post_data_buffer
         ):
             data = request.post_data_buffer
-            payload["postData"] = data[: self.limit].decode("utf8", errors="replace")
+            payload["postData"] = (
+                redact_text(
+                    data.decode("utf8", errors="replace"),
+                    self.privacy,
+                    {"kind": "network", "name": "postData"},
+                )
+                .encode("utf8")[: self.limit]
+                .decode("utf8", errors="replace")
+            )
             payload["postDataTruncated"] = len(data) > self.limit
         self.record("network.request", payload)
 
@@ -86,7 +97,14 @@ class NetworkRecorder:
         return {
             "size": len(data),
             "truncated": len(data) > self.limit,
-            "data": base64.b64encode(data[: self.limit]).decode("ascii"),
+            "encoding": "utf8",
+            "data": redact_text(
+                data.decode("utf8", errors="replace"),
+                self.privacy,
+                {"kind": "network", "name": "responseBody"},
+            )
+            .encode("utf8")[: self.limit]
+            .decode("utf8", errors="replace"),
         }
 
     def response(self, response):
@@ -127,9 +145,29 @@ class NetworkRecorder:
                 "xhr",
                 "fetch",
             }:
-                length = int(headers.get("content-length", "0"))
-                if length > self.limit:
-                    payload["body"] = {"size": length, "truncated": True, "data": ""}
+                length = None
+                try:
+                    if "content-length" in headers:
+                        length = int(headers["content-length"])
+                    elif callable(getattr(response.request, "sizes", None)):
+                        sizes = await asyncio.wait_for(
+                            response.request.sizes(), timeout=5
+                        )
+                        length = sizes.get("responseBodySize")
+                except Exception:
+                    pass
+                if not re.search(
+                    r"^(?:text/|application/(?:[\w.+-]*json|[\w.+-]*xml|javascript|x-www-form-urlencoded))|multipart/form-data",
+                    headers.get("content-type", ""),
+                    re.I,
+                ):
+                    payload["body"] = {"size": length, "omitted": "binary"}
+                elif length is not None and length > self.limit:
+                    payload["body"] = {
+                        "size": length,
+                        "truncated": True,
+                        "omitted": "size limit",
+                    }
                 else:
                     try:
                         payload["body"] = self.body(
@@ -203,10 +241,14 @@ def write_har(root, events, target=None):
                         **(
                             {
                                 "text": body["data"],
-                                "encoding": "base64",
+                                **(
+                                    {}
+                                    if body.get("encoding") == "utf8"
+                                    else {"encoding": "base64"}
+                                ),
                                 "_truncated": body["truncated"],
                             }
-                            if body
+                            if "data" in body
                             else {}
                         ),
                     },

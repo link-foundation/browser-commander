@@ -30,7 +30,7 @@ every requirement, including the choices considered before implementing it.
 ### #151: persistent browser lifecycle
 
 11. Offer explicit adoption of an already-running loopback browser when metadata is absent; verify requested profile identity before assigning ownership. Alternative blind adoption is inappropriate because close would affect an unrelated browser.
-12. Keep attached controllers active even without navigations; update metadata using bounded heartbeat and stop it on detach/disconnect.
+12. Keep attached controllers active even without navigations; update metadata using bounded heartbeat and stop it on detach.
 13. Offer ongoing enforcement that closes subsequently opened tabs; clean up listeners/tasks on detach and preserve selected tab.
 
 ### #152: network privacy

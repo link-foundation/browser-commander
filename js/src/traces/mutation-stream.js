@@ -20,7 +20,7 @@ import {
   RECORDER_GLOBAL,
   stopMutationRecorderInPage,
 } from './page-capture.js';
-import { REDACTED } from './redaction.js';
+import { redactValue, REDACTED } from './redaction.js';
 import { TRACE_DROP_REASON, TRACE_EVENT } from './schema.js';
 
 /** In-page records kept before the recorder starts counting drops instead. */
@@ -62,6 +62,8 @@ export function createMutationStream(options) {
   const recorderOptions = {
     globalName: RECORDER_GLOBAL,
     redactSelectors: privacyOptions.redactSelectors,
+    redactAttributes: privacyOptions.redactAttributes,
+    useDefaults: privacyOptions.useDefaults,
     redacted: REDACTED,
     ignoreSelectors: domOptions.ignoreSelectors ?? [],
     maxQueued: limits.maxQueuedMutations ?? DEFAULT_MAX_QUEUED_MUTATIONS,
@@ -195,13 +197,17 @@ export function createMutationStream(options) {
       // frame; one ordered file is what a replay reads.
       batches.sort((left, right) => (left.at ?? 0) - (right.at ?? 0));
 
-      const member = await bundle.writeMutations(index, batches);
+      const member = await bundle.writeMutations(
+        index,
+        redactValue(batches, privacyOptions)
+      );
       if (member) {
         await record(TRACE_EVENT.MUTATIONS, {
           member,
           batches: batches.length,
           checkpoint: index,
           frames: drained.length,
+          truncated: bundle.mutationTruncated,
         });
       }
       return member;

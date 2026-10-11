@@ -10,6 +10,7 @@ import { launchSafari } from './safari-launch.js';
 import { isSafariChannel } from './safari-support.js';
 
 import { startProcess } from '../utilities/subprocess.js';
+import { withDeadline } from '../traces/deadline.js';
 import {
   applyAutomationParityArgs,
   detectAutomationControlledTriggers,
@@ -308,15 +309,26 @@ function createCloser({
   temporaryProfile,
   closeTimeout,
   closeConnection,
+  verbose,
 }) {
   const originalClose = closeConnection ?? browser?.close;
   let closing;
   const close = () => {
     closing ??= (async () => {
       if (browserProcess.exitCode === null && originalClose) {
-        await requestBrowserClose({ engine, browser, originalClose }).catch(
-          () => {}
-        );
+        // A signal can sever the engine transport while its close RPC is pending.
+        // Keep the existing close budget active until owned-process cleanup runs.
+        await withDeadline(
+          requestBrowserClose({ engine, browser, originalClose }),
+          closeTimeout,
+          'browser close'
+        ).catch((error) => {
+          if (verbose) {
+            console.debug(
+              `[browser-commander] Engine close failed: ${error.message}; finishing owned process cleanup`
+            );
+          }
+        });
       }
       if (!(await waitForExit(browserProcess, closeTimeout))) {
         browserProcess.kill();
@@ -755,6 +767,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       temporaryProfile,
       closeTimeout,
       closeConnection: engine === 'selenium' ? connection.close : undefined,
+      verbose,
     });
     return await installSessionPersistence(
       {

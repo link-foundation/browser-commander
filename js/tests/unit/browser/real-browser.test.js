@@ -460,6 +460,35 @@ describe('launchAndConnectRealBrowser', () => {
     await assert.rejects(() => access(result.userDataDir), /ENOENT/);
   });
 
+  it(
+    'finishes owned cleanup when the engine close stalls after interruption',
+    { timeout: 1000 },
+    async () => {
+      const calls = [];
+      const browserProcess = fakeProcess(calls);
+      const result = await launchAndConnectRealBrowserWithDependencies(
+        { engine: 'puppeteer', closeTimeout: 20 },
+        {
+          resolveExecutable: async () => '/opt/google/chrome',
+          reservePort: async () => 40005,
+          spawnBrowser: () => browserProcess,
+          waitForEndpoint: async () => 'http://127.0.0.1:40005',
+          connect: async () => ({
+            browser: { close: () => new Promise(() => {}) },
+            page: null,
+          }),
+        }
+      );
+      temporaryDirectory = result.userDataDir;
+      await result.close();
+      assert.deepEqual(
+        { calls, exitCode: browserProcess.exitCode },
+        { calls: [['kill']], exitCode: 143 }
+      );
+      await assert.rejects(() => access(result.userDataDir), /ENOENT/);
+    }
+  );
+
   it('passes restriction environment to the browser only', async () => {
     const before = process.env.GOOGLE_API_KEY;
     let spawnOptions;

@@ -2,7 +2,7 @@
 
 A universal browser automation library for JavaScript/TypeScript that supports Playwright, Puppeteer, and Selenium with a unified API. The key focus is on **stoppable page triggers** - ensuring automation logic is properly mounted/unmounted during page navigation.
 
-See [engine support and native/CLI defaults](../docs/engine-support.md) for the
+See [engine support and native/CLI defaults](https://github.com/link-foundation/browser-commander/blob/main/docs/engine-support.md) for the
 cross-language API matrix and Selenium examples.
 
 ## Installation
@@ -119,7 +119,7 @@ const { browser, page } = await launchBrowser({
 ```
 
 Every switch Browser Commander used to add on its own is available as a named
-[launch restriction](../docs/feature-parity.md#launch-command-line-and-opt-in-restrictions);
+[launch restriction](https://github.com/link-foundation/browser-commander/blob/main/docs/feature-parity.md#launch-command-line-and-opt-in-restrictions);
 `restrictions: ['legacy-defaults']` restores the old `CHROME_ARGS`. Pass
 `launch: 'engine'` to use Playwright's `launchPersistentContext()` or
 `puppeteer.launch()` instead; the engine then adds its own switches, and
@@ -379,6 +379,10 @@ commander.pageTrigger({
 });
 ```
 
+For trace budgets/privacy, persistent session adoption and heartbeats, CDP
+`noDefaults`, overlay reporting, and the `readyOn`/`concurrency` trigger migration,
+see [trace and session hardening](https://github.com/link-foundation/browser-commander/blob/f5e426d6933c681189c4989bac182a1558d8edb8/docs/trace-session-hardening.md).
+
 ## API Reference
 
 ### launchBrowser(options)
@@ -520,7 +524,7 @@ headless. `connectWebDriver({ serverUrl, capabilities })` opens a session on a
 server that is already running (a Selenium Grid, a cloud provider); pass
 `capabilities: { webSocketUrl: true }` for BiDi. Media emulation, fingerprint
 overrides and managed downloads need CDP and throw on this engine; see
-[docs/feature-parity.md](../docs/feature-parity.md#webdriver-engine).
+[docs/feature-parity.md](https://github.com/link-foundation/browser-commander/blob/main/docs/feature-parity.md#webdriver-engine).
 
 ### listBrowserProfiles(options)
 
@@ -686,6 +690,8 @@ const commander = makeBrowserCommander({
   verbose: false, // Enable debug logging
   enableNetworkTracking: true, // Track HTTP requests
   enableNavigationManager: true, // Enable navigation events
+  overlays: [{ selector: '.consent-close', timeout: 1000 }],
+  onOverlayDismiss: (report) => console.log(report.selector, report.status),
 });
 ```
 
@@ -693,10 +699,14 @@ const commander = makeBrowserCommander({
 
 ```javascript
 const unregister = commander.pageTrigger({
-  name: 'trigger-name',                    // For debugging
-  condition: (ctx) => boolean,             // When to run (receives {url, commander})
-  action: async (ctx) => void,             // What to do
-  priority: 0,                             // Higher runs first
+  name: 'application-ready',
+  readyOn: 'domcontentloaded', // Default: networkidle
+  concurrency: 'queue', // Default: skip; also restart
+  condition: ({ url }) => url.includes('/application'),
+  action: async (ctx) => {
+    ctx.checkStopped();
+  },
+  priority: 0, // Higher runs first
 });
 ```
 
@@ -802,7 +812,7 @@ failed or cancelled download raises the failure rather than returning a path.
 
 ### Portable Traces
 
-See [capture, debugging and reusable sessions](../docs/capture-and-debugging.md)
+See [capture, debugging and reusable sessions](https://github.com/link-foundation/browser-commander/blob/main/docs/capture-and-debugging.md)
 for screenshots, recordings, full/text DOM links, network/HAR, rotation,
 persistent browsers, early trigger readiness and engine capability limits.
 
@@ -1028,7 +1038,7 @@ This is the **official extensibility mechanism** while awaiting browser-commande
 
 ## Command Line
 
-The package installs a `browser-commander` command. The Rust and Python packages ship the same command, and the contract all three follow is [docs/cli-and-bridge.md](../docs/cli-and-bridge.md). Every command prints exactly one JSON document to stdout. The exit code is `0` on success and `1` on error. `doctor` exits `2` when it finds an unlisted difference, and a usage error exits `64`.
+The package installs a `browser-commander` command. The Rust and Python packages ship the same command, and the contract all three follow is [docs/cli-and-bridge.md](https://github.com/link-foundation/browser-commander/blob/main/docs/cli-and-bridge.md). Every command prints exactly one JSON document to stdout. The exit code is `0` on success and `1` on error. `doctor` exits `2` when it finds an unlisted difference, and a usage error exits `64`.
 
 ```bash
 npx browser-commander version
@@ -1068,4 +1078,4 @@ See [src/ARCHITECTURE.md](src/ARCHITECTURE.md) for detailed architecture documen
 
 [UNLICENSE](../LICENSE)
 
-See [navigation budgets, launch diagnostics, reusable helpers and sessions](../docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.
+See [navigation budgets, launch diagnostics, reusable helpers and sessions](https://github.com/link-foundation/browser-commander/blob/main/docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.

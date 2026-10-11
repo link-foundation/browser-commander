@@ -2,12 +2,12 @@
 
 A universal browser automation library for Python that supports both Playwright and Selenium with a unified API. The key focus is on **stoppable page triggers** - ensuring automation logic is properly mounted/unmounted during page navigation.
 
-See [engine support and native/CLI defaults](../docs/engine-support.md) for the
+See [engine support and native/CLI defaults](https://github.com/link-foundation/browser-commander/blob/main/docs/engine-support.md) for the
 cross-language API matrix and Selenium examples.
 
 ## Installation
 
-The first PyPI release is pending [trusted publisher registration](../docs/PUBLISHING.md). Until the
+The first PyPI release is pending [trusted publisher registration](https://github.com/link-foundation/browser-commander/blob/main/docs/PUBLISHING.md). Until the
 [PyPI project](https://pypi.org/project/browser-commander/) is available,
 install directly from this repository:
 
@@ -138,6 +138,10 @@ any_condition(
 not_condition(make_url_condition("*/admin*"))  # Negation
 ```
 
+For trace budgets/privacy, persistent session adoption and heartbeats, CDP
+`noDefaults`, overlay reporting, and the `readyOn`/`concurrency` trigger migration,
+see [trace and session hardening](https://github.com/link-foundation/browser-commander/blob/f5e426d6933c681189c4989bac182a1558d8edb8/docs/trace-session-hardening.md).
+
 ## API Reference
 
 ### launch_browser(options)
@@ -162,7 +166,7 @@ browser, page = result.browser, result.page
 By default both launch APIs start the installed browser the way a person would:
 `--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved
 port> about:blank` and nothing else (see
-[Launch Command Line and Opt-In Restrictions](../docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
+[Launch Command Line and Opt-In Restrictions](https://github.com/link-foundation/browser-commander/blob/main/docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
 Switches the library used to add, such as `--password-store=basic`, are opt-in
 `restrictions` (`restrictions=["legacy-defaults"]` restores the old set).
 `launch="engine"` keeps the engine launcher, and `ignore_default_args=True`
@@ -497,7 +501,7 @@ directly in Python, without the JavaScript CLI. It exposes typed tab results,
 CDP sessions and events. Install the `extension` extra and select the bundled
 `extension_directory()` in Chrome's **Load unpacked** dialog. Configure
 `allowed_extension_ids` to restrict the accepted installed extension.
-[Native extension relay](../docs/extension-relay.md) has startup, cancellation,
+[Native extension relay](https://github.com/link-foundation/browser-commander/blob/main/docs/extension-relay.md) has startup, cancellation,
 resource limits and complete Python/Rust examples.
 
 ### Live Profile Snapshots
@@ -527,7 +531,7 @@ returns the same report without launching; callers own that returned directory.
 
 ### Portable Traces
 
-See [capture, debugging and reusable sessions](../docs/capture-and-debugging.md)
+See [capture, debugging and reusable sessions](https://github.com/link-foundation/browser-commander/blob/main/docs/capture-and-debugging.md)
 for screenshots, recordings, full/text DOM links, network/HAR, rotation,
 persistent browsers, early trigger readiness and engine capability limits.
 
@@ -750,4 +754,4 @@ The Python implementation follows the same architecture as the JavaScript versio
 
 [UNLICENSE](../LICENSE)
 
-See [navigation budgets, launch diagnostics, reusable helpers and sessions](../docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.
+See [navigation budgets, launch diagnostics, reusable helpers and sessions](https://github.com/link-foundation/browser-commander/blob/main/docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.

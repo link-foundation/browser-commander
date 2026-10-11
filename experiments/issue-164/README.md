@@ -52,6 +52,14 @@ seconds: the launcher must exit before the marker exists, and the child must
 still create it afterwards. Tests have ten-second suite limits, clean up child
 processes and temporary files, and never access a browser or website.
 
+Detached-child survival is a Unix contract: both the original Command Stream
+1.4.0 and 2.0.2 hardcode `detached: process.platform !== 'win32'` in their
+noninteractive spawn. The new fixture initially failed on Windows because it
+assumed detachment there. It now explicitly skips that Unix assertion on Windows;
+the other six subprocess contracts still run. This preserves the existing
+adapter's platform behavior. [Node's detached-process documentation](https://nodejs.org/api/child_process.html#optionsdetached)
+explains why Windows requires `detached: true` for a child to survive its parent.
+
 The browser-backed capture fixture runs through the existing E2E framework:
 
 ```sh

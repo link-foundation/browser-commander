@@ -99,48 +99,60 @@ describe('startProcess', { timeout: 10000 }, () => {
   });
 });
 
-describe('startDetachedProcess', { timeout: 10000 }, () => {
-  it('lets the launcher exit while the detached child survives', async (t) => {
-    const directory = await fs.mkdtemp(path.join(tmpdir(), 'bc-detached-164-'));
-    const marker = path.join(directory, 'survived');
-    let pid;
-    const launcher = startProcess(node, [
-      repoPath('experiments', 'issue-164', 'detached-launcher.mjs'),
-      marker,
-    ]);
-    t.after(async () => {
-      launcher.kill();
-      if (pid) {
-        try {
-          process.kill(pid, 'SIGKILL');
-        } catch (error) {
-          if (error.code !== 'ESRCH') {
-            throw error;
+describe(
+  'startDetachedProcess',
+  {
+    timeout: 10000,
+    // Both the original 1.4.0 and 2.0.2 runner disable Windows detachment.
+    skip:
+      process.platform === 'win32' &&
+      'Command Stream only creates detached process groups on Unix',
+  },
+  () => {
+    it('lets the launcher exit while the detached child survives', async (t) => {
+      const directory = await fs.mkdtemp(
+        path.join(tmpdir(), 'bc-detached-164-')
+      );
+      const marker = path.join(directory, 'survived');
+      let pid;
+      const launcher = startProcess(node, [
+        repoPath('experiments', 'issue-164', 'detached-launcher.mjs'),
+        marker,
+      ]);
+      t.after(async () => {
+        launcher.kill();
+        if (pid) {
+          try {
+            process.kill(pid, 'SIGKILL');
+          } catch (error) {
+            if (error.code !== 'ESRCH') {
+              throw error;
+            }
           }
         }
-      }
-      await fs.rm(directory, { recursive: true, force: true });
-    });
-    let output = '';
-    launcher.stdout.on('data', (chunk) => {
-      output += chunk;
-      pid = Number(output.trim());
-    });
-    assert.equal(await launcher.exited, 0, launcher.stderrTail);
-    assert.ok(pid > 0);
-    await assert.rejects(fs.readFile(marker), { code: 'ENOENT' });
-    const deadline = Date.now() + 5000;
-    while (Date.now() < deadline) {
-      try {
-        assert.equal(await fs.readFile(marker, 'utf8'), 'survived');
-        return;
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          throw error;
+        await fs.rm(directory, { recursive: true, force: true });
+      });
+      let output = '';
+      launcher.stdout.on('data', (chunk) => {
+        output += chunk;
+        pid = Number(output.trim());
+      });
+      assert.equal(await launcher.exited, 0, launcher.stderrTail);
+      assert.ok(pid > 0);
+      await assert.rejects(fs.readFile(marker), { code: 'ENOENT' });
+      const deadline = Date.now() + 5000;
+      while (Date.now() < deadline) {
+        try {
+          assert.equal(await fs.readFile(marker, 'utf8'), 'survived');
+          return;
+        } catch (error) {
+          if (error.code !== 'ENOENT') {
+            throw error;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
-        await new Promise((resolve) => setTimeout(resolve, 50));
       }
-    }
-    assert.fail('detached child did not survive the launcher exit');
-  });
-});
+      assert.fail('detached child did not survive the launcher exit');
+    });
+  }
+);

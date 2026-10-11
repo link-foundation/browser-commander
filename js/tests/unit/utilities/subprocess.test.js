@@ -1,14 +1,18 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import * as fs from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import {
   CommandError,
   runCommand,
   startProcess,
 } from '../../../src/utilities/subprocess.js';
+import { repoPath } from '../../helpers/repo.js';
 
 const node = process.execPath;
 
-describe('runCommand', () => {
+describe('runCommand', { timeout: 10000 }, () => {
   it('passes arguments without a shell and captures output', async () => {
     const result = await runCommand(node, [
       '-e',
@@ -46,9 +50,25 @@ describe('runCommand', () => {
     const result = await runCommand(node, args, { check: false });
     assert.equal(result.code, 3);
   });
+
+  it('reports a missing executable as exit 127 with ENOENT diagnostics', async () => {
+    const file = path.join(tmpdir(), 'bc-missing-executable-164', 'missing');
+    await assert.rejects(
+      () => runCommand(file),
+      (error) => {
+        assert.ok(error instanceof CommandError);
+        assert.equal(error.code, 127);
+        assert.match(error.stderr, /ENOENT/);
+        return true;
+      }
+    );
+    const result = await runCommand(file, [], { check: false });
+    assert.equal(result.code, 127);
+    assert.match(result.stderr, /ENOENT/);
+  });
 });
 
-describe('startProcess', () => {
+describe('startProcess', { timeout: 10000 }, () => {
   it('streams output and reports the exit code', async () => {
     const child = startProcess(node, [
       '-e',
@@ -76,5 +96,51 @@ describe('startProcess', () => {
     assert.equal(child.kill(), true);
     const exitCode = await child.exited;
     assert.notEqual(exitCode, 0);
+  });
+});
+
+describe('startDetachedProcess', { timeout: 10000 }, () => {
+  it('lets the launcher exit while the detached child survives', async (t) => {
+    const directory = await fs.mkdtemp(path.join(tmpdir(), 'bc-detached-164-'));
+    const marker = path.join(directory, 'survived');
+    let pid;
+    const launcher = startProcess(node, [
+      repoPath('experiments', 'issue-164', 'detached-launcher.mjs'),
+      marker,
+    ]);
+    t.after(async () => {
+      launcher.kill();
+      if (pid) {
+        try {
+          process.kill(pid, 'SIGKILL');
+        } catch (error) {
+          if (error.code !== 'ESRCH') {
+            throw error;
+          }
+        }
+      }
+      await fs.rm(directory, { recursive: true, force: true });
+    });
+    let output = '';
+    launcher.stdout.on('data', (chunk) => {
+      output += chunk;
+      pid = Number(output.trim());
+    });
+    assert.equal(await launcher.exited, 0, launcher.stderrTail);
+    assert.ok(pid > 0);
+    await assert.rejects(fs.readFile(marker), { code: 'ENOENT' });
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      try {
+        assert.equal(await fs.readFile(marker, 'utf8'), 'survived');
+        return;
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+    }
+    assert.fail('detached child did not survive the launcher exit');
   });
 });

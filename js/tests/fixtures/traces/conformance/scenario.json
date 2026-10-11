@@ -4,6 +4,7 @@
   "engine": "playwright",
   "options": {
     "mode": "continuous",
+    "network": false,
     "commanderVersion": "0.0.0-conformance",
     "privacy": {
       "redactPatterns": ["sk-[a-z0-9]+"],

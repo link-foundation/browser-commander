@@ -409,6 +409,7 @@ def attach_timeline_observers(
                     TraceEvent.INTERACTION,
                     {
                         "actionId": action_id,
+                        "source": "commander",
                         "action": action,
                         "target": target,
                         "durationMs": now() - started,
@@ -421,6 +422,7 @@ def attach_timeline_observers(
                 TraceEvent.INTERACTION,
                 {
                     "actionId": action_id,
+                    "source": "commander",
                     "action": action,
                     "target": target,
                     "durationMs": now() - started,

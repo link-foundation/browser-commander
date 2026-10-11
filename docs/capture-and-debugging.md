@@ -155,13 +155,57 @@ are closed only when `singleTab` is requested.
 
 ## Debugging and continuous traces
 
-`makeBrowserCommander({ page, debug: { output: './run.bc-trace' } })` or
-`BROWSER_COMMANDER_TRACE=./run.bc-trace` starts managed continuous debugging in
-JS/Python. Await `commander.ready` before driving the raw page directly and
-`commander.destroy()` to finish exporters. Rust uses `TraceOptions::debug` and
-explicit traced interactions. Debugging includes DOM text changes, interactions,
-navigation checkpoints, console/page errors, network metadata, links and HAR.
-Bodies remain opt-in.
+JavaScript `makeBrowserCommander({ page })` and `launchBrowser()` start a complete
+recording automatically. The default directory is
+`./browser-commander-traces/<time>-<pid>-<session-id>`; its absolute path is logged
+once to stderr and exposed as `commander.tracePath` or `launched.tracePath`.
+`debug: { output: './run.bc-trace' }` and `BROWSER_COMMANDER_TRACE=./run.bc-trace`
+choose another directory. A launched page and its commander share the recording.
+Await `commander.ready` before driving the raw page directly; commander actions
+wait for startup themselves. `commander.destroy()`, the launch's `close()` or
+`detach()`, and its browser's `close()` finish the exporters before disconnecting.
+
+Use `debug: false` or `BROWSER_COMMANDER_DEBUG=0` to disable automatic recording.
+Either opt-out takes precedence over an output path or the trace environment
+variable. Creating a commander with `debug: false` also stops an automatic trace
+already started for its launched page. Explicit `startTrace()` remains available
+when automatic recording is disabled. A launch opt-out carries over to a default
+commander on that page; an explicit `debug: true` or debug object enables it again.
+
+Plain `startTrace({ page, output })` defaults to continuous DOM changes, an initial
+snapshot, live state, console/errors, actions and network request/response metadata
+with HAR. `<output>/trace.lino` contains inline HTML snapshots, incremental DOM
+changes, actions and network records. Use
+`links: { output: './run.lino', dom: 'text' }` for a smaller text-oriented export,
+or `links: false` to disable the export. `network: false` and `mode: 'checkpoints'`
+narrow an explicit trace; an
+explicit checkpoint trace has no automatic initial snapshot. Network bodies are
+opt-in (`network: { bodies: true }`) and use the existing field-name redaction.
+
+Trusted clicks, pointer presses, non-text keys such as Enter/Escape, form submits
+and context menus are timeline interactions with `source: 'user'`. Targets carry
+a selector path, role, accessible-name description and visible text. Action records
+never read text-control values or contenteditable text. Selector/pattern privacy
+also applies to their descriptions. Commander method records use
+`source: 'commander'`; their engine input on the same target is suppressed to avoid
+duplicate user actions. Input through raw engine APIs is trusted and is recorded
+as user input. DOM events cannot distinguish a physical click from an engine click
+on the same target during an overlapping commander call. Unrelated manual actions
+continue to record while automation waits.
+
+User listeners cover existing frames and future navigations, including composed
+events from open shadow roots. Playwright/Puppeteer bindings deliver actions
+immediately; engines without bindings use a bounded polling queue and preserve the
+event's original timestamp. `events: false` or an events list without `interaction`
+disables action recording. Queues default to 5,000 entries (configurable through
+`limits.maxQueuedUserActions`), and existing DOM/resource/bundle limits and
+continuous rotation still apply. Startup failures are reported to stderr and do
+not prevent browser use. Engines without tracing capabilities need a supported
+engine to record a session.
+
+Python continues to use explicit `debug: { output }`/`BROWSER_COMMANDER_TRACE`, and
+Rust uses `TraceOptions::debug` and explicit traced interactions. Their commander
+records carry the same `source: 'commander'` field for portable trace conformance.
 
 For explicit JS tracing:
 

@@ -117,6 +117,7 @@ impl TraceRecorder {
         let duration = state.bundle.now_ms() - started;
         let mut payload = JsonObject::new()
             .with("actionId", action_id)
+            .with("source", "commander")
             .with("action", action)
             .with("target", Json::from(target))
             .with("durationMs", duration)

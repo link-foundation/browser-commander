@@ -57,10 +57,11 @@ export function createMutationStream(options) {
   } = options;
 
   const enabled = Boolean(domOptions.mutations);
+  const globalName = `${RECORDER_GLOBAL}${identity.traceId}`;
 
   /** What the in-page recorder is built with, wherever it is installed. */
   const recorderOptions = {
-    globalName: RECORDER_GLOBAL,
+    globalName,
     redactSelectors: privacyOptions.redactSelectors,
     redactAttributes: privacyOptions.redactAttributes,
     useDefaults: privacyOptions.useDefaults,
@@ -168,7 +169,7 @@ export function createMutationStream(options) {
     }
     try {
       const drained = await withDeadline(
-        evaluateInFrames(drainMutationsInPage, RECORDER_GLOBAL),
+        evaluateInFrames(drainMutationsInPage, globalName),
         captureTimeoutMs,
         'trace mutation drain'
       );
@@ -229,7 +230,7 @@ export function createMutationStream(options) {
       return;
     }
     try {
-      await evaluateInFrames(stopMutationRecorderInPage, RECORDER_GLOBAL);
+      await evaluateInFrames(stopMutationRecorderInPage, globalName);
     } catch (error) {
       note?.(`could not stop the in-page recorder: ${error.message}`);
     }

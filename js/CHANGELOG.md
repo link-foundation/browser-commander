@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.30.0
+
+### Minor Changes
+
+- 0abb9c9: Enable complete JavaScript session recording by default for commanders, launches, and explicit traces. Record trusted user actions with private target descriptions alongside commander actions, DOM changes, network metadata, and a self-contained trace.lino export. Use debug: false or BROWSER_COMMANDER_DEBUG=0 to opt out.
+
 ## 0.29.0
 
 ### Minor Changes

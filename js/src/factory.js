@@ -33,6 +33,7 @@ import { createCdpSession } from './browser/cdp-session.js';
  * @param {boolean} options.enableNetworkTracking - Enable network request tracking (default: true)
  * @param {boolean} options.enableNavigationManager - Enable navigation manager (default: true)
  * @param {Object} [options.downloads] - A download manager to expose as commander.downloads, such as the one launchBrowser() returned
+ * @param {boolean|Object} [options.debug=false] - Opt-in recording: true, {output}, or {directory, retain, maxDurationMs, limits} for managed storage
  * @returns {Object} - Browser commander API
  */
 export function makeBrowserCommander(options = {}) {

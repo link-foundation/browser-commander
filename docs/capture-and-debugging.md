@@ -155,22 +155,94 @@ are closed only when `singleTab` is requested.
 
 ## Debugging and continuous traces
 
-JavaScript `makeBrowserCommander({ page })` and `launchBrowser()` start a complete
-recording automatically. The default directory is
-`./browser-commander-traces/<time>-<pid>-<session-id>`; its absolute path is logged
-once to stderr and exposed as `commander.tracePath` or `launched.tracePath`.
-`debug: { output: './run.bc-trace' }` and `BROWSER_COMMANDER_TRACE=./run.bc-trace`
-choose another directory. A launched page and its commander share the recording.
-Await `commander.ready` before driving the raw page directly; commander actions
-wait for startup themselves. `commander.destroy()`, the launch's `close()` or
-`detach()`, and its browser's `close()` finish the exporters before disconnecting.
+JavaScript `makeBrowserCommander({ page })` and `launchBrowser()` leave recording
+off by default, across all supported engines. Ordinary navigation creates no
+trace directory, opens no recording files and installs no capture scripts, so a
+read-only working directory is supported. `tracePath` is `null` when recording is
+off. Python/Rust trace APIs also require an explicit recording request.
 
-Use `debug: false` or `BROWSER_COMMANDER_DEBUG=0` to disable automatic recording.
-Either opt-out takes precedence over an output path or the trace environment
-variable. Creating a commander with `debug: false` also stops an automatic trace
-already started for its launched page. Explicit `startTrace()` remains available
-when automatic recording is disabled. A launch opt-out carries over to a default
-commander on that page; an explicit `debug: true` or debug object enables it again.
+### Migration from JavaScript 0.30.x
+
+To preserve 0.30.x automatic capture, request `debug: true`, a debug object, or
+`BROWSER_COMMANDER_DEBUG=1`. `debug: true` retains the complete recording under
+`./browser-commander-traces/<time>-<pid>-<session-id>`. `debug: { output }`, a
+top-level `output`, or `BROWSER_COMMANDER_TRACE` selects an output path only after
+recording is enabled; an output hint alone never enables it. For read-only
+deployments and tests, use an absolute managed directory as shown below.
+
+`debug: false` and `BROWSER_COMMANDER_DEBUG=0` override all automatic recording
+requests and output settings. A launch opt-out carries over to a default commander
+on that page; an explicit debug option enables it again unless the environment
+opt-out applies. A default commander adopts a launched page's explicitly enabled
+recording. Creating it with `debug: false` stops that recording. Explicit
+`startTrace()` and `startRecording()` remain available with debug disabled.
+
+### Managed storage and recording ownership
+
+```js
+const launched = await launchBrowser({
+  debug: {
+    directory: '/application-data/evidence',
+    retain: false,
+    maxDurationMs: 60_000,
+    limits: { maxBundleBytes: 8 * 1024 * 1024 },
+  },
+});
+const commander = makeBrowserCommander({ page: launched.page });
+try {
+  await commander.goto({ url: 'https://example.com' });
+  // Await commander.ready before driving the raw page directly.
+} finally {
+  try {
+    await commander.destroy();
+  } finally {
+    await launched.close();
+  }
+}
+```
+
+`debug.directory` creates a fresh private `session-*` child below that root;
+`tracePath` exposes its absolute path, logged once to stderr. Launch and commander
+share the recording and its retention policy. The default managed limits are
+8 MiB of bundle data, 1 MiB per resource and 60 seconds of capture. The recorder
+stops at the duration limit; exceeding the data limit drops records and marks
+the manifest partial. These are data budgets: manifest metadata, optional HAR,
+viewer/export overhead and filesystem allocation add storage beyond that number.
+Managed mode disables automatic rotation and the `trace.lino` side export;
+`limits.rotate`, `links` exports, external HAR paths and simultaneous `debug.output`
+are rejected before writing. Network metadata remains captured, with HAR off
+unless explicitly requested. Managed byte and duration limits must be finite
+positive integers. Explicit `startTrace()` or `debug.output` retains the existing
+rotation and Links export APIs when those capabilities are needed.
+
+`retain` defaults to `true`: stopping finishes files and leaves them for the
+caller to review, archive or remove. `retain: false` deletes only the generated
+child after stopping, including when finalization fails. It requires managed
+mode; caller-supplied `output` directories are never automatically removed.
+Failed managed startup removes its unfinished child and detaches capture
+listeners. Runtime recording failures are reported to stderr; invalid managed
+configuration rejects `commander.ready` or `launchBrowser()`.
+
+`await commander.stopDebug()` or `await launched.stopDebug()` stops capture
+without closing the browser. `stopDebug({ discard: true })` deletes a managed
+child; `stopDebug({ discard: false })` retains it even with `retain: false`.
+The first successful stop request determines retention; repeated calls share
+its result. A retained recording becomes the caller's cleanup responsibility.
+`commander.destroy()`, launch `close()`/`detach()`, and browser `close()` also stop
+debug recording. Always await teardown in `finally`, including after failed
+navigation. Teardown does not close a raw page supplied to a commander.
+
+Applications own signal handlers. The debug recorder installs no global signal
+or exit handlers; handlers should stop accepting work, await recording/commander
+teardown and then close or detach the owned browser. Register handlers with
+`process.on` and keep them installed through teardown: browser process dependencies
+may also forward SIGINT and inspect other registered handlers before exiting. Run
+[the managed recording example](../examples/managed-debug-session.mjs) with an
+absolute evidence directory; `--wait-for-signal` demonstrates awaited cleanup on
+SIGINT/SIGTERM. SIGKILL, crashes and power loss cannot run asynchronous cleanup;
+the application must sweep abandoned children in its evidence root. Retained
+sessions also need an application-wide retention/storage policy: per-session
+bounds do not limit the number of runs.
 
 Plain `startTrace({ page, output })` defaults to continuous DOM changes, an initial
 snapshot, live state, console/errors, actions and network request/response metadata

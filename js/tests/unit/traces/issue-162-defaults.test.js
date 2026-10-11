@@ -1,3 +1,4 @@
+import { clearDebugEnvironment } from '../../helpers/debug-environment.js';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -19,23 +20,12 @@ describe('complete recording defaults (issue #162)', { timeout: 15000 }, () => {
     const output = await fs.mkdtemp(path.join(os.tmpdir(), 'bc-defaults-'));
     const page = createFakePage();
     const commander = createFakeCommander(page, { destroy: async () => {} });
-    const previous = { ...process.env };
-    delete process.env.BROWSER_COMMANDER_DEBUG;
-    delete process.env.BROWSER_COMMANDER_TRACE;
+    const restoreEnvironment = clearDebugEnvironment();
     try {
       await run({ output, page, commander });
     } finally {
       await commander.destroy();
-      for (const key of [
-        'BROWSER_COMMANDER_DEBUG',
-        'BROWSER_COMMANDER_TRACE',
-      ]) {
-        if (previous[key] === undefined) {
-          delete process.env[key];
-        } else {
-          process.env[key] = previous[key];
-        }
-      }
+      restoreEnvironment();
       await fs.rm(output, { recursive: true, force: true });
     }
   }
@@ -112,7 +102,7 @@ describe('complete recording defaults (issue #162)', { timeout: 15000 }, () => {
     });
   });
 
-  it('records the very first call with no options and chooses a unique session directory', async () => {
+  it('records the very first call with debug:true and chooses a unique session directory', async () => {
     await fixture(async ({ output, page }) => {
       const cwd = process.cwd();
       process.chdir(output);
@@ -123,6 +113,7 @@ describe('complete recording defaults (issue #162)', { timeout: 15000 }, () => {
       try {
         commander = makeBrowserCommander({
           page,
+          debug: true,
           enableNetworkTracking: false,
           enableNavigationManager: false,
           enableDialogManager: false,

@@ -8,7 +8,8 @@ import {
 import { assertSupportedEngine } from './connector.js';
 import { emulateMedia } from './media.js';
 import { reserveLoopbackPort } from './debugging-port.js';
-import { attachLaunchDebug } from '../traces/debug-session.js';
+import { attachLaunchDebug, debugEnabled } from '../traces/debug-session.js';
+import { validateDebugConfig } from '../traces/debug-output.js';
 import {
   buildPlaywrightLaunchOptions,
   buildPuppeteerLaunchOptions,
@@ -307,6 +308,7 @@ async function unfocusAddressBar(page, verbose, settleMs = 500) {
  * @param {Object} [options.fingerprint] - Environment fields to present to pages, such as userAgent, timezone, locale, hardwareConcurrency or screen. Applied over CDP after launch; see src/fingerprint/profile.js for the full field list and presets.js for ready-made profiles.
  * @param {boolean} [options.automationParity=true] - Keep navigator.webdriver false where a launch switch would turn it on (headless or engine launches)
  * @param {boolean|Object} [options.downloads] - Manage downloads: true for defaults, or {directory, persist, conflict}. The directory may be an absolute path, 'user-downloads' or 'temporary'.
+ * @param {boolean|Object} [options.debug=false] - Opt-in recording: true, {output}, or {directory, retain, maxDurationMs, limits} for managed storage
  * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, launch: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>}>} Browser (a BrowserContext for Playwright), page, download manager and launch metadata
  */
 export async function launchBrowser(options = {}) {
@@ -318,6 +320,9 @@ export async function launchBrowserWithDependencies(
   options = {},
   dependencies = {}
 ) {
+  if (debugEnabled(options) && typeof options.debug === 'object') {
+    validateDebugConfig(options.debug);
+  }
   if (options.keepOpen) {
     const { connectOrLaunch } = await import('./persistent-session.js');
     return attachLaunchDebug(

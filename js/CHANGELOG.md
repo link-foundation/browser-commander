@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.30.1
+
+### Patch Changes
+
+- aee418c: Upgrade Command Stream to ^2.0.2 to remove the vulnerable ShellJS/braces dependency chain from fresh consumer installations while preserving subprocess and detached browser launch behavior.
+
 ## 0.30.0
 
 ### Minor Changes

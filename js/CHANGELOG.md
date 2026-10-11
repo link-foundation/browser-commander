@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.31.1
+
+### Patch Changes
+
+- c8f52e3: Upgrade Links Notation to ^0.25.2 so consumers using 0.25.2 can share one copy without an override. Preserve trace text containing lone UTF-16 surrogates, verify export/import and streaming compatibility, and document the new empty/control-value literals for consumers upgrading older parsers.
+
 ## 0.31.0
 
 ### Minor Changes

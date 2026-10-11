@@ -90,7 +90,10 @@ def assert_dedicated_user_data_dir(
     def normalize(value: str | os.PathLike[str]) -> str:
         raw = os.fspath(value)
         if selected_platform == sys.platform:
-            raw = str(Path(raw).resolve())
+            try:
+                raw = str(Path(raw).resolve())
+            except PermissionError:
+                raw = str(Path(raw).absolute())
         normalized = path_module.normcase(path_module.abspath(raw))
         return normalized.rstrip("\\/")
 

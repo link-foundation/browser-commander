@@ -35,6 +35,9 @@ const BROWSER_OPTIONS = Object.freeze({
   bidi: FLAG,
   'remote-debugging-port': STRING,
   'idle-timeout-ms': STRING,
+  'adopt-existing': FLAG,
+  'close-new-tabs': FLAG,
+  'no-defaults': FLAG,
 });
 
 /** Options accepted by every page command. */

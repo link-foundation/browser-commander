@@ -34,6 +34,15 @@ pub(crate) struct MutationStream {
 }
 
 impl MutationStream {
+    pub fn privacy_attributes(&mut self, attributes: &[String], use_defaults: bool) {
+        if let Json::Object(options) = &mut self.recorder_options {
+            options.insert(
+                "redactAttributes",
+                Json::Array(attributes.iter().map(Json::from).collect()),
+            );
+            options.insert("useDefaults", use_defaults);
+        }
+    }
     pub fn ignore_selectors(&mut self, selectors: &[String]) {
         if let Json::Object(options) = &mut self.recorder_options {
             options.insert(

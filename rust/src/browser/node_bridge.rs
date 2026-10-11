@@ -281,7 +281,7 @@ fn launch_params(
 }
 
 fn connect_params(options: &ConnectOptions, color_scheme: Option<&ColorScheme>) -> Value {
-    json!({
+    let mut params = json!({
         "colorScheme": color_scheme.map(ColorScheme::as_str),
         "engine": options.engine.to_string(),
         "cdpEndpoint": options.cdp_endpoint,
@@ -294,7 +294,13 @@ fn connect_params(options: &ConnectOptions, color_scheme: Option<&ColorScheme>) 
         "targetId": options.target_id,
         "url": options.url,
         "singleTab": options.single_tab,
-    })
+        "urlMatchers": options.url_matchers,
+        "fallback": options.fallback,
+    });
+    if let Some(no_defaults) = options.no_defaults {
+        params["noDefaults"] = json!(no_defaults);
+    }
+    params
 }
 
 fn duration_millis(duration: Option<std::time::Duration>) -> Option<u64> {
@@ -749,5 +755,15 @@ mod tests {
         let params = connect_params(&ConnectOptions::playwright(), Some(&ColorScheme::Dark));
 
         assert_eq!(params["colorScheme"], "dark");
+    }
+
+    #[test]
+    fn connect_params_preserve_omitted_and_explicit_no_defaults() {
+        let mut options = ConnectOptions::playwright();
+        assert!(connect_params(&options, None).get("noDefaults").is_none());
+        for value in [false, true] {
+            options.no_defaults = Some(value);
+            assert_eq!(connect_params(&options, None)["noDefaults"], value);
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 A Rust library for universal browser automation that provides a unified API for different browser automation engines. The key focus is on **stoppable page triggers** - ensuring automation logic is properly mounted/unmounted during page navigation.
 
-See [engine support and native/CLI defaults](../docs/engine-support.md) for the
+See [engine support and native/CLI defaults](https://github.com/link-foundation/browser-commander/blob/main/docs/engine-support.md) for the
 cross-language API matrix and Selenium examples.
 
 ## Installation
@@ -85,6 +85,10 @@ async fn main() -> anyhow::Result<()> {
 - **Portable trace bundles, recorded and read the same way in every supported language**
 - **Async/await support with Tokio**
 
+For trace budgets/privacy, persistent session adoption and heartbeats, CDP
+`noDefaults`, overlay reporting, and the `readyOn`/`concurrency` trigger migration,
+see [trace and session hardening](https://github.com/link-foundation/browser-commander/blob/f5e426d6933c681189c4989bac182a1558d8edb8/docs/trace-session-hardening.md).
+
 ## API Reference
 
 ### Browser Launch
@@ -105,7 +109,7 @@ let result = launch_browser(options).await?;
 By default Browser Commander starts the installed browser the way a person
 would: `--user-data-dir=<fresh temporary profile>
 --remote-debugging-port=<reserved port> about:blank` and nothing else (see
-[Launch Command Line and Opt-In Restrictions](../docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
+[Launch Command Line and Opt-In Restrictions](https://github.com/link-foundation/browser-commander/blob/main/docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
 Switches the library used to add, such as `--password-store=basic`, are opt-in
 `restrictions` (the `legacy-defaults` preset restores the old set).
 `LaunchMode::Engine` keeps the engine launcher, `ignore_all_default_args()`
@@ -486,7 +490,7 @@ relay in Rust, without Node.js. It returns typed tabs and CDP session handles
 with bounded event subscriptions. `write_extension_directory(path)` extracts
 the bundled extension for Chrome's **Load unpacked** dialog. Configure
 `allowed_extension_ids` to restrict the accepted installed extension.
-[Native extension relay](../docs/extension-relay.md) documents startup,
+[Native extension relay](https://github.com/link-foundation/browser-commander/blob/main/docs/extension-relay.md) documents startup,
 shutdown, resource limits and examples for both native packages.
 
 ### Live Profile Snapshots
@@ -537,7 +541,7 @@ include `--no-sandbox` in `reference_args` so both captures use the same setting
 
 ### Portable Traces
 
-See [capture, debugging and reusable sessions](../docs/capture-and-debugging.md)
+See [capture, debugging and reusable sessions](https://github.com/link-foundation/browser-commander/blob/main/docs/capture-and-debugging.md)
 for screenshots, recordings, full/text DOM links, network/HAR, rotation,
 persistent browsers, early trigger readiness and engine capability limits.
 
@@ -677,4 +681,4 @@ println!("User data dir: {:?}", result.browser.user_data_dir);
 
 [UNLICENSE](../LICENSE)
 
-See [navigation budgets, launch diagnostics, reusable helpers and sessions](../docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.
+See [navigation budgets, launch diagnostics, reusable helpers and sessions](https://github.com/link-foundation/browser-commander/blob/main/docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.

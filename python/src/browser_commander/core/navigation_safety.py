@@ -42,6 +42,7 @@ def is_navigation_error(error: Exception) -> bool:
 
     # Common Playwright navigation error patterns
     playwright_patterns = [
+        "net::err_aborted",
         "navigation",
         "frame was detached",
         "execution context was destroyed",

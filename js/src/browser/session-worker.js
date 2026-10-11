@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { connectBrowser } from './connector.js';
 import {
   connectOrLaunch,
   SESSION_METADATA,
@@ -45,6 +46,15 @@ if (options.operation) {
           metadata.targetId = options.targetId;
         }
         await writeSessionMetadata(file, metadata);
+        if (options.closeNewTabs) {
+          const connection = await connectBrowser({
+            cdpEndpoint: `http://127.0.0.1:${metadata.remoteDebuggingPort}`,
+            targetId: metadata.targetId,
+            singleTab: true,
+            noDefaults: true,
+          });
+          await connection.detach();
+        }
       } else {
         throw new TypeError('Unknown session operation');
       }
@@ -65,6 +75,8 @@ if (options.operation) {
       reused: session.reused,
       token: metadata.token,
       targetId: metadata.targetId,
+      idleTimeoutMs: metadata.idleTimeoutMs,
+      adopted: session.adopted,
     })
   );
 }

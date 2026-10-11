@@ -15,7 +15,7 @@ from .bundle import TraceBundle
 from .engine import EngineDriver, error_message, load_assets, with_deadline
 from .identity import TraceIdentity
 from .jsonfmt import coalesce, js_number
-from .redaction import REDACTED, PrivacyOptions
+from .redaction import REDACTED, PrivacyOptions, redact_value
 from .schema import TraceDropReason, TraceEvent
 
 #: How many records a document queues before it starts dropping them.
@@ -49,6 +49,7 @@ class MutationStream:
         self._note = note
         self._timeout = capture_timeout_ms
         self._evaluate_in_page = evaluate_in_page
+        self._privacy = privacy
         self.enabled = bool(dom_options.get("mutations"))
         self.options = {
             "globalName": self._global,
@@ -56,6 +57,8 @@ class MutationStream:
                 "ignoreSelectors", dom_options.get("ignore_selectors", [])
             ),
             "redactSelectors": privacy.redact_selectors,
+            "redactAttributes": privacy.redact_attributes,
+            "useDefaults": privacy.use_defaults,
             "redacted": REDACTED,
             "maxQueued": coalesce(
                 limits.get("maxQueuedMutations"), DEFAULT_MAX_QUEUED_MUTATIONS
@@ -146,7 +149,9 @@ class MutationStream:
             # by frame; one ordered file is what a replay reads.
             batches.sort(key=lambda batch: coalesce(batch.get("at"), 0))
 
-            member = self._bundle.write_mutations(index, batches)
+            member = self._bundle.write_mutations(
+                index, redact_value(batches, self._privacy)
+            )
             if member:
                 self._record(
                     TraceEvent.MUTATIONS,
@@ -155,6 +160,7 @@ class MutationStream:
                         "batches": len(batches),
                         "checkpoint": index,
                         "frames": len(drained),
+                        "truncated": self._bundle.mutation_truncated,
                     },
                 )
             return member

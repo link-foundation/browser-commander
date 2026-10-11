@@ -45,11 +45,17 @@ async function connectSelenium(options, dependencies) {
         ...options,
         debuggerAddress: new URL(options.cdpEndpoint).host,
       });
-  await selectWebDriverTab(connected.driver, options);
+  try {
+    await selectWebDriverTab(connected.driver, options);
+  } catch (error) {
+    await ignoreCleanup(() => connected.close());
+    throw error;
+  }
   return {
     ...connected,
     browser: connected.driver,
     disconnect: connected.close,
+    detach: connected.close,
   };
 }
 
@@ -60,11 +66,14 @@ async function selectWebDriverTab(driver, options) {
   const original = await driver.getWindowHandle();
   const handles = await driver.getAllWindowHandles();
   let selected = original;
-  if (options.targetId || options.url) {
+  const matchers = urlMatchers(options);
+  if (options.targetId || matchers.length) {
     selected = null;
+    const tabs = [];
     for (const handle of handles) {
       if (
         options.targetId &&
+        !options.fallback &&
         handle !== options.targetId &&
         handle !== `CDwindow-${options.targetId}`
       ) {
@@ -72,22 +81,26 @@ async function selectWebDriverTab(driver, options) {
       }
       await driver.switchTo().window(handle);
       const url = await driver.getCurrentUrl();
-      if (
-        options.url &&
-        !(typeof options.url === 'function'
-          ? options.url(url)
-          : options.url instanceof RegExp
-            ? options.url.test(url)
-            : url === options.url)
-      ) {
-        continue;
-      }
-      selected = handle;
-      break;
+      tabs.push({ handle, url });
     }
+    selected = matchers.length
+      ? matchers
+          .map(
+            (matcher) =>
+              tabs.find((tab) => matchesUrl(matcher, tab.url))?.handle
+          )
+          .find(Boolean)
+      : tabs.find(
+          (tab) =>
+            tab.handle === options.targetId ||
+            tab.handle === `CDwindow-${options.targetId}`
+        )?.handle;
     if (!selected) {
-      await driver.switchTo().window(original);
-      throw new Error('No tab matches the requested targetId or URL');
+      if (!options.fallback) {
+        await driver.switchTo().window(original);
+        throw new Error('No tab matches the requested targetId or URL');
+      }
+      selected = handles.includes(original) ? original : handles[0];
     }
   }
   if (options.singleTab) {
@@ -108,8 +121,13 @@ function addDefinedOptions(options, values) {
   return options;
 }
 
-function buildPlaywrightConnectOptions({ slowMo, timeout, headers }) {
-  return addDefinedOptions({}, { slowMo, timeout, headers });
+function buildPlaywrightConnectOptions({
+  slowMo,
+  timeout,
+  headers,
+  noDefaults,
+}) {
+  return addDefinedOptions({}, { slowMo, timeout, headers, noDefaults });
 }
 
 function buildPuppeteerConnectOptions({
@@ -128,6 +146,55 @@ function buildPuppeteerConnectOptions({
     },
     { slowMo, protocolTimeout, headers }
   );
+}
+
+export function matchesUrl(matcher, url) {
+  if (matcher instanceof RegExp) {
+    matcher.lastIndex = 0;
+    return matcher.test(url);
+  }
+  return typeof matcher === 'function' ? matcher(url) : matcher === url;
+}
+
+function urlMatchers(options) {
+  return (
+    options.urlMatchers ??
+    (Array.isArray(options.url)
+      ? options.url
+      : options.url
+        ? [options.url]
+        : [])
+  );
+}
+
+async function ignoreCleanup(cleanup) {
+  try {
+    await cleanup();
+  } catch {
+    /* Preserve the connection failure. */
+  }
+}
+
+function requestedPage(pages, targets, options) {
+  const matchers = urlMatchers(options);
+  if (!options.targetId && !matchers.length) {
+    return undefined;
+  }
+  const candidates = options.targetId
+    ? pages.filter((page) => targets.get(page) === options.targetId)
+    : pages;
+  const eligible = candidates.length || !options.fallback ? candidates : pages;
+  const selected = matchers.length
+    ? matchers
+        .map((matcher) =>
+          eligible.find((page) => matchesUrl(matcher, page.url()))
+        )
+        .find(Boolean)
+    : candidates[0];
+  if (!selected && !options.fallback) {
+    throw new RangeError('No tab matches the requested targetId/URL');
+  }
+  return selected;
 }
 
 async function prepareStorageState({ storageState, seedCookies }) {
@@ -180,30 +247,10 @@ export async function pickForegroundPage(pages, options = {}) {
       // Non-Chromium engines do not expose CDP. Explicit URL matching still
       // works there, and normal visibility is not affected by this emulation.
     } finally {
-      await session?.detach?.().catch(() => {});
+      await ignoreCleanup(() => session?.detach?.());
     }
   }
-  let selected;
-  if (options.targetId || options.url) {
-    selected = pages.find((page) => {
-      if (options.targetId && targets.get(page) !== options.targetId) {
-        return false;
-      }
-      const url = page.url();
-      const matcher = options.url;
-      if (matcher instanceof RegExp) {
-        matcher.lastIndex = 0;
-        return matcher.test(url);
-      }
-      if (typeof matcher === 'function') {
-        return matcher(url);
-      }
-      return !matcher || matcher === url;
-    });
-    if (!selected) {
-      throw new RangeError('No tab matches the requested targetId/URL');
-    }
-  }
+  let selected = requestedPage(pages, targets, options);
   if (!selected) {
     for (const page of pages) {
       if (typeof page?.evaluate !== 'function') {
@@ -232,20 +279,38 @@ export async function pickForegroundPage(pages, options = {}) {
 async function connectPlaywright({ options, loadPlaywright, storageState }) {
   const { chromium } = await loadPlaywright();
   const endpoint = options.cdpEndpoint ?? options.wsEndpoint;
-  const browser = await chromium.connectOverCDP(
-    endpoint,
-    buildPlaywrightConnectOptions(options)
-  );
-  const context = browser.contexts()[0];
-  if (!context) {
-    throw new Error('Connected Playwright browser has no default context');
+  const settings = buildPlaywrightConnectOptions(options);
+  let browser;
+  try {
+    browser = await chromium.connectOverCDP(endpoint, settings);
+  } catch (error) {
+    if (
+      settings.noDefaults !== undefined ||
+      !/Browser\.setDownloadBehavior/.test(error.message) ||
+      !/Browser context management is not supported/.test(error.message)
+    ) {
+      throw error;
+    }
+    browser = await chromium.connectOverCDP(endpoint, {
+      ...settings,
+      noDefaults: true,
+    });
   }
-  const page =
-    (await pickForegroundPage(context.pages(), options)) ??
-    (await context.newPage());
+  try {
+    const context = browser.contexts()[0];
+    if (!context) {
+      throw new Error('Connected Playwright browser has no default context');
+    }
+    const page =
+      (await pickForegroundPage(context.pages(), options)) ??
+      (await context.newPage());
 
-  await restorePlaywrightStorageState({ context, storageState });
-  return { browser, page, detach: browser.close?.bind(browser) };
+    await restorePlaywrightStorageState({ context, storageState });
+    return { browser, page, detach: browser.close?.bind(browser) };
+  } catch (error) {
+    await ignoreCleanup(() => browser.close?.());
+    throw error;
+  }
 }
 
 async function connectPuppeteer({ options, loadPuppeteer, storageState }) {
@@ -254,12 +319,17 @@ async function connectPuppeteer({ options, loadPuppeteer, storageState }) {
   const browser = await puppeteer.connect(
     buildPuppeteerConnectOptions(options)
   );
-  const page =
-    (await pickForegroundPage(await browser.pages(), options)) ??
-    (await browser.newPage());
+  try {
+    const page =
+      (await pickForegroundPage(await browser.pages(), options)) ??
+      (await browser.newPage());
 
-  await restorePuppeteerStorageState({ page, storageState });
-  return { browser, page, detach: browser.disconnect?.bind(browser) };
+    await restorePuppeteerStorageState({ page, storageState });
+    return { browser, page, detach: browser.disconnect?.bind(browser) };
+  } catch (error) {
+    await ignoreCleanup(() => browser.disconnect?.());
+    throw error;
+  }
 }
 
 /**
@@ -313,7 +383,7 @@ export async function connectBrowserWithDependencies(
       });
       return { ...result, downloads };
     } catch (error) {
-      await result.close();
+      await ignoreCleanup(() => result.close());
       throw error;
     }
   }
@@ -346,14 +416,19 @@ export async function connectBrowserWithDependencies(
 
   // An attached browser gets the same managed lifecycle as a launched one:
   // the manager is built from the browser and page, not from how we got them.
-  const downloads = await attachDownloads({
-    engine,
-    browser: result.browser,
-    page: result.page,
-    downloads: normalizedOptions.downloads,
-  });
+  try {
+    const downloads = await attachDownloads({
+      engine,
+      browser: result.browser,
+      page: result.page,
+      downloads: normalizedOptions.downloads,
+    });
 
-  return { ...result, downloads };
+    return { ...result, downloads };
+  } catch (error) {
+    await ignoreCleanup(() => result.detach?.());
+    throw error;
+  }
 }
 
 export { buildPlaywrightConnectOptions, buildPuppeteerConnectOptions };

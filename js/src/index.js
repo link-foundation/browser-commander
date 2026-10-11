@@ -20,3 +20,5 @@ export {
 export * from './exports.js';
 export * from './capture/index.js';
 export { connectOrLaunch } from './browser/persistent-session.js';
+
+export { renderTrace, summarizeTrace } from './traces/render.js';

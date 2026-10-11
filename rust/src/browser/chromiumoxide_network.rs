@@ -67,7 +67,7 @@ pub(crate) async fn observe(
                 if !state.2.allows(url,&resource) {state.3.remove(&id);continue;}
                 let timestamp=event["timestamp"].as_f64().unwrap_or(0.0);
                 let mut payload=json!({"requestId":format!("{id}:{timestamp}"),"url":url,"method":request["method"],"resourceType":resource,"headers":headers(&request["headers"]),"timing":{"startTime":event["wallTime"].as_f64().unwrap_or(0.0)*1000.0}});
-                if state.2.bodies && ["document","xhr","fetch"].contains(&resource.as_str()) {if let Some(body)=request["postData"].as_str() {let bounded=body.chars().scan(0_usize,|size,c|{*size+=c.len_utf8();(*size<=state.2.max_body_bytes).then_some(c)}).collect::<String>();payload["postData"]=json!(bounded);payload["postDataTruncated"]=json!(body.len()>state.2.max_body_bytes);}}
+                if state.2.bodies && ["document","xhr","fetch"].contains(&resource.as_str()) {if let Some(body)=request["postData"].as_str() {payload["postData"]=json!(body);payload["postDataTruncated"]=json!(body.len()>state.2.max_body_bytes);}}
                 state.3.insert(id.clone(),(payload.clone(),timestamp));state.4.push_back(id);
                 while state.4.len()>1024 {if let Some(expired)=state.4.pop_front() {state.3.remove(&expired);}}
                 return Some((TraceEngineEvent::Network {kind:"network.request".into(),payload},state));
@@ -86,9 +86,9 @@ pub(crate) async fn observe(
                 payload["timing"]["responseEnd"]=json!((event["timestamp"].as_f64().unwrap_or(started)-started)*1000.0);
                 if kind=="failed" {payload["bodyError"]=event["errorText"].clone();} else {
                     let size=event["encodedDataLength"].as_f64().unwrap_or(0.0) as usize;
-                    if size>state.2.max_body_bytes {payload["body"]=json!({"size":size,"truncated":true,"data":""});} else {
+                    if !crate::traces::network::text_body(payload["contentType"].as_str().unwrap_or("")) {payload["body"]=json!({"size":size,"omitted":"binary"});} else if size>state.2.max_body_bytes {payload["body"]=json!({"size":size,"truncated":true,"omitted":"size limit"});} else {
                         match tokio::time::timeout(std::time::Duration::from_secs(5),state.1.execute(GetResponseBodyParams::new(id))).await {
-                            Ok(Ok(body))=>{let bytes=if body.result.base64_encoded {STANDARD.decode(&body.result.body).unwrap_or_default()} else {body.result.body.as_bytes().to_vec()};payload["body"]=json!({"size":bytes.len(),"truncated":bytes.len()>state.2.max_body_bytes,"data":STANDARD.encode(&bytes[..bytes.len().min(state.2.max_body_bytes)])});}
+                            Ok(Ok(body))=>{let bytes=if body.result.base64_encoded {STANDARD.decode(&body.result.body).unwrap_or_default()} else {body.result.body.as_bytes().to_vec()};payload["body"]=json!({"size":bytes.len(),"truncated":bytes.len()>state.2.max_body_bytes,"encoding":"utf8","data":String::from_utf8_lossy(&bytes).to_string()});}
                             Ok(Err(error))=>payload["bodyError"]=json!(error.to_string()),
                             Err(_)=>payload["bodyError"]=json!("network body timeout"),
                         }

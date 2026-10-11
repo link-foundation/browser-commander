@@ -38,7 +38,12 @@ export function attachCommanderFeatures(commander, options, recreate) {
   commander.gif = (frames, animationOptions = {}) =>
     encodeAnimation(frames, { ...animationOptions, format: 'gif' });
   commander.dismissOverlays = (overlays = options.overlays) =>
-    dismissOverlays({ page, engine, overlays });
+    dismissOverlays({
+      page,
+      engine,
+      overlays,
+      onDismiss: options.onOverlayDismiss,
+    });
   commander.startTrace = async (traceOptions = {}) =>
     track(await startTrace({ commander, page, ...traceOptions }));
   const output =

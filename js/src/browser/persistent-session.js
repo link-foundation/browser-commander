@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { connectBrowser, pickForegroundPage } from './connector.js';
 import { launchAndConnectRealBrowserWithDependencies } from './real-browser.js';
 import { assertDedicatedUserDataDir } from './system-browser.js';
+import { findSessionProcess } from './session-adoption.js';
 import { startDetachedProcess } from '../utilities/subprocess.js';
 
 export const SESSION_METADATA = '.browser-commander-session.json';
@@ -108,8 +109,22 @@ async function open(options, file, endpoint) {
   let metadata = await read(file);
   const version = await probeSession(endpoint);
   if (version) {
+    let adopted = false;
+    if (!metadata && options.adoptExisting) {
+      const pid = await findSessionProcess(options);
+      metadata = {
+        token: randomUUID(),
+        pid,
+        userDataDir: path.resolve(options.userDataDir),
+        remoteDebuggingPort: options.remoteDebuggingPort,
+        webSocketDebuggerUrl: version.webSocketDebuggerUrl,
+      };
+      adopted = true;
+    }
     if (
       !metadata ||
+      path.resolve(metadata.userDataDir ?? '') !==
+        path.resolve(options.userDataDir) ||
       metadata.remoteDebuggingPort !== options.remoteDebuggingPort ||
       metadata.webSocketDebuggerUrl !== version.webSocketDebuggerUrl
     ) {
@@ -119,9 +134,13 @@ async function open(options, file, endpoint) {
       ...options,
       cdpEndpoint: endpoint,
       targetId:
-        options.targetId ?? (!options.url ? metadata.targetId : undefined),
+        options.targetId ??
+        (!options.url && !options.urlMatchers?.length
+          ? metadata.targetId
+          : undefined),
+      fallback: !options.targetId,
     });
-    return { session, metadata, reused: true };
+    return { session, metadata, reused: true, adopted };
   }
   const session = await launchAndConnectRealBrowserWithDependencies(
     { ...options, keepOpen: false },
@@ -177,7 +196,7 @@ export async function closeOwnedSession(file, metadata) {
   await fs.rm(file, { force: true });
 }
 async function lifecycle(
-  { session, metadata, reused },
+  { session, metadata, reused, adopted },
   options,
   file,
   endpoint
@@ -212,11 +231,48 @@ async function lifecycle(
     value.off?.('framenavigated', touch);
   };
   await remember(page, engine, file, metadata, idleTimeoutMs);
+  if (!reused || adopted) {
+    await startDetachedProcess(process.execPath, [
+      fileURLToPath(new URL('./session-watchdog.js', import.meta.url)),
+      file,
+      metadata.token,
+    ]);
+  }
   bind(page);
+  const heartbeat = setInterval(
+    touch,
+    Math.max(20, Math.min(30_000, idleTimeoutMs / 3))
+  );
+  heartbeat.unref?.();
+  const tabSource = engine === 'playwright' ? page.context() : session.browser;
+  const tabTasks = new Set();
+  let selecting = false;
+  const closeNewTab = (value) => {
+    const task = Promise.resolve()
+      .then(async () => {
+        const candidate =
+          engine === 'playwright' ? value : await value.page?.();
+        if (candidate && candidate !== page && !disconnected && !selecting) {
+          await candidate.close();
+        }
+      })
+      .catch((error) =>
+        options.log?.debug?.(() => `session tab close: ${error.message}`)
+      );
+    tabTasks.add(task);
+    void task.finally(() => tabTasks.delete(task));
+  };
+  const tabEvent = engine === 'playwright' ? 'page' : 'targetcreated';
+  if (options.closeNewTabs) {
+    tabSource.on?.(tabEvent, closeNewTab);
+  }
   const detach = async () => {
     if (disconnected) {
       return;
     }
+    clearInterval(heartbeat);
+    tabSource.off?.(tabEvent, closeNewTab);
+    await Promise.allSettled([...tabTasks]);
     touch();
     await activityQueue;
     unbind(page);
@@ -248,51 +304,65 @@ async function lifecycle(
     close,
     touch,
     reused,
+    adopted: Boolean(adopted),
     cdpEndpoint: endpoint,
     userDataDir: path.resolve(options.userDataDir),
     remoteDebuggingPort: options.remoteDebuggingPort,
     temporaryProfile: false,
   };
   result.reusePage = async (selection = {}) => {
-    if (disconnected) {
-      throw new Error('Persistent controller is detached');
-    }
-    const release = await acquireLease(`${file}.lock`);
+    selecting = true;
     try {
-      const current = await read(file);
-      if (current?.token !== metadata.token) {
-        throw new Error('Persistent session ownership changed');
+      if (disconnected) {
+        throw new Error('Persistent controller is detached');
       }
-      const pages =
-        engine === 'playwright'
-          ? page.context().pages()
-          : await session.browser.pages();
-      const selected = await pickForegroundPage(pages, {
-        targetId:
-          selection.targetId ??
-          (!selection.url ? metadata.targetId : undefined),
-        ...selection,
-      });
-      if (!selected) {
-        throw new Error('No reusable browser page');
+      const release = await acquireLease(`${file}.lock`);
+      try {
+        const current = await read(file);
+        if (current?.token !== metadata.token) {
+          throw new Error('Persistent session ownership changed');
+        }
+        const pages =
+          engine === 'playwright'
+            ? page.context().pages()
+            : await session.browser.pages();
+        const selected =
+          (await pickForegroundPage(pages, {
+            targetId:
+              selection.targetId ??
+              (!selection.url && !selection.urlMatchers?.length
+                ? metadata.targetId
+                : undefined),
+            fallback: !selection.targetId,
+            ...selection,
+          })) ??
+          (engine === 'playwright'
+            ? await page.context().newPage()
+            : await session.browser.newPage());
+        unbind(page);
+        page = selected;
+        bind(page);
+        result.page = page;
+        await remember(page, engine, file, metadata, idleTimeoutMs);
+      } finally {
+        await release();
       }
-      unbind(page);
-      page = selected;
-      bind(page);
-      result.page = page;
-      await remember(page, engine, file, metadata, idleTimeoutMs);
+      return page;
     } finally {
-      await release();
+      selecting = false;
+      if (options.closeNewTabs && !disconnected) {
+        const pages =
+          engine === 'playwright'
+            ? page.context().pages()
+            : await session.browser.pages();
+        await Promise.allSettled(
+          pages
+            .filter((candidate) => candidate !== page)
+            .map((candidate) => candidate.close())
+        );
+      }
     }
-    return page;
   };
-  if (!reused) {
-    await startDetachedProcess(process.execPath, [
-      fileURLToPath(new URL('./session-watchdog.js', import.meta.url)),
-      file,
-      metadata.token,
-    ]);
-  }
   return result;
 }
 export async function closeRemoteBrowser(endpoint) {
@@ -350,8 +420,10 @@ export async function connectOrLaunch(settings = {}) {
     owned = await open(options, file, endpoint);
     return await lifecycle(owned, options, file, endpoint);
   } catch (error) {
-    if (owned && !owned.reused) {
-      await owned.session.close().catch(() => {});
+    if (owned) {
+      await (
+        owned.reused ? owned.session.detach() : owned.session.close()
+      ).catch(() => {});
     }
     throw error;
   } finally {

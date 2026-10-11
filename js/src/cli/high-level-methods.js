@@ -54,6 +54,13 @@ async function connectSession(state, params) {
     ...endpoint,
     ...(params.targetId ? { targetId: params.targetId } : {}),
     ...(params.urlMatcher ? { url: params.urlMatcher } : {}),
+    ...(params.noDefaults !== undefined
+      ? { noDefaults: params.noDefaults }
+      : {}),
+    ...(params.urlMatchers !== undefined
+      ? { urlMatchers: params.urlMatchers }
+      : {}),
+    ...(params.fallback !== undefined ? { fallback: params.fallback } : {}),
     ...(params.singleTab !== undefined ? { singleTab: params.singleTab } : {}),
     ...(params.driverPath ? { driverPath: params.driverPath } : {}),
     ...(params.bidi !== undefined ? { bidi: params.bidi } : {}),

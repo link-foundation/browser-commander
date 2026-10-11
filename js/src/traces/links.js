@@ -583,7 +583,9 @@ export async function openTraceLinks(options = {}) {
   const file = await resolveOutput(output);
   const sections = chosenSections(include);
   const problems = [];
-  const seenDom = new Set();
+  // Only the current interval is remembered; completed intervals never recur.
+  let mutationMember = null;
+  let mutationOffset = 0;
 
   await fs.mkdir(path.dirname(file), { recursive: true });
   const handle = await fs.open(file, 'w', 0o600);
@@ -626,7 +628,7 @@ export async function openTraceLinks(options = {}) {
      * @param {Object} event - The event as written to the bundle
      * @returns {Promise<void>}
      */
-    async event(event) {
+    async event(event, source = {}) {
       if (!event) {
         return;
       }
@@ -636,7 +638,45 @@ export async function openTraceLinks(options = {}) {
         bundlePath &&
         [TRACE_EVENT.CHECKPOINT, TRACE_EVENT.MUTATIONS].includes(event.kind)
       ) {
-        const opened = await readTrace(bundlePath);
+        const root = source.root ?? bundlePath;
+        let batches = [];
+        if (event.kind === TRACE_EVENT.MUTATIONS) {
+          const member = path.join(root, event.member);
+          if (member !== mutationMember) {
+            mutationMember = member;
+            mutationOffset = 0;
+          }
+          const input = await fs.open(member, 'r');
+          try {
+            const size = (await input.stat()).size;
+            const bytes = Buffer.alloc(Math.max(0, size - mutationOffset));
+            await input.read(bytes, 0, bytes.length, mutationOffset);
+            mutationOffset = size;
+            batches = bytes
+              .toString('utf8')
+              .split('\n')
+              .filter(Boolean)
+              .map(JSON.parse);
+          } finally {
+            await input.close();
+          }
+        }
+        const opened = {
+          html: () =>
+            event.members?.html
+              ? fs.readFile(path.join(root, event.members.html), 'utf8')
+              : null,
+          state: async () =>
+            event.members?.state
+              ? JSON.parse(
+                  await fs.readFile(
+                    path.join(root, event.members.state),
+                    'utf8'
+                  )
+                )
+              : null,
+          mutations: () => batches,
+        };
         await append(
           await domLinks(
             {
@@ -644,8 +684,7 @@ export async function openTraceLinks(options = {}) {
               checkpoints: event.kind === TRACE_EVENT.CHECKPOINT ? [event] : [],
               events: event.kind === TRACE_EVENT.MUTATIONS ? [event] : [],
             },
-            dom,
-            seenDom
+            dom
           )
         );
       }

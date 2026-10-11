@@ -3,7 +3,11 @@ use super::{
     jsonfmt::{Json, JsonObject},
     links::{field, Link},
 };
-use std::{collections::HashSet, fs, path::Path};
+use std::{
+    fs,
+    io::{Read, Seek, SeekFrom},
+    path::Path,
+};
 
 fn link(name: &str, values: Vec<Option<Link>>) -> Link {
     Link::new(name, values.into_iter().flatten().collect())
@@ -13,7 +17,7 @@ pub(crate) fn event_links(
     root: &Path,
     event: &JsonObject,
     dom: &str,
-    seen: &mut HashSet<String>,
+    seen: &mut (String, u64),
 ) -> Vec<Link> {
     let mut links = Vec::new();
     let kind = event.get("kind").and_then(Json::as_str).unwrap_or("");
@@ -52,22 +56,25 @@ pub(crate) fn event_links(
     let Some(member) = event.get("member").and_then(Json::as_str) else {
         return links;
     };
-    let Ok(body) = fs::read_to_string(root.join(member)) else {
+    let path = root.join(member).to_string_lossy().into_owned();
+    if seen.0 != path {
+        *seen = (path, 0);
+    }
+    let Ok(mut source) = fs::File::open(root.join(member)) else {
         return links;
     };
+    if source.seek(SeekFrom::Start(seen.1)).is_err() {
+        return links;
+    }
+    let mut body = String::new();
+    if source.read_to_string(&mut body).is_err() {
+        return links;
+    }
+    seen.1 += body.len() as u64;
     for line in body.lines() {
         let Ok(batch) = Json::parse(line) else {
             continue;
         };
-        let key = format!(
-            "{member}:{}:{}:{}",
-            batch.get("frameId").unwrap_or(&Json::Null).to_compact(),
-            batch.get("sequence").unwrap_or(&Json::Null).to_compact(),
-            batch.get("at").unwrap_or(&Json::Null).to_compact()
-        );
-        if !seen.insert(key) {
-            continue;
-        }
         for record in batch
             .get("records")
             .and_then(Json::as_array)

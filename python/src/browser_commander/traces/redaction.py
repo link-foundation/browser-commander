@@ -12,6 +12,7 @@ the same text the JavaScript recorder writes for it.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -26,6 +27,7 @@ REDACTED = "[redacted]"
 #: Controls whose value is a secret unless the caller says otherwise.
 DEFAULT_REDACT_SELECTORS = (
     "input[type=password]",
+    "input[type=hidden]",
     "[data-private]",
     "[data-bc-redact]",
 )
@@ -55,6 +57,9 @@ DEFAULT_REDACT_QUERY_PARAMS = (
     "session",
     "signature",
     "token",
+    "csrf",
+    "xsrf",
+    "_xsrf",
 )
 
 _ENCODED_MARKER = "%5Bredacted%5D"
@@ -79,6 +84,7 @@ class PrivacyOptions:
     redact_query_params: list[str] = field(default_factory=list)
     redact_patterns: list[re.Pattern[str]] = field(default_factory=list)
     redact: Callable[[dict[str, Any]], Any] | None = None
+    use_defaults: bool = True
 
 
 def _lower_set(values: Iterable[Any]) -> list[str]:
@@ -142,6 +148,74 @@ def normalize_privacy_options(
         redact_query_params=merged("redact_query_params", DEFAULT_REDACT_QUERY_PARAMS),
         redact_patterns=patterns,
         redact=redact,
+        use_defaults=use_defaults,
+    )
+
+
+def sensitive_name(name: str, privacy: PrivacyOptions) -> bool:
+    return privacy.use_defaults and bool(
+        re.search(
+            r"password|passwd|token|csrf|xsrf|otp|secret|api[_-]?key|authorization",
+            name,
+            re.I,
+        )
+    )
+
+
+def _redact_fields(value: Any, privacy: PrivacyOptions) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: REDACTED
+            if sensitive_name(key, privacy)
+            else _redact_fields(entry, privacy)
+            for key, entry in value.items()
+        }
+    if isinstance(value, list):
+        return [_redact_fields(entry, privacy) for entry in value]
+    return value
+
+
+def _structured_text(value: str, privacy: PrivacyOptions) -> str:
+    if not privacy.use_defaults:
+        return value
+    try:
+        parsed = json.loads(value)
+        if isinstance(parsed, (dict, list)):
+            return json.dumps(
+                _redact_fields(parsed, privacy),
+                separators=(",", ":"),
+                ensure_ascii=False,
+            )
+    except (ValueError, TypeError):
+        pass
+
+    def assignment(match: re.Match[str]) -> str:
+        return (
+            match[1] + json.dumps(REDACTED)
+            if sensitive_name(match[1], privacy)
+            else match[0]
+        )
+
+    text = re.sub(
+        r"(\b(?:[\"']?[\w-]+[\"']?)\s*[:=]\s*)(\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|\d+(?:\.\d+)?)",
+        assignment,
+        value,
+    )
+
+    def parameter(match: re.Match[str]) -> str:
+        name = parse_form(match[2] + "=")[0][0]
+        return (
+            match[1] + match[2] + "=" + REDACTED
+            if sensitive_name(name, privacy)
+            else match[0]
+        )
+
+    text = re.sub(r"(^|[&?])([^=&\s]+)=([^&\s]*)", parameter, text)
+    return re.sub(
+        r'(Content-Disposition:[^\r\n]*?;\s*name="([^"]+)"[^\r\n]*\r?\n(?:[^\r\n]+\r?\n)*\r?\n)([\s\S]*?)(?=\r?\n--)',
+        lambda m: m[1] + REDACTED if sensitive_name(m[2], privacy) else m[0],
+        text,
+        flags=re.I,
     )
 
 
@@ -163,7 +237,11 @@ def redact_text(
     if not isinstance(value, str) or value == "":
         return value
 
-    text = value
+    text = (
+        value
+        if (context or {}).get("kind") == "url"
+        else _structured_text(value, privacy)
+    )
     for pattern in privacy.redact_patterns:
         text = pattern.sub(lambda _match: REDACTED, text)
 
@@ -203,7 +281,9 @@ def redact_url(url: Any, privacy: PrivacyOptions) -> Any:
             parsed.set_password(REDACTED if parsed.password else "")
         params = parsed.search_params()
         for key in [name for name, _ in params]:
-            if key.lower() in privacy.redact_query_params:
+            if key.lower() in privacy.redact_query_params or sensitive_name(
+                key, privacy
+            ):
                 set_param(params, key, REDACTED)
                 parsed.set_search_params(params)
         if parsed.hash:
@@ -211,7 +291,9 @@ def redact_url(url: Any, privacy: PrivacyOptions) -> Any:
             fragment = parse_form(parsed.hash[1:])
             changed = False
             for key in [name for name, _ in fragment]:
-                if key.lower() in privacy.redact_query_params:
+                if key.lower() in privacy.redact_query_params or sensitive_name(
+                    key, privacy
+                ):
                     set_param(fragment, key, REDACTED)
                     changed = True
             if changed:
@@ -240,6 +322,7 @@ def redact_headers(headers: Any, privacy: PrivacyOptions) -> Any:
         result[name] = (
             REDACTED
             if name.lower() in privacy.redact_attributes
+            or sensitive_name(name, privacy)
             else redact_text(
                 js_string(value), privacy, {"kind": "header", "name": name}
             )
@@ -258,6 +341,8 @@ def redact_value(value: Any, privacy: PrivacyOptions, key: str = "") -> Any:
     Returns:
         The value with strings redacted
     """
+    if sensitive_name(key, privacy) or key.lower() in privacy.redact_attributes:
+        return REDACTED
     if isinstance(value, str):
         if key.lower() in privacy.redact_attributes:
             return REDACTED

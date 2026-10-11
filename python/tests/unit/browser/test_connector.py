@@ -127,3 +127,86 @@ async def test_rejects_invalid_engine() -> None:
                 engine="invalid", cdp_endpoint="http://127.0.0.1:9222"
             )
         )
+
+
+@pytest.mark.asyncio
+async def test_failed_selection_closes_browser_and_stops_driver():
+    browser = MagicMock(contexts=[MagicMock(pages=[])])
+    browser.close = AsyncMock()
+    playwright = MagicMock(stop=AsyncMock())
+    playwright.chromium.connect_over_cdp = AsyncMock(return_value=browser)
+    with pytest.raises(ValueError, match="No tab matches"):
+        await connect_browser_with_dependencies(
+            ConnectOptions(cdp_endpoint="http://127.0.0.1:9222", target_id="gone"),
+            start_playwright=AsyncMock(return_value=playwright),
+        )
+    browser.close.assert_awaited_once()
+    playwright.stop.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_no_defaults_recovers_context_management_error():
+    page = object()
+    browser = MagicMock(
+        contexts=[MagicMock(pages=[], new_page=AsyncMock(return_value=page))]
+    )
+    playwright = MagicMock()
+    connect = AsyncMock(
+        side_effect=[
+            RuntimeError(
+                "Protocol error (Browser.setDownloadBehavior): Browser context management is not supported."
+            ),
+            browser,
+        ]
+    )
+    playwright.chromium.connect_over_cdp = connect
+    result = await connect_browser_with_dependencies(
+        ConnectOptions(cdp_endpoint="http://127.0.0.1:9222"),
+        start_playwright=AsyncMock(return_value=playwright),
+    )
+    assert result.page is page
+    assert connect.await_args.kwargs == {"no_defaults": True}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("selection", "expected"),
+    [
+        ({"target_id": "second"}, "CDwindow-second"),
+        ({"url": ["https://second.test", "https://first.test"]}, "CDwindow-second"),
+        (
+            {"url_matchers": ["https://second.test", "https://first.test"]},
+            "CDwindow-second",
+        ),
+        ({}, "CDwindow-second"),
+        (
+            {"target_id": "gone", "fallback": True, "url": ["https://second.test"]},
+            "CDwindow-second",
+        ),
+    ],
+)
+async def test_selenium_selection_preserves_explicit_ranked_and_current_tabs(
+    selection, expected
+):
+    driver = MagicMock()
+    urls = {
+        "CDwindow-first": "https://first.test",
+        "CDwindow-second": "https://second.test",
+    }
+    driver.window_handles = list(urls)
+    driver.current_window_handle = "CDwindow-second"
+
+    def switch(handle):
+        driver.current_window_handle = handle
+        driver.current_url = urls[handle]
+
+    driver.switch_to.window.side_effect = switch
+    result = await connect_browser_with_dependencies(
+        ConnectOptions(
+            engine="selenium", cdp_endpoint="http://127.0.0.1:9222", **selection
+        ),
+        create_selenium=MagicMock(return_value=driver),
+    )
+    assert result.page is driver
+    assert driver.current_window_handle == expected
+    driver.quit.assert_not_called()

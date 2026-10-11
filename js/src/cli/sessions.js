@@ -47,6 +47,9 @@ const LAUNCH_PASSTHROUGH = Object.freeze([
   'disableFeatures',
   'keepOpen',
   'idleTimeoutMs',
+  'adoptExisting',
+  'closeNewTabs',
+  'noDefaults',
 ]);
 
 /** Validate an engine name, defaulting to Playwright. */

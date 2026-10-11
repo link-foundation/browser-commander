@@ -1,5 +1,6 @@
 import { abortTraceStart } from './start-cleanup.js';
 import { createTraceStop } from './stop.js';
+import { openRollingBundle } from './rolling-bundle.js';
 /**
  * The trace recorder (issue #87).
  *
@@ -166,13 +167,13 @@ export async function startTrace(options = {}) {
   // readable export of everything that had happened. The bundle stays
   // authoritative: nothing is written here that is not written there first.
   let linksSink = null;
-  const bundle = await openTraceBundle({
+  const bundle = await openRecorderBundle(options, {
     output,
     limits,
     strict,
     now,
     monotonic,
-    onEvent: (event) => linksSink?.event(event),
+    onEvent: (event, source) => linksSink?.event(event, source),
   });
   const startedAt = new Date(now()).toISOString();
 
@@ -297,7 +298,13 @@ export async function startTrace(options = {}) {
       identity,
       now,
     });
-    detachNetwork = attachNetwork({ page, network, record, note });
+    detachNetwork = attachNetwork({
+      page,
+      network,
+      record,
+      note,
+      privacy: privacyOptions,
+    });
     video = options.video
       ? await startRecording({
           page,
@@ -405,6 +412,12 @@ export async function startTrace(options = {}) {
 
     return {
       path: bundle.root,
+      get currentPath() {
+        return bundle.currentPath ?? bundle.root;
+      },
+      get segments() {
+        return bundle.segments;
+      },
       links: linksSink?.path ?? null,
       mode: recorderMode,
       get bytesWritten() {
@@ -448,4 +461,21 @@ export async function startTrace(options = {}) {
 function requireTraceSupport(options) {
   validateNetworkOptions(options.network);
   (options.page ?? options.commander?.page)?.requireFeature?.('tracing');
+}
+
+function openRecorderBundle(options, settings) {
+  const writer =
+    options.openBundle ??
+    (options.mode === TRACE_MODE.CONTINUOUS
+      ? (config) =>
+          openRollingBundle(
+            config,
+            {
+              lazy: true,
+              maxBytes: settings.limits.maxBundleBytes ?? 256 * 1024 * 1024,
+            },
+            options
+          )
+      : openTraceBundle);
+  return writer(settings);
 }

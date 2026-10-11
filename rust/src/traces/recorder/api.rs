@@ -11,6 +11,13 @@ impl TraceRecorder {
     pub fn path(&self) -> &Path {
         &self.inner.settings.root
     }
+    /// Directory accepting new records, including after automatic rotation.
+    pub fn current_path(&self) -> PathBuf {
+        self.inner.lock().bundle.active_root.clone()
+    }
+    pub fn segments(&self) -> Vec<String> {
+        self.inner.lock().bundle.segments.clone()
+    }
 
     /// The trace's mode.
     pub fn mode(&self) -> &str {

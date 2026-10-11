@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import json
 import os
 from dataclasses import asdict
@@ -32,7 +34,7 @@ async def _worker(options: dict[str, Any]) -> dict[str, Any]:
 class PersistentSession:
     """detach keeps Chrome running; close terminates only this owned session."""
 
-    def __init__(self, connection, metadata):
+    def __init__(self, connection, metadata, *, close_new_tabs=False):
         self.browser, self.page = connection.browser, connection.page
         self.downloads = connection.downloads
         self.metadata = metadata
@@ -43,6 +45,32 @@ class PersistentSession:
         self.temporary_profile = False
         self._detached = False
         self._closed = False
+        self._tab_tasks: set[asyncio.Task] = set()
+        self._context = self.page.context
+        self._close_new_tabs = close_new_tabs
+        self._selecting = False
+        if close_new_tabs:
+            self._context.on("page", self._on_new_page)
+        self._heartbeat = asyncio.create_task(self._keep_alive())
+
+    async def _keep_alive(self):
+        interval = max(
+            0.02, min(30, self.metadata.get("idleTimeoutMs", 1800000) / 3000)
+        )
+        while True:
+            await asyncio.sleep(interval)
+            with contextlib.suppress(Exception):
+                await self.touch()
+
+    def _on_new_page(self, page):
+        async def close():
+            if page is not self.page and not self._detached and not self._selecting:
+                with contextlib.suppress(Exception):
+                    await page.close()
+
+        task = asyncio.create_task(close())
+        self._tab_tasks.add(task)
+        task.add_done_callback(self._tab_tasks.discard)
 
     async def touch(self, target_id=None):
         await _worker({**self.metadata, "operation": "touch", "targetId": target_id})
@@ -50,8 +78,14 @@ class PersistentSession:
     async def detach(self):
         if self._detached:
             return
-        await self.touch()
+        self._heartbeat.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await self._heartbeat
+        if self._close_new_tabs:
+            self._context.remove_listener("page", self._on_new_page)
+        await asyncio.gather(*self._tab_tasks, return_exceptions=True)
         try:
+            await self.touch()
             if self.downloads:
                 await self.downloads.dispose()
         finally:
@@ -66,17 +100,38 @@ class PersistentSession:
         await _worker({**self.metadata, "operation": "close"})
         self._closed = True
 
-    async def reuse_page(self, *, target_id=None, url=None, single_tab=False):
+    async def reuse_page(
+        self, *, target_id=None, url=None, url_matchers=None, single_tab=False
+    ):
         if self._detached:
             raise RuntimeError("Persistent controller is detached")
-        self.page = await pick_foreground_page(
-            self.page.context.pages,
-            ConnectOptions(
-                target_id=target_id or (None if url else self.metadata["targetId"]),
-                url=url,
-                single_tab=single_tab,
-            ),
-        )
+        self._selecting = True
+        try:
+            self.page = (
+                await pick_foreground_page(
+                    self._context.pages,
+                    ConnectOptions(
+                        target_id=target_id
+                        or (None if url or url_matchers else self.metadata["targetId"]),
+                        url=url,
+                        url_matchers=url_matchers or [],
+                        fallback=target_id is None,
+                        single_tab=single_tab,
+                    ),
+                )
+                or await self._context.new_page()
+            )
+        finally:
+            self._selecting = False
+            if self._close_new_tabs:
+                await asyncio.gather(
+                    *(
+                        page.close()
+                        for page in self._context.pages
+                        if page is not self.page
+                    ),
+                    return_exceptions=True,
+                )
         session = await self.page.context.new_cdp_session(self.page)
         try:
             target = (await session.send("Target.getTargetInfo"))["targetInfo"][
@@ -110,7 +165,11 @@ async def connect_or_launch(
         ConnectOptions(
             cdp_endpoint=metadata["cdpEndpoint"],
             target_id=metadata["targetId"],
+            fallback=True,
+            no_defaults=options.no_defaults,
             downloads=options.downloads,
         )
     )
-    return PersistentSession(connection, metadata)
+    return PersistentSession(
+        connection, metadata, close_new_tabs=options.close_new_tabs
+    )

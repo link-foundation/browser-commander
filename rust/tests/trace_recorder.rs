@@ -582,3 +582,39 @@ async fn network_records_are_exported_to_har_and_links() {
     .allows("https://example.test/api", "fetch"));
     fs::remove_dir_all(dir).unwrap();
 }
+
+#[tokio::test]
+async fn continuous_budget_rotates_and_keeps_later_events() {
+    let dir = scratch("automatic-rotation");
+    let mut options = TraceOptions::new(dir.join("bundle"));
+    options.mode = "continuous".into();
+    options.screenshots = TraceScreenshots::Off;
+    options.limits.max_bundle_bytes = Some(2048);
+    let trace = start_trace(Arc::new(FakePage::default()), options)
+        .await
+        .unwrap();
+    for index in 0..12 {
+        trace
+            .event(
+                "step",
+                JsonObject::new()
+                    .with("index", index)
+                    .with("payload", "x".repeat(1500)),
+            )
+            .await
+            .unwrap();
+    }
+    trace.stop().await.unwrap();
+    let opened = read_trace(dir.join("bundle")).unwrap();
+    assert_eq!(
+        opened
+            .events
+            .iter()
+            .filter(|event| event["action"] == "step")
+            .count(),
+        12
+    );
+    assert!(!opened.events.iter().any(|event| event["kind"] == "dropped"));
+    assert!(dir.join("bundle/segments.json").exists());
+    fs::remove_dir_all(dir).ok();
+}

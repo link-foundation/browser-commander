@@ -186,6 +186,9 @@ async function withPageSession(parsed, io, work, { skipUrl = false } = {}) {
             engine: options.engine,
             targetId: options.targetId,
             singleTab: options.singleTab,
+            ...(options.noDefaults !== undefined
+              ? { noDefaults: options.noDefaults }
+              : {}),
             ...(options.serverUrl ? { serverUrl: options.serverUrl } : {}),
             ...(options.driverPath ? { driverPath: options.driverPath } : {}),
             ...(options.bidi !== undefined ? { bidi: options.bidi } : {}),

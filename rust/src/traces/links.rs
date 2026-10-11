@@ -525,7 +525,7 @@ pub(crate) struct LinksSink {
     file: Option<File>,
     dom: Option<String>,
     root: PathBuf,
-    seen_dom: std::collections::HashSet<String>,
+    seen_dom: (String, u64),
 }
 
 impl LinksSink {
@@ -546,7 +546,7 @@ impl LinksSink {
             file: Some(file),
             dom: options.dom.clone(),
             root: root.to_path_buf(),
-            seen_dom: std::collections::HashSet::new(),
+            seen_dom: (String::new(), 0),
         };
         if has(&sink.sections, "trace") {
             sink.append(&[header_link(&about)]);
@@ -571,6 +571,10 @@ impl LinksSink {
     }
 
     /// Write the links of one event as it is recorded.
+    pub(crate) fn set_root(&mut self, root: &Path) {
+        self.root = root.to_path_buf();
+    }
+
     pub fn event(&mut self, event: &JsonObject) {
         let mut links = links_for_event(event, &self.sections);
         if let Some(dom) = &self.dom {

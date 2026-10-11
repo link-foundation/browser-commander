@@ -43,6 +43,7 @@ from .reader import read_trace
 from .redaction import (
     REDACTED,
     normalize_privacy_options,
+    redact_text,
     redact_url,
     redact_value,
 )
@@ -206,7 +207,6 @@ class TraceRecorder:
         monotonic: Callable[[], float] | None,
     ) -> None:
         self._network_options = network
-        self._network = NetworkRecorder(page, network, self.record, _note_through(log))
         self._video_options = video
         self._video: Recording | None = None
         self._links_dom = links.get("dom") if isinstance(links, Mapping) else None
@@ -217,6 +217,9 @@ class TraceRecorder:
             self._dom["mutations"] = True
         self._events = _normalize_events(events)
         self._privacy = normalize_privacy_options(privacy)
+        self._network = NetworkRecorder(
+            page, network, self.record, _note_through(log), self._privacy
+        )
         self._limits = normalize_limits(limits)
         # Validated before the bundle opens, so a rejected start does not
         # strand an open timeline that no running trace is there to stop.
@@ -241,9 +244,18 @@ class TraceRecorder:
         )
 
         self._links_sink: TraceLinksSink | None = None
+        writer_limits = self._limits
+        if self.mode == TraceMode.CONTINUOUS and not self._limits.get("rotate"):
+            writer_limits = {
+                **self._limits,
+                "rotate": {
+                    "lazy": True,
+                    "maxBytes": self._limits.get("maxBundleBytes", 256 * 1024 * 1024),
+                },
+            }
         self._bundle: TraceBundle = open_trace_bundle(
             output,
-            limits=self._limits,
+            limits=writer_limits,
             strict=strict,
             now=self._now,
             monotonic=monotonic,
@@ -291,6 +303,9 @@ class TraceRecorder:
 
     def _stream_link(self, event: dict[str, Any]) -> None:
         if self._links_sink is not None:
+            self._links_sink._bundle_path = getattr(
+                self._bundle, "current_root", self._bundle.root
+            )
             self._links_sink.event(event)
 
     async def _start(self) -> None:
@@ -488,7 +503,10 @@ class TraceRecorder:
                         "ignoreSelectors": self._dom.get(
                             "ignoreSelectors", self._dom.get("ignore_selectors", [])
                         ),
-                        "maxHtmlBytes": coalesce(self._limits.get("maxHtmlBytes"), 0),
+                        "maxHtmlBytes": coalesce(
+                            self._limits.get("maxHtmlBytes"), 4 * 1024 * 1024
+                        ),
+                        "useDefaults": self._privacy.use_defaults,
                     },
                 ),
                 self._timeout,
@@ -519,7 +537,9 @@ class TraceRecorder:
 
         members = self._bundle.write_checkpoint(
             index,
-            html=captured.get("html"),
+            html=redact_text(
+                captured.get("html"), self._privacy, {"kind": "dom", "name": "html"}
+            ),
             state={**state, "name": name, "actor": actor, "reason": reason}
             if state is not None
             else None,
@@ -690,6 +710,11 @@ class TraceRecorder:
                 *(self._links_sink.problems if self._links_sink else []),
             ],
             "links": self.links,
+            **(
+                {"segments": self._bundle.segments}
+                if hasattr(self._bundle, "segments")
+                else {}
+            ),
         }
         self._stopped = result
         if self._limits.get("gzip"):
@@ -730,17 +755,6 @@ async def start_trace(
         TypeError: For an unknown option
         ValueError: For an invalid mode, event source or output
     """
-    if (options.get("limits") or {}).get("rotate"):
-        from typing import cast
-
-        from .rolling import start_rolling
-
-        return cast(
-            "TraceRecorder",
-            await start_rolling(
-                {**options, "commander": commander, "page": page}, start_trace
-            ),
-        )
     unknown = sorted(set(options) - _OPTIONS)
     if unknown:
         raise TypeError(f"unknown trace option(s): {', '.join(unknown)}")

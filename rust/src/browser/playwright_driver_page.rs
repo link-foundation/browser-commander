@@ -78,6 +78,9 @@ pub struct PlaywrightConnect {
     pub target_id: Option<String>,
     pub url: Option<String>,
     pub single_tab: bool,
+    pub url_matchers: Vec<String>,
+    pub fallback: bool,
+    pub no_defaults: Option<bool>,
 }
 
 /// [`EngineAdapter`] backed by the official Playwright driver.
@@ -155,17 +158,7 @@ impl PlaywrightDriverPage {
         driver
             .connection()
             .set_default_timeout(Some(ACTION_TIMEOUT_MS));
-        let chromium = chromium(&driver)?;
-        let params = BrowserTypeConnectOverCDPParams {
-            endpoint_url: Some(options.endpoint.clone()),
-            slow_mo: (options.slow_mo > 0).then_some(options.slow_mo as f64),
-            ..Default::default()
-        };
-        let timeout = options.timeout.map(millis).unwrap_or(ACTION_TIMEOUT_MS);
-        let result: BrowserTypeConnectOverCDPResult = chromium
-            .channel()
-            .send_with_timeout("connectOverCDP", &params, Some(timeout))
-            .await?;
+        let result = selection::connect_over_cdp(&driver, &options).await?;
         let connection = driver.connection();
         let browser: Browser = connection.object(&result.browser)?;
         let context: BrowserContext = match &result.default_context {

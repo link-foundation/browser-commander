@@ -10,13 +10,16 @@ export function localStatePathForProfile(profileDir) {
 }
 
 /** Resolve existing ancestors even when the target profile does not exist. */
-export function physicalPath(value) {
+export function physicalPath(value, resolve = realpathSync) {
   let existing = path.resolve(value);
   const suffix = [];
   while (true) {
     try {
-      return path.join(realpathSync(existing), ...suffix.reverse());
+      return path.join(resolve(existing), ...suffix.reverse());
     } catch (error) {
+      if (['EPERM', 'EACCES'].includes(error.code)) {
+        return path.resolve(value);
+      }
       if (!['ENOENT', 'ENOTDIR'].includes(error.code)) {
         throw error;
       }

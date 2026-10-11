@@ -14,6 +14,7 @@ JavaScript recorder writes for the same bundle.
 from __future__ import annotations
 
 import contextlib
+import json
 import os
 from collections.abc import Iterable, Mapping
 from pathlib import Path
@@ -704,7 +705,8 @@ class TraceLinksSink:
         dom: Any = None,
     ) -> None:
         self._dom, self._bundle_path = dom, bundle_path
-        self._seen_dom: set[tuple[Any, ...]] = set()
+        self._mutation_member: str | None = None
+        self._mutation_offset = 0
         self.path = resolve_links_output(output)
         self._sections = chosen_sections(list(include) if include is not None else None)
         self.problems: list[dict[str, Any]] = []
@@ -745,9 +747,37 @@ class TraceLinksSink:
             and self._bundle_path
             and event.get("kind") in {"checkpoint", "mutations"}
         ):
-            self._append(
-                dom_links(read_trace(self._bundle_path), self._dom, self._seen_dom)
+            from types import SimpleNamespace
+
+            root = Path(self._bundle_path)
+            batches = []
+            if event.get("kind") == "mutations":
+                member = str(root / event["member"])
+                if member != self._mutation_member:
+                    self._mutation_member, self._mutation_offset = member, 0
+                with Path(member).open("rb") as source:
+                    source.seek(self._mutation_offset)
+                    body = source.read()
+                    self._mutation_offset = source.tell()
+                batches = [json.loads(line) for line in body.splitlines() if line]
+
+            def read_member(name):
+                member = event.get("members", {}).get(name)
+                if not member:
+                    return None
+                body = (root / member).read_text()
+                return json.loads(body) if name == "state" else body
+
+            opened = SimpleNamespace(
+                checkpoints=[SimpleNamespace(index=event["index"])]
+                if event.get("kind") == "checkpoint"
+                else [],
+                events=[event] if event.get("kind") == "mutations" else [],
+                state=lambda _index: read_member("state"),
+                html=lambda _index: read_member("html"),
+                mutations=lambda _index: batches,
             )
+            self._append(dom_links(opened, self._dom))
 
     def close(
         self,

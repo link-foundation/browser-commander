@@ -1,6 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { withDeadline } from './deadline.js';
+import {
+  normalizePrivacyOptions,
+  redactText,
+  redactHeaders as privateHeaders,
+} from './redaction.js';
 
 const PRIVATE_HEADERS = new Set([
   'cookie',
@@ -9,11 +14,20 @@ const PRIVATE_HEADERS = new Set([
   'set-cookie',
 ]);
 export function redactHeaders(headers = {}) {
-  return Object.fromEntries(
-    Object.entries(headers).map(([key, value]) => [
-      key.toLowerCase(),
-      PRIVATE_HEADERS.has(key.toLowerCase()) ? '[redacted]' : value,
-    ])
+  return privateHeaders(
+    Object.fromEntries(
+      Object.entries(headers).map(([key, value]) => [
+        key.toLowerCase(),
+        PRIVATE_HEADERS.has(key.toLowerCase()) ? '[redacted]' : value,
+      ])
+    ),
+    normalizePrivacyOptions()
+  );
+}
+
+export function isTextBody(contentType = '') {
+  return /^(?:text\/|application\/(?:[\w.+-]*json|[\w.+-]*xml|javascript|x-www-form-urlencoded))|multipart\/form-data/i.test(
+    contentType
   );
 }
 
@@ -81,10 +95,12 @@ export function networkHar(events) {
           content: {
             size: response.body?.size ?? 0,
             mimeType: response.contentType ?? '',
-            ...(response.body
+            ...(response.body?.data !== undefined
               ? {
                   text: response.body.data,
-                  encoding: 'base64',
+                  ...(response.body.encoding === 'utf8'
+                    ? {}
+                    : { encoding: 'base64' }),
                   _truncated: response.body.truncated,
                 }
               : {}),
@@ -131,7 +147,13 @@ export function validateNetworkOptions(network) {
     );
   }
 }
-export function attachNetwork({ page, network, record, note }) {
+export function attachNetwork({
+  page,
+  network,
+  record,
+  note,
+  privacy = normalizePrivacyOptions(),
+}) {
   validateNetworkOptions(network);
   if (!network) {
     return async () => {};
@@ -172,7 +194,12 @@ export function attachNetwork({ page, network, record, note }) {
         ['document', 'xhr', 'fetch'].includes(request.resourceType?.()) &&
         request.postData?.()
           ? {
-              postData: Buffer.from(request.postData())
+              postData: Buffer.from(
+                redactText(request.postData(), privacy, {
+                  kind: 'network',
+                  name: 'postData',
+                })
+              )
                 .subarray(0, maxBodyBytes)
                 .toString('utf8'),
               postDataTruncated:
@@ -210,9 +237,26 @@ export function attachNetwork({ page, network, record, note }) {
           options.bodies &&
           ['document', 'xhr', 'fetch'].includes(resourceType)
         ) {
-          const length = Number(headers['content-length']);
-          if (Number.isFinite(length) && length > maxBodyBytes) {
-            payload.body = { size: length, truncated: true, data: '' };
+          let length = Number(headers['content-length']);
+          if (!Number.isFinite(length) && request.sizes) {
+            const sizes = await withDeadline(
+              request.sizes(),
+              5000,
+              'network sizes'
+            ).catch(() => ({}));
+            length = sizes.responseBodySize ?? NaN;
+          }
+          if (!isTextBody(payload.contentType ?? '')) {
+            payload.body = {
+              size: Number.isFinite(length) ? length : null,
+              omitted: 'binary',
+            };
+          } else if (Number.isFinite(length) && length > maxBodyBytes) {
+            payload.body = {
+              size: length,
+              truncated: true,
+              omitted: 'size limit',
+            };
           } else {
             try {
               const data = Buffer.from(
@@ -225,7 +269,15 @@ export function attachNetwork({ page, network, record, note }) {
               payload.body = {
                 size: data.length,
                 truncated: data.length > maxBodyBytes,
-                data: data.subarray(0, maxBodyBytes).toString('base64'),
+                encoding: 'utf8',
+                data: Buffer.from(
+                  redactText(data.toString('utf8'), privacy, {
+                    kind: 'network',
+                    name: 'responseBody',
+                  })
+                )
+                  .subarray(0, maxBodyBytes)
+                  .toString('utf8'),
               };
             } catch (error) {
               payload.bodyError = error.message;

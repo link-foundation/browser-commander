@@ -10,6 +10,7 @@ pub(crate) fn physical_path(path: &Path) -> Result<PathBuf> {
     } else {
         std::env::current_dir()?.join(path)
     };
+    let original = existing.clone();
     let mut suffix = Vec::new();
     loop {
         match existing.canonicalize() {
@@ -27,6 +28,9 @@ pub(crate) fn physical_path(path: &Path) -> Result<PathBuf> {
                         .to_os_string(),
                 );
                 existing.pop();
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::PermissionDenied => {
+                return Ok(original)
             }
             Err(error) => return Err(error.into()),
         }

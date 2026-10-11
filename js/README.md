@@ -816,12 +816,19 @@ See [capture, debugging and reusable sessions](https://github.com/link-foundatio
 for screenshots, recordings, full/text DOM links, network/HAR, rotation,
 persistent browsers, early trigger readiness and engine capability limits.
 
-JavaScript commanders and browser launches record complete sessions by default
-under `./browser-commander-traces/`, including trusted user actions, DOM changes,
-network metadata and `trace.lino`. Await `commander.ready` before using its raw
-page, and call `commander.destroy()` or the launch's `close()` to finish the files.
-Use `debug: false` or `BROWSER_COMMANDER_DEBUG=0` to opt out; `debug: { output }`
-chooses the directory. `commander.tracePath` exposes its path.
+JavaScript commanders and browser launches leave recording off by default and
+support navigation in a read-only cwd. Request `debug: true`, `debug: { output }`
+or `BROWSER_COMMANDER_DEBUG=1` for complete capture; an output hint alone does not
+enable recording. `debug: false` or `BROWSER_COMMANDER_DEBUG=0` overrides automatic
+capture. Explicit trace APIs remain available.
+
+Use `debug: { directory: '/owned/evidence', retain: false }` for a private unique
+session child with finite data/duration limits and cleanup on teardown. Await
+`commander.ready` before using its raw page; `commander.tracePath` exposes the
+recording path. Await `commander.destroy()` or launch `close()` in `finally`.
+`stopDebug({ discard: true })` removes only a managed child; recordings are
+retained by default. See the guide above for migration from 0.30.x, limits and
+application-owned signal handling.
 
 `startTrace()` records a session into a schema-versioned bundle any of the three
 languages can read - the manifest, an ordered NDJSON timeline, per-checkpoint

@@ -52,6 +52,14 @@ export function attachCommanderFeatures(commander, options, recreate) {
   let debugSession;
   let detachActions;
   commander.tracePath = null;
+  commander.stopDebug = async (stopOptions) => {
+    await commander.ready;
+    try {
+      return (await debugSession?.stop(stopOptions)) ?? null;
+    } finally {
+      detachActions?.();
+    }
+  };
   const ensureDebug = () => commander.ready;
   for (const name of [...INTERACTIONS, 'goto', 'evaluate', 'count']) {
     const method = commander[name];
@@ -71,10 +79,14 @@ export function attachCommanderFeatures(commander, options, recreate) {
   commander.destroy = async () => {
     try {
       await commander.ready;
-      await debugSession?.stop();
-      await Promise.all([...managed].map((item) => item.stop()));
-      detachActions?.();
+      try {
+        await commander.stopDebug();
+      } finally {
+        await Promise.all([...managed].map((item) => item.stop()));
+        detachActions?.();
+      }
     } finally {
+      detachActions?.();
       await destroy();
     }
   };

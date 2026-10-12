@@ -18,7 +18,7 @@ Each row records a separate requirement, its selected solution, and its check.
 | #172, requirement 2             | Do all work in one PR, with no deferred sub-issue.                                                      | Keep selectors, diagnostics, ownership tests, macOS CI coverage, and release fragments on the prepared branch in PR 173.                                                                    | One PR includes both issue scopes.                                                                                                                 |
 | #172, requirements 3–4          | Close the parent and every listed issue with a keyword for each.                                        | Include three separate lines in the PR body: `Fixes #170`, `Fixes #171`, `Fixes #172`.                                                                                                      | Check the final PR body, not a comma-separated reference.                                                                                          |
 | #172, requirement 5             | Explicitly describe an already resolved or unreproducible issue, retaining its closing reference.       | State that the original intermittent macOS failure remains unreproduced and its root cause unconfirmed.                                                                                     | #171's later unchanged full-suite success is recorded below and in the PR.                                                                         |
-| #170, problem                   | A scoped text selector must target the matched element, rather than a button elsewhere in the document. | Preserve Playwright strings; resolve nonnative text objects to a unique ancestor path. Remove both JS and Python rewrites of CSS sibling positions into global locator indexes.             | Two containers with the same button tag and sibling position; additional duplicate attributes and nested containers.                               |
+| #170, problem                   | A scoped text selector must target the matched element, rather than a button elsewhere in the document. | Preserve Playwright strings; resolve nonnative text objects to a unique ancestor path. Remove CSS sibling-position rewrites in JS/Python locator helpers and shared engine adapters.             | Two containers with the same button tag and sibling position; additional duplicate attributes and nested containers.                               |
 | #170, preferred fix 1           | Use Playwright's native `:has-text()` and `:text-is()` support.                                         | Pass the entire selector directly to `page.locator`, preserving the engine's text semantics and lazy resolution.                                                                            | Unit tests forbid eager DOM evaluation; real-browser tests exercise exact and substring matching.                                                  |
 | #170, preferred fix 2           | Make nonnative matches unique across the document.                                                      | Use escaped tag names and sibling `:nth-of-type` at every ancestor level. Avoid assuming an `id` or `data-qa` is unique; do not mutate the application DOM.                                 | Puppeteer, JS Selenium, and Python Selenium integration tests assert that the intended button is selected despite duplicated attributes.           |
 | #170, preferred fix 3           | Add the two-container regression.                                                                       | Add minimum unit reproductions first, then real-browser tests for every affected native engine.                                                                                             | JS tests also exercise attributes, content, visibility, enabled state, clicking, filling, and CSS query enumeration.                               |
@@ -35,7 +35,7 @@ The original JS Playwright branch evaluated the text query and returned an
 unqualified tag and sibling position. Its Puppeteer branch also trusted an
 unchecked attribute or returned that same unqualified position. Python had
 the corresponding Playwright/Selenium implementations. These outputs did not
-identify the matched node. The native locator helpers additionally interpreted
+identify the matched node. The native locator helpers and shared engine adapters additionally interpreted
 trailing CSS `:nth-of-type(n)` as a global `.nth(n-1)`, which changes CSS semantics
 when several containers or different sibling tags are present.
 
@@ -125,19 +125,19 @@ These are related evidence, not proof of this report's cause:
 
 | Area                                                                                              | Audit result / application                                                                                                                                                                                |
 | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| JS Playwright                                                                                     | Preserve native strings in normalization and wrappers; direct `page.locator(selector)` keeps CSS sibling semantics.                                                                                       |
+| JS Playwright                                                                                     | Preserve native strings in normalization, wrappers, and the shared adapter; direct `page.locator(selector)` keeps CSS sibling semantics.                                                                                       |
 | JS Puppeteer / Selenium                                                                           | Both use the text-object normalization path; replace unchecked attribute/tag-only outputs with the shared unique-path function.                                                                           |
-| Python Playwright / Selenium                                                                      | Apply the corresponding native locator and nonnative path fixes. Public selector parsing helpers remain available for compatibility.                                                                      |
+| Python Playwright / Selenium                                                                      | Apply native locator, shared adapter, and nonnative path fixes. Public selector parsing helpers remain available for compatibility.                                                                      |
 | Rust selectors                                                                                    | Normalize syntax into typed CSS/text/XPath variants; CSS strings retain ancestry. Its nth parser is not used to rewrite native adapter CSS queries. No corresponding tag-only normalization defect found. |
 | Element content, attributes, state, queries, waiting, clicks, typing, scrolling, reusable helpers | Shared wrappers and locator helpers carry the corrected identity; native evaluation operates on locators/handles rather than feeding Playwright pseudo-classes to DOM `querySelector`.                    |
 | JS/Python/Rust launch errors                                                                      | All displayed stderr instead of the engine cause when stderr was nonempty; all now retain both.                                                                                                           |
-| Launch ownership                                                                                  | Existing failure paths dispose managed children, delete only owned temporary profiles, and retain supplied profiles; tests strengthen verification without changing that policy.                          |
+| Launch ownership                                                                                  | JS now waits for actual process exit after cancellation before profile cleanup. Python and Rust already wait for OS exit; supplied profiles remain caller-owned.                          |
 | Release automation                                                                                | One JS patch changeset for both fixes, Python fixed fragments, Rust patch fragment; no manual manifest version bump.                                                                                      |
 
 ## Reproduction and validation commands
 
 Run commands from the indicated package directory; Chrome and native engine
-dependencies must be installed. In this controlled root container the explicit
+dependencies must be installed. In this controlled container without a usable browser sandbox, the explicit
 `CHROME_NO_SANDBOX=true` choice is required; it is not a new library default.
 
 ```sh
@@ -176,3 +176,32 @@ The first published CI run at `412fd4f` found two added JS changesets, while
 log (`ci-logs/javascript-38210707824.log`, line 930) identifies this release
 policy failure. Both release notes are combined into one patch changeset; the
 same validation script verifies the correction locally before pushing.
+
+
+The next CI run at `b2c5a0d` exposed a separate, reproducible shutdown defect:
+the macOS ownership regression found its temporary profile still present
+(`ci-logs/javascript-38211503871.log`, line 4424). Tracing
+`command-stream` 2.0.2 showed that cancellation resolves its result immediately
+and removes child exit listeners, before the signalled OS process has exited.
+The managed adapter mistakenly exposed that cancellation result as a real exit,
+allowing profile removal to race Chrome's shutdown writes. The bounded
+`delayed-shutdown.mjs` fixture demonstrates this before the fix: the handle
+reports completion while the raw child's exit code is still null. The adapter
+now retains the child handle through cancellation, observes its actual exit,
+and only then resolves its exit promise and emits its exit event. The existing
+signal escalation and close deadlines remain finite. This applies to every JS
+managed subprocess; Python's supervisor and Rust's streaming runner already
+wait on their OS children. The new unit regression and real ownership tests
+verify the correction. This shutdown finding is not evidence that it caused
+the original intermittent attachment timeout.
+[Node.js child process events and signals](https://nodejs.org/api/child_process.html).
+
+That same head's Python 3.9 job failed a policy-only test because its 50 ms
+wall-clock navigation deadline expired on the loaded runner
+(`ci-logs/python-38211503892.log`, line 5156). The finite
+`navigation-policy-clock.py` experiment reproduces scheduler sensitivity and
+checks the corrected isolation. The policy test now uses a fixed deadline
+clock and immediate mocked phases, while still asserting the exact browser
+navigation timeout and the absence of network-idle waits. The adjacent test
+continues to use real deadlines and verifies cancellation of a stalled
+navigation; no product timeout is increased.

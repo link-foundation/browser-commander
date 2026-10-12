@@ -360,14 +360,6 @@ class PlaywrightAdapter(EngineAdapter):
 
     def create_locator(self, selector: str) -> Any:
         """Create a Playwright locator."""
-        # Handle :nth-of-type() pseudo-selectors
-        import re
-
-        match = re.match(r"^(.+):nth-of-type\((\d+)\)$", selector)
-        if match:
-            base_selector = match.group(1)
-            index = int(match.group(2)) - 1  # Convert to 0-based
-            return self.page.locator(base_selector).nth(index)
         return self.page.locator(selector)
 
     async def query_selector(self, selector: str) -> Any | None:

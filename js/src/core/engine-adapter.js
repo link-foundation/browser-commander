@@ -284,13 +284,6 @@ export class PlaywrightAdapter extends EngineAdapter {
   // ============================================================================
 
   createLocator(selector) {
-    // Handle :nth-of-type() pseudo-selectors which don't work in Playwright locators
-    const nthOfTypeMatch = selector.match(/^(.+):nth-of-type\((\d+)\)$/);
-    if (nthOfTypeMatch) {
-      const baseSelector = nthOfTypeMatch[1];
-      const index = parseInt(nthOfTypeMatch[2], 10) - 1; // Convert to 0-based
-      return this.page.locator(baseSelector).nth(index);
-    }
     return this.page.locator(selector);
   }
 

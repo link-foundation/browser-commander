@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { it } from 'node:test';
 import { makeBrowserCommander } from '../../src/factory.js';
+import { createEngineAdapter } from '../../src/core/engine-adapter.js';
 import { launchE2EBrowser } from '../helpers/e2e-browser.js';
 
 for (const engine of ['playwright', 'puppeteer', 'selenium']) {
@@ -89,6 +90,12 @@ it(
       });
       assert.equal(matches.length, 1);
       assert.equal(await matches[0].textContent(), 'C');
+      const adapter = createEngineAdapter(session.page, 'playwright');
+      const adapterMatches = await adapter.querySelectorAll(
+        'section button:nth-of-type(2)'
+      );
+      assert.equal(adapterMatches.length, 1);
+      assert.equal(await adapterMatches[0].textContent(), 'C');
     } finally {
       await commander.destroy();
       await session.cleanup();

@@ -1,5 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
+from browser_commander.core.engine_adapter import PlaywrightAdapter
 from browser_commander.elements.locators import create_playwright_locator
 from browser_commander.elements.selectors import normalize_selector
 
@@ -16,4 +17,11 @@ def test_css_nth_of_type_keeps_sibling_semantics():
     page = MagicMock()
     selector = "section button:nth-of-type(2)"
     assert create_playwright_locator(page, selector) is page.locator.return_value
+    page.locator.assert_called_once_with(selector)
+
+
+def test_shared_adapter_keeps_css_sibling_semantics():
+    page = MagicMock()
+    selector = "section button:nth-of-type(2)"
+    assert PlaywrightAdapter(page).create_locator(selector) is page.locator.return_value
     page.locator.assert_called_once_with(selector)

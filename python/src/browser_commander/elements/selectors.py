@@ -195,7 +195,8 @@ async def normalize_selector(
 ) -> str | None:
     """Normalize selector to handle both Selenium and Playwright text selectors.
 
-    Converts engine-specific text selectors to valid CSS selectors for browser context.
+    Preserves native Playwright strings and resolves Selenium text objects
+    to document-unique CSS paths without modifying the DOM.
 
     Args:
         page: Browser page object
@@ -207,59 +208,6 @@ async def normalize_selector(
     """
     if not selector:
         raise ValueError("selector is required")
-
-    # Handle Playwright text selectors (strings containing :has-text or :text-is)
-    if (
-        isinstance(selector, str)
-        and engine == "playwright"
-        and is_playwright_text_selector(selector)
-    ):
-        parsed = parse_playwright_text_selector(selector)
-        if not parsed:
-            return selector
-
-        try:
-            # Use page.evaluate to find matching element
-            result = await page.evaluate(
-                """({ baseSelector, text, exact }) => {
-                    const elements = Array.from(document.querySelectorAll(baseSelector));
-                    const matchingElement = elements.find(el => {
-                        const elementText = el.textContent.trim();
-                        return exact ? elementText === text : elementText.includes(text);
-                    });
-
-                    if (!matchingElement) {
-                        return null;
-                    }
-
-                    // Generate a unique selector using data-qa or nth-of-type
-                    const dataQa = matchingElement.getAttribute('data-qa');
-                    if (dataQa) {
-                        return `[data-qa="${dataQa}"]`;
-                    }
-
-                    // Use nth-of-type as fallback
-                    const tagName = matchingElement.tagName.toLowerCase();
-                    const siblings = Array.from(matchingElement.parentElement.children)
-                        .filter(el => el.tagName.toLowerCase() === tagName);
-                    const index = siblings.indexOf(matchingElement);
-                    return `${tagName}:nth-of-type(${index + 1})`;
-                }""",
-                {
-                    "baseSelector": parsed["base_selector"],
-                    "text": parsed["text"],
-                    "exact": parsed["exact"],
-                },
-            )
-            return result
-        except Exception as error:
-            if is_navigation_error(error):
-                print(
-                    "Navigation detected during normalize_selector (Playwright), "
-                    "returning None"
-                )
-                return None
-            raise
 
     # Plain string selector - return as-is
     if isinstance(selector, str):
@@ -281,18 +229,14 @@ async def normalize_selector(
                     return null;
                 }
 
-                // Generate a unique selector using data-qa or nth-of-type
-                const dataQa = matchingElement.getAttribute('data-qa');
-                if (dataQa) {
-                    return `[data-qa="${dataQa}"]`;
+                const steps = [];
+                for (let node = matchingElement; node; node = node.parentElement) {
+                    const siblings = Array.from(node.parentElement?.children ?? [])
+                        .filter(sibling => sibling.localName === node.localName);
+                    const index = Math.max(1, siblings.indexOf(node) + 1);
+                    steps.unshift(`${CSS.escape(node.localName)}:nth-of-type(${index})`);
                 }
-
-                // Use nth-of-type as fallback
-                const tagName = matchingElement.tagName.toLowerCase();
-                const siblings = Array.from(matchingElement.parentElement.children)
-                    .filter(el => el.tagName.toLowerCase() === tagName);
-                const index = siblings.indexOf(matchingElement);
-                return `${tagName}:nth-of-type(${index + 1})`;
+                return steps.join(' > ');
             """
             result = page.execute_script(
                 script,

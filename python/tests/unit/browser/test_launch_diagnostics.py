@@ -7,12 +7,30 @@ import pytest
 
 from browser_commander.browser.launch_diagnostics import (
     BrowserLaunchError,
+    launch_failure,
     redact_launch_evidence,
 )
 from browser_commander.browser.real_browser import (
     RealBrowserOptions,
     launch_real_browser,
 )
+
+
+def test_attachment_timeout_remains_visible_alongside_browser_stderr():
+    from types import SimpleNamespace
+
+    error = launch_failure(
+        TimeoutError("connect_over_cdp: Timeout 30000ms exceeded"),
+        phase="connect",
+        options=RealBrowserOptions(),
+        process=SimpleNamespace(
+            exit_code=None,
+            stderr_tail="DevTools listening on ws://127.0.0.1:9222/devtools/browser/private\nCVDisplayLinkCreateWithCGDisplay failed",
+        ),
+    )
+    assert "connect_over_cdp: Timeout 30000ms exceeded" in str(error)
+    assert "CVDisplayLinkCreateWithCGDisplay failed" in str(error)
+    assert "private" not in str(error)
 
 
 async def test_bad_executable_preserves_stderr_and_cleanup():

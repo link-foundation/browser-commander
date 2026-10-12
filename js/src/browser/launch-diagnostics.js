@@ -7,10 +7,11 @@ export class BrowserLaunchError extends Error {
     exitCode = null,
     signal = null,
     stderrTail = '',
+    attachmentStage,
     cause,
   }) {
     super(
-      `Browser launch failed (${phase}: ${category}): ${stderrTail || cause?.message || ''}`,
+      `Browser launch failed (${phase}: ${category}): ${cause?.message || ''}${stderrTail ? `\nBrowser stderr:\n${stderrTail}` : ''}`,
       { cause }
     );
     this.name = 'BrowserLaunchError';
@@ -21,6 +22,7 @@ export class BrowserLaunchError extends Error {
       exitCode,
       signal,
       stderrTail,
+      ...(attachmentStage ? { attachmentStage } : {}),
     });
   }
 }
@@ -98,5 +100,6 @@ export function launchFailure(
     signal: browserProcess?.signalCode ?? null,
     stderrTail: scrub(browserProcess?.stderrTail ?? cause?.stderrTail ?? ''),
     cause: safeCause,
+    attachmentStage: cause?.attachmentStage,
   });
 }

@@ -6,7 +6,6 @@ across both Playwright and Selenium engines.
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from browser_commander.core.constants import TIMING
@@ -21,7 +20,7 @@ from browser_commander.core.navigation_safety import (
 def create_playwright_locator(page: Any, selector: str) -> Any:
     """Create Playwright locator from selector string.
 
-    Handles :nth-of-type() pseudo-selectors which don't work in Playwright locators.
+    Preserves native CSS and text selector semantics.
 
     Args:
         page: Browser page object
@@ -32,14 +31,6 @@ def create_playwright_locator(page: Any, selector: str) -> Any:
     """
     if not selector:
         raise ValueError("selector is required")
-
-    # Check if selector has :nth-of-type(n) pattern
-    nth_of_type_match = re.match(r"^(.+):nth-of-type\((\d+)\)$", selector)
-
-    if nth_of_type_match:
-        base_selector = nth_of_type_match.group(1)
-        index = int(nth_of_type_match.group(2)) - 1  # Convert to 0-based index
-        return page.locator(base_selector).nth(index)
 
     return page.locator(selector)
 

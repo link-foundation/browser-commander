@@ -205,32 +205,18 @@ describe('selectors', () => {
       return page;
     }
 
-    it('splits :has-text into base selector and text', async () => {
-      const page = capturingPage();
-      await normalizeSelector({
-        page,
-        engine: 'playwright',
-        selector: 'nav a:has-text("Sign in")',
-      });
-      assert.deepStrictEqual(page.parsed, {
-        baseSelector: 'nav a',
-        text: 'Sign in',
-        exact: false,
-      });
-    });
-
-    it('splits :text-is into base selector and exact text', async () => {
-      const page = capturingPage();
-      await normalizeSelector({
-        page,
-        engine: 'playwright',
-        selector: 'button:text-is("Submit")',
-      });
-      assert.deepStrictEqual(page.parsed, {
-        baseSelector: 'button',
-        text: 'Submit',
-        exact: true,
-      });
+    it('preserves native text selectors without an eager lookup', async () => {
+      for (const selector of [
+        'nav a:has-text("Sign in")',
+        'button:text-is("Submit")',
+      ]) {
+        const page = capturingPage();
+        assert.equal(
+          await normalizeSelector({ page, engine: 'playwright', selector }),
+          selector
+        );
+        assert.equal(page.parsed, null);
+      }
     });
 
     it('returns an unparseable selector unchanged', async () => {

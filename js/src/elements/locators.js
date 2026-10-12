@@ -6,7 +6,7 @@ import {
 
 /**
  * Helper to create Playwright locator from selector string
- * Handles :nth-of-type() pseudo-selectors which don't work in Playwright locators
+ * Preserves native CSS and text selector semantics.
  * @param {Object} options - Configuration options
  * @param {Object} options.page - Browser page object
  * @param {string} options.selector - CSS selector
@@ -22,15 +22,6 @@ export function createPlaywrightLocator(options = {}) {
   const { page, selector } = options;
 
   requireSelector(selector);
-  // Check if selector has :nth-of-type(n) pattern
-  const nthOfTypeMatch = selector.match(/^(.+):nth-of-type\((\d+)\)$/);
-
-  if (nthOfTypeMatch) {
-    const baseSelector = nthOfTypeMatch[1];
-    const index = parseInt(nthOfTypeMatch[2], 10) - 1; // Convert to 0-based index
-    return page.locator(baseSelector).nth(index);
-  }
-
   return page.locator(selector);
 }
 

@@ -177,6 +177,7 @@ export class ManagedProcess {
     this.stdout = new OutputChannel();
     this.stderr = new OutputChannel();
     this.exitListeners = new Set();
+    this.termination = null;
     runner.on('stdout', (chunk) => {
       if (forwardOutput) {
         process.stdout.write(chunk);
@@ -196,7 +197,15 @@ export class ManagedProcess {
         this.spawnError = error;
         return { code: error?.code ?? 1 };
       })
-      .then((result) => {
+      .then(async (result) => {
+        const actualExit = await this.termination;
+        if (actualExit) {
+          result = {
+            ...result,
+            code: actualExit.code ?? result.code,
+            signal: actualExit.signal,
+          };
+        }
         this.exitCode = typeof result.code === 'number' ? result.code : 1;
         this.signalCode = result.signal ?? null;
         for (const listener of this.exitListeners) {
@@ -233,10 +242,36 @@ export class ManagedProcess {
    * @returns {boolean} Whether a running process was signalled
    */
   kill(signal) {
-    if (this.exitCode !== null) {
+    if (this.exitCode !== null || this.termination) {
       return false;
     }
+    // command-stream resolves cancellation immediately and removes the child's
+    // listeners. Retain its handle and observe the real exit after signalling,
+    // so launchers cannot delete profiles while Chrome still writes to them.
+    const child = this.runner.child;
+    let resolveExit;
+    if (child?.pid) {
+      this.termination = new Promise((resolve) => {
+        resolveExit = resolve;
+      });
+    }
     this.runner.kill(signal);
+    if (resolveExit) {
+      if (child.exited) {
+        child.exited.then((code) =>
+          resolveExit({ code, signal: child.signalCode ?? null })
+        );
+      } else if (
+        Number.isInteger(child.exitCode) ||
+        typeof child.signalCode === 'string'
+      ) {
+        resolveExit({ code: child.exitCode, signal: child.signalCode });
+      } else {
+        child.once('exit', (code, exitSignal) =>
+          resolveExit({ code, signal: exitSignal })
+        );
+      }
+    }
     return true;
   }
 }

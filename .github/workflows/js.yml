@@ -253,6 +253,15 @@ jobs:
         # failed. See docs/CI-TIMEOUT-BUDGETS.md.
         run: bash ../scripts/run-with-budget-warning.sh 300 "Node.js test suite" npm test
 
+      - name: Check fresh-profile Chrome readiness and failure ownership on macOS
+        if: runner.os == 'macOS'
+        env:
+          RUN_E2E: 'true'
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 180 "macOS Chrome startup regression" \
+            node --test --test-concurrency=1 tests/e2e/startup-readiness.e2e.test.js
+
   # === RELEASE PREFLIGHT - prove npm will accept the publish (issue #128) ===
   # Principle 16 of the link-foundation pipeline templates, "Prove You Can
   # Publish Before You Build". The release jobs publish with npm trusted

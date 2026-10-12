@@ -41,7 +41,9 @@ class BrowserLaunchError(RuntimeError):
         stderr_tail="",
         cause=None,
     ):
-        detail = stderr_tail or str(cause or "")
+        detail = str(cause or "")
+        if stderr_tail:
+            detail += f"\nBrowser stderr:\n{stderr_tail}"
         super().__init__(f"Browser launch failed ({phase}: {category}): {detail}")
         self.phase = phase
         self.engine = engine

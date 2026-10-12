@@ -97,6 +97,39 @@ describe('startProcess', { timeout: 10000 }, () => {
     const exitCode = await child.exited;
     assert.notEqual(exitCode, 0);
   });
+
+  it(
+    'reports exit only after a signalled child finishes its profile writes',
+    { skip: process.platform === 'win32' && 'Windows termination is forceful' },
+    async (t) => {
+      const directory = await fs.mkdtemp(
+        path.join(tmpdir(), 'bc-shutdown-172-')
+      );
+      const marker = path.join(directory, 'flushed');
+      const child = startProcess(
+        node,
+        [repoPath('experiments', 'issue-172', 'delayed-shutdown.mjs'), marker],
+        { killGrace: 1000 }
+      );
+      const processHandle = child.runner.child;
+      t.after(async () => {
+        if (
+          processHandle.exitCode === null &&
+          processHandle.signalCode === null
+        ) {
+          processHandle.kill('SIGKILL');
+          await new Promise((resolve) => processHandle.once('exit', resolve));
+        }
+        await fs.rm(directory, { recursive: true, force: true });
+      });
+      await new Promise((resolve) => child.stdout.on('data', resolve));
+      child.kill();
+      await child.exited;
+      assert.equal(await fs.readFile(marker, 'utf8'), 'flushed');
+      assert.equal(processHandle.exitCode, 0);
+      assert.equal(child.exitCode, 0);
+    }
+  );
 });
 
 describe(

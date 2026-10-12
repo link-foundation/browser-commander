@@ -16,10 +16,10 @@ Work only on `issue-172-a9f96de6a00d`; update existing PR 173.
 - [ ] Run focused unit tests, real-browser integration tests, then full relevant suites and local CI quality checks. Save large output in log files.
 - [x] Keep experiments under this directory; bound stress probes and run memory-heavy builds sequentially with at most one compiler.
 - [x] Add release fragments/triggers for packages changed, following repository conventions.
-- [ ] Commit independently useful steps after their local checks; push only the prepared branch.
+- [x] Commit independently useful steps after their local checks; push only the prepared branch.
 - [x] Bring default-branch changes into the branch, preserving history.
-- [ ] Update PR title/body with reproduction, test evidence, limitations, all requirements and closing references for 170, 171, 172.
-- [ ] Review the complete PR diff for regressions and scope completeness.
-- [ ] List recent CI runs with timestamps and SHAs; download and inspect failed logs under `ci-logs/`; fix attributable failures.
+- [x] Update PR title/body with reproduction, test evidence, limitations, all requirements and closing references for 170, 171, 172.
+- [x] Review the complete PR diff for regressions and scope completeness.
+- [x] List recent CI runs with timestamps and SHAs; download and inspect failed logs under `ci-logs/`; fix attributable failures.
 - [ ] Wait for all background work and CI to finish; verify clean worktree and matching latest head.
 - [ ] Mark PR 173 ready and report the PR URL with final validation and material limitations.

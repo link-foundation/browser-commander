@@ -132,7 +132,7 @@ These are related evidence, not proof of this report's cause:
 | Element content, attributes, state, queries, waiting, clicks, typing, scrolling, reusable helpers | Shared wrappers and locator helpers carry the corrected identity; native evaluation operates on locators/handles rather than feeding Playwright pseudo-classes to DOM `querySelector`.                    |
 | JS/Python/Rust launch errors                                                                      | All displayed stderr instead of the engine cause when stderr was nonempty; all now retain both.                                                                                                           |
 | Launch ownership                                                                                  | Existing failure paths dispose managed children, delete only owned temporary profiles, and retain supplied profiles; tests strengthen verification without changing that policy.                          |
-| Release automation                                                                                | JS patch changesets, Python fixed fragment, Rust patch fragment; no manual manifest version bump.                                                                                                         |
+| Release automation                                                                                | One JS patch changeset for both fixes, Python fixed fragments, Rust patch fragment; no manual manifest version bump.                                                                                      |
 
 ## Reproduction and validation commands
 
@@ -155,6 +155,8 @@ mypy src
 
 # rust: low-memory compiler settings and peak RSS recorded by the helper
 python3 ../experiments/issue-172/run-rust-check.py test --lib
+python3 ../experiments/issue-172/run-rust-check.py test --all-features
+python3 ../experiments/issue-172/run-rust-check.py clippy --all-targets --all-features
 cargo fmt --all -- --check
 
 # repository root: original issue fixture screenshots using the actual library
@@ -168,3 +170,9 @@ languages. Rust's first compile used one job without incremental/debug data,
 completed without OOM, and measured peak child RSS at 2,446,720 KiB. Browser
 tests use finite inputs and test deadlines; no stack or memory stress probe is
 needed. CI runs and any failed logs are checked against the final commit SHA.
+
+The first published CI run at `412fd4f` found two added JS changesets, while
+`js/scripts/validate-changeset.mjs` requires exactly one per PR. Its downloaded
+log (`ci-logs/javascript-38210707824.log`, line 930) identifies this release
+policy failure. Both release notes are combined into one patch changeset; the
+same validation script verifies the correction locally before pushing.

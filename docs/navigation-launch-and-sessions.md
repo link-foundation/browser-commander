@@ -65,6 +65,19 @@ output is forwarded only with explicit verbose logging. Rust command-stream
 does not expose a reliable separate termination signal, so its `signal` can be
 `None`.
 
+The displayed launch error includes both the sanitized engine cause and browser
+stderr. An emitted DevTools URL establishes that Chrome started listening; the
+launcher still checks `/json/version` and verifies the launched browser's
+WebSocket identity before attaching. `startupTimeout` bounds that readiness
+check; `timeout` controls Playwright's subsequent CDP attachment and
+`protocolTimeout` controls individual Puppeteer CDP calls.
+
+JavaScript attachment errors also carry `attachmentStage` when available:
+`engine-connect`, `page-selection`, or `storage-restore`. With `verbose: true`,
+stage transitions include elapsed milliseconds. Logging remains off by default.
+Failed launches terminate their own managed process, delete an owned temporary
+profile, and preserve caller-supplied profile directories.
+
 In a container, install the browser's system libraries, give Chromium sufficient
 shared memory, and run as a user with a working sandbox. Select a known executable
 with `executablePath`/`executable_path` when discovery fails. `--no-sandbox` or

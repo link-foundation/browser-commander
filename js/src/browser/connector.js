@@ -1,4 +1,5 @@
 import { attachDownloads } from '../downloads/attach.js';
+import { connectionStage } from './connection-stage.js';
 import { connectWebDriver, launchWebDriver } from './webdriver.js';
 import {
   loadStorageState,
@@ -282,7 +283,9 @@ async function connectPlaywright({ options, loadPlaywright, storageState }) {
   const settings = buildPlaywrightConnectOptions(options);
   let browser;
   try {
-    browser = await chromium.connectOverCDP(endpoint, settings);
+    browser = await connectionStage(options, 'engine-connect', () =>
+      chromium.connectOverCDP(endpoint, settings)
+    );
   } catch (error) {
     if (
       settings.noDefaults !== undefined ||
@@ -291,21 +294,26 @@ async function connectPlaywright({ options, loadPlaywright, storageState }) {
     ) {
       throw error;
     }
-    browser = await chromium.connectOverCDP(endpoint, {
-      ...settings,
-      noDefaults: true,
-    });
+    browser = await connectionStage(options, 'engine-connect', () =>
+      chromium.connectOverCDP(endpoint, { ...settings, noDefaults: true })
+    );
   }
   try {
     const context = browser.contexts()[0];
     if (!context) {
       throw new Error('Connected Playwright browser has no default context');
     }
-    const page =
-      (await pickForegroundPage(context.pages(), options)) ??
-      (await context.newPage());
+    const page = await connectionStage(
+      options,
+      'page-selection',
+      async () =>
+        (await pickForegroundPage(context.pages(), options)) ??
+        (await context.newPage())
+    );
 
-    await restorePlaywrightStorageState({ context, storageState });
+    await connectionStage(options, 'storage-restore', () =>
+      restorePlaywrightStorageState({ context, storageState })
+    );
     return { browser, page, detach: browser.close?.bind(browser) };
   } catch (error) {
     await ignoreCleanup(() => browser.close?.());
@@ -316,15 +324,21 @@ async function connectPlaywright({ options, loadPlaywright, storageState }) {
 async function connectPuppeteer({ options, loadPuppeteer, storageState }) {
   const puppeteerModule = await loadPuppeteer();
   const puppeteer = puppeteerModule.default ?? puppeteerModule;
-  const browser = await puppeteer.connect(
-    buildPuppeteerConnectOptions(options)
+  const browser = await connectionStage(options, 'engine-connect', () =>
+    puppeteer.connect(buildPuppeteerConnectOptions(options))
   );
   try {
-    const page =
-      (await pickForegroundPage(await browser.pages(), options)) ??
-      (await browser.newPage());
+    const page = await connectionStage(
+      options,
+      'page-selection',
+      async () =>
+        (await pickForegroundPage(await browser.pages(), options)) ??
+        (await browser.newPage())
+    );
 
-    await restorePuppeteerStorageState({ page, storageState });
+    await connectionStage(options, 'storage-restore', () =>
+      restorePuppeteerStorageState({ page, storageState })
+    );
     return { browser, page, detach: browser.disconnect?.bind(browser) };
   } catch (error) {
     await ignoreCleanup(() => browser.disconnect?.());

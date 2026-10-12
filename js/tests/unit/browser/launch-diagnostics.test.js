@@ -1,6 +1,28 @@
 // feature-parity: launch.diagnostics@native-typed
 import { it } from 'node:test';
-import { redactLaunchEvidence } from '../../../src/browser/launch-diagnostics.js';
+import {
+  launchFailure,
+  redactLaunchEvidence,
+} from '../../../src/browser/launch-diagnostics.js';
+
+it('retains the attachment timeout alongside incidental Chrome stderr', () => {
+  const error = launchFailure(
+    new Error(
+      'connectOverCDP: Timeout 30000ms exceeded; <ws connected> ws://127.0.0.1:9222/devtools/browser/private'
+    ),
+    {
+      phase: 'connect',
+      browserProcess: {
+        exitCode: null,
+        stderrTail:
+          'DevTools listening on ws://127.0.0.1:9222/devtools/browser/private\nCVDisplayLinkCreateWithCGDisplay failed',
+      },
+    }
+  );
+  assert.match(error.message, /connectOverCDP: Timeout 30000ms exceeded/);
+  assert.match(error.message, /CVDisplayLinkCreateWithCGDisplay failed/);
+  assert.doesNotMatch(error.message, /devtools|private|127\.0\.0\.1/);
+});
 
 it('diagnostics scrub URL credentials and queries and bound multibyte evidence', () => {
   const redacted = redactLaunchEvidence(

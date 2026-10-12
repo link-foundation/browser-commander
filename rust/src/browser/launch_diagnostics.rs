@@ -52,14 +52,12 @@ impl fmt::Display for BrowserLaunchError {
         write!(
             f,
             "Browser launch failed ({}: {}): {}",
-            self.phase,
-            self.category,
-            if self.stderr_tail.is_empty() {
-                self.cause.to_string()
-            } else {
-                self.stderr_tail.clone()
-            }
-        )
+            self.phase, self.category, self.cause
+        )?;
+        if !self.stderr_tail.is_empty() {
+            write!(f, "\nBrowser stderr:\n{}", self.stderr_tail)?;
+        }
+        Ok(())
     }
 }
 impl std::error::Error for BrowserLaunchError {
@@ -122,6 +120,21 @@ pub(crate) fn launch_failure(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn attachment_timeout_remains_visible_alongside_browser_stderr() {
+        let error = BrowserLaunchError {
+            phase: "connect",
+            engine: EngineType::Playwright,
+            category: "startup_timeout",
+            exit_code: None,
+            signal: None,
+            stderr_tail: "CVDisplayLinkCreateWithCGDisplay failed".into(),
+            cause: anyhow::anyhow!("connectOverCDP: Timeout 30000ms exceeded"),
+        };
+        let message = error.to_string();
+        assert!(message.contains("connectOverCDP: Timeout 30000ms exceeded"));
+        assert!(message.contains("CVDisplayLinkCreateWithCGDisplay failed"));
+    }
     #[test]
     fn scrubs_url_credentials_and_bounds_multibyte_evidence() {
         let value = redact_launch_evidence(

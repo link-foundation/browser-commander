@@ -64,7 +64,7 @@ function signalExitCode(signal) {
 }
 
 /** Signal a process and its process group, ignoring an already-gone one. */
-function signalProcessTree(pid, signal) {
+export function signalProcessTree(pid, signal) {
   let delivered = false;
   for (const target of process.platform === 'win32' ? [pid] : [-pid, pid]) {
     try {

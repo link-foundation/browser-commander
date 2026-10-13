@@ -54,11 +54,15 @@ export async function installSessionPersistence(result, options) {
   const persistAndClose = () =>
     (closing ??= (async () => {
       try {
-        const state = await saveStorageState(result.page);
-        await writeRestrictedState(file, {
-          cookies: state.cookies.filter((cookie) => !(cookie.expires > 0)),
-          origins: [],
-        });
+        // A handed-off session no longer has an engine connection to save
+        // from; the controller that reconnects owns persistence.
+        if (!result.detached) {
+          const state = await saveStorageState(result.page);
+          await writeRestrictedState(file, {
+            cookies: state.cookies.filter((cookie) => !(cookie.expires > 0)),
+            origins: [],
+          });
+        }
       } finally {
         await close();
       }

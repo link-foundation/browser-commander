@@ -66,3 +66,28 @@ export function useTempDirectories(prefix) {
     return directory;
   };
 }
+
+/**
+ * Wait until a file a background process writes has the expected text.
+ *
+ * @param {string} file - File to poll
+ * @param {string} expected - Text to wait for
+ * @param {number} [timeout=5000] - How long to poll, in milliseconds
+ * @returns {Promise<boolean>} Whether the text appeared in time
+ */
+export async function waitForFileText(file, expected, timeout = 5000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const text = await fs.readFile(file, 'utf8').catch((error) => {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+      return null;
+    });
+    if (text === expected) {
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  return false;
+}

@@ -251,3 +251,4 @@ for Clippy. A single slow hook can be skipped for one commit with
 [UNLICENSE](LICENSE)
 
 See [navigation budgets, launch diagnostics, reusable helpers and sessions](docs/navigation-launch-and-sessions.md) for the shared API contracts and engine limitations.
+An application that supervises the browser itself can own Ctrl+C and hand the exact browser and tab to its next run; see [embedding: Ctrl+C ownership and browser hand-off](docs/embedding-and-handoff.md).

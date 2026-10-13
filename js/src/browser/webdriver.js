@@ -30,6 +30,7 @@ import path from 'node:path';
 import { createWebDriverPage } from '../core/webdriver-page.js';
 import { isVerboseEnabled } from '../core/logger.js';
 import {
+  interruptionMode,
   runCommand as defaultRunCommand,
   startProcess as defaultStartProcess,
 } from '../utilities/subprocess.js';
@@ -483,6 +484,7 @@ async function teardown({
  * @param {Object<string,string>} [options.env] - Extra environment for the driver and browser
  * @param {number} [options.startupTimeout=30000]
  * @param {boolean} [options.verbose=false] - Mirror the driver server's output
+ * @param {'managed'|'caller'} [options.interruption='managed'] - Who handles Ctrl+C for the driver server and the browser under it; see `startProcess`
  * @param {Object} [dependencies] - Injected selenium modules, runCommand, startProcess, fetch, reservePort, environment, platform (tests)
  * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, bidi: boolean}>}
  */
@@ -564,6 +566,7 @@ async function launchWebDriverOnce(options, dependencies) {
     startupTimeout = 30_000,
     verbose = false,
     debuggerAddress,
+    interruption,
   } = options;
   assertBrowser(browser);
   const safari = isSafariChannel(browser);
@@ -607,7 +610,11 @@ async function launchWebDriverOnce(options, dependencies) {
     driverProcess = startProcess(
       resolved.driverPath,
       buildDriverServerArgs(browser, port),
-      { env: childEnv, forwardOutput: verbose }
+      {
+        env: childEnv,
+        forwardOutput: verbose,
+        interruption: interruptionMode(interruption),
+      }
     );
     for (const stream of [driverProcess.stdout, driverProcess.stderr]) {
       stream?.on('data', (chunk) => {

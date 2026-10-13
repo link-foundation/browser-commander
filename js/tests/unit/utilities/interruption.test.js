@@ -1,17 +1,23 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
 import * as fs from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import {
   interruptionMode,
   startProcess,
 } from '../../../src/utilities/subprocess.js';
 import { repoPath } from '../../helpers/repo.js';
+import { waitForFileText } from '../../helpers/temp-directory.js';
 
 // feature-parity: process.interruption@native-typed
 
 const node = process.execPath;
+const delayedShutdown = repoPath(
+  'experiments',
+  'issue-172',
+  'delayed-shutdown.mjs'
+);
 const unixOnly = {
   timeout: 15000,
   skip:
@@ -98,11 +104,10 @@ describe('interruption ownership (issue #174)', unixOnly, () => {
   it('kill() still awaits the actual exit of a caller-owned child', async (t) => {
     const directory = await tempDirectory(t, 'bc-caller-kill-174-');
     const marker = path.join(directory, 'flushed');
-    const child = startProcess(
-      node,
-      [repoPath('experiments', 'issue-172', 'delayed-shutdown.mjs'), marker],
-      { interruption: 'caller', killGrace: 1000 }
-    );
+    const child = startProcess(node, [delayedShutdown, marker], {
+      interruption: 'caller',
+      killGrace: 1000,
+    });
     t.after(() => forceKill(child.pid));
     await new Promise((resolve) => child.stdout.on('data', resolve));
     assert.equal(child.kill(), true);
@@ -143,19 +148,11 @@ describe('interruption ownership (issue #174)', unixOnly, () => {
     t.after(() => forceKill(pid));
     assert.equal(detached, true);
     assert.equal(isAlive(pid), true);
-    const deadline = Date.now() + 5000;
-    while (Date.now() < deadline) {
-      try {
-        assert.equal(await fs.readFile(marker, 'utf8'), 'survived');
-        return;
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          throw error;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-    }
-    assert.fail('detached child did not outlive its supervisor');
+    assert.equal(
+      await waitForFileText(marker, 'survived'),
+      true,
+      'detached child did not outlive its supervisor'
+    );
   });
 
   it('detach() is idempotent and a detached child can still be stopped', async () => {

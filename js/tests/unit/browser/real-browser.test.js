@@ -266,7 +266,7 @@ describe('launchAndConnectRealBrowser', () => {
         '--remote-debugging-port=9444',
         'about:blank',
       ],
-      { env: undefined, verbose: false },
+      { env: undefined, interruption: 'managed', verbose: false },
     ]);
     assert.deepEqual(calls[1], ['wait', 9444]);
     assert.deepEqual(calls[2], [

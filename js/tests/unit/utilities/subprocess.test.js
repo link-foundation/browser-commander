@@ -9,6 +9,7 @@ import {
   startProcess,
 } from '../../../src/utilities/subprocess.js';
 import { repoPath } from '../../helpers/repo.js';
+import { waitForFileText } from '../../helpers/temp-directory.js';
 
 const node = process.execPath;
 
@@ -173,19 +174,11 @@ describe(
       assert.equal(await launcher.exited, 0, launcher.stderrTail);
       assert.ok(pid > 0);
       await assert.rejects(fs.readFile(marker), { code: 'ENOENT' });
-      const deadline = Date.now() + 5000;
-      while (Date.now() < deadline) {
-        try {
-          assert.equal(await fs.readFile(marker, 'utf8'), 'survived');
-          return;
-        } catch (error) {
-          if (error.code !== 'ENOENT') {
-            throw error;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 50));
-        }
-      }
-      assert.fail('detached child did not survive the launcher exit');
+      assert.equal(
+        await waitForFileText(marker, 'survived'),
+        true,
+        'detached child did not survive the launcher exit'
+      );
     });
   }
 );

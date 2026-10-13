@@ -73,6 +73,11 @@ function sleeper(t, script = 'setInterval(()=>{},1000)') {
   return child;
 }
 
+// These tests stop real processes with POSIX signals and exit codes.
+const posixSignals = {
+  skip: process.platform === 'win32' && 'POSIX signals and exit codes',
+};
+
 describe('browser hand-off (issue #174)', () => {
   it('is exported from the package API', () => {
     assert.equal(typeof api.reconnectBrowser, 'function');
@@ -229,50 +234,62 @@ describe('browser hand-off (issue #174)', () => {
     assert.equal(await session.handoff(), first);
   });
 
-  it('close() of a reconnected session closes the browser and awaits its process', async (t) => {
-    const child = sleeper(t);
-    const endpoint = await fakeEndpoint({
-      onBrowserClose: () => child.kill('SIGTERM'),
-    });
-    const directory = await mkdtemp(path.join(os.tmpdir(), 'bc-handoff-'));
-    cleanups.push(() => rm(directory, { recursive: true, force: true }));
-    const session = await reconnectBrowserWithDependencies(
-      handoffFor(endpoint, {
-        pid: child.pid,
-        userDataDir: directory,
-        temporaryProfile: true,
-      }),
-      {},
-      { connect: fakeConnect([]) }
-    );
-    await session.close();
-    assert.equal(endpoint.closes.length, 1);
-    assert.equal(await child.exited, 128 + 15);
-    await assert.rejects(access(directory), { code: 'ENOENT' });
-    // Idempotent.
-    await session.close();
-    assert.equal(endpoint.closes.length, 1);
-  });
+  it(
+    'close() of a reconnected session closes the browser and awaits its process',
+    posixSignals,
+    async (t) => {
+      const child = sleeper(t);
+      const endpoint = await fakeEndpoint({
+        onBrowserClose: () => child.kill('SIGTERM'),
+      });
+      const directory = await mkdtemp(path.join(os.tmpdir(), 'bc-handoff-'));
+      cleanups.push(() => rm(directory, { recursive: true, force: true }));
+      const session = await reconnectBrowserWithDependencies(
+        handoffFor(endpoint, {
+          pid: child.pid,
+          userDataDir: directory,
+          temporaryProfile: true,
+        }),
+        {},
+        { connect: fakeConnect([]) }
+      );
+      await session.close();
+      assert.equal(endpoint.closes.length, 1);
+      assert.equal(await child.exited, 128 + 15);
+      await assert.rejects(access(directory), { code: 'ENOENT' });
+      // Idempotent.
+      await session.close();
+      assert.equal(endpoint.closes.length, 1);
+    }
+  );
 
-  it('kills the process tree when Browser.close does not stop it', async (t) => {
-    const child = sleeper(t);
-    const endpoint = await fakeEndpoint();
-    await closeHandedOffBrowser(handoffFor(endpoint, { pid: child.pid }), {
-      closeTimeout: 300,
-    });
-    assert.equal(endpoint.closes.length, 1);
-    assert.equal(await child.exited, 128 + 9);
-  });
+  it(
+    'kills the process tree when Browser.close does not stop it',
+    posixSignals,
+    async (t) => {
+      const child = sleeper(t);
+      const endpoint = await fakeEndpoint();
+      await closeHandedOffBrowser(handoffFor(endpoint, { pid: child.pid }), {
+        closeTimeout: 300,
+      });
+      assert.equal(endpoint.closes.length, 1);
+      assert.equal(await child.exited, 128 + 9);
+    }
+  );
 
-  it('never closes a different browser that took over the endpoint', async (t) => {
-    const child = sleeper(t);
-    const endpoint = await fakeEndpoint();
-    const handoff = handoffFor(endpoint, { pid: child.pid });
-    endpoint.setBrowserId('someone-else');
-    await closeHandedOffBrowser(handoff, { closeTimeout: 200 });
-    assert.equal(endpoint.closes.length, 0);
-    assert.equal(await child.exited, 128 + 9);
-  });
+  it(
+    'never closes a different browser that took over the endpoint',
+    posixSignals,
+    async (t) => {
+      const child = sleeper(t);
+      const endpoint = await fakeEndpoint();
+      const handoff = handoffFor(endpoint, { pid: child.pid });
+      endpoint.setBrowserId('someone-else');
+      await closeHandedOffBrowser(handoff, { closeTimeout: 200 });
+      assert.equal(endpoint.closes.length, 0);
+      assert.equal(await child.exited, 128 + 9);
+    }
+  );
 
   it('waitForPidExit reports whether a process ended in time', async (t) => {
     const child = sleeper(t);

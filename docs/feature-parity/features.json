@@ -159,6 +159,23 @@
           "title": "Cookie-only session discovery and opt-in persistence"
         }
       ]
+    },
+    {
+      "title": "Embedding and test runners",
+      "features": [
+        {
+          "id": "process.interruption",
+          "title": "Caller-owned interruption (SIGINT) for a launched browser"
+        },
+        {
+          "id": "sessions.handoff",
+          "title": "Detach a launched browser and reconnect to the exact tab"
+        },
+        {
+          "id": "engine.cypress",
+          "title": "Drive the Cypress-launched browser with any engine"
+        }
+      ]
     }
   ]
 }

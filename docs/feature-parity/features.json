@@ -170,10 +170,6 @@
         {
           "id": "sessions.handoff",
           "title": "Detach a launched browser and reconnect to the exact tab"
-        },
-        {
-          "id": "engine.cypress",
-          "title": "Drive the Cypress-launched browser with any engine"
         }
       ]
     }

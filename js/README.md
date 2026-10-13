@@ -496,7 +496,7 @@ await again.close(); // closes the browser and waits for its process to exit
 `session.handoff()` returns the same JSON-serializable description without
 detaching. `reconnectBrowser` throws a `BrowserHandoffError` when the endpoint
 now belongs to another browser instance or the tab is gone. See
-[embedding: Ctrl+C ownership and browser hand-off](https://github.com/link-foundation/browser-commander/blob/main/docs/embedding-and-handoff.md).
+[embedding: Ctrl+C ownership and browser hand-off](../docs/embedding-and-handoff.md).
 
 ### launchWebDriver(options) / connectWebDriver(options)
 

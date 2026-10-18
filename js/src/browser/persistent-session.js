@@ -7,6 +7,10 @@ import { launchAndConnectRealBrowserWithDependencies } from './real-browser.js';
 import { assertDedicatedUserDataDir } from './system-browser.js';
 import { findSessionProcess } from './session-adoption.js';
 import { startDetachedProcess } from '../utilities/subprocess.js';
+import { closeRemoteBrowser, probeSession } from './cdp-browser-endpoint.js';
+import { pageTargetId } from './browser-handoff.js';
+
+export { closeRemoteBrowser, probeSession };
 
 export const SESSION_METADATA = '.browser-commander-session.json';
 const activity = new WeakMap();
@@ -26,13 +30,6 @@ export async function writeSessionMetadata(file, value) {
   } finally {
     await fs.rm(temporary, { force: true });
   }
-}
-export function probeSession(endpoint) {
-  return fetch(`${endpoint}/json/version`, {
-    signal: AbortSignal.timeout(1000),
-  })
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null);
 }
 export async function acquireLease(file, retries = 50) {
   let lease;
@@ -168,17 +165,7 @@ async function open(options, file, endpoint) {
   }
 }
 async function remember(page, engine, file, metadata, idleTimeoutMs) {
-  const cdp =
-    engine === 'playwright'
-      ? await page.context().newCDPSession(page)
-      : await page.target().createCDPSession();
-  try {
-    metadata.targetId = (
-      await cdp.send('Target.getTargetInfo')
-    ).targetInfo.targetId;
-  } finally {
-    await cdp.detach();
-  }
+  metadata.targetId = await pageTargetId({ engine, page });
   metadata.lastActive = Date.now();
   metadata.idleTimeoutMs = idleTimeoutMs;
   await writeSessionMetadata(file, metadata);
@@ -364,44 +351,6 @@ async function lifecycle(
     }
   };
   return result;
-}
-export async function closeRemoteBrowser(endpoint) {
-  await new Promise((resolve, reject) => {
-    const socket = new globalThis.WebSocket(endpoint);
-    let acknowledged = false;
-    const timer = setTimeout(() => {
-      socket.close();
-      reject(new Error('Browser.close timed out'));
-    }, 3000);
-    socket.onopen = () =>
-      socket.send(JSON.stringify({ id: 1, method: 'Browser.close' }));
-    socket.onclose = () => {
-      clearTimeout(timer);
-      resolve();
-    };
-    socket.onerror = () => {
-      // Chrome can close the TCP connection without a WebSocket close frame
-      // after acknowledging Browser.close. Its ensuing close event completes
-      // shutdown; a pre-acknowledgement connection error remains a failure.
-      if (!acknowledged) {
-        clearTimeout(timer);
-        reject(new Error('Browser.close connection failed'));
-      }
-    };
-    socket.onmessage = ({ data }) => {
-      const response = JSON.parse(data);
-      if (response.id !== 1) {
-        return;
-      }
-      if (response.error) {
-        clearTimeout(timer);
-        reject(new Error(response.error.message ?? 'Browser.close failed'));
-        socket.close();
-      } else {
-        acknowledged = true;
-      }
-    };
-  });
 }
 /** Reuse an owned profile/port; detach survives the controller; close terminates it. */
 export async function connectOrLaunch(settings = {}) {

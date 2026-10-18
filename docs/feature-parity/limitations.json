@@ -12,5 +12,11 @@
     "languages": ["python", "rust"],
     "tier": "untyped-via-cli",
     "reason": "The optional shared CLI accepts dynamic JSON and forwards all three engines to the JavaScript command server. Native library launches remain the default; the CLI needs Node.js and the selected JavaScript engine package."
+  },
+  {
+    "id": "embedder-handoff-js-first",
+    "features": ["process.interruption", "sessions.handoff"],
+    "languages": ["python", "rust"],
+    "reason": "Caller-owned interruption and browser hand-off (issue #174) are implemented in JavaScript, where Command Stream forwards SIGINT to every started child and the engines install their own SIGINT handlers. The Python and Rust ports are tracked as follow-up work; a JavaScript-written hand-off is plain JSON with a CDP endpoint and target id, so those languages can already attach with connect_browser."
   }
 ]

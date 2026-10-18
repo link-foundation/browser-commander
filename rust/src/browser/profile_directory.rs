@@ -186,9 +186,11 @@ pub fn configure_user_data_dir_for_profile(
             .ok_or_else(|| anyhow!("preferences.browser must be a JSON object"))?
             .insert("check_default_browser".to_string(), json!(check));
     }
+    // Chrome 155 opens a "Continue where you left off" session restore infobar
+    // in a new profile until it has been shown 3 times.
     merge_json_file(
         &user_data_dir.join(profile).join(PREFERENCES_FILE),
-        &json!({"browser":{"check_default_browser":false}}),
+        &json!({"browser":{"check_default_browser":false,"session_restore_infobar_times_shown":5}}),
         &overrides,
     )?;
     let check = overrides
@@ -305,7 +307,7 @@ mod tests {
         .unwrap();
         assert_eq!(
             preferences,
-            serde_json::json!({"browser":{"check_default_browser":false}})
+            serde_json::json!({"browser":{"check_default_browser":false,"session_restore_infobar_times_shown":5}})
         );
         let other = create_temporary_user_data_dir(None).unwrap();
         assert_ne!(directory, other);
@@ -347,7 +349,7 @@ mod tests {
         assert_eq!(
             preferences,
             json!({
-                "browser":{"check_default_browser":false,"show_home_button":true},
+                "browser":{"check_default_browser":false,"session_restore_infobar_times_shown":5,"show_home_button":true},
                 "intl":{"accept_languages":"en"}
             })
         );

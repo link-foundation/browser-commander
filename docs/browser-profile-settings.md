@@ -6,14 +6,15 @@ Settings are merged into JSON on disk without adding automation switches or
 changing the user's normal browser profile. The Python and Rust APIs use
 `snake_case` option names.
 
-| Default write                                                       | Why                                                       | Opt out                                                                                       |
-| ------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `<userDataDir>/First Run` empty sentinel                            | Skip Chromium's first-run flow                            | `firstRun: true` on a new profile (`first_run=True` in Python/Rust, `--first-run` in the CLI) |
-| `Local State`: `browser.last_whats_new_version = 9999`              | Keep the What's New tab from taking focus                 | `localState: { browser: { last_whats_new_version: 0 } }`                                      |
-| `Local State`: `fre.has_user_seen_fre = true`                       | Keep Edge's welcome tab from taking focus                 | `localState: { fre: { has_user_seen_fre: false } }`                                           |
-| `<profile>/Preferences`: `browser.check_default_browser = false`    | Compatibility with older Chromium's default browser check | `defaultBrowserCheck: true` or an explicit `preferences.browser.check_default_browser`        |
-| `Local State`: `browser.default_browser_infobar_declined_count = 5` | Suppress the current Chromium infobar                     | `defaultBrowserCheck: true` or an explicit `localState` value                                 |
-| `Local State`: `browser.default_browser_declined_count = 5`         | Suppress the current prompt surface experiment            | `defaultBrowserCheck: true` or an explicit `localState` value                                 |
+| Default write                                                              | Why                                                            | Opt out                                                                                       |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `<userDataDir>/First Run` empty sentinel                                   | Skip Chromium's first-run flow                                 | `firstRun: true` on a new profile (`first_run=True` in Python/Rust, `--first-run` in the CLI) |
+| `Local State`: `browser.last_whats_new_version = 9999`                     | Keep the What's New tab from taking focus                      | `localState: { browser: { last_whats_new_version: 0 } }`                                      |
+| `Local State`: `fre.has_user_seen_fre = true`                              | Keep Edge's welcome tab from taking focus                      | `localState: { fre: { has_user_seen_fre: false } }`                                           |
+| `<profile>/Preferences`: `browser.session_restore_infobar_times_shown = 5` | Keep Chrome 155's "Continue where you left off" infobar closed | An explicit `preferences.browser.session_restore_infobar_times_shown`                         |
+| `<profile>/Preferences`: `browser.check_default_browser = false`           | Compatibility with older Chromium's default browser check      | `defaultBrowserCheck: true` or an explicit `preferences.browser.check_default_browser`        |
+| `Local State`: `browser.default_browser_infobar_declined_count = 5`        | Suppress the current Chromium infobar                          | `defaultBrowserCheck: true` or an explicit `localState` value                                 |
+| `Local State`: `browser.default_browser_declined_count = 5`                | Suppress the current prompt surface experiment                 | `defaultBrowserCheck: true` or an explicit `localState` value                                 |
 
 The last two entries are needed because current Chromium's
 [prompt manager](https://github.com/chromium/chromium/blob/main/chrome/browser/ui/startup/default_browser_prompt/default_browser_prompt_manager.cc)
@@ -22,6 +23,12 @@ the infobar in Chrome 153. `defaultBrowserCheck: true` writes zero for both
 counts. User supplied `localState` values take precedence. The setting is
 applied after migration and snapshot copy so a copied preference cannot restore
 the prompt. With snapshot attach, `<profile>` is the selected profile directory.
+
+Chrome 155 shows a session restore infobar ("Continue where you left off:
+Chrome can restore your tabs every time you restart") in a new profile until
+the profile's `browser.session_restore_infobar_times_shown` count reaches 3
+(measured with `experiments/session-restore-infobar/probe.py`; Local State has
+no effect). Browser Commander writes 5.
 
 `preferences` and `localState` are JSON objects. They are recursively merged
 into `Preferences` and `Local State`; other fields in an existing profile are

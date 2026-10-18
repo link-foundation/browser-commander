@@ -135,7 +135,10 @@ describe('profile directory', () => {
         }
       );
       assert.deepEqual(await readPreferences(dir), {
-        browser: { check_default_browser: false },
+        browser: {
+          check_default_browser: false,
+          session_restore_infobar_times_shown: 5,
+        },
       });
     } finally {
       await removeUserDataDir(dir);
@@ -181,7 +184,11 @@ describe('profile directory', () => {
         localState: { browser: { extra: 1 } },
       });
       assert.deepEqual(await readPreferences(dir), {
-        browser: { check_default_browser: false, show_home_button: true },
+        browser: {
+          check_default_browser: false,
+          session_restore_infobar_times_shown: 5,
+          show_home_button: true,
+        },
         intl: { accept_languages: 'en' },
       });
       assert.deepEqual(

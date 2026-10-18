@@ -141,8 +141,15 @@ export async function configureUserDataDir(
   ) {
     throw new TypeError('profileDirectory must be one profile directory name');
   }
+  // Chrome 155 opens a "Continue where you left off" session restore infobar
+  // in a new profile until it has been shown 3 times.
   const profilePreferences = deepMerge(
-    { browser: { check_default_browser: false } },
+    {
+      browser: {
+        check_default_browser: false,
+        session_restore_infobar_times_shown: 5,
+      },
+    },
     preferences
   );
   assertObject(profilePreferences.browser, 'preferences.browser');

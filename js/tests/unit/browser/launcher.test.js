@@ -232,6 +232,29 @@ describe('launchBrowser', () => {
       await result.close();
       assert.deepEqual(calls.at(-1), ['browser.close']);
     });
+
+    it("leaves Ctrl+C to the caller with interruption: 'caller' (#174)", async () => {
+      for (const [interruption, expected] of [
+        [undefined, undefined],
+        ['managed', undefined],
+        ['caller', false],
+      ]) {
+        const calls = [];
+        const result = await launchBrowserWithDependencies(
+          { launch: 'engine', interruption },
+          { loadEngineModule: async () => fakePlaywright(calls), settleMs: 0 }
+        );
+        assert.equal(calls[0][2].handleSIGINT, expected);
+        await result.close();
+      }
+      await assert.rejects(
+        launchBrowserWithDependencies(
+          { launch: 'engine', interruption: 'nobody' },
+          { loadEngineModule: async () => fakePlaywright([]), settleMs: 0 }
+        ),
+        /interruption must be one of managed, caller/
+      );
+    });
   });
 });
 

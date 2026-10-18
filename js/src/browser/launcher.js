@@ -34,6 +34,7 @@ import {
   restorePuppeteerStorageState,
   restoreWebDriverStorageState,
 } from './storage-state.js';
+import { interruptionMode } from '../utilities/subprocess.js';
 
 /** How `launchBrowser` starts the browser (issue #103). */
 export const LAUNCH_MODES = Object.freeze(['real', 'engine']);
@@ -166,7 +167,12 @@ async function launchWithEngine(options, dependencies) {
     executablePath,
     automationParity,
     storageState,
+    interruption,
   } = options;
+  // The engines install their own SIGINT handler that closes the browser;
+  // with caller-owned interruption the embedder's handler decides (#174).
+  const signals =
+    interruptionMode(interruption) === 'caller' ? { handleSIGINT: false } : {};
   const chrome = resolveChromeArgs({
     args,
     extraArgs,
@@ -208,6 +214,7 @@ async function launchWithEngine(options, dependencies) {
           ignoreDefaultArgs: chrome.ignoreDefaultArgs,
           automationParity,
         }),
+        ...signals,
         ...(childEnv ? { env: childEnv } : {}),
       });
       page = browser.pages()[0] ?? (await browser.newPage());
@@ -223,6 +230,7 @@ async function launchWithEngine(options, dependencies) {
           automationParity,
         }),
         ...(slowMo ? { slowMo } : {}),
+        ...signals,
         ...(childEnv ? { env: childEnv } : {}),
       });
       page = (await browser.pages())[0] ?? (await browser.newPage());

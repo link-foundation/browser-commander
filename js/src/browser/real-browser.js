@@ -9,7 +9,9 @@ import { findBrowserSource } from './browser-sources.js';
 import { launchSafari } from './safari-launch.js';
 import { isSafariChannel } from './safari-support.js';
 
-import { startProcess } from '../utilities/subprocess.js';
+import { interruptionMode, startProcess } from '../utilities/subprocess.js';
+import { installHandoff } from './browser-handoff.js';
+import { closeRemoteBrowser } from './cdp-browser-endpoint.js';
 import { withDeadline } from '../traces/deadline.js';
 import {
   applyAutomationParityArgs,
@@ -256,8 +258,16 @@ export async function waitForCdpEndpoint({
   }
 }
 
-function spawnWithStartProcess(executablePath, args, { env, verbose }) {
-  return startProcess(executablePath, args, { env, forwardOutput: verbose });
+function spawnWithStartProcess(
+  executablePath,
+  args,
+  { env, verbose, interruption }
+) {
+  return startProcess(executablePath, args, {
+    env,
+    forwardOutput: verbose,
+    interruption,
+  });
 }
 
 async function waitForExit(browserProcess, timeout) {
@@ -310,12 +320,20 @@ function createCloser({
   closeTimeout,
   closeConnection,
   verbose,
+  handoffState = {},
 }) {
   const originalClose = closeConnection ?? browser?.close;
   let closing;
   const close = () => {
     closing ??= (async () => {
-      if (browserProcess.exitCode === null && originalClose) {
+      if (browserProcess.exitCode === null && handoffState.detached) {
+        // The engine connection was handed off; ask the browser directly.
+        await withDeadline(
+          closeRemoteBrowser(handoffState.webSocketDebuggerUrl),
+          closeTimeout,
+          'browser close'
+        ).catch(() => {});
+      } else if (browserProcess.exitCode === null && originalClose) {
         // A signal can sever the engine transport while its close RPC is pending.
         // Keep the existing close budget active until owned-process cleanup runs.
         await withDeadline(
@@ -346,6 +364,14 @@ function createCloser({
     browser.close = close;
   }
   return close;
+}
+
+/**
+ * Selenium attaches through a chromedriver the launch starts; the driver
+ * follows the browser's interruption ownership (issue #174).
+ */
+function driverInterruption(engine, interruption) {
+  return engine === 'selenium' ? { interruption } : {};
 }
 
 /**
@@ -400,6 +426,7 @@ async function spawnOnFreePort({
   argOptions,
   env,
   verbose,
+  interruption,
   userDataDir,
   startupTimeout,
   dependencies,
@@ -421,6 +448,7 @@ async function spawnOnFreePort({
       browserProcess = await spawnBrowser(executablePath, browserArgs, {
         env,
         verbose: false,
+        interruption,
       });
     } catch (error) {
       throw launchFailure(error, {
@@ -650,8 +678,10 @@ export async function launchAndConnectRealBrowserWithDependencies(
     preferences,
     localState,
     firstRun,
+    interruption: requestedInterruption,
     ...connectionOptions
   } = options;
+  const interruption = interruptionMode(requestedInterruption);
   const argOptions = {
     headless,
     restrictions,
@@ -731,6 +761,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       argOptions,
       env: childEnv,
       verbose,
+      interruption,
       userDataDir,
       startupTimeout,
       dependencies,
@@ -756,9 +787,11 @@ export async function launchAndConnectRealBrowserWithDependencies(
       engine,
       cdpEndpoint: resolvedCdpEndpoint,
       ...connectionOptions,
+      ...driverInterruption(engine, interruption),
       seedCookies,
       verbose,
     });
+    const handoffState = { detached: false };
     const close = createCloser({
       engine,
       browser: connection.browser,
@@ -768,8 +801,9 @@ export async function launchAndConnectRealBrowserWithDependencies(
       closeTimeout,
       closeConnection: engine === 'selenium' ? connection.close : undefined,
       verbose,
+      handoffState,
     });
-    return await installSessionPersistence(
+    const session = await installSessionPersistence(
       {
         ...connection,
         close,
@@ -784,6 +818,23 @@ export async function launchAndConnectRealBrowserWithDependencies(
         ...(snapshotLaunch ? { attach: snapshotLaunch.attach } : {}),
       },
       options
+    );
+    return installHandoff(
+      session,
+      {
+        engine,
+        cdpEndpoint: resolvedCdpEndpoint,
+        userDataDir,
+        temporaryProfile,
+        remoteDebuggingPort: launched.port,
+        executablePath,
+        pid: () => browserProcess.pid,
+        connectedBrowser: () => connection.browser,
+        // The browser outlives this controller: no SIGINT forwarding, and
+        // its handle no longer keeps this program running.
+        release: () => browserProcess.detach?.(),
+      },
+      handoffState
     );
   } catch (error) {
     if (browserProcess.exitCode === null) {

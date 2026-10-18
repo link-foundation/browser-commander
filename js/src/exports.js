@@ -71,6 +71,12 @@ export {
   launchRealBrowser,
 } from './browser/real-browser.js';
 export {
+  BROWSER_HANDOFF_VERSION,
+  BrowserHandoffError,
+  reconnectBrowser,
+} from './browser/browser-handoff.js';
+export { INTERRUPTION_MODES } from './utilities/subprocess.js';
+export {
   classifyDifferences,
   compareCommandLines,
   measureParity,

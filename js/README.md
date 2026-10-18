@@ -399,6 +399,7 @@ const { browser, page, close } = await launchBrowser({
   verbose: false, // Enable debug logging
   args: ['--no-sandbox'], // Custom Chrome args to append
   storageState: './session-state.json', // Saved cookies and localStorage, as a path or object
+  interruption: 'managed', // 'caller' leaves Ctrl+C (SIGINT) to your own handler
 });
 ```
 
@@ -471,6 +472,31 @@ const session = await launchRealBrowser({
 });
 console.log(session.migration.migrated, session.migration.skipped);
 ```
+
+### detach() / reconnectBrowser(handoff)
+
+For an application that supervises the browser itself, `interruption:
+'caller'` keeps Ctrl+C from reaching the launched browser (and its
+ChromeDriver), so the application's own SIGINT handler decides what happens.
+A real launch can then hand the exact browser and tab to the next run:
+
+```javascript
+const session = await launchBrowser({ interruption: 'caller' });
+process.on('SIGINT', async () => {
+  // The browser keeps running; the hand-off names its instance and tab.
+  writeFileSync('handoff.json', JSON.stringify(await session.detach()));
+  process.exit(130);
+});
+
+// Next run: attach to that exact tab - no launch, no new page, no navigation.
+const again = await reconnectBrowser('handoff.json');
+await again.close(); // closes the browser and waits for its process to exit
+```
+
+`session.handoff()` returns the same JSON-serializable description without
+detaching. `reconnectBrowser` throws a `BrowserHandoffError` when the endpoint
+now belongs to another browser instance or the tab is gone. See
+[embedding: Ctrl+C ownership and browser hand-off](../docs/embedding-and-handoff.md).
 
 ### launchWebDriver(options) / connectWebDriver(options)
 

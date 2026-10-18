@@ -68,3 +68,5 @@ and [Chrome's policy scopes](https://support.google.com/chrome/a/answer/9037717)
 under Xvfb, rather than a page screenshot, and checks its infobar strip. The
 before/after Chrome and Edge captures are in `docs/screenshots/issue-110/`.
 The Browser Parity workflow runs this check with real Chrome.
+Chrome 155's session restore infobar, before and after the profile pref, is
+captured in `docs/screenshots/session-restore-infobar/`.

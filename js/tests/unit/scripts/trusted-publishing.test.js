@@ -7,8 +7,13 @@ import { readRepoText } from '../../helpers/repo.js';
 describe('trusted publishing configuration', () => {
   const rust = parse(readRepoText('.github/workflows/rust.yml'));
 
+  // Organization policy: trusted publishing (OIDC) first, the token secret
+  // only when OIDC is unavailable.
+  const FALLBACK =
+    '${{ steps.crates_auth.outputs.token || secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}';
+
   for (const jobId of ['auto-release', 'manual-release']) {
-    it(`${jobId} uses a fresh OIDC token only when publishing`, () => {
+    it(`${jobId} publishes with a fresh OIDC token, falling back to the token secret`, () => {
       const job = rust.jobs[jobId];
       assert.equal(job.permissions['id-token'], 'write');
       const auth = job.steps.find((step) => step.id === 'crates_auth');
@@ -20,9 +25,11 @@ describe('trusted publishing configuration', () => {
       );
       assert.equal(auth.if, publish.if);
       assert.equal(
-        publish.env.CARGO_REGISTRY_TOKEN,
-        '${{ steps.crates_auth.outputs.token }}'
+        auth['continue-on-error'],
+        true,
+        'a trusted publishing failure must leave the token fallback reachable'
       );
+      assert.equal(publish.env.CARGO_REGISTRY_TOKEN, FALLBACK);
       assert.ok(job.steps.indexOf(auth) < job.steps.indexOf(publish));
       assert.ok(
         job.steps.indexOf(auth) >
@@ -31,11 +38,26 @@ describe('trusted publishing configuration', () => {
     });
   }
 
-  it('never reads the long-lived Cargo secret in the Rust workflow', () => {
-    assert.doesNotMatch(
-      readRepoText('.github/workflows/rust.yml'),
-      /secrets\.CARGO_TOKEN/
+  it('gives the release preflight the same token fallback', () => {
+    const probe = rust.jobs['release-preflight'].steps.find(
+      (step) => step.name === 'Probe crates.io trusted publishing'
     );
+    assert.equal(
+      probe.env.CARGO_REGISTRY_TOKEN,
+      '${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}'
+    );
+  });
+
+  it('reads the Cargo secrets only as the trusted publishing fallback', () => {
+    const uses = readRepoText('.github/workflows/rust.yml')
+      .split('\n')
+      .filter((line) => /secrets\.CARGO_/.test(line))
+      .map((line) => line.trim());
+    assert.deepEqual(uses, [
+      'CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}',
+      `CARGO_REGISTRY_TOKEN: ${FALLBACK}`,
+      `CARGO_REGISTRY_TOKEN: ${FALLBACK}`,
+    ]);
   });
 
   it('keeps the registered PyPI identity identical across preflight and releases', () => {

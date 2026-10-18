@@ -90,6 +90,7 @@ function environment(overrides) {
     NPM_REGISTRY: `${stub.origin}/npm`,
     CRATES_API: `${stub.origin}/crates`,
     NPM_PACKAGE: '@link-foundation/probe',
+    CRATES_PACKAGE: 'probe-crate',
     CARGO_REGISTRY_TOKEN: '',
     CARGO_TOKEN: '',
     GITHUB_STEP_SUMMARY: '',
@@ -133,6 +134,13 @@ const EXCHANGE =
   'POST /npm/-/npm/v1/oidc/token/exchange/package/@link-foundation%2Fprobe';
 const CRATES_MINT = 'POST /crates/api/v1/trusted_publishing/tokens';
 const CRATES_REVOKE = 'DELETE /crates/api/v1/trusted_publishing/tokens';
+const CRATES_PUBLISH = 'PUT /crates/api/v1/crates/new';
+// What crates.io answers to an authorised publish that omits the archive.
+const TOKEN_ACCEPTED = [
+  400,
+  { errors: [{ detail: 'invalid tarball length' }] },
+];
+const TOKEN_REJECTED = [403, { errors: [{ detail: 'authentication failed' }] }];
 const INVALID_PUBLISHER = [
   422,
   {
@@ -155,6 +163,33 @@ function probePypi(answer, overrides = {}) {
 function probeCrates(answer, overrides = {}) {
   stub.routes[CRATES_MINT] = answer;
   return preflight({ PREFLIGHT_REGISTRIES: 'crates', ...overrides });
+}
+
+/**
+ * Refuse the crates.io OIDC exchange and answer the token publish probe with
+ * `answer`, so the outcome rests on the token fallback.
+ */
+function probeFallback(answer, overrides = {}) {
+  stub.routes[CRATES_PUBLISH] = answer;
+  return probeCrates([403, {}], { CARGO_TOKEN: CARGO_SECRET, ...overrides });
+}
+
+/** Run the crates.io probe in a job without `id-token: write`. */
+function preflightWithoutOidc(overrides = {}) {
+  return preflight({
+    PREFLIGHT_REGISTRIES: 'crates',
+    ACTIONS_ID_TOKEN_REQUEST_URL: '',
+    ACTIONS_ID_TOKEN_REQUEST_TOKEN: '',
+    ...overrides,
+  });
+}
+
+/** The metadata of a token publish probe: a u32 length, then JSON. */
+function probeMetadata(body) {
+  const bytes = Buffer.from(body, 'latin1');
+  const length = bytes.readUInt32LE(0);
+  assert.equal(bytes.length, 4 + length, 'the probe must carry no archive');
+  return JSON.parse(bytes.subarray(4).toString('utf8'));
 }
 
 describe('scripts/preflight-credentials.sh', scriptOptions, () => {
@@ -349,11 +384,11 @@ describe('scripts/preflight-credentials.sh', scriptOptions, () => {
       assertNoSecrets(output);
     });
 
-    it('fails a release when no trusted publisher matches, even with a legacy secret', async () => {
-      const { status, output } = await probeCrates(
-        [403, { errors: [{ detail: 'no matching publisher' }] }],
-        { CARGO_TOKEN: CARGO_SECRET }
-      );
+    it('fails a release when no trusted publisher matches and no token is set', async () => {
+      const { status, output } = await probeCrates([
+        403,
+        { errors: [{ detail: 'no matching publisher' }] },
+      ]);
 
       assert.equal(status, 1, output);
       assert.match(
@@ -362,17 +397,79 @@ describe('scripts/preflight-credentials.sh', scriptOptions, () => {
       );
       assert.match(output, /rust\.yml/);
       assert.match(output, /docs\/PUBLISHING\.md/);
+      assert.match(output, /neither CARGO_REGISTRY_TOKEN nor CARGO_TOKEN/);
       assert.equal(stub.requests.length, 2);
+    });
+
+    it('passes a release on the token fallback when no trusted publisher matches', async () => {
+      const { status, output } = await probeFallback(TOKEN_ACCEPTED);
+
+      assert.equal(status, 0, output);
+      assert.match(output, /1 verified, 0 failed, 0 unknown/);
+      assert.match(
+        output,
+        /PASS: crates.io accepted the CARGO_REGISTRY_TOKEN\/CARGO_TOKEN fallback for probe-crate/
+      );
+      assert.match(
+        output,
+        /::warning::release-preflight: crates.io refused the OIDC token exchange \(403\).*falls back to the CARGO_REGISTRY_TOKEN\/CARGO_TOKEN secret/
+      );
+      assert.doesNotMatch(output, /::error::/);
+      const publish = stub.requests.at(-1);
+      assert.equal(publish.route, CRATES_PUBLISH);
+      assert.equal(publish.authorization, CARGO_SECRET);
+      assert.match(publish.userAgent, /^release-preflight /);
+      assert.deepEqual(probeMetadata(publish.body), {
+        name: 'probe-crate',
+        vers: '0.0.0-preflight',
+      });
+      assert.equal(stub.requests.length, 3);
       assertNoSecrets(output);
     });
 
-    it('fails when the job has no OIDC permission, with no secret fallback', async () => {
-      const { status, output } = await preflight({
-        PREFLIGHT_REGISTRIES: 'crates',
-        ACTIONS_ID_TOKEN_REQUEST_URL: '',
-        ACTIONS_ID_TOKEN_REQUEST_TOKEN: '',
+    it('prefers CARGO_REGISTRY_TOKEN over CARGO_TOKEN for the fallback', async () => {
+      const { status, output } = await probeFallback(TOKEN_ACCEPTED, {
+        CARGO_REGISTRY_TOKEN: CARGO_SECRET,
+        CARGO_TOKEN: 'cio-other-token-must-not-be-used',
+      });
+
+      assert.equal(status, 0, output);
+      assert.equal(stub.requests.at(-1).authorization, CARGO_SECRET);
+    });
+
+    it('fails a release when trusted publishing and the token fallback are both refused', async () => {
+      const { status, output } = await probeFallback(TOKEN_REJECTED);
+
+      assert.equal(status, 1, output);
+      assert.match(output, /0 verified, 1 failed, 0 unknown/);
+      assert.match(
+        output,
+        /::error::release-preflight: crates.io refused the OIDC token exchange \(403\).*; crates.io rejected the CARGO_REGISTRY_TOKEN\/CARGO_TOKEN fallback for probe-crate \(403\)/
+      );
+      assert.equal(stub.requests.length, 3);
+      assertNoSecrets(output);
+    });
+
+    it('falls back to the token when the job has no OIDC permission', async () => {
+      stub.routes[CRATES_PUBLISH] = TOKEN_ACCEPTED;
+      const { status, output } = await preflightWithoutOidc({
         CARGO_REGISTRY_TOKEN: CARGO_SECRET,
       });
+
+      assert.equal(status, 0, output);
+      assert.match(
+        output,
+        /::warning::release-preflight: crates.io: no OIDC token available: .*id-token: write/
+      );
+      assert.deepEqual(
+        stub.requests.map(({ route }) => route),
+        [CRATES_PUBLISH]
+      );
+      assertNoSecrets(output);
+    });
+
+    it('fails when the job has no OIDC permission and no token is set', async () => {
+      const { status, output } = await preflightWithoutOidc();
 
       assert.equal(status, 1, output);
       assert.match(
@@ -380,6 +477,54 @@ describe('scripts/preflight-credentials.sh', scriptOptions, () => {
         /crates.io: no OIDC token available: .*id-token: write/
       );
       assert.equal(stub.requests.length, 0);
+    });
+
+    it('treats an unproven token fallback as unknown, never as a pass', async () => {
+      for (const answer of [
+        [400, { errors: [{ detail: 'invalid upload request' }] }],
+        [429, {}],
+        [500, { token: CARGO_SECRET }],
+      ]) {
+        const { status, output } = await probeFallback(answer);
+        assert.equal(status, 1, output);
+        assert.match(output, /0 verified, 0 failed, 1 unknown/);
+        assert.match(output, /verified nothing/);
+        assertNoSecrets(output);
+      }
+    });
+
+    it('reads the crate name from Cargo.toml when CRATES_PACKAGE is unset', async () => {
+      writeFileSync(
+        path.join(workDir, 'Cargo.toml'),
+        [
+          '[package]',
+          'name = "from-manifest"',
+          'version = "1.2.3"',
+          '',
+          '[dependencies.serde]',
+          'name = "not-this-one"',
+          '',
+        ].join('\n')
+      );
+      const { status, output } = await probeFallback(TOKEN_ACCEPTED, {
+        CRATES_PACKAGE: '',
+      });
+
+      assert.equal(status, 0, output);
+      assert.equal(
+        probeMetadata(stub.requests.at(-1).body).name,
+        'from-manifest'
+      );
+    });
+
+    it('cannot probe the token without a crate name', async () => {
+      const { status, output } = await probeFallback(TOKEN_ACCEPTED, {
+        CRATES_PACKAGE: '',
+      });
+
+      assert.equal(status, 1, output);
+      assert.match(output, /cannot tell which crate to probe/);
+      assert.equal(stub.requests.length, 2);
     });
 
     it('keeps missing publishers advisory on pull requests', async () => {
@@ -429,6 +574,7 @@ describe('scripts/preflight-credentials.sh', scriptOptions, () => {
       stub.routes[MINT] = INVALID_PUBLISHER;
       stub.routes[EXCHANGE] = [403, { message: 'forbidden' }];
       stub.routes[CRATES_MINT] = [401, { errors: [{ detail: 'bad token' }] }];
+      stub.routes[CRATES_PUBLISH] = TOKEN_REJECTED;
       const summary = path.join(workDir, 'summary.md');
       writeFileSync(summary, '');
 

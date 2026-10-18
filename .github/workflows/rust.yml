@@ -447,8 +447,9 @@ jobs:
   # === RELEASE PREFLIGHT - prove crates.io will accept the publish (issue #128) ===
   # Prove the trusted publisher matches this workflow by exchanging OIDC for
   # a temporary publish token, then revoking it without uploading anything.
-  # Release mode blocks a missing publisher; PR report mode is advisory since
-  # fork jobs cannot obtain OIDC credentials. See docs/PUBLISHING.md.
+  # When that fails, prove the token secret the publish steps fall back to
+  # instead. Release mode blocks only when neither can publish; PR report mode
+  # is advisory since fork jobs cannot obtain credentials. See docs/PUBLISHING.md.
   release-preflight:
     name: Release Preflight
     runs-on: ubuntu-24.04
@@ -476,6 +477,9 @@ jobs:
               ) && 'release' || 'report'
             }}
           PREFLIGHT_REGISTRIES: crates
+          # Probed only when trusted publishing is unavailable, as in the
+          # publish steps.
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}
         run: bash ../scripts/preflight-credentials.sh
 
   # === AUTO RELEASE ===

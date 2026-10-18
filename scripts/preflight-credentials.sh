@@ -26,6 +26,11 @@
 #             at /api/v1/trusted_publishing/tokens, exactly as
 #             rust-lang/crates-io-auth-action does, then revoke it. The
 #             exchange validates the trusted-publisher mapping; no upload.
+#             rust.yml falls back to CARGO_REGISTRY_TOKEN / CARGO_TOKEN when
+#             trusted publishing is unavailable, so when the exchange does not
+#             succeed and a token is set, the token is probed instead: a
+#             publish request whose archive is missing. crates.io checks the
+#             token and its scope for the crate before it reads the archive.
 #
 # Each workflow probes only the registry it publishes to:
 #   PREFLIGHT_REGISTRIES -- space- or comma-separated: pypi, npm, crates.
@@ -64,6 +69,12 @@ n_fail=0
 n_unknown=0
 failures=''
 unknowns=''
+warnings=''
+# Set while the crates.io OIDC exchange runs: bad and unknown verdicts are held
+# back, because the token fallback decides whether they block the release.
+hold=0
+held_verdict=''
+held_message=''
 
 ok() {
   verified=$((verified + 1))
@@ -71,15 +82,31 @@ ok() {
 }
 
 bad() {
+  if [ "$hold" = 1 ]; then
+    held_verdict=refused
+    held_message="$1"
+    return 0
+  fi
   n_fail=$((n_fail + 1))
   failures="${failures}${failures:+${NEWLINE}}$1"
   printf '  FAIL: %s\n' "$*"
 }
 
 unknown() {
+  if [ "$hold" = 1 ]; then
+    held_verdict=unknown
+    held_message="$1"
+    return 0
+  fi
   n_unknown=$((n_unknown + 1))
   unknowns="${unknowns}${unknowns:+${NEWLINE}}$1"
   printf '  UNKNOWN: %s\n' "$*"
+}
+
+# Not a failure: the release still has a verified way to publish.
+warn() {
+  warnings="${warnings}${warnings:+${NEWLINE}}$1"
+  printf '  WARN: %s\n' "$*"
 }
 
 # curl that separates the HTTP status from the body without temp files.
@@ -255,11 +282,10 @@ check_npm() {
 # exchange it for a short-lived publish token, then revoke it immediately.
 # The registry validates the workflow's trusted-publisher mapping during the
 # exchange. No long-lived Cargo secret or upload is needed for this probe.
-check_crates_io() {
+# Runs with hold=1: a refusal or unknown is left in held_verdict/held_message.
+check_crates_oidc() {
   local oidc_token response status token audience
   local endpoint="${CRATES_API%/}/api/v1/trusted_publishing/tokens"
-
-  printf 'crates.io:\n'
 
   audience="${CRATES_API#*://}"
   audience="${audience%/}"
@@ -276,6 +302,8 @@ check_crates_io() {
         unknown "crates.io answered ${status} to the OIDC token exchange but returned no token"
         return 0
       fi
+      hold=0
+      held_verdict=verified
       ok 'crates.io minted a short-lived publish token via trusted publishing'
       # As in the action's post step, revoke the token with Bearer auth. Never
       # echo the response: even an error response might contain credentials.
@@ -301,6 +329,115 @@ check_crates_io() {
   return 0
 }
 
+# The crate name: CRATES_PACKAGE when set, else the [package] name of the
+# Cargo.toml in the working directory (rust.yml runs this from rust/).
+crates_package_name() {
+  if [ -n "${CRATES_PACKAGE:-}" ]; then
+    printf '%s' "$CRATES_PACKAGE"
+    return 0
+  fi
+  [ -f Cargo.toml ] || return 1
+  sed -n '/^\[package\]/,/^\[/s/^name *= *"\([^"]*\)".*/\1/p' Cargo.toml | head -n 1
+}
+
+# A publish request body with valid metadata and no archive: the metadata
+# length as a little-endian u32, then the JSON metadata, and nothing else.
+crates_probe_body() {
+  local metadata="{\"name\":\"$1\",\"vers\":\"0.0.0-preflight\"}"
+  local length=${#metadata}
+  # shellcheck disable=SC2059 # the format is the four octal-escaped bytes
+  printf "$(printf '\\%03o' $((length & 255)) $((length >> 8 & 255)) \
+    $((length >> 16 & 255)) $((length >> 24 & 255)))"
+  printf '%s' "$metadata"
+}
+
+# Probe the publish token rust.yml falls back to. crates.io authenticates the
+# token, checks its scope for the crate, its trusted-publishing-only setting
+# and the rate limit before it reads the archive length, so exactly
+# "invalid tarball length" proves the token could publish; nothing is uploaded.
+# Sets token_verdict (verified, refused, unknown) and token_message.
+check_crates_token() {
+  local token="$1" package response status
+
+  token_verdict=unknown
+  if ! package=$(crates_package_name) || [ -z "$package" ]; then
+    token_message='cannot tell which crate to probe -- set CRATES_PACKAGE or run from the directory holding Cargo.toml'
+    return 0
+  fi
+
+  response=$(crates_probe_body "$package" | http -A "$CURL_USER_AGENT" -X PUT \
+    -H "Authorization: ${token}" -H 'Content-Type: application/octet-stream' \
+    --data-binary @- "${CRATES_API%/}/api/v1/crates/new")
+  status="${response##*"$NEWLINE"}"
+
+  # Never echo the response: an error response might contain credentials.
+  case "$status" in
+    400)
+      if [ "$(json_string "${response%"${NEWLINE}"*}" detail)" = 'invalid tarball length' ]; then
+        token_verdict=verified
+        token_message="crates.io accepted the CARGO_REGISTRY_TOKEN/CARGO_TOKEN fallback for ${package} (archive omitted; nothing was published)"
+      else
+        token_message="crates.io answered 400 to the token publish probe without the missing-archive confirmation (no verdict on the token)"
+      fi
+      ;;
+    401 | 403)
+      token_verdict=refused
+      token_message="crates.io rejected the CARGO_REGISTRY_TOKEN/CARGO_TOKEN fallback for ${package} (${status}) -- the token is invalid, expired, lacks the publish-update scope for the crate, or the crate only accepts trusted publishing"
+      ;;
+    '')
+      token_message='crates.io was unreachable during the token publish probe'
+      ;;
+    *)
+      token_message="crates.io answered ${status} to the token publish probe (no verdict on the token)"
+      ;;
+  esac
+
+  return 0
+}
+
+# Trusted publishing first, then the token rust.yml falls back to. A release is
+# blocked only when neither can publish; a working fallback still warns that
+# trusted publishing failed.
+check_crates_io() {
+  local token="${CARGO_REGISTRY_TOKEN:-${CARGO_TOKEN:-}}"
+  local token_verdict token_message
+
+  printf 'crates.io:\n'
+
+  hold=1
+  held_verdict=''
+  held_message=''
+  check_crates_oidc
+  hold=0
+
+  case "$held_verdict" in
+    verified) return 0 ;;
+    refused | unknown) ;;
+    *) held_verdict=unknown held_message='crates.io: the trusted publishing probe gave no verdict' ;;
+  esac
+
+  if [ -z "$token" ]; then
+    if [ "$held_verdict" = refused ]; then
+      bad "$held_message -- and neither CARGO_REGISTRY_TOKEN nor CARGO_TOKEN is set for the token fallback"
+    else
+      unknown "$held_message"
+    fi
+    return 0
+  fi
+
+  check_crates_token "$token"
+  case "$token_verdict" in
+    verified)
+      warn "$held_message -- publishing falls back to the CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret"
+      ok "$token_message"
+      ;;
+    refused) bad "$held_message; $token_message" ;;
+    *) unknown "$held_message; $token_message" ;;
+  esac
+
+  return 0
+}
+
 emit_annotations() {
   local level="$1" list="$2"
   [ -n "$list" ] || return 0
@@ -318,7 +455,7 @@ append_summary() {
     printf '| verified | %d |\n' "$verified"
     printf '| failed | %d |\n' "$n_fail"
     printf '| unknown | %d |\n' "$n_unknown"
-    for list in "$failures" "$unknowns"; do
+    for list in "$failures" "$unknowns" "$warnings"; do
       [ -n "$list" ] || continue
       printf '\n'
       printf '%s\n' "$list" | while IFS= read -r line; do
@@ -343,6 +480,9 @@ done
 
 printf '\nRelease preflight: %d verified, %d failed, %d unknown\n' \
   "$verified" "$n_fail" "$n_unknown"
+
+# Warnings sit next to a verified credential, so they never decide the exit.
+emit_annotations warning "$warnings"
 
 if [ "$n_fail" -gt 0 ]; then
   if [ "$MODE" = 'release' ]; then

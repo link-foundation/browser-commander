@@ -1,8 +1,9 @@
 # Package publishing setup
 
-All three release workflows use GitHub Actions OIDC credentials. Registry
-configuration lives outside this repository: editing YAML does not register a
-trusted publisher. The preflight jobs test the registry exchange without
+All three release workflows use GitHub Actions OIDC credentials. The Rust
+workflow follows the organization policy of trusted publishing first, with a
+token secret only as the fallback. Registry configuration lives outside this
+repository: editing YAML does not register a trusted publisher. The preflight jobs test the registry exchange without
 uploading a package, fail releases on rejected credentials, and report advisory
 warnings on pull requests where the release identity may be unavailable.
 
@@ -38,7 +39,7 @@ See PyPI's [pending publisher instructions](https://docs.pypi.org/trusted-publis
 [`explain_pypi_failure.py`](../python/scripts/explain_pypi_failure.py) also prints
 the registration values for a failed run.
 
-## crates.io: register the publisher and retire the secret
+## crates.io: trusted publishing first, token secret as fallback
 
 A crate owner must open `browser-commander` on crates.io and select
 **Settings → Trusted Publishing → Add → GitHub**. The crate already exists;
@@ -59,20 +60,31 @@ immediately before publishing, passes its token to `CARGO_REGISTRY_TOKEN`, and
 lets the action revoke it when the job finishes. A token minted during
 preflight is never reused by a release job.
 
-After this PR is merged and registration is complete:
+The token secret is only the fallback, for when trusted publishing is
+unavailable (no matching publisher, a missing `id-token: write`, or an OIDC
+outage):
 
-1. Verify the Rust workflow on `main` has a green **Release Preflight** and
-   successfully publishes using OIDC.
-2. Remove `CARGO_TOKEN` from the GitHub secret scope that supplies it. If it
-   is an organization secret shared by other repositories, first migrate
-   those users or remove only this repository's access.
-3. Revoke the old API token in the issuing crates.io account once its remaining
-   users have migrated. Deleting a GitHub secret alone does not revoke it.
+- The `crates_auth` step has `continue-on-error: true`. Each publish step uses
+  `steps.crates_auth.outputs.token || secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN`.
+- When the OIDC exchange does not succeed, the preflight probes
+  `CARGO_REGISTRY_TOKEN` (else `CARGO_TOKEN`) instead. It sends a publish
+  request for `browser-commander` with the metadata but without the `.crate`
+  archive. crates.io checks the token, its scope for the crate, the crate's
+  trusted-publishing-only setting and the rate limit before it reads the
+  archive. A `400 invalid tarball length` therefore proves the token could
+  publish, and nothing is uploaded. A `401`/`403` is a refusal, and any other
+  answer is `unknown`.
+- A release is blocked only when neither credential can publish. When the
+  fallback carries the release, the preflight still emits a warning naming the
+  trusted publishing failure, so it gets fixed rather than hidden.
 
-The workflow never falls back to the old secret. Registering a publisher and
-revoking an account's token require authenticated registry access; they cannot
-be completed by a repository commit. See the official
-[crates.io migration instructions](https://crates.io/docs/trusted-publishing).
+Keep the trusted publisher registered so that normal releases use OIDC. Do not
+enable **trusted publishing only** on crates.io while you rely on the fallback:
+that setting makes crates.io reject token publishes, and the preflight reports
+it as a refused fallback. Rotating or revoking the token secret requires
+authenticated registry access and cannot be done by a repository commit. See
+the official
+[crates.io trusted publishing instructions](https://crates.io/docs/trusted-publishing).
 
 ## npm and fixture manifests
 
@@ -94,7 +106,9 @@ node scripts/check-ci-workflows.mjs
 ```
 
 The tests use local HTTP stubs to exercise successful exchanges, rejection,
-missing OIDC permissions, unknown registry responses, token revocation,
-advisory PR behavior, and credential redaction. They also check the release
-steps use the action output with the same publish condition, preserve the
-PyPI workflow identity, and keep both fixture manifests non-publishable.
+missing OIDC permissions, the crates.io token fallback, unknown registry
+responses, token revocation, advisory PR behavior, and credential redaction.
+They also check the release steps use the action output first and the token
+secret only as the fallback, with the same publish condition. Finally, they
+check the PyPI workflow identity is preserved and both fixture manifests stay
+non-publishable.

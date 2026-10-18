@@ -195,16 +195,17 @@ in a `release-preflight` job (5-minute backstop, no build) in `python.yml`,
 `js.yml` and `rust.yml`, in parallel with lint and tests. `PREFLIGHT_REGISTRIES`
 picks the probe:
 
-| Workflow     | Registry | Probe                                                                                            |
-| ------------ | -------- | ------------------------------------------------------------------------------------------------ |
-| `python.yml` | `pypi`   | exchanges the job's OIDC token at PyPI's `/_/oidc/mint-token`, as the publish action does        |
-| `js.yml`     | `npm`    | exchanges the job's OIDC token at npm's trusted-publishing token endpoint, as `npm publish` does |
-| `rust.yml`   | `crates` | exchanges the job's OIDC token at crates.io's trusted-publishing endpoint and revokes it         |
+| Workflow     | Registry | Probe                                                                                                                           |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `python.yml` | `pypi`   | exchanges the job's OIDC token at PyPI's `/_/oidc/mint-token`, as the publish action does                                       |
+| `js.yml`     | `npm`    | exchanges the job's OIDC token at npm's trusted-publishing token endpoint, as `npm publish` does                                |
+| `rust.yml`   | `crates` | exchanges the job's OIDC token at crates.io's trusted-publishing endpoint and revokes it; on failure, probes the token fallback |
 
 The exchanges publish nothing, but they are the credential step the real
 publish performs, so a passing probe verifies the trusted-publisher mapping.
 Package validity and version availability are checked by the actual publish.
-Each Rust release job obtains its own fresh token immediately before publishing.
+Each Rust release job obtains its own fresh token immediately before publishing
+and falls back to the token secret only when trusted publishing is unavailable.
 
 On a push to `main` or a manual release the job runs in **release** mode: a
 refused credential, or a run that verified nothing because every probe came
@@ -233,7 +234,7 @@ When the preflight fails in release mode, its next step runs
 which prints the same values for the run that failed.
 
 The [publishing setup guide](PUBLISHING.md) covers the first PyPI release,
-crates.io trusted-publisher registration, and retiring the old Cargo secret.
+crates.io trusted-publisher registration, and the crates.io token fallback.
 
 ## Reference
 

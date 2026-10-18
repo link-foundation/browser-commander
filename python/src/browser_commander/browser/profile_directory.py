@@ -128,9 +128,16 @@ def configure_user_data_dir(
         or any(c in profile_directory for c in "/\\\0")
     ):
         raise ValueError("profile_directory must be a profile directory name")
+    # Chrome 155 opens a "Continue where you left off" session restore infobar
+    # in a new profile until it has been shown 3 times.
     _merge_json(
         directory / profile_directory / "Preferences",
-        {"browser": {"check_default_browser": False}},
+        {
+            "browser": {
+                "check_default_browser": False,
+                "session_restore_infobar_times_shown": 5,
+            }
+        },
         overrides,
     )
     browser = overrides.get("browser", {})

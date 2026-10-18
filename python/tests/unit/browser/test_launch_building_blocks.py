@@ -126,7 +126,12 @@ def test_creates_a_prepared_temporary_profile() -> None:
         }
         assert json.loads(
             (Path(directory) / "Default" / "Preferences").read_text()
-        ) == {"browser": {"check_default_browser": False}}
+        ) == {
+            "browser": {
+                "check_default_browser": False,
+                "session_restore_infobar_times_shown": 5,
+            }
+        }
     finally:
         remove_user_data_dir(directory)
     assert not Path(directory).exists()
@@ -159,7 +164,11 @@ def test_profile_settings_merge_and_named_override(tmp_path: Path) -> None:
         local_state={"browser": {"extra": 1}},
     )
     assert json.loads((tmp_path / "Default" / "Preferences").read_text()) == {
-        "browser": {"check_default_browser": False, "show_home_button": True},
+        "browser": {
+            "check_default_browser": False,
+            "session_restore_infobar_times_shown": 5,
+            "show_home_button": True,
+        },
         "intl": {"accept_languages": "en"},
     }
     assert json.loads((tmp_path / LOCAL_STATE_FILE).read_text())["browser"] == {

@@ -6,6 +6,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- changelog-insert-here -->
+## [0.20.0] - 2026-10-18
+
+### Fixed
+
+- Publish to crates.io with short-lived OIDC tokens in both release jobs instead of the long-lived Cargo secret. Release preflight verifies trusted publishing and revokes its probe token without uploading a crate.
+
+### Fixed
+
+- Accept dedicated macOS application profiles under `~/Library/Application Support` by separating Safari import discovery roots from protected browser data paths. Safari, Technology Preview and Chrome default profiles remain protected.
+
+### Added
+
+- Reusable indexed elements, ordered selectors/text, idempotent checkbox/radio
+  input, removable subscriptions and non-clearing flags.
+- Cookie-only browser reads, runtime cookies, validated session discovery and
+  opt-in dedicated-profile session-cookie persistence.
+- Bounded redacted launch diagnostics and caller redaction.
+
+### Fixed
+
+- Share navigation budgets across engine calls, readiness and verification;
+  preserve interruption outcomes and forward native wait policies.
+- Resolve catalogue snapshot channels and modern macOS default browsers.
+
+### Added
+
+- Typed engine screenshots, native animation codecs and bounded recordings.
+- Stable viewport capture without activating or resizing the page.
+- Full/text DOM links, native CDP network/HAR, debug presets, continuous trace
+  rotation/gzip, persistent sessions and shared CLI capture/render commands.
+
+### Fixed
+
+- Navigation-interrupted clicks, Trusted Types capture, Chrome panel restrictions,
+  protected-preference diagnostics and deterministic tab selection.
+- Forward typed screenshot options through the Node engine bridge.
+
+### Added
+
+- Ranked attach URLs, explicit no_defaults, persistent heartbeats, write-boundary trace rotation, and overlay outcome reports.
+
+### Fixed
+
+- Pre-persistence DOM/network redaction, bounded mutation intervals and incremental links, interrupted navigation recognition, and attach failure cleanup.
+
+### Changed
+
+- Commander trace interactions include `source: "commander"`, preserving cross-language trace conformance with JavaScript user-action recording.
+
+### Fixed
+
+- Retain sanitized engine attachment failures alongside browser stderr in launch error messages.
+
+CI/CD: crates.io publishing tries trusted publishing (OIDC) first and falls back to the CARGO_REGISTRY_TOKEN / CARGO_TOKEN secret when it is unavailable. The release preflight verifies that fallback token with a publish request that omits the archive, so a release is blocked only when neither credential can publish.
+
+### Fixed
+
+- Prepared profiles keep Chrome 155's "Continue where you left off" session restore infobar closed by writing `browser.session_restore_infobar_times_shown` to the profile's `Preferences`.
+
 ## [0.19.0] - 2026-10-06
 
 ### Changed

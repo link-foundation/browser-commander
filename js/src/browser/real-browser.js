@@ -824,6 +824,9 @@ export async function launchAndConnectRealBrowserWithDependencies(
       cdpEndpoint: resolvedCdpEndpoint,
       ...connectionOptions,
       ...driverInterruption(engine, interruption),
+      // ChromeDriver must match the browser just started, not the installed
+      // Chrome Selenium Manager would otherwise pick (issue #179).
+      ...(engine === 'selenium' ? { executablePath } : {}),
       seedCookies,
       verbose,
     });

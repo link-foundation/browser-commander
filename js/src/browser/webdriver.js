@@ -42,7 +42,10 @@ import {
 } from './profile-directory.js';
 import { buildRealBrowserArgs } from './real-browser.js';
 import { resolveRestrictions } from './restrictions.js';
-import { defaultRestrictionsFor } from './launch-executable.js';
+import {
+  defaultRestrictionsFor,
+  isChromeForTesting,
+} from './launch-executable.js';
 import { findBrowserSource } from './browser-sources.js';
 import {
   isSafariChannel,
@@ -182,7 +185,8 @@ async function findOnPath(name, { environment, platform, checkAccess }) {
  * @param {string} [options.executablePath] - Browser the driver must match
  * @param {boolean} [options.downloadBrowser=false] - Without `executablePath`,
  *   have Selenium Manager download Chrome for Testing instead of matching the
- *   installed browser (issue #179); a driver on PATH is then not used
+ *   installed browser (issue #179); a driver on PATH is then not used, nor
+ *   for a Chrome for Testing `executablePath`
  * @param {Function} [options.runCommand] - command-stream runner (tests)
  * @returns {Promise<{driverPath: string, browserPath: (string|null), source: string}>}
  */
@@ -224,8 +228,11 @@ export async function resolveWebDriverExecutable({
   }
 
   const download = downloadBrowser && !executablePath;
+  // A driver on PATH belongs to an installed browser; Chrome for Testing gets
+  // the driver of its own release from Selenium Manager (issue #179).
   const onPath =
     !download &&
+    !isChromeForTesting(executablePath) &&
     (await findOnPath(name, { environment, platform, checkAccess }));
   if (onPath) {
     return {

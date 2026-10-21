@@ -109,6 +109,19 @@ describe('browser hand-off (issue #174)', () => {
     assert.deepEqual(await session.handoff(), handoffFor(endpoint));
   });
 
+  it('reattaches Selenium with the driver of the handed-off browser (issue #179)', async () => {
+    const endpoint = await fakeEndpoint();
+    const cft =
+      '/home/u/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
+    const calls = [];
+    await reconnectBrowserWithDependencies(
+      handoffFor(endpoint, { executablePath: cft }),
+      {},
+      { connect: fakeConnect(calls) }
+    );
+    assert.equal(calls[0][1].executablePath, cft);
+  });
+
   it('reads a hand-off from a JSON file', async () => {
     const endpoint = await fakeEndpoint();
     const directory = await mkdtemp(path.join(os.tmpdir(), 'bc-handoff-'));

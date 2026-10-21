@@ -251,6 +251,21 @@ describe('resolveWebDriverExecutable', () => {
     assert.equal(resolved.browserPath, cft);
   });
 
+  it('matches Chrome for Testing with its own driver, not the one on PATH (issue #179)', async () => {
+    const cft =
+      '/home/u/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
+    const { commands, resolved } = await managerResolve(
+      { executablePath: cft, environment: { PATH: '/bin' } },
+      // The chromedriver on PATH belongs to the installed Google Chrome.
+      { checkAccess: accessOnly('/bin/chromedriver'), browserPath: cft }
+    );
+    assert.deepEqual(commands, [
+      ['/sm', '--browser', 'chrome', '--output', 'json', '--browser-path', cft],
+    ]);
+    assert.equal(resolved.source, 'selenium-manager');
+    assert.equal(resolved.browserPath, cft);
+  });
+
   it('then asks Selenium Manager for a matching driver', async () => {
     const { commands, resolved } = await managerResolve(
       { executablePath: '/usr/bin/google-chrome', environment: { PATH: '' } },

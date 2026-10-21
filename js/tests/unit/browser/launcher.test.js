@@ -67,6 +67,7 @@ await writeFile(cftChrome, '#!/bin/sh\n');
 await chmod(cftChrome, 0o755);
 after(() => rm(cftRoot, { recursive: true, force: true }));
 const cftEngine = async () => ({ executablePath: () => cftChrome });
+const missingEngine = async () => ({ executablePath: () => '/nonexistent' });
 const noSystemChrome = async () => {
   throw new Error('the installed Google Chrome must not be resolved');
 };
@@ -337,19 +338,34 @@ describe('launchBrowser', () => {
       );
       assert.equal(launches[1].executablePath, undefined);
 
-      // Without Chrome for Testing Selenium picks its own browser, unchanged.
+      // Selenium Manager's Chrome for Testing comes next...
+      const seleniumCft = process.execPath;
       await launchBrowserWithDependencies(
         { engine: 'selenium', launch: 'engine' },
         {
           launchWebDriver,
-          loadEngineModule: async () => ({
-            executablePath: () => '/nonexistent',
-          }),
+          loadEngineModule: missingEngine,
+          seleniumManagerBrowser: async () => seleniumCft,
           settleMs: 0,
         }
       );
-      assert.equal('executablePath' in launches[2], false);
-      assert.deepEqual(launches[2].restrictions, []);
+      assert.equal(launches[2].executablePath, seleniumCft);
+
+      // ...and without any the launch fails instead of letting the driver
+      // pick the installed Google Chrome.
+      await assert.rejects(
+        launchBrowserWithDependencies(
+          { engine: 'selenium', launch: 'engine' },
+          {
+            launchWebDriver,
+            loadEngineModule: missingEngine,
+            seleniumManagerBrowser: async () => undefined,
+            settleMs: 0,
+          }
+        ),
+        /Chrome for Testing is not installed for selenium/
+      );
+      assert.equal(launches.length, 3);
     });
 
     it("leaves Ctrl+C to the caller with interruption: 'caller' (#174)", async () => {
@@ -427,10 +443,44 @@ describe('resolveLaunchExecutable', () => {
             loadEngineModule: async () => {
               throw new Error('not installed');
             },
+            seleniumManagerBrowser: async () => {
+              throw new Error('offline');
+            },
           }
         ),
-      /run `npx playwright install chromium` or `npx puppeteer browsers install chrome`/
+      /run `npx playwright install chromium` or `npx puppeteer browsers install chrome` or `selenium-manager --browser chrome --force-browser-download`/
     );
+  });
+
+  it("falls back to Selenium Manager's Chrome for Testing for Selenium only", async () => {
+    const asked = [];
+    const seleniumManagerBrowser = async () => {
+      asked.push('selenium-manager');
+      return cftChrome;
+    };
+    assert.equal(
+      await resolveLaunchExecutable(
+        { engine: 'selenium' },
+        {
+          resolveSystem: noSystemChrome,
+          loadEngineModule: missingEngine,
+          seleniumManagerBrowser,
+        }
+      ),
+      cftChrome
+    );
+    await assert.rejects(
+      resolveLaunchExecutable(
+        { engine: 'playwright' },
+        {
+          resolveSystem: noSystemChrome,
+          loadEngineModule: missingEngine,
+          seleniumManagerBrowser,
+        }
+      ),
+      /Chrome for Testing is not installed for playwright/
+    );
+    assert.deepEqual(asked, ['selenium-manager']);
   });
 });
 

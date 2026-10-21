@@ -20,16 +20,23 @@ export const ENGINE_BROWSERS = Object.freeze({
 });
 
 // Selenium has no browser of its own; it starts the one Playwright or
-// Puppeteer downloaded.
+// Puppeteer downloaded, then the one Selenium Manager keeps.
 const BUNDLED_BROWSER_ENGINES = {
   playwright: ['playwright'],
   puppeteer: ['puppeteer'],
   selenium: ['playwright', 'puppeteer'],
 };
 
+const PLAYWRIGHT_INSTALL = 'npx playwright install chromium';
+const PUPPETEER_INSTALL = 'npx puppeteer browsers install chrome';
 const INSTALL_COMMANDS = {
-  playwright: 'npx playwright install chromium',
-  puppeteer: 'npx puppeteer browsers install chrome',
+  playwright: [PLAYWRIGHT_INSTALL],
+  puppeteer: [PUPPETEER_INSTALL],
+  selenium: [
+    PLAYWRIGHT_INSTALL,
+    PUPPETEER_INSTALL,
+    'selenium-manager --browser chrome --force-browser-download',
+  ],
 };
 
 // Chrome for Testing archives unpack to chrome-<platform>; the macOS app is
@@ -112,9 +119,28 @@ async function isExecutable(file) {
   }
 }
 
-async function bundledExecutable(load) {
-  const executable = await load()
-    .then((module) => module.executablePath())
+/**
+ * The Chrome for Testing Selenium Manager keeps in `~/.cache/selenium`,
+ * downloaded when missing. `--force-browser-download` stops it from picking
+ * the installed Google Chrome instead.
+ *
+ * @returns {Promise<string|undefined>}
+ */
+export async function seleniumManagerChromeForTesting() {
+  // Imported here: webdriver.js imports this module.
+  const { seleniumManagerPath } = await import('./webdriver.js');
+  const { runCommand } = await import('../utilities/subprocess.js');
+  const { stdout, code } = await runCommand(
+    seleniumManagerPath(),
+    ['--browser', 'chrome', '--force-browser-download', '--output', 'json'],
+    { check: false }
+  );
+  return code === 0 ? JSON.parse(stdout)?.result?.browser_path : undefined;
+}
+
+async function existingExecutable(find) {
+  const executable = await Promise.resolve()
+    .then(find)
     .catch(() => undefined);
   return executable && (await isExecutable(executable))
     ? executable
@@ -126,13 +152,18 @@ async function bundledExecutable(load) {
  *
  * An explicit `executablePath` or `channel` is honoured as given. Without
  * either, the engine's downloaded Chrome for Testing is started; Selenium
- * uses Playwright's, then Puppeteer's. The installed Google Chrome is never a
- * silent fallback: without Chrome for Testing the launch fails and says how
- * to install it or how to ask for Google Chrome.
+ * uses Playwright's, then Puppeteer's, then Selenium Manager's. The
+ * installed Google Chrome is never a silent fallback: without Chrome for
+ * Testing the launch fails and says how to install it or how to ask for
+ * Google Chrome.
  */
 export async function resolveLaunchExecutable(
   { engine, channel, executablePath },
-  { resolveSystem = resolveSystemBrowserExecutable, loadEngineModule } = {}
+  {
+    resolveSystem = resolveSystemBrowserExecutable,
+    loadEngineModule,
+    seleniumManagerBrowser = seleniumManagerChromeForTesting,
+  } = {}
 ) {
   if (executablePath !== undefined || channel !== undefined) {
     return await resolveSystem({
@@ -144,14 +175,20 @@ export async function resolveLaunchExecutable(
   const loaders = loadEngineModule
     ? [loadEngineModule]
     : engines.map((name) => ENGINE_BROWSERS[name]);
-  for (const load of loaders) {
-    const executable = await bundledExecutable(load);
+  const finders = loaders.map(
+    (load) => async () => (await load()).executablePath()
+  );
+  if (engine === 'selenium') {
+    finders.push(seleniumManagerBrowser);
+  }
+  for (const find of finders) {
+    const executable = await existingExecutable(find);
     if (executable) {
       return executable;
     }
   }
-  const install = engines
-    .map((name) => `\`${INSTALL_COMMANDS[name]}\``)
+  const install = (INSTALL_COMMANDS[engine] ?? [])
+    .map((command) => `\`${command}\``)
     .join(' or ');
   throw new Error(
     `Chrome for Testing is not installed for ${engine}: run ${install}, or pass channel: 'chrome' to start the installed Google Chrome`

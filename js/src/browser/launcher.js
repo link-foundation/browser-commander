@@ -113,10 +113,10 @@ async function engineExecutable(
     return executablePath;
   }
   if (engine === 'selenium') {
+    // Without Chrome for Testing this fails rather than let the driver pick
+    // the installed Google Chrome (issue #179).
     return browser === 'chrome'
-      ? await resolveLaunchExecutable({ engine }, dependencies).catch(
-          () => undefined
-        )
+      ? await resolveLaunchExecutable({ engine }, dependencies)
       : undefined;
   }
   return await Promise.resolve()

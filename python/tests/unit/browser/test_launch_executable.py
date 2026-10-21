@@ -1,3 +1,4 @@
+# feature-parity: launch.chrome-for-testing@native-typed
 """Chrome for Testing by default, without its infobar or keychain prompt (#179)."""
 
 from __future__ import annotations

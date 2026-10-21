@@ -498,6 +498,13 @@ jobs:
           }
           "$CHROME_PATH" --version
 
+      - name: Give Chrome for Testing a usable sandbox
+        # Google Chrome's package installs an AppArmor profile that lets it
+        # create the user namespaces its sandbox needs; Chrome for Testing has
+        # none, so on ubuntu-24.04 it aborts with "No usable sandbox!". Fixing
+        # the host keeps --no-sandbox off the command line under test.
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Run engine lifecycle suites under Xvfb
         shell: bash
         run: |

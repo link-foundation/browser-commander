@@ -32,6 +32,7 @@ on:
       - 'js/tests/helpers/**'
       - 'js/examples/react-test-app/**'
       - 'experiments/fingerprint-parity/**'
+      - 'experiments/issue-179/**'
       - 'js/src/cli/**'
       - 'js/bin/**'
       - 'tests/cli-contract/**'
@@ -362,11 +363,36 @@ jobs:
       - name: Install browser engines
         working-directory: js
         run: npm ci --ignore-scripts
+      - name: Install the engines' Chrome for Testing
+        # A launch without a channel or executable path starts Chrome for
+        # Testing, never the installed Google Chrome (issue #179), and
+        # --ignore-scripts above skips the downloads. The Rust launches find
+        # these through Node or the caches.
+        working-directory: js
+        run: |
+          npx playwright install --with-deps chromium
+          npx puppeteer browsers install chrome
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Install Python test dependencies
         run: python -m pip install -e './python[dev]'
+      - name: Install Python Playwright's Chrome for Testing
+        # Python's Playwright pins its own Chromium revision. Installed after
+        # the JavaScript one so neither install collects the other's browser.
+        run: python -m playwright install chromium
+      - name: Verify every engine has its Chrome for Testing
+        shell: bash
+        run: |
+          node experiments/issue-179/chrome-for-testing-paths.mjs
+          python - <<'PY'
+          import os
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as playwright:
+              path = playwright.chromium.executable_path
+          assert os.access(path, os.X_OK), f"Python Playwright has no browser at {path}"
+          print(f"python playwright: {path}")
+          PY
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
         with:
           toolchain: stable
@@ -453,10 +479,16 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Install Playwright's headless Chromium
+      - name: Install the engines' Chrome for Testing
         # The click-readiness suite launches Playwright's own Chromium rather
         # than $CHROME_PATH, and --ignore-scripts above skips its download.
-        run: npx playwright install --with-deps --only-shell chromium
+        # Launches without a channel start Chrome for Testing (issue #179):
+        # the hand-off supervisor and the Chrome for Testing suite need the
+        # full, windowed build of both engines.
+        run: |
+          npx playwright install --with-deps chromium
+          npx puppeteer browsers install chrome
+          node ../experiments/issue-179/chrome-for-testing-paths.mjs
 
       - name: Verify Chrome is present
         run: |
@@ -466,11 +498,18 @@ jobs:
           }
           "$CHROME_PATH" --version
 
+      - name: Give Chrome for Testing a usable sandbox
+        # Google Chrome's package installs an AppArmor profile that lets it
+        # create the user namespaces its sandbox needs; Chrome for Testing has
+        # none, so on ubuntu-24.04 it aborts with "No usable sandbox!". Fixing
+        # the host keeps --no-sandbox off the command line under test.
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Run engine lifecycle suites under Xvfb
         shell: bash
         run: |
           bash ../scripts/run-with-budget-warning.sh 1200 "Engine lifecycle suites" \
-            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/navigation-budget.e2e.test.js tests/e2e/reusable-session.e2e.test.js tests/e2e/click-readiness.e2e.test.js tests/e2e/downloads.e2e.test.js tests/e2e/traces.e2e.test.js tests/e2e/issue-160.e2e.test.js tests/e2e/issue-162-recording.e2e.test.js tests/e2e/issue-166-policy.e2e.test.js tests/e2e/capture.e2e.test.js tests/e2e/selector-identity.e2e.test.js tests/e2e/startup-readiness.e2e.test.js tests/e2e/browser-handoff.e2e.test.js 2>&1 | tee engine-suites.log'
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/navigation-budget.e2e.test.js tests/e2e/reusable-session.e2e.test.js tests/e2e/click-readiness.e2e.test.js tests/e2e/downloads.e2e.test.js tests/e2e/traces.e2e.test.js tests/e2e/issue-160.e2e.test.js tests/e2e/issue-162-recording.e2e.test.js tests/e2e/issue-166-policy.e2e.test.js tests/e2e/capture.e2e.test.js tests/e2e/selector-identity.e2e.test.js tests/e2e/startup-readiness.e2e.test.js tests/e2e/browser-handoff.e2e.test.js tests/e2e/chrome-for-testing.e2e.test.js 2>&1 | tee engine-suites.log'
 
       - name: Fail on a suite that asserted nothing
         run: |

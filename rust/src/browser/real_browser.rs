@@ -41,7 +41,8 @@ use crate::browser::launch_diagnostics::{
 };
 use crate::browser::launcher::Browser;
 use crate::browser::migration::{
-    migrate_profile, MigrateProfileOptions, MigrationSource, MigrationSummary,
+    migrate_profile, target_keystore_for, MigrateProfileOptions, MigrationSource, MigrationSummary,
+    TargetKeystore,
 };
 use crate::browser::profile_directory::{
     configure_user_data_dir_for_profile, create_temporary_user_data_dir_with_first_run,
@@ -382,6 +383,25 @@ pub(crate) fn with_default_restrictions(
     (effective, defaults)
 }
 
+/// The browser whose key encrypts migrated passwords and the keystore that
+/// key comes from. Chrome for Testing keeps its key under "Chromium Safe
+/// Storage", or uses Chromium's mock key with `--use-mock-keychain`
+/// (issue #179).
+pub(crate) fn migration_target(
+    options: &RealBrowserOptions,
+    executable: &Path,
+    platform: &str,
+) -> Result<(String, TargetKeystore)> {
+    let browser = if crate::browser::chrome_for_testing::is_chrome_for_testing(executable) {
+        "chromium"
+    } else {
+        options.browser_channel()
+    };
+    let mut args = resolve_restrictions(&options.restrictions)?.args;
+    args.extend(options.args.iter().chain(&options.extra_args).cloned());
+    Ok((browser.to_string(), target_keystore_for(&args, platform)))
+}
+
 fn browser_environment(options: &RealBrowserOptions) -> Result<Option<HashMap<String, String>>> {
     let mut env = resolve_restrictions(&options.restrictions)?.env;
     if let Some(extra) = &options.env {
@@ -647,7 +667,10 @@ where
     let (migration, migrated_cookies) = if let Some(source) = options.migrate_from.clone() {
         let target = user_data_dir.join("Default");
         let mut migrate_options = MigrateProfileOptions::new(source, target);
-        migrate_options.target_browser = Some(options.browser_channel().to_string());
+        let (target_browser, target_keystore) =
+            migration_target(options, &executable_path, &migrate_options.platform)?;
+        migrate_options.target_browser = Some(target_browser);
+        migrate_options.target_keystore = target_keystore;
         if let Some(include) = &options.migrate_include {
             migrate_options.include = include.clone();
         }

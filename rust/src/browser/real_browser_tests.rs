@@ -714,3 +714,41 @@ async fn unknown_default_restrictions_are_refused_before_starting_a_browser() {
     assert!(error.to_string().contains("no-such-restriction"), "{error}");
     assert!(hooks.spawned.lock().unwrap().is_empty());
 }
+
+#[test]
+fn migrates_passwords_with_the_key_of_the_browser_that_starts() {
+    let mac_cft = "/Users/u/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing";
+    let google_chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+    let chrome = || RealBrowserOptions::default().channel("chrome");
+    for (executable, options, browser, keystore) in [
+        // The default launch: Chrome for Testing with its mock keychain.
+        (
+            mac_cft,
+            RealBrowserOptions::default(),
+            "chromium",
+            TargetKeystore::Mock,
+        ),
+        // Opting out of the defaults uses the real "Chromium Safe Storage".
+        (
+            mac_cft,
+            RealBrowserOptions::default().default_restrictions(Vec::<String>::new()),
+            "chromium",
+            TargetKeystore::Os,
+        ),
+        (google_chrome, chrome(), "chrome", TargetKeystore::Os),
+        (
+            google_chrome,
+            chrome().restrictions(["mock-keychain"]),
+            "chrome",
+            TargetKeystore::Mock,
+        ),
+    ] {
+        let (effective, _) = with_default_restrictions(&options, Path::new(executable));
+        assert_eq!(
+            migration_target(&effective, Path::new(executable), "darwin").unwrap(),
+            (browser.to_string(), keystore),
+            "{executable} {:?}",
+            options.restrictions
+        );
+    }
+}

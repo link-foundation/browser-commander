@@ -105,10 +105,10 @@ pub(super) fn reencrypt_secret(
             ))
         }
     };
-    let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "win32" {
-        "v10"
-    } else {
+    let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "linux" {
         "v11"
+    } else {
+        "v10"
     });
     Ok(SecretRewrite::Encrypted(encrypt_chromium_value(
         plaintext.as_bytes(),

@@ -412,6 +412,10 @@ with.
 
 #### Chrome for Testing by default
 
+See [Chrome for Testing by default](../docs/chrome-for-testing.md) for the
+download each engine starts, its matching ChromeDriver and the Ubuntu sandbox
+note.
+
 Without `channel` or `executablePath`, a launch starts Chrome for Testing - the
 one Playwright or Puppeteer downloaded, or else another build in its download
 cache (`ms-playwright`, moved by `PLAYWRIGHT_BROWSERS_PATH`; `~/.cache/puppeteer`,

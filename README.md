@@ -24,6 +24,8 @@ bridges, browser coverage, and protocol limitations.
 
 See [docs/feature-parity.md](docs/feature-parity.md) for the cross-language feature matrix and [docs/case-studies/issue-51/README.md](docs/case-studies/issue-51/README.md) for the implementation notes.
 
+See [docs/chrome-for-testing.md](docs/chrome-for-testing.md) for the Chrome for Testing every engine starts by default, its matching ChromeDriver, its default restrictions and the Ubuntu sandbox note.
+
 All three implementations can attach to a running Chrome-family browser over
 CDP or find and start an installed Chrome, Edge, Brave, or Chromium with a
 safe, dedicated automation profile before attaching. Use

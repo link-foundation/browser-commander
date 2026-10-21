@@ -89,8 +89,9 @@ pub use browser::snapshot::{
 };
 pub use browser::{
     browser_family, browser_for_identifier, browser_ids, browser_sources, build_real_browser_args,
-    clear_browser_cookie_memory_cache, connect_browser, default_browser_identifiers,
-    default_run_command, emulate_media, find_browser_source, is_default_browser_keyword,
+    chrome_for_testing_restrictions, clear_browser_cookie_memory_cache, connect_browser,
+    default_browser_identifiers, default_restrictions_for, default_run_command, emulate_media,
+    find_browser_source, is_chrome_for_testing, is_default_browser_keyword,
     is_single_profile_browser, launch_and_connect_real_browser, launch_browser,
     launch_real_browser, launch_restrictions, list_browser_profiles, list_cookie_sources,
     normalize_browser_id, parse_mac_launch_services_handler, parse_windows_prog_id,
@@ -103,10 +104,6 @@ pub use browser::{
     PlaywrightLaunch, RealBrowserLaunchResult, RealBrowserOptions, RunCommand, SafeStorageIdentity,
     StorageEntry, StorageOrigin, StorageState, StorageStateInput, LAUNCH_MODES,
     SUPPORTED_COOKIE_BROWSERS,
-};
-pub use browser::{
-    chrome_for_testing_restrictions, default_restrictions_for, is_chrome_for_testing,
-    resolve_launch_executable, CHROME_FOR_TESTING_PRESET,
 };
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,

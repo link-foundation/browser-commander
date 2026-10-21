@@ -183,7 +183,7 @@ pub(crate) struct FirefoxPasswordKeys<'a> {
     pub platform: &'a str,
     /// The dedicated Chrome profile's key.
     pub target_key: &'a [u8],
-    /// Version prefix to write; defaults to `v11` on Linux, `v10` elsewhere.
+    /// Version prefix to write; defaults to `v10` on Windows, `v11` elsewhere.
     pub target_prefix: Option<&'a str>,
     /// The Firefox primary password (empty when none is set).
     pub primary_password: &'a [u8],
@@ -320,10 +320,10 @@ pub(crate) fn write_chromium_passwords(
     let database = Connection::open(&target_path)
         .with_context(|| format!("Could not open {}", target_path.display()))?;
     database.execute_batch(CHROME_LOGINS_SCHEMA)?;
-    let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "linux" {
-        "v11"
-    } else {
+    let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "win32" {
         "v10"
+    } else {
+        "v11"
     });
     {
         let mut insert = database.prepare(

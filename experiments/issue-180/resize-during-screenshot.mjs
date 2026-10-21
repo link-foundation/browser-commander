@@ -1,6 +1,7 @@
 // Does a screenshot taken while a headful window is resized leave the page
 // drawn at its old size (issue #180)? Compares Playwright's clipped
 // page.screenshot with the no-clip captureStableViewport.
+// Run with DEBUG=pw:protocol to see the clip each capture sends.
 // Usage: xvfb-run -a -s "-screen 0 1280x1024x24" \
 //   node experiments/issue-180/resize-during-screenshot.mjs [chrome] [rounds]
 import { spawn } from 'node:child_process';
@@ -9,6 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { captureStableViewport } from '../../js/src/capture/viewport.js';
+import { startTrace } from '../../js/src/traces/recorder.js';
 
 const require = createRequire(
   new URL('../../js/package.json', import.meta.url)
@@ -19,14 +21,30 @@ const build = (await readdir(cache)).find((name) =>
   /^chromium-\d+$/.test(name)
 );
 const executable =
-  process.argv[2] ?? path.join(cache, build, 'chrome-linux64/chrome');
-const rounds = Number(process.argv[3] ?? 40);
+  process.argv[2] || path.join(cache, build, 'chrome-linux64/chrome');
+const rounds = Number(process.argv[3] ?? 8);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const captures = {
   'page.screenshot': (page) => page.screenshot({ type: 'png' }),
   captureStableViewport: (page) =>
     captureStableViewport(page, 'playwright', { type: 'png' }),
+  // The trace recorder's own checkpoint screenshots.
+  'trace checkpoints': async (page) => {
+    traces.set(
+      page,
+      traces.get(page) ??
+        (await startTrace({
+          page,
+          output: path.join(os.tmpdir(), `issue-180-trace-${process.pid}`),
+          mode: 'checkpoints',
+          network: false,
+          links: false,
+        }))
+    );
+    await traces.get(page).checkpoint('resize');
+  },
 };
+const traces = new Map();
 
 let port = 9500;
 for (const [name, capture] of Object.entries(captures)) {
@@ -68,33 +86,49 @@ for (const [name, capture] of Object.entries(captures)) {
     await sleep(1000);
     const base = await measure();
     const frame = base.outer - base.inner;
+    // Like the issue: keep capturing while each drag resizes the window in
+    // 20 steps, then compare innerWidth with outerWidth.
     let stuck = 0;
     let failed = 0;
+    let shots = 0;
     const samples = [];
-    for (let round = 0; round < rounds; round++) {
-      const width = 700 + ((round * 97) % 500);
-      const shot = capture(page).catch(() => {
-        failed += 1;
-      });
-      await cdp.send('Browser.setWindowBounds', {
-        windowId,
-        bounds: { width, windowState: 'normal' },
-      });
-      await shot;
+    for (let drag = 0; drag < rounds; drag++) {
+      let dragging = true;
+      const loop = (async () => {
+        while (dragging) {
+          await capture(page).then(
+            () => {
+              shots += 1;
+            },
+            () => {
+              failed += 1;
+            }
+          );
+        }
+      })();
+      for (let step = 0; step < 20; step++) {
+        const width = 700 + ((drag * 97 + step * 23) % 500);
+        await cdp.send('Browser.setWindowBounds', {
+          windowId,
+          bounds: { width, windowState: 'normal' },
+        });
+        await sleep(15);
+      }
+      dragging = false;
+      await loop;
       await sleep(400);
       const after = await measure();
       if (after.outer - after.inner !== frame) {
         stuck += 1;
-        samples.push({ round, width, ...after });
+        samples.push({ drag, ...after });
       }
     }
-    await capture(page);
-    await sleep(400);
     const final = await measure();
     console.log(
       JSON.stringify({
         capture: name,
-        rounds,
+        drags: rounds,
+        shots,
         failed,
         stuck,
         frame,
@@ -102,6 +136,7 @@ for (const [name, capture] of Object.entries(captures)) {
         samples: samples.slice(0, 5),
       })
     );
+    await traces.get(page)?.stop();
     await browser.close().catch(() => {});
   } finally {
     child.kill();

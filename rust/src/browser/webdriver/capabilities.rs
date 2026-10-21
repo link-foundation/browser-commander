@@ -185,3 +185,103 @@ pub fn build_capabilities(
     }
     Ok(caps)
 }
+
+/// Put the default restrictions of the Chrome binary before the caller's
+/// arguments, environment and preferences, and return them (issue #179):
+/// the `chrome-for-testing` preset when `browser_executable` is Chrome for
+/// Testing, or `default_restrictions` when the caller chose them. Other
+/// browsers get none.
+pub(crate) fn apply_default_restrictions(options: &mut WebDriverOptions) -> Result<Vec<String>> {
+    use crate::browser::restrictions::{merge_preferences, resolve_restrictions};
+    if options.browser != WebDriverBrowser::Chrome {
+        return Ok(Vec::new());
+    }
+    let defaults = match &options.browser_executable {
+        Some(executable) => crate::browser::chrome_for_testing::default_restrictions_for(
+            executable,
+            options.default_restrictions.as_deref(),
+        ),
+        None => options.default_restrictions.clone().unwrap_or_default(),
+    };
+    if defaults.is_empty() {
+        return Ok(defaults);
+    }
+    let resolved = resolve_restrictions(&defaults)?;
+    options.args = resolved
+        .args
+        .into_iter()
+        .chain(std::mem::take(&mut options.args))
+        .collect();
+    if resolved
+        .preferences
+        .as_object()
+        .is_some_and(|preferences| !preferences.is_empty())
+        && options.preferences.is_object()
+    {
+        let mut preferences = resolved.preferences;
+        merge_preferences(&mut preferences, &options.preferences);
+        options.preferences = preferences;
+    }
+    if !resolved.env.is_empty() {
+        let mut env = resolved.env;
+        env.extend(options.env.take().unwrap_or_default());
+        options.env = Some(env);
+    }
+    Ok(defaults)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn chrome_for_testing_gets_its_defaults_before_the_callers_arguments() {
+        let mut options = WebDriverOptions {
+            browser_executable: Some(PathBuf::from(
+                "/home/user/.cache/selenium/chrome/linux64/131.0.6778.204/chrome",
+            )),
+            args: vec!["--lang=de".into()],
+            ..Default::default()
+        };
+        let defaults = apply_default_restrictions(&mut options).unwrap();
+        assert_eq!(defaults, ["no-chrome-for-testing-infobar", "mock-keychain"]);
+        assert_eq!(
+            options.args,
+            ["--test-type=gpu", "--use-mock-keychain", "--lang=de"]
+        );
+        let caps = build_capabilities(&options, Path::new("profile"), None).unwrap();
+        let args = caps["goog:chromeOptions"]["args"].as_array().unwrap();
+        assert!(args.contains(&json!("--test-type=gpu")));
+    }
+
+    #[test]
+    fn google_chrome_and_an_opt_out_get_no_defaults() {
+        for options in [
+            WebDriverOptions {
+                browser_executable: Some(PathBuf::from("/usr/bin/google-chrome")),
+                ..Default::default()
+            },
+            WebDriverOptions {
+                browser_executable: Some(PathBuf::from(
+                    "/home/user/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome",
+                )),
+                default_restrictions: Some(Vec::new()),
+                ..Default::default()
+            },
+        ] {
+            let mut options = options;
+            assert!(apply_default_restrictions(&mut options).unwrap().is_empty());
+            assert!(options.args.is_empty());
+        }
+    }
+
+    #[test]
+    fn unknown_default_restrictions_are_refused() {
+        let mut options = WebDriverOptions {
+            default_restrictions: Some(vec!["no-such-restriction".into()]),
+            ..Default::default()
+        };
+        assert!(apply_default_restrictions(&mut options).is_err());
+    }
+}

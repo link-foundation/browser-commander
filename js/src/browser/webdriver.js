@@ -42,10 +42,7 @@ import {
 } from './profile-directory.js';
 import { buildRealBrowserArgs } from './real-browser.js';
 import { resolveRestrictions } from './restrictions.js';
-import {
-  defaultRestrictionsFor,
-  isChromeForTesting,
-} from './launch-executable.js';
+import { defaultRestrictionsFor } from './launch-executable.js';
 import { findBrowserSource } from './browser-sources.js';
 import {
   isSafariChannel,
@@ -183,10 +180,6 @@ async function findOnPath(name, { environment, platform, checkAccess }) {
  * @param {'chrome'|'firefox'} [options.browser='chrome']
  * @param {string} [options.driverPath] - Explicit driver executable
  * @param {string} [options.executablePath] - Browser the driver must match
- * @param {boolean} [options.downloadBrowser=false] - Without `executablePath`,
- *   have Selenium Manager download Chrome for Testing instead of matching the
- *   installed browser (issue #179); a driver on PATH is then not used, nor
- *   for a Chrome for Testing `executablePath`
  * @param {Function} [options.runCommand] - command-stream runner (tests)
  * @returns {Promise<{driverPath: string, browserPath: (string|null), source: string}>}
  */
@@ -194,7 +187,6 @@ export async function resolveWebDriverExecutable({
   browser = 'chrome',
   driverPath,
   executablePath,
-  downloadBrowser = false,
   environment = process.env,
   platform = process.platform,
   runCommand = defaultRunCommand,
@@ -227,13 +219,7 @@ export async function resolveWebDriverExecutable({
     };
   }
 
-  const download = downloadBrowser && !executablePath;
-  // A driver on PATH belongs to an installed browser; Chrome for Testing gets
-  // the driver of its own release from Selenium Manager (issue #179).
-  const ownDriver = download || isChromeForTesting(executablePath);
-  const onPath =
-    !ownDriver &&
-    (await findOnPath(name, { environment, platform, checkAccess }));
+  const onPath = await findOnPath(name, { environment, platform, checkAccess });
   if (onPath) {
     return {
       driverPath: onPath,
@@ -242,42 +228,11 @@ export async function resolveWebDriverExecutable({
     };
   }
 
-  return await askSeleniumManager({
-    browser,
-    name,
-    executablePath,
-    download,
-    ownDriver,
-    environment,
-    platform,
-    runCommand,
-    managerPath,
-  });
-}
-
-/** Ask Selenium Manager for the driver of `browser` (and the browser itself). */
-async function askSeleniumManager({
-  browser,
-  name,
-  executablePath,
-  download,
-  ownDriver,
-  environment,
-  platform,
-  runCommand,
-  managerPath,
-}) {
   const manager = managerPath ?? seleniumManagerPath({ platform, environment });
-  const args = [
-    '--browser',
-    browser,
-    '--output',
-    'json',
-    ...(executablePath ? ['--browser-path', executablePath] : []),
-    ...(download ? ['--force-browser-download'] : []),
-    // Selenium Manager itself prefers a driver on PATH, whatever its release.
-    ...(ownDriver ? ['--skip-driver-in-path'] : []),
-  ];
+  const args = ['--browser', browser, '--output', 'json'];
+  if (executablePath) {
+    args.push('--browser-path', executablePath);
+  }
   const { stdout, code } = await runCommand(manager, args, { check: false });
   let output;
   try {
@@ -520,9 +475,6 @@ async function teardown({
  * @param {Object} [options]
  * @param {'chrome'|'firefox'} [options.browser='chrome']
  * @param {string} [options.executablePath] - Browser executable
- * @param {boolean} [options.downloadBrowser=false] - Chrome only: without
- *   `executablePath`, start a Chrome for Testing Selenium Manager downloads
- *   rather than the installed Google Chrome (issue #179)
  * @param {string} [options.driverPath] - chromedriver/geckodriver executable
  * @param {boolean} [options.headless=false]
  * @param {string} [options.userDataDir] - Profile directory; a temporary one is created (and removed on close) when omitted
@@ -652,7 +604,6 @@ async function launchWebDriverOnce(options, dependencies) {
     browser,
     driverPath: requestedDriverPath,
     executablePath,
-    downloadBrowser: options.downloadBrowser,
   });
 
   const defaultRestrictions = launchDefaultRestrictions(

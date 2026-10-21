@@ -52,7 +52,7 @@ for (const [name, extra] of Object.entries(variants)) {
     const m = await page.evaluate(() => ({
       outer: globalThis.outerHeight,
       inner: globalThis.innerHeight,
-      webdriver: globalThis.navigator.webdriver,
+      webdriver: navigator.webdriver,
     }));
     console.log(
       JSON.stringify({ variant: name, chromeHeight: m.outer - m.inner, ...m })

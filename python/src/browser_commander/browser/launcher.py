@@ -1,12 +1,18 @@
 """Browser launcher for browser-commander.
 
-By default (``launch="real"``) Browser Commander starts Chrome for Testing
-(the installed Google Chrome with ``channel="chrome"``, issue #179) itself,
+By default (``launch="real"``) Browser Commander starts Chrome itself,
 exactly like a person who wants to attach a debugger would:
 ``--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved
 port>`` and nothing else, then attaches the engine over CDP (issues #101 and
 #103). The profile is deleted on close. Every restriction the library used to
 add silently is an explicit opt-in through ``restrictions``.
+
+The browser is the engine's Chrome for Testing, an application of its own, so
+the user's Google Chrome is never taken over; ``channel="chrome"`` asks for
+the installed Google Chrome. Chrome for Testing gets the
+``chrome-for-testing`` restrictions (``--test-type=gpu``, the only switch that
+hides its "only for automated testing" bar, and ``--use-mock-keychain``)
+unless ``default_restrictions`` says otherwise (issue #179).
 
 ``launch="engine"`` keeps the Playwright/Selenium-launched browser for CI and
 headless use; the switches those engines add are listed in limitations.json
@@ -24,8 +30,6 @@ from pathlib import Path
 from typing import Any, Callable, Literal
 
 from browser_commander.browser.launch_executable import (
-    bundled_chrome_for_testing,
-    chrome_for_testing_driver,
     default_restrictions_for,
     resolve_launch_executable,
 )
@@ -88,7 +92,7 @@ class LaunchOptions:
     default_restrictions: list[str] | None = None
     """Restrictions that replace the executable's defaults: the
     ``"chrome-for-testing"`` preset for Chrome for Testing, none for any other
-    browser. ``[]`` turns them off (issue #179)."""
+    browser. ``[]`` starts Chrome for Testing without them."""
     args: list[str] = field(default_factory=list)
     extra_args: list[str] = field(default_factory=list)
     ignore_default_args: bool | list[str] = field(default_factory=list)
@@ -99,8 +103,7 @@ class LaunchOptions:
     channel: str | None = None
     """Installed browser channel, such as ``"chrome"``, ``"msedge"``,
     ``"brave"`` or ``"chromium"``. Without it (and without
-    ``executable_path``) Playwright's Chrome for Testing is started, never the
-    user's Google Chrome (issue #179)."""
+    ``executable_path``) the engine's Chrome for Testing is started."""
     executable_path: str | None = None
     remote_debugging_port: int | None = None
     keep_open: bool = False
@@ -238,13 +241,13 @@ def _validate_launch_options(options: LaunchOptions) -> None:
         msg = f"Invalid launch mode: {options.launch}. Expected 'real' or 'engine'"
         raise ValueError(msg)
     # Validate arguments before anything is started or written to disk.
-    resolve_restrictions(options.default_restrictions or [])
     resolve_chrome_args(
         args=options.args,
         extra_args=options.extra_args,
         restrictions=options.restrictions,
         disable_features=options.disable_features,
     )
+    resolve_restrictions(options.default_restrictions or [])
 
 
 async def _launch_real(
@@ -269,6 +272,7 @@ async def _launch_real(
                 engine=options.engine,
                 channel=options.channel,
                 executable_path=executable_path,
+                default_restrictions=options.default_restrictions,
                 user_data_dir=options.user_data_dir,
                 default_browser_check=options.default_browser_check,
                 first_run=options.first_run,
@@ -281,7 +285,6 @@ async def _launch_real(
                 remote_debugging_port=options.remote_debugging_port,
                 headless=options.headless,
                 restrictions=list(options.restrictions),
-                default_restrictions=options.default_restrictions,
                 disable_features=list(options.disable_features),
                 args=list(options.args),
                 extra_args=list(options.extra_args),
@@ -329,55 +332,8 @@ def _default_create_selenium(chrome_options: Any, service_env: Any) -> Any:
     from selenium import webdriver
     from selenium.webdriver.chrome.service import Service
 
-    service = Service(
-        executable_path=chrome_for_testing_driver(chrome_options.binary_location),
-        env=service_env,
-    )
+    service = Service(env=service_env) if service_env is not None else Service()
     return webdriver.Chrome(service=service, options=chrome_options)
-
-
-def _download_chrome_for_testing() -> str:
-    # Selenium Manager would otherwise pick the installed Google Chrome.
-    from selenium.webdriver.common.selenium_manager import SeleniumManager
-
-    paths = SeleniumManager().binary_paths(
-        ["--browser", "chrome", "--force-browser-download"]
-    )
-    return str(paths["browser_path"])
-
-
-async def _engine_executable(
-    options: LaunchOptions, dependencies: Mapping[str, Any]
-) -> str | None:
-    """The browser an engine launch starts, when Browser Commander picks it.
-
-    An explicit ``executable_path`` is used as given and Playwright resolves a
-    ``channel`` itself. Otherwise the launch starts Playwright's Chrome for
-    Testing; Selenium is pointed at it too, or at the Chrome for Testing
-    Selenium Manager downloads, never at the installed Google Chrome (issue
-    #179).
-    """
-
-    if options.executable_path is not None or options.channel is not None:
-        if options.engine == "playwright":
-            return options.executable_path
-        from browser_commander.browser.system_browser import (
-            resolve_system_browser_executable,
-        )
-
-        return resolve_system_browser_executable(
-            channel=options.channel or "chrome",
-            executable_path=options.executable_path,
-        )
-    bundled = await bundled_chrome_for_testing(
-        options.engine, dependencies.get("bundled_executable")
-    )
-    if bundled or options.engine == "playwright":
-        return bundled
-    download = dependencies.get("download_chrome_for_testing")
-    if download is None:
-        return await asyncio.to_thread(_download_chrome_for_testing)
-    return str(await _resolve(download()))
 
 
 def _selenium_options(
@@ -395,7 +351,17 @@ def _selenium_options(
     for argument in chrome_args:
         chrome_options.add_argument(argument)
     chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
-    if executable_path is not None:
+    if options.executable_path is not None or options.channel is not None:
+        from browser_commander.browser.system_browser import (
+            resolve_system_browser_executable,
+        )
+
+        chrome_options.binary_location = resolve_system_browser_executable(
+            channel=options.channel or "chrome",
+            executable_path=options.executable_path,
+        )
+    elif executable_path is not None:
+        # ChromeDriver would otherwise start the installed Google Chrome.
         chrome_options.binary_location = executable_path
     # ChromeDriver names its own switches without the leading dashes.
     excluded = selenium_excluded_switches(ignored)
@@ -404,53 +370,78 @@ def _selenium_options(
     return chrome_options
 
 
+async def _engine_executable(
+    options: LaunchOptions, playwright: Any, dependencies: Mapping[str, Any]
+) -> str | None:
+    """The Chrome for Testing an engine launch starts on its own, or the one a
+    Selenium launch is pointed at; ``None`` for any installed browser."""
+
+    if options.executable_path is not None or options.channel is not None:
+        return options.executable_path
+    if options.engine == "selenium":
+        return await resolve_launch_executable(
+            engine="selenium",
+            bundled_executable=dependencies.get("bundled_executable"),
+        )
+    try:
+        return str(playwright.chromium.executable_path)
+    except Exception:
+        return None
+
+
 async def _launch_with_engine(
     options: LaunchOptions, dependencies: Mapping[str, Any]
 ) -> LaunchResult:
     engine = options.engine
-    executable_path = await _engine_executable(options, dependencies)
-    default_restrictions = default_restrictions_for(
-        executable_path, options.default_restrictions
-    )
-    restrictions = [*default_restrictions, *options.restrictions]
-    chrome_args = resolve_chrome_args(
-        args=options.args,
-        extra_args=options.extra_args,
-        restrictions=restrictions,
-        disable_features=options.disable_features,
-    )
-    if options.automation_parity:
-        chrome_args = apply_automation_parity_args(chrome_args)
-    ignored = resolve_ignored_default_args(
-        engine,
-        ignore_default_args=options.ignore_default_args,
-        headless=options.headless,
-        automation_parity=options.automation_parity,
-    )
-    child_env = browser_environment(restrictions, options.env)
-    temporary_profile = not options.user_data_dir
-    user_data_dir = (
-        create_temporary_user_data_dir()
-        if temporary_profile
-        else str(options.user_data_dir)
-    )
-
-    configure_user_data_dir(
-        user_data_dir,
-        preferences={
-            **resolve_restrictions(restrictions).preferences,
-            **(options.preferences or {}),
-        },
-        local_state=options.local_state,
-    )
-    browser: Any = None
     playwright: Any = None
+    if engine == "playwright":
+        start_playwright = (
+            dependencies.get("start_playwright") or _default_start_playwright
+        )
+        playwright = await _resolve(start_playwright())
     try:
+        executable_path = await _engine_executable(options, playwright, dependencies)
+        default_restrictions = default_restrictions_for(
+            executable_path, options.default_restrictions
+        )
+        restrictions = [*default_restrictions, *options.restrictions]
+        chrome_args = resolve_chrome_args(
+            args=options.args,
+            extra_args=options.extra_args,
+            restrictions=restrictions,
+            disable_features=options.disable_features,
+        )
+        if options.automation_parity:
+            chrome_args = apply_automation_parity_args(chrome_args)
+        ignored = resolve_ignored_default_args(
+            engine,
+            ignore_default_args=options.ignore_default_args,
+            headless=options.headless,
+            automation_parity=options.automation_parity,
+        )
+        child_env = browser_environment(restrictions, options.env)
+        temporary_profile = not options.user_data_dir
+        user_data_dir = (
+            create_temporary_user_data_dir()
+            if temporary_profile
+            else str(options.user_data_dir)
+        )
+    except BaseException:
+        # Chrome for Testing lookup or the profile failed: stop the engine.
+        await _close_engine_browser(engine, None, playwright, None)
+        raise
+
+    browser: Any = None
+    try:
+        configure_user_data_dir(
+            user_data_dir,
+            preferences={
+                **resolve_restrictions(restrictions).preferences,
+                **(options.preferences or {}),
+            },
+            local_state=options.local_state,
+        )
         if engine == "playwright":
-            start_playwright = (
-                dependencies.get("start_playwright") or _default_start_playwright
-            )
-            playwright = await _resolve(start_playwright())
             context_options: dict[str, Any] = {
                 "headless": options.headless,
                 "slow_mo": options.slow_mo,
@@ -464,8 +455,8 @@ async def _launch_with_engine(
                 context_options["color_scheme"] = options.color_scheme
             if options.channel is not None:
                 context_options["channel"] = options.channel
-            if executable_path is not None:
-                context_options["executable_path"] = executable_path
+            if options.executable_path is not None:
+                context_options["executable_path"] = options.executable_path
             if child_env is not None:
                 context_options["env"] = child_env
             browser = await playwright.chromium.launch_persistent_context(
@@ -515,7 +506,6 @@ async def _launch_with_engine(
         temporary_profile=temporary_profile,
         args=chrome_args,
         default_restrictions=default_restrictions,
-        executable_path=executable_path,
     )
 
 
@@ -561,16 +551,11 @@ async def launch_browser(options: LaunchOptions | None = None) -> LaunchResult:
     By default (``launch="real"``) Chrome is started with only
     ``--user-data-dir=<fresh temporary profile>`` and
     ``--remote-debugging-port=<reserved port>`` and the engine attaches over
-    CDP, so ``navigator.webdriver`` is false. ``launch="engine"`` lets
+    CDP, so ``navigator.webdriver`` is false. Without ``channel`` or
+    ``executable_path`` that is the engine's Chrome for Testing, never the
+    user's Google Chrome, with the ``chrome-for-testing`` restrictions unless
+    ``default_restrictions`` says otherwise (issue #179). ``launch="engine"`` lets
     Playwright or Selenium start the browser instead.
-
-    The browser is Playwright's Chrome for Testing, an application of its own,
-    so the user's Google Chrome is never taken over; ``channel="chrome"`` asks
-    for the installed Google Chrome. Chrome for Testing gets the
-    ``chrome-for-testing`` restrictions (``--test-type=gpu``, the only switch
-    that hides its "only for automated testing" bar, and
-    ``--use-mock-keychain``) unless ``default_restrictions`` says otherwise
-    (issue #179).
 
     Args:
         options: Launch configuration options

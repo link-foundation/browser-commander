@@ -23,7 +23,6 @@ import {
 } from './attach/snapshot-launch.js';
 import { connectBrowser } from './connector.js';
 import { migrateProfile } from './migration/index.js';
-import { targetKeystoreFor } from './migration/os-crypt-keys.js';
 import {
   assertFixedDebuggingPort,
   classifyDevToolsOwnership,
@@ -51,7 +50,6 @@ import {
 } from './system-browser.js';
 import {
   defaultRestrictionsFor,
-  isChromeForTesting,
   resolveLaunchExecutable,
 } from './launch-executable.js';
 
@@ -374,12 +372,10 @@ function createCloser({
 
 /**
  * Selenium attaches through a chromedriver the launch starts; the driver
- * follows the browser's interruption ownership (issue #174) and must match
- * the browser just started, not the installed Chrome Selenium Manager would
- * otherwise pick (issue #179).
+ * follows the browser's interruption ownership (issue #174).
  */
-function driverOptions(engine, { interruption, executablePath }) {
-  return engine === 'selenium' ? { interruption, executablePath } : {};
+function driverInterruption(engine, interruption) {
+  return engine === 'selenium' ? { interruption } : {};
 }
 
 /**
@@ -606,9 +602,6 @@ async function runPreLaunchMigration({
   migrateFrom,
   userDataDir,
   channel,
-  executablePath,
-  argOptions,
-  platform,
   temporaryProfile,
   migrate,
 }) {
@@ -617,14 +610,6 @@ async function runPreLaunchMigration({
   }
   const { include, domains, passwordCsv, includePaymentCards, ...from } =
     migrateFrom;
-  // Passwords are re-encrypted with the key of the browser that starts:
-  // Chrome for Testing keeps "Chromium Safe Storage", and its default mock
-  // keychain uses Chromium's fixed mock password (issue #179).
-  const launchArgs = [
-    ...resolveRestrictions(argOptions.restrictions).args,
-    ...argOptions.args,
-    ...argOptions.extraArgs,
-  ];
   try {
     const report = await migrate({
       from,
@@ -633,8 +618,7 @@ async function runPreLaunchMigration({
       domains,
       passwordCsv,
       includePaymentCards,
-      targetBrowser: isChromeForTesting(executablePath) ? 'chromium' : channel,
-      targetKeystore: targetKeystoreFor(launchArgs, platform),
+      targetBrowser: channel,
     });
     const { cookies, ...migration } = report;
     return { migration, migratedCookies: cookies ?? [] };
@@ -769,9 +753,6 @@ export async function launchAndConnectRealBrowserWithDependencies(
     migrateFrom,
     userDataDir,
     channel,
-    executablePath,
-    argOptions,
-    platform: dependencies.platform ?? process.platform,
     temporaryProfile,
     migrate: dependencies.migrateProfile ?? migrateProfile,
   });
@@ -825,7 +806,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       engine,
       cdpEndpoint: resolvedCdpEndpoint,
       ...connectionOptions,
-      ...driverOptions(engine, { interruption, executablePath }),
+      ...driverInterruption(engine, interruption),
       seedCookies,
       verbose,
     });

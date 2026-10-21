@@ -249,10 +249,6 @@ export async function reconnectBrowserWithDependencies(
       cdpEndpoint: descriptor.cdpEndpoint,
       targetId: descriptor.targetId,
       fallback: false,
-      // ChromeDriver must match the browser it reattaches to (issue #179).
-      ...(engine === 'selenium' && descriptor.executablePath
-        ? { executablePath: descriptor.executablePath }
-        : {}),
     });
   } catch (error) {
     throw new BrowserHandoffError(

@@ -11,14 +11,13 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import dataclasses
+import functools
 import inspect
 import json
 import logging
 import os
-import sys
 from collections.abc import Awaitable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Callable
 from urllib.request import urlopen
@@ -39,7 +38,6 @@ from browser_commander.browser.launch_diagnostics import (
 )
 from browser_commander.browser.launch_executable import (
     default_restrictions_for,
-    is_chrome_for_testing,
     resolve_launch_executable,
 )
 from browser_commander.browser.launcher import LaunchResult
@@ -111,9 +109,9 @@ class RealBrowserOptions:
     engine: EngineType = "playwright"
     channel: str | None = None
     """Installed Chrome-family channel, such as ``"chrome"`` for the installed
-    Google Chrome. Without it (and without ``executable_path``) Playwright's
-    Chrome for Testing is started (issue #179). It also names the browser a
-    migration targets (default ``"chrome"``)."""
+    Google Chrome. Without it (and without ``executable_path``) the engine's
+    Chrome for Testing is started (issue #179); a migration then targets
+    ``"chrome"``."""
     executable_path: str | None = None
     user_data_dir: str | None = None
     persist_session_cookies: bool | str | Path = False
@@ -529,7 +527,6 @@ def _validate_launch_request(options: RealBrowserOptions) -> None:
     if options.engine not in ("playwright", "selenium"):
         msg = f"Invalid engine: {options.engine}. Expected 'playwright' or 'selenium'"
         raise ValueError(msg)
-    resolve_restrictions(options.default_restrictions or [])
     if options.remote_debugging_port is not None:
         assert_fixed_debugging_port(options.remote_debugging_port)
     if (
@@ -549,6 +546,7 @@ def _validate_launch_request(options: RealBrowserOptions) -> None:
         extra_args=options.extra_args,
         automation_parity=options.automation_parity,
     )
+    resolve_restrictions(options.default_restrictions or [])
     if options.user_data_dir:
         assert_dedicated_user_data_dir(options.user_data_dir)
 
@@ -629,8 +627,6 @@ async def _run_pre_launch_migration(
     options: RealBrowserOptions,
     *,
     user_data_dir: str,
-    executable_path: str,
-    platform: str,
     temporary_profile: bool,
     migrate: Any,
 ) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
@@ -646,10 +642,6 @@ async def _run_pre_launch_migration(
 
     if not options.migrate_from:
         return None, []
-    from browser_commander.browser.migration.os_crypt_keys import (
-        target_keystore_for,
-    )
-
     source = dict(options.migrate_from)
     include = source.pop("include", None)
     domains = source.pop("domains", None)
@@ -663,22 +655,7 @@ async def _run_pre_launch_migration(
         "domains": domains,
         "password_csv": password_csv,
         "include_payment_cards": include_payment_cards,
-        # Passwords are re-encrypted with the key of the browser that starts:
-        # Chrome for Testing keeps "Chromium Safe Storage", and its default
-        # mock keychain uses Chromium's fixed mock password (issue #179).
-        "target_browser": (
-            "chromium"
-            if is_chrome_for_testing(executable_path)
-            else options.channel or "chrome"
-        ),
-        "target_keystore": target_keystore_for(
-            [
-                *resolve_restrictions(options.restrictions).args,
-                *options.args,
-                *options.extra_args,
-            ],
-            platform,
-        ),
+        "target_browser": options.channel or "chrome",
     }
     if include is not None:
         migrate_options["include"] = include
@@ -698,17 +675,6 @@ async def _default_migrate_profile(**kwargs: Any) -> Any:
     return await migrate_profile(**kwargs)
 
 
-def _default_resolve_executable(engine: str) -> Callable[..., Awaitable[str]]:
-    # Without a channel or executable_path, Chrome for Testing - never the
-    # user's Google Chrome (issue #179).
-    async def resolve(*, channel: str | None, executable_path: str | None) -> str:
-        return await resolve_launch_executable(
-            engine=engine, channel=channel, executable_path=executable_path
-        )
-
-    return resolve
-
-
 async def launch_real_browser_with_dependencies(
     options: RealBrowserOptions,
     *,
@@ -719,7 +685,6 @@ async def launch_real_browser_with_dependencies(
     reserve_port: Any = reserve_loopback_port,
     migrate_profile: Any = _default_migrate_profile,
     owned_profile: bool = False,
-    platform: str = sys.platform,
 ) -> RealBrowserResult:
     """Dependency-injected implementation used by the public helper and tests."""
 
@@ -735,10 +700,16 @@ async def launch_real_browser_with_dependencies(
 
     session_persistence_path(options)
     _validate_launch_request(options)
+    # Without a channel or executable_path the engine's Chrome for Testing is
+    # started, never the user's Google Chrome (issue #179).
+    if resolve_executable is None:
+        resolve_executable = functools.partial(
+            resolve_launch_executable, engine=options.engine
+        )
     try:
         executable_path = str(
             await _resolve(
-                (resolve_executable or _default_resolve_executable(options.engine))(
+                resolve_executable(
                     channel=options.channel, executable_path=options.executable_path
                 )
             )
@@ -746,12 +717,12 @@ async def launch_real_browser_with_dependencies(
     except Exception as error:
         raise launch_failure(error, phase="discovery", options=options)
     # Chrome for Testing gets its infobar hidden and a mock keychain unless the
-    # caller sets default_restrictions; the environment and the profile
-    # preferences see them too (issue #179).
+    # caller sets default_restrictions; the switches, the environment and the
+    # profile preferences all see them.
     default_restrictions = default_restrictions_for(
         executable_path, options.default_restrictions
     )
-    options = dataclasses.replace(
+    options = replace(
         options, restrictions=[*default_restrictions, *options.restrictions]
     )
 
@@ -768,8 +739,6 @@ async def launch_real_browser_with_dependencies(
     migration, migrated_cookies = await _run_pre_launch_migration(
         options,
         user_data_dir=user_data_dir,
-        executable_path=executable_path,
-        platform=platform,
         temporary_profile=temporary_profile,
         migrate=migrate_profile,
     )
@@ -846,10 +815,6 @@ async def launch_real_browser_with_dependencies(
                     storage_state=options.storage_state,
                     verbose=options.verbose,
                     downloads=options.downloads,
-                    # ChromeDriver must match the browser just started (#179).
-                    executable_path=executable_path
-                    if options.engine == "selenium"
-                    else None,
                 )
             )
         )

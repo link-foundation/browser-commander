@@ -8,8 +8,7 @@
 //! unit tests.
 //!
 //! On macOS and Linux the Safe Storage key is per application, not per
-//! profile, so the target key is looked up for the launching browser channel
-//! (`chromium` for Chrome for Testing, which is not Google-branded).
+//! profile, so the target key is looked up for the launching browser channel.
 //! On Windows the target key does not exist yet: the caller generates one with
 //! `create_windows_profile_key` and writes it into the target `Local State`.
 
@@ -124,66 +123,22 @@ pub struct TargetKey {
     pub prefix: String,
 }
 
-/// Where the launching browser keeps its encryption key.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum TargetKeystore {
-    /// The OS keystore: the macOS Keychain, libsecret or KWallet.
-    #[default]
-    Os,
-    /// Chromium's fixed mock passwords, for a launch with
-    /// `--use-mock-keychain` (macOS) or `--password-store=basic` (Linux).
-    Mock,
-}
-
-/// The keystore a browser started with `args` uses (issue #179): `Mock` when
-/// `--use-mock-keychain` (macOS) or `--password-store=basic` (Linux) keeps
-/// it away from the OS keystore. Windows always uses DPAPI.
-pub fn target_keystore_for(args: &[String], platform: &str) -> TargetKeystore {
-    let bypass = if platform == "darwin" {
-        "--use-mock-keychain"
-    } else {
-        "--password-store=basic"
-    };
-    if platform != "win32" && args.iter().any(|arg| arg == bypass) {
-        TargetKeystore::Mock
-    } else {
-        TargetKeystore::Os
-    }
-}
-
 /// Resolve the target (launching) profile's encryption key on macOS/Linux.
-///
-/// macOS Chromium only knows the `v10` tag; Linux tags keyring keys `v11` and
-/// its fixed basic-store key `v10`. A [`TargetKeystore::Mock`] keystore uses
-/// Chromium's fixed mock passwords: `mock_password` for the mock keychain,
-/// `peanuts` for the basic store.
 pub(crate) fn resolve_target_key(
     browser: &str,
     platform: &str,
-    keystore: TargetKeystore,
     hooks: &KeystoreHooks,
 ) -> Result<TargetKey> {
-    if platform != "darwin" && platform != "linux" {
-        return Err(anyhow!(
-            "resolve_target_key does not derive a Windows key; use create_windows_profile_key"
-        ));
-    }
-    if keystore == TargetKeystore::Mock {
-        let password = if platform == "darwin" {
-            "mock_password"
-        } else {
-            "peanuts"
-        };
+    if platform == "darwin" || platform == "linux" {
+        let password = (hooks.read_safe_storage_password)(browser, platform)?;
         return Ok(TargetKey {
-            key: derive_chromium_cookie_key(password, platform)?,
-            prefix: "v10".to_string(),
+            key: derive_chromium_cookie_key(&password, platform)?,
+            prefix: "v11".to_string(),
         });
     }
-    let password = (hooks.read_safe_storage_password)(browser, platform)?;
-    Ok(TargetKey {
-        key: derive_chromium_cookie_key(&password, platform)?,
-        prefix: if platform == "darwin" { "v10" } else { "v11" }.to_string(),
-    })
+    Err(anyhow!(
+        "resolve_target_key does not derive a Windows key; use create_windows_profile_key"
+    ))
 }
 
 pub(crate) use crate::browser::browser_profile_files::local_state_path_for_profile;

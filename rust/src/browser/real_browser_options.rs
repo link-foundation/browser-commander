@@ -75,8 +75,9 @@ impl RealBrowserOptions {
         self
     }
 
-    /// The selected channel, `"chrome"` when none is.
-    pub fn channel_name(&self) -> &str {
+    /// The browser family this launch belongs to: the channel, or `"chrome"`
+    /// when none is named (Chrome for Testing is a Chrome).
+    pub fn browser_channel(&self) -> &str {
         self.channel.as_deref().unwrap_or("chrome")
     }
 
@@ -125,8 +126,9 @@ impl RealBrowserOptions {
         self
     }
 
-    /// Replace the restrictions the launch adds for the browser that starts;
-    /// an empty list turns the Chrome for Testing defaults off (issue #179).
+    /// Choose the restrictions the launch starts with instead of the
+    /// automatic ones (the `chrome-for-testing` preset for Chrome for
+    /// Testing). An empty list opts out.
     pub fn default_restrictions<I, S>(mut self, restrictions: I) -> Self
     where
         I: IntoIterator<Item = S>,
@@ -283,6 +285,6 @@ impl RealBrowserOptions {
     pub fn get_user_data_dir(&self) -> PathBuf {
         self.user_data_dir
             .clone()
-            .unwrap_or_else(|| default_real_browser_user_data_dir(self.channel_name()))
+            .unwrap_or_else(|| default_real_browser_user_data_dir(self.browser_channel()))
     }
 }

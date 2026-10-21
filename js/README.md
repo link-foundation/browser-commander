@@ -99,21 +99,13 @@ await commander.destroy();
 await browser.close();
 ```
 
-`launchBrowser()` starts the engine's Chrome for Testing (installed by
-`npx playwright install chromium` or `npx puppeteer browsers install chrome`)
-the way a person would and then attaches to it; it never starts your own Google
-Chrome unless `channel: 'chrome'` or `executablePath` asks for it. The whole
-command line is
-`--test-type=gpu --use-mock-keychain --user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port> about:blank`:
+`launchBrowser()` starts the installed Chrome the way a person would and then
+attaches to it. The whole command line is
+`--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved port> about:blank`:
 no automation switches, so `navigator.webdriver` is `false`, there is no
 "controlled by automated test software" or unsupported-flag infobar, and
 extensions, sync, translation and every other browser feature behave as in a
-hand-started Chrome. The first two switches are the `chrome-for-testing`
-default restrictions: they hide Chrome for Testing's "only for automated
-testing" bar and keep it away from the macOS keychain. Any other browser gets
-none, and `defaultRestrictions: []` turns them off; see
-[Chrome for Testing by default](https://github.com/link-foundation/browser-commander/blob/main/docs/chrome-for-testing.md).
-The temporary profile is deleted by `browser.close()`.
+hand-started Chrome. The temporary profile is deleted by `browser.close()`.
 
 ```javascript
 const { browser, page } = await launchBrowser({
@@ -150,8 +142,7 @@ with a fixed `--remote-debugging-port` and a dedicated `--user-data-dir`, or
 let `launchBrowser()`/`launchRealBrowser()` start it.
 
 `launchRealBrowser()` is the lower-level helper behind the default launch: it
-starts Chrome for Testing, or the installed Chrome, Edge, Brave, or Chromium a
-`channel` names, on a reserved
+finds and starts an installed Chrome, Edge, Brave, or Chromium on a reserved
 loopback port, confirms from the browser's own `DevTools listening on` line
 that the port is really its own (retrying on a port race), and attaches. It
 always uses a dedicated profile; Chrome 136 and newer do not honor remote
@@ -399,9 +390,8 @@ see [trace and session hardening](https://github.com/link-foundation/browser-com
 ```javascript
 const { browser, page, close } = await launchBrowser({
   engine: 'playwright', // 'playwright' or 'puppeteer'
-  launch: 'real', // 'real' (start the browser, attach) or 'engine'
-  channel: 'chrome', // or executablePath; defaults to Chrome for Testing
-  defaultRestrictions: undefined, // [] drops Chrome for Testing's defaults
+  launch: 'real', // 'real' (start the browser itself, attach) or 'engine'
+  channel: 'chrome', // or executablePath; default: Chrome for Testing
   headless: false, // Run in headless mode
   userDataDir: undefined, // Keep a profile; default is a fresh temporary one
   restrictions: [], // Opt-in restrictions such as 'no-extensions', 'no-sync'
@@ -419,6 +409,47 @@ with the persistent context. `close()` (and `browser.close()`) closes the
 browser and deletes a temporary profile. The result also carries `launch`,
 `userDataDir`, `temporaryProfile` and the exact `args` the browser was started
 with.
+
+#### Chrome for Testing by default
+
+Without `channel` or `executablePath`, a launch starts Chrome for Testing - the
+one Playwright or Puppeteer downloaded, or else another build in its download
+cache (`ms-playwright`, moved by `PLAYWRIGHT_BROWSERS_PATH`; `~/.cache/puppeteer`,
+moved by `PUPPETEER_CACHE_DIR`), newest first; Selenium tries both caches, then
+Selenium Manager's - never your own Google Chrome. Chrome for Testing is an app of
+its own (`com.google.chrome.for.testing` on macOS), so the Dock icon, new tabs
+and links opened from other apps keep going to your Chrome. Without it the
+launch fails and names the install command (`npx playwright install chromium`,
+`npx puppeteer browsers install chrome`) and `channel: 'chrome'`, which starts
+the installed Google Chrome instead. It is never a silent fallback.
+
+A Chrome for Testing launch gets the `chrome-for-testing` restriction preset
+before your own `restrictions`: `no-chrome-for-testing-infobar`
+(`--test-type=gpu`, the only value that hides the "Chrome for Testing is only
+for automated testing" bar) and `mock-keychain` (`--use-mock-keychain`, no
+keychain prompt at each start). Other browsers get nothing. `defaultRestrictions`
+replaces that choice (`[]` opts out) and the result reports what was applied:
+
+```javascript
+import { isChromeForTesting, launchBrowser } from 'browser-commander';
+
+const { defaultRestrictions, close } = await launchBrowser({});
+console.log(defaultRestrictions); // ['no-chrome-for-testing-infobar', 'mock-keychain']
+await close();
+
+// Keep the infobar, or start Google Chrome on purpose:
+await launchBrowser({ defaultRestrictions: [] });
+await launchBrowser({ channel: 'chrome' });
+isChromeForTesting(
+  '/home/me/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome'
+); // true
+```
+
+`launchRealBrowser()` and `launchWebDriver()` take the same
+`defaultRestrictions`. With the mock keychain, Chrome for Testing cannot decrypt
+cookies another Chrome wrote into a copied profile; move logins with
+`readBrowserCookies()` or `storageState`, which set cookies through the
+browser's cookie API instead.
 
 The `args` option allows passing custom Chrome arguments, which is useful for headless server environments (Docker, CI/CD) that require flags like `--no-sandbox`.
 
@@ -450,16 +481,16 @@ Playwright accepts `timeout` and Puppeteer accepts `protocolTimeout`.
 ### launchRealBrowser(options)
 
 Start a browser and connect through `connectBrowser()`. Without `channel` or
-`executablePath` it starts the engine's Chrome for Testing with the
-`chrome-for-testing` default restrictions (`defaultRestrictions` replaces
-them). Use `channel` (`chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`,
-`msedge`, `msedge-beta`, `msedge-dev`, `msedge-canary`, `brave`, or `chromium`)
-or an explicit `executablePath` to start an installed browser instead. Without `userDataDir` it creates a fresh temporary
-profile that `close()` deletes; it rejects known default browser-profile paths,
+`executablePath` it starts Chrome for Testing, as `launchBrowser()` does; use
+`channel` (`chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`,
+`msedge-beta`, `msedge-dev`, `msedge-canary`, `brave`, or `chromium`) or an
+explicit `executablePath` for an installed browser. Without `userDataDir` it
+creates a fresh temporary profile that `close()` deletes; it rejects known
+default browser-profile paths,
 protects its remote-debugging switches, reserves a loopback port (or uses
 `remoteDebuggingPort`, never `0`), and returns the spawned `browserProcess`,
 `cdpEndpoint`, `remoteDebuggingPort`, `executablePath`, `userDataDir`,
-`temporaryProfile`, `args` and `defaultRestrictions` alongside `{ browser, page, close }`.
+`temporaryProfile` and `args` alongside `{ browser, page, close }`.
 `launchAndConnectRealBrowser()` is an alias with identical behavior.
 `restrictions` opts into named restrictions, `args`/`extraArgs` append custom
 switches, and `env` adds environment variables for the browser process only.
@@ -514,8 +545,7 @@ now belongs to another browser instance or the tab is gone. See
 
 The same engine is available through `launchBrowser({engine: 'selenium'})` and
 `connectBrowser({engine: 'selenium', serverUrl, capabilities})`. The common
-launcher defaults to a real attachment to Chrome for Testing, whose
-ChromeDriver is resolved for that browser; `launch: 'engine'` enables
+launcher defaults to a real Chrome attachment; `launch: 'engine'` enables
 ChromeDriver/GeckoDriver-managed Chrome or Firefox launches. Both return a common
 page facade plus a raw `driver` and `close()`.
 
@@ -523,8 +553,7 @@ The `selenium` engine drives Chrome or Firefox over W3C WebDriver through
 `selenium-webdriver` (an optional peer dependency). `launchWebDriver()` finds a
 driver (`driverPath`, then `PATH`, then the Selenium Manager bundled with
 `selenium-webdriver`, which downloads a chromedriver/geckodriver matching the
-browser; a Chrome for Testing `executablePath` skips `PATH`, whose chromedriver
-belongs to the installed Google Chrome), starts it on a reserved loopback port, waits for `/status`, and opens
+browser), starts it on a reserved loopback port, waits for `/status`, and opens
 a session with a fresh temporary profile that `close()` deletes:
 
 ```javascript
@@ -534,8 +563,7 @@ const { driver, page, close } = await launchWebDriver({
   browser: 'chrome', // or 'firefox'
   headless: false,
   bidi: true, // WebDriver BiDi: console/dialog/network events, preload scripts
-  // executablePath, downloadBrowser, driverPath, userDataDir, args,
-  // restrictions, defaultRestrictions, env
+  // executablePath, driverPath, userDataDir, args, restrictions, env
 });
 const commander = makeBrowserCommander({ page }); // commander.engine === 'selenium'
 

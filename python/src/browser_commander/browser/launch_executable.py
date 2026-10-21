@@ -1,14 +1,15 @@
 """Which browser binary an automation launch starts (issue #179).
 
 Without ``channel`` or ``executable_path`` a launch starts Chrome for Testing,
-the browser ``playwright install chromium`` downloads. It is an application
-of its own (``com.google.chrome.for.testing`` on macOS), so the user's Google
-Chrome - its Dock icon, its new tabs, the links other apps open - never goes to
-the automation window. The installed Google Chrome is used only on request.
+the browser Playwright and Selenium Manager download. It is an application of
+its own (``com.google.chrome.for.testing`` on macOS), so the user's Google
+Chrome - its Dock icon, its new tabs, the links other apps open - never goes
+to the automation window. The installed Google Chrome is used only on request.
 """
 
 from __future__ import annotations
 
+import asyncio
 import inspect
 import os
 import re
@@ -16,14 +17,16 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from browser_commander.browser.chrome_for_testing_cache import (
+    cached_chrome_for_testing,
+)
 from browser_commander.browser.restrictions import LAUNCH_RESTRICTION_PRESETS
+from browser_commander.core.engine_detection import EngineType
 
 #: The restrictions every Chrome for Testing launch gets by default.
-CHROME_FOR_TESTING_RESTRICTIONS: tuple[str, ...] = tuple(
-    LAUNCH_RESTRICTION_PRESETS["chrome-for-testing"]
-)
-
-INSTALL_COMMAND = "python -m playwright install chromium"
+CHROME_FOR_TESTING_RESTRICTIONS: tuple[str, ...] = LAUNCH_RESTRICTION_PRESETS[
+    "chrome-for-testing"
+]
 
 # Chrome for Testing archives unpack to chrome-<platform>; the macOS app is
 # "Google Chrome for Testing.app". Playwright's older own Chromium builds
@@ -41,12 +44,20 @@ _SELENIUM_CACHE_PLATFORMS = frozenset(
     {"linux64", "win64", "win32", "mac-x64", "mac-arm64"}
 )
 
+_INSTALL_COMMANDS = {
+    "playwright": "`playwright install chromium`",
+    "selenium": (
+        "`playwright install chromium` or "
+        "`selenium-manager --browser chrome --force-browser-download`"
+    ),
+}
 
-def is_chrome_for_testing(executable_path: Any) -> bool:
-    """Whether an executable is a Chrome for Testing build, by install path.
 
-    Playwright, Puppeteer, ``@puppeteer/browsers`` and Selenium Manager all
-    keep it under a Chrome for Testing archive directory.
+def is_chrome_for_testing(executable_path: str | None) -> bool:
+    """Whether an executable is a Chrome for Testing build, judged by its path.
+
+    Playwright, Puppeteer, ``@puppeteer/browsers`` and Selenium Manager all keep
+    it under a Chrome for Testing archive directory.
     """
 
     if not isinstance(executable_path, str):
@@ -69,81 +80,94 @@ def is_chrome_for_testing(executable_path: Any) -> bool:
     )
 
 
-def chrome_for_testing_driver(executable_path: Any) -> str | None:
-    """The ChromeDriver of a Chrome for Testing's own release, else ``None``.
-
-    A ``chromedriver`` on ``PATH`` belongs to the installed Google Chrome and
-    refuses another release, yet Selenium Manager returns it even for a
-    ``--browser-path``, so it is told to skip it. Any other browser is left to
-    Selenium's own lookup (``None``).
-    """
-
-    if not is_chrome_for_testing(executable_path):
-        return None
-    from selenium.webdriver.common import selenium_manager
-
-    paths = selenium_manager.SeleniumManager().binary_paths(
-        [
-            "--browser",
-            "chrome",
-            "--browser-path",
-            str(executable_path),
-            "--skip-driver-in-path",
-        ]
-    )
-    return str(paths["driver_path"])
-
-
 def default_restrictions_for(
-    executable_path: Any, requested: Sequence[str] | None = None
+    executable_path: str | None, requested: Sequence[str] | None = None
 ) -> list[str]:
     """The restrictions a launch of ``executable_path`` gets by default.
 
-    ``requested`` - the caller's ``default_restrictions`` - wins when given
-    (``[]`` opts out); otherwise Chrome for Testing gets the
-    ``chrome-for-testing`` preset and any other browser nothing.
+    The caller's ``default_restrictions`` win when given; otherwise Chrome for
+    Testing gets the ``chrome-for-testing`` preset and any other browser none.
     """
 
     if requested is not None:
         return list(requested)
-    if is_chrome_for_testing(executable_path):
-        return list(CHROME_FOR_TESTING_RESTRICTIONS)
-    return []
+    return (
+        list(CHROME_FOR_TESTING_RESTRICTIONS)
+        if is_chrome_for_testing(executable_path)
+        else []
+    )
 
 
 async def _resolve(value: Any) -> Any:
     return await value if inspect.isawaitable(value) else value
 
 
-def _is_executable(file: Any) -> bool:
+def _is_executable(file: str | None) -> bool:
     return bool(file) and Path(str(file)).is_file() and os.access(str(file), os.X_OK)
 
 
-async def _bundled_executable(engine: str) -> str | None:
-    # Selenium has no browser of its own; it starts the one Playwright downloaded.
-    if engine not in ("playwright", "selenium"):
+async def _playwright_executable() -> str | None:
+    try:
+        from playwright.async_api import async_playwright
+    except ImportError:
         return None
-    from playwright.async_api import async_playwright
-
     async with async_playwright() as playwright:
         return str(playwright.chromium.executable_path)
 
 
-async def bundled_chrome_for_testing(
-    engine: str, bundled_executable: Any = None
-) -> str | None:
-    """Playwright's downloaded Chrome for Testing, when it is installed."""
-
+def _selenium_manager_executable() -> str | None:
+    # Selenium Manager keeps its own Chrome for Testing in ~/.cache/selenium
+    # and downloads it when missing; --force-browser-download stops it from
+    # picking the installed Google Chrome instead.
     try:
-        bundled = await _resolve((bundled_executable or _bundled_executable)(engine))
-    except Exception:
+        from selenium.webdriver.common.selenium_manager import SeleniumManager
+    except ImportError:
         return None
-    return str(bundled) if _is_executable(bundled) else None
+    paths = SeleniumManager().binary_paths(
+        ["--browser", "chrome", "--force-browser-download"]
+    )
+    return paths.get("browser_path") or None
+
+
+def _returning(value: str) -> Any:
+    async def source() -> str:
+        return value
+
+    return source
+
+
+async def bundled_chrome_for_testing(
+    engine: str, *, cached: Any = cached_chrome_for_testing
+) -> str | None:
+    """The Chrome for Testing an engine downloaded, if any.
+
+    Playwright uses its own, then any other build in its download cache,
+    newest first. Selenium has no browser of its own and uses Playwright's,
+    then the Playwright, Puppeteer and Selenium Manager caches, then asks
+    Selenium Manager, which downloads one when none is there.
+    """
+
+    sources: list[Any] = [_playwright_executable]
+    try:
+        candidates = list(cached(engine))
+    except Exception:
+        candidates = []
+    sources.extend(_returning(candidate) for candidate in candidates)
+    if engine == "selenium":
+        sources.append(lambda: asyncio.to_thread(_selenium_manager_executable))
+    for source in sources:
+        try:
+            executable = await source()
+        except Exception:
+            executable = None
+        if executable and _is_executable(executable):
+            return str(executable)
+    return None
 
 
 async def resolve_launch_executable(
     *,
-    engine: str,
+    engine: EngineType,
     channel: str | None = None,
     executable_path: str | None = None,
     resolve_system: Any = None,
@@ -152,13 +176,10 @@ async def resolve_launch_executable(
     """Pick the browser binary for a launch.
 
     An explicit ``executable_path`` or ``channel`` is honoured as given.
-    Without either, Playwright's downloaded Chrome for Testing is started, for
-    Selenium too. The installed Google Chrome is never a silent fallback:
-    without Chrome for Testing the launch fails and says how to install it or
-    how to ask for Google Chrome.
-
-    Raises:
-        FileNotFoundError: When Chrome for Testing is not installed.
+    Without either, the engine's downloaded Chrome for Testing is started. The
+    installed Google Chrome is never a silent fallback: without Chrome for
+    Testing the launch fails and says how to install it or how to ask for
+    Google Chrome.
     """
 
     if executable_path is not None or channel is not None:
@@ -173,12 +194,17 @@ async def resolve_launch_executable(
                 )
             )
         )
-    bundled = await bundled_chrome_for_testing(engine, bundled_executable)
-    if bundled:
-        return bundled
+    try:
+        bundled = await _resolve(
+            (bundled_executable or bundled_chrome_for_testing)(engine)
+        )
+    except Exception:
+        bundled = None
+    if bundled and _is_executable(str(bundled)):
+        return str(bundled)
+    install = _INSTALL_COMMANDS.get(engine, _INSTALL_COMMANDS["playwright"])
     msg = (
-        f"Chrome for Testing is not installed for {engine}: run "
-        f"`{INSTALL_COMMAND}`, or pass channel='chrome' to start the installed "
-        "Google Chrome"
+        f"Chrome for Testing is not installed for {engine}: run {install}, "
+        "or pass channel='chrome' to start the installed Google Chrome"
     )
     raise FileNotFoundError(msg)

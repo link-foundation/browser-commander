@@ -1,8 +1,10 @@
 //! Browser launcher for browser automation.
 //!
-//! By default ([`LaunchMode::Real`]) Browser Commander starts the installed
-//! Chrome itself, exactly like a person who wants to attach a debugger would,
-//! and attaches the engine over CDP (issues #101 and #103).
+//! By default ([`LaunchMode::Real`]) Browser Commander starts the browser
+//! itself, exactly like a person who wants to attach a debugger would, and
+//! attaches the engine over CDP (issues #101 and #103). Without a `channel`
+//! or `executable_path` that browser is Chrome for Testing, never the
+//! person's own Google Chrome (issue #179).
 //! [`LaunchMode::Engine`] keeps the engine-launched browser for CI and
 //! headless use. Mirrors `js/src/browser/launcher.js`.
 
@@ -112,10 +114,10 @@ pub struct LaunchOptions {
     /// Opt-in restrictions from `launch-restrictions.json`, such as
     /// `no-extensions` or the `legacy-defaults` preset (issue #103).
     pub restrictions: Vec<String>,
-    /// Restrictions applied before `restrictions` depending on the browser
-    /// that starts. `None` gives Chrome for Testing the `chrome-for-testing`
-    /// preset (`--test-type=gpu`, `--use-mock-keychain`) and every other
-    /// browser nothing; `Some(vec![])` turns the defaults off (issue #179).
+    /// Restrictions added before `restrictions` once the browser is known.
+    /// `None` picks them automatically - the `chrome-for-testing` preset
+    /// (`--test-type=gpu --use-mock-keychain`) for Chrome for Testing,
+    /// nothing otherwise; `Some(vec![])` opts out (issue #179).
     pub default_restrictions: Option<Vec<String>>,
     /// Additional Chrome features to disable, merged into one switch.
     pub disable_features: Vec<String>,
@@ -290,8 +292,9 @@ impl LaunchOptions {
         self
     }
 
-    /// Replace the restrictions the launch adds for the browser that starts;
-    /// an empty list turns the Chrome for Testing defaults off (issue #179).
+    /// Choose the restrictions the launch starts with instead of the
+    /// automatic ones (the `chrome-for-testing` preset for Chrome for
+    /// Testing). An empty list opts out.
     pub fn default_restrictions<I, S>(mut self, restrictions: I) -> Self
     where
         I: IntoIterator<Item = S>,
@@ -299,6 +302,25 @@ impl LaunchOptions {
     {
         self.default_restrictions = Some(restrictions.into_iter().map(Into::into).collect());
         self
+    }
+
+    /// The same options with the default restrictions for `executable`
+    /// before the caller's own, and the defaults that were added.
+    pub(crate) fn with_default_restrictions(
+        &self,
+        executable: Option<&std::path::Path>,
+    ) -> (Self, Vec<String>) {
+        let defaults = executable
+            .map(|executable| {
+                crate::browser::chrome_for_testing::default_restrictions_for(
+                    executable,
+                    self.default_restrictions.as_deref(),
+                )
+            })
+            .unwrap_or_else(|| self.default_restrictions.clone().unwrap_or_default());
+        let mut effective = self.clone();
+        effective.restrictions = defaults.iter().chain(&self.restrictions).cloned().collect();
+        (effective, defaults)
     }
 
     /// Add additional Chrome arguments.
@@ -565,9 +587,8 @@ pub struct LaunchResult {
     /// The Chrome arguments Browser Commander passed (the engine adds its own
     /// in [`LaunchMode::Engine`]).
     pub args: Vec<String>,
-    /// The restrictions the launch added for the browser that started: the
-    /// `chrome-for-testing` preset for Chrome for Testing unless
-    /// [`LaunchOptions::default_restrictions`] says otherwise (issue #179).
+    /// Restrictions the launch added before the caller's own, such as the
+    /// `chrome-for-testing` preset for Chrome for Testing.
     pub default_restrictions: Vec<String>,
     /// The DevTools HTTP endpoint of a real launch.
     pub cdp_endpoint: Option<String>,
@@ -638,17 +659,20 @@ impl std::fmt::Debug for LaunchResult {
 
 /// Launch a browser with the given options.
 ///
-/// By default ([`LaunchMode::Real`]) Browser Commander starts the installed
-/// Chrome itself: `--user-data-dir=<fresh temporary profile>
+/// By default ([`LaunchMode::Real`]) Browser Commander starts the browser
+/// itself: `--user-data-dir=<fresh temporary profile>
 /// --remote-debugging-port=<reserved port> about:blank` and nothing else (plus
 /// `--headless=new`, restrictions and the caller's arguments when asked for),
 /// then attaches the engine over CDP. The browser behaves like one a person
 /// started by hand and `navigator.webdriver` stays false. Without an explicit
-/// `channel` or `executable_path` the engine's Chrome for Testing is started,
-/// never the user's Google Chrome, with the `chrome-for-testing` restrictions
-/// that hide its infobar and keychain prompts (issue #179); without Chrome for
-/// Testing the launch fails and says how to install it. Every other
-/// restriction is an explicit opt-in through `restrictions`.
+/// `channel` or `executable_path` the browser is Chrome for Testing - the one
+/// Playwright or Puppeteer downloaded, or for chromiumoxide the newest one in
+/// the Playwright, Puppeteer or Selenium Manager cache - and never the
+/// installed Google Chrome; when none is installed the launch fails and says
+/// how to install it, or to pass `channel("chrome")`. Every restriction the
+/// library used to add silently is an explicit opt-in through
+/// `restrictions`, except the `chrome-for-testing` preset a Chrome for
+/// Testing launch gets through `default_restrictions`.
 ///
 /// [`LaunchMode::Engine`] keeps the chromiumoxide-, Playwright- or
 /// Puppeteer-launched browser for CI and headless use. Playwright and
@@ -682,14 +706,20 @@ pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyh
             return Err(super::safari::unsupported("fingerprint or media emulation").into());
         }
         let mut real_options = options.real_browser_options();
-        if !super::safari::is_safari_channel(real_options.channel_name()) {
-            real_options.channel = if options.webdriver.browser
-                == super::webdriver::WebDriverBrowser::SafariTechnologyPreview
-            {
-                Some("safari-technology-preview".into())
-            } else {
-                Some("safari".into())
-            };
+        if !real_options
+            .channel
+            .as_deref()
+            .is_some_and(super::safari::is_safari_channel)
+        {
+            real_options.channel = Some(
+                if options.webdriver.browser
+                    == super::webdriver::WebDriverBrowser::SafariTechnologyPreview
+                {
+                    "safari-technology-preview".into()
+                } else {
+                    "safari".into()
+                },
+            );
         }
         let safari = super::safari::launch_safari_real_with_webdriver(
             real_options,
@@ -714,9 +744,7 @@ pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyh
     }
     // Validate before anything is started or written to disk.
     options.all_chrome_args()?;
-    if let Some(defaults) = &options.default_restrictions {
-        resolve_restrictions(defaults)?;
-    }
+    resolve_restrictions(options.default_restrictions.as_deref().unwrap_or_default())?;
     if let Some(state) = &options.storage_state {
         state.load()?;
     }

@@ -6,7 +6,6 @@ import {
   createSourceKeyResolver,
   localStatePathForProfile,
   resolveTargetKey,
-  targetKeystoreFor,
 } from '../../../../src/browser/migration/os-crypt-keys.js';
 import { deriveChromiumCookieKey } from '../../../../src/browser/browser-cookie-crypto.js';
 
@@ -78,67 +77,11 @@ describe('resolveTargetKey', () => {
     assert.equal(result.prefix, 'v11');
   });
 
-  it('tags macOS keys v10, the only tag macOS Chromium reads', async () => {
-    const result = await resolveTargetKey({
-      browser: 'chromium',
-      platform: 'darwin',
-      readSafeStoragePassword: async () => 'target-pass',
-    });
-    assert.deepEqual(
-      result.key,
-      deriveChromiumCookieKey('target-pass', 'darwin')
-    );
-    assert.equal(result.prefix, 'v10');
-  });
-
-  it("uses Chromium's fixed mock passwords for a mock keystore (issue #179)", async () => {
-    const unreadable = async () => {
-      throw new Error('the OS keystore must not be asked');
-    };
-    const mac = await resolveTargetKey({
-      browser: 'chromium',
-      platform: 'darwin',
-      keystore: 'mock',
-      readSafeStoragePassword: unreadable,
-    });
-    assert.deepEqual(mac, {
-      key: deriveChromiumCookieKey('mock_password', 'darwin'),
-      prefix: 'v10',
-    });
-    const linux = await resolveTargetKey({
-      browser: 'chrome',
-      platform: 'linux',
-      keystore: 'mock',
-      readSafeStoragePassword: unreadable,
-    });
-    assert.deepEqual(linux, {
-      key: deriveChromiumCookieKey('peanuts', 'linux'),
-      prefix: 'v10',
-    });
-  });
-
   it('refuses to derive a Windows key', async () => {
     await assert.rejects(
       resolveTargetKey({ browser: 'chrome', platform: 'win32' }),
       /createWindowsProfileKey/
     );
-  });
-});
-
-describe('targetKeystoreFor (issue #179)', () => {
-  it('reports the switches that bypass the OS keystore', () => {
-    assert.equal(targetKeystoreFor(['--use-mock-keychain'], 'darwin'), 'mock');
-    assert.equal(
-      targetKeystoreFor(['--password-store=basic'], 'linux'),
-      'mock'
-    );
-    assert.equal(targetKeystoreFor(['--use-mock-keychain'], 'linux'), 'os');
-    assert.equal(
-      targetKeystoreFor(['--password-store=gnome-libsecret'], 'linux'),
-      'os'
-    );
-    assert.equal(targetKeystoreFor([], 'darwin'), 'os');
-    assert.equal(targetKeystoreFor(['--use-mock-keychain'], 'win32'), 'os');
   });
 });
 

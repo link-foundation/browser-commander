@@ -19,6 +19,7 @@ mod browser_profiles;
 mod browser_sources;
 pub mod cdp_endpoint;
 mod cdp_trace_events;
+pub mod chrome_for_testing;
 pub mod chromiumoxide_adapter;
 mod chromiumoxide_network;
 mod chromiumoxide_trace;
@@ -72,16 +73,16 @@ pub use browser_sources::{
 pub use cdp_endpoint::{
     fetch_cdp_version, read_dev_tools_active_port, wait_for_cdp_endpoint, CdpEndpointRequest,
 };
+pub use chrome_for_testing::{
+    chrome_for_testing_restrictions, default_restrictions_for, is_chrome_for_testing,
+    CHROME_FOR_TESTING_PRESET,
+};
 pub use chromiumoxide_adapter::ChromiumoxidePage;
 pub use connector::{connect_browser, ConnectOptions};
 pub use debugging_port::{assert_fixed_debugging_port, reserve_loopback_port, PortRaceError};
 pub use default_browser::{
     browser_for_identifier, default_run_command, parse_mac_launch_services_handler,
     parse_windows_prog_id, resolve_default_browser, RunCommand,
-};
-pub use launch_executable::{
-    chrome_for_testing_restrictions, default_restrictions_for, is_chrome_for_testing,
-    resolve_launch_executable, CHROME_FOR_TESTING_PRESET,
 };
 pub use launcher::{
     launch_browser, Browser, LaunchMode, LaunchOptions, LaunchResult, LAUNCH_MODES,

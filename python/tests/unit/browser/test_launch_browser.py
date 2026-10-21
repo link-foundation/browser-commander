@@ -70,49 +70,35 @@ def system_chrome(**_options: Any) -> str:
     return "/usr/bin/google-chrome"
 
 
-def chrome_for_testing(tmp: Path) -> str:
-    """An executable at the path Playwright installs Chrome for Testing to."""
-
-    executable = tmp / "chromium-1248" / "chrome-linux64" / "chrome"
-    executable.parent.mkdir(parents=True)
-    executable.write_text("")
-    executable.chmod(0o755)
-    return str(executable)
+def bundled_chrome_for_testing(_engine: str) -> str:
+    # Any executable file stands in for the downloaded Chrome for Testing.
+    return sys.executable
 
 
-def no_bundled_browser(_engine: str) -> None:
-    return None
-
-
-def real_dependencies(
-    calls: list[Any], bundled: str = sys.executable
-) -> dict[str, Any]:
-    # Hermetic: never the Chrome for Testing this machine may have installed.
+def real_dependencies(calls: list[Any]) -> dict[str, Any]:
     return {
         "launch_real_browser": fake_real_launcher(calls),
         "resolve_system": system_chrome,
-        "bundled_executable": lambda _engine: bundled,
+        "bundled_executable": bundled_chrome_for_testing,
         "settle_seconds": 0,
     }
 
 
 async def test_starts_the_real_browser_by_default_with_nothing_added(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
     calls: list[Any] = []
-    bundled = chrome_for_testing(tmp_path)
 
     result = await launch_browser_with_dependencies(
-        LaunchOptions(), real_dependencies(calls, bundled)
+        LaunchOptions(), real_dependencies(calls)
     )
 
     options = next(call[1] for call in calls if call[0] == "launch_real_browser")
     assert options.engine == "playwright"
-    # Chrome for Testing, not the installed Google Chrome (issue #179).
-    assert options.executable_path == bundled
+    # Chrome for Testing, not the installed Google Chrome (#179).
+    assert options.executable_path == sys.executable
     assert options.channel is None
-    assert options.default_restrictions is None
     assert options.slow_mo is None
     assert options.user_data_dir is None
     assert options.remote_debugging_port is None
@@ -133,20 +119,12 @@ async def test_starts_the_real_browser_by_default_with_nothing_added(
 async def test_forwards_restrictions_and_slow_mo_to_the_real_launch() -> None:
     calls: list[Any] = []
     result = await launch_browser_with_dependencies(
-        LaunchOptions(
-            channel="chrome",
-            restrictions=["no-sync"],
-            default_restrictions=[],
-            slow_mo=20,
-        ),
+        LaunchOptions(restrictions=["no-sync"], slow_mo=20),
         real_dependencies(calls),
     )
 
     options = calls[0][1]
-    assert options.executable_path == "/usr/bin/google-chrome"
-    assert options.channel == "chrome"
     assert options.restrictions == ["no-sync"]
-    assert options.default_restrictions == []
     assert options.slow_mo == 20
     assert result.close is not None
     await result.close()
@@ -212,11 +190,7 @@ def engine_dependencies(calls: list[Any]) -> dict[str, Any]:
     async def start_playwright() -> FakePlaywright:
         return FakePlaywright(calls)
 
-    return {
-        "start_playwright": start_playwright,
-        "bundled_executable": no_bundled_browser,
-        "settle_seconds": 0,
-    }
+    return {"start_playwright": start_playwright, "settle_seconds": 0}
 
 
 async def test_engine_launch_uses_a_temporary_profile_deleted_on_close() -> None:
@@ -286,17 +260,9 @@ async def test_selenium_engine_launch_passes_the_environment_to_the_service() ->
 
     result = await launch_browser_with_dependencies(
         LaunchOptions(
-            engine="selenium",
-            launch="engine",
-            restrictions=["no-google-services"],
-            default_restrictions=[],
+            engine="selenium", launch="engine", restrictions=["no-google-services"]
         ),
-        {
-            "create_selenium": create_selenium,
-            "bundled_executable": no_bundled_browser,
-            "download_chrome_for_testing": lambda: "/cache/selenium/chrome/x/chrome",
-            "settle_seconds": 0,
-        },
+        {"create_selenium": create_selenium, "settle_seconds": 0},
     )
 
     chrome_options, service_env = created[0]
@@ -333,10 +299,8 @@ async def test_resolve_launch_executable_honours_channel_and_path() -> None:
     ]
 
 
-async def test_resolve_launch_executable_starts_the_bundled_browser_by_default() -> (
-    None
-):
-    requests: list[Any] = []
+async def test_resolve_launch_executable_prefers_chrome_for_testing() -> None:
+    requests: list[dict[str, Any]] = []
 
     def installed(**request: Any) -> str:
         requests.append(request)
@@ -348,9 +312,9 @@ async def test_resolve_launch_executable_starts_the_bundled_browser_by_default()
         bundled_executable=lambda _engine: sys.executable,
     )
     assert executable == sys.executable
-    # The installed Google Chrome is not even looked up (issue #179).
     assert requests == []
 
+    # The installed Google Chrome is never a silent fallback (#179).
     with pytest.raises(FileNotFoundError, match="Chrome for Testing is not installed"):
         await resolve_launch_executable(
             engine="playwright",
@@ -370,8 +334,6 @@ def test_public_api_exports_the_launch_modes_restrictions_and_helpers() -> None:
         "merge_feature_switches",
         "browser_environment",
         "resolve_launch_executable",
-        "is_chrome_for_testing",
-        "default_restrictions_for",
         "create_temporary_user_data_dir",
         "prepare_user_data_dir",
         "remove_user_data_dir",

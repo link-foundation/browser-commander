@@ -218,7 +218,7 @@ export async function migrateFirefoxPasswords({
   targetProfileDir,
   platform,
   targetKey,
-  targetPrefix = platform === 'linux' ? 'v11' : 'v10',
+  targetPrefix = platform === 'win32' ? 'v10' : 'v11',
   primaryPassword = Buffer.alloc(0),
   domains,
 }) {

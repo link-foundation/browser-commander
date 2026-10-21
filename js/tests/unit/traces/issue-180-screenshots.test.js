@@ -1,4 +1,3 @@
-// feature-parity: trace.screenshots@native-typed
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';

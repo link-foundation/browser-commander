@@ -408,8 +408,7 @@ def _normalize_whitespace(text: Any) -> str:
 def _requested_args_for(session: Any, options: Mapping[str, Any]) -> list[str]:
     requested = [*(options.get("args") or []), *(options.get("extra_args") or [])]
     launched_args = _field(session, "args") or []
-    # Chrome for Testing's default restrictions are requested too (issue #179).
-    if options.get("restrictions") or _field(session, "default_restrictions"):
+    if options.get("restrictions"):
         requested.extend(
             arg
             for arg in launched_args

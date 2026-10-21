@@ -17,7 +17,6 @@ from browser_commander.browser.migration.os_crypt_keys import (
     create_source_key_resolver,
     local_state_path_for_profile,
     resolve_target_key,
-    target_keystore_for,
 )
 from tests.helpers.migration_fixtures import write_local_state
 
@@ -138,12 +137,9 @@ class TestCreateSourceKeyResolver:
 
 
 class TestResolveTargetKey:
-    # macOS Chromium reads only v10; Linux tags keyring keys v11.
-    @pytest.mark.parametrize(
-        ("platform", "prefix"), [("darwin", "v10"), ("linux", "v11")]
-    )
+    @pytest.mark.parametrize("platform", ["darwin", "linux"])
     def test_derives_the_launching_profile_key_on_macos_and_linux(
-        self, platform: str, prefix: str
+        self, platform: str
     ) -> None:
         result = resolve_target_key(
             browser="chrome",
@@ -151,43 +147,11 @@ class TestResolveTargetKey:
             read_safe_storage_password=lambda **_options: "target-pass",
         )
         assert result["key"] == derive_chromium_cookie_key("target-pass", platform)
-        assert result["prefix"] == prefix
-
-    @pytest.mark.parametrize(
-        ("platform", "password"), [("darwin", "mock_password"), ("linux", "peanuts")]
-    )
-    def test_uses_chromiums_fixed_mock_passwords_for_a_mock_keystore(
-        self, platform: str, password: str
-    ) -> None:
-        # Issue #179: --use-mock-keychain / --password-store=basic never ask
-        # the OS keystore.
-        def read_safe_storage_password(**_options: Any) -> str:
-            raise AssertionError("a mock keystore must not ask the OS")
-
-        result = resolve_target_key(
-            browser="chromium",
-            platform=platform,
-            keystore="mock",
-            read_safe_storage_password=read_safe_storage_password,
-        )
-        assert result == {
-            "key": derive_chromium_cookie_key(password, platform),
-            "prefix": "v10",
-        }
+        assert result["prefix"] == "v11"
 
     def test_refuses_to_derive_a_windows_key(self) -> None:
         with pytest.raises(ValueError, match="create_windows_profile_key"):
             resolve_target_key(browser="chrome", platform="win32")
-
-
-class TestTargetKeystoreFor:
-    def test_detects_the_switches_that_bypass_the_os_keystore(self) -> None:
-        assert target_keystore_for(["--use-mock-keychain"], "darwin") == "mock"
-        assert target_keystore_for(["--password-store=basic"], "linux") == "mock"
-        assert target_keystore_for(["--use-mock-keychain"], "linux") == "os"
-        assert target_keystore_for(["--password-store=basic"], "darwin") == "os"
-        assert target_keystore_for([], "darwin") == "os"
-        assert target_keystore_for(["--use-mock-keychain"], "win32") == "os"
 
 
 class TestLocalStatePathForProfile:

@@ -20,8 +20,8 @@ import {
   removeUserDataDir,
 } from './profile-directory.js';
 import {
-  defaultRestrictionsFor,
   ENGINE_BROWSERS,
+  defaultRestrictionsFor,
   resolveLaunchExecutable,
 } from './launch-executable.js';
 import { launchRealBrowser } from './real-browser.js';
@@ -113,27 +113,15 @@ async function engineExecutable(
     return executablePath;
   }
   if (engine === 'selenium') {
+    // Without Chrome for Testing this fails rather than let the driver pick
+    // the installed Google Chrome (issue #179).
     return browser === 'chrome'
-      ? await resolveLaunchExecutable({ engine }, dependencies).catch(
-          () => undefined
-        )
+      ? await resolveLaunchExecutable({ engine }, dependencies)
       : undefined;
   }
   return await Promise.resolve()
     .then(() => engineModule.executablePath?.())
     .catch(() => undefined);
-}
-
-function seleniumDownloadsBrowser(
-  { browser = 'chrome', channel, executablePath: requested },
-  executablePath
-) {
-  return (
-    browser === 'chrome' &&
-    channel === undefined &&
-    requested === undefined &&
-    !executablePath
-  );
 }
 
 async function launchWithEngine(options, dependencies) {
@@ -143,11 +131,6 @@ async function launchWithEngine(options, dependencies) {
     const launched = await (dependencies.launchWebDriver ?? launchWebDriver)({
       ...options,
       ...(executablePath ? { executablePath } : {}),
-      // Without a Chrome for Testing of the engines, Selenium Manager
-      // downloads one rather than starting the user's Google Chrome.
-      ...(seleniumDownloadsBrowser(options, executablePath)
-        ? { downloadBrowser: true }
-        : {}),
       args: [...options.args, ...options.extraArgs],
     });
     return { ...launched, browser: launched.driver };

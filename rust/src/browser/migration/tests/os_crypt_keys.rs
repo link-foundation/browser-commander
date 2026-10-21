@@ -5,8 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use super::super::os_crypt_keys::{
-    create_source_key_resolver, local_state_path_for_profile, resolve_target_key,
-    target_keystore_for, KeystoreHooks, TargetKeystore,
+    create_source_key_resolver, local_state_path_for_profile, resolve_target_key, KeystoreHooks,
 };
 use crate::browser::browser_cookie_crypto::derive_chromium_cookie_key;
 
@@ -85,13 +84,8 @@ fn derives_the_macos_safe_storage_key() {
 
 #[test]
 fn derives_the_launching_profile_key_on_macos_and_linux() {
-    let result = resolve_target_key(
-        "chrome",
-        "linux",
-        TargetKeystore::Os,
-        &hooks_with_password("target-pass"),
-    )
-    .unwrap();
+    let result =
+        resolve_target_key("chrome", "linux", &hooks_with_password("target-pass")).unwrap();
     assert_eq!(
         result.key,
         derive_chromium_cookie_key("target-pass", "linux").unwrap()
@@ -100,80 +94,9 @@ fn derives_the_launching_profile_key_on_macos_and_linux() {
 }
 
 #[test]
-fn tags_macos_keys_v10_the_only_tag_macos_chromium_reads() {
-    let result = resolve_target_key(
-        "chrome",
-        "darwin",
-        TargetKeystore::Os,
-        &hooks_with_password("mac-pass"),
-    )
-    .unwrap();
-    assert_eq!(
-        result.key,
-        derive_chromium_cookie_key("mac-pass", "darwin").unwrap()
-    );
-    assert_eq!(result.prefix, "v10");
-}
-
-#[test]
-fn uses_the_fixed_mock_passwords_for_a_mock_keystore_issue_179() {
-    // The OS keystore is never asked.
-    let mac =
-        resolve_target_key("chromium", "darwin", TargetKeystore::Mock, &failing_hooks()).unwrap();
-    assert_eq!(
-        mac.key,
-        derive_chromium_cookie_key("mock_password", "darwin").unwrap()
-    );
-    assert_eq!(mac.prefix, "v10");
-    let linux =
-        resolve_target_key("chromium", "linux", TargetKeystore::Mock, &failing_hooks()).unwrap();
-    assert_eq!(
-        linux.key,
-        derive_chromium_cookie_key("peanuts", "linux").unwrap()
-    );
-    assert_eq!(linux.prefix, "v10");
-}
-
-#[test]
 fn refuses_to_derive_a_windows_key() {
-    for keystore in [TargetKeystore::Os, TargetKeystore::Mock] {
-        let error = resolve_target_key("chrome", "win32", keystore, &failing_hooks()).unwrap_err();
-        assert!(error.to_string().contains("create_windows_profile_key"));
-    }
-}
-
-#[test]
-fn reports_the_switches_that_bypass_the_os_keystore_issue_179() {
-    let args = |values: &[&str]| {
-        values
-            .iter()
-            .map(|value| value.to_string())
-            .collect::<Vec<_>>()
-    };
-    assert_eq!(
-        target_keystore_for(&args(&["--use-mock-keychain"]), "darwin"),
-        TargetKeystore::Mock
-    );
-    assert_eq!(
-        target_keystore_for(
-            &args(&["--no-first-run", "--password-store=basic"]),
-            "linux"
-        ),
-        TargetKeystore::Mock
-    );
-    assert_eq!(
-        target_keystore_for(&args(&["--use-mock-keychain"]), "linux"),
-        TargetKeystore::Os
-    );
-    assert_eq!(
-        target_keystore_for(&args(&["--password-store=basic"]), "darwin"),
-        TargetKeystore::Os
-    );
-    assert_eq!(
-        target_keystore_for(&args(&["--use-mock-keychain"]), "win32"),
-        TargetKeystore::Os
-    );
-    assert_eq!(target_keystore_for(&[], "darwin"), TargetKeystore::Os);
+    let error = resolve_target_key("chrome", "win32", &failing_hooks()).unwrap_err();
+    assert!(error.to_string().contains("create_windows_profile_key"));
 }
 
 #[test]

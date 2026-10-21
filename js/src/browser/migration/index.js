@@ -122,7 +122,6 @@ async function resolvePasswordKeys({
   keys,
   browser,
   targetBrowser,
-  targetKeystore,
   platform,
   sourceProfileDir,
   environment,
@@ -136,7 +135,6 @@ async function resolvePasswordKeys({
   const { key: targetKey, prefix: targetPrefix } = await resolveTargetKey({
     browser: targetBrowser,
     platform,
-    keystore: targetKeystore,
     environment,
   });
   const resolveSourceKey = isChromiumBrowser(browser)
@@ -161,7 +159,6 @@ async function resolvePasswordKeys({
  * @param {boolean} [options.includePaymentCards=false] - Separate explicit payment-card consent
  * @param {string} [options.platform=process.platform]
  * @param {string} [options.targetBrowser] - Launching browser channel (key derivation)
- * @param {'mock'|'os'} [options.targetKeystore='os'] - 'mock' when the launch bypasses the OS keystore (`targetKeystoreFor`)
  * @param {Object} [options.keys] - Injected password keys {resolveSourceKey, targetKey, targetPrefix, primaryPassword}
  * @param {string} [options.homeDir]
  * @param {Object} [options.environment]
@@ -174,7 +171,6 @@ export async function migrateProfile({
   domains,
   platform = process.platform,
   targetBrowser,
-  targetKeystore,
   keys,
   homeDir = os.homedir(),
   environment = process.env,
@@ -276,7 +272,6 @@ export async function migrateProfile({
       keys,
       browser,
       targetBrowser,
-      targetKeystore,
       platform,
       sourceProfileDir,
       environment,
@@ -357,7 +352,6 @@ export async function migrateProfile({
       keys,
       browser,
       targetBrowser,
-      targetKeystore,
       platform,
       sourceProfileDir,
       environment,
@@ -383,7 +377,6 @@ async function migrateSafariProfile({
   selected,
   sourceProfileDir,
   targetBrowser,
-  targetKeystore,
   to,
 }) {
   const passwordKeys =
@@ -392,7 +385,6 @@ async function migrateSafariProfile({
           keys,
           browser,
           targetBrowser: targetBrowser ?? 'chrome',
-          targetKeystore,
           platform,
           sourceProfileDir,
           environment,
@@ -450,7 +442,6 @@ async function migratePasswordClass(
     platform,
     sourceProfileDir,
     targetBrowser,
-    targetKeystore,
     to,
   }
 ) {
@@ -473,7 +464,6 @@ async function migratePasswordClass(
     keys,
     browser,
     targetBrowser: targetBrowser ?? (isFirefox ? 'chrome' : browser),
-    targetKeystore,
     platform,
     sourceProfileDir,
     environment,

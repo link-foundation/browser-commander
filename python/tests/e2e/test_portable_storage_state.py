@@ -78,7 +78,13 @@ async def test_portable_state_crosses_real_engines(
         return page.execute_script(f"return ({script})();")
 
     try:
-        source = await launch_browser(LaunchOptions(engine=source_engine, args=args))
+        source = await launch_browser(
+            LaunchOptions(
+                engine=source_engine,
+                args=args,
+                executable_path=os.environ.get("CHROME_PATH"),
+            )
+        )
         try:
             await navigate(source_engine, source.page)
             await evaluate(
@@ -97,7 +103,12 @@ async def test_portable_state_crosses_real_engines(
             await source.close()
 
         target = await launch_browser(
-            LaunchOptions(engine=target_engine, args=args, storage_state=state_path)
+            LaunchOptions(
+                engine=target_engine,
+                args=args,
+                storage_state=state_path,
+                executable_path=os.environ.get("CHROME_PATH"),
+            )
         )
         try:
             await navigate(target_engine, target.page)

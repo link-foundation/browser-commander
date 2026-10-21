@@ -8,7 +8,7 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::core::engine::{EngineAdapter, EngineError};
+use crate::core::engine::{EngineAdapter, EngineError, EngineType};
 use crate::utilities::subprocess::{run_command, RunCommandOptions};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -109,6 +109,20 @@ impl ScreenshotOptions {
         }
         Ok(())
     }
+    /// Whether nothing but the existing view is asked for: no region,
+    /// background, styling or CSS scale.
+    pub(crate) fn is_view(&self) -> bool {
+        self.selector.is_none()
+            && self.clip.is_none()
+            && !(self.full_page
+                || self.omit_background
+                || self.hide_scrollbars
+                || self.hide_caret
+                || self.disable_animations)
+            && self.animations == ScreenshotAnimations::Allow
+            && self.caret == ScreenshotCaret::Initial
+            && self.scale == ScreenshotScale::Device
+    }
     pub(crate) fn native(&self) -> Value {
         let mut value = json!({"type":self.format,"fullPage":self.full_page,"scale":self.scale,"omitBackground":self.omit_background,
             "animations": if self.disable_animations {ScreenshotAnimations::Disabled} else {self.animations},
@@ -147,6 +161,31 @@ pub fn unsupported<E: EngineAdapter + ?Sized>(
     }
 }
 
+/// Capture the existing view with no `clip` where the engine can (issue #180).
+///
+/// A clipped Playwright capture can leave a resized headful window drawn at its
+/// old size. Playwright and Puppeteer pages without a fixed viewport take the
+/// view as it is instead; `None` means the caller's own capture should run.
+pub(crate) async fn view_screenshot(
+    adapter: &dyn EngineAdapter,
+    options: &ScreenshotOptions,
+) -> Option<Vec<u8>> {
+    if options.stable_viewport
+        || !options.is_view()
+        || !matches!(
+            adapter.engine_type(),
+            EngineType::Playwright | EngineType::Puppeteer
+        )
+    {
+        return None;
+    }
+    let view = ScreenshotOptions {
+        stable_viewport: true,
+        ..options.clone()
+    };
+    adapter.screenshot_with_options(&view).await.ok()
+}
+
 pub async fn screenshot(
     adapter: &dyn EngineAdapter,
     options: &ScreenshotOptions,
@@ -176,7 +215,10 @@ pub async fn screenshot(
             .await?;
     }
     native.wait_for_fonts = false;
-    let bytes = adapter.screenshot_with_options(&native).await?;
+    let bytes = match view_screenshot(adapter, &native).await {
+        Some(bytes) => bytes,
+        None => adapter.screenshot_with_options(&native).await?,
+    };
     if let Some(path) = &options.path {
         crate::capture_encoding::private_write(path, &bytes)?;
     }
@@ -404,6 +446,76 @@ mod tests {
         }))
         .unwrap();
         assert!(options.validate().is_err());
+    }
+    #[tokio::test]
+    async fn default_captures_take_the_view_without_a_clip() {
+        for engine in [EngineType::Playwright, EngineType::Puppeteer] {
+            let stub = StubEngine::fixed("about:blank").capturing_as(engine, false);
+            let shot = screenshot(&stub, &ScreenshotOptions::default()).await;
+            assert_eq!(shot.unwrap(), b"view");
+            let captures = stub.captures();
+            assert_eq!(captures.len(), 1);
+            assert!(captures[0].stable_viewport && captures[0].clip.is_none());
+        }
+    }
+    #[tokio::test]
+    async fn default_captures_fall_back_without_a_view_capture() {
+        let stub = StubEngine::fixed("about:blank").capturing_as(EngineType::Playwright, true);
+        assert!(screenshot(&stub, &ScreenshotOptions::default())
+            .await
+            .unwrap()
+            .is_empty());
+        let captures = stub.captures();
+        assert_eq!(captures.len(), 2);
+        assert!(captures[0].stable_viewport && !captures[1].stable_viewport);
+    }
+    #[tokio::test]
+    async fn regions_styling_and_other_engines_keep_the_engine_capture() {
+        let clip = Some(ScreenshotClip {
+            x: 0.0,
+            y: 0.0,
+            width: 1.0,
+            height: 1.0,
+        });
+        for (engine, options) in [
+            (
+                EngineType::Playwright,
+                ScreenshotOptions {
+                    clip,
+                    ..Default::default()
+                },
+            ),
+            (
+                EngineType::Playwright,
+                ScreenshotOptions {
+                    full_page: true,
+                    ..Default::default()
+                },
+            ),
+            (
+                EngineType::Playwright,
+                ScreenshotOptions {
+                    hide_caret: true,
+                    ..Default::default()
+                },
+            ),
+            (
+                EngineType::Puppeteer,
+                ScreenshotOptions {
+                    scale: ScreenshotScale::Css,
+                    ..Default::default()
+                },
+            ),
+            (EngineType::Fantoccini, ScreenshotOptions::default()),
+            (EngineType::Chromiumoxide, ScreenshotOptions::default()),
+        ] {
+            let stub = StubEngine::fixed("about:blank").capturing_as(engine, false);
+            screenshot(&stub, &options).await.unwrap();
+            assert!(stub
+                .captures()
+                .iter()
+                .all(|options| !options.stable_viewport));
+        }
     }
     #[tokio::test]
     async fn unsupported_options_are_explicit() {

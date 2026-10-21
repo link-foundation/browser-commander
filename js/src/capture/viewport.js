@@ -28,7 +28,8 @@ export async function captureStableViewport(page, engine, native) {
   }
   let session;
   if (
-    (engine === 'playwright' && typeof page.context === 'function') ||
+    (engine === 'playwright' &&
+      typeof page.context?.()?.newCDPSession === 'function') ||
     (engine === 'puppeteer' &&
       (typeof page.createCDPSession === 'function' ||
         typeof page.target === 'function'))

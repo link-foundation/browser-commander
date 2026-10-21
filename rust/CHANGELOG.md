@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- changelog-insert-here -->
+## [0.21.1] - 2026-10-21
+
+### Fixed
+- A chromiumoxide engine launch (`LaunchMode::Engine`) without a `channel` or `executable_path` now starts the newest cached Chrome for Testing - chromiumoxide itself would detect the installed Google Chrome - and fails with the install hint when there is none (issue #179).
+- fantoccini drives Chrome for Testing with a chromedriver of its version instead of the `chromedriver` on `PATH`, which belongs to the installed Google Chrome and refuses another release ("This version of ChromeDriver only supports Chrome version …"). Without a `driver_executable`, the chromedriver Selenium Manager or `@puppeteer/browsers` downloaded for the same release is used, else the newest cached one of the same major version; an engine launch prefers a Chrome for Testing download whose chromedriver is cached.
+
+### Fixed
+- `migrate_from` re-encrypts passwords with the key of the browser that starts: Chrome for Testing keeps "Chromium Safe Storage" rather than "Chrome Safe Storage", and with its default `mock-keychain` restriction (`--use-mock-keychain` on macOS, or `--password-store=basic` on Linux) Chromium's fixed mock key, so migrated passwords decrypt in it (issue #179). `MigrateProfileOptions::target_keystore` and `target_keystore_for` select the keystore.
+
 ## [0.21.0] - 2026-10-21
 
 ### Changed

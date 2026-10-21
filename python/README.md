@@ -200,7 +200,9 @@ print(result.default_restrictions)  # ['no-chrome-for-testing-infobar', 'mock-ke
 # Keep the infobar, or start Google Chrome on purpose:
 await launch_browser(LaunchOptions(default_restrictions=[]))
 await launch_browser(LaunchOptions(channel="chrome"))
-is_chrome_for_testing("/home/me/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome")  # True
+is_chrome_for_testing(
+    "/home/me/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome"
+)  # True
 ```
 
 `RealBrowserOptions` takes the same `default_restrictions`. With the mock

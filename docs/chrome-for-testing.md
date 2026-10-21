@@ -34,6 +34,20 @@ Testing that was started, through Selenium Manager's `--browser-path`; a
 `chromedriver` on `PATH`, which belongs to the installed Google Chrome, is
 not used for Chrome for Testing.
 
+## The Linux sandbox on Ubuntu 23.10 and newer
+
+Ubuntu 23.10 and newer restrict the unprivileged user namespaces Chromium's
+sandbox needs (`kernel.apparmor_restrict_unprivileged_userns=1`). Google
+Chrome's package installs an AppArmor profile that exempts it; Chrome for
+Testing has none, so it exits with "No usable sandbox!" and the launch fails
+with that line in its stderr. Browser Commander does not add `--no-sandbox` on
+its own, because the command line stays the one a person would type. Fix the
+host the way
+[Chromium describes](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md) -
+an AppArmor profile for the Chrome for Testing directory, or
+`sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0` on a disposable
+CI runner - or pass `args: ['--no-sandbox']` where the sandbox is not wanted.
+
 ## Default restrictions: no infobar, no keychain prompt
 
 Chrome for Testing shows a "Chrome for Testing is only for automated testing"

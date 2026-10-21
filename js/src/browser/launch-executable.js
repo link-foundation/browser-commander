@@ -1,5 +1,6 @@
 import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
+import { cachedChromeForTesting } from './chrome-for-testing-cache.js';
 import { LAUNCH_RESTRICTION_PRESETS } from './restrictions.js';
 import { resolveSystemBrowserExecutable } from './system-browser.js';
 
@@ -151,8 +152,9 @@ async function existingExecutable(find) {
  * Pick the browser binary for a launch.
  *
  * An explicit `executablePath` or `channel` is honoured as given. Without
- * either, the engine's downloaded Chrome for Testing is started; Selenium
- * uses Playwright's, then Puppeteer's, then Selenium Manager's. The
+ * either, the engine's downloaded Chrome for Testing is started, then any
+ * other build in its download cache, newest first; Selenium uses Playwright's,
+ * then Puppeteer's, then the cached ones, then Selenium Manager's. The
  * installed Google Chrome is never a silent fallback: without Chrome for
  * Testing the launch fails and says how to install it or how to ask for
  * Google Chrome.
@@ -163,6 +165,7 @@ export async function resolveLaunchExecutable(
     resolveSystem = resolveSystemBrowserExecutable,
     loadEngineModule,
     seleniumManagerBrowser = seleniumManagerChromeForTesting,
+    cachedBrowsers = cachedChromeForTesting,
   } = {}
 ) {
   if (executablePath !== undefined || channel !== undefined) {
@@ -178,6 +181,10 @@ export async function resolveLaunchExecutable(
   const finders = loaders.map(
     (load) => async () => (await load()).executablePath()
   );
+  const cached = await Promise.resolve()
+    .then(() => cachedBrowsers(engine))
+    .catch(() => []);
+  finders.push(...cached.map((executable) => () => executable));
   if (engine === 'selenium') {
     finders.push(seleniumManagerBrowser);
   }

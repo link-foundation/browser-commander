@@ -68,6 +68,7 @@ await chmod(cftChrome, 0o755);
 after(() => rm(cftRoot, { recursive: true, force: true }));
 const cftEngine = async () => ({ executablePath: () => cftChrome });
 const missingEngine = async () => ({ executablePath: () => '/nonexistent' });
+const noCachedBrowsers = () => [];
 const noSystemChrome = async () => {
   throw new Error('the installed Google Chrome must not be resolved');
 };
@@ -338,13 +339,14 @@ describe('launchBrowser', () => {
       );
       assert.equal(launches[1].executablePath, undefined);
 
-      // Selenium Manager's Chrome for Testing comes next...
+      // Selenium Manager's Chrome for Testing comes last...
       const seleniumCft = process.execPath;
       await launchBrowserWithDependencies(
         { engine: 'selenium', launch: 'engine' },
         {
           launchWebDriver,
           loadEngineModule: missingEngine,
+          cachedBrowsers: noCachedBrowsers,
           seleniumManagerBrowser: async () => seleniumCft,
           settleMs: 0,
         }
@@ -359,6 +361,7 @@ describe('launchBrowser', () => {
           {
             launchWebDriver,
             loadEngineModule: missingEngine,
+            cachedBrowsers: noCachedBrowsers,
             seleniumManagerBrowser: async () => undefined,
             settleMs: 0,
           }
@@ -430,7 +433,11 @@ describe('resolveLaunchExecutable', () => {
       () =>
         resolveLaunchExecutable(
           { engine: 'playwright' },
-          { resolveSystem: noSystemChrome, loadEngineModule: missing }
+          {
+            resolveSystem: noSystemChrome,
+            loadEngineModule: missing,
+            cachedBrowsers: noCachedBrowsers,
+          }
         ),
       /Chrome for Testing is not installed for playwright: run `npx playwright install chromium`, or pass channel: 'chrome'/
     );
@@ -446,6 +453,7 @@ describe('resolveLaunchExecutable', () => {
             seleniumManagerBrowser: async () => {
               throw new Error('offline');
             },
+            cachedBrowsers: noCachedBrowsers,
           }
         ),
       /run `npx playwright install chromium` or `npx puppeteer browsers install chrome` or `selenium-manager --browser chrome --force-browser-download`/
@@ -465,6 +473,7 @@ describe('resolveLaunchExecutable', () => {
           resolveSystem: noSystemChrome,
           loadEngineModule: missingEngine,
           seleniumManagerBrowser,
+          cachedBrowsers: noCachedBrowsers,
         }
       ),
       cftChrome
@@ -476,11 +485,32 @@ describe('resolveLaunchExecutable', () => {
           resolveSystem: noSystemChrome,
           loadEngineModule: missingEngine,
           seleniumManagerBrowser,
+          cachedBrowsers: noCachedBrowsers,
         }
       ),
       /Chrome for Testing is not installed for playwright/
     );
     assert.deepEqual(asked, ['selenium-manager']);
+  });
+
+  it("falls back to a cached build when the engine's own is not installed", async () => {
+    const asked = [];
+    const resolved = await resolveLaunchExecutable(
+      { engine: 'selenium' },
+      {
+        resolveSystem: noSystemChrome,
+        loadEngineModule: missingEngine,
+        cachedBrowsers: (engine) => {
+          asked.push(engine);
+          return ['/nonexistent/chrome-linux64/chrome', cftChrome];
+        },
+        seleniumManagerBrowser: async () => {
+          throw new Error('Selenium Manager is asked only without a cache');
+        },
+      }
+    );
+    assert.equal(resolved, cftChrome);
+    assert.deepEqual(asked, ['selenium']);
   });
 });
 

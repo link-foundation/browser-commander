@@ -413,8 +413,10 @@ with.
 #### Chrome for Testing by default
 
 Without `channel` or `executablePath`, a launch starts Chrome for Testing - the
-one Playwright or Puppeteer downloaded; Selenium also tries the one Selenium
-Manager keeps - never your own Google Chrome. Chrome for Testing is an app of
+one Playwright or Puppeteer downloaded, or else another build in its download
+cache (`ms-playwright`, moved by `PLAYWRIGHT_BROWSERS_PATH`; `~/.cache/puppeteer`,
+moved by `PUPPETEER_CACHE_DIR`), newest first; Selenium tries both caches, then
+Selenium Manager's - never your own Google Chrome. Chrome for Testing is an app of
 its own (`com.google.chrome.for.testing` on macOS), so the Dock icon, new tabs
 and links opened from other apps keep going to your Chrome. Without it the
 launch fails and names the install command (`npx playwright install chromium`,

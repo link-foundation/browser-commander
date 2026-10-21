@@ -590,6 +590,57 @@ describe('launchAndConnectRealBrowser', () => {
     ]);
   });
 
+  it('migrates passwords with the key of the browser that starts (issue #179)', async () => {
+    const cft =
+      '/Users/u/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
+    const migrateTarget = async (executablePath, options = {}) => {
+      let migrateOptions;
+      const result = await launchAndConnectRealBrowserWithDependencies(
+        {
+          closeTimeout: 50,
+          migrateFrom: { browser: 'chrome', include: ['passwords'] },
+          ...options,
+        },
+        {
+          platform: 'darwin',
+          resolveExecutable: async () => executablePath,
+          reservePort: async () => 40007,
+          spawnBrowser: () => fakeProcess([]),
+          waitForEndpoint: async () => 'http://127.0.0.1:40007',
+          connect: async () => ({ browser: null, page: null }),
+          migrateProfile: async (migration) => {
+            migrateOptions = migration;
+            return { migrated: {}, skipped: [], warnings: [], cookies: [] };
+          },
+        }
+      );
+      await result.close();
+      const { targetBrowser, targetKeystore } = migrateOptions;
+      return { targetBrowser, targetKeystore };
+    };
+
+    // Chrome for Testing keeps "Chromium Safe Storage", and its default
+    // mock keychain encrypts with Chromium's fixed mock password.
+    assert.deepEqual(await migrateTarget(cft), {
+      targetBrowser: 'chromium',
+      targetKeystore: 'mock',
+    });
+    assert.deepEqual(await migrateTarget(cft, { defaultRestrictions: [] }), {
+      targetBrowser: 'chromium',
+      targetKeystore: 'os',
+    });
+    assert.deepEqual(await migrateTarget('/opt/google/chrome'), {
+      targetBrowser: 'chrome',
+      targetKeystore: 'os',
+    });
+    assert.deepEqual(
+      await migrateTarget('/opt/google/chrome', {
+        restrictions: ['mock-keychain'],
+      }),
+      { targetBrowser: 'chrome', targetKeystore: 'mock' }
+    );
+  });
+
   it('terminates the spawned browser when connection fails', async () => {
     temporaryDirectory = await makeDedicatedProfile();
     let killed = false;

@@ -74,11 +74,33 @@ export function createSourceKeyResolver({
 }
 
 /**
+ * Which keystore a launch encrypts its new profile with: `'mock'` when the
+ * launch switches bypass the OS keystore (`--use-mock-keychain` on macOS, as
+ * Chrome for Testing gets by default, or `--password-store=basic` on Linux),
+ * `'os'` otherwise.
+ *
+ * @param {string[]} args - The browser command-line switches
+ * @param {string} platform
+ * @returns {'mock'|'os'}
+ */
+export function targetKeystoreFor(args, platform) {
+  const bypass =
+    platform === 'darwin' ? '--use-mock-keychain' : '--password-store=basic';
+  return platform !== 'win32' && args.includes(bypass) ? 'mock' : 'os';
+}
+
+/**
  * Resolve the target (launching) profile's encryption key on macOS/Linux.
+ *
+ * macOS Chromium only knows the `v10` tag; Linux tags keyring keys `v11` and
+ * its fixed basic-store key `v10`. A `'mock'` keystore uses Chromium's fixed
+ * mock passwords: `mock_password` for the mock keychain, `peanuts` for the
+ * basic store.
  *
  * @param {Object} options
  * @param {string} options.browser - Launching browser channel
  * @param {string} options.platform
+ * @param {'mock'|'os'} [options.keystore='os'] - See `targetKeystoreFor`
  * @param {Object} [options.environment]
  * @param {Function} [options.readSafeStoragePassword]
  * @returns {Promise<{key: Buffer, prefix: string}>}
@@ -86,16 +108,24 @@ export function createSourceKeyResolver({
 export async function resolveTargetKey({
   browser,
   platform,
+  keystore = 'os',
   environment = process.env,
   readSafeStoragePassword: readSafeStorage = readSafeStoragePassword,
 }) {
-  if (platform === 'darwin' || platform === 'linux') {
-    const password = await readSafeStorage({ browser, platform, environment });
-    return { key: deriveChromiumCookieKey(password, platform), prefix: 'v11' };
+  if (platform !== 'darwin' && platform !== 'linux') {
+    throw new Error(
+      `resolveTargetKey does not derive a Windows key; use createWindowsProfileKey`
+    );
   }
-  throw new Error(
-    `resolveTargetKey does not derive a Windows key; use createWindowsProfileKey`
-  );
+  if (keystore === 'mock') {
+    const password = platform === 'darwin' ? 'mock_password' : 'peanuts';
+    return { key: deriveChromiumCookieKey(password, platform), prefix: 'v10' };
+  }
+  const password = await readSafeStorage({ browser, platform, environment });
+  return {
+    key: deriveChromiumCookieKey(password, platform),
+    prefix: platform === 'darwin' ? 'v10' : 'v11',
+  };
 }
 
 /** Convenience: the Local State path next to a profile directory. */

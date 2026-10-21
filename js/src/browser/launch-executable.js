@@ -13,7 +13,8 @@ import { resolveSystemBrowserExecutable } from './system-browser.js';
  * automation window. The installed Google Chrome is used only on request.
  */
 
-const ENGINE_BROWSERS = {
+/** Load the browser launcher of an engine that downloads its own browser. */
+export const ENGINE_BROWSERS = {
   playwright: async () => (await import('playwright')).chromium,
   puppeteer: async () => (await import('puppeteer')).default,
 };

@@ -21,6 +21,7 @@ import {
 } from './profile-directory.js';
 import {
   defaultRestrictionsFor,
+  ENGINE_BROWSERS,
   resolveLaunchExecutable,
 } from './launch-executable.js';
 import { launchRealBrowser } from './real-browser.js';
@@ -42,11 +43,6 @@ export { resolveLaunchExecutable };
 
 /** How `launchBrowser` starts the browser (issue #103). */
 export const LAUNCH_MODES = Object.freeze(['real', 'engine']);
-
-const loadEngine = {
-  playwright: async () => (await import('playwright')).chromium,
-  puppeteer: async () => (await import('puppeteer')).default,
-};
 
 function validateLaunchMode({ engine, launch, attach }) {
   assertSupportedEngine(engine);
@@ -140,7 +136,7 @@ async function launchWithEngine(options, dependencies) {
     return { ...launched, browser: launched.driver };
   }
   const engineModule = await (
-    dependencies.loadEngineModule ?? loadEngine[options.engine]
+    dependencies.loadEngineModule ?? ENGINE_BROWSERS[options.engine]
   )();
   const defaultRestrictions = defaultRestrictionsFor(
     await engineExecutable(options, engineModule, dependencies),

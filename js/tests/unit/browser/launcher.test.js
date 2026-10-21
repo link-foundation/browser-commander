@@ -71,20 +71,24 @@ const noSystemChrome = async () => {
   throw new Error('the installed Google Chrome must not be resolved');
 };
 
+// Launch through a fake launchRealBrowser and return what it was given.
+async function realLaunch(launchOptions, dependencies) {
+  const calls = [];
+  const result = await launchBrowserWithDependencies(launchOptions, {
+    launchRealBrowser: fakeRealLauncher(calls),
+    settleMs: 0,
+    ...dependencies,
+  });
+  const [, options] = calls.find(([name]) => name === 'launchRealBrowser');
+  return { result, options, calls };
+}
+
 describe('launchBrowser', () => {
   it('starts Chrome for Testing by default, never the installed Google Chrome (issue #179)', async () => {
-    const calls = [];
-    await launchBrowserWithDependencies(
+    const { options } = await realLaunch(
       {},
-      {
-        launchRealBrowser: fakeRealLauncher(calls),
-        resolveSystem: noSystemChrome,
-        loadEngineModule: cftEngine,
-        settleMs: 0,
-      }
+      { resolveSystem: noSystemChrome, loadEngineModule: cftEngine }
     );
-
-    const [, options] = calls.find(([name]) => name === 'launchRealBrowser');
     assert.equal(options.executablePath, cftChrome);
     // No channel is invented: the launch is not Google Chrome's.
     assert.equal('channel' in options, false);
@@ -94,19 +98,12 @@ describe('launchBrowser', () => {
   });
 
   it('starts the requested Google Chrome with nothing added (issue #103)', async () => {
-    const calls = [];
     const googleBefore = process.env.GOOGLE_API_KEY;
 
-    const result = await launchBrowserWithDependencies(
+    const { result, options, calls } = await realLaunch(
       { channel: 'chrome' },
-      {
-        launchRealBrowser: fakeRealLauncher(calls),
-        resolveSystem: systemChrome,
-        settleMs: 0,
-      }
+      { resolveSystem: systemChrome }
     );
-
-    const [, options] = calls.find(([name]) => name === 'launchRealBrowser');
     assert.equal(options.engine, 'playwright');
     assert.equal(options.executablePath, '/usr/bin/google-chrome');
     assert.equal('slowMo' in options, false);

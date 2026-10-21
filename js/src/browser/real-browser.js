@@ -23,6 +23,7 @@ import {
 } from './attach/snapshot-launch.js';
 import { connectBrowser } from './connector.js';
 import { migrateProfile } from './migration/index.js';
+import { targetKeystoreFor } from './migration/os-crypt-keys.js';
 import {
   assertFixedDebuggingPort,
   classifyDevToolsOwnership,
@@ -50,6 +51,7 @@ import {
 } from './system-browser.js';
 import {
   defaultRestrictionsFor,
+  isChromeForTesting,
   resolveLaunchExecutable,
 } from './launch-executable.js';
 
@@ -602,6 +604,9 @@ async function runPreLaunchMigration({
   migrateFrom,
   userDataDir,
   channel,
+  executablePath,
+  argOptions,
+  platform,
   temporaryProfile,
   migrate,
 }) {
@@ -610,6 +615,14 @@ async function runPreLaunchMigration({
   }
   const { include, domains, passwordCsv, includePaymentCards, ...from } =
     migrateFrom;
+  // Passwords are re-encrypted with the key of the browser that starts:
+  // Chrome for Testing keeps "Chromium Safe Storage", and its default mock
+  // keychain uses Chromium's fixed mock password (issue #179).
+  const launchArgs = [
+    ...resolveRestrictions(argOptions.restrictions).args,
+    ...argOptions.args,
+    ...argOptions.extraArgs,
+  ];
   try {
     const report = await migrate({
       from,
@@ -618,7 +631,8 @@ async function runPreLaunchMigration({
       domains,
       passwordCsv,
       includePaymentCards,
-      targetBrowser: channel,
+      targetBrowser: isChromeForTesting(executablePath) ? 'chromium' : channel,
+      targetKeystore: targetKeystoreFor(launchArgs, platform),
     });
     const { cookies, ...migration } = report;
     return { migration, migratedCookies: cookies ?? [] };
@@ -753,6 +767,9 @@ export async function launchAndConnectRealBrowserWithDependencies(
     migrateFrom,
     userDataDir,
     channel,
+    executablePath,
+    argOptions,
+    platform: dependencies.platform ?? process.platform,
     temporaryProfile,
     migrate: dependencies.migrateProfile ?? migrateProfile,
   });

@@ -24,6 +24,24 @@ const fixture = (name) =>
     )
   );
 
+function migratedPasswords(profile) {
+  const db = new Database(path.join(profile, 'Login Data'));
+  try {
+    return db.prepare('SELECT origin_url,password_value FROM logins').all();
+  } finally {
+    db.close();
+  }
+}
+
+const decryptPassword = (row, key, platform) =>
+  decryptChromiumCookie({
+    encryptedValue: row.password_value,
+    key,
+    platform,
+    databaseVersion: 0,
+    host: 'github.com',
+  });
+
 describe('Safari data sources', () => {
   for (const format of ['binary', 'xml']) {
     it(`preserves hierarchy and reading list from ${format} plist`, async () => {
@@ -103,25 +121,31 @@ describe('Safari data sources', () => {
         ({ reason }) => reason === 'safari-reading-list-translated'
       )
     );
-    const db = new Database(path.join(target, 'Login Data'));
-    try {
-      const rows = db
-        .prepare('SELECT origin_url,password_value FROM logins')
-        .all();
-      assert.equal(rows.length, 1);
-      assert.equal(
-        decryptChromiumCookie({
-          encryptedValue: rows[0].password_value,
-          key,
-          platform: 'linux',
-          databaseVersion: 0,
-          host: 'github.com',
-        }),
-        'p"a\nss'
-      );
-    } finally {
-      db.close();
-    }
+    const rows = migratedPasswords(target);
+    assert.equal(rows.length, 1);
+    assert.equal(decryptPassword(rows[0], key, 'linux'), 'p"a\nss');
+  });
+
+  it('encrypts migrated passwords with the mock keychain key of a Chrome for Testing launch (issue #179)', async () => {
+    const source = await temporary();
+    const target = await temporary();
+    // No keys are injected and the OS keystore is never asked: Chromium's
+    // --use-mock-keychain derives its key from the fixed "mock_password".
+    const report = await migrateProfile({
+      from: { browser: 'safari', userDataDir: source },
+      to: target,
+      include: ['passwords'],
+      domains: ['github.com'],
+      passwordCsv: fixture('Passwords.csv'),
+      platform: 'darwin',
+      targetBrowser: 'chromium',
+      targetKeystore: 'mock',
+    });
+    assert.equal(report.migrated.passwords, 1);
+    const [row] = migratedPasswords(target);
+    assert.equal(row.password_value.subarray(0, 3).toString(), 'v10');
+    const key = deriveChromiumCookieKey('mock_password', 'darwin');
+    assert.equal(decryptPassword(row, key, 'darwin'), 'p"a\nss');
   });
 
   it('names the executing app and retry link for non-cookie protection failures', async () => {

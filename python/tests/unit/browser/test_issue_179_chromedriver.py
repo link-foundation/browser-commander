@@ -181,3 +181,22 @@ async def test_migrates_passwords_with_the_key_of_the_browser_that_starts(
     )
     assert seen["migrate"]["target_browser"] == browser
     assert seen["migrate"]["target_keystore"] == keystore
+
+
+def test_parity_counts_the_default_restrictions_as_requested() -> None:
+    # Chrome for Testing's default switches are requested, not extra (#179).
+    from browser_commander.browser.launch_executable import (
+        CHROME_FOR_TESTING_RESTRICTIONS,
+    )
+    from browser_commander.browser.parity import _requested_args_for
+
+    args = ["--user-data-dir=/tmp/p", "--test-type=gpu", "--use-mock-keychain"]
+    session = {
+        "args": args,
+        "default_restrictions": list(CHROME_FOR_TESTING_RESTRICTIONS),
+    }
+    assert _requested_args_for(session, {}) == [
+        "--test-type=gpu",
+        "--use-mock-keychain",
+    ]
+    assert _requested_args_for({"args": args}, {}) == []

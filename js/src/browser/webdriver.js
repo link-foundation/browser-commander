@@ -42,6 +42,7 @@ import {
 } from './profile-directory.js';
 import { buildRealBrowserArgs } from './real-browser.js';
 import { resolveRestrictions } from './restrictions.js';
+import { defaultRestrictionsFor } from './launch-executable.js';
 import { findBrowserSource } from './browser-sources.js';
 import {
   isSafariChannel,
@@ -480,13 +481,14 @@ async function teardown({
  * @param {boolean} [options.bidi=false] - Enable WebDriver BiDi (events, preload scripts, full-page screenshots)
  * @param {string[]} [options.args] - Extra browser arguments
  * @param {string[]} [options.restrictions] - Chrome launch restrictions (launch-restrictions.json)
+ * @param {string[]} [options.defaultRestrictions] - Restrictions that replace the browser's defaults (the 'chrome-for-testing' preset for Chrome for Testing, none otherwise); [] turns them off
  * @param {boolean} [options.automationParity=true] - Keep navigator.webdriver false in headless Chrome
  * @param {Object<string,string>} [options.env] - Extra environment for the driver and browser
  * @param {number} [options.startupTimeout=30000]
  * @param {boolean} [options.verbose=false] - Mirror the driver server's output
  * @param {'managed'|'caller'} [options.interruption='managed'] - Who handles Ctrl+C for the driver server and the browser under it; see `startProcess`
  * @param {Object} [dependencies] - Injected selenium modules, runCommand, startProcess, fetch, reservePort, environment, platform (tests)
- * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, bidi: boolean}>}
+ * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, bidi: boolean, defaultRestrictions: Array<string>}>}
  */
 export async function launchWebDriver(options = {}, dependencies = {}) {
   if (!isSafariChannel(options.browser ?? 'chrome')) {
@@ -550,6 +552,17 @@ function withDriverContext(error, { serverUrl, exitCode, output }) {
   );
 }
 
+// Chrome for Testing - the engines' download or Selenium Manager's - gets its
+// default restrictions like any other launch of it (issue #179).
+function launchDefaultRestrictions(
+  { browser = 'chrome', debuggerAddress, defaultRestrictions },
+  browserPath
+) {
+  return browser === 'chrome' && !debuggerAddress
+    ? defaultRestrictionsFor(browserPath, defaultRestrictions)
+    : [];
+}
+
 async function launchWebDriverOnce(options, dependencies) {
   const {
     browser = 'chrome',
@@ -593,12 +606,17 @@ async function launchWebDriverOnce(options, dependencies) {
     executablePath,
   });
 
+  const defaultRestrictions = launchDefaultRestrictions(
+    options,
+    resolved.browserPath
+  );
+  const launchRestrictions = [...defaultRestrictions, ...restrictions];
   const temporaryProfile = !safari && !debuggerAddress && !requestedUserDataDir;
   const userDataDir =
     safari || debuggerAddress
       ? undefined
       : await resolveProfile(browser, requestedUserDataDir);
-  const childEnv = driverEnvironment(restrictions, env);
+  const childEnv = driverEnvironment(launchRestrictions, env);
 
   let driverProcess;
   let driver;
@@ -636,7 +654,7 @@ async function launchWebDriverOnce(options, dependencies) {
       remoteDebuggingPort:
         browser === 'chrome' ? await reservePort() : undefined,
       headless,
-      restrictions,
+      restrictions: launchRestrictions,
       disableFeatures,
       args,
       automationParity,
@@ -675,6 +693,7 @@ async function launchWebDriverOnce(options, dependencies) {
       temporaryProfile,
       args: built.args,
       bidi,
+      defaultRestrictions,
     };
   } catch (error) {
     const exitCode = driverProcess?.exitCode;

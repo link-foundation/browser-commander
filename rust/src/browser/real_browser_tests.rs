@@ -14,7 +14,7 @@ const DEDICATED: &str = "/tmp/browser-commander-dedicated";
 fn cdp_validation_rejects_other_protocols() {
     for channel in ["firefox", "librewolf", "safari", "duckduckgo"] {
         let options = RealBrowserOptions {
-            channel: channel.into(),
+            channel: Some(channel.into()),
             ..Default::default()
         };
         let error = validate_launch_request(&options).unwrap_err();
@@ -44,6 +44,8 @@ struct FakeHooks {
     processes: Mutex<Vec<Arc<FakeProcess>>>,
     spawned: Mutex<Vec<SpawnCall>>,
     graceful: bool,
+    /// The browser `resolve_executable` picks; Google Chrome when `None`.
+    executable: Option<PathBuf>,
 }
 
 impl FakeHooks {
@@ -70,7 +72,10 @@ impl FakeHooks {
 #[async_trait]
 impl LaunchHooks for FakeHooks {
     fn resolve_executable(&self, _options: &RealBrowserOptions) -> Result<PathBuf> {
-        Ok(PathBuf::from("/opt/google/chrome"))
+        Ok(self
+            .executable
+            .clone()
+            .unwrap_or_else(|| PathBuf::from("/opt/google/chrome")))
     }
 
     fn reserve_port(&self) -> Result<u16> {
@@ -279,7 +284,9 @@ fn rejects_arguments_that_could_bypass_protected_cdp_settings() {
 fn default_options_use_the_native_engine_and_no_extra_switches() {
     let options = RealBrowserOptions::default();
     assert_eq!(options.engine, EngineType::Chromiumoxide);
-    assert_eq!(options.channel, "chrome");
+    // No channel: Chrome for Testing, a Chrome (issue #179).
+    assert_eq!(options.channel, None);
+    assert_eq!(options.browser_channel(), "chrome");
     assert_eq!(options.remote_debugging_port, None);
     assert_eq!(options.port_attempts, DEFAULT_PORT_ATTEMPTS);
     assert_eq!(options.close_timeout, DEFAULT_CLOSE_TIMEOUT);
@@ -604,4 +611,106 @@ async fn terminates_the_spawned_browser_when_connection_fails() {
     let args = hooks.spawned.lock().unwrap()[0].1.clone();
     let profile = PathBuf::from(args[0].trim_start_matches("--user-data-dir="));
     assert!(!profile.exists());
+}
+
+const CHROME_FOR_TESTING: &str =
+    "/home/user/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome";
+
+fn chrome_for_testing_hooks(port: u16) -> Arc<FakeHooks> {
+    Arc::new(FakeHooks {
+        executable: Some(PathBuf::from(CHROME_FOR_TESTING)),
+        ..FakeHooks::with_ports(&[port])
+    })
+}
+
+#[tokio::test]
+async fn chrome_for_testing_starts_without_its_infobar() {
+    // Issue #179: the chrome-for-testing preset comes before the caller's
+    // restrictions and arguments.
+    let hooks = chrome_for_testing_hooks(40011);
+    let options = RealBrowserOptions::default()
+        .restrictions(["no-first-run"])
+        .with_args(vec!["--lang=de".into()])
+        .close_timeout(Duration::from_millis(50));
+
+    let (_, launched) = launch(&options, &hooks).await.unwrap();
+
+    assert_eq!(
+        launched.default_restrictions,
+        ["no-chrome-for-testing-infobar", "mock-keychain"]
+    );
+    let (executable, args, _) = hooks.spawned.lock().unwrap()[0].clone();
+    assert_eq!(executable, PathBuf::from(CHROME_FOR_TESTING));
+    assert_eq!(
+        args[2..],
+        [
+            "--test-type=gpu",
+            "--use-mock-keychain",
+            "--no-first-run",
+            "--lang=de",
+            START_URL,
+        ]
+    );
+    assert_eq!(launched.args, args);
+    launched.closer.close().await.unwrap();
+}
+
+#[tokio::test]
+async fn google_chrome_gets_no_default_restrictions() {
+    let hooks = Arc::new(FakeHooks::with_ports(&[40012]));
+    let options = RealBrowserOptions::default().close_timeout(Duration::from_millis(50));
+
+    let (_, launched) = launch(&options, &hooks).await.unwrap();
+
+    assert!(launched.default_restrictions.is_empty());
+    let args = hooks.spawned.lock().unwrap()[0].1.clone();
+    assert!(!args.iter().any(|arg| arg.starts_with("--test-type")));
+    assert!(!args.iter().any(|arg| arg == "--use-mock-keychain"));
+    launched.closer.close().await.unwrap();
+}
+
+#[tokio::test]
+async fn an_empty_default_restriction_list_opts_out() {
+    let hooks = chrome_for_testing_hooks(40013);
+    let options = RealBrowserOptions::default()
+        .default_restrictions(Vec::<String>::new())
+        .close_timeout(Duration::from_millis(50));
+
+    let (_, launched) = launch(&options, &hooks).await.unwrap();
+
+    assert!(launched.default_restrictions.is_empty());
+    let args = hooks.spawned.lock().unwrap()[0].1.clone();
+    assert_eq!(args.len(), 3, "{args:?}");
+    assert!(!args.iter().any(|arg| arg.starts_with("--test-type")));
+    launched.closer.close().await.unwrap();
+}
+
+#[tokio::test]
+async fn chosen_default_restrictions_replace_the_automatic_ones() {
+    let hooks = chrome_for_testing_hooks(40014);
+    let options = RealBrowserOptions::default()
+        .default_restrictions(["no-chrome-for-testing-infobar"])
+        .close_timeout(Duration::from_millis(50));
+
+    let (_, launched) = launch(&options, &hooks).await.unwrap();
+
+    assert_eq!(
+        launched.default_restrictions,
+        ["no-chrome-for-testing-infobar"]
+    );
+    let args = hooks.spawned.lock().unwrap()[0].1.clone();
+    assert!(args.contains(&"--test-type=gpu".to_string()));
+    assert!(!args.contains(&"--use-mock-keychain".to_string()));
+    launched.closer.close().await.unwrap();
+}
+
+#[tokio::test]
+async fn unknown_default_restrictions_are_refused_before_starting_a_browser() {
+    let hooks = chrome_for_testing_hooks(40015);
+    let options = RealBrowserOptions::default().default_restrictions(["no-such-restriction"]);
+
+    let error = launch(&options, &hooks).await.unwrap_err();
+
+    assert!(error.to_string().contains("no-such-restriction"), "{error}");
+    assert!(hooks.spawned.lock().unwrap().is_empty());
 }

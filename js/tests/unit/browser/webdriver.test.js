@@ -381,6 +381,45 @@ describe('launchWebDriver', () => {
     await session.close(); // idempotent
   });
 
+  it('adds the Chrome for Testing defaults for the browser it resolves (issue #179)', async () => {
+    const launchWith = async (browserPath, options = {}) => {
+      const { mock, dependencies } = launchDependencies({
+        runCommand: async () =>
+          managerOutput({
+            driver_path: '/cache/chromedriver',
+            browser_path: browserPath,
+          }),
+      });
+      const session = await launchWebDriver(options, dependencies);
+      await session.close();
+      const { args } = mock.record.builders[0].options;
+      return {
+        defaults: session.defaultRestrictions,
+        switches: args.filter((arg) =>
+          ['--test-type=gpu', '--use-mock-keychain'].includes(arg)
+        ),
+      };
+    };
+
+    // Selenium Manager downloads Chrome for Testing when no Chrome is installed.
+    const cft = await launchWith(
+      '/home/u/.cache/selenium/chrome/linux64/131.0.6778.85/chrome'
+    );
+    assert.deepEqual(cft.defaults, [
+      'no-chrome-for-testing-infobar',
+      'mock-keychain',
+    ]);
+    assert.deepEqual(cft.switches, ['--test-type=gpu', '--use-mock-keychain']);
+
+    const chrome = await launchWith('/opt/google/chrome/chrome');
+    assert.deepEqual(chrome, { defaults: [], switches: [] });
+    const off = await launchWith(
+      '/home/u/.cache/selenium/chrome/linux64/131.0.6778.85/chrome',
+      { defaultRestrictions: [] }
+    );
+    assert.deepEqual(off, { defaults: [], switches: [] });
+  });
+
   it('starts geckodriver for Firefox with a -profile argument', async () => {
     const { mock, started, dependencies } = launchDependencies({
       environment: { PATH: '/usr/bin' },

@@ -116,6 +116,47 @@ Switches the library used to add, such as `--password-store=basic`, are opt-in
 omits that launcher's own defaults, and `with_args()` remains a compatible
 append-only builder.
 
+#### Chrome for Testing by default
+
+Without a `channel` or `executable_path`, `launch_browser()` and
+`launch_real_browser()` start Chrome for Testing, never your own Google
+Chrome. It looks for the engine's bundled browser first, then in the
+Playwright (`ms-playwright`, moved by `PLAYWRIGHT_BROWSERS_PATH`), Puppeteer
+(`~/.cache/puppeteer`, moved by `PUPPETEER_CACHE_DIR`) and Selenium Manager
+caches, newest version first. When none is installed the launch fails with an
+error that names the install command (`npx playwright install chromium` or
+`npx puppeteer browsers install chrome`) and the `channel("chrome")` option
+that starts the installed Google Chrome instead.
+
+A Chrome for Testing launch gets the `chrome-for-testing` restriction preset
+(`no-chrome-for-testing-infobar` = `--test-type=gpu`, `mock-keychain` =
+`--use-mock-keychain`) before your own restrictions, so it shows no "Chrome
+for Testing is only for automated testing" infobar and no keychain prompt.
+Any other browser gets nothing. `default_restrictions()` replaces that
+choice, and an empty list opts out; the result reports what was applied:
+
+```rust
+use browser_commander::{is_chrome_for_testing, launch_browser, LaunchOptions};
+
+// Keep the infobar: no default restrictions at all.
+let result = launch_browser(
+    LaunchOptions::chromiumoxide().default_restrictions(Vec::<String>::new()),
+)
+.await?;
+assert!(result.default_restrictions.is_empty());
+
+assert!(is_chrome_for_testing(std::path::Path::new(
+    "/home/me/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome"
+)));
+```
+
+`RealBrowserOptions` and `WebDriverOptions` take the same
+`default_restrictions`, and `default_restrictions_for(executable, requested)`
+returns the list a launch of `executable` would use.
+With the mock keychain, Chrome for Testing cannot decrypt cookies another Chrome
+wrote into a copied profile; move logins with `read_browser_cookies()` or
+`storage_state`, which set cookies through the browser's cookie API instead.
+
 ### Playwright and Puppeteer
 
 Rust Playwright talks to Playwright's own driver, the same process the
@@ -343,9 +384,13 @@ never commit cache files, and seed only a dedicated automation profile.
 
 ### Launch and Connect to an Installed Browser
 
-`launch_real_browser()` discovers and starts genuine installed Chrome, Edge,
-Brave, or Chromium with a dedicated profile, waits for its loopback CDP
-endpoint, and attaches with Chromiumoxide or the Playwright/Puppeteer bridges:
+`launch_real_browser()` starts a browser with a dedicated profile, waits for
+its loopback CDP endpoint, and attaches with Chromiumoxide or the
+Playwright/Puppeteer bridges. Without a `channel` or `executable_path` it
+starts Chrome for Testing, like `launch_browser()`, with the
+`chrome-for-testing` preset unless `default_restrictions` says otherwise;
+`channel("chrome")`, `"msedge"`, `"brave"` or `"chromium"` discovers and
+starts that installed browser instead:
 
 ```rust
 use browser_commander::prelude::*;

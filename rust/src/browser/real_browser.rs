@@ -12,7 +12,11 @@
 //! ownership is confirmed from the browser's own `DevTools listening on ...`
 //! line before the endpoint is trusted, and a lost race is retried on a new
 //! port. Every switch the library used to add on its own is an explicit
-//! opt-in through [`RealBrowserOptions::restrictions`].
+//! opt-in through [`RealBrowserOptions::restrictions`]. The one exception is
+//! Chrome for Testing, which gets the `chrome-for-testing` preset
+//! (`--test-type=gpu --use-mock-keychain`) through
+//! [`RealBrowserOptions::default_restrictions`] so it shows no "only for
+//! automated testing" infobar (issue #179).
 
 use std::collections::HashMap;
 use std::future::Future;
@@ -82,8 +86,12 @@ pub struct RealBrowserOptions {
     pub diagnostic_redactor: Option<DiagnosticRedactor>,
     /// Browser Commander engine used after the browser starts.
     pub engine: EngineType,
-    /// Installed Chrome-family channel to discover.
-    pub channel: String,
+    /// Installed Chrome-family channel to discover, such as `"chrome"` for
+    /// the installed Google Chrome. Without it (and without
+    /// `executable_path`) the engine's Chrome for Testing is started, never
+    /// the person's own browser (issue #179); the browser family is then
+    /// Chrome.
+    pub channel: Option<String>,
     /// Explicit installed-browser executable, bypassing channel discovery.
     pub executable_path: Option<PathBuf>,
     /// Dedicated, non-default browser profile. When `None` a fresh temporary
@@ -115,6 +123,12 @@ pub struct RealBrowserOptions {
     /// `no-extensions` or the `legacy-defaults` preset. See
     /// [`restrictions`](super::restrictions).
     pub restrictions: Vec<String>,
+    /// Restrictions added before [`restrictions`](Self::restrictions) once
+    /// the executable is known. `None` picks them automatically: the
+    /// `chrome-for-testing` preset when the executable is Chrome for Testing
+    /// (see [`is_chrome_for_testing`](super::chrome_for_testing::is_chrome_for_testing)),
+    /// nothing otherwise. `Some(vec![])` opts out.
+    pub default_restrictions: Option<Vec<String>>,
     /// Additional Chrome features to disable, merged into one switch.
     pub disable_features: Vec<String>,
     /// Additional browser arguments.
@@ -194,6 +208,9 @@ pub struct RealBrowserLaunchResult {
     pub temporary_profile: bool,
     /// The browser's exact command line (without the executable).
     pub args: Vec<String>,
+    /// Restrictions the launch added before the caller's own, such as the
+    /// `chrome-for-testing` preset for Chrome for Testing.
+    pub default_restrictions: Vec<String>,
     /// The spawned browser. Dropping the result (and every clone of this
     /// handle) stops it; [`close`](Self::close) shuts it down gracefully.
     pub browser_process: BrowserProcess,
@@ -230,6 +247,7 @@ impl std::fmt::Debug for RealBrowserLaunchResult {
             .field("user_data_dir", &self.user_data_dir)
             .field("temporary_profile", &self.temporary_profile)
             .field("args", &self.args)
+            .field("default_restrictions", &self.default_restrictions)
             .field("browser_process", &self.browser_process)
             .field("downloads", &self.downloads)
             .field("migration", &self.migration)
@@ -239,7 +257,10 @@ impl std::fmt::Debug for RealBrowserLaunchResult {
 
 /// Resolve a genuine installed Chrome-family browser executable.
 pub fn resolve_system_browser_executable(options: &RealBrowserOptions) -> Result<PathBuf> {
-    resolve_browser_executable(&options.channel, options.executable_path.as_deref())
+    resolve_browser_executable(
+        options.browser_channel(),
+        options.executable_path.as_deref(),
+    )
 }
 
 fn assert_no_managed_arguments(options: &RealBrowserOptions) -> Result<()> {
@@ -320,7 +341,7 @@ pub fn build_real_browser_args(options: &RealBrowserOptions) -> Result<Vec<Strin
 }
 
 fn validate_launch_request(options: &RealBrowserOptions) -> Result<()> {
-    assert_cdp_browser(&options.channel)?;
+    assert_cdp_browser(options.browser_channel())?;
     if options.engine == EngineType::Fantoccini {
         return Err(anyhow!(FANTOCCINI_OVER_CDP));
     }
@@ -338,7 +359,27 @@ fn validate_launch_request(options: &RealBrowserOptions) -> Result<()> {
     if let Some(user_data_dir) = &options.user_data_dir {
         assert_dedicated_user_data_dir(user_data_dir)?;
     }
+    resolve_restrictions(options.default_restrictions.as_deref().unwrap_or_default())?;
     Ok(())
+}
+
+/// `options` with the default restrictions for `executable` before the
+/// caller's own, and the defaults that were added.
+pub(crate) fn with_default_restrictions(
+    options: &RealBrowserOptions,
+    executable: &Path,
+) -> (RealBrowserOptions, Vec<String>) {
+    let defaults = crate::browser::chrome_for_testing::default_restrictions_for(
+        executable,
+        options.default_restrictions.as_deref(),
+    );
+    let mut effective = options.clone();
+    effective.restrictions = defaults
+        .iter()
+        .chain(&options.restrictions)
+        .cloned()
+        .collect();
+    (effective, defaults)
 }
 
 fn browser_environment(options: &RealBrowserOptions) -> Result<Option<HashMap<String, String>>> {
@@ -363,8 +404,9 @@ pub(crate) struct SpawnedBrowser {
 /// The side effects of a launch, replaceable in tests.
 #[async_trait]
 pub(crate) trait LaunchHooks: Send + Sync {
+    /// The named browser, or Chrome for Testing when none is named.
     fn resolve_executable(&self, options: &RealBrowserOptions) -> Result<PathBuf> {
-        resolve_system_browser_executable(options)
+        crate::browser::launch_executable::resolve_default_launch_executable(options)
     }
 
     fn reserve_port(&self) -> Result<u16> {
@@ -478,6 +520,7 @@ pub(crate) struct LaunchedRealBrowser {
     pub(crate) user_data_dir: PathBuf,
     pub(crate) temporary_profile: bool,
     pub(crate) args: Vec<String>,
+    pub(crate) default_restrictions: Vec<String>,
     pub(crate) browser_process: BrowserProcess,
     pub(crate) migration: Option<MigrationSummary>,
     pub(crate) closer: Arc<RealBrowserCloser>,
@@ -493,6 +536,7 @@ impl std::fmt::Debug for LaunchedRealBrowser {
             .field("user_data_dir", &self.user_data_dir)
             .field("temporary_profile", &self.temporary_profile)
             .field("args", &self.args)
+            .field("default_restrictions", &self.default_restrictions)
             .field("browser_process", &self.browser_process)
             .field("migration", &self.migration)
             .finish()
@@ -590,6 +634,9 @@ where
     let executable_path = hooks
         .resolve_executable(options)
         .map_err(|error| launch_failure(error, "discovery", options, None))?;
+    let (effective_options, default_restrictions) =
+        with_default_restrictions(options, &executable_path);
+    let options = &effective_options;
     let temporary_profile = options.user_data_dir.is_none() || owned_profile;
     let user_data_dir = match &options.user_data_dir {
         Some(user_data_dir) => {
@@ -600,7 +647,7 @@ where
     let (migration, migrated_cookies) = if let Some(source) = options.migrate_from.clone() {
         let target = user_data_dir.join("Default");
         let mut migrate_options = MigrateProfileOptions::new(source, target);
-        migrate_options.target_browser = Some(options.channel.clone());
+        migrate_options.target_browser = Some(options.browser_channel().to_string());
         if let Some(include) = &options.migrate_include {
             migrate_options.include = include.clone();
         }
@@ -715,6 +762,7 @@ where
             user_data_dir,
             temporary_profile,
             args: spawned.args,
+            default_restrictions,
             browser_process: process,
             migration,
             closer,
@@ -732,7 +780,11 @@ where
 /// browser exits; known default profiles are refused because Chrome 136 and
 /// newer ignore remote-debugging switches for them.
 pub async fn launch_real_browser(options: RealBrowserOptions) -> Result<RealBrowserLaunchResult> {
-    if crate::browser::safari::is_safari_channel(&options.channel) {
+    if options
+        .channel
+        .as_deref()
+        .is_some_and(crate::browser::safari::is_safari_channel)
+    {
         return crate::browser::safari::launch_safari_real(options).await;
     }
     launch_real_browser_owned(options, false).await

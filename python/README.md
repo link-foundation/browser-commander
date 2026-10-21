@@ -163,14 +163,54 @@ result = await launch_browser(options)
 browser, page = result.browser, result.page
 ```
 
-By default both launch APIs start the installed browser the way a person would:
+By default both launch APIs start the browser the way a person would:
 `--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved
-port> about:blank` and nothing else (see
+port> about:blank`, plus the Chrome for Testing defaults below (see
 [Launch Command Line and Opt-In Restrictions](https://github.com/link-foundation/browser-commander/blob/main/docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
 Switches the library used to add, such as `--password-store=basic`, are opt-in
 `restrictions` (`restrictions=["legacy-defaults"]` restores the old set).
 `launch="engine"` keeps the engine launcher, and `ignore_default_args=True`
 omits that launcher's own defaults.
+
+#### Chrome for Testing by default
+
+Without `channel` or `executable_path`, a launch starts Chrome for Testing -
+the one Playwright downloaded, or else another build in the `ms-playwright`
+cache (moved by `PLAYWRIGHT_BROWSERS_PATH`), newest first; Selenium also tries
+the Puppeteer (`PUPPETEER_CACHE_DIR`) and Selenium Manager caches, then asks
+Selenium Manager - never your own Google Chrome. Chrome for Testing is an app of its own
+(`com.google.chrome.for.testing` on macOS), so the Dock icon, new tabs and
+links opened from other apps keep going to your Chrome. Without it the launch
+fails and names the install command (`playwright install chromium`) and
+`channel="chrome"`, which starts the installed Google Chrome instead. It is
+never a silent fallback.
+
+A Chrome for Testing launch gets the `chrome-for-testing` restriction preset
+before your own `restrictions`: `no-chrome-for-testing-infobar`
+(`--test-type=gpu`, the only value that hides the "Chrome for Testing is only
+for automated testing" bar) and `mock-keychain` (`--use-mock-keychain`, no
+keychain prompt at each start). Other browsers get nothing.
+`default_restrictions` replaces that choice (`[]` opts out) and the result
+reports what was applied:
+
+```python
+from browser_commander import LaunchOptions, is_chrome_for_testing, launch_browser
+
+result = await launch_browser(LaunchOptions())
+print(result.default_restrictions)  # ['no-chrome-for-testing-infobar', 'mock-keychain']
+
+# Keep the infobar, or start Google Chrome on purpose:
+await launch_browser(LaunchOptions(default_restrictions=[]))
+await launch_browser(LaunchOptions(channel="chrome"))
+is_chrome_for_testing(
+    "/home/me/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome"
+)  # True
+```
+
+`RealBrowserOptions` takes the same `default_restrictions`. With the mock
+keychain, Chrome for Testing cannot decrypt cookies another Chrome wrote into a
+copied profile; move logins with `read_browser_cookies()` or `storage_state`,
+which set cookies through the browser's cookie API instead.
 
 Pass Playwright-compatible `storage_state` as a JSON file path or object to
 restore cookies and origin-scoped localStorage before navigation. The option
@@ -273,9 +313,10 @@ private, use a short TTL, never commit them, and seed only a dedicated profile.
 
 ### launch_real_browser(options)
 
-Discover and start a genuine installed Chrome, Edge, Brave, or Chromium with a
-dedicated profile, wait for its loopback CDP endpoint, and attach with
-Playwright or Selenium:
+Start Chrome for Testing (the default, as for `launch_browser()`) or, with
+`channel` or `executable_path`, a genuine installed Chrome, Edge, Brave, or
+Chromium with a dedicated profile, wait for its loopback CDP endpoint, and
+attach with Playwright or Selenium:
 
 ```python
 from browser_commander import RealBrowserOptions, launch_real_browser

@@ -10,6 +10,7 @@ import { captureStableViewport, validateStableViewport } from './viewport.js';
  * @property {string} [path]
  * @property {boolean} [fullPage]
  * @property {boolean} [stableViewport] Capture only the existing view without visual styling.
+ *   Default captures already do so without a fixed viewport; false keeps the engine capture.
  * @property {string} [selector]
  * @property {Object} [element]
  * @property {{x:number,y:number,width:number,height:number}} [clip]
@@ -61,7 +62,7 @@ export async function screenshot(options = {}) {
   if (options.waitForFonts) {
     await page.evaluate(() => document.fonts.ready.then(() => true));
   }
-  if (options.stableViewport) {
+  if (capturesView(options, engine, css)) {
     if (engine === 'playwright') {
       native.scale = scale;
       native.caret = 'initial';
@@ -121,6 +122,20 @@ export async function screenshot(options = {}) {
       );
     }
   }
+}
+
+/**
+ * A default capture of a page without a fixed viewport takes the view as it
+ * is: a clipped engine capture can leave a resized window stuck (issue #180).
+ */
+function capturesView(options, engine, css) {
+  const { selector, element, clip, fullPage, omitBackground } = options;
+  return (
+    options.stableViewport ??
+    (['playwright', 'puppeteer'].includes(engine) &&
+      ![selector, element, clip, fullPage, omitBackground, css].some(Boolean) &&
+      (options.scale ?? 'device') === 'device')
+  );
 }
 
 async function finishScreenshot(

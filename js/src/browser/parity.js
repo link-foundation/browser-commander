@@ -317,7 +317,12 @@ function normalizeWhitespace(text) {
 function requestedArgsFor(session, options) {
   const requested = [...(options.args ?? []), ...(options.extraArgs ?? [])];
   const launchedArgs = session.args ?? [];
-  if ((options.restrictions ?? []).length > 0) {
+  // Chrome for Testing's default restrictions are requested too (issue #179).
+  const restrictions = [
+    ...(session.defaultRestrictions ?? []),
+    ...(options.restrictions ?? []),
+  ];
+  if (restrictions.length > 0) {
     requested.push(
       ...launchedArgs.filter(
         (arg) =>

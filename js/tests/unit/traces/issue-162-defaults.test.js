@@ -181,7 +181,7 @@ describe('complete recording defaults (issue #162)', { timeout: 15000 }, () => {
         },
       };
       const launched = await launchBrowserWithDependencies(
-        { debug: { output } },
+        { channel: 'chrome', debug: { output } },
         {
           resolveSystem: async () => '/usr/bin/google-chrome',
           settleMs: 0,

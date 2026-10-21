@@ -44,6 +44,7 @@ it(
   async () => {
     const sibling = await launchBrowser({
       debug: false,
+      channel: 'chrome',
       headless: true,
       ...CHROME_LAUNCH_OPTIONS,
     });
@@ -58,6 +59,7 @@ it(
             launchAndConnectRealBrowserWithDependencies(
               {
                 debug: false,
+                channel: 'chrome',
                 headless: true,
                 persistSessionCookies: suppliedProfile,
                 ...(suppliedProfile ? { userDataDir: root } : {}),

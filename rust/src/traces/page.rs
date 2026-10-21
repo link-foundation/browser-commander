@@ -168,6 +168,10 @@ impl TracePage for AdapterTracePage {
     }
 
     async fn screenshot(&self) -> Result<Option<Vec<u8>>, String> {
+        let view = crate::capture::ScreenshotOptions::default();
+        if let Some(bytes) = crate::capture::view_screenshot(self.adapter.as_ref(), &view).await {
+            return Ok(Some(bytes));
+        }
         self.adapter
             .screenshot()
             .await
@@ -234,6 +238,31 @@ mod tests {
         );
         assert!(json_text_expression("function f() {}", &Json::Null)
             .contains("await (function f() {})(null);"));
+    }
+
+    #[tokio::test]
+    async fn checkpoint_screenshots_take_the_view_without_a_clip() {
+        use crate::core::engine::EngineType;
+        use crate::core::stub_engine::StubEngine;
+        for (engine, view_fails, expected) in [
+            (EngineType::Playwright, false, b"view".to_vec()),
+            (EngineType::Puppeteer, false, b"view".to_vec()),
+            // No CDP session: the engine's plain screenshot.
+            (EngineType::Playwright, true, Vec::new()),
+            (EngineType::Fantoccini, false, Vec::new()),
+        ] {
+            let stub = Arc::new(StubEngine::fixed("about:blank").capturing_as(engine, view_fails));
+            let page = AdapterTracePage::new(stub.clone());
+            assert_eq!(page.screenshot().await, Ok(Some(expected)));
+            let captures = stub.captures();
+            assert!(captures
+                .iter()
+                .all(|o| o.stable_viewport && o.clip.is_none()));
+            assert_eq!(
+                captures.len(),
+                usize::from(engine != EngineType::Fantoccini)
+            );
+        }
     }
 
     #[tokio::test]

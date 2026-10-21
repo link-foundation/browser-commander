@@ -16,8 +16,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::launch_executable::DefaultLaunchHooks;
-use super::real_browser::LaunchHooks;
+use super::launch_executable::resolve_default_launch_executable;
 use super::{launch_browser, LaunchOptions, LaunchResult};
 use crate::core::{EngineAdapter, EngineType};
 
@@ -145,7 +144,9 @@ fn assemble_report(
     if !options.launch.sandbox {
         requested_args.push("--no-sandbox".into());
     }
-    if !options.launch.restrictions.is_empty() {
+    // The default restrictions (the chrome-for-testing preset for Chrome for
+    // Testing) were asked for as much as the caller's own (issue #179).
+    if !options.launch.restrictions.is_empty() || !session.default_restrictions.is_empty() {
         requested_args.extend(
             session
                 .args
@@ -205,11 +206,7 @@ async fn measure(
         if let Some(path) = supplied.and_then(|session| session.executable_path.clone()) {
             path
         } else {
-            DefaultLaunchHooks {
-                explicit_selection: options.launch.executable_path.is_some()
-                    || options.launch.channel.is_some(),
-            }
-            .resolve_executable(&real)?
+            resolve_default_launch_executable(&real)?
         };
     let server = ProbeServer::start().await?;
     let reference = reference::capture(&server, &executable, &options).await?;

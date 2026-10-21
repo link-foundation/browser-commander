@@ -32,8 +32,13 @@
     },
     {
       "id": "mock-keychain",
-      "description": "Use a mock macOS Keychain. Real-profile data cannot be decrypted or migrated.",
+      "description": "Use a mock macOS Keychain. Real-profile data cannot be decrypted or migrated. Added by default for Chrome for Testing, which otherwise asks for its keychain entry at each start.",
       "args": ["--use-mock-keychain"]
+    },
+    {
+      "id": "no-chrome-for-testing-infobar",
+      "description": "Hide the \"Chrome for Testing is only for automated testing\" bar; Chromium skips it only for --test-type=gpu, which also skips the unsupported-flag and other startup infobars. Added by default for Chrome for Testing.",
+      "args": ["--test-type=gpu"]
     },
     {
       "id": "no-extensions",
@@ -167,6 +172,7 @@
       "no-google-services",
       "no-translate"
     ],
+    "chrome-for-testing": ["no-chrome-for-testing-infobar", "mock-keychain"],
     "quiet-ui": [
       "no-first-run",
       "no-default-browser-check",

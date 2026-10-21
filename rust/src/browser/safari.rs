@@ -148,7 +148,7 @@ pub(crate) async fn launch_safari_real_with_webdriver(
             return Err(unsupported(feature).into());
         }
     }
-    let source = find_browser_source(&options.channel)
+    let source = find_browser_source(options.browser_channel())
         .ok_or_else(|| anyhow::anyhow!("Unknown Safari channel"))?;
     let browser = if source.id == "safari-technology-preview" {
         WebDriverBrowser::SafariTechnologyPreview
@@ -221,6 +221,7 @@ pub(crate) async fn launch_safari_real_with_webdriver(
         user_data_dir: PathBuf::new(),
         temporary_profile: false,
         args: Vec::new(),
+        default_restrictions: Vec::new(),
         browser_process: process,
         downloads: None,
         migration: None,

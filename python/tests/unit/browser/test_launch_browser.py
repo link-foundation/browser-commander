@@ -70,10 +70,16 @@ def system_chrome(**_options: Any) -> str:
     return "/usr/bin/google-chrome"
 
 
+def bundled_chrome_for_testing(_engine: str) -> str:
+    # Any executable file stands in for the downloaded Chrome for Testing.
+    return sys.executable
+
+
 def real_dependencies(calls: list[Any]) -> dict[str, Any]:
     return {
         "launch_real_browser": fake_real_launcher(calls),
         "resolve_system": system_chrome,
+        "bundled_executable": bundled_chrome_for_testing,
         "settle_seconds": 0,
     }
 
@@ -90,7 +96,9 @@ async def test_starts_the_real_browser_by_default_with_nothing_added(
 
     options = next(call[1] for call in calls if call[0] == "launch_real_browser")
     assert options.engine == "playwright"
-    assert options.executable_path == "/usr/bin/google-chrome"
+    # Chrome for Testing, not the installed Google Chrome (#179).
+    assert options.executable_path == sys.executable
+    assert options.channel is None
     assert options.slow_mo is None
     assert options.user_data_dir is None
     assert options.remote_debugging_port is None
@@ -291,23 +299,29 @@ async def test_resolve_launch_executable_honours_channel_and_path() -> None:
     ]
 
 
-async def test_resolve_launch_executable_falls_back_to_the_bundled_chromium() -> None:
-    def not_installed(**_request: Any) -> str:
-        raise FileNotFoundError("Chrome is not installed")
+async def test_resolve_launch_executable_prefers_chrome_for_testing() -> None:
+    requests: list[dict[str, Any]] = []
+
+    def installed(**request: Any) -> str:
+        requests.append(request)
+        return "/usr/bin/google-chrome"
 
     executable = await resolve_launch_executable(
         engine="playwright",
-        resolve_system=not_installed,
+        resolve_system=installed,
         bundled_executable=lambda _engine: sys.executable,
     )
     assert executable == sys.executable
+    assert requests == []
 
-    with pytest.raises(FileNotFoundError, match="Chrome is not installed"):
+    # The installed Google Chrome is never a silent fallback (#179).
+    with pytest.raises(FileNotFoundError, match="Chrome for Testing is not installed"):
         await resolve_launch_executable(
             engine="playwright",
-            resolve_system=not_installed,
+            resolve_system=installed,
             bundled_executable=lambda _engine: "/nonexistent/chrome",
         )
+    assert requests == []
 
 
 def test_public_api_exports_the_launch_modes_restrictions_and_helpers() -> None:

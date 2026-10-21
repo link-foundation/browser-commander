@@ -5,7 +5,8 @@
 //! Mirrors `launchWithEngine` in `js/src/browser/launcher.js`: a temporary
 //! profile unless one is given, the opt-in restrictions and the caller's
 //! environment for the browser process only, and a close that deletes the
-//! temporary profile.
+//! temporary profile. When the engine starts Chrome for Testing the launch
+//! gets the `chrome-for-testing` restrictions first (issue #179).
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -18,6 +19,7 @@ use futures::StreamExt;
 
 use crate::browser::browser_process::BrowserCloser;
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
+use crate::browser::launch_executable::{cached_chrome_for_testing, node_bundled_executable};
 use crate::browser::launcher::{Browser, LaunchOptions, LaunchResult};
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::browser::playwright_driver_page::{PlaywrightDriverPage, PlaywrightLaunch};
@@ -133,8 +135,57 @@ impl BrowserCloser for EngineCloser {
     }
 }
 
+/// The Chrome for Testing the engine starts on its own, or the one a
+/// fantoccini launch is pointed at; `None` when the browser is unknown.
+///
+/// Mirrors `engineExecutable` in `js/src/browser/launcher.js`.
+fn engine_executable(options: &LaunchOptions) -> Option<PathBuf> {
+    if options.executable_path.is_some() || options.channel.is_some() {
+        return options.executable_path.clone();
+    }
+    match options.engine {
+        EngineType::Fantoccini => match options.webdriver.browser {
+            WebDriverBrowser::Chrome => {
+                options.webdriver.browser_executable.clone().or_else(|| {
+                    cached_chrome_for_testing(EngineType::Fantoccini)
+                        .into_iter()
+                        .next()
+                })
+            }
+            _ => None,
+        },
+        EngineType::Chromiumoxide => chromiumoxide::detection::default_executable(
+            chromiumoxide::detection::DetectionOptions::default(),
+        )
+        .ok(),
+        EngineType::Playwright | EngineType::Puppeteer => node_bundled_executable(
+            options.engine,
+            options.node_executable.as_deref(),
+            options.node_working_dir.as_deref(),
+        ),
+    }
+}
+
 /// Launch the browser through the engine.
 pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<LaunchResult> {
+    let executable = engine_executable(options);
+    if options.engine == EngineType::Fantoccini {
+        // launch_webdriver adds the defaults of the browser it is given.
+        return launch(options, executable, Vec::new()).await;
+    }
+    let (effective, default_restrictions) =
+        options.with_default_restrictions(executable.as_deref());
+    launch(&effective, None, default_restrictions).await
+}
+
+/// Launch through the engine; `webdriver_browser` is the Chrome for Testing
+/// a fantoccini launch starts when the caller named no browser.
+async fn launch(
+    options: &LaunchOptions,
+    webdriver_browser: Option<PathBuf>,
+    mut default_restrictions: Vec<String>,
+) -> Result<LaunchResult> {
+    let executable_path = options.executable_path.clone().or(webdriver_browser);
     let args = if options.engine == EngineType::Fantoccini
         && options.webdriver.browser == WebDriverBrowser::Firefox
     {
@@ -207,8 +258,11 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
                         .clone(),
                 );
                 native.args.extend(args.clone());
-                if let Some(binary) = &options.executable_path {
+                if let Some(binary) = &executable_path {
                     native.browser_executable = Some(binary.clone());
+                }
+                if options.default_restrictions.is_some() {
+                    native.default_restrictions = options.default_restrictions.clone();
                 }
                 if let Some(timeout) = options.launch_timeout {
                     native.launch_timeout = timeout;
@@ -218,6 +272,7 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
                 native.env = (!driver_env.is_empty()).then_some(driver_env);
                 native.downloads = options.downloads.clone();
                 let browser = Arc::new(launch_webdriver(native).await?);
+                default_restrictions = browser.default_restrictions().to_vec();
                 let downloads = browser.downloads().cloned();
                 Ok((EngineBrowser::WebDriver(browser), downloads))
             }
@@ -257,7 +312,7 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
         closed: tokio::sync::OnceCell::new(),
     });
     profile_guard.armed = false;
-    Ok(LaunchResult::attached(
+    let mut result = LaunchResult::attached(
         Browser {
             engine: options.engine,
             user_data_dir,
@@ -266,12 +321,9 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
         page,
         downloads,
     )
-    .launched_by_engine(
-        args,
-        temporary_profile,
-        options.executable_path.clone(),
-        closer,
-    ))
+    .launched_by_engine(args, temporary_profile, executable_path, closer);
+    result.default_restrictions = default_restrictions;
+    Ok(result)
 }
 
 type Launched = (

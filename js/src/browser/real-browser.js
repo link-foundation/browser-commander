@@ -48,6 +48,10 @@ import {
   knownDefaultUserDataDirs,
   resolveSystemBrowserExecutable,
 } from './system-browser.js';
+import {
+  defaultRestrictionsFor,
+  resolveLaunchExecutable,
+} from './launch-executable.js';
 
 /**
  * Switches the launcher owns. Letting a caller pass them would break the
@@ -375,22 +379,25 @@ function driverInterruption(engine, interruption) {
 }
 
 /**
- * Spawn a genuine installed Chrome-family browser with a dedicated profile,
- * wait for its loopback CDP endpoint, and attach through {@link connectBrowser}.
+ * Spawn a Chrome-family browser with a dedicated profile, wait for its
+ * loopback CDP endpoint, and attach through {@link connectBrowser}.
  *
  * The command line is `--user-data-dir=<dir> --remote-debugging-port=<port>`
  * and nothing else unless asked for, so the session is as close to a
  * hand-started browser as CDP allows and `navigator.webdriver` is false.
+ * Without `channel`, `executablePath` or `attach` the engine's Chrome for
+ * Testing is started, with the `chrome-for-testing` restrictions (issue #179).
  *
  * @param {Object} options - Launch and connection options
  * @param {'playwright'|'puppeteer'} [options.engine='playwright'] - Automation engine
- * @param {string} [options.channel='chrome'] - Installed Chrome-family channel
+ * @param {string} [options.channel] - Installed Chrome-family channel, such as 'chrome' for the installed Google Chrome; it also names the browser a snapshot or migration belongs to (default 'chrome')
  * @param {string} [options.executablePath] - Explicit installed browser executable
  * @param {string} [options.userDataDir] - Persistent dedicated profile. When omitted a fresh temporary profile is created and deleted on close.
  * @param {number} [options.remoteDebuggingPort] - Fixed loopback CDP port. When omitted a free port is reserved (and re-reserved on a port race). Zero is refused because it sets navigator.webdriver.
  * @param {number} [options.portAttempts=3] - Launch attempts when a reserved port is lost to a race
  * @param {boolean} [options.headless=false] - Run the installed browser headlessly
  * @param {string[]} [options.restrictions] - Opt-in restrictions from launch-restrictions.json, such as 'no-extensions'
+ * @param {string[]} [options.defaultRestrictions] - Restrictions that replace the executable's defaults: the 'chrome-for-testing' preset for Chrome for Testing, none for any other browser. Pass [] to start Chrome for Testing without them.
  * @param {string[]} [options.args] - Additional browser arguments
  * @param {string[]} [options.extraArgs] - Additional browser arguments appended after args
  * @param {boolean} [options.defaultBrowserCheck=false] - Allow the disposable browser to ask to become the default
@@ -404,7 +411,7 @@ function driverInterruption(engine, interruption) {
  * @param {{browser: string, profile: (string|undefined), userDataDir: (string|undefined), include: (Array<string>|undefined), domains: (Array<string>|undefined)}} [options.migrateFrom] - Migrate a real browser profile into the dedicated profile before launch; on-disk data is written before the browser starts and cookies are seeded over CDP after connecting
  * @param {{mode: 'snapshot', browser: (string|undefined), profile: (string|undefined), userDataDir: (string|undefined)}} [options.attach] - Launch on a read-only snapshot of a real profile (issue #102, addendum): `snapshotUserDataDir()` copies it into a temporary user data directory, which is deleted on close. `browser` defaults to the channel's browser and `profile` to Default. Mutually exclusive with `migrateFrom` and `userDataDir`.
  * @param {boolean} [options.verbose=false] - Show browser and connection logs
- * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, migration: (Object|undefined), attach: ({mode: 'snapshot', snapshot: Object, differences: Array<{aspect: string, description: string}>}|undefined)}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given and an `attach` entry when `attach` was given)
+ * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, defaultRestrictions: Array<string>, migration: (Object|undefined), attach: ({mode: 'snapshot', snapshot: Object, differences: Array<{aspect: string, description: string}>}|undefined)}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given and an `attach` entry when `attach` was given)
  */
 export async function launchAndConnectRealBrowser(options = {}) {
   return await launchAndConnectRealBrowserWithDependencies(options);
@@ -662,6 +669,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
     portAttempts = 3,
     headless = false,
     restrictions = [],
+    defaultRestrictions: requestedDefaultRestrictions,
     args = [],
     extraArgs = [],
     ignoreDefaultArgs: _ignoredLegacyDefaults,
@@ -699,14 +707,17 @@ export async function launchAndConnectRealBrowserWithDependencies(
     attach,
     migrateFrom,
   });
+  resolveRestrictions(requestedDefaultRestrictions ?? []);
 
+  // Without a channel, executablePath or attach the engine's Chrome for
+  // Testing is started, never the user's Google Chrome (issue #179).
   const resolveExecutable =
-    dependencies.resolveExecutable ?? resolveSystemBrowserExecutable;
-  const launchChannel = attach?.browser ?? channel;
+    dependencies.resolveExecutable ??
+    ((request) => resolveLaunchExecutable({ engine, ...request }));
   const executablePath = await Promise.resolve()
     .then(() =>
       resolveExecutable({
-        channel: launchChannel,
+        channel: attach?.browser ?? options.channel,
         executablePath: requestedExecutablePath,
       })
     )
@@ -718,6 +729,14 @@ export async function launchAndConnectRealBrowserWithDependencies(
         executablePath: requestedExecutablePath,
       });
     });
+  // Chrome for Testing gets its infobar hidden and a mock keychain unless the
+  // caller sets defaultRestrictions; the snapshot keystore warning, the
+  // environment and the profile preferences all see them.
+  const defaultRestrictions = defaultRestrictionsFor(
+    executablePath,
+    requestedDefaultRestrictions
+  );
+  argOptions.restrictions = [...defaultRestrictions, ...restrictions];
 
   const temporaryProfile = !requestedUserDataDir;
   const { userDataDir, snapshotLaunch } = await prepareProfile({
@@ -728,7 +747,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
     snapshot: dependencies.snapshotUserDataDir,
     firstRun,
   });
-  const childEnv = browserEnvironment(restrictions, env);
+  const childEnv = browserEnvironment(argOptions.restrictions, env);
 
   const { migration, migratedCookies } = await runPreLaunchMigration({
     migrateFrom,
@@ -745,7 +764,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
     configureUserDataDir(userDataDir, {
       defaultBrowserCheck,
       preferences: {
-        ...resolveRestrictions(restrictions).preferences,
+        ...resolveRestrictions(argOptions.restrictions).preferences,
         ...preferences,
       },
       localState,
@@ -814,6 +833,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
         userDataDir,
         temporaryProfile,
         args: launched.browserArgs,
+        defaultRestrictions,
         ...(migration ? { migration } : {}),
         ...(snapshotLaunch ? { attach: snapshotLaunch.attach } : {}),
       },

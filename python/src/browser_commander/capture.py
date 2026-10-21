@@ -31,7 +31,8 @@ class UnsupportedCaptureError(RuntimeError):
 class ScreenshotOptions:
     path: str | Path | None = None
     full_page: bool = False
-    stable_viewport: bool = False
+    # None: default captures of a page without a fixed viewport use the view.
+    stable_viewport: bool | None = None
     selector: str | None = None
     clip: dict[str, float] | None = None
     format: Literal["png", "jpeg", "webp"] = "png"
@@ -102,7 +103,7 @@ async def screenshot(
         "initial",
     }:
         raise ValueError("invalid animations/caret")
-    if opts["stable_viewport"]:
+    if _captures_view(opts, engine):
         if (
             any(
                 opts[key]
@@ -218,6 +219,24 @@ async def screenshot(
         )
         data = output.getvalue()
     return _write(data, opts["path"])
+
+
+def _captures_view(opts: dict[str, Any], engine: str) -> bool:
+    """Whether to capture the view as it is, with no clip (issue #180).
+
+    A clipped engine capture can leave a resized headful window drawn at its
+    old size, so a default capture without a fixed viewport avoids one.
+    """
+    if opts["stable_viewport"] is not None:
+        return bool(opts["stable_viewport"])
+    changes = ("selector", "clip", "full_page", "omit_background", "hide_scrollbars")
+    return (
+        engine in {"playwright", "puppeteer"}
+        and not any(opts[key] for key in (*changes, "hide_caret", "disable_animations"))
+        and opts.get("element") is None
+        and (opts["animations"], opts["caret"], opts["scale"])
+        == ("allow", "initial", "device")
+    )
 
 
 async def _puppeteer_screenshot(page: Any, opts: dict[str, Any]) -> bytes:

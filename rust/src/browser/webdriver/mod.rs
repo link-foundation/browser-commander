@@ -72,6 +72,10 @@ pub struct WebDriverOptions {
     pub launch_timeout: Duration,
     /// Request webSocketUrl and connect when the driver supplies it.
     pub bidi: bool,
+    /// Chrome restrictions added before `args` (issue #179). `None` picks
+    /// them from `browser_executable`: the `chrome-for-testing` preset for
+    /// Chrome for Testing, nothing otherwise. `Some(vec![])` opts out.
+    pub default_restrictions: Option<Vec<String>>,
 }
 
 impl Default for WebDriverOptions {
@@ -94,6 +98,7 @@ impl Default for WebDriverOptions {
             downloads: DownloadSetting::Off,
             launch_timeout: Duration::from_secs(30),
             bidi: true,
+            default_restrictions: None,
         }
     }
 }
@@ -148,6 +153,7 @@ pub struct ManagedWebDriver {
     bidi: Option<Arc<BidiClient>>,
     downloads: Option<Arc<DownloadManager>>,
     profile: PathBuf,
+    default_restrictions: Vec<String>,
     driver: tokio::sync::Mutex<OwnedDriver>,
     closed: OnceCell<()>,
 }
@@ -164,6 +170,11 @@ impl ManagedWebDriver {
     }
     pub fn user_data_dir(&self) -> &Path {
         &self.profile
+    }
+    /// Restrictions the launch added before the caller's arguments, such as
+    /// the `chrome-for-testing` preset for Chrome for Testing.
+    pub fn default_restrictions(&self) -> &[String] {
+        &self.default_restrictions
     }
     pub fn driver_pid(&self) -> Option<u32> {
         self.driver
@@ -241,6 +252,7 @@ async fn launch_owned(
     if options.launch_timeout.is_zero() {
         return Err(anyhow!("launch_timeout must be positive"));
     }
+    let default_restrictions = capabilities::apply_default_restrictions(&mut options)?;
     // Validate before creating profiles or starting a process.
     build_capabilities(&options, Path::new("validation-profile"), None)?;
     let safari = options.browser.is_safari();
@@ -409,6 +421,7 @@ async fn launch_owned(
         bidi: None,
         downloads: manager,
         profile,
+        default_restrictions,
         driver: tokio::sync::Mutex::new(owner),
         closed: OnceCell::new(),
     };

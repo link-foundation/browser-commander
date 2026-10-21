@@ -322,7 +322,10 @@ fn get_user_data_dir_creates_default() {
 
 #[tokio::test]
 async fn launch_fantoccini_owns_a_native_driver() {
-    let mut options = LaunchOptions::fantoccini();
+    // An existing stand-in browser keeps the test independent of whether a
+    // Chrome for Testing download exists: the driver must fail to start.
+    let browser = std::env::current_exe().unwrap();
+    let mut options = LaunchOptions::fantoccini().executable_path(browser);
     options.webdriver.driver_executable =
         Some("/nonexistent/browser-commander/chromedriver".into());
     let err = launch_browser(options).await.unwrap_err();

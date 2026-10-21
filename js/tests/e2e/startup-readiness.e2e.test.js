@@ -42,8 +42,11 @@ it(
   'failure after real DevTools readiness leaves another Chrome and caller profile intact',
   { skip: process.env.RUN_E2E !== 'true', timeout: 90000 },
   async () => {
+    // Like the test above, this regression is about the installed Google
+    // Chrome; without a channel the launch would start Chrome for Testing.
     const sibling = await launchBrowser({
       debug: false,
+      channel: 'chrome',
       headless: true,
       ...CHROME_LAUNCH_OPTIONS,
     });
@@ -58,6 +61,7 @@ it(
             launchAndConnectRealBrowserWithDependencies(
               {
                 debug: false,
+                channel: 'chrome',
                 headless: true,
                 persistSessionCookies: suppliedProfile,
                 ...(suppliedProfile ? { userDataDir: root } : {}),

@@ -153,6 +153,9 @@ assert!(is_chrome_for_testing(std::path::Path::new(
 `RealBrowserOptions` and `WebDriverOptions` take the same
 `default_restrictions`, and `default_restrictions_for(executable, requested)`
 returns the list a launch of `executable` would use.
+With the mock keychain, Chrome for Testing cannot decrypt cookies another Chrome
+wrote into a copied profile; move logins with `read_browser_cookies()` or
+`storage_state`, which set cookies through the browser's cookie API instead.
 
 ### Playwright and Puppeteer
 

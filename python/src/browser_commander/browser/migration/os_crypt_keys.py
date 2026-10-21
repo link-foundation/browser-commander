@@ -3,7 +3,8 @@
 The source key decrypts the values stored by the browser being migrated from;
 the target key encrypts them for the dedicated profile that will be launched:
 
-* macOS: PBKDF2 of the Keychain "Safe Storage" password (1003 iterations);
+* macOS: PBKDF2 of the Keychain "Safe Storage" password (1003 iterations),
+  always tagged ``v10``;
 * Linux: ``v10`` values use the hard-coded ``"peanuts"`` password, ``v11``
   values the keyring "Safe Storage" password (1 iteration);
 * Windows: the AES-256-GCM key in ``Local State``, protected by DPAPI. A
@@ -14,7 +15,7 @@ the target key encrypts them for the dedicated profile that will be launched:
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +37,7 @@ __all__ = [
     "create_source_key_resolver",
     "local_state_path_for_profile",
     "resolve_target_key",
+    "target_keystore_for",
 ]
 
 #: ``resolve(prefix) -> key`` for a ``"v10"``/``"v11"`` value prefix.
@@ -89,31 +91,55 @@ def create_source_key_resolver(
     return resolve
 
 
+def target_keystore_for(args: Sequence[str], platform: str) -> str:
+    """Which keystore a launch encrypts its new profile with.
+
+    ``"mock"`` when the launch switches bypass the OS keystore
+    (``--use-mock-keychain`` on macOS, as Chrome for Testing gets by default,
+    or ``--password-store=basic`` on Linux), ``"os"`` otherwise.
+    """
+
+    bypass = "--use-mock-keychain" if platform == "darwin" else "--password-store=basic"
+    return "mock" if platform != "win32" and bypass in args else "os"
+
+
 def resolve_target_key(
     *,
     browser: str,
     platform: str,
+    keystore: str = "os",
     environment: Mapping[str, str] | None = None,
     read_safe_storage_password: Callable[..., str] = default_read_safe_storage_password,
 ) -> dict[str, Any]:
     """Derive the dedicated profile's key on macOS/Linux.
 
+    macOS Chromium only knows the ``v10`` tag; Linux tags keyring keys ``v11``
+    and its fixed basic-store key ``v10``. A ``"mock"`` keystore (see
+    :func:`target_keystore_for`) uses Chromium's fixed mock passwords:
+    ``mock_password`` for the mock keychain, ``peanuts`` for the basic store.
+
     Returns:
-        ``{"key": bytes, "prefix": "v11"}``.
+        ``{"key": bytes, "prefix": "v10" | "v11"}``.
 
     Raises:
         ValueError: On Windows, where the key must be created instead.
     """
 
-    if platform in ("darwin", "linux"):
-        password = read_safe_storage_password(
-            browser=browser,
-            platform=platform,
-            environment=os.environ if environment is None else environment,
+    if platform not in ("darwin", "linux"):
+        msg = (
+            "resolve_target_key does not derive a Windows key; "
+            "use create_windows_profile_key"
         )
-        return {"key": derive_chromium_cookie_key(password, platform), "prefix": "v11"}
-    msg = (
-        "resolve_target_key does not derive a Windows key; "
-        "use create_windows_profile_key"
+        raise ValueError(msg)
+    if keystore == "mock":
+        mock = "mock_password" if platform == "darwin" else "peanuts"
+        return {"key": derive_chromium_cookie_key(mock, platform), "prefix": "v10"}
+    password = read_safe_storage_password(
+        browser=browser,
+        platform=platform,
+        environment=os.environ if environment is None else environment,
     )
-    raise ValueError(msg)
+    return {
+        "key": derive_chromium_cookie_key(password, platform),
+        "prefix": "v10" if platform == "darwin" else "v11",
+    }

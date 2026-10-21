@@ -45,6 +45,11 @@ from browser_commander.browser.extension_relay import (
     extension_directory,
 )
 from browser_commander.browser.launch_diagnostics import BrowserLaunchError
+from browser_commander.browser.launch_executable import (
+    CHROME_FOR_TESTING_RESTRICTIONS,
+    default_restrictions_for,
+    is_chrome_for_testing,
+)
 from browser_commander.browser.launcher import (
     LAUNCH_MODES,
     LaunchOptions,
@@ -355,6 +360,7 @@ __all__ = [
     "AUTOMATION_CONTROLLED_OFF_ARG",
     "AUTOMATION_CONTROLLED_TRIGGERS",
     "CHROME_ARGS",
+    "CHROME_FOR_TESTING_RESTRICTIONS",
     # Managed downloads
     "DEFAULT_CAPTURE_TIMEOUT",
     "FINGERPRINT_FIELD_MECHANISMS",
@@ -490,6 +496,7 @@ __all__ = [
     "default_click_verification",
     "default_fill_verification",
     "default_navigation_verification",
+    "default_restrictions_for",
     "default_scroll_verification",
     "derive_user_agent_data",
     "detect_automation_controlled_triggers",
@@ -517,6 +524,7 @@ __all__ = [
     "install_click_listener",
     "is_action_stopped_error",
     "is_checked",
+    "is_chrome_for_testing",
     "is_enabled",
     "is_long_lived_request",
     "is_navigation_error",

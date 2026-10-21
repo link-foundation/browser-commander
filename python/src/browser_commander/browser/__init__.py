@@ -34,6 +34,11 @@ from browser_commander.browser.extension_relay import (
     attach_via_extension,
     extension_directory,
 )
+from browser_commander.browser.launch_executable import (
+    CHROME_FOR_TESTING_RESTRICTIONS,
+    default_restrictions_for,
+    is_chrome_for_testing,
+)
 from browser_commander.browser.launcher import (
     LAUNCH_MODES,
     LaunchOptions,
@@ -109,6 +114,7 @@ from browser_commander.browser.storage_state import (
 
 __all__ = [
     "ALL_DATA_CLASSES",
+    "CHROME_FOR_TESTING_RESTRICTIONS",
     "LAUNCH_MODES",
     "LAUNCH_RESTRICTIONS",
     "LAUNCH_RESTRICTION_PRESETS",
@@ -148,9 +154,11 @@ __all__ = [
     "connect_or_launch",
     "create_temporary_user_data_dir",
     "default_navigation_verification",
+    "default_restrictions_for",
     "emulate_media",
     "extension_directory",
     "goto",
+    "is_chrome_for_testing",
     "launch_and_connect_real_browser",
     "launch_browser",
     "launch_real_browser",

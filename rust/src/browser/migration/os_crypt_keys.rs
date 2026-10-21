@@ -24,6 +24,7 @@ use crate::browser::browser_cookie_credentials::{
     read_safe_storage_password, read_windows_encryption_key,
 };
 use crate::browser::browser_cookie_crypto::derive_chromium_cookie_key;
+use crate::browser::browser_cookies::chromium_mock_keystore_key;
 
 /// Reads a Safe Storage password for `(browser, platform)`.
 pub type SafeStoragePasswordReader = Arc<dyn Fn(&str, &str) -> Result<String> + Send + Sync>;
@@ -169,13 +170,8 @@ pub(crate) fn resolve_target_key(
         ));
     }
     if keystore == TargetKeystore::Mock {
-        let password = if platform == "darwin" {
-            "mock_password"
-        } else {
-            "peanuts"
-        };
         return Ok(TargetKey {
-            key: derive_chromium_cookie_key(password, platform)?,
+            key: chromium_mock_keystore_key(platform)?,
             prefix: "v10".to_string(),
         });
     }

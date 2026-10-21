@@ -151,6 +151,14 @@ describe('judging one rejected link', () => {
     assert.equal(verdict.verdict, 'transient');
   });
 
+  it('does not fail for a host that answered 5xx and then timed out', async () => {
+    // chromium.googlesource.com answered 503 to lychee and then let the
+    // re-check time out: neither said the link is gone, and a host that
+    // answered at all still resolves.
+    const verdict = await verdictFor(playwright, unreachable(), waybackNever());
+    assert.equal(verdict.verdict, 'transient');
+  });
+
   it('does not fail for a host that keeps rate-limiting the runner', async () => {
     const verdict = await verdictFor(
       { url: 'https://example.com/x', status: '429' },

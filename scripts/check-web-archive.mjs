@@ -18,6 +18,9 @@
  *      same URL answered 200 on the next run. Failing a pull request for it is
  *      a false positive, and the Wayback Machine cannot rescue it either -
  *      a live page that nobody has archived has no snapshot to fall back to.
+ *   3. `[503]` from chromium.googlesource.com, followed by a re-check that
+ *      timed out, was reported as confirmed broken. A timeout after a 5xx is
+ *      the same host still not answering; the links answered 200 elsewhere.
  *
  * So: only the errors section is read, every rejected URL is re-checked from
  * this script, and a URL is only ever fatal when the second look agrees it is
@@ -245,11 +248,13 @@ export async function judge(link, deps = {}) {
     return { ...link, verdict: 'alive' };
   }
 
+  // After a 429 or 5xx, a second refusal or no answer at all (a timeout)
+  // still says nothing about the link, and a host that answered resolves.
   const kind = classifyStatus(link.status);
-  if (kind === 'transient' && second.status !== null && second.status >= 500) {
-    return { ...link, verdict: 'transient' };
-  }
-  if (kind === 'transient' && second.status === 429) {
+  if (
+    kind === 'transient' &&
+    (second.status === null || second.status >= 500 || second.status === 429)
+  ) {
     return { ...link, verdict: 'transient' };
   }
 

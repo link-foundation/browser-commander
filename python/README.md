@@ -163,9 +163,16 @@ result = await launch_browser(options)
 browser, page = result.browser, result.page
 ```
 
-By default both launch APIs start the installed browser the way a person would:
-`--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved
-port> about:blank` and nothing else (see
+By default both launch APIs start Playwright's Chrome for Testing (installed by
+`python -m playwright install chromium`) the way a person would, never your own
+Google Chrome unless `channel="chrome"` or `executable_path` asks for it:
+`--test-type=gpu --use-mock-keychain --user-data-dir=<fresh temporary profile>
+--remote-debugging-port=<reserved port> about:blank` and nothing else. The
+first two switches are the `chrome-for-testing` default restrictions, which
+hide Chrome for Testing's "only for automated testing" bar and keep it away
+from the macOS keychain; any other browser gets none, `default_restrictions=[]`
+turns them off, and the result reports them as `default_restrictions` (see
+[Chrome for Testing by default](https://github.com/link-foundation/browser-commander/blob/main/docs/chrome-for-testing.md) and
 [Launch Command Line and Opt-In Restrictions](https://github.com/link-foundation/browser-commander/blob/main/docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
 Switches the library used to add, such as `--password-store=basic`, are opt-in
 `restrictions` (`restrictions=["legacy-defaults"]` restores the old set).
@@ -273,8 +280,8 @@ private, use a short TTL, never commit them, and seed only a dedicated profile.
 
 ### launch_real_browser(options)
 
-Discover and start a genuine installed Chrome, Edge, Brave, or Chromium with a
-dedicated profile, wait for its loopback CDP endpoint, and attach with
+Start Chrome for Testing, or the genuine installed Chrome, Edge, Brave, or
+Chromium a `channel` or `executable_path` names, with a dedicated profile, wait for its loopback CDP endpoint, and attach with
 Playwright or Selenium:
 
 ```python

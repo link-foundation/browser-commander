@@ -364,23 +364,28 @@ private to its writer.
 
 ## Launch Command Line and Opt-In Restrictions
 
-By default `launchBrowser()`/`launch_browser()` starts the installed browser the
-way a person would, then attaches to it (issue #103). The whole command line is:
+By default `launchBrowser()`/`launch_browser()` starts Chrome for Testing the
+way a person would, then attaches to it (issues #103 and #179). The whole
+command line is:
 
 ```
-<chrome> --user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved loopback port> about:blank
+<chrome for testing> --test-type=gpu --use-mock-keychain --user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved loopback port> about:blank
 ```
+
+Any other browser, picked with `channel` or `executablePath`, gets the same
+command line without the first two switches. See
+[Chrome for Testing by default](chrome-for-testing.md).
 
 | Property         | Default                                                                                                                                                                                                                                                                                                                                                                                                |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Launch mode      | `launch: 'real'`: Browser Commander spawns the browser itself and attaches over CDP. `launch: 'engine'` keeps the engine launcher (`launchPersistentContext`/`puppeteer.launch`).                                                                                                                                                                                                                      |
-| Browser          | The installed Chrome (or `channel`/`executablePath`); the engine's downloaded Chromium only when no installed browser is found.                                                                                                                                                                                                                                                                        |
+| Browser          | The engine's Chrome for Testing (Playwright's, Puppeteer's or Selenium Manager's download); never the user's Google Chrome unless `channel: 'chrome'` or `executablePath` asks for it.                                                                                                                                                                                                                 |
 | Profile          | A fresh temporary directory, deleted on close. Pass `userDataDir` to keep one.                                                                                                                                                                                                                                                                                                                         |
 | First-run UI     | Suppressed by the `First Run` sentinel and `{"browser":{"last_whats_new_version":9999},"fre":{"has_user_seen_fre":true}}` in `Local State` - the files the browser writes itself - instead of `--no-first-run`. Without `last_whats_new_version` a "What's new" tab steals the foreground after attaching; without `fre.has_user_seen_fre` Microsoft Edge opens its edge://welcome-edge first-run tab. |
 | Start page       | `about:blank`, unless `args` contain a URL. With no URL Edge opens edge://welcome-new-profile, whose flow closes the window and ends the browser seconds after the launch; Playwright and Puppeteer open `about:blank` for the same reason. A page cannot see how its tab was first opened.                                                                                                            |
 | Remote debugging | A fixed, reserved loopback port. Port `0`, `--remote-debugging-pipe` and `--enable-automation` turn Blink's `AutomationControlled` feature on (so `navigator.webdriver === true`); a fixed port does not, and neither does `--headless` (a hand-started headless Chrome reports `false`), so `headless: true` adds only `--headless=new`.                                                              |
 | Port ownership   | The browser's own `DevTools listening on ws://127.0.0.1:<port>/...` line must match `/json/version`, so a port lost to a race is detected and the launch retried with a new port.                                                                                                                                                                                                                      |
-| Added switches   | None. `--remote-debugging-address` is not passed: DevTools binds to loopback by default.                                                                                                                                                                                                                                                                                                               |
+| Added switches   | The `chrome-for-testing` preset for Chrome for Testing (`defaultRestrictions: []` turns it off), none for any other browser. `--remote-debugging-address` is not passed: DevTools binds to loopback by default.                                                                                                                                                                                        |
 | Host environment | Never modified. Restriction environment variables reach the browser process only.                                                                                                                                                                                                                                                                                                                      |
 | `slowMo`         | `0`.                                                                                                                                                                                                                                                                                                                                                                                                   |
 
@@ -393,33 +398,35 @@ await launchBrowser({ restrictions: ['no-sync', 'no-translate'] });
 await launchBrowser({ restrictions: ['legacy-defaults'] }); // the pre-#103 CHROME_ARGS
 ```
 
-| Restriction                | Effect                                                                                  |
-| -------------------------- | --------------------------------------------------------------------------------------- |
-| `no-first-run`             | `--no-first-run` instead of the sentinel file.                                          |
-| `no-default-browser-check` | `--no-default-browser-check`.                                                           |
-| `no-crash-restore`         | `--disable-session-crashed-bubble --hide-crash-restore-bubble --disable-crash-restore`. |
-| `no-infobars`              | `--disable-infobars` (ignored by current Chrome).                                       |
-| `basic-password-store`     | `--password-store=basic`; real-profile data can no longer be decrypted or migrated.     |
-| `mock-keychain`            | `--use-mock-keychain`; same caveat on macOS.                                            |
-| `no-extensions`            | Disables extensions, background component extensions and default apps.                  |
-| `no-sync`                  | `--disable-sync`.                                                                       |
-| `no-google-services`       | `GOOGLE_API_KEY`/`GOOGLE_DEFAULT_CLIENT_*` = `no` for the browser process only.         |
-| `no-translate`             | `--disable-features=Translate`.                                                         |
-| `no-component-update`      | `--disable-component-update`.                                                           |
-| `no-background-networking` | `--disable-background-networking`.                                                      |
-| `no-popup-blocking`        | `--disable-popup-blocking`.                                                             |
-| `no-phishing-detection`    | `--disable-client-side-phishing-detection`.                                             |
-| `no-https-upgrades`        | `--disable-features=HttpsUpgrades`.                                                     |
-| `no-media-router`          | `--disable-features=MediaRouter,DialMediaRouteProvider,GlobalMediaControls`.            |
-| `no-lens`                  | `--disable-features=LensOverlay`.                                                       |
-| `no-background-throttling` | Keeps hidden tabs at full speed.                                                        |
-| `no-back-forward-cache`    | `--disable-back-forward-cache`.                                                         |
-| `srgb-color-profile`       | `--force-color-profile=srgb`.                                                           |
-| `start-maximized`          | `--start-maximized`.                                                                    |
+| Restriction                     | Effect                                                                                                           |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `no-first-run`                  | `--no-first-run` instead of the sentinel file.                                                                   |
+| `no-default-browser-check`      | `--no-default-browser-check`.                                                                                    |
+| `no-crash-restore`              | `--disable-session-crashed-bubble --hide-crash-restore-bubble --disable-crash-restore`.                          |
+| `no-infobars`                   | `--disable-infobars` (ignored by current Chrome).                                                                |
+| `basic-password-store`          | `--password-store=basic`; real-profile data can no longer be decrypted or migrated.                              |
+| `mock-keychain`                 | `--use-mock-keychain`; same caveat on macOS.                                                                     |
+| `no-chrome-for-testing-infobar` | `--test-type=gpu`: hides Chrome for Testing's "only for automated testing" bar (and the other startup infobars). |
+| `no-extensions`                 | Disables extensions, background component extensions and default apps.                                           |
+| `no-sync`                       | `--disable-sync`.                                                                                                |
+| `no-google-services`            | `GOOGLE_API_KEY`/`GOOGLE_DEFAULT_CLIENT_*` = `no` for the browser process only.                                  |
+| `no-translate`                  | `--disable-features=Translate`.                                                                                  |
+| `no-component-update`           | `--disable-component-update`.                                                                                    |
+| `no-background-networking`      | `--disable-background-networking`.                                                                               |
+| `no-popup-blocking`             | `--disable-popup-blocking`.                                                                                      |
+| `no-phishing-detection`         | `--disable-client-side-phishing-detection`.                                                                      |
+| `no-https-upgrades`             | `--disable-features=HttpsUpgrades`.                                                                              |
+| `no-media-router`               | `--disable-features=MediaRouter,DialMediaRouteProvider,GlobalMediaControls`.                                     |
+| `no-lens`                       | `--disable-features=LensOverlay`.                                                                                |
+| `no-background-throttling`      | Keeps hidden tabs at full speed.                                                                                 |
+| `no-back-forward-cache`         | `--disable-back-forward-cache`.                                                                                  |
+| `srgb-color-profile`            | `--force-color-profile=srgb`.                                                                                    |
+| `start-maximized`               | `--start-maximized`.                                                                                             |
 
-Presets: `legacy-defaults` (the old `CHROME_ARGS`) and `legacy-launch-browser`
+Presets: `legacy-defaults` (the old `CHROME_ARGS`), `legacy-launch-browser`
 (the old `launchBrowser()` defaults, including the Google API key override and
-`Translate`). Repeated `--disable-features`/`--enable-features` switches from
+`Translate`) and `chrome-for-testing` (`no-chrome-for-testing-infobar` and
+`mock-keychain`, the default for Chrome for Testing). Repeated `--disable-features`/`--enable-features` switches from
 restrictions and `args` are merged into one, because Chrome honours only the
 last occurrence.
 

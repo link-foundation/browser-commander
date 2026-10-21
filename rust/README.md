@@ -106,9 +106,19 @@ let options = LaunchOptions::chromiumoxide()
 let result = launch_browser(options).await?;
 ```
 
-By default Browser Commander starts the installed browser the way a person
-would: `--user-data-dir=<fresh temporary profile>
---remote-debugging-port=<reserved port> about:blank` and nothing else (see
+By default Browser Commander starts Chrome for Testing the way a person would,
+never your own Google Chrome unless `channel("chrome")` or `executable_path`
+asks for it: `--test-type=gpu --use-mock-keychain --user-data-dir=<fresh
+temporary profile> --remote-debugging-port=<reserved port> about:blank` and
+nothing else. The browser is the one Playwright or Puppeteer reports through
+Node, else the newest in the Playwright, Puppeteer or Selenium Manager download
+caches (`npx playwright install chromium` installs one). The first two switches
+are the `chrome-for-testing` default restrictions
+(`CHROME_FOR_TESTING_PRESET`), which hide Chrome for Testing's "only for
+automated testing" bar and keep it away from the macOS keychain; any other
+browser gets none, `.default_restrictions(Vec::<String>::new())` turns them
+off, and `LaunchResult::default_restrictions` reports them (see
+[Chrome for Testing by default](https://github.com/link-foundation/browser-commander/blob/main/docs/chrome-for-testing.md) and
 [Launch Command Line and Opt-In Restrictions](https://github.com/link-foundation/browser-commander/blob/main/docs/feature-parity.md#launch-command-line-and-opt-in-restrictions)).
 Switches the library used to add, such as `--password-store=basic`, are opt-in
 `restrictions` (the `legacy-defaults` preset restores the old set).
@@ -343,8 +353,8 @@ never commit cache files, and seed only a dedicated automation profile.
 
 ### Launch and Connect to an Installed Browser
 
-`launch_real_browser()` discovers and starts genuine installed Chrome, Edge,
-Brave, or Chromium with a dedicated profile, waits for its loopback CDP
+`launch_real_browser()` starts Chrome for Testing, or the genuine installed
+Chrome, Edge, Brave, or Chromium a `channel` names, with a dedicated profile, waits for its loopback CDP
 endpoint, and attaches with Chromiumoxide or the Playwright/Puppeteer bridges:
 
 ```rust

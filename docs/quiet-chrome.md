@@ -7,6 +7,12 @@ checks, password/card saving, promotional tabs and the what's-new page. Browser
 Commander normally omits the engines' automation switches; supplying
 `--enable-automation` yourself can bring the automation banner back.
 
+Chrome for Testing, the browser every engine starts by default, also shows an
+"only for automated testing" bar. Its default `chrome-for-testing` restrictions
+(`no-chrome-for-testing-infobar` and `mock-keychain`) hide that bar and keep it
+away from the macOS keychain, in addition to any restrictions you request; see
+[Chrome for Testing by default](chrome-for-testing.md).
+
 `no-crash-restore` includes `SessionRestoreInfobar`. `no-translate` both disables
 the Translate feature and seeds `translate.enabled=false` before launch.
 `disableFeatures` (`disable_features` in Python/Rust), named restrictions and

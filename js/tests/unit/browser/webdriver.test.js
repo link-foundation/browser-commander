@@ -210,6 +210,38 @@ describe('resolveWebDriverExecutable', () => {
     assert.equal(resolved.driverPath, 'C:\\b\\chromedriver.exe');
   });
 
+  it('downloads Chrome for Testing instead of the installed Chrome on request (issue #179)', async () => {
+    const commands = [];
+    const resolved = await resolveWebDriverExecutable({
+      downloadBrowser: true,
+      environment: { PATH: '/bin' },
+      managerPath: '/sm',
+      // A chromedriver on PATH drives the installed Chrome: not used.
+      checkAccess: accessOnly('/bin/chromedriver'),
+      runCommand: async (file, args) => {
+        commands.push([file, ...args]);
+        return managerOutput({
+          driver_path: '/cache/chromedriver',
+          browser_path: '/home/u/.cache/selenium/chrome/linux64/156.0/chrome',
+        });
+      },
+    });
+    assert.deepEqual(commands, [
+      [
+        '/sm',
+        '--browser',
+        'chrome',
+        '--output',
+        'json',
+        '--force-browser-download',
+      ],
+    ]);
+    assert.equal(
+      resolved.browserPath,
+      '/home/u/.cache/selenium/chrome/linux64/156.0/chrome'
+    );
+  });
+
   it('then asks Selenium Manager for a matching driver', async () => {
     const commands = [];
     const resolved = await resolveWebDriverExecutable({

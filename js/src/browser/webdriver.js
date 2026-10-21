@@ -180,6 +180,9 @@ async function findOnPath(name, { environment, platform, checkAccess }) {
  * @param {'chrome'|'firefox'} [options.browser='chrome']
  * @param {string} [options.driverPath] - Explicit driver executable
  * @param {string} [options.executablePath] - Browser the driver must match
+ * @param {boolean} [options.downloadBrowser=false] - Without `executablePath`,
+ *   have Selenium Manager download Chrome for Testing instead of matching the
+ *   installed browser (issue #179); a driver on PATH is then not used
  * @param {Function} [options.runCommand] - command-stream runner (tests)
  * @returns {Promise<{driverPath: string, browserPath: (string|null), source: string}>}
  */
@@ -187,6 +190,7 @@ export async function resolveWebDriverExecutable({
   browser = 'chrome',
   driverPath,
   executablePath,
+  downloadBrowser = false,
   environment = process.env,
   platform = process.platform,
   runCommand = defaultRunCommand,
@@ -219,7 +223,10 @@ export async function resolveWebDriverExecutable({
     };
   }
 
-  const onPath = await findOnPath(name, { environment, platform, checkAccess });
+  const download = downloadBrowser && !executablePath;
+  const onPath =
+    !download &&
+    (await findOnPath(name, { environment, platform, checkAccess }));
   if (onPath) {
     return {
       driverPath: onPath,
@@ -232,6 +239,9 @@ export async function resolveWebDriverExecutable({
   const args = ['--browser', browser, '--output', 'json'];
   if (executablePath) {
     args.push('--browser-path', executablePath);
+  }
+  if (download) {
+    args.push('--force-browser-download');
   }
   const { stdout, code } = await runCommand(manager, args, { check: false });
   let output;
@@ -475,6 +485,9 @@ async function teardown({
  * @param {Object} [options]
  * @param {'chrome'|'firefox'} [options.browser='chrome']
  * @param {string} [options.executablePath] - Browser executable
+ * @param {boolean} [options.downloadBrowser=false] - Chrome only: without
+ *   `executablePath`, start a Chrome for Testing Selenium Manager downloads
+ *   rather than the installed Google Chrome (issue #179)
  * @param {string} [options.driverPath] - chromedriver/geckodriver executable
  * @param {boolean} [options.headless=false]
  * @param {string} [options.userDataDir] - Profile directory; a temporary one is created (and removed on close) when omitted
@@ -604,6 +617,7 @@ async function launchWebDriverOnce(options, dependencies) {
     browser,
     driverPath: requestedDriverPath,
     executablePath,
+    downloadBrowser: options.downloadBrowser,
   });
 
   const defaultRestrictions = launchDefaultRestrictions(

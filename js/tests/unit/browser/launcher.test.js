@@ -335,8 +335,11 @@ describe('launchBrowser', () => {
         { launchWebDriver, loadEngineModule: cftEngine, settleMs: 0 }
       );
       assert.equal(launches[1].executablePath, undefined);
+      assert.equal('downloadBrowser' in launches[1], false);
+      assert.equal('downloadBrowser' in launches[0], false);
 
-      // Without Chrome for Testing Selenium picks its own browser, unchanged.
+      // Without Chrome for Testing of the engines, Selenium Manager downloads
+      // one rather than starting the installed Google Chrome.
       await launchBrowserWithDependencies(
         { engine: 'selenium', launch: 'engine' },
         {
@@ -348,6 +351,7 @@ describe('launchBrowser', () => {
         }
       );
       assert.equal('executablePath' in launches[2], false);
+      assert.equal(launches[2].downloadBrowser, true);
       assert.deepEqual(launches[2].restrictions, []);
     });
 

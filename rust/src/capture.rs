@@ -478,19 +478,43 @@ mod tests {
             height: 1.0,
         });
         for (engine, options) in [
-            (EngineType::Playwright, ScreenshotOptions { clip, ..Default::default() }),
-            (EngineType::Playwright, ScreenshotOptions { full_page: true, ..Default::default() }),
-            (EngineType::Playwright, ScreenshotOptions { hide_caret: true, ..Default::default() }),
+            (
+                EngineType::Playwright,
+                ScreenshotOptions {
+                    clip,
+                    ..Default::default()
+                },
+            ),
+            (
+                EngineType::Playwright,
+                ScreenshotOptions {
+                    full_page: true,
+                    ..Default::default()
+                },
+            ),
+            (
+                EngineType::Playwright,
+                ScreenshotOptions {
+                    hide_caret: true,
+                    ..Default::default()
+                },
+            ),
             (
                 EngineType::Puppeteer,
-                ScreenshotOptions { scale: ScreenshotScale::Css, ..Default::default() },
+                ScreenshotOptions {
+                    scale: ScreenshotScale::Css,
+                    ..Default::default()
+                },
             ),
             (EngineType::Fantoccini, ScreenshotOptions::default()),
             (EngineType::Chromiumoxide, ScreenshotOptions::default()),
         ] {
             let stub = StubEngine::fixed("about:blank").capturing_as(engine, false);
             screenshot(&stub, &options).await.unwrap();
-            assert!(stub.captures().iter().all(|options| !options.stable_viewport));
+            assert!(stub
+                .captures()
+                .iter()
+                .all(|options| !options.stable_viewport));
         }
     }
     #[tokio::test]

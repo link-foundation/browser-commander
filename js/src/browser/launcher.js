@@ -124,6 +124,18 @@ async function engineExecutable(
     .catch(() => undefined);
 }
 
+function seleniumDownloadsBrowser(
+  { browser = 'chrome', channel, executablePath: requested },
+  executablePath
+) {
+  return (
+    browser === 'chrome' &&
+    channel === undefined &&
+    requested === undefined &&
+    !executablePath
+  );
+}
+
 async function launchWithEngine(options, dependencies) {
   if (options.engine === 'selenium') {
     // launchWebDriver adds the defaults of the browser it resolves.
@@ -131,6 +143,11 @@ async function launchWithEngine(options, dependencies) {
     const launched = await (dependencies.launchWebDriver ?? launchWebDriver)({
       ...options,
       ...(executablePath ? { executablePath } : {}),
+      // Without a Chrome for Testing of the engines, Selenium Manager
+      // downloads one rather than starting the user's Google Chrome.
+      ...(seleniumDownloadsBrowser(options, executablePath)
+        ? { downloadBrowser: true }
+        : {}),
       args: [...options.args, ...options.extraArgs],
     });
     return { ...launched, browser: launched.driver };

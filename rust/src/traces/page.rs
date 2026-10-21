@@ -255,8 +255,13 @@ mod tests {
             let page = AdapterTracePage::new(stub.clone());
             assert_eq!(page.screenshot().await, Ok(Some(expected)));
             let captures = stub.captures();
-            assert!(captures.iter().all(|o| o.stable_viewport && o.clip.is_none()));
-            assert_eq!(captures.len(), usize::from(engine != EngineType::Fantoccini));
+            assert!(captures
+                .iter()
+                .all(|o| o.stable_viewport && o.clip.is_none()));
+            assert_eq!(
+                captures.len(),
+                usize::from(engine != EngineType::Fantoccini)
+            );
         }
     }
 

@@ -166,6 +166,27 @@ function launchDependencies(overrides = {}) {
   };
 }
 
+// Resolve through a fake Selenium Manager that answers browserPath.
+async function managerResolve(
+  options,
+  { checkAccess = accessOnly(), browserPath }
+) {
+  const commands = [];
+  const resolved = await resolveWebDriverExecutable({
+    managerPath: '/sm',
+    checkAccess,
+    runCommand: async (file, args) => {
+      commands.push([file, ...args]);
+      return managerOutput({
+        driver_path: '/cache/chromedriver',
+        browser_path: browserPath,
+      });
+    },
+    ...options,
+  });
+  return { commands, resolved };
+}
+
 describe('resolveWebDriverExecutable', () => {
   it('uses an explicit driverPath first', async () => {
     const resolved = await resolveWebDriverExecutable({
@@ -211,21 +232,12 @@ describe('resolveWebDriverExecutable', () => {
   });
 
   it('downloads Chrome for Testing instead of the installed Chrome on request (issue #179)', async () => {
-    const commands = [];
-    const resolved = await resolveWebDriverExecutable({
-      downloadBrowser: true,
-      environment: { PATH: '/bin' },
-      managerPath: '/sm',
+    const cft = '/home/u/.cache/selenium/chrome/linux64/156.0/chrome';
+    const { commands, resolved } = await managerResolve(
+      { downloadBrowser: true, environment: { PATH: '/bin' } },
       // A chromedriver on PATH drives the installed Chrome: not used.
-      checkAccess: accessOnly('/bin/chromedriver'),
-      runCommand: async (file, args) => {
-        commands.push([file, ...args]);
-        return managerOutput({
-          driver_path: '/cache/chromedriver',
-          browser_path: '/home/u/.cache/selenium/chrome/linux64/156.0/chrome',
-        });
-      },
-    });
+      { checkAccess: accessOnly('/bin/chromedriver'), browserPath: cft }
+    );
     assert.deepEqual(commands, [
       [
         '/sm',
@@ -236,27 +248,14 @@ describe('resolveWebDriverExecutable', () => {
         '--force-browser-download',
       ],
     ]);
-    assert.equal(
-      resolved.browserPath,
-      '/home/u/.cache/selenium/chrome/linux64/156.0/chrome'
-    );
+    assert.equal(resolved.browserPath, cft);
   });
 
   it('then asks Selenium Manager for a matching driver', async () => {
-    const commands = [];
-    const resolved = await resolveWebDriverExecutable({
-      executablePath: '/usr/bin/google-chrome',
-      environment: { PATH: '' },
-      managerPath: '/sm',
-      checkAccess: accessOnly(),
-      runCommand: async (file, args) => {
-        commands.push([file, ...args]);
-        return managerOutput({
-          driver_path: '/cache/chromedriver',
-          browser_path: '/usr/bin/google-chrome',
-        });
-      },
-    });
+    const { commands, resolved } = await managerResolve(
+      { executablePath: '/usr/bin/google-chrome', environment: { PATH: '' } },
+      { browserPath: '/usr/bin/google-chrome' }
+    );
     assert.deepEqual(commands, [
       [
         '/sm',

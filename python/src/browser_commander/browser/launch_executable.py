@@ -80,6 +80,31 @@ def is_chrome_for_testing(executable_path: str | None) -> bool:
     )
 
 
+def chrome_for_testing_driver(executable_path: Any) -> str | None:
+    """The ChromeDriver of a Chrome for Testing's own release, else ``None``.
+
+    A ``chromedriver`` on ``PATH`` belongs to the installed Google Chrome and
+    refuses another release, yet Selenium Manager returns it even for a
+    ``--browser-path``, so it is told to skip it. Any other browser is left to
+    Selenium's own lookup (``None``).
+    """
+
+    if not is_chrome_for_testing(executable_path):
+        return None
+    from selenium.webdriver.common import selenium_manager
+
+    paths = selenium_manager.SeleniumManager().binary_paths(
+        [
+            "--browser",
+            "chrome",
+            "--browser-path",
+            str(executable_path),
+            "--skip-driver-in-path",
+        ]
+    )
+    return str(paths["driver_path"])
+
+
 def default_restrictions_for(
     executable_path: str | None, requested: Sequence[str] | None = None
 ) -> list[str]:

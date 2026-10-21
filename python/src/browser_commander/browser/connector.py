@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlparse
 
+from browser_commander.browser.launch_executable import chrome_for_testing_driver
 from browser_commander.browser.launcher import LaunchResult
 from browser_commander.browser.storage_state import (
     StorageStateInput,
@@ -40,6 +41,9 @@ class ConnectOptions:
     url_matchers: list[Any] = field(default_factory=list)
     """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
     ``persist`` and ``conflict``."""
+    executable_path: str | None = None
+    """Selenium: the browser behind the endpoint, so Selenium Manager picks its
+    ChromeDriver rather than the installed Google Chrome's (issue #179)."""
 
 
 def _validate_options(options: ConnectOptions) -> str:
@@ -69,8 +73,12 @@ async def _default_start_playwright() -> Any:
 
 def _default_create_selenium(chrome_options: Any) -> Any:
     from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
 
-    return webdriver.Chrome(options=chrome_options)
+    driver = chrome_for_testing_driver(chrome_options.binary_location)
+    return webdriver.Chrome(
+        service=Service(executable_path=driver), options=chrome_options
+    )
 
 
 def matches_url(matcher: Any, url: str) -> bool:
@@ -264,6 +272,8 @@ async def _connect_selenium(
 
     chrome_options = Options()
     chrome_options.debugger_address = _debugger_address(endpoint)
+    if options.executable_path:
+        chrome_options.binary_location = options.executable_path
     browser = create_selenium(chrome_options)
     try:
         handles = list(browser.window_handles)

@@ -18,8 +18,11 @@ use chromiumoxide::browser::{Browser as CdpBrowser, BrowserConfig};
 use futures::StreamExt;
 
 use crate::browser::browser_process::BrowserCloser;
+use crate::browser::chrome_for_testing::prefer_driven;
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
-use crate::browser::launch_executable::{cached_chrome_for_testing, node_bundled_executable};
+use crate::browser::launch_executable::{
+    cached_chrome_for_testing, chrome_for_testing_not_installed, node_bundled_executable,
+};
 use crate::browser::launcher::{Browser, LaunchOptions, LaunchResult};
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::browser::playwright_driver_page::{PlaywrightDriverPage, PlaywrightLaunch};
@@ -136,46 +139,74 @@ impl BrowserCloser for EngineCloser {
 }
 
 /// The Chrome for Testing the engine starts on its own, or the one a
-/// fantoccini launch is pointed at; `None` when the browser is unknown.
+/// chromiumoxide or fantoccini launch is pointed at; `None` when the browser
+/// is unknown. `cached` lists the Chrome for Testing downloads an engine
+/// finds, newest first, and `bundled` the one a Node engine downloaded.
+///
+/// chromiumoxide and chromedriver would otherwise start the installed Google
+/// Chrome, so without a channel or executable they are given Chrome for
+/// Testing - fantoccini one it has the chromedriver of - and chromiumoxide
+/// fails without one (issue #179).
 ///
 /// Mirrors `engineExecutable` in `js/src/browser/launcher.js`.
-fn engine_executable(options: &LaunchOptions) -> Option<PathBuf> {
+fn engine_executable(
+    options: &LaunchOptions,
+    cached: impl FnOnce(EngineType) -> Vec<PathBuf>,
+    bundled: impl FnOnce(&LaunchOptions) -> Option<PathBuf>,
+) -> Result<Option<PathBuf>> {
     if options.executable_path.is_some() || options.channel.is_some() {
-        return options.executable_path.clone();
+        return Ok(options.executable_path.clone());
     }
-    match options.engine {
+    Ok(match options.engine {
         EngineType::Fantoccini => match options.webdriver.browser {
-            WebDriverBrowser::Chrome => {
-                options.webdriver.browser_executable.clone().or_else(|| {
-                    cached_chrome_for_testing(EngineType::Fantoccini)
-                        .into_iter()
-                        .next()
-                })
-            }
+            WebDriverBrowser::Chrome => options
+                .webdriver
+                .browser_executable
+                .clone()
+                .or_else(|| prefer_driven(cached(EngineType::Fantoccini))),
             _ => None,
         },
-        EngineType::Chromiumoxide => chromiumoxide::detection::default_executable(
-            chromiumoxide::detection::DetectionOptions::default(),
-        )
-        .ok(),
-        EngineType::Playwright | EngineType::Puppeteer => node_bundled_executable(
-            options.engine,
-            options.node_executable.as_deref(),
-            options.node_working_dir.as_deref(),
+        EngineType::Chromiumoxide => Some(
+            cached(EngineType::Chromiumoxide)
+                .into_iter()
+                .next()
+                .ok_or_else(|| chrome_for_testing_not_installed(EngineType::Chromiumoxide))?,
         ),
+        EngineType::Playwright | EngineType::Puppeteer => bundled(options),
+    })
+}
+
+/// The options an engine launch runs with, the browser a fantoccini launch
+/// starts and the default restrictions added (issue #179).
+fn engine_launch_options(
+    options: &LaunchOptions,
+    executable: Option<PathBuf>,
+) -> (LaunchOptions, Option<PathBuf>, Vec<String>) {
+    if options.engine == EngineType::Fantoccini {
+        // launch_webdriver adds the defaults of the browser it is given.
+        return (options.clone(), executable, Vec::new());
     }
+    let (mut effective, default_restrictions) =
+        options.with_default_restrictions(executable.as_deref());
+    if options.engine == EngineType::Chromiumoxide {
+        // chromiumoxide itself would detect the installed Google Chrome.
+        effective.executable_path = effective.executable_path.take().or(executable);
+    }
+    (effective, None, default_restrictions)
 }
 
 /// Launch the browser through the engine.
 pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<LaunchResult> {
-    let executable = engine_executable(options);
-    if options.engine == EngineType::Fantoccini {
-        // launch_webdriver adds the defaults of the browser it is given.
-        return launch(options, executable, Vec::new()).await;
-    }
-    let (effective, default_restrictions) =
-        options.with_default_restrictions(executable.as_deref());
-    launch(&effective, None, default_restrictions).await
+    let executable = engine_executable(options, cached_chrome_for_testing, |options| {
+        node_bundled_executable(
+            options.engine,
+            options.node_executable.as_deref(),
+            options.node_working_dir.as_deref(),
+        )
+    })?;
+    let (effective, webdriver_browser, default_restrictions) =
+        engine_launch_options(options, executable);
+    launch(&effective, webdriver_browser, default_restrictions).await
 }
 
 /// Launch through the engine; `webdriver_browser` is the Chrome for Testing
@@ -508,3 +539,7 @@ async fn set_up_page(
     }
     Ok(downloads)
 }
+
+#[cfg(test)]
+#[path = "engine_launch_tests.rs"]
+mod tests;

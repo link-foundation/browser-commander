@@ -1,0 +1,15 @@
+== main: fantoccini
+Error: Browser launch failed (engine_launch: configuration): webdriver did not create session: session not created: This version of ChromeDriver only supports Chrome version 153
+Current browser version is 156.0.8078.4 with binary path [path]
+
+Caused by:
+    webdriver did not create session: session not created: This version of ChromeDriver only supports Chrome version 153
+    Current browser version is 156.0.8078.4 with binary path [path]
+exit=0
+== main: chromiumoxide
+engine: chromiumoxide
+executable: 
+chrome for testing: false
+default restrictions: []
+user agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36"
+exit=0

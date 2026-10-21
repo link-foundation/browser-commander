@@ -283,10 +283,154 @@ impl CacheLocations {
             .collect()
     }
 
+    /// The chromedrivers Selenium Manager and `@puppeteer/browsers`
+    /// downloaded, with their versions, newest first.
+    pub(crate) fn chromedrivers(&self) -> Vec<(Vec<u64>, PathBuf)> {
+        let platform = self.platform;
+        let name = if platform.is_windows() {
+            "chromedriver.exe"
+        } else {
+            "chromedriver"
+        };
+        let mut drivers: Vec<(Vec<u64>, PathBuf)> = Vec::new();
+        if let Some(root) = self.selenium_root() {
+            let directory = root.join("chromedriver").join(platform.name());
+            drivers.extend(
+                versions(&directory, version_key)
+                    .into_iter()
+                    .map(|(version, directory)| (version, directory.join(name))),
+            );
+        }
+        if let Some(root) = self.puppeteer_root() {
+            let prefix = format!("{}-", platform.puppeteer_name());
+            let archive = format!("chromedriver-{}", platform.name());
+            drivers.extend(
+                versions(&root.join("chromedriver"), |directory| {
+                    directory.strip_prefix(&prefix).and_then(version_key)
+                })
+                .into_iter()
+                .map(|(version, directory)| (version, directory.join(&archive).join(name))),
+            );
+        }
+        drivers.retain(|(_, path)| is_executable_file(path));
+        drivers.sort_by(|left, right| right.0.cmp(&left.0));
+        drivers
+    }
+
     /// Chrome for Testing binaries in each of `caches`, in that order.
     pub(crate) fn find_all(&self, caches: &[ChromeForTestingCache]) -> Vec<PathBuf> {
         caches.iter().flat_map(|cache| self.find(*cache)).collect()
     }
+}
+
+/// The chromedriver Selenium Manager or `@puppeteer/browsers` downloaded for
+/// the same Chrome for Testing release as `executable`, if any: chromedriver
+/// only drives the Chrome version it was built for, and a `chromedriver` on
+/// `PATH` belongs to the installed Google Chrome.
+///
+/// Selenium Manager keeps `<cache>/chrome/<platform>/<version>/chrome` next to
+/// `<cache>/chromedriver/<platform>/<version>/chromedriver`; Puppeteer keeps
+/// `<cache>/chrome/<platform>-<version>/…` next to
+/// `<cache>/chromedriver/<platform>-<version>/chromedriver-<platform>/chromedriver`.
+/// Playwright downloads no chromedriver.
+pub(crate) fn matching_chromedriver(executable: &Path) -> Option<PathBuf> {
+    if !is_chrome_for_testing(executable) {
+        return None;
+    }
+    let name = if executable.extension().is_some_and(|ext| ext == "exe") {
+        "chromedriver.exe"
+    } else {
+        "chromedriver"
+    };
+    let chrome = executable
+        .parent()?
+        .ancestors()
+        .find(|ancestor| ancestor.file_name().is_some_and(|name| name == "chrome"))?;
+    let mut release = executable.strip_prefix(chrome).ok()?.components();
+    let first = release.next()?.as_os_str().to_owned();
+    let drivers = chrome.parent()?.join("chromedriver").join(first);
+    let selenium = release
+        .next()
+        .map(|version| drivers.join(version.as_os_str()).join(name));
+    let puppeteer = std::fs::read_dir(&drivers)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with("chromedriver-")
+        })
+        .map(|entry| entry.path().join(name));
+    selenium
+        .into_iter()
+        .chain(puppeteer)
+        .find(|path| is_executable_file(path))
+}
+
+/// The chromedriver that drives the Chrome for Testing `executable`: the one
+/// of its own release, else the newest cached chromedriver of its major
+/// version - chromedriver checks only that, as Selenium Manager does when it
+/// pairs them. `major` reads the browser's major version and `locations`
+/// are the caches searched.
+pub(crate) fn chromedriver_for_with(
+    executable: &Path,
+    major: impl FnOnce(&Path) -> Option<u64>,
+    locations: Option<&CacheLocations>,
+) -> Option<PathBuf> {
+    if let Some(driver) = matching_chromedriver(executable) {
+        return Some(driver);
+    }
+    if !is_chrome_for_testing(executable) {
+        return None;
+    }
+    let locations = locations?;
+    let major = major(executable)?;
+    locations
+        .chromedrivers()
+        .into_iter()
+        .find(|(version, _)| version.first() == Some(&major))
+        .map(|(_, driver)| driver)
+}
+
+/// [`chromedriver_for_with`] the caches of this machine.
+pub(crate) fn chromedriver_for(executable: &Path) -> Option<PathBuf> {
+    chromedriver_for_with(
+        executable,
+        browser_major_version,
+        CacheLocations::from_environment().as_ref(),
+    )
+}
+
+/// The major version of the Chrome at `executable`: on Windows from the
+/// version directory next to `chrome.exe` (which prints no `--version`),
+/// elsewhere from `--version` ("Google Chrome for Testing 131.0.6778.85").
+fn browser_major_version(executable: &Path) -> Option<u64> {
+    let major = |text: &str| text.split('.').next()?.parse::<u64>().ok();
+    if cfg!(windows) {
+        return versions(executable.parent()?, version_key)
+            .into_iter()
+            .find_map(|(version, _)| version.first().copied());
+    }
+    let output = crate::utilities::run_command_blocking(
+        &executable.to_string_lossy(),
+        &["--version"],
+        crate::utilities::RunCommandOptions::default(),
+    )
+    .ok()?;
+    major(output.stdout.split_whitespace().last()?)
+}
+
+/// The first of `candidates` that has the [`matching_chromedriver`] of its
+/// release, else the first: fantoccini drives Chrome for Testing through
+/// chromedriver.
+pub(crate) fn prefer_driven(candidates: Vec<PathBuf>) -> Option<PathBuf> {
+    candidates
+        .iter()
+        .find(|candidate| matching_chromedriver(candidate).is_some())
+        .or_else(|| candidates.first())
+        .cloned()
 }
 
 /// A dotted version (`131.0.6778.204`) or revision (`1248`) as numbers, so
@@ -297,8 +441,9 @@ fn version_key(text: &str) -> Option<Vec<u64>> {
         .collect::<Option<Vec<_>>>()
 }
 
-/// The directories in `root` whose name `key` parses, newest first.
-fn newest_first(root: &Path, key: impl Fn(&str) -> Option<Vec<u64>>) -> Vec<PathBuf> {
+/// The directories in `root` whose name `key` parses, with that version,
+/// newest first.
+fn versions(root: &Path, key: impl Fn(&str) -> Option<Vec<u64>>) -> Vec<(Vec<u64>, PathBuf)> {
     let Ok(entries) = std::fs::read_dir(root) else {
         return Vec::new();
     };
@@ -310,7 +455,15 @@ fn newest_first(root: &Path, key: impl Fn(&str) -> Option<Vec<u64>>) -> Vec<Path
         })
         .collect();
     versions.sort_by(|left, right| right.0.cmp(&left.0));
-    versions.into_iter().map(|(_, path)| path).collect()
+    versions
+}
+
+/// The directories in `root` whose name `key` parses, newest first.
+fn newest_first(root: &Path, key: impl Fn(&str) -> Option<Vec<u64>>) -> Vec<PathBuf> {
+    versions(root, key)
+        .into_iter()
+        .map(|(_, path)| path)
+        .collect()
 }
 
 #[cfg(test)]

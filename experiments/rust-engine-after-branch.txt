@@ -1,0 +1,15 @@
+# The same, built from this branch: both engines start Chrome for Testing 156 with its defaults.
+== branch: fantoccini
+engine: fantoccini
+executable: /home/box/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome
+chrome for testing: true
+default restrictions: ["no-chrome-for-testing-infobar", "mock-keychain"]
+user agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+exit=0
+== branch: chromiumoxide
+engine: chromiumoxide
+executable: /home/box/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome
+chrome for testing: true
+default restrictions: ["no-chrome-for-testing-infobar", "mock-keychain"]
+user agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+exit=0

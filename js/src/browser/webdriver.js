@@ -230,9 +230,9 @@ export async function resolveWebDriverExecutable({
   const download = downloadBrowser && !executablePath;
   // A driver on PATH belongs to an installed browser; Chrome for Testing gets
   // the driver of its own release from Selenium Manager (issue #179).
+  const ownDriver = download || isChromeForTesting(executablePath);
   const onPath =
-    !download &&
-    !isChromeForTesting(executablePath) &&
+    !ownDriver &&
     (await findOnPath(name, { environment, platform, checkAccess }));
   if (onPath) {
     return {
@@ -247,6 +247,7 @@ export async function resolveWebDriverExecutable({
     name,
     executablePath,
     download,
+    ownDriver,
     environment,
     platform,
     runCommand,
@@ -260,6 +261,7 @@ async function askSeleniumManager({
   name,
   executablePath,
   download,
+  ownDriver,
   environment,
   platform,
   runCommand,
@@ -273,6 +275,8 @@ async function askSeleniumManager({
     'json',
     ...(executablePath ? ['--browser-path', executablePath] : []),
     ...(download ? ['--force-browser-download'] : []),
+    // Selenium Manager itself prefers a driver on PATH, whatever its release.
+    ...(ownDriver ? ['--skip-driver-in-path'] : []),
   ];
   const { stdout, code } = await runCommand(manager, args, { check: false });
   let output;

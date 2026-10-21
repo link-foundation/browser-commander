@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlparse
 
+from browser_commander.browser.launch_executable import chrome_for_testing_driver
 from browser_commander.browser.launcher import LaunchResult
 from browser_commander.browser.storage_state import (
     StorageStateInput,
@@ -72,8 +73,12 @@ async def _default_start_playwright() -> Any:
 
 def _default_create_selenium(chrome_options: Any) -> Any:
     from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
 
-    return webdriver.Chrome(options=chrome_options)
+    driver = chrome_for_testing_driver(chrome_options.binary_location)
+    return webdriver.Chrome(
+        service=Service(executable_path=driver), options=chrome_options
+    )
 
 
 def matches_url(matcher: Any, url: str) -> bool:

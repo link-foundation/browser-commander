@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import browser_commander
+from browser_commander.browser import connector, launcher
 from browser_commander.browser.connector import (
     ConnectOptions,
     connect_browser_with_dependencies,
@@ -214,6 +215,59 @@ async def test_selenium_connect_gives_selenium_manager_the_browser_path() -> Non
     chrome_options = create_selenium.call_args.args[0]
     assert chrome_options.debugger_address == "127.0.0.1:40179"
     assert chrome_options.binary_location == PLAYWRIGHT_CFT
+
+
+class _SeleniumManagerStub:
+    def __init__(self, calls: list[list[str]]) -> None:
+        self._calls = calls
+
+    def binary_paths(self, args: list[str]) -> dict[str, str]:
+        self._calls.append(args)
+        return {"driver_path": "/cache/chromedriver", "browser_path": args[3]}
+
+
+@pytest.mark.parametrize("module", [launcher, connector])
+@pytest.mark.parametrize(
+    ("executable", "driver"),
+    [
+        # Selenium Manager prefers a chromedriver on PATH even for another
+        # release (run 39651456089: ChromeDriver 155 for Chrome 153), so the
+        # driver of Chrome for Testing is resolved without it.
+        (PLAYWRIGHT_CFT, "/cache/chromedriver"),
+        # Any other browser is left to Selenium's own lookup (no driver path).
+        (GOOGLE_CHROME, ""),
+        (None, ""),
+    ],
+)
+def test_selenium_drives_chrome_for_testing_with_its_own_chromedriver(
+    monkeypatch: pytest.MonkeyPatch, module: Any, executable: Any, driver: Any
+) -> None:
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.common import selenium_manager
+
+    calls: list[list[str]] = []
+    monkeypatch.setattr(
+        selenium_manager, "SeleniumManager", lambda: _SeleniumManagerStub(calls)
+    )
+    chrome = MagicMock()
+    monkeypatch.setattr(webdriver, "Chrome", chrome)
+    chrome_options = Options()
+    if executable:
+        chrome_options.binary_location = executable
+    if module is launcher:
+        module._default_create_selenium(chrome_options, None)
+    else:
+        module._default_create_selenium(chrome_options)
+    assert chrome.call_args.kwargs["service"].path == driver
+    expected = [
+        "--browser",
+        "chrome",
+        "--browser-path",
+        PLAYWRIGHT_CFT,
+        "--skip-driver-in-path",
+    ]
+    assert calls == ([expected] if driver else [])
 
 
 @pytest.mark.parametrize(

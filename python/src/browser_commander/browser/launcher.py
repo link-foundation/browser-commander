@@ -25,6 +25,7 @@ from typing import Any, Callable, Literal
 
 from browser_commander.browser.launch_executable import (
     bundled_chrome_for_testing,
+    chrome_for_testing_driver,
     default_restrictions_for,
     resolve_launch_executable,
 )
@@ -328,7 +329,10 @@ def _default_create_selenium(chrome_options: Any, service_env: Any) -> Any:
     from selenium import webdriver
     from selenium.webdriver.chrome.service import Service
 
-    service = Service(env=service_env) if service_env is not None else Service()
+    service = Service(
+        executable_path=chrome_for_testing_driver(chrome_options.binary_location),
+        env=service_env,
+    )
     return webdriver.Chrome(service=service, options=chrome_options)
 
 

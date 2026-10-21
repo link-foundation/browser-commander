@@ -237,16 +237,18 @@ describe('resolveWebDriverExecutable', () => {
 
   // A chromedriver on PATH drives the installed Google Chrome: never used
   // for a Chrome for Testing that is downloaded or given (issue #179).
+  // Selenium Manager returns a PATH driver of another release too, so it is
+  // told to skip it (run 39651456089: ChromeDriver 155 for Chrome 153).
   for (const [title, options, managerArgs] of [
     [
       'downloads Chrome for Testing instead of the installed Chrome on request',
       { downloadBrowser: true },
-      ['--force-browser-download'],
+      ['--force-browser-download', '--skip-driver-in-path'],
     ],
     [
       'matches Chrome for Testing with its own driver, not the one on PATH',
       { executablePath: PLAYWRIGHT_CFT },
-      ['--browser-path', PLAYWRIGHT_CFT],
+      ['--browser-path', PLAYWRIGHT_CFT, '--skip-driver-in-path'],
     ],
   ]) {
     it(`${title} (issue #179)`, async () => {

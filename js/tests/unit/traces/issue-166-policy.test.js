@@ -244,7 +244,7 @@ describe('opt-in recording policy (issue #166)', { timeout: 15000 }, () => {
     await fixture(async ({ root }) => {
       await assert.rejects(
         launchBrowserWithDependencies(
-          { debug: { directory: root } },
+          { channel: 'chrome', debug: { directory: root } },
           {
             resolveSystem: async () => '/usr/bin/google-chrome',
             launchRealBrowser: async () => {

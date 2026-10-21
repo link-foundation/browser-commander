@@ -1,6 +1,8 @@
-import { describe, it } from 'node:test';
+import { after, describe, it } from 'node:test';
 import assert from 'node:assert';
-import { access } from 'node:fs/promises';
+import { access, chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 import {
   launchBrowser,
@@ -52,21 +54,57 @@ function fakeRealLauncher(calls, { engine = 'playwright' } = {}) {
 
 const systemChrome = async () => '/usr/bin/google-chrome';
 
+// An executable laid out like the Chrome for Testing Playwright downloads.
+const cftRoot = await mkdtemp(path.join(tmpdir(), 'browser-commander-cft-'));
+const cftChrome = path.join(
+  cftRoot,
+  'chromium-1248',
+  'chrome-linux64',
+  'chrome'
+);
+await mkdir(path.dirname(cftChrome), { recursive: true });
+await writeFile(cftChrome, '#!/bin/sh\n');
+await chmod(cftChrome, 0o755);
+after(() => rm(cftRoot, { recursive: true, force: true }));
+const cftEngine = async () => ({ executablePath: () => cftChrome });
+const noSystemChrome = async () => {
+  throw new Error('the installed Google Chrome must not be resolved');
+};
+
+// A real launch with recorded calls: the result and launchRealBrowser's options.
+async function realLaunch(options, dependencies, calls = []) {
+  const result = await launchBrowserWithDependencies(options, {
+    launchRealBrowser: fakeRealLauncher(calls),
+    settleMs: 0,
+    ...dependencies,
+  });
+  const [, launched] = calls.find(([name]) => name === 'launchRealBrowser');
+  return [result, launched];
+}
+
 describe('launchBrowser', () => {
-  it('starts the real browser by default, with nothing added (issue #103)', async () => {
+  it('starts Chrome for Testing by default, never the installed Google Chrome (issue #179)', async () => {
+    const [, options] = await realLaunch(
+      {},
+      { resolveSystem: noSystemChrome, loadEngineModule: cftEngine }
+    );
+    assert.equal(options.executablePath, cftChrome);
+    // No channel is invented: the launch is not Google Chrome's.
+    assert.equal('channel' in options, false);
+    // The Chrome for Testing defaults are added by launchRealBrowser.
+    assert.deepEqual(options.restrictions, []);
+    assert.equal('defaultRestrictions' in options, false);
+  });
+
+  it('starts the requested Google Chrome with nothing added (issue #103)', async () => {
     const calls = [];
     const googleBefore = process.env.GOOGLE_API_KEY;
 
-    const result = await launchBrowserWithDependencies(
-      {},
-      {
-        launchRealBrowser: fakeRealLauncher(calls),
-        resolveSystem: systemChrome,
-        settleMs: 0,
-      }
+    const [result, options] = await realLaunch(
+      { channel: 'chrome' },
+      { resolveSystem: systemChrome },
+      calls
     );
-
-    const [, options] = calls.find(([name]) => name === 'launchRealBrowser');
     assert.equal(options.engine, 'playwright');
     assert.equal(options.executablePath, '/usr/bin/google-chrome');
     assert.equal('slowMo' in options, false);
@@ -91,7 +129,7 @@ describe('launchBrowser', () => {
       { engine: 'puppeteer', restrictions: ['no-sync'], slowMo: 20 },
       {
         launchRealBrowser: fakeRealLauncher(calls, { engine: 'puppeteer' }),
-        resolveSystem: systemChrome,
+        loadEngineModule: cftEngine,
         settleMs: 0,
       }
     );
@@ -109,7 +147,7 @@ describe('launchBrowser', () => {
       { colorScheme: 'dark' },
       {
         launchRealBrowser: fakeRealLauncher(calls),
-        resolveSystem: systemChrome,
+        loadEngineModule: cftEngine,
         settleMs: 0,
       }
     );
@@ -128,7 +166,7 @@ describe('launchBrowser', () => {
           { fingerprint: { timezone: 'Not/AZone' } },
           {
             launchRealBrowser: fakeRealLauncher(calls),
-            resolveSystem: systemChrome,
+            loadEngineModule: cftEngine,
             settleMs: 0,
           }
         ),
@@ -149,6 +187,10 @@ describe('launchBrowser', () => {
     await assert.rejects(
       () => launchBrowser({ restrictions: ['no-such-restriction'] }),
       /Unknown launch restriction "no-such-restriction"/
+    );
+    await assert.rejects(
+      () => launchBrowser({ defaultRestrictions: ['no-such-default'] }),
+      /Unknown launch restriction "no-such-default"/
     );
   });
 
@@ -233,6 +275,83 @@ describe('launchBrowser', () => {
       assert.deepEqual(calls.at(-1), ['browser.close']);
     });
 
+    it('adds the Chrome for Testing defaults to its engine launch (issue #179)', async () => {
+      const launchWith = async (options, executablePath) => {
+        const calls = [];
+        const engine = {
+          ...fakePlaywright(calls),
+          executablePath: () => executablePath,
+        };
+        const result = await launchBrowserWithDependencies(
+          { launch: 'engine', ...options },
+          { loadEngineModule: async () => engine, settleMs: 0 }
+        );
+        await result.close();
+        return { args: calls[0][2].args, defaults: result.defaultRestrictions };
+      };
+
+      const cft = await launchWith({}, cftChrome);
+      assert.deepEqual(cft.defaults, [
+        'no-chrome-for-testing-infobar',
+        'mock-keychain',
+      ]);
+      assert.ok(cft.args.includes('--test-type=gpu'));
+      assert.ok(cft.args.includes('--use-mock-keychain'));
+
+      for (const [options, executablePath] of [
+        [{}, '/home/u/.cache/ms-playwright/chromium-1100/chrome-linux/chrome'],
+        [{ channel: 'chrome' }, cftChrome],
+        [{ defaultRestrictions: [] }, cftChrome],
+      ]) {
+        const other = await launchWith(options, executablePath);
+        assert.deepEqual(other.defaults, [], JSON.stringify(options));
+        assert.equal(other.args.includes('--test-type=gpu'), false);
+        assert.equal(other.args.includes('--use-mock-keychain'), false);
+      }
+    });
+
+    it("points a Selenium launch at the engines' Chrome for Testing (issue #179)", async () => {
+      const launches = [];
+      const launchWebDriver = async (options) => {
+        launches.push(options);
+        return { driver: {}, page: fakePage(), close: async () => {} };
+      };
+      await launchBrowserWithDependencies(
+        {
+          engine: 'selenium',
+          launch: 'engine',
+          restrictions: ['no-sync'],
+          defaultRestrictions: ['mock-keychain'],
+        },
+        { launchWebDriver, loadEngineModule: cftEngine, settleMs: 0 }
+      );
+      assert.equal(launches[0].executablePath, cftChrome);
+      // launchWebDriver adds the defaults for the browser it resolves.
+      assert.deepEqual(launches[0].restrictions, ['no-sync']);
+      assert.deepEqual(launches[0].defaultRestrictions, ['mock-keychain']);
+
+      // An installed browser asked for by channel is left to Selenium.
+      await launchBrowserWithDependencies(
+        { engine: 'selenium', launch: 'engine', channel: 'chrome' },
+        { launchWebDriver, loadEngineModule: cftEngine, settleMs: 0 }
+      );
+      assert.equal(launches[1].executablePath, undefined);
+
+      // Without Chrome for Testing Selenium picks its own browser, unchanged.
+      await launchBrowserWithDependencies(
+        { engine: 'selenium', launch: 'engine' },
+        {
+          launchWebDriver,
+          loadEngineModule: async () => ({
+            executablePath: () => '/nonexistent',
+          }),
+          settleMs: 0,
+        }
+      );
+      assert.equal('executablePath' in launches[2], false);
+      assert.deepEqual(launches[2].restrictions, []);
+    });
+
     it("leaves Ctrl+C to the caller with interruption: 'caller' (#174)", async () => {
       for (const [interruption, expected] of [
         [undefined, undefined],
@@ -279,33 +398,38 @@ describe('resolveLaunchExecutable', () => {
     ]);
   });
 
-  it("falls back to the engine's downloaded Chromium without an installed Chrome", async () => {
-    const notInstalled = async () => {
-      throw new Error('Chrome is not installed');
-    };
+  it("starts the engine's Chrome for Testing, never the installed Google Chrome", async () => {
     const executable = await resolveLaunchExecutable(
       { engine: 'playwright' },
-      {
-        resolveSystem: notInstalled,
-        loadEngineModule: async () => ({
-          executablePath: () => process.execPath,
-        }),
-      }
+      { resolveSystem: noSystemChrome, loadEngineModule: cftEngine }
     );
-    assert.equal(executable, process.execPath);
+    assert.equal(executable, cftChrome);
+  });
 
+  it('says how to install Chrome for Testing or ask for Google Chrome without it', async () => {
+    const missing = async () => ({
+      executablePath: () => '/nonexistent/chrome',
+    });
     await assert.rejects(
       () =>
         resolveLaunchExecutable(
           { engine: 'playwright' },
+          { resolveSystem: noSystemChrome, loadEngineModule: missing }
+        ),
+      /Chrome for Testing is not installed for playwright: run `npx playwright install chromium`, or pass channel: 'chrome'/
+    );
+    await assert.rejects(
+      () =>
+        resolveLaunchExecutable(
+          { engine: 'selenium' },
           {
-            resolveSystem: notInstalled,
-            loadEngineModule: async () => ({
-              executablePath: () => '/nonexistent/chrome',
-            }),
+            resolveSystem: noSystemChrome,
+            loadEngineModule: async () => {
+              throw new Error('not installed');
+            },
           }
         ),
-      /Chrome is not installed/
+      /run `npx playwright install chromium` or `npx puppeteer browsers install chrome`/
     );
   });
 });

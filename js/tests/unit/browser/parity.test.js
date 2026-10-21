@@ -264,6 +264,25 @@ describe('measureParity', () => {
     );
   });
 
+  it("accepts Chrome for Testing's default switches as requested (issue #179)", async () => {
+    const { session, dependencies } = fakes({
+      candidateCommandLine: `${CHROME} --user-data-dir=/tmp/c --remote-debugging-port=2 --test-type=gpu --use-mock-keychain about:blank`,
+    });
+    session.args = [
+      '--user-data-dir=/tmp/c',
+      '--remote-debugging-port=2',
+      '--test-type=gpu',
+      '--use-mock-keychain',
+    ];
+    session.defaultRestrictions = [
+      'no-chrome-for-testing-infobar',
+      'mock-keychain',
+    ];
+    const report = await measureParity({}, dependencies);
+    assert.equal(report.ok, true);
+    assert.deepEqual(report.unlisted, []);
+  });
+
   it('measures a provided session and leaves it open', async () => {
     const { calls, session, dependencies } = fakes({
       candidateCommandLine: `${CHROME} --user-data-dir=/tmp/c --remote-debugging-port=2 about:blank`,

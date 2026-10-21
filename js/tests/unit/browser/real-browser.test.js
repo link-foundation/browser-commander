@@ -516,6 +516,58 @@ describe('launchAndConnectRealBrowser', () => {
     await result.close();
   });
 
+  it('adds the Chrome for Testing defaults to its command line only (issue #179)', async () => {
+    const cft =
+      '/home/u/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome';
+    const launch = async (executablePath, options = {}) => {
+      let spawnedArgs;
+      const result = await launchAndConnectRealBrowserWithDependencies(
+        { closeTimeout: 50, ...options },
+        {
+          resolveExecutable: async () => executablePath,
+          reservePort: async () => 40006,
+          spawnBrowser: (_executablePath, args) => {
+            spawnedArgs = args;
+            return fakeProcess([]);
+          },
+          waitForEndpoint: async () => 'http://127.0.0.1:40006',
+          connect: async () => ({ browser: null, page: null }),
+        }
+      );
+      await result.close();
+      return { args: spawnedArgs, defaults: result.defaultRestrictions };
+    };
+    const defaultSwitches = (args) =>
+      args.filter((arg) =>
+        ['--test-type=gpu', '--use-mock-keychain'].includes(arg)
+      );
+
+    const testing = await launch(cft);
+    assert.deepEqual(testing.defaults, [
+      'no-chrome-for-testing-infobar',
+      'mock-keychain',
+    ]);
+    assert.deepEqual(defaultSwitches(testing.args), [
+      '--test-type=gpu',
+      '--use-mock-keychain',
+    ]);
+
+    // Google Chrome keeps the clean command line of issue #103.
+    const chrome = await launch('/opt/google/chrome');
+    assert.deepEqual(chrome.defaults, []);
+    assert.deepEqual(defaultSwitches(chrome.args), []);
+
+    // defaultRestrictions replaces the defaults; [] turns them off.
+    const off = await launch(cft, { defaultRestrictions: [] });
+    assert.deepEqual(defaultSwitches(off.args), []);
+    const keychainOnly = await launch(cft, {
+      defaultRestrictions: ['mock-keychain'],
+    });
+    assert.deepEqual(defaultSwitches(keychainOnly.args), [
+      '--use-mock-keychain',
+    ]);
+  });
+
   it('terminates the spawned browser when connection fails', async () => {
     temporaryDirectory = await makeDedicatedProfile();
     let killed = false;

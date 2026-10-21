@@ -187,6 +187,10 @@ async function managerResolve(
   return { commands, resolved };
 }
 
+const SELENIUM_CFT = '/home/u/.cache/selenium/chrome/linux64/156.0/chrome';
+const PLAYWRIGHT_CFT =
+  '/home/u/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
+
 describe('resolveWebDriverExecutable', () => {
   it('uses an explicit driverPath first', async () => {
     const resolved = await resolveWebDriverExecutable({
@@ -231,40 +235,33 @@ describe('resolveWebDriverExecutable', () => {
     assert.equal(resolved.driverPath, 'C:\\b\\chromedriver.exe');
   });
 
-  it('downloads Chrome for Testing instead of the installed Chrome on request (issue #179)', async () => {
-    const cft = '/home/u/.cache/selenium/chrome/linux64/156.0/chrome';
-    const { commands, resolved } = await managerResolve(
-      { downloadBrowser: true, environment: { PATH: '/bin' } },
-      // A chromedriver on PATH drives the installed Chrome: not used.
-      { checkAccess: accessOnly('/bin/chromedriver'), browserPath: cft }
-    );
-    assert.deepEqual(commands, [
-      [
-        '/sm',
-        '--browser',
-        'chrome',
-        '--output',
-        'json',
-        '--force-browser-download',
-      ],
-    ]);
-    assert.equal(resolved.browserPath, cft);
-  });
-
-  it('matches Chrome for Testing with its own driver, not the one on PATH (issue #179)', async () => {
-    const cft =
-      '/home/u/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
-    const { commands, resolved } = await managerResolve(
-      { executablePath: cft, environment: { PATH: '/bin' } },
-      // The chromedriver on PATH belongs to the installed Google Chrome.
-      { checkAccess: accessOnly('/bin/chromedriver'), browserPath: cft }
-    );
-    assert.deepEqual(commands, [
-      ['/sm', '--browser', 'chrome', '--output', 'json', '--browser-path', cft],
-    ]);
-    assert.equal(resolved.source, 'selenium-manager');
-    assert.equal(resolved.browserPath, cft);
-  });
+  // A chromedriver on PATH drives the installed Google Chrome: never used
+  // for a Chrome for Testing that is downloaded or given (issue #179).
+  for (const [title, options, managerArgs] of [
+    [
+      'downloads Chrome for Testing instead of the installed Chrome on request',
+      { downloadBrowser: true },
+      ['--force-browser-download'],
+    ],
+    [
+      'matches Chrome for Testing with its own driver, not the one on PATH',
+      { executablePath: PLAYWRIGHT_CFT },
+      ['--browser-path', PLAYWRIGHT_CFT],
+    ],
+  ]) {
+    it(`${title} (issue #179)`, async () => {
+      const cft = options.executablePath ?? SELENIUM_CFT;
+      const { commands, resolved } = await managerResolve(
+        { ...options, environment: { PATH: '/bin' } },
+        { checkAccess: accessOnly('/bin/chromedriver'), browserPath: cft }
+      );
+      assert.deepEqual(commands, [
+        ['/sm', '--browser', 'chrome', '--output', 'json', ...managerArgs],
+      ]);
+      assert.equal(resolved.source, 'selenium-manager');
+      assert.equal(resolved.browserPath, cft);
+    });
+  }
 
   it('then asks Selenium Manager for a matching driver', async () => {
     const { commands, resolved } = await managerResolve(

@@ -189,6 +189,7 @@ async fn native_snapshot_launches_selected_profile_in_all_cdp_engines() -> anyho
     use browser_commander::{launch_real_browser, launch_snapshot, EngineType, RealBrowserOptions};
     let source_path = create_temporary_user_data_dir(None)?;
     let source_options = RealBrowserOptions {
+        channel: Some("chrome".into()),
         user_data_dir: Some(source_path.clone()),
         profile_directory: "Profile 1".into(),
         headless: true,

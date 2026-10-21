@@ -10,10 +10,15 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 
 import browser_commander
+from browser_commander.browser.connector import (
+    ConnectOptions,
+    connect_browser_with_dependencies,
+)
 from browser_commander.browser.launch_executable import (
     CHROME_FOR_TESTING_RESTRICTIONS,
     default_restrictions_for,
@@ -146,7 +151,8 @@ async def _launch_real(
         migrated.update(migrate_options)
         return {"migrated": {}, "skipped": [], "warnings": [], "cookies": []}
 
-    async def connect(_options: Any) -> LaunchResult:
+    async def connect(connect_options: Any) -> LaunchResult:
+        spawned["connect"] = connect_options
         return LaunchResult(browser=None, page=None)
 
     result = await launch_real_browser_with_dependencies(
@@ -161,6 +167,7 @@ async def _launch_real(
     )
     assert result.close is not None
     await result.close()
+    result.connect_options = spawned["connect"]
     return result, spawned["args"], migrated
 
 
@@ -185,6 +192,28 @@ async def test_a_real_launch_of_google_chrome_or_an_opt_out_adds_nothing() -> No
         assert "--test-type=gpu" not in args
         assert "--use-mock-keychain" not in args
         assert result.default_restrictions == []
+
+
+async def test_selenium_attaches_with_the_driver_of_the_started_browser() -> None:
+    # Selenium Manager would otherwise match ChromeDriver to the installed
+    # Google Chrome, which refuses to drive Chrome for Testing.
+    result, _, _ = await _launch_real(PLAYWRIGHT_CFT, engine="selenium")
+    assert result.connect_options.executable_path == PLAYWRIGHT_CFT
+
+
+async def test_selenium_connect_gives_selenium_manager_the_browser_path() -> None:
+    create_selenium = MagicMock(return_value=MagicMock())
+    await connect_browser_with_dependencies(
+        ConnectOptions(
+            engine="selenium",
+            cdp_endpoint="http://127.0.0.1:40179",
+            executable_path=PLAYWRIGHT_CFT,
+        ),
+        create_selenium=create_selenium,
+    )
+    chrome_options = create_selenium.call_args.args[0]
+    assert chrome_options.debugger_address == "127.0.0.1:40179"
+    assert chrome_options.binary_location == PLAYWRIGHT_CFT
 
 
 @pytest.mark.parametrize(

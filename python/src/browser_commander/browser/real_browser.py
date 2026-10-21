@@ -846,6 +846,10 @@ async def launch_real_browser_with_dependencies(
                     storage_state=options.storage_state,
                     verbose=options.verbose,
                     downloads=options.downloads,
+                    # ChromeDriver must match the browser just started (#179).
+                    executable_path=executable_path
+                    if options.engine == "selenium"
+                    else None,
                 )
             )
         )

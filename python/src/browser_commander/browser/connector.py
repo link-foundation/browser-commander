@@ -40,6 +40,9 @@ class ConnectOptions:
     url_matchers: list[Any] = field(default_factory=list)
     """Manage downloads: ``True`` for defaults, or a mapping with ``directory``,
     ``persist`` and ``conflict``."""
+    executable_path: str | None = None
+    """Selenium: the browser behind the endpoint, so Selenium Manager picks its
+    ChromeDriver rather than the installed Google Chrome's (issue #179)."""
 
 
 def _validate_options(options: ConnectOptions) -> str:
@@ -264,6 +267,8 @@ async def _connect_selenium(
 
     chrome_options = Options()
     chrome_options.debugger_address = _debugger_address(endpoint)
+    if options.executable_path:
+        chrome_options.binary_location = options.executable_path
     browser = create_selenium(chrome_options)
     try:
         handles = list(browser.window_handles)

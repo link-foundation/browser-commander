@@ -1,4 +1,3 @@
-import { access } from 'node:fs/promises';
 import { launchFailure } from './launch-diagnostics.js';
 import {
   installSessionPersistence,
@@ -20,9 +19,12 @@ import {
   configureUserDataDir,
   removeUserDataDir,
 } from './profile-directory.js';
+import {
+  defaultRestrictionsFor,
+  resolveLaunchExecutable,
+} from './launch-executable.js';
 import { launchRealBrowser } from './real-browser.js';
 import { resolveRestrictions } from './restrictions.js';
-import { resolveSystemBrowserExecutable } from './system-browser.js';
 import { applyFingerprint } from '../fingerprint/apply.js';
 import { attachDownloads } from '../downloads/attach.js';
 import { launchWebDriver } from './webdriver.js';
@@ -35,6 +37,8 @@ import {
   restoreWebDriverStorageState,
 } from './storage-state.js';
 import { interruptionMode } from '../utilities/subprocess.js';
+
+export { resolveLaunchExecutable };
 
 /** How `launchBrowser` starts the browser (issue #103). */
 export const LAUNCH_MODES = Object.freeze(['real', 'engine']);
@@ -55,48 +59,6 @@ function validateLaunchMode({ engine, launch, attach }) {
     throw new TypeError(
       "attach needs launch: 'real'; an engine launch starts its own profile"
     );
-  }
-}
-
-async function isExecutable(file) {
-  try {
-    await access(file);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Pick the browser binary for a real launch.
- *
- * An explicit `executablePath` or `channel` is honoured as given. Without
- * either, the installed Google Chrome is preferred - it is the browser a
- * person would start - and the engine's own downloaded Chromium is the
- * fallback, so a machine with only `npx playwright install` still works. The
- * binary is spawned by Browser Commander either way, with the same clean
- * command line.
- */
-export async function resolveLaunchExecutable(
-  { engine, channel, executablePath },
-  { resolveSystem = resolveSystemBrowserExecutable, loadEngineModule } = {}
-) {
-  if (executablePath !== undefined || channel !== undefined) {
-    return await resolveSystem({
-      channel: channel ?? 'chrome',
-      executablePath,
-    });
-  }
-  try {
-    return await resolveSystem({ channel: 'chrome' });
-  } catch (error) {
-    const bundled = await (loadEngineModule ?? loadEngine[engine])()
-      .then((module) => module.executablePath())
-      .catch(() => undefined);
-    if (bundled && (await isExecutable(bundled))) {
-      return bundled;
-    }
-    throw error;
   }
 }
 
@@ -144,14 +106,47 @@ async function launchReal(options, dependencies) {
   return { browser, page, close, connectedBrowser, ...meta };
 }
 
+// The Chrome for Testing an engine launch starts on its own, or the one a
+// Selenium launch is pointed at; undefined for any installed browser.
+async function engineExecutable(
+  { engine, browser = 'chrome', channel, executablePath },
+  engineModule,
+  dependencies
+) {
+  if (executablePath !== undefined || channel !== undefined) {
+    return executablePath;
+  }
+  if (engine === 'selenium') {
+    return browser === 'chrome'
+      ? await resolveLaunchExecutable({ engine }, dependencies).catch(
+          () => undefined
+        )
+      : undefined;
+  }
+  return await Promise.resolve()
+    .then(() => engineModule.executablePath?.())
+    .catch(() => undefined);
+}
+
 async function launchWithEngine(options, dependencies) {
   if (options.engine === 'selenium') {
+    // launchWebDriver adds the defaults of the browser it resolves.
+    const executablePath = await engineExecutable(options, null, dependencies);
     const launched = await (dependencies.launchWebDriver ?? launchWebDriver)({
       ...options,
+      ...(executablePath ? { executablePath } : {}),
       args: [...options.args, ...options.extraArgs],
     });
     return { ...launched, browser: launched.driver };
   }
+  const engineModule = await (
+    dependencies.loadEngineModule ?? loadEngine[options.engine]
+  )();
+  const defaultRestrictions = defaultRestrictionsFor(
+    await engineExecutable(options, engineModule, dependencies),
+    options.defaultRestrictions
+  );
+  const restrictions = [...defaultRestrictions, ...options.restrictions];
   const {
     engine,
     userDataDir: requestedUserDataDir,
@@ -160,7 +155,6 @@ async function launchWithEngine(options, dependencies) {
     args,
     extraArgs,
     ignoreDefaultArgs,
-    restrictions,
     env,
     colorScheme,
     channel,
@@ -195,9 +189,6 @@ async function launchWithEngine(options, dependencies) {
     },
     localState: options.localState,
   });
-  const engineModule = await (
-    dependencies.loadEngineModule ?? loadEngine[engine]
-  )();
   const selection = { channel, executablePath };
 
   let browser;
@@ -263,6 +254,7 @@ async function launchWithEngine(options, dependencies) {
     userDataDir,
     temporaryProfile,
     args: chrome.args,
+    defaultRestrictions,
   };
 }
 
@@ -285,12 +277,19 @@ async function unfocusAddressBar(page, verbose, settleMs = 500) {
 /**
  * Launch a browser.
  *
- * By default (`launch: 'real'`) Browser Commander starts the installed Chrome
- * itself, exactly like a person who wants to attach a debugger would:
+ * By default (`launch: 'real'`) Browser Commander starts Chrome itself,
+ * exactly like a person who wants to attach a debugger would:
  * `--user-data-dir=<fresh temporary profile> --remote-debugging-port=<reserved
  * port>` and nothing else, then attaches the engine over CDP (issues #101 and
  * #103). The profile is deleted on close. Every restriction the library used
  * to add silently is an explicit opt-in through `restrictions`.
+ *
+ * The browser is the engine's Chrome for Testing, an application of its own,
+ * so the user's Google Chrome is never taken over; `channel: 'chrome'` asks
+ * for the installed Google Chrome. Chrome for Testing gets the
+ * `chrome-for-testing` restrictions (`--test-type=gpu`, the only switch that
+ * hides its "only for automated testing" bar, and `--use-mock-keychain`)
+ * unless `defaultRestrictions` says otherwise (issue #179).
  *
  * `launch: 'engine'` keeps the Playwright/Puppeteer-launched browser for CI
  * and headless use; the switches those engines add are listed in
@@ -304,12 +303,13 @@ async function unfocusAddressBar(page, verbose, settleMs = 500) {
  * @param {number} [options.slowMo=0] - Slow down operations by ms
  * @param {boolean} [options.verbose=false] - Enable verbose logging
  * @param {string[]} [options.restrictions] - Opt-in restrictions from launch-restrictions.json, such as 'no-extensions' or the 'legacy-defaults' preset
+ * @param {string[]} [options.defaultRestrictions] - Restrictions that replace the executable's defaults (the 'chrome-for-testing' preset for Chrome for Testing, none otherwise); [] turns them off
  * @param {string[]} [options.args] - Additional Chrome arguments
  * @param {string[]} [options.extraArgs] - Additional Chrome arguments appended after args
  * @param {boolean|string[]} [options.ignoreDefaultArgs] - Engine default switches to omit, or true for all ('engine' launch only)
  * @param {Object<string,string>} [options.env] - Extra environment for the browser process only
  * @param {string|null} [options.colorScheme] - Emulate color scheme: 'light', 'dark', 'no-preference', or null to reset
- * @param {string} [options.channel] - Installed browser channel, such as 'chrome', 'chrome-beta', 'msedge', 'brave' or 'chromium'
+ * @param {string} [options.channel] - Installed browser channel, such as 'chrome', 'chrome-beta', 'msedge', 'brave' or 'chromium'; without it (and without executablePath) the engine's Chrome for Testing is started
  * @param {string} [options.executablePath] - Explicit path to a Chrome or Chromium executable
  * @param {number} [options.remoteDebuggingPort] - Fixed CDP port for the real launch; a free one is reserved when omitted
  * @param {string|Object} [options.storageState] - Playwright-compatible storage state path or object
@@ -317,7 +317,7 @@ async function unfocusAddressBar(page, verbose, settleMs = 500) {
  * @param {boolean} [options.automationParity=true] - Keep navigator.webdriver false where a launch switch would turn it on (headless or engine launches)
  * @param {boolean|Object} [options.downloads] - Manage downloads: true for defaults, or {directory, persist, conflict}. The directory may be an absolute path, 'user-downloads' or 'temporary'.
  * @param {boolean|Object} [options.debug=false] - Opt-in recording: true, {output}, or {directory, retain, maxDurationMs, limits} for managed storage
- * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, launch: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>}>} Browser (a BrowserContext for Playwright), page, download manager and launch metadata
+ * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, launch: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, defaultRestrictions: Array<string>}>} Browser (a BrowserContext for Playwright), page, download manager and launch metadata
  */
 export async function launchBrowser(options = {}) {
   return await launchBrowserWithDependencies(options);
@@ -368,6 +368,23 @@ export async function launchBrowserWithDependencies(
   }
 }
 
+function validateSeleniumLaunch({
+  launch,
+  browser,
+  colorScheme,
+  fingerprint,
+  downloads,
+}) {
+  if (colorScheme !== undefined || fingerprint !== undefined || downloads) {
+    throw new Error(
+      'selenium does not support CDP emulation, fingerprint overrides or managed downloads (webdriver-no-cdp-emulation)'
+    );
+  }
+  if (launch === 'real' && browser === 'firefox') {
+    throw new Error("selenium Firefox requires launch: 'engine'");
+  }
+}
+
 async function launchNonSafariBrowser(options, dependencies) {
   const {
     engine = 'playwright',
@@ -388,16 +405,16 @@ async function launchNonSafariBrowser(options, dependencies) {
   } = options;
   validateLaunchMode({ engine, launch, attach: rest.attach });
   if (engine === 'selenium') {
-    if (colorScheme !== undefined || fingerprint !== undefined || downloads) {
-      throw new Error(
-        'selenium does not support CDP emulation, fingerprint overrides or managed downloads (webdriver-no-cdp-emulation)'
-      );
-    }
-    if (launch === 'real' && rest.browser === 'firefox') {
-      throw new Error("selenium Firefox requires launch: 'engine'");
-    }
+    validateSeleniumLaunch({
+      launch,
+      colorScheme,
+      fingerprint,
+      downloads,
+      ...rest,
+    });
   }
   // Validate arguments before anything is started or written to disk.
+  resolveRestrictions(rest.defaultRestrictions ?? []);
   resolveChromeArgs({
     args,
     extraArgs,

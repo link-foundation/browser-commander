@@ -20,7 +20,11 @@ async def capture_stable_viewport(
     if engine == "puppeteer" and hasattr(page, "viewport"):
         emulated = await page.viewport()
     try:
-        if engine == "playwright" and not emulated and hasattr(page, "context"):
+        if (
+            engine == "playwright"
+            and not emulated
+            and hasattr(getattr(page, "context", None), "new_cdp_session")
+        ):
             session = await page.context.new_cdp_session(page)
         elif (
             engine == "puppeteer"

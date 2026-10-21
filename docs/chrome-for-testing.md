@@ -30,9 +30,14 @@ silently.
 
 Selenium attaches through a ChromeDriver, and ChromeDriver drives only the
 Chrome release it was built for. The driver is resolved for the Chrome for
-Testing that was started, through Selenium Manager's `--browser-path`; a
-`chromedriver` on `PATH`, which belongs to the installed Google Chrome, is
-not used for Chrome for Testing.
+Testing that was started, through Selenium Manager's `--browser-path` and
+`--skip-driver-in-path`: a `chromedriver` on `PATH`, which belongs to the
+installed Google Chrome, is not used for Chrome for Testing, although Selenium
+Manager would otherwise return it whatever its release. Rust's fantoccini uses
+the chromedriver Selenium Manager or `@puppeteer/browsers` downloaded for the
+same release and prefers a download that has one; Playwright downloads none, so
+with only Playwright's Chrome for Testing it falls back to `chromedriver` on
+`PATH`, which must then be of the same release (or pass `driver_executable`).
 
 ## The Linux sandbox on Ubuntu 23.10 and newer
 

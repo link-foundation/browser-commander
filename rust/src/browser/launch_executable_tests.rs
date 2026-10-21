@@ -221,3 +221,36 @@ fn pairs_chrome_for_testing_with_the_chromedriver_of_its_release() {
     let playwright = executable(root, "ms-playwright/chromium-1248/chrome-linux64/chrome");
     assert_eq!(matching_chromedriver(&playwright), None);
 }
+
+#[test]
+fn fantoccini_prefers_a_release_it_has_the_chromedriver_of() {
+    let temp = TempDir::new("bc-cft-driven-");
+    let root = temp.path();
+    let sources = [
+        CacheSource::Selenium,
+        CacheSource::Puppeteer,
+        CacheSource::Playwright,
+    ];
+    let caches = DownloadCaches {
+        playwright: Some(root.join("ms-playwright")),
+        puppeteer: Some(root.join("puppeteer")),
+        selenium: Some(root.join("selenium")),
+    };
+    // Without any chromedriver, the first cache still names the download.
+    let playwright = executable(root, "ms-playwright/chromium-1248/chrome-linux64/chrome");
+    assert_eq!(caches.find_driven(&sources, "linux"), Some(playwright));
+    let selenium = executable(root, "selenium/chrome/linux64/132.0.1/chrome");
+    assert_eq!(caches.find_driven(&sources, "linux"), Some(selenium));
+
+    // A chromedriver on PATH belongs to another release, so a later cache
+    // with the chromedriver of its own release wins.
+    let puppeteer = executable(
+        root,
+        "puppeteer/chrome/linux-131.0.6778.85/chrome-linux64/chrome",
+    );
+    executable(
+        root,
+        "puppeteer/chromedriver/linux-131.0.6778.85/chromedriver-linux64/chromedriver",
+    );
+    assert_eq!(caches.find_driven(&sources, "linux"), Some(puppeteer));
+}

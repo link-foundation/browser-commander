@@ -165,7 +165,7 @@ pub(crate) fn bundled_engine_executable(options: &RealBrowserOptions) -> Option<
             ],
             std::env::consts::OS,
         ),
-        EngineType::Fantoccini => caches.find(
+        EngineType::Fantoccini => caches.find_driven(
             &[
                 CacheSource::Selenium,
                 CacheSource::Puppeteer,
@@ -243,6 +243,19 @@ impl DownloadCaches {
                 })
             }
         })
+    }
+}
+
+impl DownloadCaches {
+    /// The first download in `sources` that has the [`matching_chromedriver`]
+    /// of its release, else the first download: a chromedriver on PATH
+    /// belongs to the installed Google Chrome and refuses another release.
+    pub(crate) fn find_driven(&self, sources: &[CacheSource], os: &str) -> Option<PathBuf> {
+        sources
+            .iter()
+            .filter_map(|source| self.find(std::slice::from_ref(source), os))
+            .find(|executable| matching_chromedriver(executable).is_some())
+            .or_else(|| self.find(sources, os))
     }
 }
 

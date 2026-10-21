@@ -12,5 +12,5 @@ bump: minor
 
 ### Fixed
 
-- Fantoccini uses a chromedriver matching the Chrome for Testing it starts, and password migration re-encrypts with Chrome for Testing's keychain key (issue #179).
+- Fantoccini uses a chromedriver matching the Chrome for Testing it starts and prefers a download that has one, and password migration re-encrypts with Chrome for Testing's keychain key (issue #179).
 - Trace checkpoint screenshots and default screenshots of a page without a fixed viewport are captured with CDP `Page.captureScreenshot` and no clip, so a resized headful window is no longer left drawn at its old size (issue #180).

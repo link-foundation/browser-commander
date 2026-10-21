@@ -128,6 +128,7 @@ def _resolve_password_keys(
     keys: Mapping[str, Any] | None,
     browser: str,
     target_browser: str,
+    target_keystore: str,
     platform: str,
     source_profile_dir: Path,
     environment: Mapping[str, str],
@@ -137,7 +138,10 @@ def _resolve_password_keys(
     if platform not in ("darwin", "linux"):
         return None
     target = resolve_target_key(
-        browser=target_browser, platform=platform, environment=environment
+        browser=target_browser,
+        platform=platform,
+        keystore=target_keystore,
+        environment=environment,
     )
     resolve_source_key = (
         create_source_key_resolver(
@@ -164,6 +168,7 @@ def migrate_profile_sync(
     domains: Sequence[str] | None = None,
     platform: str | None = None,
     target_browser: str | None = None,
+    target_keystore: str = "os",
     keys: Mapping[str, Any] | None = None,
     home_dir: PathLike | None = None,
     environment: Mapping[str, str] | None = None,
@@ -279,6 +284,7 @@ def migrate_profile_sync(
                 keys=keys,
                 browser=browser,
                 target_browser=target_browser or "chrome",
+                target_keystore=target_keystore,
                 platform=platform,
                 source_profile_dir=source_profile_dir,
                 environment=env,
@@ -399,6 +405,7 @@ def migrate_profile_sync(
             keys=keys,
             browser=browser,
             target_browser=target_browser or ("chrome" if is_firefox else browser),
+            target_keystore=target_keystore,
             platform=platform,
             source_profile_dir=source_profile_dir,
             environment=env,
@@ -461,6 +468,7 @@ async def migrate_profile(
     domains: Sequence[str] | None = None,
     platform: str | None = None,
     target_browser: str | None = None,
+    target_keystore: str = "os",
     keys: Mapping[str, Any] | None = None,
     home_dir: PathLike | None = None,
     environment: Mapping[str, str] | None = None,
@@ -481,6 +489,8 @@ async def migrate_profile(
         include_payment_cards: Separate explicit payment-card consent, false by default.
         platform: ``darwin``/``linux``/``win32``; defaults to ``sys.platform``.
         target_browser: The launching channel, for the target key derivation.
+        target_keystore: ``"mock"`` when the launch bypasses the OS keystore
+            (see :func:`target_keystore_for`), ``"os"`` by default.
         keys: Injected password keys ``{"target_key", "target_prefix",
             "resolve_source_key", "primary_password"}``.
         home_dir: Home directory for profile discovery.
@@ -508,6 +518,7 @@ async def migrate_profile(
         domains=domains,
         platform=platform,
         target_browser=target_browser,
+        target_keystore=target_keystore,
         keys=keys,
         home_dir=home_dir,
         environment=environment,

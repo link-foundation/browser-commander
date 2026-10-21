@@ -44,6 +44,7 @@ from browser_commander.browser.migration.os_crypt_keys import (
     create_source_key_resolver,
     local_state_path_for_profile,
     resolve_target_key,
+    target_keystore_for,
 )
 from browser_commander.browser.migration.passwords import migrate_passwords
 from browser_commander.browser.migration.preferences import (
@@ -93,5 +94,6 @@ __all__ = [
     "report_firefox_history",
     "resolve_target_key",
     "select_migratable_extensions",
+    "target_keystore_for",
     "with_database_snapshot",
 ]

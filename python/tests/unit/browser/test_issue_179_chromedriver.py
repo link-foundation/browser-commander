@@ -1,11 +1,12 @@
 """Chrome for Testing is driven and migrated as the browser it is (#179).
 
-Mirrors the issue #179 cases of js/tests/unit/browser/webdriver.test.js and
-real-browser.test.js.
+Mirrors the issue #179 cases of js/tests/unit/browser/webdriver.test.js,
+real-browser.test.js and migration/os-crypt-keys.test.js.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -140,3 +141,43 @@ def test_selenium_drives_chrome_for_testing_with_its_own_chromedriver(
         "--skip-driver-in-path",
     ]
     assert calls == ([expected] if driver else [])
+
+
+MAC_CFT = (
+    "/Users/u/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/"
+    "Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+)
+
+
+@pytest.mark.parametrize(
+    ("executable", "options", "browser", "keystore"),
+    [
+        # The default launch: Chrome for Testing with its mock keychain.
+        (MAC_CFT, {}, "chromium", "mock"),
+        # Opting out of the defaults uses the real "Chromium Safe Storage".
+        (MAC_CFT, {"default_restrictions": []}, "chromium", "os"),
+        (GOOGLE_CHROME, {"channel": "chrome"}, "chrome", "os"),
+        (
+            GOOGLE_CHROME,
+            {"channel": "chrome", "restrictions": ["mock-keychain"]},
+            "chrome",
+            "mock",
+        ),
+    ],
+)
+async def test_migrates_passwords_with_the_key_of_the_browser_that_starts(
+    tmp_path: Path,
+    executable: str,
+    options: dict[str, Any],
+    browser: str,
+    keystore: str,
+) -> None:
+    _, seen = await _launch_real(
+        executable,
+        {"platform": "darwin"},
+        user_data_dir=str(tmp_path / "profile"),
+        migrate_from={"browser": "chrome", "include": ["passwords"]},
+        **options,
+    )
+    assert seen["migrate"]["target_browser"] == browser
+    assert seen["migrate"]["target_keystore"] == keystore

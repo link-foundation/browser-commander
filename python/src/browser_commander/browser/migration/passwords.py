@@ -32,9 +32,9 @@ __all__ = ["default_target_prefix", "migrate_passwords"]
 
 
 def default_target_prefix(platform: str) -> str:
-    """The prefix Chromium writes on ``platform``: ``v10`` on Windows, else ``v11``."""
+    """The prefix Chromium writes on ``platform``: ``v11`` on Linux, else ``v10``."""
 
-    return "v10" if platform == "win32" else "v11"
+    return "v11" if platform == "linux" else "v10"
 
 
 def _to_bytes(value: Any) -> bytes:

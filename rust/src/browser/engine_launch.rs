@@ -18,6 +18,10 @@ use futures::StreamExt;
 
 use crate::browser::browser_process::BrowserCloser;
 use crate::browser::chromiumoxide_adapter::ChromiumoxidePage;
+use crate::browser::launch_executable::{
+    bundled_engine_executable, default_restrictions_for, matching_chromedriver,
+    resolve_launch_executable_with,
+};
 use crate::browser::launcher::{Browser, LaunchOptions, LaunchResult};
 use crate::browser::node_bridge::NodeBridgePage;
 use crate::browser::playwright_driver_page::{PlaywrightDriverPage, PlaywrightLaunch};
@@ -27,6 +31,7 @@ use crate::browser::profile_directory::{
 use crate::browser::profile_directory::{
     create_temporary_user_data_dir_with_first_run, remove_user_data_dir,
 };
+use crate::browser::real_browser::{resolve_system_browser_executable, RealBrowserOptions};
 use crate::browser::webdriver::{launch_webdriver, ManagedWebDriver, WebDriverBrowser};
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::attach_downloads;
@@ -133,8 +138,65 @@ impl BrowserCloser for EngineCloser {
     }
 }
 
+/// The options an engine launch runs with and the default restrictions it
+/// added (issue #179).
+///
+/// Without `channel` or an executable, chromiumoxide and chromedriver would
+/// start the installed Google Chrome, so they are given Chrome for Testing
+/// (with the chromedriver downloaded alongside it); a channel is resolved to
+/// its installed browser. Playwright and Puppeteer start their own Chrome for
+/// Testing, which is only looked up to choose the restrictions. Firefox gets
+/// none.
+pub(crate) fn with_engine_defaults(
+    options: &LaunchOptions,
+    bundled: impl FnOnce(&RealBrowserOptions) -> Option<PathBuf>,
+) -> Result<(LaunchOptions, Vec<String>)> {
+    let mut effective = options.clone();
+    let webdriver = options.engine == EngineType::Fantoccini;
+    if webdriver && options.webdriver.browser != WebDriverBrowser::Chrome {
+        return Ok((effective, Vec::new()));
+    }
+    let real = options.real_browser_options();
+    let requested = options.channel.is_some()
+        || options.executable_path.is_some()
+        || (webdriver && options.webdriver.browser_executable.is_some());
+    let executable = match options.engine {
+        _ if webdriver && options.webdriver.browser_executable.is_some() => {
+            options.webdriver.browser_executable.clone()
+        }
+        EngineType::Chromiumoxide | EngineType::Fantoccini => {
+            let executable =
+                resolve_launch_executable_with(&real, resolve_system_browser_executable, bundled)?;
+            if webdriver && !requested && effective.webdriver.driver_executable.is_none() {
+                effective.webdriver.driver_executable = matching_chromedriver(&executable);
+            }
+            effective.executable_path = Some(executable.clone());
+            Some(executable)
+        }
+        EngineType::Playwright | EngineType::Puppeteer if requested => {
+            options.executable_path.clone()
+        }
+        EngineType::Playwright | EngineType::Puppeteer => bundled(&real),
+    };
+    let defaults = match &executable {
+        Some(executable) => {
+            default_restrictions_for(executable, options.default_restrictions.as_deref())
+        }
+        None => options.default_restrictions.clone().unwrap_or_default(),
+    };
+    effective.restrictions = defaults
+        .iter()
+        .chain(&options.restrictions)
+        .cloned()
+        .collect();
+    Ok((effective, defaults))
+}
+
 /// Launch the browser through the engine.
 pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<LaunchResult> {
+    let (effective, default_restrictions) =
+        with_engine_defaults(options, bundled_engine_executable)?;
+    let options = &effective;
     let args = if options.engine == EngineType::Fantoccini
         && options.webdriver.browser == WebDriverBrowser::Firefox
     {
@@ -257,7 +319,7 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
         closed: tokio::sync::OnceCell::new(),
     });
     profile_guard.armed = false;
-    Ok(LaunchResult::attached(
+    let mut result = LaunchResult::attached(
         Browser {
             engine: options.engine,
             user_data_dir,
@@ -271,7 +333,9 @@ pub(crate) async fn launch_with_engine(options: &LaunchOptions) -> Result<Launch
         temporary_profile,
         options.executable_path.clone(),
         closer,
-    ))
+    );
+    result.default_restrictions = default_restrictions;
+    Ok(result)
 }
 
 type Launched = (
@@ -456,3 +520,7 @@ async fn set_up_page(
     }
     Ok(downloads)
 }
+
+#[cfg(test)]
+#[path = "engine_launch_tests.rs"]
+mod tests;

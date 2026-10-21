@@ -226,6 +226,7 @@ pub(crate) async fn with_deadline<T>(
 
 #[cfg(test)]
 mod tests {
+    // feature-parity: trace.screenshots@native-typed
     use super::*;
     use crate::traces::jsonfmt::JsonObject;
 

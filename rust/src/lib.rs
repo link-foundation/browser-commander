@@ -104,6 +104,10 @@ pub use browser::{
     StorageEntry, StorageOrigin, StorageState, StorageStateInput, LAUNCH_MODES,
     SUPPORTED_COOKIE_BROWSERS,
 };
+pub use browser::{
+    chrome_for_testing_restrictions, default_restrictions_for, is_chrome_for_testing,
+    resolve_launch_executable, CHROME_FOR_TESTING_PRESET,
+};
 pub use core::{
     DialogEvent, DialogManager, DialogType, EngineAdapter, EngineError, EngineType, Logger,
     LoggerOptions, PdfOptions, Timing, CHROME_ARGS, TIMING,

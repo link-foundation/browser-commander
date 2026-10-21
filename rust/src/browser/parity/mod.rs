@@ -16,8 +16,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::launch_executable::DefaultLaunchHooks;
-use super::real_browser::LaunchHooks;
+use super::launch_executable::resolve_launch_executable;
 use super::{launch_browser, LaunchOptions, LaunchResult};
 use crate::core::{EngineAdapter, EngineType};
 
@@ -119,6 +118,33 @@ async fn capture_candidate(
     Ok((report, version))
 }
 
+/// The switches the caller asked for: their arguments, the sandbox switch,
+/// and the session's command line when they chose restrictions or the launch
+/// added Chrome for Testing's default restrictions (issue #179).
+pub(crate) fn requested_args_for(
+    launch: &LaunchOptions,
+    session_args: &[String],
+    default_restrictions: &[String],
+) -> Vec<String> {
+    let mut requested_args = launch.args.clone();
+    requested_args.extend(launch.extra_args.clone());
+    if !launch.sandbox {
+        requested_args.push("--no-sandbox".into());
+    }
+    if !launch.restrictions.is_empty() || !default_restrictions.is_empty() {
+        requested_args.extend(
+            session_args
+                .iter()
+                .filter(|arg| {
+                    !arg.starts_with("--user-data-dir")
+                        && !arg.starts_with("--remote-debugging-port")
+                })
+                .cloned(),
+        );
+    }
+    requested_args
+}
+
 fn assemble_report(
     session: &LaunchResult,
     options: &MeasureParityOptions,
@@ -140,23 +166,11 @@ fn assemble_report(
     let comparison = compare_command_lines(&reference_command, &launched);
     let mut raw_differences = command_line_differences(&comparison);
     raw_differences.extend(diff_reports(&reference, &candidate));
-    let mut requested_args = options.launch.args.clone();
-    requested_args.extend(options.launch.extra_args.clone());
-    if !options.launch.sandbox {
-        requested_args.push("--no-sandbox".into());
-    }
-    if !options.launch.restrictions.is_empty() {
-        requested_args.extend(
-            session
-                .args
-                .iter()
-                .filter(|arg| {
-                    !arg.starts_with("--user-data-dir")
-                        && !arg.starts_with("--remote-debugging-port")
-                })
-                .cloned(),
-        );
-    }
+    let requested_args = requested_args_for(
+        &options.launch,
+        &session.args,
+        &session.default_restrictions,
+    );
     let launch = session
         .launch
         .unwrap_or(options.launch.launch)
@@ -205,11 +219,7 @@ async fn measure(
         if let Some(path) = supplied.and_then(|session| session.executable_path.clone()) {
             path
         } else {
-            DefaultLaunchHooks {
-                explicit_selection: options.launch.executable_path.is_some()
-                    || options.launch.channel.is_some(),
-            }
-            .resolve_executable(&real)?
+            resolve_launch_executable(&real)?
         };
     let server = ProbeServer::start().await?;
     let reference = reference::capture(&server, &executable, &options).await?;
@@ -279,4 +289,26 @@ pub async fn measure_session_parity(
 /// Read version metadata from a fresh tab, leaving the measured page untouched.
 pub async fn read_browser_version_page(page: &dyn EngineAdapter) -> Result<Value> {
     Ok(page.read_browser_version_page().await?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parity_counts_the_default_restrictions_as_requested() {
+        let args: Vec<String> = [
+            "--user-data-dir=/tmp/p",
+            "--test-type=gpu",
+            "--use-mock-keychain",
+        ]
+        .map(String::from)
+        .to_vec();
+        let defaults = crate::browser::chrome_for_testing_restrictions();
+        assert_eq!(
+            requested_args_for(&LaunchOptions::default(), &args, defaults),
+            ["--test-type=gpu", "--use-mock-keychain"]
+        );
+        assert!(requested_args_for(&LaunchOptions::default(), &args, &[]).is_empty());
+    }
 }

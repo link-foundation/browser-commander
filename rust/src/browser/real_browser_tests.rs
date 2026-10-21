@@ -9,12 +9,14 @@ use crate::browser::profile_directory::{create_temporary_user_data_dir, FIRST_RU
 use crate::fingerprint::automation_parity::disables_automation_controlled;
 
 const DEDICATED: &str = "/tmp/browser-commander-dedicated";
+const GOOGLE_CHROME: &str = "/opt/google/chrome";
+const PLAYWRIGHT_CFT: &str = "/home/u/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome";
 
 #[test]
 fn cdp_validation_rejects_other_protocols() {
     for channel in ["firefox", "librewolf", "safari", "duckduckgo"] {
         let options = RealBrowserOptions {
-            channel: channel.into(),
+            channel: Some(channel.into()),
             ..Default::default()
         };
         let error = validate_launch_request(&options).unwrap_err();
@@ -44,6 +46,7 @@ struct FakeHooks {
     processes: Mutex<Vec<Arc<FakeProcess>>>,
     spawned: Mutex<Vec<SpawnCall>>,
     graceful: bool,
+    executable: Option<PathBuf>,
 }
 
 impl FakeHooks {
@@ -70,7 +73,10 @@ impl FakeHooks {
 #[async_trait]
 impl LaunchHooks for FakeHooks {
     fn resolve_executable(&self, _options: &RealBrowserOptions) -> Result<PathBuf> {
-        Ok(PathBuf::from("/opt/google/chrome"))
+        Ok(self
+            .executable
+            .clone()
+            .unwrap_or_else(|| PathBuf::from(GOOGLE_CHROME)))
     }
 
     fn reserve_port(&self) -> Result<u16> {
@@ -279,7 +285,10 @@ fn rejects_arguments_that_could_bypass_protected_cdp_settings() {
 fn default_options_use_the_native_engine_and_no_extra_switches() {
     let options = RealBrowserOptions::default();
     assert_eq!(options.engine, EngineType::Chromiumoxide);
-    assert_eq!(options.channel, "chrome");
+    // Chrome for Testing unless a channel is chosen (issue #179).
+    assert_eq!(options.channel, None);
+    assert_eq!(options.channel_name(), "chrome");
+    assert_eq!(options.default_restrictions, None);
     assert_eq!(options.remote_debugging_port, None);
     assert_eq!(options.port_attempts, DEFAULT_PORT_ATTEMPTS);
     assert_eq!(options.close_timeout, DEFAULT_CLOSE_TIMEOUT);
@@ -604,4 +613,90 @@ async fn terminates_the_spawned_browser_when_connection_fails() {
     let args = hooks.spawned.lock().unwrap()[0].1.clone();
     let profile = PathBuf::from(args[0].trim_start_matches("--user-data-dir="));
     assert!(!profile.exists());
+}
+
+#[tokio::test]
+async fn a_chrome_for_testing_launch_hides_the_infobar_and_keychain() {
+    // Issue #179: Chrome for Testing gets the chrome-for-testing preset.
+    let hooks = Arc::new(FakeHooks {
+        executable: Some(PLAYWRIGHT_CFT.into()),
+        ..FakeHooks::with_ports(&[40179])
+    });
+    let (_, launched) = launch(&RealBrowserOptions::default(), &hooks)
+        .await
+        .unwrap();
+    assert!(launched.args.contains(&"--test-type=gpu".to_string()));
+    assert!(launched.args.contains(&"--use-mock-keychain".to_string()));
+    assert_eq!(
+        launched.default_restrictions,
+        ["no-chrome-for-testing-infobar", "mock-keychain"]
+    );
+    launched.closer.close().await.unwrap();
+}
+
+#[tokio::test]
+async fn a_launch_of_google_chrome_or_an_opt_out_adds_nothing() {
+    for (executable, options) in [
+        (
+            GOOGLE_CHROME,
+            RealBrowserOptions::default().channel("chrome"),
+        ),
+        (
+            PLAYWRIGHT_CFT,
+            RealBrowserOptions::default().default_restrictions(Vec::<String>::new()),
+        ),
+    ] {
+        let hooks = Arc::new(FakeHooks {
+            executable: Some(executable.into()),
+            ..FakeHooks::with_ports(&[40180])
+        });
+        let (_, launched) = launch(&options, &hooks).await.unwrap();
+        assert!(!launched.args.contains(&"--test-type=gpu".to_string()));
+        assert!(!launched.args.contains(&"--use-mock-keychain".to_string()));
+        assert!(launched.default_restrictions.is_empty());
+        launched.closer.close().await.unwrap();
+    }
+}
+
+#[test]
+fn refuses_unknown_default_restrictions_before_starting() {
+    let options = RealBrowserOptions::default().default_restrictions(["no-such-restriction"]);
+    assert!(validate_launch_request(&options).is_err());
+}
+
+#[test]
+fn migrates_passwords_with_the_key_of_the_browser_that_starts() {
+    let mac_cft = "/Users/u/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing";
+    let chrome = || RealBrowserOptions::default().channel("chrome");
+    for (executable, options, browser, keystore) in [
+        // The default launch: Chrome for Testing with its mock keychain.
+        (
+            mac_cft,
+            RealBrowserOptions::default(),
+            "chromium",
+            TargetKeystore::Mock,
+        ),
+        // Opting out of the defaults uses the real "Chromium Safe Storage".
+        (
+            mac_cft,
+            RealBrowserOptions::default().default_restrictions(Vec::<String>::new()),
+            "chromium",
+            TargetKeystore::Os,
+        ),
+        (GOOGLE_CHROME, chrome(), "chrome", TargetKeystore::Os),
+        (
+            GOOGLE_CHROME,
+            chrome().restrictions(["mock-keychain"]),
+            "chrome",
+            TargetKeystore::Mock,
+        ),
+    ] {
+        let (effective, _) = with_default_restrictions(&options, Path::new(executable));
+        assert_eq!(
+            migration_target(&effective, Path::new(executable), "darwin").unwrap(),
+            (browser.to_string(), keystore),
+            "{executable} {:?}",
+            options.restrictions
+        );
+    }
 }

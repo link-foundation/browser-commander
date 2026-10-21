@@ -281,7 +281,7 @@ fn real_browser_options_carry_the_launch() {
     let real = options.real_browser_options();
 
     assert_eq!(real.engine, EngineType::Playwright);
-    assert_eq!(real.channel, "msedge");
+    assert_eq!(real.channel.as_deref(), Some("msedge"));
     assert_eq!(real.user_data_dir, Some(PathBuf::from("/tmp/bc-profile")));
     assert_eq!(real.remote_debugging_port, Some(9333));
     assert!(real.headless);
@@ -298,7 +298,7 @@ fn real_browser_options_default_to_chrome() {
     let real = LaunchOptions::default().real_browser_options();
     let defaults = RealBrowserOptions::default();
 
-    assert_eq!(real.channel, "chrome");
+    assert_eq!(real.channel, None);
     assert!(real.extra_args.is_empty());
     assert_eq!(real.remote_debugging_port, None);
     assert_eq!(real.startup_timeout, defaults.startup_timeout);

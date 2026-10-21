@@ -72,6 +72,7 @@ pub(super) fn real_browser_result(
         user_data_dir: launched.user_data_dir,
         temporary_profile: launched.temporary_profile,
         args: launched.args,
+        default_restrictions: launched.default_restrictions,
         browser_process: launched.browser_process,
         downloads,
         migration: launched.migration,

@@ -5,7 +5,7 @@ impl Default for RealBrowserOptions {
     fn default() -> Self {
         Self {
             engine: EngineType::Chromiumoxide,
-            channel: "chrome".to_string(),
+            channel: None,
             executable_path: None,
             user_data_dir: None,
             persist_session_cookies: None,
@@ -19,6 +19,7 @@ impl Default for RealBrowserOptions {
             port_attempts: DEFAULT_PORT_ATTEMPTS,
             headless: false,
             restrictions: Vec::new(),
+            default_restrictions: None,
             disable_features: Vec::new(),
             args: Vec::new(),
             extra_args: Vec::new(),
@@ -70,8 +71,13 @@ impl RealBrowserOptions {
 
     /// Select an installed browser channel.
     pub fn channel(mut self, channel: impl Into<String>) -> Self {
-        self.channel = channel.into();
+        self.channel = Some(channel.into());
         self
+    }
+
+    /// The selected channel, `"chrome"` when none is.
+    pub fn channel_name(&self) -> &str {
+        self.channel.as_deref().unwrap_or("chrome")
     }
 
     /// Select an explicit installed-browser executable.
@@ -116,6 +122,17 @@ impl RealBrowserOptions {
         S: Into<String>,
     {
         self.restrictions = restrictions.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// Replace the restrictions the launch adds for the browser that starts;
+    /// an empty list turns the Chrome for Testing defaults off (issue #179).
+    pub fn default_restrictions<I, S>(mut self, restrictions: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.default_restrictions = Some(restrictions.into_iter().map(Into::into).collect());
         self
     }
 
@@ -266,6 +283,6 @@ impl RealBrowserOptions {
     pub fn get_user_data_dir(&self) -> PathBuf {
         self.user_data_dir
             .clone()
-            .unwrap_or_else(|| default_real_browser_user_data_dir(&self.channel))
+            .unwrap_or_else(|| default_real_browser_user_data_dir(self.channel_name()))
     }
 }

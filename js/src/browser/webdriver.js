@@ -42,7 +42,10 @@ import {
 } from './profile-directory.js';
 import { buildRealBrowserArgs } from './real-browser.js';
 import { resolveRestrictions } from './restrictions.js';
-import { defaultRestrictionsFor } from './launch-executable.js';
+import {
+  defaultRestrictionsFor,
+  isChromeForTesting,
+} from './launch-executable.js';
 import { findBrowserSource } from './browser-sources.js';
 import {
   isSafariChannel,
@@ -219,7 +222,12 @@ export async function resolveWebDriverExecutable({
     };
   }
 
-  const onPath = await findOnPath(name, { environment, platform, checkAccess });
+  // A driver on PATH belongs to an installed browser; Chrome for Testing gets
+  // the driver of its own release from Selenium Manager (issue #179).
+  const ownDriver = isChromeForTesting(executablePath);
+  const onPath =
+    !ownDriver &&
+    (await findOnPath(name, { environment, platform, checkAccess }));
   if (onPath) {
     return {
       driverPath: onPath,
@@ -228,11 +236,39 @@ export async function resolveWebDriverExecutable({
     };
   }
 
+  return await askSeleniumManager({
+    browser,
+    name,
+    executablePath,
+    ownDriver,
+    environment,
+    platform,
+    runCommand,
+    managerPath,
+  });
+}
+
+/** Ask Selenium Manager for the driver of `browser` (and the browser itself). */
+async function askSeleniumManager({
+  browser,
+  name,
+  executablePath,
+  ownDriver,
+  environment,
+  platform,
+  runCommand,
+  managerPath,
+}) {
   const manager = managerPath ?? seleniumManagerPath({ platform, environment });
-  const args = ['--browser', browser, '--output', 'json'];
-  if (executablePath) {
-    args.push('--browser-path', executablePath);
-  }
+  const args = [
+    '--browser',
+    browser,
+    '--output',
+    'json',
+    ...(executablePath ? ['--browser-path', executablePath] : []),
+    // Selenium Manager itself prefers a driver on PATH, whatever its release.
+    ...(ownDriver ? ['--skip-driver-in-path'] : []),
+  ];
   const { stdout, code } = await runCommand(manager, args, { check: false });
   let output;
   try {

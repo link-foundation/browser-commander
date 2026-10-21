@@ -166,6 +166,31 @@ function launchDependencies(overrides = {}) {
   };
 }
 
+// Resolve through a fake Selenium Manager that answers browserPath.
+async function managerResolve(
+  options,
+  { checkAccess = accessOnly(), browserPath }
+) {
+  const commands = [];
+  const resolved = await resolveWebDriverExecutable({
+    managerPath: '/sm',
+    checkAccess,
+    runCommand: async (file, args) => {
+      commands.push([file, ...args]);
+      return managerOutput({
+        driver_path: '/cache/chromedriver',
+        browser_path: browserPath,
+      });
+    },
+    ...options,
+  });
+  return { commands, resolved };
+}
+
+const SELENIUM_CFT = '/home/u/.cache/selenium/chrome/linux64/156.0/chrome';
+const PLAYWRIGHT_CFT =
+  '/home/u/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
+
 describe('resolveWebDriverExecutable', () => {
   it('uses an explicit driverPath first', async () => {
     const resolved = await resolveWebDriverExecutable({
@@ -210,21 +235,38 @@ describe('resolveWebDriverExecutable', () => {
     assert.equal(resolved.driverPath, 'C:\\b\\chromedriver.exe');
   });
 
-  it('then asks Selenium Manager for a matching driver', async () => {
-    const commands = [];
-    const resolved = await resolveWebDriverExecutable({
-      executablePath: '/usr/bin/google-chrome',
-      environment: { PATH: '' },
-      managerPath: '/sm',
-      checkAccess: accessOnly(),
-      runCommand: async (file, args) => {
-        commands.push([file, ...args]);
-        return managerOutput({
-          driver_path: '/cache/chromedriver',
-          browser_path: '/usr/bin/google-chrome',
-        });
-      },
+  // A chromedriver on PATH drives the installed Google Chrome: never used
+  // for Chrome for Testing (issue #179). Selenium Manager returns a PATH
+  // driver of another release too, so it is told to skip it (run
+  // 39651456089: ChromeDriver 155 for Chrome 153).
+  for (const cft of [PLAYWRIGHT_CFT, SELENIUM_CFT]) {
+    it(`matches ${cft} with its own driver, not the one on PATH (issue #179)`, async () => {
+      const { commands, resolved } = await managerResolve(
+        { executablePath: cft, environment: { PATH: '/bin' } },
+        { checkAccess: accessOnly('/bin/chromedriver'), browserPath: cft }
+      );
+      assert.deepEqual(commands, [
+        [
+          '/sm',
+          '--browser',
+          'chrome',
+          '--output',
+          'json',
+          '--browser-path',
+          cft,
+          '--skip-driver-in-path',
+        ],
+      ]);
+      assert.equal(resolved.driverPath, '/cache/chromedriver');
+      assert.equal(resolved.source, 'selenium-manager');
     });
+  }
+
+  it('then asks Selenium Manager for a matching driver', async () => {
+    const { commands, resolved } = await managerResolve(
+      { executablePath: '/usr/bin/google-chrome', environment: { PATH: '' } },
+      { browserPath: '/usr/bin/google-chrome' }
+    );
     assert.deepEqual(commands, [
       [
         '/sm',

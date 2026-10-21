@@ -282,6 +282,28 @@ describe('launchAndConnectRealBrowser', () => {
     await access(path.join(temporaryDirectory, 'First Run'));
   });
 
+  it('gives Selenium the started browser so its driver matches it (issue #179)', async () => {
+    temporaryDirectory = await makeDedicatedProfile();
+    const cft =
+      '/home/u/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
+    let connectOptions;
+    await launchAndConnectRealBrowserWithDependencies(
+      { engine: 'selenium', userDataDir: temporaryDirectory },
+      {
+        resolveExecutable: async () => cft,
+        reservePort: async () => 9444,
+        spawnBrowser: () => fakeProcess([]),
+        waitForEndpoint: async () => 'http://127.0.0.1:9444',
+        connect: async (options) => {
+          connectOptions = options;
+          return { browser: null, page: null };
+        },
+      }
+    );
+    assert.equal(connectOptions.engine, 'selenium');
+    assert.equal(connectOptions.executablePath, cft);
+  });
+
   it('migrates a profile before launch and seeds the migrated cookies', async () => {
     temporaryDirectory = await makeDedicatedProfile();
     const calls = [];

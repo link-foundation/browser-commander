@@ -89,5 +89,6 @@ describe('defaultRestrictionsFor (issue #179)', () => {
       'mock-keychain',
     ]);
     assert.equal(api.isChromeForTesting, isChromeForTesting);
+    assert.equal(api.defaultRestrictionsFor, defaultRestrictionsFor);
   });
 });

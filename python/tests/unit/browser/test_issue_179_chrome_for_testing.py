@@ -4,6 +4,8 @@ Mirrors js/tests/unit/browser/launch-executable.test.js and the issue #179
 cases of real-browser.test.js.
 """
 
+# feature-parity: launch.chrome-for-testing@native-typed
+
 from __future__ import annotations
 
 from pathlib import Path

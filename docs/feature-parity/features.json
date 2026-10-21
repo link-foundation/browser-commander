@@ -111,6 +111,10 @@
         {
           "id": "trace.read",
           "title": "Read a portable trace"
+        },
+        {
+          "id": "trace.screenshots",
+          "title": "Trace and default screenshots of the view without a clip"
         }
       ]
     },
@@ -145,6 +149,10 @@
         {
           "id": "launch.diagnostics",
           "title": "Bounded redacted launch diagnostics"
+        },
+        {
+          "id": "launch.chrome-for-testing",
+          "title": "Start Chrome for Testing by default, without its infobar or keychain prompts"
         },
         {
           "id": "elements.reusable",

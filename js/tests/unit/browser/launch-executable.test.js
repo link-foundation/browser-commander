@@ -1,3 +1,4 @@
+// feature-parity: launch.chrome-for-testing@native-typed
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -88,5 +89,6 @@ describe('defaultRestrictionsFor (issue #179)', () => {
       'mock-keychain',
     ]);
     assert.equal(api.isChromeForTesting, isChromeForTesting);
+    assert.equal(api.defaultRestrictionsFor, defaultRestrictionsFor);
   });
 });

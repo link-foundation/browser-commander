@@ -5,6 +5,8 @@ size stuck after a resize. Without a fixed viewport, captures go through CDP
 ``Page.captureScreenshot`` with no ``clip``.
 """
 
+# feature-parity: trace.screenshots@native-typed
+
 from __future__ import annotations
 
 import base64

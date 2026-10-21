@@ -53,7 +53,8 @@ use crate::browser::default_browser::RunCommand;
 pub use cookies::{CookieReader, DBSC_BOUND_COOKIE_NAMES};
 pub use firefox_nss::PrimaryPasswordError;
 pub use os_crypt_keys::{
-    KeystoreHooks, SafeStoragePasswordReader, SourceKeyResolver, TargetKey, WindowsKeyReader,
+    target_keystore_for, KeystoreHooks, SafeStoragePasswordReader, SourceKeyResolver, TargetKey,
+    TargetKeystore, WindowsKeyReader,
 };
 pub use preferences::MIGRATED_PREFERENCE_PATHS;
 
@@ -332,6 +333,10 @@ pub struct MigrateProfileOptions {
     pub platform: String,
     /// The launching browser channel, used to derive the target key.
     pub target_browser: Option<String>,
+    /// Where the launching browser keeps its key; [`TargetKeystore::Mock`]
+    /// when its command line bypasses the OS keystore
+    /// ([`target_keystore_for`]).
+    pub target_keystore: TargetKeystore,
     /// Explicit Safari/Passwords app password CSV export.
     pub password_csv: Option<PathBuf>,
     /// Explicit consent to import payment cards; selecting the class is insufficient.
@@ -363,6 +368,7 @@ impl std::fmt::Debug for MigrateProfileOptions {
             .field("domains", &self.domains)
             .field("platform", &self.platform)
             .field("target_browser", &self.target_browser)
+            .field("target_keystore", &self.target_keystore)
             .field("keys", &self.keys)
             .field("home_dir", &self.home_dir)
             .finish_non_exhaustive()
@@ -382,6 +388,7 @@ impl MigrateProfileOptions {
             domains: Vec::new(),
             platform: current_platform().to_string(),
             target_browser: None,
+            target_keystore: TargetKeystore::Os,
             password_csv: None,
             include_payment_cards: false,
             keys: None,
@@ -426,6 +433,13 @@ impl MigrateProfileOptions {
     #[must_use]
     pub fn target_browser(mut self, target_browser: impl Into<String>) -> Self {
         self.target_browser = Some(target_browser.into());
+        self
+    }
+
+    /// Set where the launching browser keeps its key (target key derivation).
+    #[must_use]
+    pub fn target_keystore(mut self, target_keystore: TargetKeystore) -> Self {
+        self.target_keystore = target_keystore;
         self
     }
 
@@ -547,8 +561,12 @@ fn resolve_password_keys(
     if platform != "darwin" && platform != "linux" {
         return Ok(None);
     }
-    let TargetKey { key, prefix } =
-        os_crypt_keys::resolve_target_key(target_browser, platform, &options.keystore)?;
+    let TargetKey { key, prefix } = os_crypt_keys::resolve_target_key(
+        target_browser,
+        platform,
+        options.target_keystore,
+        &options.keystore,
+    )?;
     let resolve_source_key = is_chromium(browser).then(|| {
         os_crypt_keys::create_source_key_resolver(
             browser,

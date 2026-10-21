@@ -118,6 +118,10 @@ append-only builder.
 
 #### Chrome for Testing by default
 
+See [Chrome for Testing by default](../docs/chrome-for-testing.md) for the
+download each engine starts, its matching ChromeDriver and the Ubuntu sandbox
+note.
+
 Without a `channel` or `executable_path`, `launch_browser()` and
 `launch_real_browser()` start Chrome for Testing, never your own Google
 Chrome. It looks for the engine's bundled browser first, then in the

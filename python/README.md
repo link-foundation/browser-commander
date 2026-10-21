@@ -174,6 +174,10 @@ omits that launcher's own defaults.
 
 #### Chrome for Testing by default
 
+See [Chrome for Testing by default](../docs/chrome-for-testing.md) for the
+download each engine starts, its matching ChromeDriver and the Ubuntu sandbox
+note.
+
 Without `channel` or `executable_path`, a launch starts Chrome for Testing -
 the one Playwright downloaded, or else another build in the `ms-playwright`
 cache (moved by `PLAYWRIGHT_BROWSERS_PATH`), newest first; Selenium also tries

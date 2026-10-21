@@ -51,7 +51,9 @@ impl WebDriverBrowser {
 #[derive(Clone, Debug)]
 pub struct WebDriverOptions {
     pub browser: WebDriverBrowser,
-    /// Matching chromedriver/geckodriver; otherwise resolved through PATH.
+    /// Matching chromedriver/geckodriver; otherwise the chromedriver
+    /// downloaded with a Chrome for Testing `browser_executable` (issue
+    /// #179), else resolved through PATH.
     pub driver_executable: Option<PathBuf>,
     pub browser_executable: Option<PathBuf>,
     /// An existing dedicated profile is retained on close. Never use a profile
@@ -240,6 +242,33 @@ impl Drop for ManagedWebDriver {
     }
 }
 
+/// The driver a launch starts: the requested one, else for Chrome for
+/// Testing a cached chromedriver of its release - a `chromedriver` on `PATH`
+/// belongs to the installed Google Chrome and refuses another release (issue
+/// #179) - else the driver on `PATH`.
+fn driver_executable(options: &WebDriverOptions) -> PathBuf {
+    if let Some(driver) = &options.driver_executable {
+        return driver.clone();
+    }
+    if options.browser == WebDriverBrowser::Chrome {
+        if let Some(driver) = options
+            .browser_executable
+            .as_deref()
+            .and_then(crate::browser::chrome_for_testing::chromedriver_for)
+        {
+            return driver;
+        }
+    }
+    PathBuf::from(match options.browser {
+        WebDriverBrowser::Chrome => "chromedriver",
+        WebDriverBrowser::Firefox => "geckodriver",
+        WebDriverBrowser::Safari => "/usr/bin/safaridriver",
+        WebDriverBrowser::SafariTechnologyPreview => {
+            "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"
+        }
+    })
+}
+
 /// Start a locally installed driver. No npm package or Node process is used.
 pub async fn launch_webdriver(options: WebDriverOptions) -> Result<ManagedWebDriver> {
     launch_owned(options, false).await
@@ -314,16 +343,7 @@ async fn launch_owned(
         .transpose()?;
     let capabilities = build_capabilities(&options, &profile, staging.as_deref())?;
     let port = crate::browser::debugging_port::reserve_loopback_port()?;
-    let executable = options.driver_executable.clone().unwrap_or_else(|| {
-        PathBuf::from(match options.browser {
-            WebDriverBrowser::Chrome => "chromedriver",
-            WebDriverBrowser::Firefox => "geckodriver",
-            WebDriverBrowser::Safari => "/usr/bin/safaridriver",
-            WebDriverBrowser::SafariTechnologyPreview => {
-                "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"
-            }
-        })
-    });
+    let executable = driver_executable(&options);
     let args = match options.browser {
         WebDriverBrowser::Chrome => {
             vec![format!("--port={port}"), "--allowed-ips=127.0.0.1".into()]
@@ -447,4 +467,60 @@ async fn launch_owned(
         return Err(error);
     }
     Ok(browser)
+}
+
+#[cfg(test)]
+mod driver_tests {
+    use super::*;
+    use crate::browser::browser_cookie_sources::tests::TempDir;
+
+    fn executable(root: &Path, relative: &str) -> PathBuf {
+        let path = root.join(relative);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, "").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        path
+    }
+
+    #[test]
+    fn chrome_for_testing_gets_the_chromedriver_of_its_release() {
+        let temp = TempDir::new("bc-webdriver-driver-");
+        let cft = executable(temp.path(), "selenium/chrome/linux64/131.0.6778.85/chrome");
+        let driver = executable(
+            temp.path(),
+            "selenium/chromedriver/linux64/131.0.6778.85/chromedriver",
+        );
+        let options = |browser_executable: Option<PathBuf>| WebDriverOptions {
+            browser_executable,
+            ..WebDriverOptions::default()
+        };
+        assert_eq!(driver_executable(&options(Some(cft.clone()))), driver);
+        // Without one downloaded, or for another browser, the driver on PATH.
+        let other = executable(temp.path(), "selenium/chrome/linux64/132.0.1/chrome");
+        assert_eq!(
+            driver_executable(&options(Some(other))),
+            PathBuf::from("chromedriver")
+        );
+        assert_eq!(
+            driver_executable(&options(Some("/opt/google/chrome/chrome".into()))),
+            PathBuf::from("chromedriver")
+        );
+        assert_eq!(
+            driver_executable(&options(None)),
+            PathBuf::from("chromedriver")
+        );
+        // A requested driver always wins.
+        let requested = WebDriverOptions {
+            driver_executable: Some("/opt/chromedriver".into()),
+            ..options(Some(cft))
+        };
+        assert_eq!(
+            driver_executable(&requested),
+            PathBuf::from("/opt/chromedriver")
+        );
+    }
 }

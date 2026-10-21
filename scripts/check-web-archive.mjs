@@ -18,6 +18,14 @@
  *      same URL answered 200 on the next run. Failing a pull request for it is
  *      a false positive, and the Wayback Machine cannot rescue it either -
  *      a live page that nobody has archived has no snapshot to fall back to.
+ *   3. `[503]` from chromium.googlesource.com, followed by a re-check that
+ *      timed out, was reported as confirmed broken. A timeout after a 5xx is
+ *      the same host still not answering; the links answered 200 elsewhere.
+ *   4. A README linked `blob/main/docs/chrome-for-testing.md`, a doc the same
+ *      pull request adds (run 39651456194). READMEs are published to npm, PyPI
+ *      and crates.io, so they link docs on main by absolute URL, and main has
+ *      the file only once the pull request merges. A 404 on this
+ *      repository's main branch is checked against the checkout instead.
  *
  * So: only the errors section is read, every rejected URL is re-checked from
  * this script, and a URL is only ever fatal when the second look agrees it is
@@ -28,6 +36,8 @@
  *
  * Environment variables:
  *   - LYCHEE_OUTPUT: path to lychee's markdown output (default: lychee/out.md)
+ *   - GITHUB_REPOSITORY: `owner/repo` whose main-branch links are checked
+ *     against the checkout (set by GitHub Actions)
  *   - CI_SCRIPTS_DEBUG=1: trace parsing and every verdict (default: off)
  *
  * GitHub Actions outputs:
@@ -39,6 +49,7 @@
  */
 
 import { readFileSync, appendFileSync, existsSync } from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { debug } from './debug-print.mjs';
@@ -230,26 +241,58 @@ export function formatTimestamp(timestamp) {
 }
 
 /**
+ * The checkout path a link to this repository's main branch names.
+ *
+ * @param {string} url - a rejected link
+ * @param {string | undefined} repository - `owner/repo`
+ * @returns {string | null} the path relative to the checkout root, or null
+ */
+export function ownRepositoryPath(url, repository) {
+  if (!repository) {
+    return null;
+  }
+  const repo = `https://github.com/${repository}/`.toLowerCase();
+  if (!url.toLowerCase().startsWith(repo)) {
+    return null;
+  }
+  const match = url.slice(repo.length).match(/^(?:blob|tree)\/main\/([^?#]+)/);
+  const relative = match?.[1];
+  return relative ? decodeURIComponent(relative) : null;
+}
+
+/**
  * Decide the fate of one rejected link.
  *
  * @param {{url: string, status: string}} link - as parsed from the report
- * @param {{recheckImpl?: Function, waybackImpl?: Function}} [deps]
- * @returns {Promise<{url: string, status: string, verdict: 'alive' | 'transient' | 'archived' | 'gone', archiveUrl?: string, date?: string}>}
+ * @param {{recheckImpl?: Function, waybackImpl?: Function, repository?: string, fileExists?: Function}} [deps]
+ * @returns {Promise<{url: string, status: string, verdict: 'alive' | 'transient' | 'unmerged' | 'archived' | 'gone', archiveUrl?: string, date?: string}>}
  */
 export async function judge(link, deps = {}) {
   const recheckImpl = deps.recheckImpl ?? recheck;
   const waybackImpl = deps.waybackImpl ?? checkWaybackMachine;
+  const repository = deps.repository ?? process.env.GITHUB_REPOSITORY;
+  const fileExists =
+    deps.fileExists ?? ((relative) => existsSync(path.resolve(relative)));
+
+  // A file the checkout has is on main as soon as this branch merges.
+  const own = link.status === '404' && ownRepositoryPath(link.url, repository);
+  if (own && fileExists(own)) {
+    debug('linked file is in the checkout', { url: link.url, path: own });
+    return { ...link, verdict: 'unmerged' };
+  }
 
   const second = await recheckImpl(link.url);
   if (second.alive) {
     return { ...link, verdict: 'alive' };
   }
 
+  // After a 429 or 5xx, a second refusal or no answer at all (a timeout)
+  // still says nothing about the link, and a host that answered resolves.
   const kind = classifyStatus(link.status);
-  if (kind === 'transient' && second.status !== null && second.status >= 500) {
-    return { ...link, verdict: 'transient' };
-  }
-  if (kind === 'transient' && second.status === 429) {
+  if (
+    kind === 'transient' &&
+    (second.status === null || second.status >= 500 || second.status === 429)
+  ) {
     return { ...link, verdict: 'transient' };
   }
 
@@ -313,6 +356,13 @@ async function main() {
       `::warning title=Link host unavailable::${url} answered [${status}] twice. ` +
         `A 429 or 5xx is the host reporting its own problem, so this run cannot ` +
         `say whether the link is valid and does not fail because of it.`
+    );
+  }
+
+  for (const { url } of verdicts.filter((v) => v.verdict === 'unmerged')) {
+    console.log(
+      `::notice title=Link to a file this branch adds::${url} is not on main ` +
+        `yet, but the checkout has the file, so it resolves once this merges.`
     );
   }
 

@@ -609,6 +609,31 @@ pub fn read_browser_cookies(mut options: BrowserCookieReadOptions) -> Result<Vec
     Ok(cookies)
 }
 
+/// The key Chromium derives from its fixed mock-keystore password on macOS
+/// (`--use-mock-keychain`) or Linux (`--password-store=basic`), the same key
+/// cookie reading uses for such a profile, so profile migration can encrypt
+/// for a browser started that way (issue #179).
+pub(crate) fn chromium_mock_keystore_key(platform: &str) -> Result<Vec<u8>> {
+    let cache = NormalizedCookieCache {
+        enabled: false,
+        directory: PathBuf::new(),
+        ttl_seconds: 0.0,
+    };
+    let mut state = CookieDecryptionState {
+        mock_keystore: true,
+        cache: &cache,
+        operation_keys: OperationKeyCache::default(),
+    };
+    chromium_key_for_prefix(
+        b"v10",
+        "chromium",
+        platform,
+        Path::new(""),
+        false,
+        &mut state,
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

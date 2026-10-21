@@ -262,3 +262,132 @@ fn an_empty_cache_finds_nothing() {
         ])
         .is_empty());
 }
+
+#[test]
+fn chrome_for_testing_is_paired_with_the_chromedriver_of_its_release() {
+    let scratch = Scratch::new("driver");
+    let selenium = scratch.binary(&["selenium", "chrome", "linux64", "131.0.6778.85", "chrome"]);
+    let selenium_driver = scratch.binary(&[
+        "selenium",
+        "chromedriver",
+        "linux64",
+        "131.0.6778.85",
+        "chromedriver",
+    ]);
+    scratch.binary(&[
+        "selenium",
+        "chromedriver",
+        "linux64",
+        "130.0.1",
+        "chromedriver",
+    ]);
+    assert_eq!(matching_chromedriver(&selenium), Some(selenium_driver));
+
+    let puppeteer = scratch.binary(&[
+        "puppeteer",
+        "chrome",
+        "linux-131.0.6778.85",
+        "chrome-linux64",
+        "chrome",
+    ]);
+    let puppeteer_driver = scratch.binary(&[
+        "puppeteer",
+        "chromedriver",
+        "linux-131.0.6778.85",
+        "chromedriver-linux64",
+        "chromedriver",
+    ]);
+    assert_eq!(matching_chromedriver(&puppeteer), Some(puppeteer_driver));
+
+    // Another release's chromedriver cannot drive it, and Playwright
+    // downloads none.
+    let unmatched = scratch.binary(&["selenium", "chrome", "linux64", "132.0.1", "chrome"]);
+    assert_eq!(matching_chromedriver(&unmatched), None);
+    let playwright =
+        scratch.binary(&["ms-playwright", "chromium-1248", "chrome-linux64", "chrome"]);
+    assert_eq!(matching_chromedriver(&playwright), None);
+    assert_eq!(
+        matching_chromedriver(Path::new("/opt/google/chrome/chrome")),
+        None
+    );
+
+    // fantoccini prefers a download it has the chromedriver of.
+    assert_eq!(
+        prefer_driven(vec![
+            playwright.clone(),
+            unmatched.clone(),
+            puppeteer.clone()
+        ]),
+        Some(puppeteer)
+    );
+    assert_eq!(
+        prefer_driven(vec![playwright.clone(), unmatched]),
+        Some(playwright)
+    );
+    assert_eq!(prefer_driven(Vec::new()), None);
+}
+
+#[test]
+fn another_download_of_the_same_major_version_drives_chrome_for_testing() {
+    let scratch = Scratch::new("major");
+    let home = scratch.0.join("home");
+    let playwright = scratch.binary(&[
+        "home",
+        ".cache",
+        "ms-playwright",
+        "chromium-1248",
+        "chrome-linux64",
+        "chrome",
+    ]);
+    let selenium_155 = scratch.binary(&[
+        "home",
+        ".cache",
+        "selenium",
+        "chromedriver",
+        "linux64",
+        "155.0.8059.84",
+        "chromedriver",
+    ]);
+    scratch.binary(&[
+        "home",
+        ".cache",
+        "selenium",
+        "chromedriver",
+        "linux64",
+        "156.0.8078.47",
+        "chromedriver",
+    ]);
+    let puppeteer_156 = scratch.binary(&[
+        "home",
+        ".cache",
+        "puppeteer",
+        "chromedriver",
+        "linux-156.0.8078.50",
+        "chromedriver-linux64",
+        "chromedriver",
+    ]);
+    let caches = locations(CachePlatform::Linux64, &home, &[]);
+    assert_eq!(
+        caches
+            .chromedrivers()
+            .into_iter()
+            .map(|(_, driver)| driver)
+            .collect::<Vec<_>>()[0],
+        puppeteer_156
+    );
+    let driver = |major: Option<u64>| chromedriver_for_with(&playwright, |_| major, Some(&caches));
+    assert_eq!(driver(Some(156)), Some(puppeteer_156));
+    assert_eq!(driver(Some(155)), Some(selenium_155));
+    // No chromedriver of its version: the launch falls back to PATH.
+    assert_eq!(driver(Some(157)), None);
+    assert_eq!(driver(None), None);
+    // Only Chrome for Testing is paired; Google Chrome keeps its own driver.
+    assert_eq!(
+        chromedriver_for_with(
+            Path::new("/opt/google/chrome/chrome"),
+            |_| panic!("Google Chrome is not asked for its version"),
+            Some(&caches),
+        ),
+        None
+    );
+}

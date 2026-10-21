@@ -16,6 +16,7 @@ import {
   classifyStatus,
   extractRejectedLinks,
   judge,
+  ownRepositoryPath,
 } from '../../../../scripts/check-web-archive.mjs';
 
 // Verbatim shape of lychee/out.md from run 33959793880.
@@ -131,8 +132,8 @@ const waybackHas = (timestamp, archiveUrl) => async () => ({
   timestamp,
 });
 
-const verdictFor = (link, recheckImpl, waybackImpl) =>
-  judge(link, { recheckImpl, waybackImpl });
+const verdictFor = (link, recheckImpl, waybackImpl, extra = {}) =>
+  judge(link, { recheckImpl, waybackImpl, ...extra });
 
 describe('judging one rejected link', () => {
   const playwright = {
@@ -148,6 +149,14 @@ describe('judging one rejected link', () => {
 
   it('does not fail for a host that is down twice', async () => {
     const verdict = await verdictFor(playwright, answers(503), waybackNever());
+    assert.equal(verdict.verdict, 'transient');
+  });
+
+  it('does not fail for a host that answered 5xx and then timed out', async () => {
+    // chromium.googlesource.com answered 503 to lychee and then let the
+    // re-check time out: neither said the link is gone, and a host that
+    // answered at all still resolves.
+    const verdict = await verdictFor(playwright, unreachable(), waybackNever());
     assert.equal(verdict.verdict, 'transient');
   });
 
@@ -185,6 +194,72 @@ describe('judging one rejected link', () => {
       { url: 'https://example.invalid/x', status: 'ERROR' },
       unreachable(),
       waybackNothing()
+    );
+    assert.equal(verdict.verdict, 'gone');
+  });
+});
+
+describe('a link to a file this branch adds', () => {
+  // Run 39651456194: the READMEs link the new docs/chrome-for-testing.md on
+  // main, which is published to npm, PyPI and crates.io, so it must be an
+  // absolute URL. Until the pull request merges, main has no such file.
+  const repository = 'link-foundation/browser-commander';
+  const newDoc = {
+    url: 'https://github.com/link-foundation/browser-commander/blob/main/docs/chrome-for-testing.md',
+    status: '404',
+  };
+  const checkout = (...files) => ({
+    repository,
+    fileExists: (relative) => files.includes(relative),
+  });
+
+  it('maps this repository’s main-branch links to checkout paths', () => {
+    assert.equal(
+      ownRepositoryPath(`${newDoc.url}#verifying-it`, repository),
+      'docs/chrome-for-testing.md'
+    );
+    assert.equal(
+      ownRepositoryPath(
+        'https://github.com/link-foundation/browser-commander/tree/main/docs/case%20studies',
+        repository
+      ),
+      'docs/case studies'
+    );
+    assert.equal(
+      ownRepositoryPath(
+        'https://github.com/link-foundation/browser-commander/blob/v1/x.md',
+        repository
+      ),
+      null
+    );
+    assert.equal(
+      ownRepositoryPath(
+        'https://github.com/other/repo/blob/main/x.md',
+        repository
+      ),
+      null
+    );
+    assert.equal(ownRepositoryPath(newDoc.url, undefined), null);
+  });
+
+  it('does not fail when the checkout has the file main is about to get', async () => {
+    const verdict = await verdictFor(
+      newDoc,
+      () => {
+        throw new Error('a file in the checkout needs no network request');
+      },
+      waybackNever(),
+      checkout('docs/chrome-for-testing.md')
+    );
+    assert.equal(verdict.verdict, 'unmerged');
+  });
+
+  it('still fails when the checkout does not have the file either', async () => {
+    const verdict = await verdictFor(
+      newDoc,
+      answers(404),
+      waybackNothing(),
+      checkout('docs/feature-parity.md')
     );
     assert.equal(verdict.verdict, 'gone');
   });

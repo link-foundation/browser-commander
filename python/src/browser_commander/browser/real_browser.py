@@ -16,6 +16,7 @@ import inspect
 import json
 import logging
 import os
+import sys
 from collections.abc import Awaitable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -38,6 +39,7 @@ from browser_commander.browser.launch_diagnostics import (
 )
 from browser_commander.browser.launch_executable import (
     default_restrictions_for,
+    is_chrome_for_testing,
     resolve_launch_executable,
 )
 from browser_commander.browser.launcher import LaunchResult
@@ -110,8 +112,9 @@ class RealBrowserOptions:
     channel: str | None = None
     """Installed Chrome-family channel, such as ``"chrome"`` for the installed
     Google Chrome. Without it (and without ``executable_path``) the engine's
-    Chrome for Testing is started (issue #179); a migration then targets
-    ``"chrome"``."""
+    Chrome for Testing is started (issue #179). A migration targets the browser
+    that starts: ``"chromium"`` for Chrome for Testing, else this channel
+    (default ``"chrome"``)."""
     executable_path: str | None = None
     user_data_dir: str | None = None
     persist_session_cookies: bool | str | Path = False
@@ -627,6 +630,8 @@ async def _run_pre_launch_migration(
     options: RealBrowserOptions,
     *,
     user_data_dir: str,
+    executable_path: str,
+    platform: str,
     temporary_profile: bool,
     migrate: Any,
 ) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
@@ -642,6 +647,10 @@ async def _run_pre_launch_migration(
 
     if not options.migrate_from:
         return None, []
+    from browser_commander.browser.migration.os_crypt_keys import (
+        target_keystore_for,
+    )
+
     source = dict(options.migrate_from)
     include = source.pop("include", None)
     domains = source.pop("domains", None)
@@ -655,7 +664,22 @@ async def _run_pre_launch_migration(
         "domains": domains,
         "password_csv": password_csv,
         "include_payment_cards": include_payment_cards,
-        "target_browser": options.channel or "chrome",
+        # Passwords are re-encrypted with the key of the browser that starts:
+        # Chrome for Testing keeps "Chromium Safe Storage", and its default
+        # mock keychain uses Chromium's fixed mock password (issue #179).
+        "target_browser": (
+            "chromium"
+            if is_chrome_for_testing(executable_path)
+            else options.channel or "chrome"
+        ),
+        "target_keystore": target_keystore_for(
+            [
+                *resolve_restrictions(options.restrictions).args,
+                *options.args,
+                *options.extra_args,
+            ],
+            platform,
+        ),
     }
     if include is not None:
         migrate_options["include"] = include
@@ -685,6 +709,7 @@ async def launch_real_browser_with_dependencies(
     reserve_port: Any = reserve_loopback_port,
     migrate_profile: Any = _default_migrate_profile,
     owned_profile: bool = False,
+    platform: str = sys.platform,
 ) -> RealBrowserResult:
     """Dependency-injected implementation used by the public helper and tests."""
 
@@ -739,6 +764,8 @@ async def launch_real_browser_with_dependencies(
     migration, migrated_cookies = await _run_pre_launch_migration(
         options,
         user_data_dir=user_data_dir,
+        executable_path=executable_path,
+        platform=platform,
         temporary_profile=temporary_profile,
         migrate=migrate_profile,
     )
@@ -815,6 +842,10 @@ async def launch_real_browser_with_dependencies(
                     storage_state=options.storage_state,
                     verbose=options.verbose,
                     downloads=options.downloads,
+                    # ChromeDriver must match the browser just started (#179).
+                    executable_path=executable_path
+                    if options.engine == "selenium"
+                    else None,
                 )
             )
         )

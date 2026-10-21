@@ -17,6 +17,9 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from browser_commander.browser.chrome_for_testing_cache import (
+    cached_chrome_for_testing,
+)
 from browser_commander.browser.restrictions import LAUNCH_RESTRICTION_PRESETS
 from browser_commander.core.engine_detection import EngineType
 
@@ -126,14 +129,30 @@ def _selenium_manager_executable() -> str | None:
     return paths.get("browser_path") or None
 
 
-async def bundled_chrome_for_testing(engine: str) -> str | None:
+def _returning(value: str) -> Any:
+    async def source() -> str:
+        return value
+
+    return source
+
+
+async def bundled_chrome_for_testing(
+    engine: str, *, cached: Any = cached_chrome_for_testing
+) -> str | None:
     """The Chrome for Testing an engine downloaded, if any.
 
-    Playwright uses its own; Selenium has no browser of its own and uses
-    Playwright's, then the one Selenium Manager keeps.
+    Playwright uses its own, then any other build in its download cache,
+    newest first. Selenium has no browser of its own and uses Playwright's,
+    then the Playwright, Puppeteer and Selenium Manager caches, then asks
+    Selenium Manager, which downloads one when none is there.
     """
 
     sources: list[Any] = [_playwright_executable]
+    try:
+        candidates = list(cached(engine))
+    except Exception:
+        candidates = []
+    sources.extend(_returning(candidate) for candidate in candidates)
     if engine == "selenium":
         sources.append(lambda: asyncio.to_thread(_selenium_manager_executable))
     for source in sources:

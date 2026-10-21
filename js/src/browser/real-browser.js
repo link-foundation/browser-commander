@@ -374,10 +374,12 @@ function createCloser({
 
 /**
  * Selenium attaches through a chromedriver the launch starts; the driver
- * follows the browser's interruption ownership (issue #174).
+ * follows the browser's interruption ownership (issue #174) and must match
+ * the browser just started, not the installed Chrome Selenium Manager would
+ * otherwise pick (issue #179).
  */
-function driverInterruption(engine, interruption) {
-  return engine === 'selenium' ? { interruption } : {};
+function driverOptions(engine, { interruption, executablePath }) {
+  return engine === 'selenium' ? { interruption, executablePath } : {};
 }
 
 /**
@@ -823,10 +825,7 @@ export async function launchAndConnectRealBrowserWithDependencies(
       engine,
       cdpEndpoint: resolvedCdpEndpoint,
       ...connectionOptions,
-      ...driverInterruption(engine, interruption),
-      // ChromeDriver must match the browser just started, not the installed
-      // Chrome Selenium Manager would otherwise pick (issue #179).
-      ...(engine === 'selenium' ? { executablePath } : {}),
+      ...driverOptions(engine, { interruption, executablePath }),
       seedCookies,
       verbose,
     });

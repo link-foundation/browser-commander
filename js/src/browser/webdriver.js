@@ -242,14 +242,38 @@ export async function resolveWebDriverExecutable({
     };
   }
 
+  return await askSeleniumManager({
+    browser,
+    name,
+    executablePath,
+    download,
+    environment,
+    platform,
+    runCommand,
+    managerPath,
+  });
+}
+
+/** Ask Selenium Manager for the driver of `browser` (and the browser itself). */
+async function askSeleniumManager({
+  browser,
+  name,
+  executablePath,
+  download,
+  environment,
+  platform,
+  runCommand,
+  managerPath,
+}) {
   const manager = managerPath ?? seleniumManagerPath({ platform, environment });
-  const args = ['--browser', browser, '--output', 'json'];
-  if (executablePath) {
-    args.push('--browser-path', executablePath);
-  }
-  if (download) {
-    args.push('--force-browser-download');
-  }
+  const args = [
+    '--browser',
+    browser,
+    '--output',
+    'json',
+    ...(executablePath ? ['--browser-path', executablePath] : []),
+    ...(download ? ['--force-browser-download'] : []),
+  ];
   const { stdout, code } = await runCommand(manager, args, { check: false });
   let output;
   try {

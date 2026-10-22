@@ -11,6 +11,7 @@ import path from 'node:path';
 import { test as baseTest } from 'test-anywhere';
 import { launchBrowser } from '../browser/launcher.js';
 import { makeBrowserCommander } from '../factory.js';
+import { captureStableViewport } from '../capture/viewport.js';
 import {
   finishScenarioTrace,
   resolveTestDownloads,
@@ -571,7 +572,19 @@ export async function writeFailureArtifacts(options = {}) {
   if (page && typeof page.screenshot === 'function') {
     const screenshotPath = path.join(artifactsDir, `${safeName}.png`);
     try {
-      await page.screenshot({ path: screenshotPath });
+      // A clipped engine capture can leave a resized headful window drawn at
+      // its old size (issue #180); without a fixed viewport, capture the view.
+      if (['playwright', 'puppeteer'].includes(engine)) {
+        const shot = await captureStableViewport(page, engine, {
+          type: 'png',
+          path: screenshotPath,
+        });
+        if (shot.engine === 'cdp') {
+          writeFileSync(screenshotPath, shot.bytes);
+        }
+      } else {
+        await page.screenshot({ path: screenshotPath });
+      }
       artifacts.push(screenshotPath);
     } catch (screenshotError) {
       const screenshotErrorPath = path.join(

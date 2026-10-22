@@ -232,6 +232,7 @@ describe('browser-commander/tests', () => {
         page: {
           screenshot: async ({ path: screenshotPath }) => {
             assert.ok(screenshotPath.endsWith('.png'));
+            return Buffer.from('png');
           },
         },
         error: new Error('broken'),
@@ -241,6 +242,7 @@ describe('browser-commander/tests', () => {
       });
 
       assert.strictEqual(artifacts.length, 2);
+      assert.ok(artifacts[1].endsWith('.png'), artifacts[1]);
       const errorJson = JSON.parse(readFileSync(artifacts[0], 'utf8'));
       assert.strictEqual(errorJson.message, 'broken');
       assert.strictEqual(errorJson.engine, 'playwright');

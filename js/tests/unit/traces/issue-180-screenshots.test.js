@@ -5,6 +5,7 @@ import path from 'node:path';
 import { startTrace } from '../../../src/traces/recorder.js';
 import { TRACE_MODE } from '../../../src/traces/schema.js';
 import { screenshot } from '../../../src/capture/index.js';
+import { writeFailureArtifacts } from '../../../src/tests/index.js';
 import {
   createFakeCommander,
   createFakePage,
@@ -45,6 +46,22 @@ function cdpFake({ viewport = null, failWith, engine = 'playwright' } = {}) {
   return { page, calls };
 }
 
+/** One clip-less CDP capture of the view, and no engine screenshot. */
+function assertViewCapture(calls) {
+  assert.deepEqual(calls.cdp, [
+    {
+      method: 'Page.captureScreenshot',
+      params: {
+        format: 'png',
+        fromSurface: false,
+        captureBeyondViewport: false,
+      },
+    },
+  ]);
+  assert.equal(calls.engine.length, 0);
+  assert.equal(calls.detached, 1);
+}
+
 describe('trace checkpoint screenshots (issue #180)', () => {
   const directory = useTempTraceDirectory();
 
@@ -74,18 +91,7 @@ describe('trace checkpoint screenshots (issue #180)', () => {
           await checkpointShot(page, { withCommander, engine }),
           'cdp-png'
         );
-        assert.deepEqual(calls.cdp, [
-          {
-            method: 'Page.captureScreenshot',
-            params: {
-              format: 'png',
-              fromSurface: false,
-              captureBeyondViewport: false,
-            },
-          },
-        ]);
-        assert.equal(calls.engine.length, 0);
-        assert.equal(calls.detached, 1);
+        assertViewCapture(calls);
       });
     }
   }
@@ -168,6 +174,51 @@ describe('default commander screenshots (issue #180)', () => {
       await screenshot({ page, ...options });
       assert.equal(calls.cdp.length, 0);
       assert.equal(calls.engine.length, 1);
+    });
+  }
+});
+
+describe('failure artifact screenshots (issue #180)', () => {
+  const directory = useTempTraceDirectory();
+
+  /** The PNG artifact a failed scenario writes, read back as text. */
+  async function failureShot(page, engine) {
+    page.screenshot = async (options) => {
+      page.engineCalls.push(options);
+      await fs.writeFile(options.path, 'engine-png');
+      return Buffer.from('engine-png');
+    };
+    const [, shot] = await writeFailureArtifacts({
+      page,
+      error: new Error('broken'),
+      testId: 'resized',
+      engine,
+      artifactsDir: directory.path,
+    });
+    assert.ok(shot.endsWith('.png'), shot);
+    return (await fs.readFile(shot)).toString();
+  }
+
+  for (const engine of ['playwright', 'puppeteer']) {
+    it(`${engine} without a fixed viewport sends no clip`, async () => {
+      const { page, calls } = cdpFake({ engine });
+      page.engineCalls = calls.engine;
+      assert.equal(await failureShot(page, engine), 'cdp-png');
+      assertViewCapture(calls);
+    });
+  }
+
+  for (const [name, engine, viewport] of [
+    ['playwright with a fixed viewport', 'playwright', { width: 8, height: 6 }],
+    ['puppeteer with a fixed viewport', 'puppeteer', { width: 8, height: 6 }],
+    ['selenium', 'selenium', null],
+  ]) {
+    it(`${name} keeps the engine screenshot`, async () => {
+      const page =
+        engine === 'selenium' ? {} : cdpFake({ engine, viewport }).page;
+      page.engineCalls = [];
+      assert.equal(await failureShot(page, engine), 'engine-png');
+      assert.equal(page.engineCalls.length, 1);
     });
   }
 });

@@ -166,6 +166,31 @@ function launchDependencies(overrides = {}) {
   };
 }
 
+// Resolve through a fake Selenium Manager that answers browserPath.
+async function managerResolve(
+  options,
+  { checkAccess = accessOnly(), browserPath }
+) {
+  const commands = [];
+  const resolved = await resolveWebDriverExecutable({
+    managerPath: '/sm',
+    checkAccess,
+    runCommand: async (file, args) => {
+      commands.push([file, ...args]);
+      return managerOutput({
+        driver_path: '/cache/chromedriver',
+        browser_path: browserPath,
+      });
+    },
+    ...options,
+  });
+  return { commands, resolved };
+}
+
+const SELENIUM_CFT = '/home/u/.cache/selenium/chrome/linux64/156.0/chrome';
+const PLAYWRIGHT_CFT =
+  '/home/u/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
+
 describe('resolveWebDriverExecutable', () => {
   it('uses an explicit driverPath first', async () => {
     const resolved = await resolveWebDriverExecutable({
@@ -210,21 +235,38 @@ describe('resolveWebDriverExecutable', () => {
     assert.equal(resolved.driverPath, 'C:\\b\\chromedriver.exe');
   });
 
-  it('then asks Selenium Manager for a matching driver', async () => {
-    const commands = [];
-    const resolved = await resolveWebDriverExecutable({
-      executablePath: '/usr/bin/google-chrome',
-      environment: { PATH: '' },
-      managerPath: '/sm',
-      checkAccess: accessOnly(),
-      runCommand: async (file, args) => {
-        commands.push([file, ...args]);
-        return managerOutput({
-          driver_path: '/cache/chromedriver',
-          browser_path: '/usr/bin/google-chrome',
-        });
-      },
+  // A chromedriver on PATH drives the installed Google Chrome: never used
+  // for Chrome for Testing (issue #179). Selenium Manager returns a PATH
+  // driver of another release too, so it is told to skip it (run
+  // 39651456089: ChromeDriver 155 for Chrome 153).
+  for (const cft of [PLAYWRIGHT_CFT, SELENIUM_CFT]) {
+    it(`matches ${cft} with its own driver, not the one on PATH (issue #179)`, async () => {
+      const { commands, resolved } = await managerResolve(
+        { executablePath: cft, environment: { PATH: '/bin' } },
+        { checkAccess: accessOnly('/bin/chromedriver'), browserPath: cft }
+      );
+      assert.deepEqual(commands, [
+        [
+          '/sm',
+          '--browser',
+          'chrome',
+          '--output',
+          'json',
+          '--browser-path',
+          cft,
+          '--skip-driver-in-path',
+        ],
+      ]);
+      assert.equal(resolved.driverPath, '/cache/chromedriver');
+      assert.equal(resolved.source, 'selenium-manager');
     });
+  }
+
+  it('then asks Selenium Manager for a matching driver', async () => {
+    const { commands, resolved } = await managerResolve(
+      { executablePath: '/usr/bin/google-chrome', environment: { PATH: '' } },
+      { browserPath: '/usr/bin/google-chrome' }
+    );
     assert.deepEqual(commands, [
       [
         '/sm',
@@ -379,6 +421,45 @@ describe('launchWebDriver', () => {
     assert.ok(mock.driver.calls.some(([name]) => name === 'quit'));
     assert.ok(!existsSync(session.userDataDir));
     await session.close(); // idempotent
+  });
+
+  it('adds the Chrome for Testing defaults for the browser it resolves (issue #179)', async () => {
+    const launchWith = async (browserPath, options = {}) => {
+      const { mock, dependencies } = launchDependencies({
+        runCommand: async () =>
+          managerOutput({
+            driver_path: '/cache/chromedriver',
+            browser_path: browserPath,
+          }),
+      });
+      const session = await launchWebDriver(options, dependencies);
+      await session.close();
+      const { args } = mock.record.builders[0].options;
+      return {
+        defaults: session.defaultRestrictions,
+        switches: args.filter((arg) =>
+          ['--test-type=gpu', '--use-mock-keychain'].includes(arg)
+        ),
+      };
+    };
+
+    // Selenium Manager downloads Chrome for Testing when no Chrome is installed.
+    const cft = await launchWith(
+      '/home/u/.cache/selenium/chrome/linux64/131.0.6778.85/chrome'
+    );
+    assert.deepEqual(cft.defaults, [
+      'no-chrome-for-testing-infobar',
+      'mock-keychain',
+    ]);
+    assert.deepEqual(cft.switches, ['--test-type=gpu', '--use-mock-keychain']);
+
+    const chrome = await launchWith('/opt/google/chrome/chrome');
+    assert.deepEqual(chrome, { defaults: [], switches: [] });
+    const off = await launchWith(
+      '/home/u/.cache/selenium/chrome/linux64/131.0.6778.85/chrome',
+      { defaultRestrictions: [] }
+    );
+    assert.deepEqual(off, { defaults: [], switches: [] });
   });
 
   it('starts geckodriver for Firefox with a -profile argument', async () => {

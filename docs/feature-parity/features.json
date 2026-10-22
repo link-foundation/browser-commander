@@ -147,6 +147,10 @@
           "title": "Bounded redacted launch diagnostics"
         },
         {
+          "id": "launch.chrome-for-testing",
+          "title": "Chrome for Testing by default, without its infobar or keychain prompt"
+        },
+        {
           "id": "elements.reusable",
           "title": "Ordered text/selectors and indexed controls"
         },

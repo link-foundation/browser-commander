@@ -16,8 +16,16 @@ use std::time::Duration;
 /// script text.
 type EvaluateDelay = Box<dyn Fn(usize, &str) -> Duration + Send + Sync>;
 
+/// Typed captures a stub answers as a named engine would (issue #180).
+struct Capture {
+    engine: EngineType,
+    view_fails: bool,
+    calls: Mutex<Vec<crate::capture::ScreenshotOptions>>,
+}
+
 /// An engine adapter whose `url()` and `evaluate()` answers come from a script.
 pub struct StubEngine {
+    capture: Option<Capture>,
     url_of: Box<dyn Fn(usize) -> String + Send + Sync>,
     url_calls: AtomicUsize,
     goto_calls: Mutex<Vec<String>>,
@@ -41,6 +49,7 @@ impl StubEngine {
     /// Build a stub whose `url()` is computed from the call index.
     pub fn scripted(url_of: impl Fn(usize) -> String + Send + Sync + 'static) -> Self {
         Self {
+            capture: None,
             url_of: Box::new(url_of),
             url_calls: AtomicUsize::new(0),
             goto_calls: Mutex::new(Vec::new()),
@@ -92,6 +101,25 @@ impl StubEngine {
         self
     }
 
+    /// Claim to be `engine` and record typed captures: a stable view capture
+    /// answers `b"view"`, or fails as a page without CDP does.
+    #[must_use]
+    pub fn capturing_as(mut self, engine: EngineType, view_fails: bool) -> Self {
+        self.capture = Some(Capture {
+            engine,
+            view_fails,
+            calls: Mutex::new(Vec::new()),
+        });
+        self
+    }
+
+    /// Every typed capture asked of a [`Self::capturing_as`] stub, in order.
+    pub fn captures(&self) -> Vec<crate::capture::ScreenshotOptions> {
+        self.capture
+            .as_ref()
+            .map_or_else(Vec::new, |capture| capture.calls.lock().unwrap().clone())
+    }
+
     /// Number of times `evaluate()` was asked.
     pub fn evaluate_calls(&self) -> usize {
         self.evaluate_calls.load(Ordering::SeqCst)
@@ -111,7 +139,9 @@ impl StubEngine {
 #[async_trait]
 impl EngineAdapter for StubEngine {
     fn engine_type(&self) -> EngineType {
-        EngineType::Chromiumoxide
+        self.capture
+            .as_ref()
+            .map_or(EngineType::Chromiumoxide, |capture| capture.engine)
     }
 
     async fn url(&self) -> Result<String, EngineError> {
@@ -196,6 +226,32 @@ impl EngineAdapter for StubEngine {
 
     async fn screenshot(&self) -> Result<Vec<u8>, EngineError> {
         Ok(Vec::new())
+    }
+
+    async fn screenshot_with_options(
+        &self,
+        options: &crate::capture::ScreenshotOptions,
+    ) -> Result<Vec<u8>, EngineError> {
+        options.validate()?;
+        let Some(capture) = &self.capture else {
+            // The trait default: only the plain viewport capture.
+            let native = crate::capture::ScreenshotOptions {
+                stable_viewport: false,
+                ..options.clone()
+            };
+            if native != crate::capture::ScreenshotOptions::default() {
+                return Err(crate::capture::unsupported(self, "screenshot options"));
+            }
+            return self.screenshot().await;
+        };
+        capture.calls.lock().unwrap().push(options.clone());
+        match (options.stable_viewport, capture.view_fails) {
+            (true, true) => Err(EngineError::Browser(
+                "CDP sessions are only supported by Chromium".into(),
+            )),
+            (true, false) => Ok(b"view".to_vec()),
+            (false, _) => self.screenshot().await,
+        }
     }
 
     async fn pdf(&self, _options: PdfOptions) -> Result<Vec<u8>, EngineError> {

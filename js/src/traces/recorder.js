@@ -21,6 +21,7 @@ import { startTraceDrain } from './drain-timer.js';
 import { attachRecorderObservers } from './observers.js';
 import { attachNetwork, validateNetworkOptions } from './network.js';
 import { startRecording } from '../capture/recording.js';
+import { captureStableViewport } from '../capture/viewport.js';
 import { normalizePrivacyOptions, redactValue } from './redaction.js';
 import path from 'node:path';
 import {
@@ -46,6 +47,17 @@ const DEFAULT_DOM_OPTIONS = Object.freeze({
   mutations: false,
   openShadowRoots: true,
 });
+
+/** The CDP-capable engine a bare page belongs to, or null for any other page. */
+function pageEngine(page) {
+  if (typeof page.context === 'function') {
+    return 'playwright';
+  }
+  return typeof page.createCDPSession === 'function' ||
+    typeof page.target === 'function'
+    ? 'puppeteer'
+    : null;
+}
 
 function normalizeMode(mode) {
   const values = Object.values(TRACE_MODE);
@@ -275,12 +287,16 @@ export async function startTrace(options = {}) {
       return null;
     }
     try {
+      // A clipped engine capture can leave a resized headful window drawn at
+      // its old size (issue #180); without a fixed viewport, capture the view.
       const shot = await withDeadline(
-        page.screenshot({ type: 'png' }),
+        captureStableViewport(page, engine ?? pageEngine(page), {
+          type: 'png',
+        }),
         captureTimeoutMs,
         'trace screenshot'
       );
-      return Buffer.isBuffer(shot) ? shot : Buffer.from(shot);
+      return shot.bytes;
     } catch (error) {
       await bundle.drop({
         reason: TRACE_DROP_REASON.CAPTURE_FAILED,

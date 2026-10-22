@@ -5,7 +5,7 @@ impl Default for RealBrowserOptions {
     fn default() -> Self {
         Self {
             engine: EngineType::Chromiumoxide,
-            channel: "chrome".to_string(),
+            channel: None,
             executable_path: None,
             user_data_dir: None,
             persist_session_cookies: None,
@@ -19,6 +19,7 @@ impl Default for RealBrowserOptions {
             port_attempts: DEFAULT_PORT_ATTEMPTS,
             headless: false,
             restrictions: Vec::new(),
+            default_restrictions: None,
             disable_features: Vec::new(),
             args: Vec::new(),
             extra_args: Vec::new(),
@@ -70,8 +71,14 @@ impl RealBrowserOptions {
 
     /// Select an installed browser channel.
     pub fn channel(mut self, channel: impl Into<String>) -> Self {
-        self.channel = channel.into();
+        self.channel = Some(channel.into());
         self
+    }
+
+    /// The browser family this launch belongs to: the channel, or `"chrome"`
+    /// when none is named (Chrome for Testing is a Chrome).
+    pub fn browser_channel(&self) -> &str {
+        self.channel.as_deref().unwrap_or("chrome")
     }
 
     /// Select an explicit installed-browser executable.
@@ -116,6 +123,18 @@ impl RealBrowserOptions {
         S: Into<String>,
     {
         self.restrictions = restrictions.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// Choose the restrictions the launch starts with instead of the
+    /// automatic ones (the `chrome-for-testing` preset for Chrome for
+    /// Testing). An empty list opts out.
+    pub fn default_restrictions<I, S>(mut self, restrictions: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.default_restrictions = Some(restrictions.into_iter().map(Into::into).collect());
         self
     }
 
@@ -266,6 +285,6 @@ impl RealBrowserOptions {
     pub fn get_user_data_dir(&self) -> PathBuf {
         self.user_data_dir
             .clone()
-            .unwrap_or_else(|| default_real_browser_user_data_dir(&self.channel))
+            .unwrap_or_else(|| default_real_browser_user_data_dir(self.browser_channel()))
     }
 }

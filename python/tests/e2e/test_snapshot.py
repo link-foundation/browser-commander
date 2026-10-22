@@ -34,6 +34,7 @@ async def test_native_snapshot_owns_only_its_copy(engine: str, tmp_path: Path) -
                 profile_directory="Profile 1",
                 headless=True,
                 args=[*args, "--profile-directory=Profile 1"],
+                executable_path=os.environ.get("CHROME_PATH"),
             )
         )
         try:

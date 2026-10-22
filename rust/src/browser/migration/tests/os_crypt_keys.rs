@@ -5,16 +5,38 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use super::super::os_crypt_keys::{
-    create_source_key_resolver, local_state_path_for_profile, resolve_target_key, KeystoreHooks,
+    create_source_key_resolver, local_state_path_for_profile, resolve_target_key,
+    target_keystore_for, KeystoreHooks, TargetKeystore,
 };
 use crate::browser::browser_cookie_crypto::derive_chromium_cookie_key;
 
 fn hooks_with_password(password: &'static str) -> KeystoreHooks {
+    hooks_with_owned_password(password.to_string())
+}
+
+fn hooks_with_owned_password(password: String) -> KeystoreHooks {
     KeystoreHooks {
-        read_safe_storage_password: Arc::new(move |_, _| Ok(password.to_string())),
+        read_safe_storage_password: Arc::new(move |_, _| Ok(password.clone())),
         ..KeystoreHooks::default()
     }
 }
+
+/// A Safe Storage password the keystore hook returns, different every run.
+fn random_password() -> String {
+    let mut bytes = [0_u8; 12];
+    getrandom::fill(&mut bytes).unwrap();
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+/// `PBKDF2-HMAC-SHA1(password, "saltysalt")`, 16 bytes, for Chromium's fixed
+/// mock passwords: `mock_password` with 1003 iterations (macOS mock
+/// keychain) and `peanuts` with 1 iteration (Linux basic store).
+const MACOS_MOCK_KEYCHAIN_KEY: [u8; 16] = [
+    0xaf, 0x0f, 0x76, 0x2a, 0xaf, 0x6d, 0x7d, 0x11, 0x58, 0x1b, 0x7a, 0xa8, 0xce, 0x72, 0x18, 0xde,
+];
+const LINUX_BASIC_STORE_KEY: [u8; 16] = [
+    0xfd, 0x62, 0x1f, 0xe5, 0xa2, 0xb4, 0x02, 0x53, 0x9d, 0xfa, 0x14, 0x7c, 0xa9, 0x27, 0x27, 0x78,
+];
 
 fn failing_hooks() -> KeystoreHooks {
     KeystoreHooks {
@@ -84,19 +106,91 @@ fn derives_the_macos_safe_storage_key() {
 
 #[test]
 fn derives_the_launching_profile_key_on_macos_and_linux() {
-    let result =
-        resolve_target_key("chrome", "linux", &hooks_with_password("target-pass")).unwrap();
+    let password = random_password();
+    let result = resolve_target_key(
+        "chrome",
+        "linux",
+        TargetKeystore::Os,
+        &hooks_with_owned_password(password.clone()),
+    )
+    .unwrap();
     assert_eq!(
         result.key,
-        derive_chromium_cookie_key("target-pass", "linux").unwrap()
+        derive_chromium_cookie_key(&password, "linux").unwrap()
     );
     assert_eq!(result.prefix, "v11");
 }
 
 #[test]
+fn tags_macos_keys_v10_the_only_tag_macos_chromium_reads() {
+    let password = random_password();
+    let result = resolve_target_key(
+        "chrome",
+        "darwin",
+        TargetKeystore::Os,
+        &hooks_with_owned_password(password.clone()),
+    )
+    .unwrap();
+    assert_eq!(
+        result.key,
+        derive_chromium_cookie_key(&password, "darwin").unwrap()
+    );
+    assert_eq!(result.prefix, "v10");
+}
+
+#[test]
+fn uses_the_fixed_mock_passwords_for_a_mock_keystore_issue_179() {
+    // The OS keystore is never asked.
+    let mac =
+        resolve_target_key("chromium", "darwin", TargetKeystore::Mock, &failing_hooks()).unwrap();
+    assert_eq!(mac.key, MACOS_MOCK_KEYCHAIN_KEY);
+    assert_eq!(mac.prefix, "v10");
+    let linux =
+        resolve_target_key("chromium", "linux", TargetKeystore::Mock, &failing_hooks()).unwrap();
+    assert_eq!(linux.key, LINUX_BASIC_STORE_KEY);
+    assert_eq!(linux.prefix, "v10");
+}
+
+#[test]
 fn refuses_to_derive_a_windows_key() {
-    let error = resolve_target_key("chrome", "win32", &failing_hooks()).unwrap_err();
-    assert!(error.to_string().contains("create_windows_profile_key"));
+    for keystore in [TargetKeystore::Os, TargetKeystore::Mock] {
+        let error = resolve_target_key("chrome", "win32", keystore, &failing_hooks()).unwrap_err();
+        assert!(error.to_string().contains("create_windows_profile_key"));
+    }
+}
+
+#[test]
+fn reports_the_switches_that_bypass_the_os_keystore_issue_179() {
+    let args = |values: &[&str]| {
+        values
+            .iter()
+            .map(|value| value.to_string())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        target_keystore_for(&args(&["--use-mock-keychain"]), "darwin"),
+        TargetKeystore::Mock
+    );
+    assert_eq!(
+        target_keystore_for(
+            &args(&["--no-first-run", "--password-store=basic"]),
+            "linux"
+        ),
+        TargetKeystore::Mock
+    );
+    assert_eq!(
+        target_keystore_for(&args(&["--use-mock-keychain"]), "linux"),
+        TargetKeystore::Os
+    );
+    assert_eq!(
+        target_keystore_for(&args(&["--password-store=basic"]), "darwin"),
+        TargetKeystore::Os
+    );
+    assert_eq!(
+        target_keystore_for(&args(&["--use-mock-keychain"]), "win32"),
+        TargetKeystore::Os
+    );
+    assert_eq!(target_keystore_for(&[], "darwin"), TargetKeystore::Os);
 }
 
 #[test]

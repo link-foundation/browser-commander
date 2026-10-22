@@ -49,7 +49,12 @@ SANDBOX_ARGS = ["--no-sandbox"] if os.environ.get("CHROME_NO_SANDBOX") == "true"
 @pytest.mark.parametrize("engine", ["playwright", "selenium"])
 async def test_real_launch_is_not_reported_as_automated(engine: str) -> None:
     result = await launch_browser(
-        LaunchOptions(engine=engine, headless=False, args=SANDBOX_ARGS)  # type: ignore[arg-type]
+        LaunchOptions(
+            engine=engine,  # type: ignore[arg-type]
+            headless=False,
+            args=SANDBOX_ARGS,
+            executable_path=os.environ.get("CHROME_PATH"),
+        )
     )
     user_data_dir = result.user_data_dir
     try:

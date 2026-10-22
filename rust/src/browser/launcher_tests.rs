@@ -281,7 +281,7 @@ fn real_browser_options_carry_the_launch() {
     let real = options.real_browser_options();
 
     assert_eq!(real.engine, EngineType::Playwright);
-    assert_eq!(real.channel, "msedge");
+    assert_eq!(real.channel.as_deref(), Some("msedge"));
     assert_eq!(real.user_data_dir, Some(PathBuf::from("/tmp/bc-profile")));
     assert_eq!(real.remote_debugging_port, Some(9333));
     assert!(real.headless);
@@ -298,7 +298,8 @@ fn real_browser_options_default_to_chrome() {
     let real = LaunchOptions::default().real_browser_options();
     let defaults = RealBrowserOptions::default();
 
-    assert_eq!(real.channel, "chrome");
+    assert_eq!(real.channel, None);
+    assert_eq!(real.browser_channel(), "chrome");
     assert!(real.extra_args.is_empty());
     assert_eq!(real.remote_debugging_port, None);
     assert_eq!(real.startup_timeout, defaults.startup_timeout);
@@ -342,6 +343,52 @@ async fn launch_refuses_an_unknown_restriction_before_starting_anything() {
         err.to_string().contains("no-such-restriction"),
         "unexpected message: {err}"
     );
+}
+
+#[tokio::test]
+async fn launch_refuses_an_unknown_default_restriction_before_starting_anything() {
+    let options = LaunchOptions::chromiumoxide()
+        .headless(true)
+        .executable_path("/nonexistent/browser-commander/chrome")
+        .default_restrictions(["no-such-default"]);
+
+    let err = launch_browser(options).await.unwrap_err();
+
+    assert!(
+        err.to_string().contains("no-such-default"),
+        "unexpected message: {err}"
+    );
+}
+
+#[test]
+fn chrome_for_testing_restrictions_come_before_the_callers_own() {
+    let options = LaunchOptions::default().restrictions(["no-first-run"]);
+    let cft = std::path::Path::new(
+        "/home/user/.cache/puppeteer/chrome/linux-131.0.6778.204/chrome-linux64/chrome",
+    );
+
+    let (effective, defaults) = options.with_default_restrictions(Some(cft));
+    assert_eq!(defaults, ["no-chrome-for-testing-infobar", "mock-keychain"]);
+    assert_eq!(
+        effective.restrictions,
+        [
+            "no-chrome-for-testing-infobar",
+            "mock-keychain",
+            "no-first-run"
+        ]
+    );
+
+    let (effective, defaults) =
+        options.with_default_restrictions(Some(std::path::Path::new("/usr/bin/google-chrome")));
+    assert!(defaults.is_empty());
+    assert_eq!(effective.restrictions, ["no-first-run"]);
+
+    let opted_out = options.clone().default_restrictions(Vec::<String>::new());
+    assert!(opted_out.with_default_restrictions(Some(cft)).1.is_empty());
+    // An engine that picks its own browser only gets what was asked for.
+    assert!(options.with_default_restrictions(None).1.is_empty());
+    let chosen = options.default_restrictions(["mock-keychain"]);
+    assert_eq!(chosen.with_default_restrictions(None).1, ["mock-keychain"]);
 }
 
 #[test]

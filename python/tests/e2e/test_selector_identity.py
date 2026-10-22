@@ -34,6 +34,7 @@ async def test_text_selector_keeps_matched_element(engine):
                 args=["--no-sandbox"]
                 if os.environ.get("CHROME_NO_SANDBOX") == "true"
                 else [],
+                executable_path=os.environ.get("CHROME_PATH"),
             )
         )
         try:
@@ -81,6 +82,7 @@ async def test_shared_adapter_preserves_css_sibling_positions():
                 args=["--no-sandbox"]
                 if os.environ.get("CHROME_NO_SANDBOX") == "true"
                 else [],
+                executable_path=os.environ.get("CHROME_PATH"),
             )
         )
         try:

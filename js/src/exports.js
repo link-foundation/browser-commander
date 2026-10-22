@@ -105,6 +105,11 @@ export {
   resolveLaunchExecutable,
 } from './browser/launcher.js';
 export {
+  CHROME_FOR_TESTING_RESTRICTIONS,
+  defaultRestrictionsFor,
+  isChromeForTesting,
+} from './browser/launch-executable.js';
+export {
   LAUNCH_RESTRICTIONS,
   LAUNCH_RESTRICTION_PRESETS,
   resolveRestrictions,

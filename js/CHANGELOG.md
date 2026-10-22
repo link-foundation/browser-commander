@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.33.1
+
+### Patch Changes
+
+- d75bce4: Selenium drives Chrome for Testing with the ChromeDriver of its own release (issue #179): a `chromedriver` on `PATH` belongs to the installed Google Chrome and is skipped, Selenium Manager is asked with `--skip-driver-in-path`, and the real-browser launch and the hand-off reattach give ChromeDriver the browser that started. `defaultRestrictionsFor()` is exported.
+
+  `migrateFrom` re-encrypts passwords with the key of the browser that starts (issue #179): Chrome for Testing reads "Chromium Safe Storage", and with its default `mock-keychain` restriction (or `--password-store=basic` on Linux) Chromium's fixed mock password, so migrated passwords decrypt in it. macOS logins are written with the `v10` prefix Chromium uses there.
+
+## 0.33.0
+
+### Minor Changes
+
+- 60fcdc4: Launches without `channel` or `executablePath` start Chrome for Testing (the one Playwright or Puppeteer downloaded, else the newest build in its download cache; Selenium tries the Playwright and Puppeteer caches, then Selenium Manager) instead of the installed Google Chrome, which is used only on request and never as a silent fallback (#179). A Chrome for Testing launch gets the new `chrome-for-testing` restriction preset by default: `no-chrome-for-testing-infobar` (`--test-type=gpu`) and `mock-keychain` (`--use-mock-keychain`); `defaultRestrictions` changes it. New exports: `isChromeForTesting`, `defaultRestrictionsFor`, `CHROME_FOR_TESTING_RESTRICTIONS`.
+
+  Trace checkpoint screenshots and default screenshots of pages without a fixed viewport use CDP `Page.captureScreenshot` without a clip, so a headful window resized during a capture keeps its real size (#180).
+
 ## 0.32.1
 
 ### Patch Changes

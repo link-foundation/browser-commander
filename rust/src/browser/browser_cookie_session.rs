@@ -160,7 +160,7 @@ pub async fn read_browser_cookie_session(
             .path
         }
     };
-    launch_options.channel = browser.into();
+    launch_options.channel = Some(browser.into());
     let launched = launch_snapshot(
         SnapshotOptions {
             browser: browser.into(),

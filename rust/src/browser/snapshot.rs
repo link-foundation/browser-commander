@@ -405,9 +405,11 @@ pub async fn launch_snapshot(
         ));
     }
     let profile = source.profile.clone();
-    options.channel = super::browser_sources::find_browser_source(&source.browser)
-        .map(|s| s.id.clone())
-        .unwrap_or_else(|| source.browser.clone());
+    options.channel = Some(
+        super::browser_sources::find_browser_source(&source.browser)
+            .map(|s| s.id.clone())
+            .unwrap_or_else(|| source.browser.clone()),
+    );
     // If this future is cancelled, dropping the task result removes the copy.
     let mut owned = copy_owned_snapshot(source).await?;
     options.user_data_dir = Some(owned.report.target.clone());

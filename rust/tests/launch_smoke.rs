@@ -11,14 +11,21 @@ use std::time::Duration;
 
 use browser_commander::{launch_browser, ColorScheme, EngineAdapter, LaunchMode, LaunchOptions};
 
+/// The browser is named explicitly: without a channel or executable a launch
+/// starts Chrome for Testing (issue #179). `CHROME_PATH` picks the binary,
+/// otherwise the installed Google Chrome channel is used.
 fn options(launch: LaunchMode) -> LaunchOptions {
-    LaunchOptions::chromiumoxide()
+    let options = LaunchOptions::chromiumoxide()
         .launch(launch)
         .headless(true)
         .sandbox(false)
         .with_args(vec!["--disable-dev-shm-usage".to_string()])
         .launch_timeout(Duration::from_secs(20))
-        .color_scheme(ColorScheme::Dark)
+        .color_scheme(ColorScheme::Dark);
+    match std::env::var("CHROME_PATH") {
+        Ok(path) if !path.is_empty() => options.executable_path(path),
+        _ => options.channel("chrome"),
+    }
 }
 
 async fn exercise(page: &dyn EngineAdapter) -> anyhow::Result<()> {

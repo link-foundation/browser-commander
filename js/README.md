@@ -390,8 +390,8 @@ see [trace and session hardening](https://github.com/link-foundation/browser-com
 ```javascript
 const { browser, page, close } = await launchBrowser({
   engine: 'playwright', // 'playwright' or 'puppeteer'
-  launch: 'real', // 'real' (start the installed browser, attach) or 'engine'
-  channel: 'chrome', // or executablePath; defaults to the installed Chrome
+  launch: 'real', // 'real' (start the browser itself, attach) or 'engine'
+  channel: 'chrome', // or executablePath; default: Chrome for Testing
   headless: false, // Run in headless mode
   userDataDir: undefined, // Keep a profile; default is a fresh temporary one
   restrictions: [], // Opt-in restrictions such as 'no-extensions', 'no-sync'
@@ -409,6 +409,51 @@ with the persistent context. `close()` (and `browser.close()`) closes the
 browser and deletes a temporary profile. The result also carries `launch`,
 `userDataDir`, `temporaryProfile` and the exact `args` the browser was started
 with.
+
+#### Chrome for Testing by default
+
+See [Chrome for Testing by default](../docs/chrome-for-testing.md) for the
+download each engine starts, its matching ChromeDriver and the Ubuntu sandbox
+note.
+
+Without `channel` or `executablePath`, a launch starts Chrome for Testing - the
+one Playwright or Puppeteer downloaded, or else another build in its download
+cache (`ms-playwright`, moved by `PLAYWRIGHT_BROWSERS_PATH`; `~/.cache/puppeteer`,
+moved by `PUPPETEER_CACHE_DIR`), newest first; Selenium tries both caches, then
+Selenium Manager's - never your own Google Chrome. Chrome for Testing is an app of
+its own (`com.google.chrome.for.testing` on macOS), so the Dock icon, new tabs
+and links opened from other apps keep going to your Chrome. Without it the
+launch fails and names the install command (`npx playwright install chromium`,
+`npx puppeteer browsers install chrome`) and `channel: 'chrome'`, which starts
+the installed Google Chrome instead. It is never a silent fallback.
+
+A Chrome for Testing launch gets the `chrome-for-testing` restriction preset
+before your own `restrictions`: `no-chrome-for-testing-infobar`
+(`--test-type=gpu`, the only value that hides the "Chrome for Testing is only
+for automated testing" bar) and `mock-keychain` (`--use-mock-keychain`, no
+keychain prompt at each start). Other browsers get nothing. `defaultRestrictions`
+replaces that choice (`[]` opts out) and the result reports what was applied:
+
+```javascript
+import { isChromeForTesting, launchBrowser } from 'browser-commander';
+
+const { defaultRestrictions, close } = await launchBrowser({});
+console.log(defaultRestrictions); // ['no-chrome-for-testing-infobar', 'mock-keychain']
+await close();
+
+// Keep the infobar, or start Google Chrome on purpose:
+await launchBrowser({ defaultRestrictions: [] });
+await launchBrowser({ channel: 'chrome' });
+isChromeForTesting(
+  '/home/me/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome'
+); // true
+```
+
+`launchRealBrowser()` and `launchWebDriver()` take the same
+`defaultRestrictions`. With the mock keychain, Chrome for Testing cannot decrypt
+cookies another Chrome wrote into a copied profile; move logins with
+`readBrowserCookies()` or `storageState`, which set cookies through the
+browser's cookie API instead.
 
 The `args` option allows passing custom Chrome arguments, which is useful for headless server environments (Docker, CI/CD) that require flags like `--no-sandbox`.
 
@@ -439,11 +484,13 @@ Playwright accepts `timeout` and Puppeteer accepts `protocolTimeout`.
 
 ### launchRealBrowser(options)
 
-Start an installed browser and connect through `connectBrowser()`. Use
+Start a browser and connect through `connectBrowser()`. Without `channel` or
+`executablePath` it starts Chrome for Testing, as `launchBrowser()` does; use
 `channel` (`chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`,
 `msedge-beta`, `msedge-dev`, `msedge-canary`, `brave`, or `chromium`) or an
-explicit `executablePath`. Without `userDataDir` it creates a fresh temporary
-profile that `close()` deletes; it rejects known default browser-profile paths,
+explicit `executablePath` for an installed browser. Without `userDataDir` it
+creates a fresh temporary profile that `close()` deletes; it rejects known
+default browser-profile paths,
 protects its remote-debugging switches, reserves a loopback port (or uses
 `remoteDebuggingPort`, never `0`), and returns the spawned `browserProcess`,
 `cdpEndpoint`, `remoteDebuggingPort`, `executablePath`, `userDataDir`,

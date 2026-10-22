@@ -14,6 +14,10 @@ const session = await launchBrowser({
   engine,
   headless: true,
   ...(mode === 'caller' ? { interruption: 'caller' } : {}),
+  // Without a path the launch would start Chrome for Testing (issue #179).
+  ...(process.env.CHROME_PATH
+    ? { executablePath: process.env.CHROME_PATH }
+    : { channel: 'chrome' }),
   args: process.env.CHROME_NO_SANDBOX === 'true' ? ['--no-sandbox'] : [],
 });
 const url = 'data:text/html,<title>waiting for a human</title><input id=otp>';

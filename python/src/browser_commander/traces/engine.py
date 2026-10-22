@@ -26,6 +26,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Callable
 
+from ..capture_viewport import capture_stable_viewport
 from .jsonfmt import dumps, js_number
 
 
@@ -135,6 +136,7 @@ class EngineDriver:
 
     def __init__(self, page: Any, engine: str | None = None) -> None:
         self.page = page
+        self.engine = engine
         self.selenium = is_selenium(page, engine)
 
     async def evaluate(self, source: str, arg: Any, target: Any = None) -> Any:
@@ -159,6 +161,18 @@ class EngineDriver:
         """Take a PNG screenshot of the page."""
         if self.selenium:
             return await settle(self.page.get_screenshot_as_png())
+        # A clipped engine capture can leave a resized headful window drawn at
+        # its old size (issue #180); without a fixed viewport, capture the view.
+        engine = self.engine or (
+            "playwright"
+            if hasattr(getattr(self.page, "context", None), "new_cdp_session")
+            else "puppeteer"
+            if hasattr(self.page, "create_cdp_session")
+            else None
+        )
+        if engine in {"playwright", "puppeteer"}:
+            view = {"format": "png", "quality": None, "scale": "device"}
+            return await capture_stable_viewport(self.page, engine, view)
         return await settle(self.page.screenshot(type="png"))
 
     async def install_init_script(

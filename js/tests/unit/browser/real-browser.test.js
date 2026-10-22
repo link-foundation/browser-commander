@@ -282,6 +282,28 @@ describe('launchAndConnectRealBrowser', () => {
     await access(path.join(temporaryDirectory, 'First Run'));
   });
 
+  it('gives Selenium the started browser so its driver matches it (issue #179)', async () => {
+    temporaryDirectory = await makeDedicatedProfile();
+    const cft =
+      '/home/u/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
+    let connectOptions;
+    await launchAndConnectRealBrowserWithDependencies(
+      { engine: 'selenium', userDataDir: temporaryDirectory },
+      {
+        resolveExecutable: async () => cft,
+        reservePort: async () => 9444,
+        spawnBrowser: () => fakeProcess([]),
+        waitForEndpoint: async () => 'http://127.0.0.1:9444',
+        connect: async (options) => {
+          connectOptions = options;
+          return { browser: null, page: null };
+        },
+      }
+    );
+    assert.equal(connectOptions.engine, 'selenium');
+    assert.equal(connectOptions.executablePath, cft);
+  });
+
   it('migrates a profile before launch and seeds the migrated cookies', async () => {
     temporaryDirectory = await makeDedicatedProfile();
     const calls = [];
@@ -514,6 +536,109 @@ describe('launchAndConnectRealBrowser', () => {
     assert.equal(spawnOptions.env.EXTRA, '1');
     assert.equal(process.env.GOOGLE_API_KEY, before);
     await result.close();
+  });
+
+  it('adds the Chrome for Testing defaults to its command line only (issue #179)', async () => {
+    const cft =
+      '/home/u/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome';
+    const launch = async (executablePath, options = {}) => {
+      let spawnedArgs;
+      const result = await launchAndConnectRealBrowserWithDependencies(
+        { closeTimeout: 50, ...options },
+        {
+          resolveExecutable: async () => executablePath,
+          reservePort: async () => 40006,
+          spawnBrowser: (_executablePath, args) => {
+            spawnedArgs = args;
+            return fakeProcess([]);
+          },
+          waitForEndpoint: async () => 'http://127.0.0.1:40006',
+          connect: async () => ({ browser: null, page: null }),
+        }
+      );
+      await result.close();
+      return { args: spawnedArgs, defaults: result.defaultRestrictions };
+    };
+    const defaultSwitches = (args) =>
+      args.filter((arg) =>
+        ['--test-type=gpu', '--use-mock-keychain'].includes(arg)
+      );
+
+    const testing = await launch(cft);
+    assert.deepEqual(testing.defaults, [
+      'no-chrome-for-testing-infobar',
+      'mock-keychain',
+    ]);
+    assert.deepEqual(defaultSwitches(testing.args), [
+      '--test-type=gpu',
+      '--use-mock-keychain',
+    ]);
+
+    // Google Chrome keeps the clean command line of issue #103.
+    const chrome = await launch('/opt/google/chrome');
+    assert.deepEqual(chrome.defaults, []);
+    assert.deepEqual(defaultSwitches(chrome.args), []);
+
+    // defaultRestrictions replaces the defaults; [] turns them off.
+    const off = await launch(cft, { defaultRestrictions: [] });
+    assert.deepEqual(defaultSwitches(off.args), []);
+    const keychainOnly = await launch(cft, {
+      defaultRestrictions: ['mock-keychain'],
+    });
+    assert.deepEqual(defaultSwitches(keychainOnly.args), [
+      '--use-mock-keychain',
+    ]);
+  });
+
+  it('migrates passwords with the key of the browser that starts (issue #179)', async () => {
+    const cft =
+      '/Users/u/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
+    const migrateTarget = async (executablePath, options = {}) => {
+      let migrateOptions;
+      const result = await launchAndConnectRealBrowserWithDependencies(
+        {
+          closeTimeout: 50,
+          migrateFrom: { browser: 'chrome', include: ['passwords'] },
+          ...options,
+        },
+        {
+          platform: 'darwin',
+          resolveExecutable: async () => executablePath,
+          reservePort: async () => 40007,
+          spawnBrowser: () => fakeProcess([]),
+          waitForEndpoint: async () => 'http://127.0.0.1:40007',
+          connect: async () => ({ browser: null, page: null }),
+          migrateProfile: async (migration) => {
+            migrateOptions = migration;
+            return { migrated: {}, skipped: [], warnings: [], cookies: [] };
+          },
+        }
+      );
+      await result.close();
+      const { targetBrowser, targetKeystore } = migrateOptions;
+      return { targetBrowser, targetKeystore };
+    };
+
+    // Chrome for Testing keeps "Chromium Safe Storage", and its default
+    // mock keychain encrypts with Chromium's fixed mock password.
+    assert.deepEqual(await migrateTarget(cft), {
+      targetBrowser: 'chromium',
+      targetKeystore: 'mock',
+    });
+    assert.deepEqual(await migrateTarget(cft, { defaultRestrictions: [] }), {
+      targetBrowser: 'chromium',
+      targetKeystore: 'os',
+    });
+    assert.deepEqual(await migrateTarget('/opt/google/chrome'), {
+      targetBrowser: 'chrome',
+      targetKeystore: 'os',
+    });
+    assert.deepEqual(
+      await migrateTarget('/opt/google/chrome', {
+        restrictions: ['mock-keychain'],
+      }),
+      { targetBrowser: 'chrome', targetKeystore: 'mock' }
+    );
   });
 
   it('terminates the spawned browser when connection fails', async () => {

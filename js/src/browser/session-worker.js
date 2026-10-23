@@ -77,6 +77,8 @@ if (options.operation) {
       targetId: metadata.targetId,
       idleTimeoutMs: metadata.idleTimeoutMs,
       adopted: session.adopted,
+      keepSessionCookies: session.keepSessionCookies,
+      warnings: session.warnings,
     })
   );
 }

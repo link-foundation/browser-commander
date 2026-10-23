@@ -55,6 +55,37 @@ describe('dispatcher: high-level methods', () => {
     }
   });
 
+  it('forwards keepSessionCookies and restoreTabs and reports the launch warnings (issue #187)', async () => {
+    const warning = {
+      item: 'keepSessionCookies',
+      reason: 'headless-shell',
+      detail: 'the headless shell loses session cookies',
+    };
+    const { dispatcher, launches } = setup({
+      launchBrowser: async (options) => {
+        launches.push({ options });
+        return {
+          page: {},
+          browser: {},
+          userDataDir: '/tmp/profile',
+          temporaryProfile: false,
+          keepSessionCookies: true,
+          warnings: [warning],
+          close: async () => {},
+        };
+      },
+    });
+    const launched = await dispatcher.dispatch('session.launch', {
+      userDataDir: '/tmp/profile',
+      keepSessionCookies: true,
+      restoreTabs: true,
+    });
+    assert.equal(launched.keepSessionCookies, true);
+    assert.deepEqual(launched.warnings, [warning]);
+    assert.equal(launches[0].options.keepSessionCookies, true);
+    assert.equal(launches[0].options.restoreTabs, true);
+  });
+
   it('launches, drives and closes a session', async () => {
     const { dispatcher, launches, pages } = setup();
     const { dispatch } = dispatcher;
@@ -70,6 +101,8 @@ describe('dispatcher: high-level methods', () => {
       remoteDebuggingPort: 9222,
       userDataDir: '/tmp/fake-profile',
       temporaryProfile: true,
+      keepSessionCookies: false,
+      warnings: [],
     });
     assert.deepEqual(launches[0].options, {
       engine: 'playwright',

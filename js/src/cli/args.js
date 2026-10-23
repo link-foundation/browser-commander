@@ -38,6 +38,9 @@ const BROWSER_OPTIONS = Object.freeze({
   'adopt-existing': FLAG,
   'close-new-tabs': FLAG,
   'no-defaults': FLAG,
+  'keep-session-cookies': FLAG,
+  'no-keep-session-cookies': FLAG,
+  'restore-tabs': FLAG,
 });
 
 /** Options accepted by every page command. */
@@ -258,6 +261,24 @@ export function requireOption(options, name, command) {
 }
 
 /**
+ * `--keep-session-cookies` / `--no-keep-session-cookies` as one boolean; a
+ * persistent `--user-data-dir` keeps them without either (issue #187).
+ *
+ * @throws {UsageError}
+ */
+function keepSessionCookiesOption({
+  keepSessionCookies,
+  noKeepSessionCookies,
+}) {
+  if (keepSessionCookies && noKeepSessionCookies) {
+    throw new UsageError(
+      '--keep-session-cookies and --no-keep-session-cookies are mutually exclusive'
+    );
+  }
+  return noKeepSessionCookies ? false : keepSessionCookies;
+}
+
+/**
  * `session.launch` params from browser options (`--arg` → `args`,
  * `--restriction` → `restrictions`), with unset options left out.
  */
@@ -314,6 +335,8 @@ export function launchParams(options) {
     localState: settings(options.localState, '--local-state'),
     defaultBrowserCheck: options.defaultBrowserCheck,
     firstRun: options.firstRun,
+    keepSessionCookies: keepSessionCookiesOption(options),
+    restoreTabs: options.restoreTabs,
     driverPath: options.driverPath,
     bidi: options.bidi,
     keepOpen: options.keepOpen,

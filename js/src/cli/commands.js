@@ -251,6 +251,8 @@ async function launch(parsed, io) {
       remoteDebuggingPort: opened.remoteDebuggingPort,
       userDataDir: opened.userDataDir,
       temporaryProfile: opened.temporaryProfile,
+      keepSessionCookies: opened.keepSessionCookies,
+      warnings: opened.warnings,
       args: session.args,
       ...(opened.attach ? { attach: opened.attach } : {}),
     };

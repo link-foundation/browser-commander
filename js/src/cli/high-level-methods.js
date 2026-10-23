@@ -36,6 +36,8 @@ async function launchSession(state, params) {
     remoteDebuggingPort: launched.remoteDebuggingPort ?? null,
     userDataDir: launched.userDataDir ?? null,
     temporaryProfile: launched.temporaryProfile ?? false,
+    keepSessionCookies: launched.keepSessionCookies ?? false,
+    warnings: launched.warnings ?? [],
     ...(launched.attach ? { attach: launched.attach } : {}),
   };
 }

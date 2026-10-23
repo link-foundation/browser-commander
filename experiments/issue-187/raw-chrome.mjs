@@ -39,7 +39,10 @@ async function start() {
       const waiting = new Map();
       ws.addEventListener('message', (e) => {
         const m = JSON.parse(e.data);
-        waiting.get(m.id)?.(m);
+        const resolve = waiting.get(m.id);
+        if (typeof resolve === 'function') {
+          resolve(m);
+        }
       });
       const send = (method, params = {}) =>
         new Promise((r) => {

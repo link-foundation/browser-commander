@@ -1,6 +1,6 @@
 // Print the field-trial features Chrome for Testing enables by default
-// (chrome://version/?show-variations-cmd), filtered by a regex.
-//   node experiments/issue-187/variations.mjs <chrome> <regex> [switch ...]
+// (chrome://version/?show-variations-cmd), filtered by a case-insensitive substring.
+//   node experiments/issue-187/variations.mjs <chrome> <substring> [switch ...]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 
@@ -32,7 +32,10 @@ let id = 0;
 const waiting = new Map();
 ws.addEventListener('message', (e) => {
   const m = JSON.parse(e.data);
-  waiting.get(m.id)?.(m);
+  const resolve = waiting.get(m.id);
+  if (typeof resolve === 'function') {
+    resolve(m);
+  }
 });
 const send = (method, params = {}) =>
   new Promise((r) => {
@@ -47,7 +50,9 @@ const { result } = await send('Runtime.evaluate', {
   returnByValue: true,
 });
 const text = result.result.value;
-const re = new RegExp(pattern, 'i');
-const items = text.split(/[,\s<>/:]+/).filter((s) => re.test(s));
+const needle = pattern.toLowerCase();
+const items = text
+  .split(/[,\s<>/:]+/)
+  .filter((s) => s.toLowerCase().includes(needle));
 console.log([...new Set(items)].join('\n'));
 child.kill();

@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import inspect
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -33,6 +34,13 @@ from browser_commander.browser.launch_executable import (
     chrome_for_testing_driver,
     default_restrictions_for,
     resolve_launch_executable,
+)
+from browser_commander.browser.persistent_profile import (
+    prepare_session_restore,
+    resolve_keep_session_cookies,
+    session_cookie_args,
+    session_cookie_warning,
+    validate_session_cookie_options,
 )
 from browser_commander.browser.profile_directory import (
     configure_user_data_dir,
@@ -76,6 +84,13 @@ class LaunchOptions:
     persist_session_cookies: bool | str | Path = False
     """Persistent profile directory. When omitted a fresh temporary profile is
     created and deleted on close."""
+    keep_session_cookies: bool | None = None
+    """Keep session cookies across restarts: the default with
+    ``user_data_dir``; a temporary profile is left as it is. ``False`` lets the
+    browser delete them at startup (issue #187)."""
+    restore_tabs: bool = False
+    """With ``keep_session_cookies``, also reopen the last session's tabs
+    instead of starting with one tab."""
     default_browser_check: bool | None = None
     first_run: bool = False
     preferences: Mapping[str, Any] | None = None
@@ -147,6 +162,11 @@ class LaunchResult:
     launch: str | None = None
     user_data_dir: str | None = None
     temporary_profile: bool = False
+    #: Whether session cookies survive a restart of this profile (issue #187).
+    keep_session_cookies: bool = False
+    #: ``{"item", "reason", "detail"}`` for each request the launch could not
+    #: honour, such as session cookies a browser cannot keep.
+    warnings: list[dict[str, str]] = field(default_factory=list)
     #: The browser switches Browser Commander passed.
     args: list[str] = field(default_factory=list)
     #: The restrictions the executable got by default (issue #179).
@@ -249,6 +269,7 @@ def _validate_launch_options(options: LaunchOptions) -> None:
         disable_features=options.disable_features,
     )
     resolve_restrictions(options.default_restrictions or [])
+    validate_session_cookie_options(options.keep_session_cookies, options.restore_tabs)
 
 
 async def _launch_real(
@@ -275,6 +296,8 @@ async def _launch_real(
                 executable_path=executable_path,
                 default_restrictions=options.default_restrictions,
                 user_data_dir=options.user_data_dir,
+                keep_session_cookies=options.keep_session_cookies,
+                restore_tabs=options.restore_tabs,
                 default_browser_check=options.default_browser_check,
                 first_run=options.first_run,
                 preferences={
@@ -313,6 +336,8 @@ async def _launch_real(
         launch="real",
         user_data_dir=session.user_data_dir,
         temporary_profile=session.temporary_profile,
+        keep_session_cookies=session.keep_session_cookies,
+        warnings=list(session.warnings),
         args=list(session.args),
         default_restrictions=list(session.default_restrictions),
         connected_browser=connected,
@@ -394,6 +419,33 @@ async def _engine_executable(
         return None
 
 
+def _playwright_session_channel(options: LaunchOptions) -> str | None:
+    """Playwright's headless default is chromium-headless-shell, which deletes
+    session cookies at startup even with ``--restore-last-session``; the full
+    Chromium build in new headless mode keeps them (measured with Playwright's
+    chromium-1243, experiments/issue-187/playwright-channel.mjs)."""
+
+    if options.headless and options.channel is None and options.executable_path is None:
+        return "chromium"
+    return options.channel
+
+
+def _headless_shell_warnings(options: LaunchOptions) -> list[dict[str, str]]:
+    shell = options.headless and (
+        options.channel == "chromium-headless-shell"
+        or re.search(r"headless[_-]shell", str(options.executable_path or ""))
+        is not None
+    )
+    if options.engine == "selenium" or not shell:
+        return []
+    return [
+        session_cookie_warning(
+            "headless-shell",
+            'chromium-headless-shell deletes session cookies at startup; use the full Chromium build (channel="chromium") to keep them',
+        )
+    ]
+
+
 async def _launch_with_engine(
     options: LaunchOptions, dependencies: Mapping[str, Any]
 ) -> LaunchResult:
@@ -410,8 +462,21 @@ async def _launch_with_engine(
             executable_path, options.default_restrictions
         )
         restrictions = [*default_restrictions, *options.restrictions]
+        temporary_profile = not options.user_data_dir
+        # A persistent profile keeps session cookies across restarts (#187).
+        keep_session_cookies = resolve_keep_session_cookies(
+            options.keep_session_cookies, temporary_profile=temporary_profile
+        )
         chrome_args = resolve_chrome_args(
-            args=options.args,
+            args=[
+                *(
+                    argument
+                    for argument in session_cookie_args(keep_session_cookies)
+                    if argument not in options.args
+                    and argument not in options.extra_args
+                ),
+                *options.args,
+            ],
             extra_args=options.extra_args,
             restrictions=restrictions,
             disable_features=options.disable_features,
@@ -425,7 +490,6 @@ async def _launch_with_engine(
             automation_parity=options.automation_parity,
         )
         child_env = browser_environment(restrictions, options.env)
-        temporary_profile = not options.user_data_dir
         user_data_dir = (
             create_temporary_user_data_dir()
             if temporary_profile
@@ -446,6 +510,12 @@ async def _launch_with_engine(
             },
             local_state=options.local_state,
         )
+        prepare_session_restore(
+            user_data_dir,
+            keep_session_cookies=keep_session_cookies,
+            restore_tabs=options.restore_tabs,
+            args=chrome_args,
+        )
         if engine == "playwright":
             context_options: dict[str, Any] = {
                 "headless": options.headless,
@@ -458,8 +528,13 @@ async def _launch_with_engine(
             # Playwright applies color_scheme as a context-level launch option.
             if options.color_scheme is not None:
                 context_options["color_scheme"] = options.color_scheme
-            if options.channel is not None:
-                context_options["channel"] = options.channel
+            channel = (
+                _playwright_session_channel(options)
+                if keep_session_cookies is True
+                else options.channel
+            )
+            if channel is not None:
+                context_options["channel"] = channel
             if options.executable_path is not None:
                 context_options["executable_path"] = options.executable_path
             if child_env is not None:
@@ -509,6 +584,10 @@ async def _launch_with_engine(
         launch="engine",
         user_data_dir=user_data_dir,
         temporary_profile=temporary_profile,
+        keep_session_cookies=keep_session_cookies is True,
+        warnings=_headless_shell_warnings(options)
+        if keep_session_cookies is True
+        else [],
         args=chrome_args,
         default_restrictions=default_restrictions,
     )

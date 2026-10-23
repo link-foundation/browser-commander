@@ -206,6 +206,7 @@ describe('CI execution budgets', () => {
       'parity.yml parity Stable viewport displayed-pixel regression',
       'parity.yml parity WebDriver suite',
       'parity.yml persistent-profile Persistent profile session cookies',
+      'parity.yml persistent-profile Python persistent profile session cookies',
       'parity.yml snapshots Python headful real-browser launches',
       'parity.yml snapshots Python native snapshot launches',
       'parity.yml snapshots Rust launch and connect smokes',

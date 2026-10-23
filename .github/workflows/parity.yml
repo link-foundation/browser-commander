@@ -670,6 +670,31 @@ jobs:
           fi
           echo "session cookie suite passed $passed tests"
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install Python test dependencies
+        working-directory: .
+        run: python -m pip install -e './python[dev]'
+
+      - name: Run the Python session cookie suite
+        # The same restarts through launch_browser (both engines, real and
+        # engine launches) and connect_or_launch, which reuses the JavaScript
+        # session worker installed above.
+        working-directory: .
+        env:
+          RUN_E2E: 'true'
+          CHROME_NO_SANDBOX: 'true'
+        shell: bash
+        run: |
+          bash scripts/run-with-budget-warning.sh 300 "Python persistent profile session cookies" \
+            bash -c 'set -o pipefail; python -m pytest python/tests/e2e/test_persistent_profile.py -v -rs 2>&1 | tee python-session-cookies.log'
+          if grep -qE '[0-9]+ skipped' python-session-cookies.log; then
+            echo "::error::the Python session cookie suite skipped instead of asserting"
+            exit 1
+          fi
+
   pipeline-status:
     name: Pipeline Status
     runs-on: ubuntu-24.04

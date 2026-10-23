@@ -2,12 +2,22 @@
 // started with an explicit userDataDir is closed normally and relaunched.
 //
 //   node experiments/issue-187/repro.mjs [engine] [launch] [extra-json]
+//
+// extra-json may set args, channel, executablePath, keepSessionCookies and
+// restoreTabs; other keys are ignored.
 import fs from 'node:fs';
 import { launchBrowser } from '../../js/src/index.js';
 
 const engine = process.argv[2] ?? 'playwright';
 const launch = process.argv[3] ?? 'real';
-const extra = JSON.parse(process.argv[4] ?? '{}');
+const parsed = JSON.parse(process.argv[4] ?? '{}');
+const extra = {
+  args: parsed.args,
+  channel: parsed.channel,
+  executablePath: parsed.executablePath,
+  keepSessionCookies: parsed.keepSessionCookies,
+  restoreTabs: parsed.restoreTabs,
+};
 const userDataDir = fs.mkdtempSync('/tmp/bc-profile-');
 const open = () =>
   launchBrowser({ engine, launch, userDataDir, headless: true, ...extra });

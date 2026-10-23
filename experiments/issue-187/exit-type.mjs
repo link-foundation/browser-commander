@@ -3,19 +3,24 @@
 // on the next start, which hides issue #187.
 //
 //   node experiments/issue-187/exit-type.mjs <engine> <launch> [extra-json]
+//
+// extra-json may set args, channel and executablePath; other keys are ignored.
 import fs from 'node:fs';
 import path from 'node:path';
 import { launchBrowser } from '../../js/src/index.js';
 
 const [engine = 'playwright', launch = 'real', extraJson = '{}'] =
   process.argv.slice(2);
+const extra = JSON.parse(extraJson);
 const userDataDir = fs.mkdtempSync('/tmp/bc-exit-');
 const session = await launchBrowser({
   engine,
   launch,
   userDataDir,
   headless: true,
-  ...JSON.parse(extraJson),
+  args: extra.args,
+  channel: extra.channel,
+  executablePath: extra.executablePath,
 });
 console.log(
   'executable:',

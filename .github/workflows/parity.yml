@@ -597,12 +597,6 @@ jobs:
           fi
           echo "React fixture suites passed $passed tests against a real Chrome"
 
-  # === PIPELINE STATUS ===
-  # The only job that can tell "somebody pressed stop" apart from "a check ran
-  # out of time". GitHub reports a job killed by its `timeout-minutes` as
-  # cancelled rather than failed, and a run whose only casualty is a cancelled
-  # job carries the conclusion `cancelled` as well, so the failure would pass
-  # unannounced. See scripts/check-pipeline-status.sh.
   # A persistent profile keeps session cookies across close() and relaunch
   # (issue #187), in every entry point, engine and language. Firefox is
   # preinstalled on the runner, so the selenium Firefox half runs too.
@@ -695,6 +689,12 @@ jobs:
             exit 1
           fi
 
+  # === PIPELINE STATUS ===
+  # The only job that can tell "somebody pressed stop" apart from "a check ran
+  # out of time". GitHub reports a job killed by its `timeout-minutes` as
+  # cancelled rather than failed, and a run whose only casualty is a cancelled
+  # job carries the conclusion `cancelled` as well, so the failure would pass
+  # unannounced. See scripts/check-pipeline-status.sh.
   pipeline-status:
     name: Pipeline Status
     runs-on: ubuntu-24.04

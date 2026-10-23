@@ -71,6 +71,8 @@ pub(super) fn real_browser_result(
         executable_path: launched.executable_path,
         user_data_dir: launched.user_data_dir,
         temporary_profile: launched.temporary_profile,
+        keep_session_cookies: launched.keep_session_cookies,
+        warnings: Vec::new(),
         args: launched.args,
         default_restrictions: launched.default_restrictions,
         browser_process: launched.browser_process,

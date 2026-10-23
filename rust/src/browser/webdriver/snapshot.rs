@@ -37,7 +37,7 @@ pub async fn launch_webdriver_snapshot(
     let mut copy = copy_owned_snapshot(source).await?;
     options.user_data_dir = Some(copy.report.target.clone());
     options.args.push(format!("--profile-directory={profile}"));
-    let browser = launch_owned(options, true).await?;
+    let browser = launch_owned(options, true, None).await?;
     copy.armed = false;
     Ok(WebDriverSnapshotResult {
         browser,

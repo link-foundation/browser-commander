@@ -123,3 +123,42 @@ fn playwright_and_puppeteer_report_their_own_download() {
         assert_eq!(defaults, chrome_for_testing_restrictions());
     }
 }
+
+// feature-parity: profile.session-cookies@native-typed
+#[test]
+fn headless_playwright_keeps_session_cookies_on_the_full_chromium_build() {
+    let headless = LaunchOptions::playwright().headless(true);
+    let session = playwright_session_options(&headless, Some(true)).unwrap();
+    assert_eq!(session.channel.as_deref(), Some("chromium"));
+    // A temporary profile, the opt-out and a headful launch change nothing.
+    assert!(playwright_session_options(&headless, None).is_none());
+    assert!(playwright_session_options(&headless, Some(false)).is_none());
+    assert!(playwright_session_options(&headless.clone().headless(false), Some(true)).is_none());
+    // A browser the caller picked is started as given.
+    let chrome = headless.clone().channel("chrome");
+    assert!(playwright_session_options(&chrome, Some(true)).is_none());
+    let path = headless.executable_path("/opt/google/chrome/chrome");
+    assert!(playwright_session_options(&path, Some(true)).is_none());
+    // Puppeteer's headless mode is the full build already.
+    let puppeteer = LaunchOptions::puppeteer().headless(true);
+    assert!(playwright_session_options(&puppeteer, Some(true)).is_none());
+}
+
+#[test]
+fn chromiumoxide_gets_each_switch_as_a_key_and_value() {
+    // Passed whole, `--restore-last-session` reached Chrome as
+    // `----restore-last-session` and session cookies were deleted (#187).
+    assert_eq!(
+        chromiumoxide_arg("--restore-last-session"),
+        ("restore-last-session", None)
+    );
+    assert_eq!(
+        chromiumoxide_arg("--disable-blink-features=AutomationControlled"),
+        ("disable-blink-features", Some("AutomationControlled"))
+    );
+    assert_eq!(
+        chromiumoxide_arg("--js-flags=--expose-gc"),
+        ("js-flags", Some("--expose-gc"))
+    );
+    assert_eq!(chromiumoxide_arg("no-first-run"), ("no-first-run", None));
+}

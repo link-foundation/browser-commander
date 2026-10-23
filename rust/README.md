@@ -89,6 +89,43 @@ For trace budgets/privacy, persistent session adoption and heartbeats, CDP
 `noDefaults`, overlay reporting, and the `readyOn`/`concurrency` trigger migration,
 see [trace and session hardening](https://github.com/link-foundation/browser-commander/blob/f5e426d6933c681189c4989bac182a1558d8edb8/docs/trace-session-hardening.md).
 
+## Profiles
+
+`user_data_dir` keeps a profile; without it each launch gets a fresh temporary
+profile that `close()` deletes. Keep in mind that
+a profile directory is permanent storage: all cookies, session ones included, survive restarts.
+Session cookies (no expiry date, the kind most logins set) are kept by the
+browser's own encrypted cookie store, never in a plaintext file:
+
+```rust
+use browser_commander::prelude::*;
+
+let first = launch_browser(LaunchOptions::chromiumoxide().user_data_dir("./profile")).await?;
+// ... log in, which sets a session cookie, then close the browser ...
+let second = launch_browser(LaunchOptions::chromiumoxide().user_data_dir("./profile")).await?;
+assert!(second.keep_session_cookies); // still logged in, one tab open
+```
+
+- `.keep_session_cookies(false)` lets Chromium delete session cookies at
+  startup; by default a `user_data_dir` launch adds `--restore-last-session`.
+- `.restore_tabs(true)` reopens the last session's tabs instead of deleting
+  them before launch.
+- It works in `launch_browser` (every engine and `LaunchMode`),
+  `launch_real_browser` (`RealBrowserOptions` has the same builders) and
+  `connect_or_launch` (through the `launch` JSON:
+  `{"keepSessionCookies": false}`, `{"restoreTabs": true}`).
+- Firefox under fantoccini starts with `browser.startup.page = 3` and its
+  restored tabs are closed after launch.
+- `LaunchResult::keep_session_cookies` and `LaunchResult::warnings`
+  (`SessionCookieWarning { item, reason, detail }`) report the outcome. Safari
+  returns `safari-no-profile-directory`, and an explicit headless shell
+  returns `headless-shell`.
+- A temporary profile gets no extra switch unless you set the option.
+- `persistent_profile_args(true)` and `clear_restored_tabs(dir, "Default")`
+  serve apps that start Chromium themselves.
+
+See [Browser profile settings](../docs/browser-profile-settings.md#session-cookies-of-a-persistent-profile).
+
 ## API Reference
 
 ### Browser Launch

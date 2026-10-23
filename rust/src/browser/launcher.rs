@@ -21,6 +21,7 @@ use crate::browser::connector::{
 };
 use crate::browser::engine_launch::launch_with_engine;
 use crate::browser::media::ColorScheme;
+use crate::browser::persistent_profile::SessionCookieWarning;
 use crate::browser::real_browser::{
     launch_real_browser_with, RealBrowserOptions, SystemLaunchHooks,
 };
@@ -95,6 +96,14 @@ pub struct LaunchOptions {
     pub user_data_dir: Option<PathBuf>,
     /// Explicit owner-only state file used to restore/save session cookies.
     pub persist_session_cookies: Option<PathBuf>,
+    /// Keep session cookies across restarts in the browser's own encrypted
+    /// cookie store. `None` keeps them with `user_data_dir` and leaves a
+    /// temporary profile untouched; `Some(false)` lets the browser delete
+    /// them at startup (issue #187). Overrides `webdriver.keep_session_cookies`.
+    pub keep_session_cookies: Option<bool>,
+    /// With session cookies kept, also reopen the last session's tabs instead
+    /// of starting with one tab.
+    pub restore_tabs: bool,
     /// Allow the disposable browser to ask to become the system default.
     pub default_browser_check: Option<bool>,
     /// Allow first-run UI in a fresh profile.
@@ -184,6 +193,8 @@ impl Default for LaunchOptions {
             launch: LaunchMode::Real,
             user_data_dir: None,
             persist_session_cookies: None,
+            keep_session_cookies: None,
+            restore_tabs: false,
             default_browser_check: None,
             first_run: false,
             preferences: serde_json::json!({}),
@@ -261,6 +272,19 @@ impl LaunchOptions {
     /// Set headless mode.
     pub fn headless(mut self, headless: bool) -> Self {
         self.headless = headless;
+        self
+    }
+
+    /// Keep (or, with `false`, drop) session cookies across restarts of a
+    /// persistent profile; see [`LaunchOptions::keep_session_cookies`].
+    pub fn keep_session_cookies(mut self, keep_session_cookies: bool) -> Self {
+        self.keep_session_cookies = Some(keep_session_cookies);
+        self
+    }
+
+    /// Reopen the last session's tabs along with its session cookies.
+    pub fn restore_tabs(mut self, restore_tabs: bool) -> Self {
+        self.restore_tabs = restore_tabs;
         self
     }
 
@@ -436,13 +460,27 @@ impl LaunchOptions {
     ///
     /// Returns an error for an unknown restriction.
     pub fn all_chrome_args(&self) -> anyhow::Result<Vec<String>> {
+        self.chrome_args_with(self.keep_session_cookies)
+    }
+
+    /// [`all_chrome_args`](Self::all_chrome_args) with a resolved
+    /// `keep_session_cookies`: its switch goes after the restrictions and
+    /// before the caller's arguments.
+    pub(crate) fn chrome_args_with(
+        &self,
+        keep_session_cookies: Option<bool>,
+    ) -> anyhow::Result<Vec<String>> {
         let mut args = crate::browser::restrictions::resolve_restrictions_with_features(
             &self.restrictions,
             &self.disable_features,
         )?
         .args;
-        args.extend(self.args.iter().cloned());
-        args.extend(self.extra_args.iter().cloned());
+        let custom_args: Vec<String> = self.args.iter().chain(&self.extra_args).cloned().collect();
+        args.extend(super::persistent_profile::session_cookie_args(
+            keep_session_cookies,
+            &custom_args,
+        ));
+        args.extend(custom_args);
         let args = merge_feature_switches(&args);
         Ok(if self.automation_parity {
             apply_automation_parity_args(&args)
@@ -520,6 +558,8 @@ impl LaunchOptions {
             channel: self.channel.clone(),
             executable_path: self.executable_path.clone(),
             user_data_dir: self.user_data_dir.clone(),
+            keep_session_cookies: self.keep_session_cookies,
+            restore_tabs: self.restore_tabs,
             default_browser_check: self.default_browser_check,
             first_run: self.first_run,
             preferences: self.preferences.clone(),
@@ -584,6 +624,12 @@ pub struct LaunchResult {
     /// Whether `browser.user_data_dir` is a temporary profile that
     /// [`close`](Self::close) deletes.
     pub temporary_profile: bool,
+    /// Whether session cookies survive a restart of this profile: true by
+    /// default for a persistent `user_data_dir` (issue #187).
+    pub keep_session_cookies: bool,
+    /// Why session cookies are not kept where they were asked for, such as
+    /// Safari, which has no profile directory.
+    pub warnings: Vec<SessionCookieWarning>,
     /// The Chrome arguments Browser Commander passed (the engine adds its own
     /// in [`LaunchMode::Engine`]).
     pub args: Vec<String>,
@@ -615,6 +661,8 @@ impl LaunchResult {
             downloads,
             launch: None,
             temporary_profile: false,
+            keep_session_cookies: false,
+            warnings: Vec::new(),
             args: Vec::new(),
             default_restrictions: Vec::new(),
             cdp_endpoint: None,
@@ -647,6 +695,8 @@ impl std::fmt::Debug for LaunchResult {
             .field("downloads", &self.downloads)
             .field("launch", &self.launch)
             .field("temporary_profile", &self.temporary_profile)
+            .field("keep_session_cookies", &self.keep_session_cookies)
+            .field("warnings", &self.warnings)
             .field("args", &self.args)
             .field("default_restrictions", &self.default_restrictions)
             .field("cdp_endpoint", &self.cdp_endpoint)
@@ -735,6 +785,7 @@ pub async fn launch_browser(options: LaunchOptions) -> Result<LaunchResult, anyh
             );
         result.launch = Some(options.launch);
         result.browser_process = Some(safari.browser_process);
+        result.warnings = safari.warnings;
         return Ok(result);
     }
     if options.engine == EngineType::Fantoccini && options.launch == LaunchMode::Real {
@@ -815,6 +866,7 @@ async fn launch_real(options: &LaunchOptions) -> Result<LaunchResult, anyhow::Er
     result.browser.headless = options.headless;
     result.launch = Some(LaunchMode::Real);
     result.temporary_profile = launched.temporary_profile;
+    result.keep_session_cookies = launched.keep_session_cookies;
     result.args = launched.args;
     result.default_restrictions = launched.default_restrictions;
     result.cdp_endpoint = Some(launched.cdp_endpoint);

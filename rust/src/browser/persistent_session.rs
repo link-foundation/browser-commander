@@ -1,5 +1,5 @@
 //! Owned persistent sessions sharing the npm package's detached idle watchdog.
-use super::{connect_browser, ConnectOptions, LaunchResult};
+use super::{connect_browser, ConnectOptions, LaunchResult, SessionCookieWarning};
 use crate::{
     core::EngineAdapter,
     utilities::subprocess::{run_command, RunCommandOptions},
@@ -13,7 +13,8 @@ pub struct PersistentOptions {
     pub user_data_dir: PathBuf,
     pub remote_debugging_port: u16,
     pub idle_timeout: Duration,
-    /// Additional launch options in the shared CLI's camelCase format.
+    /// Additional launch options in the shared CLI's camelCase format, such
+    /// as `{"keepSessionCookies": false}` or `{"restoreTabs": true}`.
     pub launch: Value,
 }
 impl PersistentOptions {
@@ -64,6 +65,15 @@ pub struct PersistentSession {
 impl PersistentSession {
     pub fn page(&self) -> &Arc<dyn EngineAdapter> {
         &self.connection.page
+    }
+    /// Whether session cookies survive a restart of the profile: true by
+    /// default, since the profile is persistent (issue #187).
+    pub fn keep_session_cookies(&self) -> bool {
+        self.metadata["keepSessionCookies"] == true
+    }
+    /// Why session cookies are not kept where they were asked for.
+    pub fn warnings(&self) -> Vec<SessionCookieWarning> {
+        serde_json::from_value(self.metadata["warnings"].clone()).unwrap_or_default()
     }
     pub async fn touch(&self) -> anyhow::Result<()> {
         let mut payload = self.metadata.clone();

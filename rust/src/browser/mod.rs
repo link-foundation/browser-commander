@@ -24,6 +24,7 @@ pub mod chromiumoxide_adapter;
 mod chromiumoxide_network;
 mod chromiumoxide_trace;
 pub mod connector;
+pub mod persistent_profile;
 pub mod persistent_session;
 pub use persistent_session::{connect_or_launch, PersistentOptions, PersistentSession};
 pub mod debugging_port;
@@ -95,6 +96,11 @@ pub use navigation_ops::{
 pub use node_bridge::NodeBridgePage;
 pub use open_in_user_browser::{
     build_open_command, open_in_user_browser, validate_open_url, OpenInUserBrowserResult,
+};
+pub use persistent_profile::{
+    clear_restored_tabs, persistent_profile_args, prepare_session_restore,
+    resolve_keep_session_cookies, SessionCookieWarning, CONTINUE_SESSION_FEATURE,
+    FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES, KEEP_SESSION_COOKIES_SWITCH, SESSION_RESTORE_FILES,
 };
 pub use playwright_driver_page::{PlaywrightConnect, PlaywrightDriverPage, PlaywrightLaunch};
 pub use profile_directory::{

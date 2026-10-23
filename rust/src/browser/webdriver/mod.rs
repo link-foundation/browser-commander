@@ -12,6 +12,10 @@ pub use capabilities::build_capabilities;
 pub use fantoccini::{Client as WebDriverClient, Locator};
 
 use crate::{
+    browser::persistent_profile::{
+        prepare_session_restore, resolve_keep_session_cookies, safari_session_cookie_warnings,
+        session_cookie_args, SessionCookieWarning, FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES,
+    },
     browser::profile_directory::{
         create_temporary_user_data_dir_with_first_run, remove_user_data_dir,
     },
@@ -78,6 +82,13 @@ pub struct WebDriverOptions {
     /// them from `browser_executable`: the `chrome-for-testing` preset for
     /// Chrome for Testing, nothing otherwise. `Some(vec![])` opts out.
     pub default_restrictions: Option<Vec<String>>,
+    /// Keep session cookies across restarts: `None` keeps them with
+    /// `user_data_dir` and leaves a temporary profile untouched (issue #187).
+    /// Chrome gets `--restore-last-session`, Firefox restores its previous
+    /// session, and Safari reports a warning.
+    pub keep_session_cookies: Option<bool>,
+    /// With session cookies kept, also reopen the last session's tabs.
+    pub restore_tabs: bool,
 }
 
 impl Default for WebDriverOptions {
@@ -101,6 +112,8 @@ impl Default for WebDriverOptions {
             launch_timeout: Duration::from_secs(30),
             bidi: true,
             default_restrictions: None,
+            keep_session_cookies: None,
+            restore_tabs: false,
         }
     }
 }
@@ -156,6 +169,8 @@ pub struct ManagedWebDriver {
     downloads: Option<Arc<DownloadManager>>,
     profile: PathBuf,
     default_restrictions: Vec<String>,
+    keep_session_cookies: bool,
+    warnings: Vec<SessionCookieWarning>,
     driver: tokio::sync::Mutex<OwnedDriver>,
     closed: OnceCell<()>,
 }
@@ -177,6 +192,14 @@ impl ManagedWebDriver {
     /// the `chrome-for-testing` preset for Chrome for Testing.
     pub fn default_restrictions(&self) -> &[String] {
         &self.default_restrictions
+    }
+    /// Whether session cookies survive a restart of this profile.
+    pub fn keep_session_cookies(&self) -> bool {
+        self.keep_session_cookies
+    }
+    /// Why session cookies are not kept where they were asked for.
+    pub fn warnings(&self) -> &[SessionCookieWarning] {
+        &self.warnings
     }
     pub fn driver_pid(&self) -> Option<u32> {
         self.driver
@@ -269,14 +292,42 @@ fn driver_executable(options: &WebDriverOptions) -> PathBuf {
     })
 }
 
+/// Firefox restores the previous session's tabs together with its session
+/// cookies, before the WebDriver session starts. Close all but one and start
+/// it blank, so one tab is driven as before.
+async fn start_driven_tab(client: &WebDriverClient) -> Result<()> {
+    let mut handles = client.windows().await?.into_iter();
+    let Some(kept) = handles.next() else {
+        return Ok(());
+    };
+    for handle in handles {
+        client.switch_to_window(handle).await?;
+        client.close_window().await?;
+    }
+    client.switch_to_window(kept).await?;
+    client.goto("about:blank").await?;
+    Ok(())
+}
+
 /// Start a locally installed driver. No npm package or Node process is used.
 pub async fn launch_webdriver(options: WebDriverOptions) -> Result<ManagedWebDriver> {
-    launch_owned(options, false).await
+    launch_owned(options, false, None).await
+}
+
+/// [`launch_webdriver`] in a profile the caller created and deletes:
+/// `temporary_profile` says whether it is temporary, which decides the
+/// default of `keep_session_cookies`.
+pub(crate) async fn launch_webdriver_in_profile(
+    options: WebDriverOptions,
+    temporary_profile: bool,
+) -> Result<ManagedWebDriver> {
+    launch_owned(options, false, Some(temporary_profile)).await
 }
 
 async fn launch_owned(
     mut options: WebDriverOptions,
     own_profile: bool,
+    temporary_profile: Option<bool>,
 ) -> Result<ManagedWebDriver> {
     if options.launch_timeout.is_zero() {
         return Err(anyhow!("launch_timeout must be positive"));
@@ -289,6 +340,35 @@ async fn launch_owned(
         return Err(crate::browser::safari::unsupported("Safari launch outside macOS").into());
     }
     let temporary = !safari && (own_profile || options.user_data_dir.is_none());
+    let (keep_session_cookies, warnings) = if safari {
+        (
+            None,
+            safari_session_cookie_warnings(options.keep_session_cookies),
+        )
+    } else {
+        (
+            resolve_keep_session_cookies(
+                options.keep_session_cookies,
+                temporary_profile.unwrap_or(temporary),
+            ),
+            Vec::new(),
+        )
+    };
+    if options.browser == WebDriverBrowser::Chrome {
+        let switches = session_cookie_args(keep_session_cookies, &options.args);
+        if !switches.is_empty() {
+            options.args.extend(switches);
+            // One --disable-features switch: Chrome reads only the last.
+            options.args = crate::browser::restrictions::merge_feature_switches(&options.args);
+        }
+    }
+    if options.browser == WebDriverBrowser::Firefox && keep_session_cookies == Some(true) {
+        if let Some(preferences) = options.preferences.as_object_mut() {
+            for (name, value) in FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES {
+                preferences.insert(name.into(), json!(value));
+            }
+        }
+    }
     let profile = if safari {
         PathBuf::new()
     } else {
@@ -321,6 +401,12 @@ async fn launch_owned(
             options.default_browser_check,
             &options.preferences,
             &options.local_state,
+        )?;
+        prepare_session_restore(
+            &profile,
+            keep_session_cookies,
+            options.restore_tabs,
+            &options.args,
         )?;
         if options.automation_parity
             && !options
@@ -415,6 +501,12 @@ async fn launch_owned(
         if safari {
             client.goto("about:blank").await?;
         }
+        if options.browser == WebDriverBrowser::Firefox
+            && keep_session_cookies == Some(true)
+            && !options.restore_tabs
+        {
+            start_driven_tab(&client).await?;
+        }
         Ok::<_, anyhow::Error>(client)
     })
     .await;
@@ -442,6 +534,8 @@ async fn launch_owned(
         downloads: manager,
         profile,
         default_restrictions,
+        keep_session_cookies: keep_session_cookies == Some(true),
+        warnings,
         driver: tokio::sync::Mutex::new(owner),
         closed: OnceCell::new(),
     };

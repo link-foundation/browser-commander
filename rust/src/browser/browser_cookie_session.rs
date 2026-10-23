@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 enum SessionLaunch {
     Real(Box<super::snapshot::SnapshotLaunchResult>),
-    Engine(super::LaunchResult, Box<super::snapshot::OwnedCopy>),
+    Engine(Box<super::LaunchResult>, Box<super::snapshot::OwnedCopy>),
 }
 impl SessionLaunch {
     fn page(&self) -> Arc<dyn EngineAdapter> {
@@ -51,7 +51,7 @@ async fn launch_source(
     ));
     engine.user_data_dir = Some(copy.report.target.clone());
     let result = super::launch_browser(engine).await?;
-    Ok(SessionLaunch::Engine(result, Box::new(copy)))
+    Ok(SessionLaunch::Engine(Box::new(result), Box::new(copy)))
 }
 
 fn engine_options(engine: EngineType, options: RealBrowserOptions) -> super::LaunchOptions {

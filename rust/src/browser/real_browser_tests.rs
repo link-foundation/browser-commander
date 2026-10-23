@@ -354,9 +354,12 @@ async fn spawns_waits_connects_and_returns_process_metadata() {
     );
     assert_eq!(launched.user_data_dir, profile);
     assert!(!launched.temporary_profile);
+    // A persistent profile keeps session cookies by default (issue #187).
+    assert!(launched.keep_session_cookies);
     let expected_args = vec![
         format!("--user-data-dir={}", profile.display()),
         "--remote-debugging-port=9444".to_string(),
+        "--restore-last-session".to_string(),
         START_URL.to_string(),
     ];
     assert_eq!(launched.args, expected_args);
@@ -751,4 +754,146 @@ fn migrates_passwords_with_the_key_of_the_browser_that_starts() {
             options.restrictions
         );
     }
+}
+
+// feature-parity: profile.session-cookies@native-typed
+#[test]
+fn keep_session_cookies_adds_the_switch_before_custom_args_once() {
+    assert_eq!(
+        build_real_browser_args(&dedicated(9333).keep_session_cookies(true)).unwrap(),
+        [
+            "--user-data-dir=/tmp/browser-commander-dedicated",
+            "--remote-debugging-port=9333",
+            "--restore-last-session",
+            "about:blank",
+        ]
+    );
+    let custom = build_real_browser_args(
+        &dedicated(9333)
+            .keep_session_cookies(true)
+            .with_args(vec!["--restore-last-session".to_string()]),
+    )
+    .unwrap();
+    assert_eq!(
+        custom
+            .iter()
+            .filter(|argument| *argument == "--restore-last-session")
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn the_session_cookie_opt_out_merges_with_restriction_features() {
+    let options = RealBrowserOptions {
+        disable_features: vec!["Translate".to_string()],
+        ..dedicated(9333).keep_session_cookies(false)
+    };
+    let args = build_real_browser_args(&options).unwrap();
+    assert!(!args
+        .iter()
+        .any(|argument| argument == "--restore-last-session"));
+    assert_eq!(
+        args.iter()
+            .filter(|argument| argument.starts_with("--disable-features="))
+            .collect::<Vec<_>>(),
+        ["--disable-features=Translate,SessionRestoreInfobar"]
+    );
+}
+
+#[test]
+fn building_the_command_line_adds_no_session_switch_when_unset() {
+    assert_eq!(
+        build_real_browser_args(&dedicated(9333)).unwrap(),
+        [
+            "--user-data-dir=/tmp/browser-commander-dedicated",
+            "--remote-debugging-port=9333",
+            "about:blank",
+        ]
+    );
+}
+
+/// A profile that was used before: the last session's tabs and its cookies.
+fn used_profile() -> PathBuf {
+    let user_data_dir = create_temporary_user_data_dir(None).unwrap();
+    let profile = user_data_dir.join("Default");
+    std::fs::create_dir_all(profile.join("Sessions")).unwrap();
+    std::fs::write(profile.join("Sessions").join("Session_1"), b"tabs").unwrap();
+    std::fs::write(profile.join("Cookies"), b"cookies").unwrap();
+    user_data_dir
+}
+
+async fn session_launch(options: RealBrowserOptions) -> (LaunchedRealBrowser, Vec<String>) {
+    let hooks = Arc::new(FakeHooks::with_ports(&[9555]));
+    let (_, launched) = launch(&options, &hooks).await.unwrap();
+    let args = hooks.spawned.lock().unwrap()[0].1.clone();
+    (launched, args)
+}
+
+fn has_session_switch(args: &[String]) -> bool {
+    args.iter().any(|argument| {
+        argument == "--restore-last-session" || argument.contains("SessionRestoreInfobar")
+    })
+}
+
+#[tokio::test]
+async fn a_persistent_profile_keeps_session_cookies_and_starts_with_one_tab() {
+    let user_data_dir = used_profile();
+    let (launched, args) =
+        session_launch(RealBrowserOptions::default().user_data_dir(&user_data_dir)).await;
+    assert!(args
+        .iter()
+        .any(|argument| argument == "--restore-last-session"));
+    assert!(launched.keep_session_cookies);
+    assert!(!user_data_dir.join("Default").join("Sessions").exists());
+    assert!(user_data_dir.join("Default").join("Cookies").exists());
+    launched.closer.close().await.unwrap();
+    remove_user_data_dir(&user_data_dir).await.unwrap();
+}
+
+#[tokio::test]
+async fn restore_tabs_keeps_the_last_session_tabs() {
+    let user_data_dir = used_profile();
+    let (launched, args) = session_launch(
+        RealBrowserOptions::default()
+            .user_data_dir(&user_data_dir)
+            .restore_tabs(true),
+    )
+    .await;
+    assert!(args
+        .iter()
+        .any(|argument| argument == "--restore-last-session"));
+    assert!(user_data_dir.join("Default").join("Sessions").exists());
+    launched.closer.close().await.unwrap();
+    remove_user_data_dir(&user_data_dir).await.unwrap();
+}
+
+#[tokio::test]
+async fn keep_session_cookies_false_lets_chromium_delete_them() {
+    let user_data_dir = used_profile();
+    let (launched, args) = session_launch(
+        RealBrowserOptions::default()
+            .user_data_dir(&user_data_dir)
+            .keep_session_cookies(false),
+    )
+    .await;
+    assert!(!args
+        .iter()
+        .any(|argument| argument == "--restore-last-session"));
+    assert!(args
+        .iter()
+        .any(|argument| argument == "--disable-features=SessionRestoreInfobar"));
+    assert!(!launched.keep_session_cookies);
+    assert!(user_data_dir.join("Default").join("Sessions").exists());
+    launched.closer.close().await.unwrap();
+    remove_user_data_dir(&user_data_dir).await.unwrap();
+}
+
+#[tokio::test]
+async fn a_temporary_profile_command_line_is_left_as_it_was() {
+    let (launched, args) = session_launch(RealBrowserOptions::default()).await;
+    assert!(launched.temporary_profile);
+    assert!(!launched.keep_session_cookies);
+    assert!(!has_session_switch(&args));
+    launched.closer.close().await.unwrap();
 }

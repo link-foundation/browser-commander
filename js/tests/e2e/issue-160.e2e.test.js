@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import net from 'node:net';
+import {
+  launchE2EBrowser,
+  CHROME_LAUNCH_OPTIONS,
+  PARITY_CHROME,
+  freePort as port,
+} from '../helpers/e2e-browser.js';
 import {
   startTrace,
   readTrace,
@@ -18,11 +23,6 @@ import {
   SESSION_METADATA,
   probeSession,
 } from '../../src/browser/persistent-session.js';
-import {
-  launchE2EBrowser,
-  CHROME_LAUNCH_OPTIONS,
-  PARITY_CHROME,
-} from '../helpers/e2e-browser.js';
 import { sendHtml, startFixtureHost } from '../helpers/fixture-server.js';
 
 const options = { skip: !process.env.RUN_E2E, timeout: 60000 };
@@ -33,13 +33,6 @@ async function removeProfile(userDataDir) {
     maxRetries: 10,
     retryDelay: 100,
   });
-}
-async function port() {
-  const server = net.createServer();
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const number = server.address().port;
-  await new Promise((resolve) => server.close(resolve));
-  return number;
 }
 async function until(predicate) {
   for (let attempt = 0; attempt < 100; attempt++) {

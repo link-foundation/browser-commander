@@ -14,12 +14,10 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
-import { accessSync, constants } from 'node:fs';
 import { createServer } from 'node:http';
-import path from 'node:path';
 import { launchWebDriver } from '../../src/browser/webdriver.js';
 import { makeBrowserCommander } from '../../src/factory.js';
-import { CHROME_LAUNCH_OPTIONS } from '../helpers/e2e-browser.js';
+import { CHROME_LAUNCH_OPTIONS, findFirefox } from '../helpers/e2e-browser.js';
 import { closeServer } from '../helpers/fixture-server.js';
 
 const PAGE = `<!doctype html>
@@ -45,26 +43,6 @@ async function startPageServer() {
     url: `http://127.0.0.1:${server.address().port}/`,
     close: () => closeServer(server),
   };
-}
-
-/** The firefox executable this machine has, or null. */
-function findFirefox() {
-  const candidates = process.env.FIREFOX_PATH
-    ? [process.env.FIREFOX_PATH]
-    : (process.env.PATH ?? '')
-        .split(path.delimiter)
-        .filter(Boolean)
-        .map((directory) => path.join(directory, 'firefox'));
-  return (
-    candidates.find((candidate) => {
-      try {
-        accessSync(candidate, constants.X_OK);
-        return true;
-      } catch {
-        return false;
-      }
-    }) ?? null
-  );
 }
 
 const headless = process.env.HEADLESS !== 'false';

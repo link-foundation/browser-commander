@@ -603,6 +603,73 @@ jobs:
   # cancelled rather than failed, and a run whose only casualty is a cancelled
   # job carries the conclusion `cancelled` as well, so the failure would pass
   # unannounced. See scripts/check-pipeline-status.sh.
+  # A persistent profile keeps session cookies across close() and relaunch
+  # (issue #187), in every entry point, engine and language. Firefox is
+  # preinstalled on the runner, so the selenium Firefox half runs too.
+  persistent-profile:
+    name: Persistent profile session cookies (real Chrome, Firefox)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-persistent-profile
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Playwright's Chromium
+        # A headless Playwright engine launch of a persistent profile starts
+        # the full Chromium build (channel 'chromium'): the headless shell
+        # cannot keep session cookies.
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify Chrome and Firefox are present
+        run: |
+          test -x "$CHROME_PATH" || {
+            echo "::error::no Chrome binary at $CHROME_PATH"
+            exit 1
+          }
+          "$CHROME_PATH" --version
+          command -v firefox || {
+            echo "::error::no firefox on PATH; the Firefox half would skip"
+            exit 1
+          }
+
+      - name: Give Chromium a usable sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Run the session cookie suite under Xvfb
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 600 "Persistent profile session cookies" \
+            bash -c 'set -o pipefail; RUN_E2E=true xvfb-run -a --server-args="-screen 0 1920x1080x24" node scripts/run-tests.mjs --reporter tap tests/e2e/issue-187-session-cookies.e2e.test.js 2>&1 | tee session-cookies.log'
+
+      - name: Fail on a suite that asserted nothing
+        run: |
+          if grep -q '# SKIP' session-cookies.log; then
+            echo "::error::the session cookie suite skipped a case instead of asserting it"
+            grep '# SKIP' session-cookies.log
+            exit 1
+          fi
+          passed=$(sed -n 's/^# pass \([0-9][0-9]*\)$/\1/p' session-cookies.log | tail -1)
+          if [ "${passed:-0}" -eq 0 ]; then
+            echo "::error::the session cookie suite reported no passing tests"
+            exit 1
+          fi
+          echo "session cookie suite passed $passed tests"
+
   pipeline-status:
     name: Pipeline Status
     runs-on: ubuntu-24.04
@@ -617,6 +684,7 @@ jobs:
       - snapshots
       - engine-suites
       - fixture-suites
+      - persistent-profile
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs
     # it exists to report. `!cancelled()` keeps it out of a superseded run,

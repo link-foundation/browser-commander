@@ -7,13 +7,30 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { launchBrowser } from '../../js/src/index.js';
 
-const [engine = 'playwright', launch = 'real', extraJson = '{}'] = process.argv.slice(2);
+const [engine = 'playwright', launch = 'real', extraJson = '{}'] =
+  process.argv.slice(2);
 const userDataDir = fs.mkdtempSync('/tmp/bc-exit-');
-const session = await launchBrowser({ engine, launch, userDataDir, headless: true, ...JSON.parse(extraJson) });
-console.log('executable:', session.executablePath ?? session.browserProcess?.spawnfile);
+const session = await launchBrowser({
+  engine,
+  launch,
+  userDataDir,
+  headless: true,
+  ...JSON.parse(extraJson),
+});
+console.log(
+  'executable:',
+  session.executablePath ?? session.browserProcess?.spawnfile
+);
 const t = Date.now();
 await session.close();
 console.log('close took', Date.now() - t, 'ms');
-const prefs = JSON.parse(fs.readFileSync(path.join(userDataDir, 'Default', 'Preferences'), 'utf8'));
-console.log('exit_type:', prefs.profile?.exit_type, 'exited_cleanly:', prefs.profile?.exited_cleanly);
+const prefs = JSON.parse(
+  fs.readFileSync(path.join(userDataDir, 'Default', 'Preferences'), 'utf8')
+);
+console.log(
+  'exit_type:',
+  prefs.profile?.exit_type,
+  'exited_cleanly:',
+  prefs.profile?.exited_cleanly
+);
 fs.rmSync(userDataDir, { recursive: true, force: true });

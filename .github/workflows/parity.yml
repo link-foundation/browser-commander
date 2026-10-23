@@ -735,10 +735,12 @@ jobs:
             echo "::error::no Chrome binary at $CHROME_PATH"
             exit 1
           }
-          command -v firefox && command -v geckodriver || {
-            echo "::error::no firefox or geckodriver on PATH; the Firefox launch would fail"
-            exit 1
-          }
+          for tool in firefox geckodriver; do
+            command -v "$tool" || {
+              echo "::error::no $tool on PATH; the Firefox launch would fail"
+              exit 1
+            }
+          done
       - name: Resolve matching native WebDriver
         run: node experiments/issue-110/resolve-webdriver.mjs >> "$GITHUB_ENV"
       - name: Give Chromium a usable sandbox

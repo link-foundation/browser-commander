@@ -6,15 +6,34 @@ import path from 'node:path';
 import { launchBrowser } from '../../js/src/index.js';
 
 const userDataDir = fs.mkdtempSync('/tmp/bc-ff-tabs-');
-fs.writeFileSync(path.join(userDataDir, 'user.js'), 'user_pref("browser.startup.page", 3);\n');
-const open = () => launchBrowser({ engine: 'selenium', launch: 'engine', browser: 'firefox', userDataDir, headless: true,
-  executablePath: process.env.FIREFOX, driverPath: process.env.GECKODRIVER, ...(process.env.KEEP ? { keepSessionCookies: process.env.KEEP === 'true' } : {}) });
+fs.writeFileSync(
+  path.join(userDataDir, 'user.js'),
+  'user_pref("browser.startup.page", 3);\n'
+);
+const open = () =>
+  launchBrowser({
+    engine: 'selenium',
+    launch: 'engine',
+    browser: 'firefox',
+    userDataDir,
+    headless: true,
+    executablePath: process.env.FIREFOX,
+    driverPath: process.env.GECKODRIVER,
+    ...(process.env.KEEP
+      ? { keepSessionCookies: process.env.KEEP === 'true' }
+      : {}),
+  });
 let s = await open();
 await s.driver.get('https://example.com/');
 await s.driver.manage().addCookie({ name: 'session_login', value: 'x' });
 await s.driver.switchTo().newWindow('tab');
 await s.driver.get('https://example.org/');
-console.log('first launch windows', (await s.driver.getAllWindowHandles()).length, 'warnings', s.warnings);
+console.log(
+  'first launch windows',
+  (await s.driver.getAllWindowHandles()).length,
+  'warnings',
+  s.warnings
+);
 await s.close();
 s = await open();
 const counts = [];

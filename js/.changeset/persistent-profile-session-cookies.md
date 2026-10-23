@@ -1,7 +1,0 @@
----
-'browser-commander': minor
----
-
-A launch with an explicit `userDataDir` keeps session cookies (cookies without an expiry date, which most logins set) across a normal `close()` and relaunch (issue #187). Before, Chromium deleted them on every clean start, so a persistent profile lost its logins. The browser's own encrypted cookie store keeps them: Chromium launches with `--restore-last-session`, and the last session's tabs are dropped first so the launch still starts with one tab (`restoreTabs: true` reopens them). Firefox under the selenium engine starts with `browser.startup.page=3` and the restored tabs are closed. The Playwright engine launches the full Chromium build headless (`channel: 'chromium'`), because the headless shell cannot keep session cookies. Safari, an attached browser, and an explicitly selected headless shell return a `keepSessionCookies` warning in `warnings`.
-
-Every entry point supports it: `launchBrowser` with any engine and `launch` mode, `connectOrLaunch`, `launchRealBrowser`, `launchWebDriver`, and the CLI (`--keep-session-cookies`, `--no-keep-session-cookies`, `--restore-tabs`). `keepSessionCookies: false` opts out, and temporary profiles behave as before. Launch results report `keepSessionCookies` and `warnings`. New exports: `persistentProfileArgs()`, `clearRestoredTabs()`, `KEEP_SESSION_COOKIES_SWITCH`, `FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES` and `SESSION_RESTORE_FILES`.

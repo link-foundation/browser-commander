@@ -38,6 +38,14 @@ import {
   restoreWebDriverStorageState,
 } from './storage-state.js';
 import { interruptionMode } from '../utilities/subprocess.js';
+import {
+  FRESH_PROFILE,
+  prepareSessionRestore,
+  resolveKeepSessionCookies,
+  sessionCookieArgs,
+  sessionCookieWarning,
+  validateSessionCookieOptions,
+} from './persistent-profile.js';
 
 export { resolveLaunchExecutable };
 
@@ -124,6 +132,32 @@ async function engineExecutable(
     .catch(() => undefined);
 }
 
+// Playwright's headless default is chromium-headless-shell, which deletes
+// session cookies at startup even with --restore-last-session; the full
+// Chromium build in new headless mode keeps them (measured with Playwright's
+// chromium-1243, experiments/issue-187/playwright-channel.mjs).
+function playwrightSessionChannel({ headless, channel, executablePath }) {
+  return headless && channel === undefined && executablePath === undefined
+    ? 'chromium'
+    : channel;
+}
+
+function headlessShellWarnings({ engine, headless, channel, executablePath }) {
+  const shell =
+    headless === 'shell' ||
+    (headless &&
+      (channel === 'chromium-headless-shell' ||
+        /headless[_-]shell/u.test(String(executablePath ?? ''))));
+  return engine !== 'selenium' && shell
+    ? [
+        sessionCookieWarning(
+          'headless-shell',
+          'chromium-headless-shell deletes session cookies at startup; use the full Chromium build (channel: "chromium", or headless: true for Puppeteer) to keep them'
+        ),
+      ]
+    : [];
+}
+
 async function launchWithEngine(options, dependencies) {
   if (options.engine === 'selenium') {
     // launchWebDriver adds the defaults of the browser it resolves.
@@ -163,8 +197,19 @@ async function launchWithEngine(options, dependencies) {
   // with caller-owned interruption the embedder's handler decides (#174).
   const signals =
     interruptionMode(interruption) === 'caller' ? { handleSIGINT: false } : {};
+  const temporaryProfile = !requestedUserDataDir;
+  // A persistent profile keeps session cookies across restarts (issue #187).
+  const keepSessionCookies = resolveKeepSessionCookies({
+    keepSessionCookies: options.keepSessionCookies,
+    temporaryProfile,
+  });
   const chrome = resolveChromeArgs({
-    args,
+    args: [
+      ...sessionCookieArgs(keepSessionCookies).filter(
+        (argument) => !args.includes(argument) && !extraArgs.includes(argument)
+      ),
+      ...args,
+    ],
     extraArgs,
     ignoreDefaultArgs,
     restrictions,
@@ -175,7 +220,6 @@ async function launchWithEngine(options, dependencies) {
     env || Object.keys(restrictionEnv).length > 0
       ? { ...process.env, ...restrictionEnv, ...env }
       : undefined;
-  const temporaryProfile = !requestedUserDataDir;
   const userDataDir =
     requestedUserDataDir ?? (await createTemporaryUserDataDir());
   await configureUserDataDir(userDataDir, {
@@ -185,7 +229,18 @@ async function launchWithEngine(options, dependencies) {
     },
     localState: options.localState,
   });
-  const selection = { channel, executablePath };
+  await prepareSessionRestore(userDataDir, {
+    keepSessionCookies,
+    restoreTabs: options.restoreTabs,
+    args: chrome.args,
+  });
+  const selection = {
+    channel:
+      engine === 'playwright' && keepSessionCookies === true
+        ? playwrightSessionChannel({ headless, channel, executablePath })
+        : channel,
+    executablePath,
+  };
 
   let browser;
   let page;
@@ -249,6 +304,11 @@ async function launchWithEngine(options, dependencies) {
     close,
     userDataDir,
     temporaryProfile,
+    keepSessionCookies: keepSessionCookies === true,
+    warnings:
+      keepSessionCookies === true
+        ? headlessShellWarnings({ engine, headless, ...selection })
+        : [],
     args: chrome.args,
     defaultRestrictions,
   };
@@ -295,6 +355,8 @@ async function unfocusAddressBar(page, verbose, settleMs = 500) {
  * @param {string} [options.engine='playwright'] - Browser automation engine: 'playwright', 'puppeteer' or 'selenium'
  * @param {'real'|'engine'} [options.launch='real'] - Who starts the browser: Browser Commander (a hand-started command line) or the automation engine
  * @param {string} [options.userDataDir] - Persistent profile directory. When omitted a fresh temporary profile is created and deleted on close.
+ * @param {boolean} [options.keepSessionCookies] - Keep session cookies across restarts: the default with userDataDir; a temporary profile is left as it is. false lets the browser delete them at startup (issue #187)
+ * @param {boolean} [options.restoreTabs=false] - With keepSessionCookies, also reopen the last session's tabs instead of starting with one tab
  * @param {boolean} [options.headless=false] - Run in headless mode
  * @param {number} [options.slowMo=0] - Slow down operations by ms
  * @param {boolean} [options.verbose=false] - Enable verbose logging
@@ -313,7 +375,7 @@ async function unfocusAddressBar(page, verbose, settleMs = 500) {
  * @param {boolean} [options.automationParity=true] - Keep navigator.webdriver false where a launch switch would turn it on (headless or engine launches)
  * @param {boolean|Object} [options.downloads] - Manage downloads: true for defaults, or {directory, persist, conflict}. The directory may be an absolute path, 'user-downloads' or 'temporary'.
  * @param {boolean|Object} [options.debug=false] - Opt-in recording: true, {output}, or {directory, retain, maxDurationMs, limits} for managed storage
- * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, launch: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, defaultRestrictions: Array<string>}>} Browser (a BrowserContext for Playwright), page, download manager and launch metadata
+ * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, launch: string, userDataDir: string, temporaryProfile: boolean, keepSessionCookies: boolean, warnings: Array<{item: string, reason: string, detail: string}>, args: Array<string>, defaultRestrictions: Array<string>}>} Browser (a BrowserContext for Playwright), page, download manager and launch metadata
  */
 export async function launchBrowser(options = {}) {
   return await launchBrowserWithDependencies(options);
@@ -328,12 +390,16 @@ export async function launchBrowserWithDependencies(
     validateDebugConfig(options.debug);
   }
   if (options.keepOpen) {
-    const { connectOrLaunch } = await import('./persistent-session.js');
+    const connectOrLaunch =
+      dependencies.connectOrLaunch ??
+      (await import('./persistent-session.js')).connectOrLaunch;
     return attachLaunchDebug(
       await connectOrLaunch({
         ...options,
         userDataDir:
           options.userDataDir ?? (await createTemporaryUserDataDir()),
+        // A profile created here starts empty, like a temporary one.
+        [FRESH_PROFILE]: options.userDataDir === undefined,
         remoteDebuggingPort:
           options.remoteDebuggingPort ?? (await reserveLoopbackPort()),
       }),
@@ -400,6 +466,7 @@ async function launchNonSafariBrowser(options, dependencies) {
     ...rest
   } = options;
   validateLaunchMode({ engine, launch, attach: rest.attach });
+  validateSessionCookieOptions(options);
   if (engine === 'selenium') {
     validateSeleniumLaunch({
       launch,

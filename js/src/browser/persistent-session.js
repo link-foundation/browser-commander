@@ -157,6 +157,7 @@ async function open(options, file, endpoint) {
       userDataDir: path.resolve(options.userDataDir),
       remoteDebuggingPort: options.remoteDebuggingPort,
       webSocketDebuggerUrl: version.webSocketDebuggerUrl,
+      keepSessionCookies: session.keepSessionCookies === true,
     };
     return { session, metadata, reused: false };
   } catch (error) {
@@ -296,6 +297,9 @@ async function lifecycle(
     userDataDir: path.resolve(options.userDataDir),
     remoteDebuggingPort: options.remoteDebuggingPort,
     temporaryProfile: false,
+    // A reused browser keeps whatever the launch that started it chose.
+    keepSessionCookies: metadata.keepSessionCookies === true,
+    warnings: session.warnings ?? [],
   };
   result.reusePage = async (selection = {}) => {
     selecting = true;

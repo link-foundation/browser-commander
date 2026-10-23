@@ -13,7 +13,9 @@
         "cdpEndpoint": "<volatile>",
         "remoteDebuggingPort": "<volatile>",
         "userDataDir": "<volatile>",
-        "temporaryProfile": true
+        "temporaryProfile": true,
+        "keepSessionCookies": false,
+        "warnings": []
       }
     },
     {

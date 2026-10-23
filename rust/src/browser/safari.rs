@@ -182,6 +182,10 @@ pub(crate) async fn launch_safari_real_with_webdriver(
             downloads: options.downloads,
             launch_timeout: options.startup_timeout,
             bidi: false,
+            keep_session_cookies: options
+                .keep_session_cookies
+                .or(webdriver_options.keep_session_cookies),
+            restore_tabs: options.restore_tabs || webdriver_options.restore_tabs,
             ..webdriver_options
         })
         .await?,
@@ -220,6 +224,8 @@ pub(crate) async fn launch_safari_real_with_webdriver(
         executable_path: executable,
         user_data_dir: PathBuf::new(),
         temporary_profile: false,
+        keep_session_cookies: false,
+        warnings: native.warnings().to_vec(),
         args: Vec::new(),
         default_restrictions: Vec::new(),
         browser_process: process,

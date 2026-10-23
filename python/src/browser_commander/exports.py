@@ -85,11 +85,21 @@ from browser_commander.browser.parity import (
     read_browser_version_page,
 )
 from browser_commander.browser.pdf import pdf
+from browser_commander.browser.persistent_profile import (
+    CONTINUE_SESSION_FEATURE,
+    FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES,
+    KEEP_SESSION_COOKIES_SWITCH,
+    SESSION_RESTORE_FILES,
+    clear_restored_tabs,
+    persistent_profile_args,
+    prepare_session_restore,
+)
 from browser_commander.browser.persistent_session import (
     PersistentSession,
     connect_or_launch,
 )
 from browser_commander.browser.profile_directory import (
+    assert_profile_directory_name,
     create_temporary_user_data_dir,
     prepare_user_data_dir,
     remove_user_data_dir,
@@ -361,11 +371,14 @@ __all__ = [
     "AUTOMATION_CONTROLLED_TRIGGERS",
     "CHROME_ARGS",
     "CHROME_FOR_TESTING_RESTRICTIONS",
+    "CONTINUE_SESSION_FEATURE",
     # Managed downloads
     "DEFAULT_CAPTURE_TIMEOUT",
     "FINGERPRINT_FIELD_MECHANISMS",
     "FINGERPRINT_LIMITATIONS",
     "FINGERPRINT_PRESET_NAMES",
+    "FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES",
+    "KEEP_SESSION_COOKIES_SWITCH",
     # Real launch (issues #101, #103) and subprocess helpers
     "LAUNCH_MODES",
     "LAUNCH_RESTRICTIONS",
@@ -373,6 +386,7 @@ __all__ = [
     "LONG_LIVED_REQUEST_PATTERNS",
     "PLAYWRIGHT_HEADLESS_POINTER_ARG",
     "PLAYWRIGHT_SOFTWARE_WEBGL_ARG",
+    "SESSION_RESTORE_FILES",
     "TIMING",
     # Portable traces
     "TRACE_EVENT_SOURCES",
@@ -463,6 +477,7 @@ __all__ = [
     "apply_automation_parity_args",
     "apply_fingerprint",
     "assert_fixed_debugging_port",
+    "assert_profile_directory_name",
     "attach_downloads",
     "attach_via_extension",
     "browser_environment",
@@ -478,6 +493,7 @@ __all__ = [
     "check_if_element_empty",
     "classify_differences",
     "clear_cookies",
+    "clear_restored_tabs",
     "click_button",
     # Click interactions
     "click_element",
@@ -560,9 +576,11 @@ __all__ = [
     "parse_switches",
     "pdf",
     "perform_fill",
+    "persistent_profile_args",
     "pick_foreground_page",
     "predicate",
     "prepare_download_directory",
+    "prepare_session_restore",
     "prepare_user_data_dir",
     # Keyboard interactions
     "press_key",

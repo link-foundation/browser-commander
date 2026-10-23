@@ -9,13 +9,16 @@
  *   CLIs are checked against the same file, so all three agree.
  * - `launch --keep-open` leaves a browser running that later `goto` and
  *   `eval` commands reach with `--cdp-endpoint`.
+ * - A `--user-data-dir` keeps a session cookie from one command's browser to
+ *   the next, and `--no-keep-session-cookies` drops it (issue #187).
  *
  * Run with: npm run test:e2e:cli
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,6 +27,7 @@ import { ProcessRunner } from 'command-stream/process-runner';
 import { normalizeRunOutput } from '../../../tests/cli-contract/normalize.mjs';
 import { runCommand } from '../../src/utilities/subprocess.js';
 import { SANDBOX_ARGS } from '../helpers/e2e-browser.js';
+import { startSessionCookieHost } from '../helpers/fixture-server.js';
 import { repoPath } from '../helpers/repo.js';
 import {
   closeRemoteBrowser,
@@ -172,6 +176,54 @@ for (const engine of ENGINES) {
               maxRetries: 5,
             });
           }
+        }
+      }
+    );
+
+    it(
+      '--user-data-dir keeps a session cookie into the next command (issue #187)',
+      E2E,
+      async () => {
+        const server = await startSessionCookieHost();
+        const profiles = [];
+        // Each eval launches a browser on the profile and closes it.
+        const cookieAfter = async (route, profile, extra = []) => {
+          const { code, document } = await browserCommander([
+            'eval',
+            'document.cookie',
+            '--url',
+            `${server.baseUrl}${route}`,
+            '--user-data-dir',
+            profile,
+            '--headless',
+            ...extra,
+            ...browserOptions(engine),
+          ]);
+          assert.equal(code, 0);
+          return document.value;
+        };
+        try {
+          for (const [extra, expected] of [
+            [[], 'sid=logged-in'],
+            [['--no-keep-session-cookies'], ''],
+          ]) {
+            const profile = await mkdtemp(
+              path.join(os.tmpdir(), 'browser-commander-cli-187-')
+            );
+            profiles.push(profile);
+            assert.equal(
+              await cookieAfter('/login', profile, extra),
+              'sid=logged-in'
+            );
+            assert.equal(await cookieAfter('/check', profile, extra), expected);
+          }
+        } finally {
+          await server.close();
+          await Promise.all(
+            profiles.map((profile) =>
+              rm(profile, { recursive: true, force: true, maxRetries: 5 })
+            )
+          );
         }
       }
     );

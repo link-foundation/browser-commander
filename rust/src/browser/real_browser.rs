@@ -44,6 +44,10 @@ use crate::browser::migration::{
     migrate_profile, target_keystore_for, MigrateProfileOptions, MigrationSource, MigrationSummary,
     TargetKeystore,
 };
+use crate::browser::persistent_profile::{
+    prepare_session_restore, resolve_keep_session_cookies, session_cookie_args,
+    SessionCookieWarning,
+};
 use crate::browser::profile_directory::{
     configure_user_data_dir_for_profile, create_temporary_user_data_dir_with_first_run,
     prepare_user_data_dir_with_first_run, remove_user_data_dir,
@@ -100,6 +104,15 @@ pub struct RealBrowserOptions {
     pub user_data_dir: Option<PathBuf>,
     /// Explicit owner-only state file used to restore/save session cookies.
     pub persist_session_cookies: Option<PathBuf>,
+    /// Keep session cookies across restarts in the browser's own encrypted
+    /// cookie store ([`KEEP_SESSION_COOKIES_SWITCH`](super::persistent_profile::KEEP_SESSION_COOKIES_SWITCH)).
+    /// `None` keeps them with `user_data_dir` and leaves a temporary profile
+    /// untouched; `Some(false)` lets Chromium delete them at startup (issue
+    /// #187). [`build_real_browser_args`] adds nothing for `None`.
+    pub keep_session_cookies: Option<bool>,
+    /// With session cookies kept, also reopen the last session's tabs instead
+    /// of starting with one tab.
+    pub restore_tabs: bool,
     /// Profile whose Preferences are seeded before launch.
     pub profile_directory: String,
     /// Whether to ask to become the OS default browser. Defaults to false.
@@ -207,6 +220,10 @@ pub struct RealBrowserLaunchResult {
     /// Whether `user_data_dir` is a temporary profile that is deleted when
     /// the browser exits.
     pub temporary_profile: bool,
+    /// Whether session cookies survive a restart of this profile.
+    pub keep_session_cookies: bool,
+    /// Why session cookies are not kept where they were asked for.
+    pub warnings: Vec<SessionCookieWarning>,
     /// The browser's exact command line (without the executable).
     pub args: Vec<String>,
     /// Restrictions the launch added before the caller's own, such as the
@@ -247,6 +264,8 @@ impl std::fmt::Debug for RealBrowserLaunchResult {
             .field("executable_path", &self.executable_path)
             .field("user_data_dir", &self.user_data_dir)
             .field("temporary_profile", &self.temporary_profile)
+            .field("keep_session_cookies", &self.keep_session_cookies)
+            .field("warnings", &self.warnings)
             .field("args", &self.args)
             .field("default_restrictions", &self.default_restrictions)
             .field("browser_process", &self.browser_process)
@@ -307,8 +326,17 @@ pub(crate) fn browser_args(
         )?
         .args,
     );
-    arguments.extend(options.args.iter().cloned());
-    arguments.extend(options.extra_args.iter().cloned());
+    let custom_args: Vec<String> = options
+        .args
+        .iter()
+        .chain(&options.extra_args)
+        .cloned()
+        .collect();
+    arguments.extend(session_cookie_args(
+        options.keep_session_cookies,
+        &custom_args,
+    ));
+    arguments.extend(custom_args);
     let arguments = merge_feature_switches(&arguments);
     let mut arguments = if options.automation_parity
         && !detect_automation_controlled_triggers(&arguments).is_empty()
@@ -326,8 +354,8 @@ pub(crate) fn browser_args(
 /// Build the exact command line for an installed browser process.
 ///
 /// `--user-data-dir` and `--remote-debugging-port` come first, then
-/// `--headless=new` when headless, then the opt-in restrictions and the
-/// caller's arguments; repeated feature-list switches are merged, and
+/// `--headless=new` when headless, then the opt-in restrictions, the
+/// `keep_session_cookies` switch and the caller's arguments; repeated feature-list switches are merged, and
 /// [`START_URL`] closes the list unless the caller passed a URL. Both
 /// `user_data_dir` and `remote_debugging_port` must be set - a launch picks
 /// them itself when they are not.
@@ -539,6 +567,7 @@ pub(crate) struct LaunchedRealBrowser {
     pub(crate) executable_path: PathBuf,
     pub(crate) user_data_dir: PathBuf,
     pub(crate) temporary_profile: bool,
+    pub(crate) keep_session_cookies: bool,
     pub(crate) args: Vec<String>,
     pub(crate) default_restrictions: Vec<String>,
     pub(crate) browser_process: BrowserProcess,
@@ -555,6 +584,7 @@ impl std::fmt::Debug for LaunchedRealBrowser {
             .field("executable_path", &self.executable_path)
             .field("user_data_dir", &self.user_data_dir)
             .field("temporary_profile", &self.temporary_profile)
+            .field("keep_session_cookies", &self.keep_session_cookies)
             .field("args", &self.args)
             .field("default_restrictions", &self.default_restrictions)
             .field("browser_process", &self.browser_process)
@@ -654,10 +684,13 @@ where
     let executable_path = hooks
         .resolve_executable(options)
         .map_err(|error| launch_failure(error, "discovery", options, None))?;
-    let (effective_options, default_restrictions) =
+    let (mut effective_options, default_restrictions) =
         with_default_restrictions(options, &executable_path);
+    let temporary_profile = effective_options.user_data_dir.is_none() || owned_profile;
+    // A persistent profile keeps session cookies across restarts (issue #187).
+    effective_options.keep_session_cookies =
+        resolve_keep_session_cookies(effective_options.keep_session_cookies, temporary_profile);
     let options = &effective_options;
-    let temporary_profile = options.user_data_dir.is_none() || owned_profile;
     let user_data_dir = match &options.user_data_dir {
         Some(user_data_dir) => {
             prepare_user_data_dir_with_first_run(user_data_dir, options.first_run)?
@@ -710,7 +743,21 @@ where
         options.default_browser_check,
         &preferences,
         &options.local_state,
-    ) {
+    )
+    .and_then(|()| {
+        let custom_args: Vec<String> = options
+            .args
+            .iter()
+            .chain(&options.extra_args)
+            .cloned()
+            .collect();
+        prepare_session_restore(
+            &user_data_dir,
+            options.keep_session_cookies,
+            options.restore_tabs,
+            &custom_args,
+        )
+    }) {
         if temporary_profile {
             let _ = remove_user_data_dir(&user_data_dir).await;
         }
@@ -784,6 +831,7 @@ where
             executable_path,
             user_data_dir,
             temporary_profile,
+            keep_session_cookies: options.keep_session_cookies == Some(true),
             args: spawned.args,
             default_restrictions,
             browser_process: process,

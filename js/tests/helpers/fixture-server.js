@@ -71,3 +71,19 @@ export async function startFixtureHost(handle, onClose) {
     },
   };
 }
+
+/**
+ * Start a fixture server whose `/login` sets a session cookie (no Expires, no
+ * Max-Age) — the login a persistent profile must keep across a restart
+ * (issue #187). Every other route serves a page without one.
+ *
+ * @returns {Promise<{baseUrl: string, close: Function}>} Server handle
+ */
+export function startSessionCookieHost() {
+  return startFixtureHost((route, _request, response) => {
+    if (route === '/login') {
+      response.setHeader('set-cookie', 'sid=logged-in; Path=/');
+    }
+    sendHtml(response, `<title>${route}</title>`);
+  });
+}

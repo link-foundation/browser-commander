@@ -94,6 +94,24 @@ async function mergeJsonFile(file, defaults, overrides) {
   await writeFile(file, JSON.stringify(merged));
 }
 
+/**
+ * Reject anything but one directory name inside the user data dir, so a
+ * profile name cannot point outside it.
+ *
+ * @param {string} profileDirectory
+ */
+export function assertProfileDirectoryName(profileDirectory) {
+  if (
+    typeof profileDirectory !== 'string' ||
+    !profileDirectory ||
+    path.basename(profileDirectory) !== profileDirectory ||
+    profileDirectory === '.' ||
+    profileDirectory === '..'
+  ) {
+    throw new TypeError('profileDirectory must be one profile directory name');
+  }
+}
+
 /** Merge launch settings into a fresh, migrated, or snapshotted profile. */
 export async function configureUserDataDir(
   userDataDir,
@@ -132,15 +150,7 @@ export async function configureUserDataDir(
   ) {
     throw new TypeError('defaultBrowserCheck must be a boolean');
   }
-  if (
-    typeof profileDirectory !== 'string' ||
-    !profileDirectory ||
-    path.basename(profileDirectory) !== profileDirectory ||
-    profileDirectory === '.' ||
-    profileDirectory === '..'
-  ) {
-    throw new TypeError('profileDirectory must be one profile directory name');
-  }
+  assertProfileDirectoryName(profileDirectory);
   // Chrome 155 opens a "Continue where you left off" session restore infobar
   // in a new profile until it has been shown 3 times.
   const profilePreferences = deepMerge(

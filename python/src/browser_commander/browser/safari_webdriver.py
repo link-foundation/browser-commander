@@ -109,6 +109,27 @@ def validate_safari_options(options: Any) -> None:
             raise SafariUnsupportedError(name)
 
 
+def safari_session_cookie_warnings(options: Any) -> list[dict[str, str]]:
+    """safaridriver has no profile directory, so an explicit request to keep
+    session cookies is reported instead of honoured (issue #187)."""
+
+    from browser_commander.browser.persistent_profile import (
+        session_cookie_warning,
+        validate_session_cookie_options,
+    )
+
+    keep = getattr(options, "keep_session_cookies", None)
+    validate_session_cookie_options(keep, getattr(options, "restore_tabs", None))
+    if keep is not True:
+        return []
+    return [
+        session_cookie_warning(
+            "safari-no-profile-directory",
+            "safaridriver runs Safari in an isolated automation session without a profile directory, so its session cookies end with the session",
+        )
+    ]
+
+
 async def seed_safari_state(driver: Any, state: Mapping[str, Any]) -> None:
     """Visit each cookie domain, add cookies, and restore the original page."""
 
@@ -228,6 +249,7 @@ async def launch_safari(
 
     dependencies = dependencies or {}
     validate_safari_options(options)
+    warnings = safari_session_cookie_warnings(options)
     if dependencies.get("platform", sys.platform) != "darwin":
         raise SafariUnsupportedError("Safari launch outside macOS")
     source = find_browser_source(options.channel)
@@ -286,4 +308,5 @@ async def launch_safari(
         launch=getattr(options, "launch", "real"),
         executable_path=driver_path,
         temporary_profile=False,
+        warnings=warnings,
     )

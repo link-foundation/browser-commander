@@ -43,6 +43,12 @@ from browser_commander.browser.launch_executable import (
     resolve_launch_executable,
 )
 from browser_commander.browser.launcher import LaunchResult
+from browser_commander.browser.persistent_profile import (
+    prepare_session_restore,
+    resolve_keep_session_cookies,
+    session_cookie_args,
+    validate_session_cookie_options,
+)
 from browser_commander.browser.profile_directory import (
     configure_user_data_dir,
     create_temporary_user_data_dir,
@@ -118,6 +124,13 @@ class RealBrowserOptions:
     executable_path: str | None = None
     user_data_dir: str | None = None
     persist_session_cookies: bool | str | Path = False
+    keep_session_cookies: bool | None = None
+    """Keep session cookies across restarts (default ``True`` with
+    ``user_data_dir``, untouched for a temporary profile); ``False`` lets
+    Chromium delete them at startup (issue #187)."""
+    restore_tabs: bool = False
+    """With ``keep_session_cookies``, also reopen the last session's tabs
+    instead of starting with one tab."""
     profile_directory: str = "Default"
     """Profile whose preferences are seeded, including snapshot Profile 1."""
     default_browser_check: bool | None = None
@@ -211,6 +224,7 @@ def build_real_browser_args(
     args: list[str] | None = None,
     extra_args: list[str] | None = None,
     automation_parity: bool = True,
+    keep_session_cookies: bool | None = None,
 ) -> list[str]:
     """Build the command line for a real browser.
 
@@ -220,7 +234,10 @@ def build_real_browser_args(
     URL among the custom ``args`` replaces ``about:blank``. Chrome's DevTools
     server binds to loopback by default, so no ``--remote-debugging-address``
     is passed; the switch stays managed so custom arguments cannot expose
-    DevTools on another interface.
+    DevTools on another interface. ``keep_session_cookies`` adds the
+    persistent-profile switch of :func:`persistent_profile_args` (``True``
+    keeps session cookies, ``False`` asks for Chromium's default of deleting
+    them, ``None`` adds nothing; issue #187).
 
     A hand-started headless browser reports ``navigator.webdriver`` false, so
     headless adds no off switch; it is added only when a custom argument is an
@@ -253,6 +270,11 @@ def build_real_browser_args(
             *resolve_restrictions(
                 restrictions, disable_features=disable_features or []
             ).args,
+            *(
+                argument
+                for argument in session_cookie_args(keep_session_cookies)
+                if argument not in custom_args
+            ),
             *custom_args,
         ]
     )
@@ -550,6 +572,7 @@ def _validate_launch_request(options: RealBrowserOptions) -> None:
         automation_parity=options.automation_parity,
     )
     resolve_restrictions(options.default_restrictions or [])
+    validate_session_cookie_options(options.keep_session_cookies, options.restore_tabs)
     if options.user_data_dir:
         assert_dedicated_user_data_dir(options.user_data_dir)
 
@@ -567,6 +590,7 @@ async def _spawn_on_free_port(
     *,
     executable_path: str,
     user_data_dir: str,
+    keep_session_cookies: bool | None,
     env: dict[str, str] | None,
     reserve_port: Any,
     spawn_browser: Any,
@@ -587,6 +611,7 @@ async def _spawn_on_free_port(
             args=options.args,
             extra_args=options.extra_args,
             automation_parity=options.automation_parity,
+            keep_session_cookies=keep_session_cookies,
         )
         try:
             browser_process = await _resolve(
@@ -760,6 +785,10 @@ async def launch_real_browser_with_dependencies(
         )
     )
     child_env = browser_environment(options.restrictions, options.env)
+    # A persistent profile keeps session cookies across restarts (issue #187).
+    keep_session_cookies = resolve_keep_session_cookies(
+        options.keep_session_cookies, temporary_profile=temporary_profile
+    )
 
     migration, migrated_cookies = await _run_pre_launch_migration(
         options,
@@ -782,6 +811,12 @@ async def launch_real_browser_with_dependencies(
             local_state=options.local_state,
             profile_directory=options.profile_directory,
         )
+        prepare_session_restore(
+            user_data_dir,
+            keep_session_cookies=keep_session_cookies,
+            restore_tabs=options.restore_tabs,
+            args=[*options.args, *options.extra_args],
+        )
     except BaseException:
         if temporary_profile:
             await _remove_profile(user_data_dir)
@@ -792,6 +827,7 @@ async def launch_real_browser_with_dependencies(
             options,
             executable_path=executable_path,
             user_data_dir=user_data_dir,
+            keep_session_cookies=keep_session_cookies,
             env=child_env,
             reserve_port=reserve_port,
             spawn_browser=spawn_browser,
@@ -879,6 +915,7 @@ async def launch_real_browser_with_dependencies(
         executable_path=executable_path,
         user_data_dir=user_data_dir,
         temporary_profile=temporary_profile,
+        keep_session_cookies=keep_session_cookies is True,
         args=launched.args,
         default_restrictions=default_restrictions,
         migration=migration,

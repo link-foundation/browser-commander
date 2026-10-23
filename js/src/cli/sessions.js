@@ -41,6 +41,8 @@ const LAUNCH_PASSTHROUGH = Object.freeze([
   'localState',
   'defaultBrowserCheck',
   'firstRun',
+  'keepSessionCookies',
+  'restoreTabs',
   'driverPath',
   'bidi',
   'seedCookies',

@@ -77,6 +77,17 @@ def _merge_json(
     path.write_text(json.dumps(current, separators=(",", ":")), encoding="utf-8")
 
 
+def assert_profile_directory_name(profile_directory: str) -> None:
+    """Refuse anything but a single directory name inside the user data dir."""
+    if (
+        not isinstance(profile_directory, str)
+        or not profile_directory
+        or profile_directory in {".", ".."}
+        or any(c in profile_directory for c in "/\\\0")
+    ):
+        raise ValueError("profile_directory must be a profile directory name")
+
+
 def configure_user_data_dir(
     user_data_dir: str | os.PathLike[str],
     *,
@@ -122,12 +133,7 @@ def configure_user_data_dir(
             "check_default_browser": default_browser_check,
         }
     directory = Path(user_data_dir)
-    if (
-        not profile_directory
-        or profile_directory in {".", ".."}
-        or any(c in profile_directory for c in "/\\\0")
-    ):
-        raise ValueError("profile_directory must be a profile directory name")
+    assert_profile_directory_name(profile_directory)
     # Chrome 155 opens a "Continue where you left off" session restore infobar
     # in a new profile until it has been shown 3 times.
     _merge_json(

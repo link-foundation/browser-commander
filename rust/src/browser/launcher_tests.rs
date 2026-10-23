@@ -491,3 +491,57 @@ async fn real_launch_reports_a_missing_executable() {
         "unexpected message: {err}"
     );
 }
+
+// feature-parity: profile.session-cookies@native-typed
+#[test]
+fn chrome_args_put_the_session_cookie_switch_before_the_caller_args() {
+    let options = LaunchOptions::default()
+        .automation_parity(false)
+        .with_args(vec!["--lang=en-US".to_string()]);
+    assert_eq!(
+        options.chrome_args_with(Some(true)).unwrap(),
+        ["--restore-last-session", "--lang=en-US"]
+    );
+    // Nothing is added when unset, as for a temporary profile.
+    assert_eq!(options.chrome_args_with(None).unwrap(), ["--lang=en-US"]);
+    assert_eq!(options.all_chrome_args().unwrap(), ["--lang=en-US"]);
+    assert_eq!(
+        options
+            .clone()
+            .keep_session_cookies(true)
+            .all_chrome_args()
+            .unwrap(),
+        ["--restore-last-session", "--lang=en-US"]
+    );
+    let custom = LaunchOptions::default()
+        .automation_parity(false)
+        .with_args(vec!["--restore-last-session".to_string()]);
+    assert_eq!(
+        custom.chrome_args_with(Some(true)).unwrap(),
+        ["--restore-last-session"]
+    );
+}
+
+#[test]
+fn the_session_cookie_opt_out_merges_with_the_caller_feature_list() {
+    let options = LaunchOptions::default()
+        .automation_parity(false)
+        .with_args(vec!["--disable-features=Translate".to_string()]);
+    assert_eq!(
+        options.chrome_args_with(Some(false)).unwrap(),
+        ["--disable-features=SessionRestoreInfobar,Translate"]
+    );
+}
+
+#[test]
+fn real_browser_options_carry_the_session_cookie_choice() {
+    let real = LaunchOptions::default().real_browser_options();
+    assert_eq!(real.keep_session_cookies, None);
+    assert!(!real.restore_tabs);
+    let real = LaunchOptions::default()
+        .keep_session_cookies(false)
+        .restore_tabs(true)
+        .real_browser_options();
+    assert_eq!(real.keep_session_cookies, Some(false));
+    assert!(real.restore_tabs);
+}

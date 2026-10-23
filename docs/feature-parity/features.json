@@ -60,6 +60,10 @@
         {
           "id": "attach.open",
           "title": "Open in the user browser without automation"
+        },
+        {
+          "id": "profile.session-cookies",
+          "title": "Keep session cookies of a persistent profile across restarts"
         }
       ]
     },

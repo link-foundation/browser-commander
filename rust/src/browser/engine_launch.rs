@@ -25,6 +25,10 @@ use crate::browser::launch_executable::{
 };
 use crate::browser::launcher::{Browser, LaunchOptions, LaunchResult};
 use crate::browser::node_bridge::NodeBridgePage;
+use crate::browser::persistent_profile::{
+    headless_shell_warnings, playwright_session_channel, prepare_session_restore,
+    resolve_keep_session_cookies,
+};
 use crate::browser::playwright_driver_page::{PlaywrightDriverPage, PlaywrightLaunch};
 use crate::browser::profile_directory::{
     configure_user_data_dir, prepare_user_data_dir_with_first_run,
@@ -32,7 +36,7 @@ use crate::browser::profile_directory::{
 use crate::browser::profile_directory::{
     create_temporary_user_data_dir_with_first_run, remove_user_data_dir,
 };
-use crate::browser::webdriver::{launch_webdriver, ManagedWebDriver, WebDriverBrowser};
+use crate::browser::webdriver::{launch_webdriver_in_profile, ManagedWebDriver, WebDriverBrowser};
 use crate::core::engine::{EngineAdapter, EngineType};
 use crate::downloads::attach_downloads;
 use crate::fingerprint::apply::{apply_fingerprint, ApplyOptions};
@@ -217,9 +221,19 @@ async fn launch(
     mut default_restrictions: Vec<String>,
 ) -> Result<LaunchResult> {
     let executable_path = options.executable_path.clone().or(webdriver_browser);
-    let args = if options.engine == EngineType::Fantoccini
-        && options.webdriver.browser == WebDriverBrowser::Firefox
-    {
+    let temporary_profile = options.user_data_dir.is_none();
+    let fantoccini = options.engine == EngineType::Fantoccini;
+    // A persistent profile keeps session cookies across restarts (issue #187).
+    let requested_keep = if fantoccini {
+        options
+            .keep_session_cookies
+            .or(options.webdriver.keep_session_cookies)
+    } else {
+        options.keep_session_cookies
+    };
+    let keep_session_cookies = resolve_keep_session_cookies(requested_keep, temporary_profile);
+    let restore_tabs = options.restore_tabs || (fantoccini && options.webdriver.restore_tabs);
+    let args = if fantoccini && options.webdriver.browser == WebDriverBrowser::Firefox {
         options
             .args
             .iter()
@@ -227,10 +241,26 @@ async fn launch(
             .cloned()
             .collect()
     } else {
-        options.all_chrome_args()?
+        options.chrome_args_with(keep_session_cookies)?
+    };
+    let session_options;
+    let options = match playwright_session_options(options, keep_session_cookies) {
+        Some(changed) => {
+            session_options = changed;
+            &session_options
+        }
+        None => options,
+    };
+    let warnings = if keep_session_cookies == Some(true) && !fantoccini {
+        headless_shell_warnings(
+            options.headless,
+            options.channel.as_deref(),
+            options.executable_path.as_deref(),
+        )
+    } else {
+        Vec::new()
     };
     let env = options.browser_env()?;
-    let temporary_profile = options.user_data_dir.is_none();
     let user_data_dir = match &options.user_data_dir {
         Some(user_data_dir) => {
             std::fs::create_dir_all(user_data_dir)?;
@@ -257,6 +287,9 @@ async fn launch(
                 &preferences,
                 &options.local_state,
             )?;
+        }
+        if !fantoccini {
+            prepare_session_restore(&user_data_dir, keep_session_cookies, restore_tabs, &args)?;
         }
         match options.engine {
             EngineType::Chromiumoxide => {
@@ -302,7 +335,10 @@ async fn launch(
                 driver_env.extend(env.clone().unwrap_or_default());
                 native.env = (!driver_env.is_empty()).then_some(driver_env);
                 native.downloads = options.downloads.clone();
-                let browser = Arc::new(launch_webdriver(native).await?);
+                native.keep_session_cookies = requested_keep;
+                native.restore_tabs = restore_tabs;
+                let browser =
+                    Arc::new(launch_webdriver_in_profile(native, temporary_profile).await?);
                 default_restrictions = browser.default_restrictions().to_vec();
                 let downloads = browser.downloads().cloned();
                 Ok((EngineBrowser::WebDriver(browser), downloads))
@@ -354,7 +390,30 @@ async fn launch(
     )
     .launched_by_engine(args, temporary_profile, executable_path, closer);
     result.default_restrictions = default_restrictions;
+    result.keep_session_cookies = keep_session_cookies == Some(true);
+    result.warnings = warnings;
     Ok(result)
+}
+
+/// The options a Playwright launch that keeps session cookies runs with:
+/// headless, the full Chromium build instead of chromium-headless-shell.
+/// `None` when nothing changes.
+fn playwright_session_options(
+    options: &LaunchOptions,
+    keep_session_cookies: Option<bool>,
+) -> Option<LaunchOptions> {
+    if options.engine != EngineType::Playwright || keep_session_cookies != Some(true) {
+        return None;
+    }
+    let channel = playwright_session_channel(
+        options.headless,
+        options.channel.as_deref(),
+        options.executable_path.as_deref(),
+    );
+    (channel != options.channel).then(|| LaunchOptions {
+        channel,
+        ..options.clone()
+    })
 }
 
 type Launched = (
@@ -417,6 +476,18 @@ async fn launch_playwright(
     Ok((EngineBrowser::PlaywrightDriver(Arc::new(page)), None))
 }
 
+/// Split `--key=value` into the key and value chromiumoxide's builder takes.
+/// The builder writes `--{key}` itself, so a whole switch passed as a key
+/// reached Chrome as `----key` and was ignored. A switch given twice, such as
+/// `--disable-features`, is merged into one comma-separated value.
+fn chromiumoxide_arg(argument: &str) -> (&str, Option<&str>) {
+    let switch = argument.strip_prefix("--").unwrap_or(argument);
+    match switch.split_once('=') {
+        Some((key, value)) => (key, Some(value)),
+        None => (switch, None),
+    }
+}
+
 async fn launch_chromiumoxide(
     options: &LaunchOptions,
     args: &[String],
@@ -431,7 +502,13 @@ async fn launch_chromiumoxide(
     } else {
         builder.with_head()
     };
-    let mut builder = builder.user_data_dir(user_data_dir).args(args.to_vec());
+    let mut builder = builder.user_data_dir(user_data_dir);
+    for argument in args {
+        builder = match chromiumoxide_arg(argument) {
+            (key, Some(value)) => builder.arg((key, value)),
+            (key, None) => builder.arg(key),
+        };
+    }
 
     // Chromiumoxide only exposes an all-or-nothing switch for its own default
     // layer. Disable that layer whenever the caller requests an omission so an

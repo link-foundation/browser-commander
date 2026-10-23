@@ -43,6 +43,17 @@ class PersistentSession:
         self.cdp_endpoint = metadata["cdpEndpoint"]
         self.reused = metadata["reused"]
         self.temporary_profile = False
+        # A reused browser keeps whatever the launch that started it chose.
+        self.keep_session_cookies = metadata.get("keepSessionCookies") is True
+        self.warnings = [
+            {
+                **warning,
+                "item": "keep_session_cookies"
+                if warning.get("item") == "keepSessionCookies"
+                else warning.get("item"),
+            }
+            for warning in metadata.get("warnings") or []
+        ]
         self._detached = False
         self._closed = False
         self._tab_tasks: set[asyncio.Task] = set()

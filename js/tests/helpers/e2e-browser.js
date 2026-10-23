@@ -8,7 +8,9 @@
  * read as the behaviour they check.
  */
 
-import { existsSync } from 'node:fs';
+import { accessSync, constants, existsSync } from 'node:fs';
+import net from 'node:net';
+import path from 'node:path';
 
 import { launchBrowser } from '../../src/browser/launcher.js';
 
@@ -34,6 +36,35 @@ export function paritySkipReason({ headless = false } = {}) {
     return 'headful parity needs a display; run under xvfb-run';
   }
   return false;
+}
+
+/** A local TCP port nothing listens on right now. */
+export async function freePort() {
+  const server = net.createServer();
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const number = server.address().port;
+  await new Promise((resolve) => server.close(resolve));
+  return number;
+}
+
+/** The firefox executable this machine has (FIREFOX_PATH, then PATH), or null. */
+export function findFirefox() {
+  const candidates = process.env.FIREFOX_PATH
+    ? [process.env.FIREFOX_PATH]
+    : (process.env.PATH ?? '')
+        .split(path.delimiter)
+        .filter(Boolean)
+        .map((directory) => path.join(directory, 'firefox'));
+  return (
+    candidates.find((candidate) => {
+      try {
+        accessSync(candidate, constants.X_OK);
+        return true;
+      } catch {
+        return false;
+      }
+    }) ?? null
+  );
 }
 
 /**

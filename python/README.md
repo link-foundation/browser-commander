@@ -142,6 +142,46 @@ For trace budgets/privacy, persistent session adoption and heartbeats, CDP
 `noDefaults`, overlay reporting, and the `readyOn`/`concurrency` trigger migration,
 see [trace and session hardening](https://github.com/link-foundation/browser-commander/blob/f5e426d6933c681189c4989bac182a1558d8edb8/docs/trace-session-hardening.md).
 
+## Profiles
+
+`user_data_dir` keeps a profile; without it each launch gets a fresh temporary
+profile that `close()` deletes. Keep in mind that
+a profile directory is permanent storage: all cookies, session ones included, survive restarts.
+Session cookies (no expiry date, the kind most logins set) are kept by the
+browser's own encrypted cookie store, never in a plaintext file:
+
+```python
+from browser_commander import launch_browser, LaunchOptions
+
+first = await launch_browser(LaunchOptions(user_data_dir="./profile"))
+await first.page.goto("https://example.com/login")  # sets a session cookie
+await first.close()
+
+second = await launch_browser(LaunchOptions(user_data_dir="./profile"))
+# Still logged in: second.keep_session_cookies is True and one tab is open.
+```
+
+- `keep_session_cookies` (default `True` with a `user_data_dir`) starts
+  Chromium with `--restore-last-session`; `False` lets it delete session
+  cookies at startup.
+- `restore_tabs=True` reopens the last session's tabs instead of deleting
+  them before launch.
+- It works in `launch_browser` (either engine and `launch` mode),
+  `connect_or_launch`, `launch_real_browser` and the CLI
+  (`--keep-session-cookies`, `--no-keep-session-cookies`, `--restore-tabs`).
+- Headless Playwright uses the full Chromium build (`channel="chromium"`),
+  because chromium-headless-shell deletes session cookies at startup.
+- Results report `keep_session_cookies` and `warnings`. Safari and an
+  explicitly selected headless shell return
+  `{"item": "keep_session_cookies", "reason": ..., "detail": ...}`.
+- A temporary profile gets no extra switch unless you set the option.
+- `persistent_profile_args(keep_session_cookies=True)` and
+  `clear_restored_tabs(user_data_dir)` serve apps that start Chromium
+  themselves. The opt-in plaintext `persist_session_cookies` file is
+  unchanged.
+
+See [Browser profile settings](../docs/browser-profile-settings.md#session-cookies-of-a-persistent-profile).
+
 ## API Reference
 
 ### launch_browser(options)

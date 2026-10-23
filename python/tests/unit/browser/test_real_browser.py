@@ -302,7 +302,13 @@ async def test_spawns_waits_connects_and_returns_process_metadata(
     assert calls[0] == (
         "spawn",
         "/opt/google/chrome",
-        [f"--user-data-dir={profile}", "--remote-debugging-port=9444", START_URL],
+        [
+            f"--user-data-dir={profile}",
+            "--remote-debugging-port=9444",
+            # A persistent profile keeps its session cookies (#187).
+            "--restore-last-session",
+            START_URL,
+        ],
         {"env": None, "verbose": False},
     )
     assert calls[1] == ("wait", 9444)

@@ -9,6 +9,8 @@ impl Default for RealBrowserOptions {
             executable_path: None,
             user_data_dir: None,
             persist_session_cookies: None,
+            keep_session_cookies: None,
+            restore_tabs: false,
             profile_directory: "Default".into(),
             default_browser_check: None,
             first_run: false,
@@ -113,6 +115,19 @@ impl RealBrowserOptions {
     /// Enable or disable headless mode.
     pub fn headless(mut self, headless: bool) -> Self {
         self.headless = headless;
+        self
+    }
+
+    /// Keep (or, with `false`, drop) session cookies across restarts of a
+    /// persistent profile; see [`RealBrowserOptions::keep_session_cookies`].
+    pub fn keep_session_cookies(mut self, keep_session_cookies: bool) -> Self {
+        self.keep_session_cookies = Some(keep_session_cookies);
+        self
+    }
+
+    /// Reopen the last session's tabs along with its session cookies.
+    pub fn restore_tabs(mut self, restore_tabs: bool) -> Self {
+        self.restore_tabs = restore_tabs;
         self
     }
 

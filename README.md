@@ -199,6 +199,34 @@ For installation and usage instructions, see the documentation for your preferre
 - **Rust**: See [rust/README.md](rust/README.md)
 - **Python**: See [python/README.md](python/README.md)
 
+## Profiles
+
+Without a user data directory every launch gets a fresh temporary profile that
+is deleted on close. With an explicit one,
+a profile directory is permanent storage: all cookies, session ones included, survive restarts.
+Session cookies (cookies without an expiry date, which most logins set) are
+kept by the browser's own encrypted cookie store; Browser Commander writes no
+plaintext copy of them.
+
+- **Chromium** (Chrome, Edge, Brave, Chromium, Chrome for Testing) launches
+  with `--restore-last-session`. The last session's tabs are deleted first, so
+  a launch still starts with one tab; `restoreTabs` reopens them.
+- **Firefox** under a WebDriver engine starts with
+  `browser.startup.page = 3` ("Open previous windows and tabs"), and the
+  restored tabs are closed after launch.
+- **Safari**, an attached browser and an explicitly selected
+  chromium-headless-shell cannot keep them: the launch result carries a
+  `warnings` entry instead.
+- `keepSessionCookies: false` (`keep_session_cookies=False` in Python,
+  `.keep_session_cookies(false)` in Rust, `--no-keep-session-cookies` in the
+  CLI) restores Chromium's default of deleting session cookies at startup.
+  Temporary profiles behave as before.
+- `persistentProfileArgs()` returns the switches for apps that start the
+  browser themselves and attach over CDP.
+
+See [Browser profile settings](docs/browser-profile-settings.md#session-cookies-of-a-persistent-profile)
+for the measurements and every option.
+
 ## Testing Layer
 
 The JavaScript package now exposes `browser-commander/tests`, a

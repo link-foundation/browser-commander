@@ -383,6 +383,55 @@ For trace budgets/privacy, persistent session adoption and heartbeats, CDP
 `noDefaults`, overlay reporting, and the `readyOn`/`concurrency` trigger migration,
 see [trace and session hardening](https://github.com/link-foundation/browser-commander/blob/f5e426d6933c681189c4989bac182a1558d8edb8/docs/trace-session-hardening.md).
 
+## Profiles
+
+`userDataDir` keeps a profile; without it each launch gets a fresh temporary
+profile that `close()` deletes. Keep in mind that
+a profile directory is permanent storage: all cookies, session ones included, survive restarts.
+Session cookies (no expiry date, the kind most logins set) are kept by the
+browser's own encrypted cookie store, never in a plaintext file:
+
+```javascript
+import { launchBrowser } from 'browser-commander';
+
+const first = await launchBrowser({ userDataDir: './profile' });
+await first.page.goto('https://example.com/login'); // sets a session cookie
+await first.close();
+
+const second = await launchBrowser({ userDataDir: './profile' });
+// Still logged in: second.keepSessionCookies is true and one tab is open.
+```
+
+- `keepSessionCookies` (default `true` with a `userDataDir`) starts Chromium
+  with `--restore-last-session`; `false` lets it delete session cookies at
+  startup.
+- `restoreTabs: true` reopens the last session's tabs instead of deleting them
+  before launch.
+- It works in `launchBrowser` (every engine and `launch` mode),
+  `connectOrLaunch`, `launchRealBrowser`, `launchWebDriver` and the CLI
+  (`--keep-session-cookies`, `--no-keep-session-cookies`, `--restore-tabs`).
+- Firefox under the selenium engine starts with `browser.startup.page = 3`
+  ("Open previous windows and tabs") and its restored tabs are closed after
+  launch.
+- Headless Playwright uses the full Chromium build (`channel: 'chromium'`),
+  because chromium-headless-shell deletes session cookies at startup.
+- Results report `keepSessionCookies` and `warnings`. Safari (safaridriver has
+  no profile directory), an attached browser and an explicitly selected
+  headless shell return `{ item: 'keepSessionCookies', reason, detail }`.
+- A temporary profile gets no extra switch unless you set the option.
+
+Apps that start Chromium themselves can use the same switches:
+
+```javascript
+import { persistentProfileArgs, clearRestoredTabs } from 'browser-commander';
+
+await clearRestoredTabs('./profile'); // optional: start with one tab
+const args = [...persistentProfileArgs(), '--user-data-dir=./profile'];
+// persistentProfileArgs({ keepSessionCookies: false }) opts out.
+```
+
+See [Browser profile settings](../docs/browser-profile-settings.md#session-cookies-of-a-persistent-profile).
+
 ## API Reference
 
 ### launchBrowser(options)

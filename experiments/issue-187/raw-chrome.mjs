@@ -3,6 +3,8 @@
 // close with Browser.close, start again and list the cookies.
 //
 //   node experiments/issue-187/raw-chrome.mjs <chrome> [switch ...]
+// NO_URL=1 starts without a URL (as chromiumoxide does); CLEAR_SESSIONS=1 deletes
+// Default/Sessions before the second start.
 // e.g. ... raw-chrome.mjs ~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome --headless=new --no-sandbox
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -15,7 +17,7 @@ let port = 9400 + Math.floor(Math.random() * 400);
 
 async function start() {
   port += 1;
-  const child = spawn(chrome, [`--user-data-dir=${dir}`, `--remote-debugging-port=${port}`, ...switches, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  const child = spawn(chrome, [`--user-data-dir=${dir}`, `--remote-debugging-port=${port}`, ...switches, ...(process.env.NO_URL ? [] : ['about:blank'])], { stdio: ['ignore', 'ignore', 'pipe'] });
   child.stderr.on('data', () => {});
   for (let i = 0; i < 100; i++) {
     try {

@@ -48,6 +48,59 @@ The CLI accepts `--pref download.prompt_for_download=false`,
 `--local-state fre.has_user_seen_fre=false`, and `--default-browser-check`.
 Values after `=` are parsed as JSON when possible; plain text remains text.
 
+## Session cookies of a persistent profile
+
+With an explicit user data directory,
+a profile directory is permanent storage: all cookies, session ones included, survive restarts.
+Session cookies are cookies without an expiry date, the kind most logins
+set. Chromium deletes them when a profile starts unless the last exit was a
+crash or the startup setting is "Continue where you left off"
+(`ProfileImpl::ShouldRestoreOldSessionCookies`). A normal `close()` is a clean
+exit, so before issue #187 every restart of a persistent profile logged the
+user out (`experiments/issue-187/repro.mjs`).
+
+With an explicit `userDataDir` (`user_data_dir` in Python and Rust) every
+entry point keeps them in the browser's own encrypted cookie store. No
+plaintext file is written:
+
+| Browser                         | Mechanism                                                                                                             | Measured with                                                |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Chrome, Edge, Brave, Chromium   | `--restore-last-session`; `<profile>/Sessions` and the legacy `Current/Last Session/Tabs` files are deleted first     | Chrome for Testing 153, Google Chrome 155 (`raw-chrome.mjs`) |
+| Playwright headless             | The full Chromium build (`channel: 'chromium'`): chromium-headless-shell deletes session cookies even with the switch | Playwright chromium-1243 (`playwright-channel.mjs`)          |
+| Firefox (selenium / fantoccini) | `browser.startup.page = 3` ("Open previous windows and tabs"); the restored tabs are closed after launch              | Firefox 158, geckodriver 0.37.1 (`firefox.mjs`)              |
+| Safari                          | None: safaridriver has no profile directory. The result carries a `safari-no-profile-directory` warning               | -                                                            |
+
+Deleting the session files drops only the tabs: cookies live in
+`<profile>/Cookies`. The launch therefore still starts with its one driven
+tab. `restoreTabs: true` (`restore_tabs`) keeps the files and reopens the last
+session's tabs.
+
+| Option                                        | Default                         | Effect                                                                                 |
+| --------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------- |
+| `keepSessionCookies` / `keep_session_cookies` | `true` with an explicit profile | `false` adds `--disable-features=SessionRestoreInfobar` so Chromium deletes them again |
+| `restoreTabs` / `restore_tabs`                | `false`                         | Reopen the last session's tabs                                                         |
+| CLI                                           | -                               | `--keep-session-cookies`, `--no-keep-session-cookies`, `--restore-tabs`                |
+
+The opt-out also disables the `SessionRestoreInfobar` field trial, which makes
+Chrome for Testing continue the last session by default. It is merged into any
+other `--disable-features` list. A temporary profile gets no extra switch
+unless the option is set explicitly, so its command line is unchanged.
+
+Launch results report `keepSessionCookies` (`keep_session_cookies`) and
+`warnings`. Each warning is
+`{ item: 'keepSessionCookies', reason, detail }` in JavaScript and
+`{ "item": "keep_session_cookies", "reason": ..., "detail": ... }` in Python
+and Rust. The reasons are `safari-no-profile-directory` and `headless-shell`
+(an explicitly selected chromium-headless-shell); JavaScript also returns
+`attached-browser` when the selenium engine attaches to a browser at
+`debuggerAddress` that it did not start.
+
+Apps that start Chromium themselves and attach over CDP can use
+`persistentProfileArgs()` (`persistent_profile_args()`), which returns
+`['--restore-last-session']`, or the opt-out switch with
+`keepSessionCookies: false`. `clearRestoredTabs(userDataDir)`
+(`clear_restored_tabs()`) deletes the tabs first.
+
 ## Enterprise policies
 
 Enterprise policies are outside the user data directory. Chromium reads Linux

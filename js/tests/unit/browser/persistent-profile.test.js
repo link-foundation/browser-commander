@@ -1,3 +1,4 @@
+// feature-parity: profile.session-cookies@native-typed
 import { afterEach, describe, it } from 'node:test';
 import assert from 'node:assert';
 import { access, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';

@@ -133,25 +133,26 @@ of a budget is the same threshold the invariant enforces against the backstop.
 Budgets are set from measured step durations taken from recent successful runs,
 with at least a fivefold margin, and always below 70% of the job's backstop.
 
-| Workflow     | Job                  | Backstop | Step                                      | Budget | Measured          |
-| ------------ | -------------------- | -------- | ----------------------------------------- | ------ | ----------------- |
-| `js.yml`     | `test`               | 20 min   | Node.js test suite                        | 300s   | 1–5s              |
-| `js.yml`     | `test` (macOS)       | 20 min   | macOS Chrome startup regression           | 180s   | 15s (local Linux) |
-| `python.yml` | `test`               | 20 min   | pytest suite                              | 300s   | 5–10s             |
-| `rust.yml`   | `test`               | 20 min   | Rust test suite                           | 480s   | 23–86s            |
-| `rust.yml`   | `coverage`           | 15 min   | Rust code coverage                        | 480s   | 10s               |
-| `docs.yml`   | `build-docs`         | 15 min   | Rust API docs                             | 480s   | 58s               |
-| `parity.yml` | `parity`             | 40 min   | Fingerprint parity suite                  | 1200s  | 26s               |
-| `parity.yml` | `parity`             | 40 min   | WebDriver suite                           | 300s   | 44s               |
-| `parity.yml` | `cli`                | 40 min   | CLI and API coverage suites               | 300s   | 30s               |
-| `parity.yml` | `snapshots`          | 30 min   | Rust native snapshots and parity          | 600s   | —                 |
-| `parity.yml` | `snapshots`          | 30 min   | Python native snapshot launches           | 180s   | —                 |
-| `parity.yml` | `snapshots`          | 30 min   | Python headful real-browser launches      | 180s   | 22s (local)       |
-| `parity.yml` | `snapshots`          | 30 min   | Rust launch and connect smokes            | 300s   | not run locally   |
-| `parity.yml` | `engine-suites`      | 30 min   | Engine lifecycle suites                   | 1200s  | 150–231s (local)  |
-| `parity.yml` | `fixture-suites`     | 40 min   | React fixture suites                      | 1500s  | 297–299s (local)  |
-| `parity.yml` | `persistent-profile` | 30 min   | Persistent profile session cookies        | 600s   | 101s (local)      |
-| `parity.yml` | `persistent-profile` | 30 min   | Python persistent profile session cookies | 300s   | 78s (local)       |
+| Workflow     | Job                       | Backstop | Step                                      | Budget | Measured            |
+| ------------ | ------------------------- | -------- | ----------------------------------------- | ------ | ------------------- |
+| `js.yml`     | `test`                    | 20 min   | Node.js test suite                        | 300s   | 1–5s                |
+| `js.yml`     | `test` (macOS)            | 20 min   | macOS Chrome startup regression           | 180s   | 15s (local Linux)   |
+| `python.yml` | `test`                    | 20 min   | pytest suite                              | 300s   | 5–10s               |
+| `rust.yml`   | `test`                    | 20 min   | Rust test suite                           | 480s   | 23–86s              |
+| `rust.yml`   | `coverage`                | 15 min   | Rust code coverage                        | 480s   | 10s                 |
+| `docs.yml`   | `build-docs`              | 15 min   | Rust API docs                             | 480s   | 58s                 |
+| `parity.yml` | `parity`                  | 40 min   | Fingerprint parity suite                  | 1200s  | 26s                 |
+| `parity.yml` | `parity`                  | 40 min   | WebDriver suite                           | 300s   | 44s                 |
+| `parity.yml` | `cli`                     | 40 min   | CLI and API coverage suites               | 300s   | 30s                 |
+| `parity.yml` | `snapshots`               | 30 min   | Rust native snapshots and parity          | 600s   | —                   |
+| `parity.yml` | `snapshots`               | 30 min   | Python native snapshot launches           | 180s   | —                   |
+| `parity.yml` | `snapshots`               | 30 min   | Python headful real-browser launches      | 180s   | 22s (local)         |
+| `parity.yml` | `snapshots`               | 30 min   | Rust launch and connect smokes            | 300s   | not run locally     |
+| `parity.yml` | `engine-suites`           | 30 min   | Engine lifecycle suites                   | 1200s  | 150–231s (local)    |
+| `parity.yml` | `fixture-suites`          | 40 min   | React fixture suites                      | 1500s  | 297–299s (local)    |
+| `parity.yml` | `persistent-profile`      | 30 min   | Persistent profile session cookies        | 600s   | 101s (local)        |
+| `parity.yml` | `persistent-profile`      | 30 min   | Python persistent profile session cookies | 300s   | 78s (local)         |
+| `parity.yml` | `rust-persistent-profile` | 25 min   | Rust persistent profile session cookies   | 900s   | 122s (local, built) |
 
 `rust.yml` no longer has a separate doc-test step (issue #128): `cargo test
 --all-features` already runs the doc tests, and the repeat with the default

@@ -40,6 +40,7 @@ on:
       - 'python/tests/e2e/**'
       - 'rust/src/**'
       - 'rust/tests/storage_state_smoke.rs'
+      - 'rust/tests/persistent_profile.rs'
       - 'rust/tests/snapshot.rs'
       - 'rust/tests/reusable_session.rs'
       - 'rust/tests/parity.rs'
@@ -689,6 +690,66 @@ jobs:
             exit 1
           fi
 
+  # The Rust half of issue #187: every Rust engine, in real and engine
+  # launches, plus connect_or_launch. A job of its own so compiling the test
+  # cannot eat the JavaScript and Python suites' allowance.
+  rust-persistent-profile:
+    name: Rust persistent profile session cookies (real Chrome, Firefox)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-rust-persistent-profile
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+      - name: Install browser engines
+        working-directory: js
+        run: npm ci --ignore-scripts
+      - name: Install Playwright's Chromium
+        # The headless Playwright engine launch of a persistent profile starts
+        # the full Chromium build, which --ignore-scripts above skipped.
+        working-directory: js
+        run: npx playwright install --with-deps chromium
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: stable
+      - name: Cache Cargo build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-persistent-profile-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-persistent-profile-cargo-
+            ${{ runner.os }}-storage-state-cargo-
+      - name: Verify Chrome, Firefox and geckodriver are present
+        run: |
+          test -x "$CHROME_PATH" || {
+            echo "::error::no Chrome binary at $CHROME_PATH"
+            exit 1
+          }
+          command -v firefox && command -v geckodriver || {
+            echo "::error::no firefox or geckodriver on PATH; the Firefox launch would fail"
+            exit 1
+          }
+      - name: Resolve matching native WebDriver
+        run: node experiments/issue-110/resolve-webdriver.mjs >> "$GITHUB_ENV"
+      - name: Give Chromium a usable sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Restart every Rust engine on a persistent profile
+        working-directory: rust
+        shell: bash
+        run: |
+          bash ../scripts/run-with-budget-warning.sh 900 "Rust persistent profile session cookies" \
+            xvfb-run -a --server-args="-screen 0 1920x1080x24" cargo test --locked --test persistent_profile -- --ignored --nocapture --test-threads=1
+
   # === PIPELINE STATUS ===
   # The only job that can tell "somebody pressed stop" apart from "a check ran
   # out of time". GitHub reports a job killed by its `timeout-minutes` as
@@ -710,6 +771,7 @@ jobs:
       - engine-suites
       - fixture-suites
       - persistent-profile
+      - rust-persistent-profile
     # A status function is required here, or the gate would inherit the implicit
     # "every dependency succeeded" condition and be skipped in exactly the runs
     # it exists to report. `!cancelled()` keeps it out of a superseded run,

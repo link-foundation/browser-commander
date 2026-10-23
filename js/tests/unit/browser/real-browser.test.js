@@ -258,12 +258,16 @@ describe('launchAndConnectRealBrowser', () => {
     assert.equal(result.executablePath, '/opt/google/chrome');
     assert.equal(result.userDataDir, temporaryDirectory);
     assert.equal(result.temporaryProfile, false);
+    // A persistent profile keeps session cookies by default (issue #187).
+    assert.equal(result.keepSessionCookies, true);
+    assert.deepEqual(result.warnings, []);
     assert.deepEqual(calls[0], [
       'spawn',
       '/opt/google/chrome',
       [
         `--user-data-dir=${temporaryDirectory}`,
         '--remote-debugging-port=9444',
+        '--restore-last-session',
         'about:blank',
       ],
       { env: undefined, interruption: 'managed', verbose: false },

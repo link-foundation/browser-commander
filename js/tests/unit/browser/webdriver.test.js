@@ -1,6 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { existsSync } from 'node:fs';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 import {
   CHROMEDRIVER_DEFAULT_SWITCHES,
@@ -37,6 +40,7 @@ function createMockSelenium(driver = createMockDriver()) {
       this.args = [];
       this.excluded = [];
       this.capabilities = {};
+      this.preferences = {};
       record.options.push(this);
     }
     addArguments(...args) {
@@ -57,6 +61,10 @@ function createMockSelenium(driver = createMockDriver()) {
     }
     set(name, value) {
       this.capabilities[name] = value;
+      return this;
+    }
+    setPreference(name, value) {
+      this.preferences[name] = value;
       return this;
     }
   }
@@ -524,6 +532,129 @@ describe('launchWebDriver', () => {
       .slice('--user-data-dir='.length);
     assert.ok(started[0].child.killed);
     assert.ok(!existsSync(profile));
+  });
+});
+
+describe('launchWebDriver keepSessionCookies (issue #187)', () => {
+  // A driver whose Firefox restored two tabs of the last session.
+  function restoredTabs(driver) {
+    const handles = ['restored-1', 'restored-2'];
+    driver.getAllWindowHandles = async () => [...handles];
+    driver.switchTo = () => ({
+      window: async (handle) => driver.calls.push(['switchTo.window', handle]),
+    });
+    return driver;
+  }
+
+  // Firefox through mocks, with two tabs its session restore reopened.
+  async function launchFirefox(options) {
+    const firefox = launchDependencies({
+      checkAccess: accessOnly('/usr/bin/geckodriver'),
+    });
+    restoredTabs(firefox.mock.driver);
+    const session = await launchWebDriver(
+      { browser: 'firefox', ...options },
+      firefox.dependencies
+    );
+    return { firefox, session };
+  }
+
+  // A profile with last-session tabs and a cookie store, removed afterwards.
+  async function withProfile(test) {
+    const userDataDir = await mkdtemp(
+      path.join(tmpdir(), 'browser-commander-webdriver-187-')
+    );
+    try {
+      await mkdir(path.join(userDataDir, 'Default', 'Sessions'), {
+        recursive: true,
+      });
+      await writeFile(path.join(userDataDir, 'Default', 'Cookies'), 'cookies');
+      await test(userDataDir);
+    } finally {
+      await rm(userDataDir, { recursive: true, force: true });
+    }
+  }
+
+  it('restores Firefox sessions for a persistent profile and closes the restored tabs', async () => {
+    await withProfile(async (userDataDir) => {
+      const { firefox, session } = await launchFirefox({ userDataDir });
+      const { options } = firefox.mock.record.builders[0];
+      assert.deepEqual(options.preferences, { 'browser.startup.page': 3 });
+      assert.equal(session.keepSessionCookies, true);
+      assert.deepEqual(session.warnings, []);
+      assert.deepEqual(
+        firefox.mock.driver.calls.filter(([name]) =>
+          ['switchTo.window', 'close', 'get'].includes(name)
+        ),
+        [
+          ['switchTo.window', 'restored-2'],
+          ['close'],
+          ['switchTo.window', 'restored-1'],
+          ['get', 'about:blank'],
+        ]
+      );
+      await session.close();
+    });
+  });
+
+  it('keeps Firefox tabs with restoreTabs and leaves a temporary profile or the opt-out alone', async () => {
+    await withProfile(async (userDataDir) => {
+      for (const [options, preferences] of [
+        [{ userDataDir, restoreTabs: true }, { 'browser.startup.page': 3 }],
+        [{ userDataDir, keepSessionCookies: false }, {}],
+        [{}, {}],
+      ]) {
+        const { firefox, session } = await launchFirefox(options);
+        assert.deepEqual(
+          firefox.mock.record.builders[0].options.preferences,
+          preferences
+        );
+        assert.equal(
+          firefox.mock.driver.calls.filter(([name]) => name === 'close').length,
+          0
+        );
+        await session.close();
+      }
+    });
+  });
+
+  it('adds --restore-last-session for a Chrome profile and drops its last tabs', async () => {
+    await withProfile(async (userDataDir) => {
+      const chrome = launchDependencies();
+      const session = await launchWebDriver(
+        { userDataDir },
+        chrome.dependencies
+      );
+      const { args } = chrome.mock.record.options[0];
+      assert.ok(args.includes('--restore-last-session'));
+      assert.equal(session.keepSessionCookies, true);
+      assert.equal(
+        existsSync(path.join(userDataDir, 'Default', 'Sessions')),
+        false
+      );
+      assert.ok(existsSync(path.join(userDataDir, 'Default', 'Cookies')));
+      await session.close();
+    });
+  });
+
+  it('warns that Safari has no profile to keep them in', async () => {
+    const { dependencies } = safariDependencies();
+    const asked = await launchWebDriver(
+      { browser: 'safari', keepSessionCookies: true },
+      dependencies
+    );
+    assert.equal(asked.keepSessionCookies, false);
+    assert.deepEqual(
+      asked.warnings.map(({ item, reason }) => [item, reason]),
+      [['keepSessionCookies', 'safari-no-profile-directory']]
+    );
+    await asked.close();
+    const quiet = await launchWebDriver(
+      { browser: 'safari' },
+      safariDependencies().dependencies
+    );
+    assert.deepEqual(quiet.warnings, []);
+    await quiet.close();
   });
 });
 

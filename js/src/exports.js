@@ -121,6 +121,13 @@ export {
   removeUserDataDir,
 } from './browser/profile-directory.js';
 export {
+  KEEP_SESSION_COOKIES_SWITCH,
+  FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES,
+  SESSION_RESTORE_FILES,
+  persistentProfileArgs,
+  clearRestoredTabs,
+} from './browser/persistent-profile.js';
+export {
   PortRaceError,
   reserveLoopbackPort,
 } from './browser/debugging-port.js';

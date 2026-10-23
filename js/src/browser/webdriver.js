@@ -48,6 +48,13 @@ import {
 } from './launch-executable.js';
 import { findBrowserSource } from './browser-sources.js';
 import {
+  FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES,
+  prepareSessionRestore,
+  resolveKeepSessionCookies,
+  sessionCookieWarning,
+  validateSessionCookieOptions,
+} from './persistent-profile.js';
+import {
   isSafariChannel,
   SafariUnsupportedError,
   safariLaunchError,
@@ -369,6 +376,7 @@ export function buildBrowserOptions({
   automationParity,
   bidi,
   debuggerAddress,
+  keepSessionCookies,
 }) {
   let options;
   let browserArgs;
@@ -400,6 +408,7 @@ export function buildBrowserOptions({
       disableFeatures,
       args,
       automationParity,
+      keepSessionCookies,
     });
     options.addArguments(...browserArgs);
     options.excludeSwitches(...CHROMEDRIVER_DEFAULT_SWITCHES);
@@ -415,6 +424,13 @@ export function buildBrowserOptions({
       ...args,
     ];
     options.addArguments(...browserArgs);
+    if (keepSessionCookies === true) {
+      for (const [name, value] of Object.entries(
+        FIREFOX_KEEP_SESSION_COOKIES_PREFERENCES
+      )) {
+        options.setPreference(name, value);
+      }
+    }
     if (browserPath) {
       options.setBinary(browserPath);
     }
@@ -439,15 +455,19 @@ function seleniumModules(dependencies) {
   );
 }
 
-function resolveProfile(browser, userDataDir) {
-  if (!userDataDir) {
-    return createTemporaryUserDataDir();
+async function resolveProfile(browser, requested, sessionRestore) {
+  const userDataDir = requested ?? (await createTemporaryUserDataDir());
+  if (browser !== 'chrome') {
+    // Firefox uses the directory as given.
+    return userDataDir;
   }
   // Chrome's profile gets the same preparation as a real-browser launch
-  // (translate prompts off); Firefox uses the directory as given.
-  return browser === 'chrome'
-    ? prepareUserDataDir(userDataDir)
-    : Promise.resolve(userDataDir);
+  // (translate prompts off) and starts without the last session's tabs.
+  if (requested) {
+    await prepareUserDataDir(userDataDir);
+  }
+  await prepareSessionRestore(userDataDir, sessionRestore);
+  return userDataDir;
 }
 
 // The driver passes its environment on to the browser, so restriction
@@ -472,6 +492,71 @@ function buildSession({ selenium, serverUrl, browser, options }) {
     builder.setFirefoxOptions(options);
   }
   return builder.build();
+}
+
+/**
+ * Firefox restores the previous session's tabs together with its session
+ * cookies, before the WebDriver session starts. Unless the caller asked for
+ * them, close all but one and start it blank, so one tab is driven as before.
+ */
+async function startDrivenTab(
+  driver,
+  { browser, keepSessionCookies, restoreTabs }
+) {
+  // Fresh Safari sessions can report an empty URL until first navigation.
+  if (isSafariChannel(browser)) {
+    await driver.get('about:blank');
+  }
+  if (
+    browser !== 'firefox' ||
+    keepSessionCookies !== true ||
+    restoreTabs === true
+  ) {
+    return;
+  }
+  const [kept, ...restored] = await driver.getAllWindowHandles();
+  for (const handle of restored) {
+    await driver.switchTo().window(handle);
+    await driver.close();
+  }
+  await driver.switchTo().window(kept);
+  await driver.get('about:blank');
+}
+
+// Which launches keep session cookies, and a warning when one was asked for
+// and the launch has no profile directory of its own to keep them in.
+function webDriverSessionCookies({
+  safari,
+  debuggerAddress,
+  keepSessionCookies,
+  temporaryProfile,
+}) {
+  if (!safari && !debuggerAddress) {
+    return {
+      keepSessionCookies: resolveKeepSessionCookies({
+        keepSessionCookies,
+        temporaryProfile,
+      }),
+      warnings: [],
+    };
+  }
+  return {
+    keepSessionCookies: undefined,
+    warnings:
+      keepSessionCookies === true
+        ? [
+            safari
+              ? sessionCookieWarning(
+                  'safari-no-profile-directory',
+                  'safaridriver runs Safari in an isolated automation session without a profile directory, so its session cookies end with the session'
+                )
+              : sessionCookieWarning(
+                  'attached-browser',
+                  'the browser at debuggerAddress was started elsewhere; start it with persistentProfileArgs() to keep session cookies'
+                ),
+          ]
+        : [],
+  };
 }
 
 /**
@@ -514,6 +599,8 @@ async function teardown({
  * @param {string} [options.driverPath] - chromedriver/geckodriver executable
  * @param {boolean} [options.headless=false]
  * @param {string} [options.userDataDir] - Profile directory; a temporary one is created (and removed on close) when omitted
+ * @param {boolean} [options.keepSessionCookies] - Keep session cookies across restarts; the default with userDataDir (issue #187)
+ * @param {boolean} [options.restoreTabs=false] - With keepSessionCookies, also reopen the last session's tabs
  * @param {boolean} [options.bidi=false] - Enable WebDriver BiDi (events, preload scripts, full-page screenshots)
  * @param {string[]} [options.args] - Extra browser arguments
  * @param {string[]} [options.restrictions] - Chrome launch restrictions (launch-restrictions.json)
@@ -524,7 +611,7 @@ async function teardown({
  * @param {boolean} [options.verbose=false] - Mirror the driver server's output
  * @param {'managed'|'caller'} [options.interruption='managed'] - Who handles Ctrl+C for the driver server and the browser under it; see `startProcess`
  * @param {Object} [dependencies] - Injected selenium modules, runCommand, startProcess, fetch, reservePort, environment, platform (tests)
- * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, bidi: boolean, defaultRestrictions: Array<string>}>}
+ * @returns {Promise<{driver: Object, page: Object, close: function(): Promise<void>, serverUrl: string, driverProcess: Object, driverPath: string, driverSource: string, browser: string, userDataDir: string, temporaryProfile: boolean, keepSessionCookies: boolean, warnings: Array<{item: string, reason: string, detail: string}>, args: Array<string>, bidi: boolean, defaultRestrictions: Array<string>}>}
  */
 export async function launchWebDriver(options = {}, dependencies = {}) {
   if (!isSafariChannel(options.browser ?? 'chrome')) {
@@ -616,8 +703,10 @@ async function launchWebDriverOnce(options, dependencies) {
     verbose = false,
     debuggerAddress,
     interruption,
+    restoreTabs,
   } = options;
   assertBrowser(browser);
+  validateSessionCookieOptions(options);
   const safari = isSafariChannel(browser);
   if (safari) {
     validateSafariOptions(options);
@@ -648,10 +737,21 @@ async function launchWebDriverOnce(options, dependencies) {
   );
   const launchRestrictions = [...defaultRestrictions, ...restrictions];
   const temporaryProfile = !safari && !debuggerAddress && !requestedUserDataDir;
+  const sessionCookies = webDriverSessionCookies({
+    safari,
+    debuggerAddress,
+    keepSessionCookies: options.keepSessionCookies,
+    temporaryProfile,
+  });
+  const { keepSessionCookies } = sessionCookies;
   const userDataDir =
     safari || debuggerAddress
       ? undefined
-      : await resolveProfile(browser, requestedUserDataDir);
+      : await resolveProfile(browser, requestedUserDataDir, {
+          keepSessionCookies,
+          restoreTabs,
+          args,
+        });
   const childEnv = driverEnvironment(launchRestrictions, env);
 
   let driverProcess;
@@ -696,6 +796,7 @@ async function launchWebDriverOnce(options, dependencies) {
       automationParity,
       bidi,
       debuggerAddress,
+      keepSessionCookies,
     });
     driver = await buildSession({
       selenium,
@@ -703,10 +804,7 @@ async function launchWebDriverOnce(options, dependencies) {
       browser,
       options: built.options,
     });
-    // Fresh Safari sessions can report an empty URL until first navigation.
-    if (safari) {
-      await driver.get('about:blank');
-    }
+    await startDrivenTab(driver, { browser, keepSessionCookies, restoreTabs });
     const page = await createWebDriverPage(driver, {
       ...dependencies.pageOptions,
       ...(safari ? { browserName: 'safari' } : {}),
@@ -727,6 +825,8 @@ async function launchWebDriverOnce(options, dependencies) {
       browser,
       userDataDir,
       temporaryProfile,
+      keepSessionCookies: keepSessionCookies === true,
+      warnings: sessionCookies.warnings,
       args: built.args,
       bidi,
       defaultRestrictions,

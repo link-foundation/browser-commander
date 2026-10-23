@@ -54,6 +54,13 @@ import {
   isChromeForTesting,
   resolveLaunchExecutable,
 } from './launch-executable.js';
+import {
+  FRESH_PROFILE,
+  prepareSessionRestore,
+  resolveKeepSessionCookies,
+  sessionCookieArgs,
+  validateSessionCookieOptions,
+} from './persistent-profile.js';
 
 /**
  * Switches the launcher owns. Letting a caller pass them would break the
@@ -86,7 +93,8 @@ const START_URL = 'about:blank';
  * #103), and a start URL among the custom `args` replaces `about:blank`. The
  * fixed port keeps `navigator.webdriver` false without any extra switch
  * (issue #101). Everything else is opt-in: `headless`, named `restrictions`
- * and custom `args`.
+ * and custom `args`. `keepSessionCookies` adds the persistent-profile switch
+ * of {@link persistentProfileArgs} (issue #187).
  *
  * Chrome's DevTools server binds to loopback by default, so no
  * `--remote-debugging-address` is passed; the switch stays managed so custom
@@ -105,6 +113,7 @@ const START_URL = 'about:blank';
  * @param {string[]} [options.args] - Additional switches
  * @param {string[]} [options.extraArgs] - Additional switches appended after args
  * @param {boolean} [options.automationParity=true]
+ * @param {boolean} [options.keepSessionCookies] - true keeps session cookies across restarts, false asks for Chromium's default of deleting them; unset adds nothing
  * @returns {string[]}
  */
 export function buildRealBrowserArgs({
@@ -116,6 +125,7 @@ export function buildRealBrowserArgs({
   args = [],
   extraArgs = [],
   automationParity = true,
+  keepSessionCookies,
 }) {
   assertFixedDebuggingPort(remoteDebuggingPort);
   const customArgs = [
@@ -138,6 +148,9 @@ export function buildRealBrowserArgs({
     `--remote-debugging-port=${remoteDebuggingPort}`,
     ...(headless ? ['--headless=new'] : []),
     ...resolveRestrictions(restrictions, { disableFeatures }).args,
+    ...sessionCookieArgs(keepSessionCookies).filter(
+      (argument) => !customArgs.includes(argument)
+    ),
     ...customArgs,
   ]);
   if (
@@ -397,6 +410,8 @@ function driverOptions(engine, { interruption, executablePath }) {
  * @param {string} [options.channel] - Installed Chrome-family channel, such as 'chrome' for the installed Google Chrome; it also names the browser a snapshot or migration belongs to (default 'chrome')
  * @param {string} [options.executablePath] - Explicit installed browser executable
  * @param {string} [options.userDataDir] - Persistent dedicated profile. When omitted a fresh temporary profile is created and deleted on close.
+ * @param {boolean} [options.keepSessionCookies] - Keep session cookies across restarts (default true with userDataDir, untouched for a temporary profile); false lets Chromium delete them at startup (issue #187)
+ * @param {boolean} [options.restoreTabs=false] - With keepSessionCookies, also reopen the last session's tabs instead of starting with one tab
  * @param {number} [options.remoteDebuggingPort] - Fixed loopback CDP port. When omitted a free port is reserved (and re-reserved on a port race). Zero is refused because it sets navigator.webdriver.
  * @param {number} [options.portAttempts=3] - Launch attempts when a reserved port is lost to a race
  * @param {boolean} [options.headless=false] - Run the installed browser headlessly
@@ -415,7 +430,7 @@ function driverOptions(engine, { interruption, executablePath }) {
  * @param {{browser: string, profile: (string|undefined), userDataDir: (string|undefined), include: (Array<string>|undefined), domains: (Array<string>|undefined)}} [options.migrateFrom] - Migrate a real browser profile into the dedicated profile before launch; on-disk data is written before the browser starts and cookies are seeded over CDP after connecting
  * @param {{mode: 'snapshot', browser: (string|undefined), profile: (string|undefined), userDataDir: (string|undefined)}} [options.attach] - Launch on a read-only snapshot of a real profile (issue #102, addendum): `snapshotUserDataDir()` copies it into a temporary user data directory, which is deleted on close. `browser` defaults to the channel's browser and `profile` to Default. Mutually exclusive with `migrateFrom` and `userDataDir`.
  * @param {boolean} [options.verbose=false] - Show browser and connection logs
- * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, args: Array<string>, defaultRestrictions: Array<string>, migration: (Object|undefined), attach: ({mode: 'snapshot', snapshot: Object, differences: Array<{aspect: string, description: string}>}|undefined)}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given and an `attach` entry when `attach` was given)
+ * @returns {Promise<{browser: Object, page: Object, downloads: (Object|null), close: function(): Promise<void>, browserProcess: Object, cdpEndpoint: string, remoteDebuggingPort: number, executablePath: string, userDataDir: string, temporaryProfile: boolean, keepSessionCookies: boolean, warnings: Array<{item: string, reason: string, detail: string}>, args: Array<string>, defaultRestrictions: Array<string>, migration: (Object|undefined), attach: ({mode: 'snapshot', snapshot: Object, differences: Array<{aspect: string, description: string}>}|undefined)}>} Connected handles and process metadata (with a `migration` report when `migrateFrom` was given and an `attach` entry when `attach` was given)
  */
 export async function launchAndConnectRealBrowser(options = {}) {
   return await launchAndConnectRealBrowserWithDependencies(options);
@@ -703,8 +718,12 @@ export async function launchAndConnectRealBrowserWithDependencies(
     localState,
     firstRun,
     interruption: requestedInterruption,
+    keepSessionCookies: requestedKeepSessionCookies,
+    restoreTabs,
+    [FRESH_PROFILE]: freshProfile,
     ...connectionOptions
   } = options;
+  validateSessionCookieOptions(options);
   const interruption = interruptionMode(requestedInterruption);
   const argOptions = {
     headless,
@@ -755,6 +774,12 @@ export async function launchAndConnectRealBrowserWithDependencies(
   argOptions.restrictions = [...defaultRestrictions, ...restrictions];
 
   const temporaryProfile = !requestedUserDataDir;
+  // A persistent profile keeps session cookies across restarts (issue #187).
+  argOptions.keepSessionCookies = resolveKeepSessionCookies({
+    keepSessionCookies: requestedKeepSessionCookies,
+    temporaryProfile,
+    [FRESH_PROFILE]: freshProfile,
+  });
   const { userDataDir, snapshotLaunch } = await prepareProfile({
     attach,
     channel,
@@ -788,6 +813,13 @@ export async function launchAndConnectRealBrowserWithDependencies(
       },
       localState,
       profileDirectory: attach?.profile ?? 'Default',
+    })
+  );
+  await removingTemporaryProfileOnError(profile, () =>
+    prepareSessionRestore(userDataDir, {
+      keepSessionCookies: argOptions.keepSessionCookies,
+      restoreTabs,
+      args: [...argOptions.args, ...argOptions.extraArgs],
     })
   );
 
@@ -851,6 +883,8 @@ export async function launchAndConnectRealBrowserWithDependencies(
         executablePath,
         userDataDir,
         temporaryProfile,
+        keepSessionCookies: argOptions.keepSessionCookies === true,
+        warnings: [],
         args: launched.browserArgs,
         defaultRestrictions,
         ...(migration ? { migration } : {}),

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- changelog-insert-here -->
+## [0.22.1] - 2026-10-29
+
+### Fixed
+
+- Preserve existing target logins and metadata during saved-password refreshes.
+  Merge new identities idempotently, remap imported notes, and refuse active
+  targets, incompatible schemas, populated account stores or target-key
+  mismatches before publication, including Firefox/Safari writers.
+- Update ctutils and Tokio to patched versions required by the security audit.
+
 ## [0.22.0] - 2026-10-23
 
 ### Added

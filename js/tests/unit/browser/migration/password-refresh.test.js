@@ -270,11 +270,13 @@ it('refuses a target browser process even without lock markers', async () => {
       'setTimeout(() => {}, 15000)',
       '--',
       `--user-data-dir=${browserTarget}`,
+      `--unused=${'x'.repeat(1024)}`,
     ],
     { stdio: 'ignore' }
   );
   try {
     await once(child, 'spawn');
+    await assertPasswordTargetClosed(path.join(root, 'closed'));
     await assert.rejects(assertPasswordTargetClosed(target), /target-active/u);
   } finally {
     const closed = once(child, 'exit');

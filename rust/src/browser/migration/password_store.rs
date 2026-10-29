@@ -109,7 +109,21 @@ pub(super) fn assert_target_closed(target: &Path) -> Result<()> {
                     .collect()
             };
         for value in candidates.into_iter().filter(|value| !value.is_empty()) {
-            let path = crate::browser::browser_profile_files::physical_path(Path::new(value))?;
+            let path = match crate::browser::browser_profile_files::physical_path(Path::new(value))
+            {
+                Ok(path) => path,
+                Err(error) => {
+                    if error.downcast_ref::<std::io::Error>().is_some_and(|error| {
+                        matches!(
+                            error.kind(),
+                            std::io::ErrorKind::InvalidFilename | std::io::ErrorKind::InvalidInput
+                        )
+                    }) {
+                        continue;
+                    }
+                    return Err(refusal("target-state-unavailable"));
+                }
+            };
             if path == target || path == parent {
                 return Err(refusal("target-active"));
             }

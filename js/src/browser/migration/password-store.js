@@ -139,7 +139,17 @@ export async function assertPasswordTargetClosed(targetProfileDir) {
           match[4].slice(0, index)
         );
     for (const value of candidates) {
-      if (value && dirs.includes(physicalPath(value))) {
+      let candidate;
+      try {
+        candidate = value ? physicalPath(value) : null;
+      } catch (error) {
+        // Later argv fields can make a candidate invalid as a filesystem path.
+        if (['ENAMETOOLONG', 'EINVAL', 'ELOOP'].includes(error.code)) {
+          continue;
+        }
+        refuse('target-state-unavailable');
+      }
+      if (dirs.includes(candidate)) {
         refuse('target-active');
       }
     }

@@ -25,12 +25,15 @@ fn live_target_through_alias_with_spaces_is_refused() {
             "--user-data-dir={}",
             alias.join("profile with spaces").display()
         ))
+        .arg(format!("--unused={}", "x".repeat(1024)))
         .stdin(Stdio::piped())
         .spawn()
         .unwrap();
+    let unrelated = super::super::password_store::assert_target_closed(&root.path().join("closed"));
     let result = super::super::password_store::assert_target_closed(&target);
     drop(child.stdin.take());
     child.wait().unwrap();
+    unrelated.unwrap();
     assert!(result.unwrap_err().to_string().contains("target-active"));
 }
 

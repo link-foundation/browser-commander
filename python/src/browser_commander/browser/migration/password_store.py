@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import errno
 import re
 import sqlite3
 import subprocess
@@ -133,7 +134,17 @@ def assert_password_target_closed(target_profile_dir):
             else [match[4][: end.start()] for end in re.finditer(r"\s|$", match[4])]
         )
         for value in candidates:
-            if value and Path(value).resolve() in dirs:
+            if not value:
+                continue
+            try:
+                candidate = Path(value).resolve()
+            except OSError as error:
+                if error.errno in (errno.ENAMETOOLONG, errno.EINVAL, errno.ELOOP):
+                    continue
+                refuse("target-state-unavailable")
+            except RuntimeError:
+                refuse("target-state-unavailable")
+            if candidate in dirs:
                 refuse("target-active")
 
 

@@ -32,9 +32,11 @@ def test_live_target_through_alias_with_spaces_is_refused(tmp_path):
             "-c",
             "import time; time.sleep(15)",
             f"--user-data-dir={alias / target.name}",
+            f"--unused={'x' * 1024}",
         ]
     )
     try:
+        assert_password_target_closed(tmp_path / "closed")
         with pytest.raises(ValueError, match="target-active"):
             assert_password_target_closed(target)
     finally:

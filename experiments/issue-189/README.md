@@ -79,3 +79,6 @@ spaces. A symlinked Linux reproducer also failed before the follow-up fix. The
 guard now requests unlimited `ps` width and resolves every possible unquoted
 argument boundary, including aliases. JS, Python and Rust have live-process
 regressions that terminate and wait for their fixture children.
+The same regressions allow an unrelated closed target when the live browser has
+a 1,024-character extra argument. This failed with `ENAMETOOLONG` before invalid
+argument-boundary candidates were excluded from path resolution.

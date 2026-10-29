@@ -71,3 +71,11 @@ Puppeteer's generated Rust/Python bindings were refreshed to match the patched
 installation. The packed consumer still proves that Browser Commander and its
 caller share one current Link type; independent older parsers inside other
 dependencies are allowed.
+
+The next CI revision exposed a macOS process guard failure at
+`ci-logs/js-macos-40964961388.log:3248`: the running process used `/var` while
+the physical target resolved under `/private/var`, and its profile path contained
+spaces. A symlinked Linux reproducer also failed before the follow-up fix. The
+guard now requests unlimited `ps` width and resolves every possible unquoted
+argument boundary, including aliases. JS, Python and Rust have live-process
+regressions that terminate and wait for their fixture children.

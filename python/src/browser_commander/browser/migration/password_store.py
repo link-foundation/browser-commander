@@ -111,7 +111,7 @@ def assert_password_target_closed(target_profile_dir):
             "Get-CimInstance Win32_Process | Select-Object -ExpandProperty CommandLine",
         ]
         if sys.platform == "win32"
-        else ["ps", "-ax", "-o", "args="]
+        else ["ps", "-axww", "-o", "args="]
     )
     try:
         output = run_command_sync(command[0], command[1:]).stdout
@@ -119,25 +119,22 @@ def assert_password_target_closed(target_profile_dir):
         refuse("target-state-unavailable")
     for line in output.splitlines():
         match = re.search(
-            r"""(?:^|\s)(?:"--user-data-dir(?:=|\s+)([^"]+)"|--user-data-dir(?:=|\s+)(?:"([^"]+)"|'([^']+)'|([^\s"]+)))""",
+            r"""(?:^|\s)(?:"--user-data-dir(?:=|\s+)([^"]+)"|--user-data-dir(?:=|\s+)(?:"([^"]+)"|'([^']+)'|(.+)))""",
             line,
         )
-        if (
-            match
-            and Path(
-                next(value for value in match.groups() if value is not None)
-            ).resolve()
-            in dirs
-        ):
-            refuse("target-active")
-        for directory in dirs:
-            for prefix in ("--user-data-dir=", "--user-data-dir "):
-                at = line.find(prefix + str(directory))
-                end = at + len(prefix) + len(str(directory))
-                if at >= 0 and (
-                    end == len(line) or line[end].isspace() or line[end] in "\"'"
-                ):
-                    refuse("target-active")
+        if not match:
+            continue
+        quoted = next((value for value in match.groups()[:3] if value), None)
+        # ps drops quoting; resolve every argument boundary to handle spaces and
+        # aliases such as macOS /var without comparing literal path spellings.
+        candidates = (
+            [quoted]
+            if quoted
+            else [match[4][: end.start()] for end in re.finditer(r"\s|$", match[4])]
+        )
+        for value in candidates:
+            if value and Path(value).resolve() in dirs:
+                refuse("target-active")
 
 
 def _quote(name):

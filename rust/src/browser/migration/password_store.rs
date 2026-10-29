@@ -80,32 +80,38 @@ pub(super) fn assert_target_closed(target: &Path) -> Result<()> {
             RunCommandOptions::default(),
         )
     } else {
-        run_command_blocking("ps", &["-ax", "-o", "args="], RunCommandOptions::default())
+        run_command_blocking(
+            "ps",
+            &["-axww", "-o", "args="],
+            RunCommandOptions::default(),
+        )
     }
     .map_err(|_| refusal("target-state-unavailable"))?;
     let pattern = regex::Regex::new(
-        r#"(?:^|\s)(?:"--user-data-dir(?:=|\s+)([^"]+)"|--user-data-dir(?:=|\s+)(?:"([^"]+)"|'([^']+)'|([^\s"]+)))"#,
+        r#"(?:^|\s)(?:"--user-data-dir(?:=|\s+)([^"]+)"|--user-data-dir(?:=|\s+)(?:"([^"]+)"|'([^']+)'|(.+)))"#,
     )?;
     for line in output.stdout.lines() {
-        if let Some(found) = pattern.captures(line) {
-            if let Some(value) = found.iter().skip(1).flatten().next() {
-                let path = crate::browser::browser_profile_files::physical_path(Path::new(
-                    value.as_str(),
-                ))?;
-                if path == target || path == parent {
-                    return Err(refusal("target-active"));
-                }
-            }
-        }
-        for directory in [&target, parent] {
-            for prefix in ["--user-data-dir=", "--user-data-dir "] {
-                let needle = format!("{prefix}{}", directory.display());
-                if let Some(at) = line.find(&needle) {
-                    let after = line[at + needle.len()..].chars().next();
-                    if after.is_none_or(|ch| ch.is_whitespace() || ch == '"' || ch == '\'') {
-                        return Err(refusal("target-active"));
-                    }
-                }
+        let Some(found) = pattern.captures(line) else {
+            continue;
+        };
+        // ps drops quoting. Resolve each possible boundary to handle spaces and
+        // symlink aliases, including macOS /var, before comparing profile paths.
+        let candidates: Vec<&str> =
+            if let Some(quoted) = found.iter().skip(1).take(3).flatten().next() {
+                vec![quoted.as_str()]
+            } else {
+                let value = found.get(4).unwrap().as_str();
+                value
+                    .char_indices()
+                    .filter(|(_, ch)| ch.is_whitespace())
+                    .map(|(at, _)| &value[..at])
+                    .chain(std::iter::once(value))
+                    .collect()
+            };
+        for value in candidates.into_iter().filter(|value| !value.is_empty()) {
+            let path = crate::browser::browser_profile_files::physical_path(Path::new(value))?;
+            if path == target || path == parent {
+                return Err(refusal("target-active"));
             }
         }
     }

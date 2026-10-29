@@ -9,6 +9,31 @@ use super::super::SourceKeyResolver;
 use super::fixtures::TempDir;
 use crate::browser::browser_cookie_crypto::decrypt_chromium_cookie;
 
+#[test]
+#[cfg(unix)]
+fn live_target_through_alias_with_spaces_is_refused() {
+    use std::process::{Command, Stdio};
+    let root = TempDir::new("bc-live-password-target-");
+    let target = root.path().join("profile with spaces");
+    fs::create_dir(&target).unwrap();
+    let alias = root.path().join("alias");
+    std::os::unix::fs::symlink(root.path(), &alias).unwrap();
+    // read blocks until this test closes stdin; no background grandchildren.
+    let mut child = Command::new("sh")
+        .args(["-c", "read -r line", "--"])
+        .arg(format!(
+            "--user-data-dir={}",
+            alias.join("profile with spaces").display()
+        ))
+        .stdin(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let result = super::super::password_store::assert_target_closed(&target);
+    drop(child.stdin.take());
+    child.wait().unwrap();
+    assert!(result.unwrap_err().to_string().contains("target-active"));
+}
+
 fn fixture(source: &TempDir, target: &TempDir, source_key: &[u8], target_key: &[u8]) {
     for (dir, key, records) in [
         (

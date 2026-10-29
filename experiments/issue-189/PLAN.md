@@ -24,12 +24,17 @@ Objective: implement all scoped saved-login refresh requirements in PR #190 on
   save large command output as logs and bound memory-heavy Rust builds to one job.
 - [x] Document supported schemas, metadata, account stores, safe refusal guidance,
   reproducible tests and acceptance evidence. Prepare required release triggers.
-- [ ] Run local CI checks before atomic commits; preserve history and push only
+- [x] Run local CI checks before atomic commits; preserve history and push only
   the prepared branch. Merge latest default branch if needed.
-- [ ] Review final PR diff and feedback, update PR title/body (Fixes #189), remove
-  placeholder .gitkeep, mark PR ready, ensure clean tree and passing current-SHA CI.
-- [ ] For failing CI: list timestamp/SHA, download logs into ci-logs/, read errors,
+- [x] Review PR diff and feedback, update PR title/body (Fixes #189), remove
+  placeholder .gitkeep. Repeat final review after any CI fixes.
+- [x] For failing CI: list timestamp/SHA, download logs into ci-logs/, read errors,
   fix actual root causes and verify on a fresh run. Never report stale CI as current.
+
+Finalization gate: the live PR checks must pass on the final commit before
+marking PR #190 ready. Confirm the latest default branch is included, inspect
+feedback again, and leave a clean working tree. This live state is tracked in
+the PR rather than claimed by a pre-CI checked box in a source commit.
 
 No UI changes are expected. Debug/experiment scripts belong in experiments/issue-189.
 
@@ -39,7 +44,11 @@ No UI changes are expected. Debug/experiment scripts belong in experiments/issue
   tests in JS/Python/Rust. The JS test failed before implementation (`2 !== 1`).
 - Live Chromium basic-keystore acceptance: `verify-chromium.mjs` passes active
   refusal, merge, idempotence, browser reopen and database integrity.
-- Python full default suite: 1,403 passed, 32 opt-in browser tests skipped.
+- Python full default suite: 1,404 passed, 32 opt-in browser tests skipped.
+- JavaScript full default suite: 1,999 passed after the CI path-alias follow-up.
 - Full Rust build stopped before OOM at 2.92 GiB; actual password modules and
   their regression tests pass in the focused harness. Full CI remains required.
 - CLI privacy regression failed before the summary filter; shared CLI test passes.
+- macOS CI exposed a live-process path-alias mismatch with spaces. A Linux
+  symlink reproducer failed before the follow-up fix; all three languages now
+  resolve possible argument boundaries and request untruncated process listings.

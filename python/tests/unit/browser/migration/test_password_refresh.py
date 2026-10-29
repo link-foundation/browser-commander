@@ -2,17 +2,44 @@ import contextlib
 import json
 import os
 import sqlite3
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 from browser_commander.browser.browser_cookie_crypto import decrypt_chromium_cookie
 from browser_commander.browser.migration.chromium_crypto import encrypt_chromium_value
+from browser_commander.browser.migration.password_store import (
+    assert_password_target_closed,
+)
 from browser_commander.browser.migration.passwords import migrate_passwords
 
 SCHEMA = (
     Path(__file__).resolve().parents[5] / "tests/fixtures/password-refresh.sql"
 ).read_text()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix symlink path aliases")
+def test_live_target_through_alias_with_spaces_is_refused(tmp_path):
+    target = tmp_path / "profile with spaces"
+    target.mkdir()
+    alias = tmp_path / "alias"
+    alias.symlink_to(tmp_path, target_is_directory=True)
+    child = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import time; time.sleep(15)",
+            f"--user-data-dir={alias / target.name}",
+        ]
+    )
+    try:
+        with pytest.raises(ValueError, match="target-active"):
+            assert_password_target_closed(target)
+    finally:
+        child.terminate()
+        child.wait()
 
 
 def fixture(tmp_path):

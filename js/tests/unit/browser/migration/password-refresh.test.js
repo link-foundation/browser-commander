@@ -252,13 +252,25 @@ it('refuses a target browser process even without lock markers', async () => {
   const { once } = await import('node:events');
   const { assertPasswordTargetClosed } =
     await import('../../../../src/browser/migration/password-store.js');
-  const { mkdir } = await import('node:fs/promises');
+  const { mkdir, symlink } = await import('node:fs/promises');
   const root = await temp();
   const target = path.join(root, 'profile with spaces');
   await mkdir(target);
+  // macOS's /var aliases /private/var. Exercise that path mismatch everywhere.
+  let browserTarget = target;
+  if (process.platform !== 'win32') {
+    const alias = path.join(root, 'alias');
+    await symlink(root, alias, 'dir');
+    browserTarget = path.join(alias, 'profile with spaces');
+  }
   const child = spawn(
     process.execPath,
-    ['-e', 'setTimeout(() => {}, 15000)', '--', `--user-data-dir=${target}`],
+    [
+      '-e',
+      'setTimeout(() => {}, 15000)',
+      '--',
+      `--user-data-dir=${browserTarget}`,
+    ],
     { stdio: 'ignore' }
   );
   try {

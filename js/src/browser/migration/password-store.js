@@ -118,27 +118,29 @@ export async function assertPasswordTargetClosed(targetProfileDir) {
             '-Command',
             'Get-CimInstance Win32_Process | Select-Object -ExpandProperty CommandLine',
           ]
-        : ['-ax', '-o', 'args=']
+        : ['-axww', '-o', 'args=']
     ));
   } catch {
     refuse('target-state-unavailable');
   }
   for (const line of stdout.split(/\r?\n/u)) {
     const match = line.match(
-      /(?:^|\s)(?:"--user-data-dir(?:=|\s+)([^"]+)"|--user-data-dir(?:=|\s+)(?:"([^"]+)"|'([^']+)'|([^\s"]+)))/u
+      /(?:^|\s)(?:"--user-data-dir(?:=|\s+)([^"]+)"|--user-data-dir(?:=|\s+)(?:"([^"]+)"|'([^']+)'|(.+)))/u
     );
-    const value = match?.slice(1).find((value) => value !== undefined);
-    if (value && dirs.includes(physicalPath(value))) {
-      refuse('target-active');
+    if (!match) {
+      continue;
     }
-    // ps prints argv joined with spaces, without quoting arguments containing spaces.
-    for (const dir of dirs) {
-      for (const prefix of ['--user-data-dir=', '--user-data-dir ']) {
-        const at = line.indexOf(prefix + dir);
-        const end = at + prefix.length + dir.length;
-        if (at >= 0 && (end === line.length || /[\s"']/u.test(line[end]))) {
-          refuse('target-active');
-        }
+    const quoted = match.slice(1, 4).find((value) => value !== undefined);
+    // ps drops argument quoting. Resolve each possible boundary so paths with
+    // spaces and symlink aliases (including macOS /var) compare physically.
+    const candidates = quoted
+      ? [quoted]
+      : Array.from(match[4].matchAll(/\s|$/gu), ({ index }) =>
+          match[4].slice(0, index)
+        );
+    for (const value of candidates) {
+      if (value && dirs.includes(physicalPath(value))) {
+        refuse('target-active');
       }
     }
   }

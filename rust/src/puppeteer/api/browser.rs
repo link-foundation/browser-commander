@@ -9,7 +9,7 @@ use super::*;
 use crate::puppeteer::bridge::{binary, remote_type, BridgeError, JsFunction, Remote};
 
 remote_type!(
-    /// Puppeteer's `Browser` (puppeteer-core 25.12.0), a remote object
+    /// Puppeteer's `Browser` (puppeteer-core 25.16.0), a remote object
     /// served by `browser-commander serve --stdio`.
     ///
     /// Extends [`EventEmitter`]; the inherited methods are repeated here.
@@ -159,6 +159,15 @@ impl Browser {
     /// ```
     pub async fn target(&self) -> Result<Target, BridgeError> {
         self.remote.call("target", vec![]).await
+    }
+
+    /// `Browser.restrictNetwork`
+    ///
+    /// ```text
+    /// restrictNetwork(conditions?: NetworkRestrictions | null): Promise<void>
+    /// ```
+    pub async fn restrict_network(&self, conditions: Option<Value>) -> Result<(), BridgeError> {
+        self.remote.call("restrictNetwork", vec![conditions]).await
     }
 
     /// `Browser.waitForTarget`

@@ -9,7 +9,7 @@ use super::*;
 use crate::puppeteer::bridge::{binary, remote_type, BridgeError, JsFunction, Remote};
 
 remote_type!(
-    /// Puppeteer's `HTTPResponse` (puppeteer-core 25.12.0), a remote object
+    /// Puppeteer's `HTTPResponse` (puppeteer-core 25.16.0), a remote object
     /// served by `browser-commander serve --stdio`.
     HTTPResponse
 );
@@ -121,6 +121,15 @@ impl HTTPResponse {
     /// ```
     pub async fn json(&self) -> Result<Value, BridgeError> {
         self.remote.call("json", vec![]).await
+    }
+
+    /// `HTTPResponse.asFetchResponse`
+    ///
+    /// ```text
+    /// asFetchResponse(): Promise<Response>
+    /// ```
+    pub async fn as_fetch_response(&self) -> Result<Value, BridgeError> {
+        self.remote.call("asFetchResponse", vec![]).await
     }
 
     /// `HTTPResponse.request`

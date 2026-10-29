@@ -1,6 +1,6 @@
 {
   "package": "puppeteer-core",
-  "version": "25.12.0",
+  "version": "25.16.0",
   "types": [
     {"name": "Accessibility", "extends": null, "methods": [
       {"owner":"Accessibility","name":"snapshot","kind":"method","params":[{"name":"options","type":"json","optional":true,"rest":false}],"returns":"json?","signatures":["snapshot(options?: SnapshotOptions): Promise<SerializedAXNode | null>"]}
@@ -27,6 +27,7 @@
       {"owner":"Browser","name":"setWindowBounds","kind":"method","params":[{"name":"windowId","type":"string","optional":false,"rest":false},{"name":"windowBounds","type":"json","optional":false,"rest":false}],"returns":"void","signatures":["setWindowBounds(windowId: WindowId, windowBounds: WindowBounds): Promise<void>"]},
       {"owner":"Browser","name":"targets","kind":"method","params":[],"returns":"list:handle:Target","signatures":["targets(): Target[]"]},
       {"owner":"Browser","name":"target","kind":"method","params":[],"returns":"handle:Target","signatures":["target(): Target"]},
+      {"owner":"Browser","name":"restrictNetwork","kind":"method","params":[{"name":"conditions","type":"json?","optional":true,"rest":false}],"returns":"void","signatures":["restrictNetwork(conditions?: NetworkRestrictions | null): Promise<void>"]},
       {"owner":"Browser","name":"waitForTarget","kind":"method","params":[{"name":"predicate","type":"function","optional":false,"rest":false},{"name":"options","type":"json","optional":true,"rest":false}],"returns":"handle:Target","signatures":["waitForTarget(predicate: (x: Target) => boolean | Promise<boolean>, options?: WaitForTargetOptions): Promise<Target>"]},
       {"owner":"Browser","name":"pages","kind":"method","params":[{"name":"includeAll","type":"boolean","optional":true,"rest":false}],"returns":"list:handle:Page","signatures":["pages(includeAll?: boolean): Promise<Page[]>"]},
       {"owner":"Browser","name":"version","kind":"method","params":[],"returns":"string","signatures":["version(): Promise<string>"]},
@@ -128,6 +129,9 @@
       {"owner":"ConnectionTransport","name":"close","kind":"method","params":[],"returns":"void","signatures":["close(): void"]}
     ]},
     {"name": "ConsoleMessage", "extends": null, "methods": [
+      {"owner":"ConsoleMessage","name":"worker","kind":"method","params":[],"returns":"handle:WebWorker?","signatures":["worker(): WebWorker | null"]},
+      {"owner":"ConsoleMessage","name":"page","kind":"method","params":[],"returns":"handle:Page?","signatures":["page(): Page | null"]},
+      {"owner":"ConsoleMessage","name":"frame","kind":"method","params":[],"returns":"handle:Frame?","signatures":["frame(): Frame | null"]},
       {"owner":"ConsoleMessage","name":"type","kind":"method","params":[],"returns":"string","signatures":["type(): ConsoleMessageType"]},
       {"owner":"ConsoleMessage","name":"text","kind":"method","params":[],"returns":"string","signatures":["text(): string"]},
       {"owner":"ConsoleMessage","name":"args","kind":"method","params":[],"returns":"list:handle:JSHandle","signatures":["args(): JSHandle[]"]},
@@ -280,7 +284,9 @@
       {"owner":"HTTPRequest","name":"postData","kind":"method","params":[],"returns":"string?","signatures":["postData(): string | undefined"]},
       {"owner":"HTTPRequest","name":"hasPostData","kind":"method","params":[],"returns":"boolean","signatures":["hasPostData(): boolean"]},
       {"owner":"HTTPRequest","name":"fetchPostData","kind":"method","params":[],"returns":"string?","signatures":["fetchPostData(): Promise<string | undefined>"]},
+      {"owner":"HTTPRequest","name":"content","kind":"method","params":[],"returns":"binary?","signatures":["content(): Promise<Uint8Array | undefined>"]},
       {"owner":"HTTPRequest","name":"headers","kind":"method","params":[],"returns":"json","signatures":["headers(): Record<string, string>"]},
+      {"owner":"HTTPRequest","name":"asFetchRequest","kind":"method","params":[],"returns":"json","signatures":["asFetchRequest(): Promise<Request>"]},
       {"owner":"HTTPRequest","name":"response","kind":"method","params":[],"returns":"handle:HTTPResponse?","signatures":["response(): HTTPResponse | null"]},
       {"owner":"HTTPRequest","name":"frame","kind":"method","params":[],"returns":"handle:Frame?","signatures":["frame(): Frame | null"]},
       {"owner":"HTTPRequest","name":"isNavigationRequest","kind":"method","params":[],"returns":"boolean","signatures":["isNavigationRequest(): boolean"]},
@@ -304,6 +310,7 @@
       {"owner":"HTTPResponse","name":"buffer","kind":"method","params":[],"returns":"binary","signatures":["buffer(): Promise<Buffer>"]},
       {"owner":"HTTPResponse","name":"text","kind":"method","params":[],"returns":"string","signatures":["text(): Promise<string>"]},
       {"owner":"HTTPResponse","name":"json","kind":"method","params":[],"returns":"json","signatures":["json(): Promise<any>"]},
+      {"owner":"HTTPResponse","name":"asFetchResponse","kind":"method","params":[],"returns":"json","signatures":["asFetchResponse(): Promise<Response>"]},
       {"owner":"HTTPResponse","name":"request","kind":"method","params":[],"returns":"handle:HTTPRequest","signatures":["request(): HTTPRequest"]},
       {"owner":"HTTPResponse","name":"fromCache","kind":"method","params":[],"returns":"boolean","signatures":["fromCache(): boolean"]},
       {"owner":"HTTPResponse","name":"fromServiceWorker","kind":"method","params":[],"returns":"boolean","signatures":["fromServiceWorker(): boolean"]},
@@ -381,7 +388,7 @@
       {"owner":"Page","name":"isDragInterceptionEnabled","kind":"method","params":[],"returns":"boolean","signatures":["isDragInterceptionEnabled(): boolean"]},
       {"owner":"Page","name":"isJavaScriptEnabled","kind":"method","params":[],"returns":"boolean","signatures":["isJavaScriptEnabled(): boolean"]},
       {"owner":"Page","name":"waitForFileChooser","kind":"method","params":[{"name":"options","type":"json","optional":true,"rest":false}],"returns":"handle:FileChooser","signatures":["waitForFileChooser(options?: WaitTimeoutOptions): Promise<FileChooser>"]},
-      {"owner":"Page","name":"setGeolocation","kind":"method","params":[{"name":"options","type":"json","optional":false,"rest":false}],"returns":"void","signatures":["setGeolocation(options: GeolocationOptions): Promise<void>"]},
+      {"owner":"Page","name":"setGeolocation","kind":"method","params":[{"name":"options","type":"json?","optional":false,"rest":false}],"returns":"void","signatures":["setGeolocation(options: GeolocationOptions | null): Promise<void>"]},
       {"owner":"Page","name":"target","kind":"method","params":[],"returns":"handle:Target","signatures":["target(): Target"]},
       {"owner":"Page","name":"browser","kind":"method","params":[],"returns":"handle:Browser","signatures":["browser(): Browser"]},
       {"owner":"Page","name":"browserContext","kind":"method","params":[],"returns":"handle:BrowserContext","signatures":["browserContext(): BrowserContext"]},
@@ -419,7 +426,7 @@
       {"owner":"Page","name":"exposeFunction","kind":"method","params":[{"name":"name","type":"string","optional":false,"rest":false},{"name":"pptrFunction","type":"json","optional":false,"rest":false}],"returns":"void","signatures":["exposeFunction(name: string, pptrFunction: | Function | { default: Function; }): Promise<void>"]},
       {"owner":"Page","name":"removeExposedFunction","kind":"method","params":[{"name":"name","type":"string","optional":false,"rest":false}],"returns":"void","signatures":["removeExposedFunction(name: string): Promise<void>"]},
       {"owner":"Page","name":"authenticate","kind":"method","params":[{"name":"credentials","type":"json?","optional":false,"rest":false}],"returns":"void","signatures":["authenticate(credentials: Credentials | null): Promise<void>"]},
-      {"owner":"Page","name":"setExtraHTTPHeaders","kind":"method","params":[{"name":"headers","type":"json","optional":false,"rest":false}],"returns":"void","signatures":["setExtraHTTPHeaders(headers: Record<string, string>): Promise<void>"]},
+      {"owner":"Page","name":"setExtraHTTPHeaders","kind":"method","params":[{"name":"headers","type":"json","optional":false,"rest":false}],"returns":"void","signatures":["setExtraHTTPHeaders(headers: HeadersInput): Promise<void>"]},
       {"owner":"Page","name":"setUserAgent","kind":"method","params":[{"name":"userAgent","type":"json","optional":false,"rest":false},{"name":"userAgentMetadata","type":"json","optional":true,"rest":false}],"returns":"void","signatures":["setUserAgent(userAgent: string, userAgentMetadata?: Protocol.Emulation.UserAgentMetadata): Promise<void>","setUserAgent(options: { userAgent?: string; userAgentMetadata?: Protocol.Emulation.UserAgentMetadata; platform?: string; }): Promise<void>"]},
       {"owner":"Page","name":"metrics","kind":"method","params":[],"returns":"json","signatures":["metrics(): Promise<Metrics>"]},
       {"owner":"Page","name":"captureHeapSnapshot","kind":"method","params":[{"name":"options","type":"json","optional":false,"rest":false}],"returns":"void","signatures":["captureHeapSnapshot(options: HeapSnapshotOptions): Promise<void>"]},
@@ -473,6 +480,7 @@
       {"owner":"Page","name":"waitForDevicePrompt","kind":"method","params":[{"name":"options","type":"json","optional":true,"rest":false}],"returns":"handle:DeviceRequestPrompt","signatures":["waitForDevicePrompt(options?: WaitTimeoutOptions): Promise<DeviceRequestPrompt>"]},
       {"owner":"Page","name":"resize","kind":"method","params":[{"name":"params","type":"json","optional":false,"rest":false}],"returns":"void","signatures":["resize(params: { contentWidth: number; contentHeight: number; }): Promise<void>"]},
       {"owner":"Page","name":"windowId","kind":"method","params":[],"returns":"string","signatures":["windowId(): Promise<WindowId>"]},
+      {"owner":"Page","name":"tabInfo","kind":"method","params":[],"returns":"json?","signatures":["tabInfo(): Promise<TabInfo | null>"]},
       {"owner":"Page","name":"openDevTools","kind":"method","params":[],"returns":"handle:Page","signatures":["openDevTools(): Promise<Page>"]},
       {"owner":"Page","name":"hasDevTools","kind":"method","params":[],"returns":"boolean","signatures":["hasDevTools(): Promise<boolean>"]},
       {"owner":"Page","name":"bluetooth","kind":"getter","params":[],"returns":"handle:BluetoothEmulation","signatures":["get bluetooth(): BluetoothEmulation"]},

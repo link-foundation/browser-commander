@@ -4,11 +4,11 @@
 //! Typed wrappers of Puppeteer's API, generated from the declaration file
 //! that puppeteer-core ships.
 //!
-//! 47 types and 490 methods and getters, each a typed
+//! 47 types and 498 methods and getters, each a typed
 //! `handle.call` or `handle.get` over [`crate::puppeteer::bridge`].
 
 /// puppeteer-core release the wrappers were generated from.
-pub const PUPPETEER_VERSION: &str = "25.12.0";
+pub const PUPPETEER_VERSION: &str = "25.16.0";
 
 mod accessibility;
 mod bluetooth_emulation;

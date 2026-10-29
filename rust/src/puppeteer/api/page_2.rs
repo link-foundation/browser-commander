@@ -27,6 +27,15 @@ impl Page {
         self.remote.call("windowId", vec![]).await
     }
 
+    /// `Page.tabInfo`
+    ///
+    /// ```text
+    /// tabInfo(): Promise<TabInfo | null>
+    /// ```
+    pub async fn tab_info(&self) -> Result<Option<Value>, BridgeError> {
+        self.remote.call("tabInfo", vec![]).await
+    }
+
     /// `Page.openDevTools`
     ///
     /// ```text

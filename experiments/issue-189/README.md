@@ -25,7 +25,8 @@ writer has a repeat-refresh regression in all three languages.
 
 A separate CLI regression initially printed the cookie-transfer array, including
 its private fixture value. It now verifies that routine `profile migrate`
-output retains counts and omits cookie values. Python/Rust forward this shared
+output retains counts and omits cookie values, including command scripts.
+Python/Rust forward this shared
 CLI, while the programmatic transfer API retains its existing behavior.
 
 Run the focused suites from the repository root:
@@ -59,3 +60,14 @@ harness does not substitute for the full Rust CI suite on larger runners.
 
 Command output is saved as ignored `*.log` files in this directory. This is a
 file-level migration change; no frontend visual changes or screenshots apply.
+
+The original PR revision also failed its existing security gate. Preserved logs
+are in `ci-logs/security-40960445712.log` (ignored): npm reported vulnerable Zod
+through Puppeteer, and Cargo reported RUSTSEC-2026-0385 (ctutils) and
+RUSTSEC-2026-0386 (Tokio). The lockfiles now resolve Puppeteer 25.16.0/Zod 4.6.7,
+ctutils 0.4.4 and Tokio 1.53.3; the Tokio manifest minimum is also patched.
+Both lockfile audits are verified without advisory suppressions.
+Puppeteer's generated Rust/Python bindings were refreshed to match the patched
+installation. The packed consumer still proves that Browser Commander and its
+caller share one current Link type; independent older parsers inside other
+dependencies are allowed.

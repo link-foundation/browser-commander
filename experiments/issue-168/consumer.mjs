@@ -15,9 +15,12 @@ const copies = Object.entries(lock.packages)
   .filter(([name]) => name.endsWith('/links-notation'))
   .map(([name, entry]) => ({ path: name, version: entry.version }));
 console.log(JSON.stringify({ copies }));
-assert.deepEqual(copies, [
-  { path: 'node_modules/links-notation', version: '0.25.2' },
-]);
+// Dependencies may use their own older grammar. Our public Link class must be
+// shared with the consumer; an unrelated transitive parser has no such contract.
+assert.deepEqual(
+  copies.filter(({ version }) => version === '0.25.2'),
+  [{ path: 'node_modules/links-notation', version: '0.25.2' }]
+);
 
 const require = createRequire(import.meta.url);
 const commanderRequire = createRequire(require.resolve('browser-commander'));

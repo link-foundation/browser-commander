@@ -17,7 +17,7 @@ native-tls = ["fantoccini/native-tls"]
 
 [dependencies]
 # Async runtime
-tokio = { version = "1.53.2", features = ["full"] }
+tokio = { version = "1.53.3", features = ["full"] }
 
 # Browser automation
 # 0.9 dropped the runtime feature flags -- the crate is tokio-only now -- and

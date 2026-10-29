@@ -335,9 +335,13 @@ async function profileMigrate(parsed, io) {
       .filter(Boolean),
     domains: options.domain,
   });
+  return done(migrationSummary(report));
+}
+
+function migrationSummary(report) {
   // Cookie transfer data is available through the API, not routine CLI output.
   const { cookies: _cookies, ...summary } = report;
-  return done(summary);
+  return summary;
 }
 
 /**
@@ -420,7 +424,16 @@ async function run(parsed, io) {
     dependencies: io.dependencies,
     launchDefaults: launchParams(parsed.options),
   });
-  return done({ results }, failed ? 1 : 0);
+  return done(
+    {
+      results: results.map((entry) =>
+        entry.method === 'profile.migrate' && entry.result
+          ? { ...entry, result: migrationSummary(entry.result) }
+          : entry
+      ),
+    },
+    failed ? 1 : 0
+  );
 }
 
 async function serve(parsed, io) {

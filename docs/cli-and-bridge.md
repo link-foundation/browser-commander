@@ -300,8 +300,9 @@ need for an authorized OS/NSS export and non-exportable/hardware key limits.
 
 The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):
 
-`profile migrate` CLI output omits the internal cookie-transfer array and keeps
-the migrated count. Python and Rust entry points use the same CLI summary.
+`profile migrate` and command-script migration output omit the internal
+cookie-transfer array and keep the migrated count. Python and Rust entry points
+use the same CLI summary.
 Programmatic migration still returns cookies for explicit browser-API seeding;
 the launcher removes those values from its migration summary.
 

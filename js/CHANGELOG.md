@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.1
+
+### Patch Changes
+
+- 0202265: Merge saved-password refreshes into compatible closed target stores without
+  replacing existing logins or metadata. Preserve target identities on conflicts,
+  remap imported notes, and refuse unsafe target states or unsupported stores.
+  Update the development browser dependency lockfile to resolve patched Zod.
+
 ## 0.34.0
 
 ### Minor Changes

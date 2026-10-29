@@ -288,6 +288,21 @@ export async function migrateProfile({
     });
   }
 
+  if (selected.has('passwords')) {
+    await migratePasswordClass(report, {
+      keys,
+      browser,
+      targetBrowser,
+      targetKeystore,
+      platform,
+      sourceProfileDir,
+      environment,
+      to,
+      isFirefox,
+      domains,
+    });
+  }
+
   if (selected.has('bookmarks')) {
     mergeReport(
       report,
@@ -352,21 +367,6 @@ export async function migrateProfile({
     }
   }
 
-  if (selected.has('passwords')) {
-    await migratePasswordClass(report, {
-      keys,
-      browser,
-      targetBrowser,
-      targetKeystore,
-      platform,
-      sourceProfileDir,
-      environment,
-      to,
-      isFirefox,
-      domains,
-    });
-  }
-
   return report;
 }
 
@@ -398,7 +398,11 @@ async function migrateSafariProfile({
           environment,
         })
       : null;
-  for (const type of ALL_DATA_CLASSES.filter(
+  const orderedClasses = [
+    'passwords',
+    ...ALL_DATA_CLASSES.filter((type) => type !== 'passwords'),
+  ];
+  for (const type of orderedClasses.filter(
     (type) =>
       type !== 'cookies' &&
       !ADDITIONAL_DATA_CLASSES.includes(type) &&

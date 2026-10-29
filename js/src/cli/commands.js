@@ -321,22 +321,23 @@ async function traceView(parsed, io) {
 
 async function profileMigrate(parsed, io) {
   const { options } = parsed;
-  return done(
-    await dispatchOnce(io, 'profile.migrate', {
-      from: requireOption(options, 'from', 'profile migrate'),
-      profile: options.profile,
-      userDataDir: options.userDataDir,
-      targetBrowser: options.targetBrowser,
-      passwordCsv: options.passwordCsv,
-      includePaymentCards: options.includePaymentCards,
-      to: options.to,
-      include: options.include
-        ?.split(',')
-        .map((item) => item.trim())
-        .filter(Boolean),
-      domains: options.domain,
-    })
-  );
+  const report = await dispatchOnce(io, 'profile.migrate', {
+    from: requireOption(options, 'from', 'profile migrate'),
+    profile: options.profile,
+    userDataDir: options.userDataDir,
+    targetBrowser: options.targetBrowser,
+    passwordCsv: options.passwordCsv,
+    includePaymentCards: options.includePaymentCards,
+    to: options.to,
+    include: options.include
+      ?.split(',')
+      .map((item) => item.trim())
+      .filter(Boolean),
+    domains: options.domain,
+  });
+  // Cookie transfer data is available through the API, not routine CLI output.
+  const { cookies: _cookies, ...summary } = report;
+  return done(summary);
 }
 
 /**

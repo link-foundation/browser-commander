@@ -56,13 +56,12 @@ export async function migrateSafariClass({
         'Supply the dedicated target profile encryption key; no plaintext passwords are written.'
       );
     }
-    const migrated = await writeChromiumPasswords({
+    return writeChromiumPasswords({
       entries,
       targetProfileDir,
       platform,
       ...passwordKeys,
     });
-    return { migrated, skipped: [], warnings: [] };
   }
   const filename = await findStore(
     profileDir,

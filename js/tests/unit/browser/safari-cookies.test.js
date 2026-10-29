@@ -249,7 +249,8 @@ describe('Safari cookies', { timeout: 10000 }, () => {
     );
     const report = JSON.parse(chunks.join(''));
     assert.equal(exitCode, 0, JSON.stringify(report));
-    assert.deepEqual(report.cookies, expected.slice(0, 2));
+    assert.equal(Object.hasOwn(report, 'cookies'), false);
+    assert.equal(chunks.join('').includes('fixture-token'), false);
     const script = await runScript({
       steps: [
         {

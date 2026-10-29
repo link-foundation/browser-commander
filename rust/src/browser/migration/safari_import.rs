@@ -69,7 +69,7 @@ pub(crate) fn migrate_safari_class(
                 password: entry.password,
             })
             .collect::<Vec<_>>();
-        let migrated = firefox::write_chromium_passwords(
+        return firefox::write_chromium_passwords(
             &options.to,
             &entries,
             &firefox::FirefoxPasswordKeys {
@@ -78,8 +78,7 @@ pub(crate) fn migrate_safari_class(
                 target_prefix: keys.and_then(|keys| keys.target_prefix.as_deref()),
                 primary_password: &[],
             },
-        )?;
-        return Ok(ClassOutcome::migrated(migrated));
+        );
     }
     let Some(filename) = find_store(
         profile,

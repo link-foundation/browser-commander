@@ -257,7 +257,7 @@ EPERM/EACCES explains which application needs Full Disk Access. A scoped
 default/auto import reports an unreadable default source instead of treating it
 as empty and silently choosing a different browser.
 
-Chromium password imports also re-encrypt retained password notes with the
+In the private source snapshot, Chromium password imports re-encrypt retained password notes with the
 target key and remove notes/security records whose login was excluded or could
 not be decrypted. Domain filters apply to the independent origin statistics.
 Copied sync metadata is reset with `sync-metadata-reset` warnings. During a
@@ -265,6 +265,13 @@ domain-filtered import, unrecognized Login Data metadata tables are cleared
 with `unsupported-password-metadata` warnings naming each affected table and
 its removed row count; unfiltered imports preserve those tables. Unreadable
 notes have individual skipped entries, without exposing note values.
+Existing target logins and metadata are preserved: new identities merge in,
+while conflicts return `target-existing` with zero added records. File-level
+password imports require a closed target and compatible schema/keystore;
+unsafe states refuse before publication. See
+[saved-password refresh rules](profile-migration.md#refreshing-saved-passwords)
+for the identity tuple, conflict policy, account-store limits and cookie refresh
+guidance.
 
 The include/report schema also recognizes `localStorage`, `indexedDB`,
 `sessionStorage`, `autofill`, `paymentCards`, `searchEngines`, `siteSettings`,
@@ -292,6 +299,11 @@ Client certificates return `client-certificates-os-export-required`, naming the
 need for an authorized OS/NSS export and non-exportable/hardware key limits.
 
 The migration report (`profile.migrate`, `launchRealBrowser({migrateFrom})`):
+
+`profile migrate` CLI output omits the internal cookie-transfer array and keeps
+the migrated count. Python and Rust entry points use the same CLI summary.
+Programmatic migration still returns cookies for explicit browser-API seeding;
+the launcher removes those values from its migration summary.
 
 ```json
 {

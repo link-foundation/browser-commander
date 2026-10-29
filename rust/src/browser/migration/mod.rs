@@ -27,6 +27,7 @@ mod fs_utils;
 mod history;
 mod os_crypt_keys;
 mod password_metadata;
+mod password_store;
 mod passwords;
 mod preferences;
 pub(crate) mod safari;
@@ -774,7 +775,9 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
                     "Safari Technology Preview"
                 })
         });
-        for data_class in ALL_DATA_CLASSES.iter().filter(|name| {
+        let ordered_classes = std::iter::once(&"passwords")
+            .chain(ALL_DATA_CLASSES.iter().filter(|name| **name != "passwords"));
+        for data_class in ordered_classes.filter(|name| {
             **name != "cookies"
                 && !data_classes::ADDITIONAL_DATA_CLASSES.contains(name)
                 && selected(name)
@@ -799,6 +802,10 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
             );
         }
         return Ok(report);
+    }
+
+    if selected("passwords") {
+        migrate_passwords_class(&options, &browser, &source_profile_dir, &mut report)?;
     }
 
     if selected("bookmarks") {
@@ -840,10 +847,6 @@ pub fn migrate_profile(options: MigrateProfileOptions) -> Result<MigrationReport
                 });
             }
         }
-    }
-
-    if selected("passwords") {
-        migrate_passwords_class(&options, &browser, &source_profile_dir, &mut report)?;
     }
 
     Ok(report)

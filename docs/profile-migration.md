@@ -81,13 +81,74 @@ Derived cluster labels, keywords, duplicate-visit records and unknown History
 tables cannot be safely associated with selected domains. Filtered imports
 empty these tables and report `unsupported-history-metadata` for each nonempty
 table; unfiltered imports preserve them.
-Skipped undecryptable passwords are removed from the target. Target database
-copies are vacuumed to remove deleted pages. Sources remain read-only.
+Skipped undecryptable source passwords are removed from the private import
+snapshot. Existing target passwords are preserved. Import snapshots are
+vacuumed to remove deleted pages. Sources remain read-only.
 SQLite stores use online backup, including committed WAL records. If a lock
 prevents a consistent snapshot, the error recommends closing the source browser
 or supplying a consistent read-only snapshot; live files are not copied as a
 fallback. Unsupported Firefox preferences and extensions have explicit skipped
 reasons.
+
+## Refreshing saved passwords
+
+Password imports into an existing Chromium `Login Data` merge new records.
+They preserve unrelated domains and target-only logins within selected domains.
+The identity is Chromium's five-field tuple: `origin_url`, `username_element`,
+`username_value`, `password_element`, and `signon_realm`, compared exactly with
+nulls equal. If that identity already exists, the **target wins**, including its
+password and metadata. The report adds `target-existing` and does not count it
+as migrated. Source password changes therefore never overwrite a target login.
+A repeated import adds no duplicates and leaves the target file unchanged when
+there are no new records. Host filters match exact hosts and their subdomains:
+`live.com` includes `login.live.com` but excludes `notlive.com`.
+
+New records receive target IDs. Their password notes are re-encrypted and their
+note/insecurity associations are remapped to those IDs. Existing target notes,
+insecurity records, schema, version markers, sync state and statistics remain
+intact. Source sync state is never merged into an existing target. Summaries
+contain counts and reason codes, without passwords, usernames or encryption
+keys. These rules apply to JS, Python, Rust and their `profile migrate` CLIs,
+including Firefox NSS and Safari CSV password writers.
+
+**Close the target browser before any file-level password import**, and keep it
+closed until the command finishes. Imports refuse browser lock markers, live
+`--user-data-dir` processes, WAL/shared-memory files, active rollback journals,
+or unavailable process inspection. Empty/zeroed persistent rollback journals
+left by a clean close are accepted. A tool lock serializes password writers;
+`target-busy` means another refresh is running. After an interrupted process,
+remove a stale `.password-refresh.lock` only after confirming no browser or
+refresh process uses the profile. The importer rechecks safety and target bytes
+before atomically publishing its staged database. A failure leaves the existing
+target database intact. Password safety is checked before other selected data
+classes write files.
+
+Existing stores must have matching login/note/insecurity table layouts and
+version markers. Supported columns include the Chromium core, password sharing,
+last-filled and actor-approval fields; nonempty OS keychain references, unknown
+tables/columns, triggers, views and incompatible schemas refuse with
+`unsupported-password-schema`. This conservative check avoids guessing at
+browser-specific migrations. Firefox/Safari use the documented version-34
+translation schema; a target upgraded to a different schema may require a fresh
+dedicated profile. A populated or unrecognized `Login Data For Account` in either
+profile refuses with `account-store-unsupported`; account-store credential
+merging is unsupported. Recognized empty account stores are left byte-for-byte
+intact. This prevents an apparently successful refresh from silently ignoring
+account passwords.
+
+Supply the key/keystore of the browser that will actually open the target.
+Existing target passwords and notes must decrypt with that key; unsupported
+target encryption (including app-bound `v20`) or a key mismatch refuses before
+publication. Linux `--password-store=basic` targets require the matching basic
+keystore; macOS targets require their actual Safe Storage service; Windows
+targets require their own `Local State` key. Source keys are used only to decrypt
+the private source snapshot. For unsupported combinations, import into a fresh
+dedicated profile with the correct target browser/keystore. There is no implicit
+replace mode for password refresh; whole-profile `profile.snapshot` is a separate
+operation with separate semantics.
+
+Refresh cookies in a running target through the browser cookie API. File-level
+password refresh and cookie refresh have different lifecycle requirements.
 
 Opera keys use a `Local State` beside its single-profile store before the
 parent-directory fallback. Yandex `Ya Passman Data` returns
@@ -120,4 +181,8 @@ their exact microsecond timestamps survive opening and closing Chromium.
 No macOS Safari/STP or Windows browser acceptance has been run in this Linux
 workspace. Firefox/WebKit target acceptance cannot be run until those writers
 are implemented. Password encryption is verified by fixture decryption; real
-browser password-store acceptance is not established by that unit test.
+browser password-store acceptance is additionally exercised by
+[`verify-chromium.mjs`](../experiments/issue-189/verify-chromium.mjs): active-target
+refusal, scoped import into Chromium-created stores, repeat refresh, profile
+reopen and SQLite integrity checks. This Linux basic-keystore check does not
+establish macOS Keychain or Windows DPAPI runtime acceptance.

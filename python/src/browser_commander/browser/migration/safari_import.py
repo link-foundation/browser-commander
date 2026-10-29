@@ -75,14 +75,13 @@ def migrate_safari_class(
                 "target-key-unavailable",
                 "Supply the dedicated target profile encryption key; no plaintext passwords are written.",
             )
-        migrated = write_chromium_passwords(
+        return write_chromium_passwords(
             entries=entries,
             target_profile_dir=target_profile_dir,
             platform=platform,
             target_key=password_keys["target_key"],
             target_prefix=password_keys.get("target_prefix"),
         )
-        return {"migrated": migrated, "skipped": [], "warnings": []}
     filename = _find_store(
         profile_dir,
         "Bookmarks.plist" if type_ == "bookmarks" else "History.db",

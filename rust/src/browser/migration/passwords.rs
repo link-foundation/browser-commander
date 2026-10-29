@@ -5,15 +5,8 @@
 //! `encrypted_value` (the same OSCrypt keys), except that `Login Data` values
 //! never carry the SHA-256(host) domain-hash prefix.
 //!
-//! Passwords cannot be re-seeded over CDP the way cookies can, so the migration
-//! writes a target `Login Data` directly:
-//!
-//! 1. Take a consistent, read-only snapshot of the source `Login Data` with the
-//!    SQLite Online Backup API.
-//! 2. Copy that snapshot to the target path, which preserves Chrome's exact
-//!    schema verbatim.
-//! 3. Decrypt each `password_value` with the source profile's key and
-//!    re-encrypt it with the dedicated target profile's key, in place.
+//! Passwords are prepared privately and merged into compatible closed target
+//! stores. Existing target identities win. Preparation cannot replace the target.
 //!
 //! Windows app-bound `v20` values cannot be decrypted outside the browser and
 //! are reported in `skipped` rather than failing the migration.
@@ -77,7 +70,7 @@ pub(super) fn reencrypt_secret(
     if value.is_empty() {
         return Ok(SecretRewrite::Encrypted(Vec::new()));
     }
-    let item = origin.unwrap_or("(unknown)");
+    let item = "Login Data";
     let prefix = String::from_utf8_lossy(&value[..value.len().min(3)]).into_owned();
     let reason = if prefix == "v20" {
         Some("app-bound-v20")
@@ -98,11 +91,12 @@ pub(super) fn reencrypt_secret(
     });
     let plaintext = match decrypted {
         Ok(plaintext) => plaintext,
-        Err(error) => {
-            return Ok(SecretRewrite::Skipped(
-                MigrationEntry::new("passwords", item, "decrypt-failed")
-                    .with_detail(format!("{error:#}")),
-            ))
+        Err(_) => {
+            return Ok(SecretRewrite::Skipped(MigrationEntry::new(
+                "passwords",
+                item,
+                "decrypt-failed",
+            )))
         }
     };
     let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "linux" {
@@ -179,6 +173,7 @@ pub(crate) fn migrate_passwords_filtered(
     keys: &PasswordKeys<'_>,
     domains: &[String],
 ) -> Result<ClassOutcome> {
+    super::password_store::preflight(Some(source_profile_dir), target_profile_dir)?;
     let source_path = source_profile_dir.join("Login Data");
     if !path_exists(&source_path) {
         return Ok(ClassOutcome::skipped(MigrationEntry::new(
@@ -192,24 +187,29 @@ pub(crate) fn migrate_passwords_filtered(
             "migrate_passwords requires a target encryption key"
         ));
     }
-    fs::create_dir_all(target_profile_dir)
-        .with_context(|| format!("Could not create {}", target_profile_dir.display()))?;
-    let target_path = target_profile_dir.join("Login Data");
-    with_database_snapshot(&source_path, |snapshot_path| {
-        // The snapshot copy preserves Chrome's exact schema; re-encrypt values
-        // in place so the target keeps whatever schema version Chrome wrote.
-        fs::copy(snapshot_path, &target_path)
-            .with_context(|| format!("Could not write {}", target_path.display()))?;
-        let database = Connection::open(&target_path)
-            .with_context(|| format!("Could not open {}", target_path.display()))?;
-        let mut outcome = reencrypt_logins(&database, keys, domains)?;
-        super::password_metadata::migrate_password_metadata(
-            &database,
-            keys,
-            domains,
-            &mut outcome,
-        )?;
-        database.execute_batch("VACUUM")?;
-        Ok(outcome)
-    })
+    super::password_store::with_password_store(
+        Some(source_profile_dir),
+        target_profile_dir,
+        keys.target_key,
+        keys.platform,
+        |target_path| {
+            with_database_snapshot(&source_path, |snapshot_path| {
+                // The snapshot copy preserves Chrome's exact schema; re-encrypt values
+                // in place so the target keeps whatever schema version Chrome wrote.
+                fs::copy(snapshot_path, target_path)
+                    .with_context(|| format!("Could not write {}", target_path.display()))?;
+                let database = Connection::open(target_path)
+                    .with_context(|| format!("Could not open {}", target_path.display()))?;
+                let mut outcome = reencrypt_logins(&database, keys, domains)?;
+                super::password_metadata::migrate_password_metadata(
+                    &database,
+                    keys,
+                    domains,
+                    &mut outcome,
+                )?;
+                database.execute_batch("VACUUM")?;
+                Ok(outcome)
+            })
+        },
+    )
 }

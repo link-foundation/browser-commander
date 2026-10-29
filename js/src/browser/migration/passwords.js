@@ -1,13 +1,17 @@
-import { copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { copyFile } from 'node:fs/promises';
 import { pathExists } from './fs-utils.js';
 
 import { decryptChromiumCookie } from '../browser-cookie-crypto.js';
-import { openSqliteDatabase } from '../browser-cookie-database.js';
+import {
+  openSqliteDatabase,
+  preserveIntegerPrecision,
+} from '../browser-cookie-database.js';
 import { withDatabaseSnapshot } from './sqlite-snapshot.js';
 import { encryptChromiumValue } from './chromium-crypto.js';
 import { matchesDomains } from './domains.js';
 import { migratePasswordMetadata } from './password-metadata.js';
+import { withPasswordStore, preflightPasswordStore } from './password-store.js';
 
 /**
  * Saved-password migration.
@@ -18,17 +22,9 @@ import { migratePasswordMetadata } from './password-metadata.js';
  * never carry the SHA-256(host) domain-hash prefix the Cookies database adds at
  * schema version 24.
  *
- * Passwords cannot be re-seeded over CDP the way cookies can, so the migration
- * writes a target `Login Data` directly:
- *
- * 1. Take a consistent, read-only snapshot of the source `Login Data` with the
- *    SQLite Online Backup API (never writing to the running source).
- * 2. Copy that snapshot to the target path, which preserves Chrome's exact
- *    schema (tables, indexes, `meta` version rows) verbatim.
- * 3. Decrypt each `password_value` with the source profile's key and
- *    re-encrypt it with the dedicated target profile's key, updating the row
- *    in place. Because only the values are rewritten, the schema Chrome expects
- *    is untouched.
+ * Passwords are prepared in a private snapshot, then merged into compatible
+ * closed target stores. Existing target identities win; see password-store.js.
+ * A failed preparation never replaces the target database.
  *
  * The source key handling, the target key, and the platform are all injected so
  * the whole path is unit-testable on Linux with a fabricated key. Windows
@@ -76,8 +72,8 @@ async function rewriteSecret(
       platform,
       key: await resolveSourceKey(prefix),
     });
-  } catch (error) {
-    return { reason: 'decrypt-failed', detail: error.message };
+  } catch {
+    return { reason: 'decrypt-failed' };
   }
   return {
     value: encryptChromiumValue({
@@ -111,6 +107,7 @@ export async function migratePasswords({
   targetPrefix = platform === 'linux' ? 'v11' : 'v10',
   domains,
 }) {
+  await preflightPasswordStore(sourceProfileDir, targetProfileDir);
   const sourcePath = path.join(sourceProfileDir, 'Login Data');
   if (!(await pathExists(sourcePath))) {
     return {
@@ -130,79 +127,87 @@ export async function migratePasswords({
     throw new TypeError('migratePasswords requires a target encryption key');
   }
 
-  await mkdir(targetProfileDir, { recursive: true });
-  const targetPath = path.join(targetProfileDir, 'Login Data');
-
-  return withDatabaseSnapshot({
-    sourcePath,
-    read: async (snapshotPath) => {
-      // The snapshot copy preserves Chrome's exact schema; re-encrypt values in
-      // place so the target keeps whatever schema version this Chrome build
-      // wrote.
-      await copyFile(snapshotPath, targetPath);
-      const db = await openSqliteDatabase(targetPath, { fileMustExist: true });
-      const skipped = [];
-      const warnings = [];
-      let migrated = 0;
-      try {
-        const rows = db
-          .prepare(
-            'SELECT rowid AS rowid, origin_url, password_value FROM logins'
-          )
-          .all();
-        const update = db.prepare(
-          'UPDATE logins SET password_value = ? WHERE rowid = ?'
-        );
-        const remove = db.prepare('DELETE FROM logins WHERE rowid = ?');
-        const skip = (row, reason, detail) => {
-          remove.run(row.rowid);
-          skipped.push({
-            type: 'passwords',
-            item: row.origin_url ?? '(unknown)',
-            reason,
-            ...(detail ? { detail } : {}),
+  return withPasswordStore({
+    sourceProfileDir,
+    targetProfileDir,
+    targetKey,
+    platform,
+    prepare: (targetPath) =>
+      withDatabaseSnapshot({
+        sourcePath,
+        read: async (snapshotPath) => {
+          // Prepare source records with their original schema before merging.
+          await copyFile(snapshotPath, targetPath);
+          const db = await openSqliteDatabase(targetPath, {
+            fileMustExist: true,
           });
-        };
-        for (const row of rows) {
-          if (!matchesDomains(row.origin_url ?? '', domains)) {
-            remove.run(row.rowid);
-            continue;
+          const skipped = [];
+          const warnings = [];
+          let migrated = 0;
+          try {
+            const rows = preserveIntegerPrecision(
+              db.prepare(
+                'SELECT rowid AS rowid, origin_url, password_value FROM logins'
+              )
+            ).all();
+            const update = db.prepare(
+              'UPDATE logins SET password_value = ? WHERE rowid = ?'
+            );
+            const remove = db.prepare('DELETE FROM logins WHERE rowid = ?');
+            const skip = (row, reason, detail) => {
+              remove.run(row.rowid);
+              skipped.push({
+                type: 'passwords',
+                item: 'Login Data',
+                reason,
+                ...(detail ? { detail } : {}),
+              });
+            };
+            for (const row of rows) {
+              if (!matchesDomains(row.origin_url ?? '', domains)) {
+                remove.run(row.rowid);
+                continue;
+              }
+              const encryptedValue = toBuffer(row.password_value);
+              if (encryptedValue.length === 0) {
+                continue;
+              }
+              const result = await rewriteSecret(
+                encryptedValue,
+                row.origin_url,
+                {
+                  platform,
+                  resolveSourceKey,
+                  targetKey,
+                  targetPrefix,
+                }
+              );
+              if (result.reason) {
+                skip(row, result.reason, result.detail);
+                continue;
+              }
+              update.run(result.value, row.rowid);
+              migrated += 1;
+            }
+            await migratePasswordMetadata({
+              db,
+              domains,
+              skipped,
+              warnings,
+              rewriteValue: (value, origin) =>
+                rewriteSecret(value, origin, {
+                  platform,
+                  resolveSourceKey,
+                  targetKey,
+                  targetPrefix,
+                }),
+            });
+            db.exec('VACUUM');
+          } finally {
+            db.close();
           }
-          const encryptedValue = toBuffer(row.password_value);
-          if (encryptedValue.length === 0) {
-            continue;
-          }
-          const result = await rewriteSecret(encryptedValue, row.origin_url, {
-            platform,
-            resolveSourceKey,
-            targetKey,
-            targetPrefix,
-          });
-          if (result.reason) {
-            skip(row, result.reason, result.detail);
-            continue;
-          }
-          update.run(result.value, row.rowid);
-          migrated += 1;
-        }
-        await migratePasswordMetadata({
-          db,
-          domains,
-          skipped,
-          warnings,
-          rewriteValue: (value, origin) =>
-            rewriteSecret(value, origin, {
-              platform,
-              resolveSourceKey,
-              targetKey,
-              targetPrefix,
-            }),
-        });
-        db.exec('VACUUM');
-      } finally {
-        db.close();
-      }
-      return { migrated, skipped, warnings };
-    },
+          return { migrated, skipped, warnings };
+        },
+      }),
   });
 }

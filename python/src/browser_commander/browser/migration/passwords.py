@@ -1,7 +1,7 @@
 """Migrate Chromium saved passwords by re-encrypting ``Login Data``.
 
-The source ``Login Data`` is snapshotted and copied into the target profile,
-then every ``password_value`` is decrypted with the source profile's OSCrypt
+The source ``Login Data`` is prepared privately, then merged into compatible
+closed target stores. Existing target identities win conflicts. Every ``password_value`` is decrypted with the source profile's OSCrypt
 key and re-encrypted with the target profile's key. Values that cannot move
 are reported per row: Windows app-bound ``v20`` values (only the browser's
 elevation service can decrypt them), unknown prefixes and decryption
@@ -27,6 +27,8 @@ from browser_commander.browser.migration.password_metadata import (
 from browser_commander.browser.migration.sqlite_snapshot import (
     with_database_snapshot,
 )
+
+from .password_store import preflight_password_store, with_password_store
 
 __all__ = ["default_target_prefix", "migrate_passwords"]
 
@@ -62,7 +64,7 @@ def _host_from_origin(origin_url: Any) -> str:
 def _skip(origin_url: Any, reason: str, detail: str | None = None) -> dict[str, Any]:
     entry: dict[str, Any] = {
         "type": "passwords",
-        "item": origin_url if origin_url is not None else "(unknown)",
+        "item": "Login Data",
         "reason": reason,
     }
     if detail is not None:
@@ -93,6 +95,7 @@ def migrate_passwords(
         TypeError: When the source resolver or the target key is missing.
     """
 
+    preflight_password_store(source_profile_dir, target_profile_dir)
     source_path = Path(source_profile_dir) / "Login Data"
     if not source_path.exists():
         return {
@@ -113,8 +116,6 @@ def migrate_passwords(
     )
 
     target_dir = Path(target_profile_dir)
-    target_dir.mkdir(parents=True, exist_ok=True)
-    target_path = target_dir / "Login Data"
 
     def rewrite_secret(
         value: Any, origin: Any
@@ -135,8 +136,8 @@ def migrate_passwords(
                 platform=platform,
                 key=resolve_source_key(prefix),
             )
-        except Exception as error:
-            return None, _skip(origin, "decrypt-failed", str(error))
+        except Exception:
+            return None, _skip(origin, "decrypt-failed")
         return encrypt_chromium_value(
             plaintext,
             key=bytes(target_key),
@@ -144,7 +145,7 @@ def migrate_passwords(
             prefix=prefix_for_target,
         ), None
 
-    def rewrite(snapshot_path: Path) -> dict[str, Any]:
+    def rewrite(snapshot_path: Path, target_path: Path) -> dict[str, Any]:
         shutil.copyfile(snapshot_path, target_path)
         skipped: list[dict[str, Any]] = []
         warnings: list[dict[str, Any]] = []
@@ -179,4 +180,12 @@ def migrate_passwords(
             database.execute("VACUUM")
         return {"migrated": migrated, "skipped": skipped, "warnings": warnings}
 
-    return with_database_snapshot(source_path, rewrite)
+    return with_password_store(
+        source_profile_dir=source_profile_dir,
+        target_profile_dir=target_dir,
+        target_key=target_key,
+        platform=platform,
+        prepare=lambda staged: with_database_snapshot(
+            source_path, lambda snapshot: rewrite(snapshot, staged)
+        ),
+    )

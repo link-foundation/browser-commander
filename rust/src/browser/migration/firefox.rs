@@ -279,21 +279,18 @@ pub(crate) fn migrate_firefox_passwords_filtered(
         }
         match decrypt_login(login, &key) {
             Ok(entry) => decrypted.push(entry),
-            Err(error) => outcome.skipped.push(
-                MigrationEntry::new(
-                    "passwords",
-                    login
-                        .get("hostname")
-                        .and_then(Value::as_str)
-                        .unwrap_or("(unknown)"),
-                    "decrypt-failed",
-                )
-                .with_detail(format!("{error:#}")),
-            ),
+            Err(_) => outcome.skipped.push(MigrationEntry::new(
+                "passwords",
+                "Login Data",
+                "decrypt-failed",
+            )),
         }
     }
 
-    outcome.migrated = write_chromium_passwords(target_profile_dir, &decrypted, keys)?;
+    let store = write_chromium_passwords(target_profile_dir, &decrypted, keys)?;
+    outcome.migrated = store.migrated;
+    outcome.skipped.extend(store.skipped);
+    outcome.warnings.extend(store.warnings);
 
     if outcome.migrated > 0 {
         outcome.warnings.push(
@@ -312,47 +309,54 @@ pub(crate) fn write_chromium_passwords(
     target_profile_dir: &Path,
     entries: &[DecryptedLogin],
     keys: &FirefoxPasswordKeys<'_>,
-) -> Result<u64> {
-    let mut migrated = 0;
-    fs::create_dir_all(target_profile_dir)
-        .with_context(|| format!("Could not create {}", target_profile_dir.display()))?;
-    let target_path = target_profile_dir.join("Login Data");
-    let database = Connection::open(&target_path)
-        .with_context(|| format!("Could not open {}", target_path.display()))?;
-    database.execute_batch(CHROME_LOGINS_SCHEMA)?;
-    let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "linux" {
-        "v11"
-    } else {
-        "v10"
-    });
-    {
-        let mut insert = database.prepare(
-            "INSERT OR IGNORE INTO logins (
+) -> Result<ClassOutcome> {
+    super::password_store::with_password_store(
+        None,
+        target_profile_dir,
+        keys.target_key,
+        keys.platform,
+        |target_path| {
+            let mut migrated = 0;
+            let database = Connection::open(target_path)?;
+            database.execute_batch(CHROME_LOGINS_SCHEMA)?;
+            let target_prefix = keys.target_prefix.unwrap_or(if keys.platform == "linux" {
+                "v11"
+            } else {
+                "v10"
+            });
+            {
+                let mut insert = database.prepare(
+                    "INSERT OR IGNORE INTO logins (
                origin_url, action_url, username_element, username_value,
                password_element, password_value, submit_element, signon_realm,
                date_created, blacklisted_by_user, scheme, password_type, times_used,
                date_last_used, date_password_modified
              ) VALUES (?1, ?2, '', ?3, '', ?4, '', ?5, 0, 0, 0, 0, 0, 0, 0)",
-        )?;
-        for entry in entries {
-            let encrypted = encrypt_chromium_value(
-                entry.password.as_bytes(),
-                keys.target_key,
-                keys.platform,
-                Some(target_prefix),
-            )?;
-            let realm = entry.origin.as_deref().map(signon_realm);
-            insert.execute(params![
-                entry.origin,
-                entry.origin,
-                entry.username,
-                encrypted,
-                realm
-            ])?;
-            migrated += 1;
-        }
-    }
-    drop(database);
+                )?;
+                for entry in entries {
+                    let encrypted = encrypt_chromium_value(
+                        entry.password.as_bytes(),
+                        keys.target_key,
+                        keys.platform,
+                        Some(target_prefix),
+                    )?;
+                    let realm = entry.origin.as_deref().map(signon_realm);
+                    insert.execute(params![
+                        entry.origin,
+                        entry.origin,
+                        entry.username,
+                        encrypted,
+                        realm
+                    ])?;
+                    migrated += 1;
+                }
+            }
+            drop(database);
 
-    Ok(migrated)
+            Ok(ClassOutcome {
+                migrated,
+                ..ClassOutcome::default()
+            })
+        },
+    )
 }

@@ -261,6 +261,56 @@ describe('runCli', () => {
     assert.equal(document.options.includePaymentCards, true);
   });
 
+  it('prints migration counts without cookie transfer values', async () => {
+    const fakes = createFakeDependencies();
+    fakes.dependencies.migrateProfile = async () => ({
+      migrated: { cookies: 1, passwords: 2 },
+      skipped: [],
+      warnings: [],
+      cookies: [{ name: 'private-cookie', value: 'private-session-value' }],
+    });
+    const { exitCode, document } = await cli(
+      ['profile', 'migrate', '--from', 'chrome'],
+      { fakes }
+    );
+    assert.equal(exitCode, 0);
+    assert.deepEqual(document.migrated, { cookies: 1, passwords: 2 });
+    assert.equal('cookies' in document, false);
+    assert.doesNotMatch(
+      JSON.stringify(document),
+      /private-cookie|private-session-value/u
+    );
+  });
+
+  it('omits migration cookie transfer values from command-script summaries', async () => {
+    const directory = await mkdtemp(
+      path.join(os.tmpdir(), 'bc-migration-cli-')
+    );
+    try {
+      const script = path.join(directory, 'migration.json');
+      await writeFile(
+        script,
+        JSON.stringify({
+          steps: [{ method: 'profile.migrate', params: { from: 'chrome' } }],
+        })
+      );
+      const fakes = createFakeDependencies();
+      fakes.dependencies.migrateProfile = async () => ({
+        migrated: { cookies: 1 },
+        cookies: [{ name: 'private-cookie', value: 'private-session-value' }],
+      });
+      const { exitCode, document } = await cli(['run', script], { fakes });
+      assert.equal(exitCode, 0);
+      assert.deepEqual(document.results[0].result.migrated, { cookies: 1 });
+      assert.doesNotMatch(
+        JSON.stringify(document),
+        /private-cookie|private-session-value/u
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it('lists cookie sources with per-domain counts', async () => {
     const { exitCode, document } = await cli([
       'cookies',

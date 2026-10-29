@@ -9,12 +9,39 @@ use super::*;
 use crate::puppeteer::bridge::{binary, remote_type, BridgeError, JsFunction, Remote};
 
 remote_type!(
-    /// Puppeteer's `ConsoleMessage` (puppeteer-core 25.12.0), a remote object
+    /// Puppeteer's `ConsoleMessage` (puppeteer-core 25.16.0), a remote object
     /// served by `browser-commander serve --stdio`.
     ConsoleMessage
 );
 
 impl ConsoleMessage {
+    /// `ConsoleMessage.worker`
+    ///
+    /// ```text
+    /// worker(): WebWorker | null
+    /// ```
+    pub async fn worker(&self) -> Result<Option<WebWorker>, BridgeError> {
+        self.remote.call("worker", vec![]).await
+    }
+
+    /// `ConsoleMessage.page`
+    ///
+    /// ```text
+    /// page(): Page | null
+    /// ```
+    pub async fn page(&self) -> Result<Option<Page>, BridgeError> {
+        self.remote.call("page", vec![]).await
+    }
+
+    /// `ConsoleMessage.frame`
+    ///
+    /// ```text
+    /// frame(): Frame | null
+    /// ```
+    pub async fn frame(&self) -> Result<Option<Frame>, BridgeError> {
+        self.remote.call("frame", vec![]).await
+    }
+
     /// `ConsoleMessage.type`
     ///
     /// ```text

@@ -9,7 +9,7 @@ use super::*;
 use crate::puppeteer::bridge::{binary, remote_type, BridgeError, JsFunction, Remote};
 
 remote_type!(
-    /// Puppeteer's `Page` (puppeteer-core 25.12.0), a remote object
+    /// Puppeteer's `Page` (puppeteer-core 25.16.0), a remote object
     /// served by `browser-commander serve --stdio`.
     ///
     /// Extends [`EventEmitter`]; the inherited methods are repeated here.
@@ -110,10 +110,10 @@ impl Page {
     /// `Page.setGeolocation`
     ///
     /// ```text
-    /// setGeolocation(options: GeolocationOptions): Promise<void>
+    /// setGeolocation(options: GeolocationOptions | null): Promise<void>
     /// ```
-    pub async fn set_geolocation(&self, options: Value) -> Result<(), BridgeError> {
-        self.remote.call("setGeolocation", vec![Some(options)]).await
+    pub async fn set_geolocation(&self, options: Option<Value>) -> Result<(), BridgeError> {
+        self.remote.call("setGeolocation", vec![Some(options.unwrap_or(Value::Null))]).await
     }
 
     /// `Page.target`
@@ -466,7 +466,7 @@ impl Page {
     /// `Page.setExtraHTTPHeaders`
     ///
     /// ```text
-    /// setExtraHTTPHeaders(headers: Record<string, string>): Promise<void>
+    /// setExtraHTTPHeaders(headers: HeadersInput): Promise<void>
     /// ```
     pub async fn set_extra_http_headers(&self, headers: Value) -> Result<(), BridgeError> {
         self.remote.call("setExtraHTTPHeaders", vec![Some(headers)]).await

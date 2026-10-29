@@ -1,3 +1,4 @@
+import { withPasswordStore } from './password-store.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { matchesDomains } from './domains.js';
@@ -273,17 +274,16 @@ export async function migrateFirefoxPasswords({
         username: decryptFirefoxField(login.encryptedUsername, key),
         password: decryptFirefoxField(login.encryptedPassword, key),
       });
-    } catch (error) {
+    } catch {
       skipped.push({
         type: 'passwords',
-        item: login.hostname ?? '(unknown)',
+        item: 'Login Data',
         reason: 'decrypt-failed',
-        detail: error.message,
       });
     }
   }
 
-  const migrated = await writeChromiumPasswords({
+  const store = await writeChromiumPasswords({
     entries: decrypted,
     targetProfileDir,
     platform,
@@ -291,7 +291,8 @@ export async function migrateFirefoxPasswords({
     targetPrefix,
   });
 
-  const warnings = [];
+  const { migrated, warnings } = store;
+  skipped.push(...store.skipped);
   if (migrated > 0) {
     warnings.push({
       type: 'passwords',
@@ -303,46 +304,51 @@ export async function migrateFirefoxPasswords({
   return { migrated, skipped, warnings };
 }
 
-export async function writeChromiumPasswords({
+export function writeChromiumPasswords({
   entries,
   targetProfileDir,
   platform,
   targetKey,
   targetPrefix,
 }) {
-  await mkdir(targetProfileDir, { recursive: true });
-  const targetPath = path.join(targetProfileDir, 'Login Data');
-  const db = await openSqliteDatabase(targetPath);
-  let migrated = 0;
-  try {
-    db.exec(CHROME_LOGINS_SCHEMA);
-    const insert = db.prepare(
-      `INSERT OR IGNORE INTO logins (
+  return withPasswordStore({
+    targetProfileDir,
+    targetKey,
+    platform,
+    prepare: async (targetPath) => {
+      const db = await openSqliteDatabase(targetPath);
+      let migrated = 0;
+      try {
+        db.exec(CHROME_LOGINS_SCHEMA);
+        const insert = db.prepare(
+          `INSERT OR IGNORE INTO logins (
          origin_url, action_url, username_element, username_value,
          password_element, password_value, submit_element, signon_realm,
          date_created, blacklisted_by_user, scheme, password_type, times_used,
          date_last_used, date_password_modified
        ) VALUES (?, ?, '', ?, '', ?, '', ?, 0, 0, 0, 0, 0, 0, 0)`
-    );
-    for (const entry of entries) {
-      const encrypted = encryptChromiumValue({
-        plaintext: entry.password,
-        key: targetKey,
-        platform,
-        prefix: targetPrefix,
-      });
-      insert.run(
-        entry.origin,
-        entry.origin,
-        entry.username,
-        encrypted,
-        signonRealm(entry.origin)
-      );
-      migrated += 1;
-    }
-  } finally {
-    db.close();
-  }
+        );
+        for (const entry of entries) {
+          const encrypted = encryptChromiumValue({
+            plaintext: entry.password,
+            key: targetKey,
+            platform,
+            prefix: targetPrefix,
+          });
+          insert.run(
+            entry.origin,
+            entry.origin,
+            entry.username,
+            encrypted,
+            signonRealm(entry.origin)
+          );
+          migrated += 1;
+        }
+      } finally {
+        db.close();
+      }
 
-  return migrated;
+      return { migrated, skipped: [], warnings: [] };
+    },
+  });
 }

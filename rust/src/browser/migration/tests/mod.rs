@@ -15,6 +15,7 @@ mod firefox_nss;
 mod history;
 mod index;
 mod os_crypt_keys;
+mod password_refresh;
 mod passwords;
 mod preferences;
 mod safari;

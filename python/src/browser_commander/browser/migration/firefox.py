@@ -53,6 +53,7 @@ from browser_commander.browser.migration.sqlite_snapshot import (
 )
 
 from .domains import matches_domains
+from .password_store import with_password_store
 
 __all__ = [
     "CHROME_LOGINS_SCHEMA",
@@ -311,18 +312,16 @@ def migrate_firefox_passwords(
                     ),
                 }
             )
-        except Exception as error:
-            hostname = login.get("hostname") if isinstance(login, dict) else None
+        except Exception:
             skipped.append(
                 {
                     "type": "passwords",
-                    "item": hostname if hostname is not None else "(unknown)",
+                    "item": "Login Data",
                     "reason": "decrypt-failed",
-                    "detail": str(error),
                 }
             )
 
-    migrated = write_chromium_passwords(
+    store = write_chromium_passwords(
         entries=decrypted,
         target_profile_dir=target_profile_dir,
         platform=platform,
@@ -330,7 +329,9 @@ def migrate_firefox_passwords(
         target_prefix=prefix,
     )
 
-    warnings: list[dict[str, Any]] = []
+    migrated = store["migrated"]
+    skipped.extend(store["skipped"])
+    warnings = store["warnings"]
     if migrated > 0:
         warnings.append(
             {
@@ -354,30 +355,36 @@ def write_chromium_passwords(
     platform: str,
     target_key: bytes,
     target_prefix: str | None = None,
-) -> int:
-    target = Path(target_profile_dir)
-    target.mkdir(parents=True, exist_ok=True)
-    migrated = 0
-    with contextlib.closing(sqlite3.connect(target / "Login Data")) as database:
-        database.executescript(CHROME_LOGINS_SCHEMA)
-        for entry in entries:
-            encrypted = encrypt_chromium_value(
-                entry["password"],
-                key=bytes(target_key),
-                platform=platform,
-                prefix=target_prefix,
-            )
-            database.execute(
-                _INSERT_LOGIN,
-                (
-                    entry["origin"],
-                    entry["origin"],
-                    entry["username"],
-                    encrypted,
-                    _signon_realm(entry["origin"]),
-                ),
-            )
-            migrated += 1
-        database.commit()
+) -> dict[str, Any]:
+    def prepare(target_path):
+        migrated = 0
+        with contextlib.closing(sqlite3.connect(target_path)) as database:
+            database.executescript(CHROME_LOGINS_SCHEMA)
+            for entry in entries:
+                encrypted = encrypt_chromium_value(
+                    entry["password"],
+                    key=bytes(target_key),
+                    platform=platform,
+                    prefix=target_prefix,
+                )
+                database.execute(
+                    _INSERT_LOGIN,
+                    (
+                        entry["origin"],
+                        entry["origin"],
+                        entry["username"],
+                        encrypted,
+                        _signon_realm(entry["origin"]),
+                    ),
+                )
+                migrated += 1
+            database.commit()
 
-    return migrated
+        return {"migrated": migrated, "skipped": [], "warnings": []}
+
+    return with_password_store(
+        target_profile_dir=target_profile_dir,
+        target_key=target_key,
+        platform=platform,
+        prepare=prepare,
+    )

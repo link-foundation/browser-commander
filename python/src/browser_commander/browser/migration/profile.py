@@ -292,7 +292,10 @@ def migrate_profile_sync(
             if "passwords" in selected and password_csv
             else None
         )
-        for type_ in ALL_DATA_CLASSES:
+        for type_ in (
+            "passwords",
+            *(name for name in ALL_DATA_CLASSES if name != "passwords"),
+        ):
             if type_ in ADDITIONAL_DATA_CLASSES:
                 continue
             if type_ != "cookies" and type_ in selected:
@@ -328,66 +331,6 @@ def migrate_profile_sync(
                 }
             )
         return report
-
-    if "bookmarks" in selected:
-        _merge_report(
-            report,
-            "bookmarks",
-            migrate_firefox_bookmarks(
-                profile_dir=source_profile_dir, target_profile_dir=target_dir
-            )
-            if is_firefox
-            else migrate_bookmarks(
-                source_profile_dir=source_profile_dir, target_profile_dir=target_dir
-            ),
-        )
-
-    if "history" in selected:
-        _merge_report(
-            report,
-            "history",
-            migrate_firefox_history(
-                profile_dir=source_profile_dir,
-                target_profile_dir=target_dir,
-                domains=domains,
-            )
-            if is_firefox
-            else migrate_history(
-                source_profile_dir=source_profile_dir,
-                target_profile_dir=target_dir,
-                domains=domains,
-            ),
-        )
-
-    if "preferences" in selected and not is_firefox:
-        _merge_report(
-            report,
-            "preferences",
-            migrate_preferences(
-                source_profile_dir=source_profile_dir, target_profile_dir=target_dir
-            ),
-        )
-
-    if "extensions" in selected and not is_firefox:
-        _merge_report(
-            report,
-            "extensions",
-            migrate_extensions(
-                source_profile_dir=source_profile_dir, target_profile_dir=target_dir
-            ),
-        )
-
-    if is_firefox:
-        for data_class in ("preferences", "extensions"):
-            if data_class in selected:
-                report["skipped"].append(
-                    {
-                        "type": data_class,
-                        "item": str(source_profile_dir),
-                        "reason": "firefox-class-not-supported",
-                        "detail": "Firefox preferences and extensions cannot be copied into a Chromium profile.",
-                    }
-                )
 
     if "passwords" in selected:
         if browser == "yandex" and (source_profile_dir / "Ya Passman Data").exists():
@@ -456,6 +399,66 @@ def migrate_profile_sync(
                     target_prefix=password_keys.get("target_prefix"),
                 ),
             )
+
+    if "bookmarks" in selected:
+        _merge_report(
+            report,
+            "bookmarks",
+            migrate_firefox_bookmarks(
+                profile_dir=source_profile_dir, target_profile_dir=target_dir
+            )
+            if is_firefox
+            else migrate_bookmarks(
+                source_profile_dir=source_profile_dir, target_profile_dir=target_dir
+            ),
+        )
+
+    if "history" in selected:
+        _merge_report(
+            report,
+            "history",
+            migrate_firefox_history(
+                profile_dir=source_profile_dir,
+                target_profile_dir=target_dir,
+                domains=domains,
+            )
+            if is_firefox
+            else migrate_history(
+                source_profile_dir=source_profile_dir,
+                target_profile_dir=target_dir,
+                domains=domains,
+            ),
+        )
+
+    if "preferences" in selected and not is_firefox:
+        _merge_report(
+            report,
+            "preferences",
+            migrate_preferences(
+                source_profile_dir=source_profile_dir, target_profile_dir=target_dir
+            ),
+        )
+
+    if "extensions" in selected and not is_firefox:
+        _merge_report(
+            report,
+            "extensions",
+            migrate_extensions(
+                source_profile_dir=source_profile_dir, target_profile_dir=target_dir
+            ),
+        )
+
+    if is_firefox:
+        for data_class in ("preferences", "extensions"):
+            if data_class in selected:
+                report["skipped"].append(
+                    {
+                        "type": data_class,
+                        "item": str(source_profile_dir),
+                        "reason": "firefox-class-not-supported",
+                        "detail": "Firefox preferences and extensions cannot be copied into a Chromium profile.",
+                    }
+                )
 
     return report
 

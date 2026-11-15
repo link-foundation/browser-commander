@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "browser-commander"
-version = "0.5.3"
+version = "0.5.4"
 description = "Universal browser automation library that supports both Playwright and Selenium with a unified API"
 readme = "README.md"
 license = "Unlicense"

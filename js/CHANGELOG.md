@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.35.0
+
+### Minor Changes
+
+- b781d74: Add the opt-in `no-promos` Chrome launch restriction to suppress product promos
+  and accidental split-view drag-and-drop while preserving password autofill.
+
 ## 0.34.1
 
 ### Patch Changes

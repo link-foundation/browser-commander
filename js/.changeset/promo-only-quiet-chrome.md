@@ -1,0 +1,6 @@
+---
+'browser-commander': minor
+---
+
+Add the opt-in `no-promos` Chrome launch restriction to suppress product promos
+and accidental split-view drag-and-drop while preserving password autofill.

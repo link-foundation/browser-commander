@@ -36,6 +36,7 @@ import {
 } from '../utilities/subprocess.js';
 import { LOOPBACK_HOST, reserveLoopbackPort } from './debugging-port.js';
 import {
+  configureUserDataDir,
   createTemporaryUserDataDir,
   prepareUserDataDir,
   removeUserDataDir,
@@ -472,8 +473,7 @@ async function resolveProfile(browser, requested, sessionRestore) {
 
 // The driver passes its environment on to the browser, so restriction
 // variables (launch-restrictions.json) go to the driver process.
-function driverEnvironment(restrictions, env) {
-  const restrictionEnv = resolveRestrictions(restrictions).env;
+function driverEnvironment(restrictionEnv, env) {
   if (!env && Object.keys(restrictionEnv).length === 0) {
     return undefined;
   }
@@ -736,6 +736,7 @@ async function launchWebDriverOnce(options, dependencies) {
     resolved.browserPath
   );
   const launchRestrictions = [...defaultRestrictions, ...restrictions];
+  const resolvedRestrictions = resolveRestrictions(launchRestrictions);
   const temporaryProfile = !safari && !debuggerAddress && !requestedUserDataDir;
   const sessionCookies = webDriverSessionCookies({
     safari,
@@ -752,13 +753,22 @@ async function launchWebDriverOnce(options, dependencies) {
           restoreTabs,
           args,
         });
-  const childEnv = driverEnvironment(launchRestrictions, env);
+  const childEnv = driverEnvironment(resolvedRestrictions.env, env);
 
   let driverProcess;
   let driver;
   let serverUrl;
   let output = '';
   try {
+    if (browser === 'chrome' && userDataDir) {
+      const preferences = {
+        ...resolvedRestrictions.preferences,
+        ...options.preferences,
+      };
+      if (Object.keys(preferences).length > 0) {
+        await configureUserDataDir(userDataDir, { preferences });
+      }
+    }
     const port = await reservePort();
     serverUrl = `http://${LOOPBACK_HOST}:${port}`;
     driverProcess = startProcess(

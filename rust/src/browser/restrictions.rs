@@ -274,6 +274,27 @@ mod tests {
         assert!(features[0].contains("Custom"));
         assert_eq!(features[0].matches("Translate").count(), 1);
         assert_eq!(result.preferences["translate"]["enabled"], false);
+        assert_eq!(
+            result.preferences["profile"]["password_manager_enabled"],
+            false
+        );
+    }
+
+    #[test]
+    fn no_promos_applies_only_promo_features_and_split_view_preference() {
+        let result = resolve_restrictions_with_features(
+            &["no-promos"],
+            &["Custom".into(), "PromotionalTabs".into()],
+        )
+        .unwrap();
+        assert_eq!(
+            result.args,
+            ["--disable-features=ChromeWhatsNewUI,PromotionalTabs,Custom"]
+        );
+        assert_eq!(
+            result.preferences,
+            serde_json::json!({"browser": {"split_view_drag_and_drop_enabled": false}})
+        );
     }
 
     #[test]

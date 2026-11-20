@@ -146,7 +146,11 @@ fn copy_file(source: &Path, target: &Path, report: &mut SnapshotReport) -> Resul
                 snapshot,
                 rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY,
             )?;
-            database.backup(rusqlite::MAIN_DB, target, None)?;
+            database.backup(
+                rusqlite::MAIN_DB,
+                target,
+                None::<fn(rusqlite::backup::Progress)>,
+            )?;
             rusqlite::Connection::open(target)?.execute_batch("PRAGMA journal_mode=DELETE")?;
             Ok(())
         })?;

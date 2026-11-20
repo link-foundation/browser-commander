@@ -38,7 +38,11 @@ fn snapshot_into(source_path: &Path, dir: &Path) -> Result<PathBuf> {
     let snapshot_path = dir.join(file_name(source_path)?);
     let backed_up = open_read_only(source_path).and_then(|source| {
         // `backup` opens the destination itself; the source stays read-only.
-        source.backup(rusqlite::MAIN_DB, &snapshot_path, None)
+        source.backup(
+            rusqlite::MAIN_DB,
+            &snapshot_path,
+            None::<fn(rusqlite::backup::Progress)>,
+        )
     });
     backed_up.with_context(|| format!(
         "Consistent SQLite snapshot unavailable for {}; close the source browser and retry, or supply a consistent read-only snapshot.",

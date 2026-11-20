@@ -16,7 +16,9 @@ const password = 'fixture-password';
 const server = createServer(async (request, response) => {
   if (request.method === 'POST') {
     let body = '';
-    for await (const chunk of request) body += chunk;
+    for await (const chunk of request) {
+      body += chunk;
+    }
     const form = new URLSearchParams(body);
     const matched =
       form.get('username') === username && form.get('password') === password;

@@ -448,8 +448,9 @@ jobs:
   # Prove the trusted publisher matches this workflow by exchanging OIDC for
   # a temporary publish token, then revoking it without uploading anything.
   # When that fails, prove the token secret the publish steps fall back to
-  # instead. Release mode blocks only when neither can publish; PR report mode
-  # is advisory since fork jobs cannot obtain credentials. See docs/PUBLISHING.md.
+  # instead. Release mode also requires a strict RustSec audit. PR credential
+  # reports are advisory since fork jobs cannot obtain credentials.
+  # See docs/PUBLISHING.md.
   release-preflight:
     name: Release Preflight
     runs-on: ubuntu-24.04
@@ -464,6 +465,16 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+
+      - name: Install Cargo audit for release
+        if: github.event_name != 'pull_request'
+        uses: taiki-e/install-action@5bf6ce016fd2e72eefc647cbca1e4213f65955b8 # v2.87.5
+        with:
+          tool: cargo-audit@0.22.2
+
+      - name: Require a strict audit before release
+        if: github.event_name != 'pull_request'
+        run: bash scripts/audit-lockfile.sh
 
       - name: Probe crates.io trusted publishing
         env:

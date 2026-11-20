@@ -471,6 +471,12 @@ async function resolveProfile(browser, requested, sessionRestore) {
   return userDataDir;
 }
 
+async function configureChromeProfile(browser, userDataDir, preferences) {
+  if (browser === 'chrome' && userDataDir && Object.keys(preferences).length) {
+    await configureUserDataDir(userDataDir, { preferences });
+  }
+}
+
 // The driver passes its environment on to the browser, so restriction
 // variables (launch-restrictions.json) go to the driver process.
 function driverEnvironment(restrictionEnv, env) {
@@ -760,15 +766,10 @@ async function launchWebDriverOnce(options, dependencies) {
   let serverUrl;
   let output = '';
   try {
-    if (browser === 'chrome' && userDataDir) {
-      const preferences = {
-        ...resolvedRestrictions.preferences,
-        ...options.preferences,
-      };
-      if (Object.keys(preferences).length > 0) {
-        await configureUserDataDir(userDataDir, { preferences });
-      }
-    }
+    await configureChromeProfile(browser, userDataDir, {
+      ...resolvedRestrictions.preferences,
+      ...options.preferences,
+    });
     const port = await reservePort();
     serverUrl = `http://${LOOPBACK_HOST}:${port}`;
     driverProcess = startProcess(

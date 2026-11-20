@@ -71,9 +71,15 @@ export async function startProbeServer(probeSource) {
   const server = createServer((request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
     if (request.method === 'GET' && url.pathname.startsWith('/probe/')) {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      if (url.searchParams.has('startup')) {
+        response.end(
+          '<!doctype html><script>location.replace(location.pathname)</script>'
+        );
+        return;
+      }
       const token = url.pathname.slice('/probe/'.length);
       requestHeaders.set(token, { ...request.headers });
-      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       response.end(probePage(probeSource, token));
       return;
     }
@@ -91,7 +97,8 @@ export async function startProbeServer(probeSource) {
 
   return {
     port,
-    url: (token) => `http://127.0.0.1:${port}/probe/${token}`,
+    url: (token, { startup = false } = {}) =>
+      `http://127.0.0.1:${port}/probe/${token}${startup ? '?startup' : ''}`,
     headersFor: (token) => requestHeaders.get(token) || null,
     waitForReport(token, timeoutMs = 60000) {
       if (reports.has(token)) {
@@ -183,8 +190,10 @@ async function exitedBeforeReport(child, executablePath, stderr) {
 }
 
 /**
- * Start the browser as an ordinary user would - no CDP, no automation
- * switches - and collect the probe report its page POSTs back.
+ * Start the browser without CDP or automation switches. The initial document
+ * opens the probe in a second navigation, like the candidate's navigation
+ * from about:blank. Edge can report an incomplete language list on its first
+ * document while it loads the profile's language settings.
  *
  * The profile is prepared exactly like the launcher's temporary profile: the
  * `First Run` sentinel and the "What's new" milestone in `Local State` keep
@@ -204,7 +213,7 @@ async function captureReferenceAttempt({
   const userDataDir = await createTemporaryUserDataDir();
   const args = buildReferenceArgs({
     userDataDir,
-    url: server.url(token),
+    url: server.url(token, { startup: true }),
     headless,
     extraArgs,
   });

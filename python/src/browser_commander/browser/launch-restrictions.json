@@ -137,6 +137,16 @@
       "args": ["--start-maximized"]
     },
     {
+      "id": "no-promos",
+      "description": "Suppress browser product promos without disabling password autofill.",
+      "disableFeatures": ["ChromeWhatsNewUI", "PromotionalTabs"],
+      "preferences": {
+        "browser": {
+          "split_view_drag_and_drop_enabled": false
+        }
+      }
+    },
+    {
       "id": "no-save-bubbles",
       "description": "Suppress password and payment-card saving bubbles and browser promos.",
       "disableFeatures": [

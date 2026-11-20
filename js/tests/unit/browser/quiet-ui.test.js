@@ -13,4 +13,17 @@ it('quiet-ui merges caller features and disables Translate in preferences', () =
   assert.ok(switches[0].includes('SessionRestoreInfobar'));
   assert.ok(switches[0].includes('CustomFeature'));
   assert.equal(result.preferences.translate.enabled, false);
+  assert.equal(result.preferences.profile.password_manager_enabled, false);
+});
+
+it('no-promos applies only promo features and the split-view preference', () => {
+  const result = resolveRestrictions(['no-promos'], {
+    disableFeatures: ['CustomFeature', 'PromotionalTabs'],
+  });
+  assert.deepEqual(result.args, [
+    '--disable-features=CustomFeature,PromotionalTabs,ChromeWhatsNewUI',
+  ]);
+  assert.deepEqual(result.preferences, {
+    browser: { split_view_drag_and_drop_enabled: false },
+  });
 });

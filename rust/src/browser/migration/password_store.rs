@@ -138,11 +138,7 @@ fn quote(value: &str) -> String {
 type Row = HashMap<String, Value>;
 fn rows(db: &Connection, sql: &str, values: &[Value]) -> Result<Vec<Row>> {
     let mut statement = db.prepare(sql)?;
-    let names: Vec<String> = statement
-        .column_names()
-        .iter()
-        .map(|name| (*name).to_owned())
-        .collect();
+    let names: Vec<String> = statement.column_names().map(str::to_owned).collect();
     let result = statement
         .query_map(params_from_iter(values), |row| {
             names
@@ -491,7 +487,11 @@ pub(super) fn with_password_store(
                 &target_path,
                 rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY,
             )?;
-            db.backup(rusqlite::MAIN_DB, &publish, None)?;
+            db.backup(
+                rusqlite::MAIN_DB,
+                &publish,
+                None::<fn(rusqlite::backup::Progress)>,
+            )?;
             drop(db);
             let source_db = Connection::open(&prepared)?;
             let target_db = Connection::open(&publish)?;

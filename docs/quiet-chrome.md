@@ -1,11 +1,21 @@
 # Quiet Chrome sessions
 
+For sign-in flows that rely on password autofill, use `restrictions: ['no-promos']`
+in JavaScript, `restrictions=["no-promos"]` in Python, or
+`LaunchOptions::default().restrictions(["no-promos"])` in Rust. This restriction
+disables `ChromeWhatsNewUI` and `PromotionalTabs`, sets
+`browser.split_view_drag_and_drop_enabled` to `false`, and leaves password-manager
+preferences alone. On Chrome 145 and later, these settings are a best-effort way
+to suppress the split-view reminder and accidental drag-and-drop. Split view
+itself stays available.
+
 Use `restrictions: ['quiet-ui']` in JavaScript, `restrictions=["quiet-ui"]`
 in Python, or `LaunchOptions::default().restrictions(["quiet-ui"])` in Rust.
 This group disables session-restore UI, translation, first-run/default-browser
-checks, password/card saving, promotional tabs and the what's-new page. Browser
-Commander normally omits the engines' automation switches; supplying
-`--enable-automation` yourself can bring the automation banner back.
+checks, password autofill and saving, card saving, promotional tabs and the
+what's-new page. Browser Commander normally omits the engines' automation
+switches. Supplying `--enable-automation` yourself can bring the automation
+banner back.
 
 `no-crash-restore` includes `SessionRestoreInfobar`. `no-translate` both disables
 the Translate feature and seeds `translate.enabled=false` before launch.

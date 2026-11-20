@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -429,6 +429,45 @@ describe('launchWebDriver', () => {
     assert.ok(mock.driver.calls.some(([name]) => name === 'quit'));
     assert.ok(!existsSync(session.userDataDir));
     await session.close(); // idempotent
+  });
+
+  it('seeds the no-promos preference and preserves existing password settings', async () => {
+    const { dependencies } = launchDependencies();
+    const userDataDir = await mkdtemp(path.join(tmpdir(), 'bc-webdriver-'));
+    const file = path.join(userDataDir, 'Default', 'Preferences');
+    try {
+      await mkdir(path.dirname(file));
+      const passwordPreferences = {
+        credentials_enable_service: true,
+        profile: { password_manager_enabled: true },
+      };
+      await writeFile(file, JSON.stringify(passwordPreferences));
+      const session = await launchWebDriver(
+        { userDataDir, restrictions: ['no-promos'] },
+        dependencies
+      );
+      try {
+        assert.ok(
+          session.args.includes(
+            '--disable-features=ChromeWhatsNewUI,PromotionalTabs'
+          )
+        );
+        const preferences = JSON.parse(await readFile(file, 'utf8'));
+        assert.strictEqual(
+          preferences.browser.split_view_drag_and_drop_enabled,
+          false
+        );
+        assert.strictEqual(preferences.credentials_enable_service, true);
+        assert.deepStrictEqual(
+          preferences.profile,
+          passwordPreferences.profile
+        );
+      } finally {
+        await session.close();
+      }
+    } finally {
+      await rm(userDataDir, { recursive: true, force: true });
+    }
   });
 
   it('adds the Chrome for Testing defaults for the browser it resolves (issue #179)', async () => {

@@ -7,7 +7,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { captureReferenceReport } from '../../../src/parity/harness.js';
+import {
+  captureReferenceReport,
+  startProbeServer,
+} from '../../../src/parity/harness.js';
 
 function fakeProcess({ exitCode, stderr = '' }) {
   const listeners = new Set();
@@ -52,6 +55,24 @@ function fakeServer({ report = null } = {}) {
 }
 
 describe('captureReferenceReport', () => {
+  it('opens a second document before measuring the reference browser', async () => {
+    const server = await startProbeServer('async () => ({ measured: true })');
+    try {
+      const startup = await fetch(server.url('browser', { startup: true }));
+      assert.match(
+        await startup.text(),
+        /location\.replace\(location\.pathname\)/
+      );
+      assert.equal(server.headersFor('browser'), null);
+
+      const probe = await fetch(server.url('browser'));
+      assert.match(await probe.text(), /measured: true/);
+      assert.ok(server.headersFor('browser'));
+    } finally {
+      await server.close();
+    }
+  });
+
   it('fails fast with the exit code and stderr of a browser that died', async () => {
     const started = Date.now();
     await assert.rejects(

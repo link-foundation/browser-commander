@@ -229,7 +229,7 @@ For Command Stream's `captureTerminal()`, install `@xterm/headless` and
 ensure that the optional `node-pty` native addon is available. Add
 `@resvg/resvg-js` and `gifenc` to the application's dependencies when
 requesting terminal GIF artifacts. See the
-[Command Stream installation guide](https://github.com/link-foundation/command-stream/blob/js-v3.0.0/docs/INSTALLATION.md).
+[Command Stream installation guide](https://github.com/link-foundation/command-stream/blob/js-v3.0.0/js/docs/INSTALLATION.md).
 
 Existing `.lino` traces remain readable. New exports may use Links Notation's
 versioned UTF-8 literals (`~1{...}`) for empty or control-character values, and

@@ -149,7 +149,7 @@ jobs:
       - name: Audit fresh packed consumer
         run: bash ../experiments/issue-164/audit-consumer.sh
 
-      - name: Check shared Links Notation consumer
+      - name: Check shared dependencies and opt-in terminal recording
         run: bash ../experiments/issue-168/check-consumer.sh
 
   cargo-audit:

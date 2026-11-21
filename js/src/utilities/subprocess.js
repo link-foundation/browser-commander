@@ -24,7 +24,7 @@ export async function startDetachedProcess(file, args = [], options = {}) {
 
 /**
  * Release a started runner from command-stream's process-wide cancellation
- * registry and return its raw child. command-stream 2.x has no public per-run
+ * registry and return its raw child. command-stream has no public per-run
  * opt-out: every runner joins a global set whose SIGINT handler forwards the
  * signal to the child's process group. command-stream starts noninteractive
  * children in their own process group, so once released nothing but the caller

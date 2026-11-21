@@ -1022,11 +1022,10 @@ between two checkpoints, with `path`, `before`, `after` and who changed it.
 Dropped and partial records are written as such rather than left out, no binary
 content is ever copied into the export, and redaction is whatever the bundle
 already decided - the export only reads what was written there. The
-representation is pinned by a golden test against
-[`links-notation`](https://www.npmjs.com/package/links-notation) 0.20, whose
-Python and Rust implementations read the same file;
+representation is pinned by a cross-language golden test and parsed with
+[`links-notation`](https://www.npmjs.com/package/links-notation) 0.31.
 `experiments/trace-links-export.mjs` records a real run and parses its export
-from Python to prove it.
+from Python.
 
 ### Truthful Click Results
 

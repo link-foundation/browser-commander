@@ -5,12 +5,22 @@ reports dependency duplication: a consumer installs Links Notation 0.25.2 while
 Browser Commander 0.31.0 requires `^0.23.0`. This is a range compatibility request;
 the consumer's browser navigation, privacy and recording controls already pass.
 
-Run from the repository root:
+Run the maintained check from the repository root:
 
 ```sh
 bash experiments/issue-168/check-consumer.sh
 ```
 
+The check now follows issue #193. It installs the packed Browser Commander
+beside Command Stream 3.0.0 and Links Notation 0.31.8, checks their shared
+resolution and exercises the CLI, release-style configuration and trace
+parsing. It then installs the opt-in capture peers, builds `node-pty` where
+needed, and records the packaged CLI to asciicast and GIF. A native build
+toolchain is required on Linux.
+
+## Original issue #168 reproduction
+
+At the issue #168 revision, the same command targets Links Notation 0.25.2.
 The check packs the local package and installs it beside a direct 0.25.2
 dependency into a temporary consumer, independently of the repository lockfile.
 Lifecycle scripts, dev dependencies and optional native builds are disabled.

@@ -218,16 +218,23 @@ continues to return `null`/`None`.
 require its native build. Node's built-in SQLite handles supported reads; online
 backup requires Node 22.16 or later. Older runtimes need the optional addon for
 SQLite workflows and receive an installation hint when it is unavailable.
-`links-notation` uses `^0.25.2`. A consumer that also depends on 0.25.2 can share
-one installed copy after refreshing its lockfile (and running `npm dedupe` if an
-existing installation retains a nested copy); no dependency override is needed.
+`command-stream` uses `^3.0.0` and `links-notation` uses `^0.31.8`. A consumer
+with compatible direct dependencies can share Browser Commander's copies after
+refreshing its lockfile. Run `npm dedupe` if the installation retains a nested
+copy.
 The `Link`, `Parser`, `StreamParser` and `formatLinks` APIs used by trace exports
 remain compatible, and the existing cross-language golden export is unchanged.
+
+For Command Stream's `captureTerminal()`, install `@xterm/headless` and
+ensure that the optional `node-pty` native addon is available. Add
+`@resvg/resvg-js` and `gifenc` to the application's dependencies when
+requesting terminal GIF artifacts. See the
+[Command Stream installation guide](https://github.com/link-foundation/command-stream/blob/js-v3.0.0/docs/INSTALLATION.md).
 
 Existing `.lino` traces remain readable. New exports may use Links Notation's
 versioned UTF-8 literals (`~1{...}`) for empty or control-character values, and
 quote Unicode whitespace and literal-looking text such as `~1{61}`. Consumers
-using an older parser should upgrade it to 0.25.2 before reading new exports.
+can use Links Notation 0.31.8 to read these exports.
 The bundle schema and trace link fields remain unchanged; continue applying
 `decodeLinkText` to parsed scalar IDs to reverse the trace-specific escapes.
 The exporter also preserves lone JavaScript UTF-16 surrogates as `\ud800`–
